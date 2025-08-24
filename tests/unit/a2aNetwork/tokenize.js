@@ -1,10 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+'use strict';
+const __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { 'default': mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const ava_1 = __importDefault(require("ava"));
-const tokenize_1 = require("../../src/tokenize");
+Object.defineProperty(exports, '__esModule', { value: true });
+const ava_1 = __importDefault(require('ava'));
+const tokenize_1 = require('../../src/tokenize');
 (0, ava_1.default)('tokenizes a string without placeholders', (t) => {
     t.deepEqual((0, tokenize_1.tokenize)('foo bar'), [
         {

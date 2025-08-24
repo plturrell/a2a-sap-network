@@ -23,12 +23,12 @@
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
+const assert = require('assert');
 
-var once = 0;
+let once = 0;
 function onAsync0() {}
 
-var handlers = {
+const handlers = {
   after: function () {
     throw new Error('erk');
   },
@@ -40,16 +40,16 @@ var handlers = {
   }
 };
 
-var key = process.addAsyncListener(onAsync0, handlers);
+const key = process.addAsyncListener(onAsync0, handlers);
 
-process.on('uncaughtException', function () {
+process.on('uncaughtException', () => {
   // process should propagate error regardless of
   // error handlers return value
   assert.equal(once, 1);
   console.log('ok');
 });
 
-setImmediate(function () {
+setImmediate(() => {
   return 1;
 });
 

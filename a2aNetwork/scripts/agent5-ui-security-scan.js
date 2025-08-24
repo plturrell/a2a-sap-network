@@ -756,7 +756,7 @@ class Agent5SecurityScanner {
         const totalChecks = this.passedChecks + this.failedChecks;
         const compliance = Math.round((this.passedChecks / totalChecks) * 100);
         
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         console.log('📊 AGENT 5 UI SECURITY & STANDARDS REPORT');
         console.log('='.repeat(60));
         console.log('');

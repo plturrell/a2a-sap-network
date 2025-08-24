@@ -38,7 +38,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-const timerId = setTimeout(function () {
+const timerId = setTimeout(() => {
   timerCalled = true;
 });
 
@@ -46,7 +46,7 @@ clearTimeout(timerId);
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, destroyUid);
 
   assert.equal(initHandleName, 'TimeoutWrap');

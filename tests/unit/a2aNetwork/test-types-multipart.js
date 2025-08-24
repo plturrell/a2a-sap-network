@@ -766,7 +766,7 @@ const tests = [
          + 'name="upload_file_0"; filename="notes.txt"',
        'Content-Type: text/plain; charset=utf8',
        '',
-       'a'.repeat(31) + '\r',
+       `${'a'.repeat(31)  }\r`,
       ].join('\r\n'),
       'b'.repeat(40),
       '\r\n-----------------------------paZqsnEHRufoShdX6fh0lUhXBP4k--',
@@ -776,7 +776,7 @@ const tests = [
     expected: [
       { type: 'file',
         name: 'upload_file_0',
-        data: Buffer.from('a'.repeat(31) + '\r' + 'b'.repeat(40)),
+        data: Buffer.from(`${'a'.repeat(31)  }\r${  'b'.repeat(40)}`),
         info: {
           filename: 'notes.txt',
           encoding: '7bit',

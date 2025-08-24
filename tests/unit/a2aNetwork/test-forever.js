@@ -1,18 +1,18 @@
-var common = require('../common');
-var assert = common.assert;
-var retry = require(common.dir.lib + '/retry');
+const common = require('../common');
+const assert = common.assert;
+const retry = require(`${common.dir.lib  }/retry`);
 
 (function testForeverUsesFirstTimeout() {
-  var operation = retry.operation({
+  const operation = retry.operation({
     retries: 0,
     minTimeout: 100,
     maxTimeout: 100,
     forever: true
   });
 
-  operation.attempt(function(numAttempt) {
+  operation.attempt((numAttempt) => {
     console.log('>numAttempt', numAttempt);
-    var err = new Error("foo");
+    const err = new Error('foo');
     if (numAttempt == 10) {
       operation.stop();
     }

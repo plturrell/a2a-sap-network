@@ -1,19 +1,19 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var chai_1 = require("chai");
-var index_1 = require("../index");
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+const chai_1 = require('chai');
+const index_1 = require('../index');
 function mockTracerimplementationTests() {
-    describe('Mock Tracer API tests', function () {
-        describe('Tracer#report', function () {
-            it('should not throw exceptions when running report', function () {
-                var tracer = new index_1.MockTracer();
-                var span = tracer.startSpan('test_operation');
+    describe('Mock Tracer API tests', () => {
+        describe('Tracer#report', () => {
+            it('should not throw exceptions when running report', () => {
+                const tracer = new index_1.MockTracer();
+                const span = tracer.startSpan('test_operation');
                 span.addTags({ key: 'value' });
                 span.finish();
-                chai_1.expect(function () {
-                    var report = tracer.report();
-                    for (var _i = 0, _a = report.spans; _i < _a.length; _i++) {
-                        var span_1 = _a[_i];
+                chai_1.expect(() => {
+                    const report = tracer.report();
+                    for (let _i = 0, _a = report.spans; _i < _a.length; _i++) {
+                        const span_1 = _a[_i];
                         span_1.tags();
                     }
                 }).to.not.throw(Error);

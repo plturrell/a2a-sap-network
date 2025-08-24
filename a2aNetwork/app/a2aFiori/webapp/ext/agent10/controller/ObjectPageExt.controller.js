@@ -715,7 +715,7 @@ sap.ui.define([
                 });
 
             } catch (error) {
-                // console.warn("Server-Sent Events not available, using polling");
+                // // console.warn("Server-Sent Events not available, using polling");
                 this._initializePolling(taskId);
             }
         },
@@ -958,17 +958,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateMetricsDisplay(data, oDialog);
                     } catch (error) {
-                        // console.error("Error parsing metrics data:", error);
+                        // // console.error("Error parsing metrics data:", error);
                     }
                 }.bind(this);
 
                 this._metricsEventSource.onerror = function(error) {
-                    // console.warn("Metrics stream error, falling back to polling:", error);
+                    // // console.warn("Metrics stream error, falling back to polling:", error);
                     this._startMetricsPolling(sTaskId, oDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startMetricsPolling(sTaskId, oDialog);
             }
         },
@@ -1006,7 +1006,7 @@ sap.ui.define([
                     this._updateMetricsDisplay(data, oDialog);
                 }.bind(this),
                 error(error) {
-                    // console.warn("Failed to fetch metrics data:", error);
+                    // // console.warn("Failed to fetch metrics data:", error);
                 }
             });
         },
@@ -1240,7 +1240,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

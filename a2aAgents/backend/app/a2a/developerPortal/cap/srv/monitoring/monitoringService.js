@@ -2,7 +2,7 @@
  * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
  */
 
-"use strict";
+'use strict';
 
 /**
  * Monitoring Service for SAP A2A Developer Portal
@@ -13,258 +13,258 @@ const express = require('express');
 const performanceMonitor = require('./performance-monitor');
 
 class MonitoringService {
-    constructor() {
-        this.router = express.Router();
-        this._setupRoutes();
-    }
+  constructor() {
+    this.router = express.Router();
+    this._setupRoutes();
+  }
 
-    /**
+  /**
      * Setup monitoring routes
      */
-    _setupRoutes() {
-        // Prometheus metrics endpoint
-        this.router.get('/metrics', async (req, res) => {
-            try {
-                const metrics = await performanceMonitor.getMetrics();
-                res.set('Content-Type', 'text/plain');
-                res.send(metrics);
-            } catch (error) {
-                console.error('Failed to get metrics:', error);
-                res.status(500).send('Failed to retrieve metrics');
-            }
-        });
+  _setupRoutes() {
+    // Prometheus metrics endpoint
+    this.router.get('/metrics', async (req, res) => {
+      try {
+        const metrics = await performanceMonitor.getMetrics();
+        res.set('Content-Type', 'text/plain');
+        res.send(metrics);
+      } catch (error) {
+        console.error('Failed to get metrics:', error);
+        res.status(500).send('Failed to retrieve metrics');
+      }
+    });
 
-        // Real-time metrics dashboard data
-        this.router.get('/dashboard', (req, res) => {
-            try {
-                const metrics = performanceMonitor.getRealtimeMetrics();
-                res.json(metrics);
-            } catch (error) {
-                console.error('Failed to get dashboard metrics:', error);
-                res.status(500).json({ error: 'Failed to retrieve dashboard metrics' });
-            }
-        });
+    // Real-time metrics dashboard data
+    this.router.get('/dashboard', (req, res) => {
+      try {
+        const metrics = performanceMonitor.getRealtimeMetrics();
+        res.json(metrics);
+      } catch (error) {
+        console.error('Failed to get dashboard metrics:', error);
+        res.status(500).json({ error: 'Failed to retrieve dashboard metrics' });
+      }
+    });
 
-        // Health check endpoint
-        this.router.get('/health', async (req, res) => {
-            const health = await this._getHealthStatus();
-            const statusCode = health.status === 'UP' ? 200 : 503;
-            res.status(statusCode).json(health);
-        });
+    // Health check endpoint
+    this.router.get('/health', async (req, res) => {
+      const health = await this._getHealthStatus();
+      const statusCode = health.status === 'UP' ? 200 : 503;
+      res.status(statusCode).json(health);
+    });
 
-        // Liveness probe (for Kubernetes)
-        this.router.get('/livez', (req, res) => {
-            res.json({ status: 'alive' });
-        });
+    // Liveness probe (for Kubernetes)
+    this.router.get('/livez', (req, res) => {
+      res.json({ status: 'alive' });
+    });
 
-        // Readiness probe (for Kubernetes)
-        this.router.get('/readyz', async (req, res) => {
-            const ready = await this._checkReadiness();
-            const statusCode = ready.ready ? 200 : 503;
-            res.status(statusCode).json(ready);
-        });
+    // Readiness probe (for Kubernetes)
+    this.router.get('/readyz', async (req, res) => {
+      const ready = await this._checkReadiness();
+      const statusCode = ready.ready ? 200 : 503;
+      res.status(statusCode).json(ready);
+    });
 
-        // Performance test endpoint
-        this.router.post('/performance-test', async (req, res) => {
-            const { operation, iterations = 100 } = req.body;
+    // Performance test endpoint
+    this.router.post('/performance-test', async (req, res) => {
+      const { operation, iterations = 100 } = req.body;
             
-            if (!operation) {
-                return res.status(400).json({ error: 'Operation name required' });
-            }
+      if (!operation) {
+        return res.status(400).json({ error: 'Operation name required' });
+      }
 
-            const results = await this._runPerformanceTest(operation, iterations);
-            res.json(results);
-        });
+      const results = await this._runPerformanceTest(operation, iterations);
+      res.json(results);
+    });
 
-        // Monitoring dashboard HTML
-        this.router.get('/', (req, res) => {
-            res.send(this._getMonitoringDashboardHTML());
-        });
-    }
+    // Monitoring dashboard HTML
+    this.router.get('/', (req, res) => {
+      res.send(this._getMonitoringDashboardHTML());
+    });
+  }
 
-    /**
+  /**
      * Get comprehensive health status
      */
-    async _getHealthStatus() {
-        const checks = {
-            database: await this._checkDatabase(),
-            cache: await this._checkCache(),
-            messageQueue: await this._checkMessageQueue(),
-            diskSpace: this._checkDiskSpace(),
-            memory: this._checkMemory()
-        };
+  async _getHealthStatus() {
+    const checks = {
+      database: await this._checkDatabase(),
+      cache: await this._checkCache(),
+      messageQueue: await this._checkMessageQueue(),
+      diskSpace: this._checkDiskSpace(),
+      memory: this._checkMemory()
+    };
 
-        const status = Object.values(checks).every(check => check.status === 'UP') ? 'UP' : 'DOWN';
+    const status = Object.values(checks).every(check => check.status === 'UP') ? 'UP' : 'DOWN';
 
-        return {
-            status,
-            timestamp: new Date().toISOString(),
-            version: process.env.SERVICE_VERSION || '2.1.0',
-            uptime: process.uptime(),
-            checks
-        };
-    }
+    return {
+      status,
+      timestamp: new Date().toISOString(),
+      version: process.env.SERVICE_VERSION || '2.1.0',
+      uptime: process.uptime(),
+      checks
+    };
+  }
 
-    /**
+  /**
      * Check database health
      */
-    async _checkDatabase() {
-        try {
-            const start = Date.now();
-            // Simulate database check
-            await new Promise(resolve => setTimeout(resolve, 10));
-            const duration = Date.now() - start;
+  async _checkDatabase() {
+    try {
+      const start = Date.now();
+      // Simulate database check
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const duration = Date.now() - start;
 
-            performanceMonitor.recordDbQuery('health_check', 'system', 'success', duration);
+      performanceMonitor.recordDbQuery('health_check', 'system', 'success', duration);
 
-            return {
-                status: 'UP',
-                responseTime: duration
-            };
-        } catch (error) {
-            performanceMonitor.recordError('database_health_check', 'monitoring', 'critical');
-            return {
-                status: 'DOWN',
-                error: error.message
-            };
-        }
+      return {
+        status: 'UP',
+        responseTime: duration
+      };
+    } catch (error) {
+      performanceMonitor.recordError('database_health_check', 'monitoring', 'critical');
+      return {
+        status: 'DOWN',
+        error: error.message
+      };
     }
+  }
 
-    /**
+  /**
      * Check cache health
      */
-    _checkCache() {
-        try {
-            // Simulate cache check
-            const _testKey = `health_check_${  Date.now()}`;
-            performanceMonitor.recordCacheAccess('redis', 'health_check', true);
+  _checkCache() {
+    try {
+      // Simulate cache check
+      const _testKey = `health_check_${  Date.now()}`;
+      performanceMonitor.recordCacheAccess('redis', 'health_check', true);
             
-            return {
-                status: 'UP',
-                type: 'redis'
-            };
-        } catch (error) {
-            performanceMonitor.recordError('cache_health_check', 'monitoring', 'warning');
-            return {
-                status: 'DOWN',
-                error: error.message
-            };
-        }
+      return {
+        status: 'UP',
+        type: 'redis'
+      };
+    } catch (error) {
+      performanceMonitor.recordError('cache_health_check', 'monitoring', 'warning');
+      return {
+        status: 'DOWN',
+        error: error.message
+      };
     }
+  }
 
-    /**
+  /**
      * Check message queue health
      */
-    _checkMessageQueue() {
-        return {
-            status: 'UP',
-            type: 'sap-event-mesh'
-        };
-    }
+  _checkMessageQueue() {
+    return {
+      status: 'UP',
+      type: 'sap-event-mesh'
+    };
+  }
 
-    /**
+  /**
      * Check disk space
      */
-    _checkDiskSpace() {
-        // Simulate disk space check
-        const freeSpace = 5 * 1024 * 1024 * 1024; // 5GB
-        const totalSpace = 20 * 1024 * 1024 * 1024; // 20GB
-        const usedPercent = ((totalSpace - freeSpace) / totalSpace) * 100;
+  _checkDiskSpace() {
+    // Simulate disk space check
+    const freeSpace = 5 * 1024 * 1024 * 1024; // 5GB
+    const totalSpace = 20 * 1024 * 1024 * 1024; // 20GB
+    const usedPercent = ((totalSpace - freeSpace) / totalSpace) * 100;
 
-        return {
-            status: usedPercent < 90 ? 'UP' : 'DOWN',
-            freeSpace: `${Math.round(freeSpace / 1024 / 1024 / 1024)  }GB`,
-            totalSpace: `${Math.round(totalSpace / 1024 / 1024 / 1024)  }GB`,
-            usedPercent: Math.round(usedPercent)
-        };
-    }
+    return {
+      status: usedPercent < 90 ? 'UP' : 'DOWN',
+      freeSpace: `${Math.round(freeSpace / 1024 / 1024 / 1024)  }GB`,
+      totalSpace: `${Math.round(totalSpace / 1024 / 1024 / 1024)  }GB`,
+      usedPercent: Math.round(usedPercent)
+    };
+  }
 
-    /**
+  /**
      * Check memory usage
      */
-    _checkMemory() {
-        const memUsage = process.memoryUsage();
-        const heapUsedPercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+  _checkMemory() {
+    const memUsage = process.memoryUsage();
+    const heapUsedPercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
 
-        return {
-            status: heapUsedPercent < 85 ? 'UP' : 'DOWN',
-            heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)  }MB`,
-            heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)  }MB`,
-            usedPercent: Math.round(heapUsedPercent)
-        };
-    }
+    return {
+      status: heapUsedPercent < 85 ? 'UP' : 'DOWN',
+      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)  }MB`,
+      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)  }MB`,
+      usedPercent: Math.round(heapUsedPercent)
+    };
+  }
 
-    /**
+  /**
      * Check service readiness
      */
-    async _checkReadiness() {
-        const checks = {
-            database: await this._checkDatabase(),
-            initialized: true,
-            migrations: true
-        };
+  async _checkReadiness() {
+    const checks = {
+      database: await this._checkDatabase(),
+      initialized: true,
+      migrations: true
+    };
 
-        const ready = Object.values(checks).every(check => 
-            check === true || (check.status && check.status === 'UP')
-        );
+    const ready = Object.values(checks).every(check => 
+      check === true || (check.status && check.status === 'UP')
+    );
 
-        return {
-            ready,
-            checks,
-            timestamp: new Date().toISOString()
-        };
-    }
+    return {
+      ready,
+      checks,
+      timestamp: new Date().toISOString()
+    };
+  }
 
-    /**
+  /**
      * Run performance test
      */
-    async _runPerformanceTest(operation, iterations) {
-        const results = {
-            operation,
-            iterations,
-            measurements: [],
-            summary: {}
-        };
+  async _runPerformanceTest(operation, iterations) {
+    const results = {
+      operation,
+      iterations,
+      measurements: [],
+      summary: {}
+    };
 
-        // Run test iterations
-        for (let i = 0; i < iterations; i++) {
-            const duration = await performanceMonitor.timeOperation(operation, async () => {
-                // Simulate operation
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
-            });
-            results.measurements.push(duration);
-        }
-
-        // Calculate summary statistics
-        results.summary = {
-            min: Math.min(...results.measurements),
-            max: Math.max(...results.measurements),
-            avg: results.measurements.reduce((a, b) => a + b, 0) / iterations,
-            median: this._calculateMedian(results.measurements)
-        };
-
-        return results;
+    // Run test iterations
+    for (let i = 0; i < iterations; i++) {
+      const duration = await performanceMonitor.timeOperation(operation, async () => {
+        // Simulate operation
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+      });
+      results.measurements.push(duration);
     }
 
-    /**
+    // Calculate summary statistics
+    results.summary = {
+      min: Math.min(...results.measurements),
+      max: Math.max(...results.measurements),
+      avg: results.measurements.reduce((a, b) => a + b, 0) / iterations,
+      median: this._calculateMedian(results.measurements)
+    };
+
+    return results;
+  }
+
+  /**
      * Calculate median value
      */
-    _calculateMedian(values) {
-        const sorted = values.slice().sort((a, b) => a - b);
-        const middle = Math.floor(sorted.length / 2);
+  _calculateMedian(values) {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
 
-        if (sorted.length % 2 === 0) {
-            return (sorted[middle - 1] + sorted[middle]) / 2;
-        }
-
-        return sorted[middle];
+    if (sorted.length % 2 === 0) {
+      return (sorted[middle - 1] + sorted[middle]) / 2;
     }
 
-    /**
+    return sorted[middle];
+  }
+
+  /**
      * Get monitoring dashboard HTML
      */
-    _getMonitoringDashboardHTML() {
-        return `
+  _getMonitoringDashboardHTML() {
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -471,7 +471,7 @@ class MonitoringService {
 </body>
 </html>
         `;
-    }
+  }
 }
 
 module.exports = new MonitoringService();

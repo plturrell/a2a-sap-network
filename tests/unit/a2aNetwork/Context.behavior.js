@@ -3,7 +3,7 @@ const { BN, expectEvent } = require('@openzeppelin/test-helpers');
 const ContextMock = artifacts.require('ContextMock');
 
 function shouldBehaveLikeRegularContext(sender) {
-  describe('msgSender', function () {
+  describe('msgSender', () => {
     it('returns the transaction sender when called from an EOA', async function () {
       const receipt = await this.context.msgSender({ from: sender });
       expectEvent(receipt, 'Sender', { sender });
@@ -15,7 +15,7 @@ function shouldBehaveLikeRegularContext(sender) {
     });
   });
 
-  describe('msgData', function () {
+  describe('msgData', () => {
     const integerValue = new BN('42');
     const stringValue = 'OpenZeppelin';
 

@@ -27,7 +27,7 @@ const timerId = setInterval(() => {
 }, 100);
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.deepEqual(timings, [
     'init#-1 - IntervalWrap',
     'pre#-1',

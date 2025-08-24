@@ -4,14 +4,14 @@ const { expect } = require('chai');
 
 const PausableMock = artifacts.require('PausableMock');
 
-contract('Pausable', function (accounts) {
+contract('Pausable', (accounts) => {
   const [pauser] = accounts;
 
   beforeEach(async function () {
     this.pausable = await PausableMock.new();
   });
 
-  context('when unpaused', function () {
+  context('when unpaused', () => {
     beforeEach(async function () {
       expect(await this.pausable.paused()).to.equal(false);
     });
@@ -28,7 +28,7 @@ contract('Pausable', function (accounts) {
       expect(await this.pausable.drasticMeasureTaken()).to.equal(false);
     });
 
-    context('when paused', function () {
+    context('when paused', () => {
       beforeEach(async function () {
         this.receipt = await this.pausable.pause({ from: pauser });
       });
@@ -50,13 +50,13 @@ contract('Pausable', function (accounts) {
         await expectRevert(this.pausable.pause(), 'Pausable: paused');
       });
 
-      describe('unpausing', function () {
+      describe('unpausing', () => {
         it('is unpausable by the pauser', async function () {
           await this.pausable.unpause();
           expect(await this.pausable.paused()).to.equal(false);
         });
 
-        context('when unpaused', function () {
+        context('when unpaused', () => {
           beforeEach(async function () {
             this.receipt = await this.pausable.unpause({ from: pauser });
           });

@@ -298,7 +298,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     }
     
     if (args.length > 0) {
-      return `${msg} ${args.map(function(arg) { return JSON.stringify(arg); }).join(' ')}`;
+      return `${msg} ${args.map((arg) => { return JSON.stringify(arg); }).join(' ')}`;
     }
     
     return msg;
@@ -370,7 +370,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     const self = this;
     
     // Before handler for logging
-    srv.before('*', function(req) {
+    srv.before('*', (req) => {
       const timer = self.startTimer(`service_${req.event}`);
       req._.timer = timer;
       
@@ -385,7 +385,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     });
     
     // After handler for success logging
-    srv.after('*', function(result, req) {
+    srv.after('*', (result, req) => {
       const duration = req._.timer ? req._.timer.end() : 0;
       
       self.info('Service operation completed', {
@@ -399,7 +399,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     });
     
     // Error handler
-    srv.on('error', function(err, req) {
+    srv.on('error', (err, req) => {
       const duration = req._.timer ? req._.timer.end() : 0;
       
       self.error('Service operation failed', {
@@ -422,7 +422,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     const sanitized = { ...headers };
     const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key'];
     
-    sensitiveHeaders.forEach(function(header) {
+    sensitiveHeaders.forEach((header) => {
       if (sanitized[header]) {
         sanitized[header] = '[REDACTED]';
       }
@@ -454,7 +454,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
   sanitizeQuery(query) {
     if (typeof query === 'string') {
       // Remove potential sensitive data patterns
-      return query.replace(/password\s*=\s*'[^']*'/gi, "password='[REDACTED]'");
+      return query.replace(/password\s*=\s*'[^']*'/gi, 'password=\'[REDACTED]\'');
     }
     return query;
   }

@@ -7,7 +7,7 @@ const ECDSA = artifacts.require('$ECDSA');
 
 const TEST_MESSAGE = web3.utils.sha3('OpenZeppelin');
 const WRONG_MESSAGE = web3.utils.sha3('Nope');
-const NON_HASH_MESSAGE = '0x' + Buffer.from('abcd').toString('hex');
+const NON_HASH_MESSAGE = `0x${  Buffer.from('abcd').toString('hex')}`;
 const RANDOM_ADDRESS = web3.utils.toChecksumAddress(web3.utils.randomHex(20));
 
 function to2098Format(signature) {
@@ -16,7 +16,7 @@ function to2098Format(signature) {
     throw new Error('invalid signature length (expected long format)');
   }
   if (long[32] >> 7 === 1) {
-    throw new Error("invalid signature 's' value");
+    throw new Error('invalid signature \'s\' value');
   }
   const short = long.slice(0, 64);
   short[32] |= long[64] % 27 << 7; // set the first bit of the 32nd byte to the v parity bit
@@ -42,14 +42,14 @@ function split(signature) {
   }
 }
 
-contract('ECDSA', function (accounts) {
+contract('ECDSA', (accounts) => {
   const [other] = accounts;
 
   beforeEach(async function () {
     this.ecdsa = await ECDSA.new();
   });
 
-  context('recover with invalid signature', function () {
+  context('recover with invalid signature', () => {
     it('with short signature', async function () {
       await expectRevert(this.ecdsa.$recover(TEST_MESSAGE, '0x1234'), 'ECDSA: invalid signature length');
     });
@@ -66,8 +66,8 @@ contract('ECDSA', function (accounts) {
     });
   });
 
-  context('recover with valid signature', function () {
-    context('using web3.eth.sign', function () {
+  context('recover with valid signature', () => {
+    context('using web3.eth.sign', () => {
       it('returns signer address with correct signature', async function () {
         // Create the signature
         const signature = await web3.eth.sign(TEST_MESSAGE, other);
@@ -97,7 +97,7 @@ contract('ECDSA', function (accounts) {
       });
     });
 
-    context('with v=27 signature', function () {
+    context('with v=27 signature', () => {
       // Signature generated outside ganache with method web3.eth.sign(signer, message)
       const signer = '0x2cc1166f6212628A0deEf2B33BEFB2187D35b86c';
       // eslint-disable-next-line max-len
@@ -160,7 +160,7 @@ contract('ECDSA', function (accounts) {
       });
     });
 
-    context('with v=28 signature', function () {
+    context('with v=28 signature', () => {
       const signer = '0x1E318623aB09Fe6de3C9b8672098464Aeda9100E';
       // eslint-disable-next-line max-len
       const signatureWithoutV =
@@ -227,16 +227,16 @@ contract('ECDSA', function (accounts) {
       // eslint-disable-next-line max-len
       const highSSignature =
         '0xe742ff452d41413616a5bf43fe15dd88294e983d3d36206c2712f39083d638bde0a0fc89be718fbc1033e1d30d78be1c68081562ed2e97af876f286f3453231d1b';
-      await expectRevert(this.ecdsa.$recover(message, highSSignature), "ECDSA: invalid signature 's' value");
+      await expectRevert(this.ecdsa.$recover(message, highSSignature), 'ECDSA: invalid signature \'s\' value');
       await expectRevert(
         this.ecdsa.methods['$recover(bytes32,uint8,bytes32,bytes32)'](TEST_MESSAGE, ...split(highSSignature)),
-        "ECDSA: invalid signature 's' value",
+        'ECDSA: invalid signature \'s\' value',
       );
-      expect(() => to2098Format(highSSignature)).to.throw("invalid signature 's' value");
+      expect(() => to2098Format(highSSignature)).to.throw('invalid signature \'s\' value');
     });
   });
 
-  context('toEthSignedMessageHash', function () {
+  context('toEthSignedMessageHash', () => {
     it('prefixes bytes32 data correctly', async function () {
       expect(await this.ecdsa.methods['$toEthSignedMessageHash(bytes32)'](TEST_MESSAGE)).to.equal(
         toEthSignedMessageHash(TEST_MESSAGE),
@@ -250,7 +250,7 @@ contract('ECDSA', function (accounts) {
     });
   });
 
-  context('toDataWithIntendedValidatorHash', function () {
+  context('toDataWithIntendedValidatorHash', () => {
     it('returns the hash correctly', async function () {
       expect(
         await this.ecdsa.methods['$toDataWithIntendedValidatorHash(address,bytes)'](RANDOM_ADDRESS, NON_HASH_MESSAGE),

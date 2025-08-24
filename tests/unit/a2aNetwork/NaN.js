@@ -1,7 +1,7 @@
-var test = require('tape');
-var equal = require('../');
+const test = require('tape');
+const equal = require('../');
 
-test('NaN and 0 values', function (t) {
+test('NaN and 0 values', (t) => {
     t.ok(equal(NaN, NaN));
     t.notOk(equal(0, NaN));
     t.ok(equal(0, 0));
@@ -10,7 +10,7 @@ test('NaN and 0 values', function (t) {
 });
 
 
-test('nested NaN values', function (t) {
+test('nested NaN values', (t) => {
     t.ok(equal([ NaN, 1, NaN ], [ NaN, 1, NaN ]));
     t.end();
 });

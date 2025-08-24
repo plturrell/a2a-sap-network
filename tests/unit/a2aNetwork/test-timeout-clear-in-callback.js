@@ -27,7 +27,7 @@ const timerId = setTimeout(() => {
 }, 100);
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.deepEqual(timings, [
     'init#-1 - TimeoutWrap',
     'pre#-1',

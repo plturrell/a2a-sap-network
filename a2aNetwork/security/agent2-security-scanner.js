@@ -546,11 +546,11 @@ class Agent2SecurityScanner {
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🤖 AGENT 2 AI PREPARATION SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
         console.log(`   Critical Issues: ${criticalCount}`);
@@ -566,19 +566,19 @@ class Agent2SecurityScanner {
         
         console.log(`\n🎯 AI PREPARATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
-            console.log(`   Status: ✅ EXCELLENT - AI preparation pipeline is well secured`);
+            console.log('   Status: ✅ EXCELLENT - AI preparation pipeline is well secured');
         } else if (score >= 70) {
-            console.log(`   Status: ⚠️  GOOD - Minor AI security issues to address`);
+            console.log('   Status: ⚠️  GOOD - Minor AI security issues to address');
         } else if (score >= 50) {
-            console.log(`   Status: ⚠️  FAIR - Several AI security issues need attention`);
+            console.log('   Status: ⚠️  FAIR - Several AI security issues need attention');
         } else {
-            console.log(`   Status: ❌ POOR - Significant AI security improvements needed`);
+            console.log('   Status: ❌ POOR - Significant AI security improvements needed');
         }
         
         // AI-specific findings
         const aiIssues = this.vulnerabilities.filter(v => v.type.startsWith('AI_'));
         if (aiIssues.length > 0) {
-            console.log(`\n🤖 AI PREPARATION-SPECIFIC SECURITY FINDINGS:`);
+            console.log('\n🤖 AI PREPARATION-SPECIFIC SECURITY FINDINGS:');
             const issueCounts = {};
             aiIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
@@ -591,7 +591,7 @@ class Agent2SecurityScanner {
         
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:\n`);
+            console.log('\n🚨 VULNERABILITIES FOUND:\n');
             
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
@@ -613,44 +613,44 @@ class Agent2SecurityScanner {
         }
         
         // AI preparation security recommendations
-        console.log(`💡 AGENT 2 AI PREPARATION SECURITY RECOMMENDATIONS:\n`);
-        console.log(`1. 🛡️  Secure AI Data Pipeline`);
-        console.log(`   - Implement strict validation for all training data inputs`);
-        console.log(`   - Use cryptographic checksums to verify data integrity`);
-        console.log(`   - Sanitize and validate all feature engineering operations`);
-        console.log(`   - Implement audit logging for all data preparation steps`);
+        console.log('💡 AGENT 2 AI PREPARATION SECURITY RECOMMENDATIONS:\n');
+        console.log('1. 🛡️  Secure AI Data Pipeline');
+        console.log('   - Implement strict validation for all training data inputs');
+        console.log('   - Use cryptographic checksums to verify data integrity');
+        console.log('   - Sanitize and validate all feature engineering operations');
+        console.log('   - Implement audit logging for all data preparation steps');
         
-        console.log(`\n2. 🔒 Model Training Security`);
-        console.log(`   - Validate all hyperparameters and model configurations`);
-        console.log(`   - Implement secure parameter storage and access controls`);
-        console.log(`   - Use differential privacy techniques for sensitive data`);
-        console.log(`   - Monitor for adversarial inputs during training`);
+        console.log('\n2. 🔒 Model Training Security');
+        console.log('   - Validate all hyperparameters and model configurations');
+        console.log('   - Implement secure parameter storage and access controls');
+        console.log('   - Use differential privacy techniques for sensitive data');
+        console.log('   - Monitor for adversarial inputs during training');
         
-        console.log(`\n3. 🔐 Feature Engineering Protection`);
-        console.log(`   - Use predefined, validated feature transformation templates`);
-        console.log(`   - Implement feature importance validation and monitoring`);
-        console.log(`   - Sanitize all custom feature engineering code`);
-        console.log(`   - Validate feature distributions for anomalies`);
+        console.log('\n3. 🔐 Feature Engineering Protection');
+        console.log('   - Use predefined, validated feature transformation templates');
+        console.log('   - Implement feature importance validation and monitoring');
+        console.log('   - Sanitize all custom feature engineering code');
+        console.log('   - Validate feature distributions for anomalies');
         
-        console.log(`\n4. ⚡ Pipeline Integrity`);
-        console.log(`   - Use immutable pipeline configurations`);
-        console.log(`   - Implement end-to-end pipeline validation`);
-        console.log(`   - Monitor pipeline execution for anomalous behavior`);
-        console.log(`   - Use containerization for pipeline isolation`);
+        console.log('\n4. ⚡ Pipeline Integrity');
+        console.log('   - Use immutable pipeline configurations');
+        console.log('   - Implement end-to-end pipeline validation');
+        console.log('   - Monitor pipeline execution for anomalous behavior');
+        console.log('   - Use containerization for pipeline isolation');
         
-        console.log(`\n5. 🔍 Model Export Security`);
-        console.log(`   - Implement access controls for model exports`);
-        console.log(`   - Validate export configurations and data inclusion`);
-        console.log(`   - Use encryption for sensitive model data`);
-        console.log(`   - Audit all model export operations`);
+        console.log('\n5. 🔍 Model Export Security');
+        console.log('   - Implement access controls for model exports');
+        console.log('   - Validate export configurations and data inclusion');
+        console.log('   - Use encryption for sensitive model data');
+        console.log('   - Audit all model export operations');
         
-        console.log(`\n6. 🎯 AutoML Security`);
-        console.log(`   - Validate AutoML configuration parameters`);
-        console.log(`   - Monitor hyperparameter search boundaries`);
-        console.log(`   - Implement resource limits for AutoML processes`);
-        console.log(`   - Validate AutoML-generated models before deployment`);
+        console.log('\n6. 🎯 AutoML Security');
+        console.log('   - Validate AutoML configuration parameters');
+        console.log('   - Monitor hyperparameter search boundaries');
+        console.log('   - Implement resource limits for AutoML processes');
+        console.log('   - Validate AutoML-generated models before deployment');
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('AI Security Scan completed. Address critical AI vulnerabilities first.');
         console.log('Focus on data poisoning and model tampering prevention.');
         console.log('='.repeat(80));

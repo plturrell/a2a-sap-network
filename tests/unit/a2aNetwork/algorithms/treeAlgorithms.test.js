@@ -6,21 +6,21 @@ const TreeAlgorithms = require('../../../srv/algorithms/treeAlgorithms');
  * Unit tests for Tree Algorithms implementation
  * Following SAP testing standards and enterprise patterns
  */
-describe('TreeAlgorithms', function() {
+describe('TreeAlgorithms', () => {
     let treeAlgorithms;
     let sandbox;
 
-    beforeEach(function() {
+    beforeEach(() => {
         sandbox = sinon.createSandbox();
         treeAlgorithms = new TreeAlgorithms();
     });
 
-    afterEach(function() {
+    afterEach(() => {
         sandbox.restore();
     });
 
-    describe('Leaf Detection', function() {
-        it('should correctly identify leaf values', function() {
+    describe('Leaf Detection', () => {
+        it('should correctly identify leaf values', () => {
             expect(treeAlgorithms.isLeaf(null)).to.be.true;
             expect(treeAlgorithms.isLeaf(undefined)).to.be.true;
             expect(treeAlgorithms.isLeaf(42)).to.be.true;
@@ -28,14 +28,14 @@ describe('TreeAlgorithms', function() {
             expect(treeAlgorithms.isLeaf(true)).to.be.true;
         });
 
-        it('should correctly identify non-leaf containers', function() {
+        it('should correctly identify non-leaf containers', () => {
             expect(treeAlgorithms.isLeaf([1, 2, 3])).to.be.false;
             expect(treeAlgorithms.isLeaf({ a: 1 })).to.be.false;
             expect(treeAlgorithms.isLeaf(new Map([['a', 1]]))).to.be.false;
             expect(treeAlgorithms.isLeaf(new Set([1, 2]))).to.be.false;
         });
 
-        it('should identify empty containers as leaves', function() {
+        it('should identify empty containers as leaves', () => {
             expect(treeAlgorithms.isLeaf([])).to.be.true;
             expect(treeAlgorithms.isLeaf({})).to.be.true;
             expect(treeAlgorithms.isLeaf(new Map())).to.be.true;
@@ -43,15 +43,15 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Flatten Operation', function() {
-        it('should flatten simple nested arrays', function() {
+    describe('Flatten Operation', () => {
+        it('should flatten simple nested arrays', () => {
             const input = [[1], [[[2, 3]]], [4]];
             const result = treeAlgorithms.flatten(input);
             
             expect(result).to.deep.equal([1, 2, 3, 4]);
         });
 
-        it('should flatten mixed nested structures', function() {
+        it('should flatten mixed nested structures', () => {
             const input = {
                 numbers: [1, [2, 3]],
                 nested: {
@@ -63,7 +63,7 @@ describe('TreeAlgorithms', function() {
             expect(result).to.include.members([1, 2, 3, 4, 5]);
         });
 
-        it('should handle Maps and Sets', function() {
+        it('should handle Maps and Sets', () => {
             const input = new Map([
                 ['array', [1, 2]],
                 ['set', new Set([3, 4])]
@@ -73,29 +73,29 @@ describe('TreeAlgorithms', function() {
             expect(result).to.include.members([1, 2, 3, 4]);
         });
 
-        it('should filter out null and undefined values', function() {
+        it('should filter out null and undefined values', () => {
             const input = [1, null, [2, undefined, 3]];
             const result = treeAlgorithms.flatten(input);
             
             expect(result).to.deep.equal([1, 2, 3]);
         });
 
-        it('should handle empty structures', function() {
+        it('should handle empty structures', () => {
             expect(treeAlgorithms.flatten([])).to.deep.equal([]);
             expect(treeAlgorithms.flatten({})).to.deep.equal([]);
             expect(treeAlgorithms.flatten(null)).to.deep.equal([]);
         });
     });
 
-    describe('Map Structure Operation', function() {
-        it('should map function over nested arrays preserving structure', function() {
+    describe('Map Structure Operation', () => {
+        it('should map function over nested arrays preserving structure', () => {
             const input = [[1], [[[2, 3]]], [4]];
             const result = treeAlgorithms.mapStructure(x => x * 2, input);
             
             expect(result).to.deep.equal([[2], [[[4, 6]]], [8]]);
         });
 
-        it('should map over objects preserving keys', function() {
+        it('should map over objects preserving keys', () => {
             const input = {
                 level1: {
                     level2: [1, 2, 3],
@@ -108,7 +108,7 @@ describe('TreeAlgorithms', function() {
             expect(result.level1.value).to.equal(84);
         });
 
-        it('should provide path information to mapping function', function() {
+        it('should provide path information to mapping function', () => {
             const input = { a: { b: [1, 2] } };
             const paths = [];
             
@@ -121,7 +121,7 @@ describe('TreeAlgorithms', function() {
             expect(paths).to.deep.include(['a', 'b', 1]);
         });
 
-        it('should handle Maps and Sets correctly', function() {
+        it('should handle Maps and Sets correctly', () => {
             const input = new Map([
                 ['key1', [1, 2]],
                 ['key2', new Set([3, 4])]
@@ -135,8 +135,8 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Filter Structure Operation', function() {
-        it('should filter values while preserving structure', function() {
+    describe('Filter Structure Operation', () => {
+        it('should filter values while preserving structure', () => {
             const input = [[1, 2], [3, [4, 5]], [6]];
             const result = treeAlgorithms.filterStructure(x => x % 2 === 0, input);
             
@@ -144,7 +144,7 @@ describe('TreeAlgorithms', function() {
             expect(flattened).to.deep.equal([2, 4, 6]);
         });
 
-        it('should remove empty containers after filtering', function() {
+        it('should remove empty containers after filtering', () => {
             const input = {
                 keep: [2, 4],
                 remove: [1, 3, 5],
@@ -158,7 +158,7 @@ describe('TreeAlgorithms', function() {
             expect(result.mixed).to.deep.equal([2, 4]);
         });
 
-        it('should provide path information to filter predicate', function() {
+        it('should provide path information to filter predicate', () => {
             const input = { section1: [1, 2], section2: [3, 4] };
             const result = treeAlgorithms.filterStructure((value, path) => {
                 return path[0] === 'section1';
@@ -168,7 +168,7 @@ describe('TreeAlgorithms', function() {
             expect(result).to.not.have.property('section2');
         });
 
-        it('should return appropriate empty structure for no matches', function() {
+        it('should return appropriate empty structure for no matches', () => {
             const arrayInput = [1, 3, 5];
             const objectInput = { a: 1, b: 3 };
             
@@ -180,15 +180,15 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Reduce Structure Operation', function() {
-        it('should reduce all values to single result', function() {
+    describe('Reduce Structure Operation', () => {
+        it('should reduce all values to single result', () => {
             const input = [[1, 2], [3, [4, 5]]];
             const result = treeAlgorithms.reduceStructure((acc, val) => acc + val, 0, input);
             
             expect(result).to.equal(15); // 1 + 2 + 3 + 4 + 5
         });
 
-        it('should provide path information to reducer function', function() {
+        it('should provide path information to reducer function', () => {
             const input = { a: [1, 2], b: { c: 3 } };
             const paths = [];
             
@@ -202,7 +202,7 @@ describe('TreeAlgorithms', function() {
             expect(paths).to.deep.include(['b', 'c']);
         });
 
-        it('should work with complex accumulator types', function() {
+        it('should work with complex accumulator types', () => {
             const input = { users: ['alice', 'bob'], admins: ['charlie'] };
             const result = treeAlgorithms.reduceStructure(
                 (acc, val, path) => {
@@ -220,10 +220,10 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Path Operations', function() {
+    describe('Path Operations', () => {
         let testStructure;
 
-        beforeEach(function() {
+        beforeEach(() => {
             testStructure = {
                 level1: {
                     level2: {
@@ -235,8 +235,8 @@ describe('TreeAlgorithms', function() {
             };
         });
 
-        describe('Get Path', function() {
-            it('should retrieve values at specified paths', function() {
+        describe('Get Path', () => {
+            it('should retrieve values at specified paths', () => {
                 expect(treeAlgorithms.getPath(testStructure, ['level1', 'level2', 'value']))
                     .to.equal('test');
                 expect(treeAlgorithms.getPath(testStructure, ['level1', 'level2', 'array', 1]))
@@ -245,7 +245,7 @@ describe('TreeAlgorithms', function() {
                     .to.equal(42);
             });
 
-            it('should return undefined for invalid paths', function() {
+            it('should return undefined for invalid paths', () => {
                 expect(treeAlgorithms.getPath(testStructure, ['nonexistent'])).to.be.undefined;
                 expect(treeAlgorithms.getPath(testStructure, ['level1', 'level2', 'array', 10]))
                     .to.be.undefined;
@@ -253,14 +253,14 @@ describe('TreeAlgorithms', function() {
                     .to.be.undefined;
             });
 
-            it('should handle edge cases gracefully', function() {
+            it('should handle edge cases gracefully', () => {
                 expect(treeAlgorithms.getPath(null, ['any'])).to.be.undefined;
                 expect(treeAlgorithms.getPath(testStructure, [])).to.equal(testStructure);
             });
         });
 
-        describe('Set Path', function() {
-            it('should set values at specified paths immutably', function() {
+        describe('Set Path', () => {
+            it('should set values at specified paths immutably', () => {
                 const result = treeAlgorithms.setPath(testStructure, ['level1', 'level2', 'value'], 'new value');
                 
                 // Original should be unchanged
@@ -273,7 +273,7 @@ describe('TreeAlgorithms', function() {
                 expect(result.topLevel).to.equal(42);
             });
 
-            it('should handle array indices correctly', function() {
+            it('should handle array indices correctly', () => {
                 const result = treeAlgorithms.setPath(testStructure, ['level1', 'level2', 'array', 1], 99);
                 
                 expect(testStructure.level1.level2.array[1]).to.equal(20);
@@ -281,21 +281,21 @@ describe('TreeAlgorithms', function() {
                 expect(result.level1.level2.array[0]).to.equal(10);
             });
 
-            it('should return original for invalid paths', function() {
+            it('should return original for invalid paths', () => {
                 const result = treeAlgorithms.setPath(testStructure, ['nonexistent', 'path'], 'value');
                 
                 expect(result).to.deep.equal(testStructure);
             });
 
-            it('should handle empty path by returning the new value', function() {
+            it('should handle empty path by returning the new value', () => {
                 const result = treeAlgorithms.setPath(testStructure, [], 'completely new');
                 
                 expect(result).to.equal('completely new');
             });
         });
 
-        describe('Get All Paths', function() {
-            it('should return all paths to leaf values', function() {
+        describe('Get All Paths', () => {
+            it('should return all paths to leaf values', () => {
                 const paths = treeAlgorithms.getAllPaths(testStructure);
                 
                 const pathStrings = paths.map(p => p.keys.join('.'));
@@ -306,7 +306,7 @@ describe('TreeAlgorithms', function() {
                 expect(pathStrings).to.include('topLevel');
             });
 
-            it('should include correct values for each path', function() {
+            it('should include correct values for each path', () => {
                 const paths = treeAlgorithms.getAllPaths(testStructure);
                 
                 const valuePath = paths.find(p => p.keys.join('.') === 'level1.level2.value');
@@ -318,16 +318,16 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Structure Analysis', function() {
-        describe('Get Depth', function() {
-            it('should calculate correct depth for nested structures', function() {
+    describe('Structure Analysis', () => {
+        describe('Get Depth', () => {
+            it('should calculate correct depth for nested structures', () => {
                 expect(treeAlgorithms.getDepth(42)).to.equal(0);
                 expect(treeAlgorithms.getDepth([1, 2, 3])).to.equal(1);
                 expect(treeAlgorithms.getDepth([[1, 2], [3]])).to.equal(2);
                 expect(treeAlgorithms.getDepth({ a: { b: { c: 1 } } })).to.equal(3);
             });
 
-            it('should handle mixed structure types', function() {
+            it('should handle mixed structure types', () => {
                 const mixed = {
                     array: [1, [2, [3]]],
                     object: { nested: { deep: 'value' } }
@@ -336,7 +336,7 @@ describe('TreeAlgorithms', function() {
                 expect(treeAlgorithms.getDepth(mixed)).to.equal(4); // a.array.[1].[1]
             });
 
-            it('should handle Maps and Sets', function() {
+            it('should handle Maps and Sets', () => {
                 const mapStructure = new Map([
                     ['key', new Set([1, new Map([['inner', 'value']])])]
                 ]);
@@ -345,10 +345,10 @@ describe('TreeAlgorithms', function() {
             });
         });
 
-        describe('Count Operations', function() {
+        describe('Count Operations', () => {
             let testStructure;
 
-            beforeEach(function() {
+            beforeEach(() => {
                 testStructure = {
                     numbers: [1, 2, 3],
                     nested: {
@@ -358,12 +358,12 @@ describe('TreeAlgorithms', function() {
                 };
             });
 
-            it('should count leaf nodes correctly', function() {
+            it('should count leaf nodes correctly', () => {
                 const leafCount = treeAlgorithms.getLeafCount(testStructure);
                 expect(leafCount).to.equal(6); // 1, 2, 3, 4, 5, 6
             });
 
-            it('should count all nodes including containers', function() {
+            it('should count all nodes including containers', () => {
                 const totalCount = treeAlgorithms.getNodeCount(testStructure);
                 // Root + numbers array + 3 items + nested object + more array + 2 items + single
                 expect(totalCount).to.be.greaterThan(6);
@@ -371,10 +371,10 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Find Substructures', function() {
+    describe('Find Substructures', () => {
         let complexStructure;
 
-        beforeEach(function() {
+        beforeEach(() => {
             complexStructure = {
                 components: [
                     { type: 'button', id: 'btn1' },
@@ -388,7 +388,7 @@ describe('TreeAlgorithms', function() {
             };
         });
 
-        it('should find structures matching predicate', function() {
+        it('should find structures matching predicate', () => {
             const containers = treeAlgorithms.findSubstructures(
                 complexStructure,
                 (item) => typeof item === 'object' && item.type === 'container'
@@ -399,7 +399,7 @@ describe('TreeAlgorithms', function() {
             expect(containers[1].value.children).to.exist;
         });
 
-        it('should provide path information for found structures', function() {
+        it('should provide path information for found structures', () => {
             const buttons = treeAlgorithms.findSubstructures(
                 complexStructure,
                 (item, path) => typeof item === 'object' && item.type === 'button'
@@ -409,7 +409,7 @@ describe('TreeAlgorithms', function() {
             expect(buttons[0].keys).to.deep.equal(['components', 0]);
         });
 
-        it('should find leaf values when specified', function() {
+        it('should find leaf values when specified', () => {
             const strings = treeAlgorithms.findSubstructures(
                 complexStructure,
                 (item) => typeof item === 'string'
@@ -422,10 +422,10 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Diff Operation', function() {
+    describe('Diff Operation', () => {
         let oldStructure, newStructure;
 
-        beforeEach(function() {
+        beforeEach(() => {
             oldStructure = {
                 a: 1,
                 b: [2, 3],
@@ -440,7 +440,7 @@ describe('TreeAlgorithms', function() {
             };
         });
 
-        it('should detect added elements', function() {
+        it('should detect added elements', () => {
             const diff = treeAlgorithms.diff(oldStructure, newStructure);
             
             expect(diff.added).to.have.lengthOf(2);
@@ -450,7 +450,7 @@ describe('TreeAlgorithms', function() {
             expect(addedPaths).to.include('e');
         });
 
-        it('should detect modified elements', function() {
+        it('should detect modified elements', () => {
             const diff = treeAlgorithms.diff(oldStructure, newStructure);
             
             expect(diff.modified).to.have.lengthOf(1);
@@ -459,7 +459,7 @@ describe('TreeAlgorithms', function() {
             expect(diff.modified[0].newValue).to.equal(10);
         });
 
-        it('should detect removed elements', function() {
+        it('should detect removed elements', () => {
             const structureWithRemoval = { a: 1, c: { d: 4 } }; // removed 'b'
             const diff = treeAlgorithms.diff(oldStructure, structureWithRemoval);
             
@@ -467,7 +467,7 @@ describe('TreeAlgorithms', function() {
             expect(diff.removed[0].keys).to.deep.equal(['b']);
         });
 
-        it('should handle complex nested changes', function() {
+        it('should handle complex nested changes', () => {
             const complexOld = { users: [{ name: 'alice' }, { name: 'bob' }] };
             const complexNew = { users: [{ name: 'alice', active: true }, { name: 'charlie' }] };
             
@@ -478,10 +478,10 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Merge Operation', function() {
+    describe('Merge Operation', () => {
         let baseStructure, overrideStructure;
 
-        beforeEach(function() {
+        beforeEach(() => {
             baseStructure = {
                 config: { theme: 'light', lang: 'en' },
                 features: ['feature1', 'feature2'],
@@ -495,7 +495,7 @@ describe('TreeAlgorithms', function() {
             };
         });
 
-        it('should merge with override strategy', function() {
+        it('should merge with override strategy', () => {
             const result = treeAlgorithms.merge(baseStructure, overrideStructure, 'override');
             
             expect(result.config.theme).to.equal('dark');
@@ -505,13 +505,13 @@ describe('TreeAlgorithms', function() {
             expect(result.newConfig).to.equal('added'); // added from override
         });
 
-        it('should merge arrays with concat strategy', function() {
+        it('should merge arrays with concat strategy', () => {
             const result = treeAlgorithms.merge(baseStructure, overrideStructure, 'concat');
             
             expect(result.features).to.deep.equal(['feature1', 'feature2', 'feature3']);
         });
 
-        it('should merge recursively with merge strategy', function() {
+        it('should merge recursively with merge strategy', () => {
             const result = treeAlgorithms.merge(baseStructure, overrideStructure, 'merge');
             
             expect(result.config.theme).to.equal('dark');
@@ -519,7 +519,7 @@ describe('TreeAlgorithms', function() {
             expect(result.features).to.deep.equal(['feature1', 'feature3']); // array merge at indices
         });
 
-        it('should preserve original structures (immutability)', function() {
+        it('should preserve original structures (immutability)', () => {
             const result = treeAlgorithms.merge(baseStructure, overrideStructure);
             
             expect(baseStructure.config.theme).to.equal('light');
@@ -529,8 +529,8 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Performance and Scalability', function() {
-        it('should handle deep nesting efficiently', function() {
+    describe('Performance and Scalability', () => {
+        it('should handle deep nesting efficiently', () => {
             // Create deeply nested structure
             let deep = 'value';
             for (let i = 0; i < 100; i++) {
@@ -545,7 +545,7 @@ describe('TreeAlgorithms', function() {
             expect(endTime - startTime).to.be.lessThan(100); // Should be fast
         });
 
-        it('should handle wide structures efficiently', function() {
+        it('should handle wide structures efficiently', () => {
             // Create structure with many properties
             const wide = {};
             for (let i = 0; i < 1000; i++) {
@@ -560,7 +560,7 @@ describe('TreeAlgorithms', function() {
             expect(endTime - startTime).to.be.lessThan(100);
         });
 
-        it('should handle large array operations efficiently', function() {
+        it('should handle large array operations efficiently', () => {
             const largeArray = Array.from({ length: 10000 }, (_, i) => [i, i * 2]);
             
             const startTime = Date.now();
@@ -572,8 +572,8 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Integration with SAP Standards', function() {
-        it('should handle SAP entity structures', function() {
+    describe('Integration with SAP Standards', () => {
+        it('should handle SAP entity structures', () => {
             const sapEntity = {
                 BusinessPartner: {
                     ID: 'BP001',
@@ -594,7 +594,7 @@ describe('TreeAlgorithms', function() {
             expect(addresses[0].value.Type).to.be.oneOf(['Billing', 'Shipping']);
         });
 
-        it('should support CAP-style navigation properties', function() {
+        it('should support CAP-style navigation properties', () => {
             const capStructure = {
                 Orders: [
                     {
@@ -616,7 +616,7 @@ describe('TreeAlgorithms', function() {
             expect(products.map(p => p.value.Product)).to.include.members(['PRD001', 'PRD002']);
         });
 
-        it('should handle i18n resource bundle structures', function() {
+        it('should handle i18n resource bundle structures', () => {
             const i18nBundle = {
                 en: {
                     buttons: { save: 'Save', cancel: 'Cancel' },
@@ -639,8 +639,8 @@ describe('TreeAlgorithms', function() {
         });
     });
 
-    describe('Error Handling and Edge Cases', function() {
-        it('should handle null and undefined gracefully', function() {
+    describe('Error Handling and Edge Cases', () => {
+        it('should handle null and undefined gracefully', () => {
             expect(treeAlgorithms.flatten(null)).to.deep.equal([]);
             expect(treeAlgorithms.flatten(undefined)).to.deep.equal([]);
             
@@ -648,7 +648,7 @@ describe('TreeAlgorithms', function() {
             expect(treeAlgorithms.getDepth(undefined)).to.equal(0);
         });
 
-        it('should handle circular references safely', function() {
+        it('should handle circular references safely', () => {
             const circular = { a: 1 };
             circular.self = circular;
             
@@ -662,7 +662,7 @@ describe('TreeAlgorithms', function() {
             }).to.not.throw();
         });
 
-        it('should maintain type safety for different container types', function() {
+        it('should maintain type safety for different container types', () => {
             const mapResult = treeAlgorithms.mapStructure(x => x * 2, new Map([['a', 1]]));
             expect(mapResult).to.be.instanceOf(Map);
             

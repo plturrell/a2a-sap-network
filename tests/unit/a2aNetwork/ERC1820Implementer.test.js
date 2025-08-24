@@ -5,7 +5,7 @@ const { expect } = require('chai');
 
 const ERC1820Implementer = artifacts.require('$ERC1820Implementer');
 
-contract('ERC1820Implementer', function (accounts) {
+contract('ERC1820Implementer', (accounts) => {
   const [registryFunder, implementee, other] = accounts;
 
   const ERC1820_ACCEPT_MAGIC = bufferToHex(keccakFromString('ERC1820_ACCEPT_MAGIC'));
@@ -18,7 +18,7 @@ contract('ERC1820Implementer', function (accounts) {
     this.interfaceB = bufferToHex(keccakFromString('interfaceB'));
   });
 
-  context('with no registered interfaces', function () {
+  context('with no registered interfaces', () => {
     it('returns false when interface implementation is queried', async function () {
       expect(await this.implementer.canImplementInterfaceForAddress(this.interfaceA, implementee)).to.not.equal(
         ERC1820_ACCEPT_MAGIC,
@@ -35,7 +35,7 @@ contract('ERC1820Implementer', function (accounts) {
     });
   });
 
-  context('with registered interfaces', function () {
+  context('with registered interfaces', () => {
     beforeEach(async function () {
       await this.implementer.$_registerInterfaceForAddress(this.interfaceA, implementee);
     });

@@ -1,40 +1,40 @@
-var test = require('tape');
-var hasSymbols = require('has-symbols/shams')();
-var utilInspect = require('../util.inspect');
-var repeat = require('string.prototype.repeat');
+const test = require('tape');
+const hasSymbols = require('has-symbols/shams')();
+const utilInspect = require('../util.inspect');
+const repeat = require('string.prototype.repeat');
 
-var inspect = require('..');
+const inspect = require('..');
 
-test('inspect', function (t) {
+test('inspect', (t) => {
     t.plan(5);
 
-    var obj = [{ inspect: function xyzInspect() { return '!XYZ¡'; } }, []];
-    var stringResult = '[ !XYZ¡, [] ]';
-    var falseResult = '[ { inspect: [Function: xyzInspect] }, [] ]';
+    const obj = [{ inspect: function xyzInspect() { return '!XYZ¡'; } }, []];
+    const stringResult = '[ !XYZ¡, [] ]';
+    const falseResult = '[ { inspect: [Function: xyzInspect] }, [] ]';
 
     t.equal(inspect(obj), stringResult);
     t.equal(inspect(obj, { customInspect: true }), stringResult);
     t.equal(inspect(obj, { customInspect: 'symbol' }), falseResult);
     t.equal(inspect(obj, { customInspect: false }), falseResult);
     t['throws'](
-        function () { inspect(obj, { customInspect: 'not a boolean or "symbol"' }); },
+        () => { inspect(obj, { customInspect: 'not a boolean or "symbol"' }); },
         TypeError,
         '`customInspect` must be a boolean or the string "symbol"'
     );
 });
 
-test('inspect custom symbol', { skip: !hasSymbols || !utilInspect || !utilInspect.custom }, function (t) {
+test('inspect custom symbol', { skip: !hasSymbols || !utilInspect || !utilInspect.custom }, (t) => {
     t.plan(4);
 
-    var obj = { inspect: function stringInspect() { return 'string'; } };
+    const obj = { inspect: function stringInspect() { return 'string'; } };
     obj[utilInspect.custom] = function custom() { return 'symbol'; };
 
-    var symbolResult = '[ symbol, [] ]';
-    var stringResult = '[ string, [] ]';
-    var falseResult = '[ { inspect: [Function: stringInspect]' + (utilInspect.custom ? ', [' + inspect(utilInspect.custom) + ']: [Function: custom]' : '') + ' }, [] ]';
+    const symbolResult = '[ symbol, [] ]';
+    const stringResult = '[ string, [] ]';
+    const falseResult = `[ { inspect: [Function: stringInspect]${  utilInspect.custom ? `, [${  inspect(utilInspect.custom)  }]: [Function: custom]` : ''  } }, [] ]`;
 
-    var symbolStringFallback = utilInspect.custom ? symbolResult : stringResult;
-    var symbolFalseFallback = utilInspect.custom ? symbolResult : falseResult;
+    const symbolStringFallback = utilInspect.custom ? symbolResult : stringResult;
+    const symbolFalseFallback = utilInspect.custom ? symbolResult : falseResult;
 
     t.equal(inspect([obj, []]), symbolStringFallback);
     t.equal(inspect([obj, []], { customInspect: true }), symbolStringFallback);
@@ -42,10 +42,10 @@ test('inspect custom symbol', { skip: !hasSymbols || !utilInspect || !utilInspec
     t.equal(inspect([obj, []], { customInspect: false }), falseResult);
 });
 
-test('symbols', { skip: !hasSymbols }, function (t) {
+test('symbols', { skip: !hasSymbols }, (t) => {
     t.plan(2);
 
-    var obj = { a: 1 };
+    const obj = { a: 1 };
     obj[Symbol('test')] = 2;
     obj[Symbol.iterator] = 3;
     Object.defineProperty(obj, Symbol('non-enum'), {
@@ -71,14 +71,14 @@ test('symbols', { skip: !hasSymbols }, function (t) {
     }
 });
 
-test('maxStringLength', function (t) {
+test('maxStringLength', (t) => {
     t['throws'](
-        function () { inspect('', { maxStringLength: -1 }); },
+        () => { inspect('', { maxStringLength: -1 }); },
         TypeError,
         'maxStringLength must be >= 0, or Infinity, not negative'
     );
 
-    var str = repeat('a', 1e8);
+    const str = repeat('a', 1e8);
 
     t.equal(
         inspect([str], { maxStringLength: 10 }),
@@ -94,15 +94,15 @@ test('maxStringLength', function (t) {
 
     t.equal(
         inspect([str], { maxStringLength: Infinity }),
-        '[ \'' + str + '\' ]',
+        `[ '${  str  }' ]`,
         'maxStringLength option accepts ∞'
     );
 
     t.end();
 });
 
-test('inspect options', { skip: !utilInspect.custom }, function (t) {
-    var obj = {};
+test('inspect options', { skip: !utilInspect.custom }, (t) => {
+    const obj = {};
     obj[utilInspect.custom] = function () {
         return JSON.stringify(arguments);
     };
@@ -118,7 +118,7 @@ test('inspect options', { skip: !utilInspect.custom }, function (t) {
     );
     t.equal(
         inspect({ d1: obj }, { depth: 3 }),
-        '{ d1: ' + utilInspect(obj, { depth: 2 }) + ' }',
+        `{ d1: ${  utilInspect(obj, { depth: 2 })  } }`,
         'deep objects will receive a reduced depth'
     );
     t.equal(
@@ -129,7 +129,7 @@ test('inspect options', { skip: !utilInspect.custom }, function (t) {
     t.end();
 });
 
-test('inspect URL', { skip: typeof URL === 'undefined' }, function (t) {
+test('inspect URL', { skip: typeof URL === 'undefined' }, (t) => {
     t.match(
         inspect(new URL('https://nodejs.org')),
         /nodejs\.org/, // Different environments stringify it differently

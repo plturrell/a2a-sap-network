@@ -20,14 +20,14 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var Thrift = require('..').Thrift;
-var fs = require('fs');
-var path = require('path');
-var source = fs.readFileSync(path.join(__dirname, 'type-mismatch.thrift'), 'ascii');
+const Thrift = require('..').Thrift;
+const fs = require('fs');
+const path = require('path');
+const source = fs.readFileSync(path.join(__dirname, 'type-mismatch.thrift'), 'ascii');
 
-test('consts parse', function t(assert) {
+test('consts parse', (assert) => {
     assert.throws(
         typeMismatch,
         /type mismatch.*expects value, got service/,

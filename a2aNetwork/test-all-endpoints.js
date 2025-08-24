@@ -119,7 +119,7 @@ async function testAllEndpoints() {
     const passed = results.filter(r => r.success).length;
     const total = results.length;
     
-    console.log('\n' + '='*50);
+    console.log('\n' + `${'='*50}`);
     console.log('🏁 FINAL RESULTS');
     console.log('='*50);
     console.log(`Passed: ${passed}/${total} (${Math.round(passed/total*100)}%)`);

@@ -143,7 +143,7 @@ class Agent12SecurityScanner {
     }
 
     async scanDirectory(dirPath) {
-        console.log(`\n🔍 Starting Agent 12 Catalog Manager Security Scan...`);
+        console.log('\n🔍 Starting Agent 12 Catalog Manager Security Scan...');
         console.log(`📂 Scanning directory: ${dirPath}\n`);
         
         try {
@@ -587,7 +587,7 @@ class Agent12SecurityScanner {
         const endTime = performance.now();
         const duration = ((endTime - this.startTime) / 1000).toFixed(2);
 
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 12 CATALOG MANAGER SECURITY SCAN REPORT');
         console.log('='.repeat(80));
 
@@ -597,7 +597,7 @@ class Agent12SecurityScanner {
         const medium = this.vulnerabilities.filter(v => v.severity === 'MEDIUM').length;
         const low = this.vulnerabilities.filter(v => v.severity === 'LOW').length;
 
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.scannedFiles}`);
         console.log(`   Scan Duration: ${duration}s`);
         console.log(`   Critical Issues: ${critical}`);
@@ -624,7 +624,7 @@ class Agent12SecurityScanner {
         }
 
         // Catalog-specific findings
-        console.log(`\n🗂️  CATALOG-SPECIFIC SECURITY FINDINGS:`);
+        console.log('\n🗂️  CATALOG-SPECIFIC SECURITY FINDINGS:');
         
         const catalogIssues = {
             'SQL_INJECTION': this.vulnerabilities.filter(v => v.type.includes('SQL_INJECTION')).length,
@@ -644,7 +644,7 @@ class Agent12SecurityScanner {
 
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:`);
+            console.log('\n🚨 VULNERABILITIES FOUND:');
             
             const processSeverityLevel = (severity) => {
                 const issues = this.vulnerabilities.filter(v => v.severity === severity);
@@ -664,28 +664,28 @@ class Agent12SecurityScanner {
         }
 
         // Recommendations
-        console.log(`\n💡 AGENT 12 CATALOG SECURITY RECOMMENDATIONS:`);
-        console.log(`\n1. 🔐 Implement SecurityUtils for catalog operations`);
-        console.log(`   - Add SecurityUtils.validateCatalogEntry() for all entries`);
-        console.log(`   - Use SecurityUtils.secureCallFunction() for catalog operations`);
-        console.log(`   - Implement SecurityUtils.sanitizeCatalogData() for metadata`);
+        console.log('\n💡 AGENT 12 CATALOG SECURITY RECOMMENDATIONS:');
+        console.log('\n1. 🔐 Implement SecurityUtils for catalog operations');
+        console.log('   - Add SecurityUtils.validateCatalogEntry() for all entries');
+        console.log('   - Use SecurityUtils.secureCallFunction() for catalog operations');
+        console.log('   - Implement SecurityUtils.sanitizeCatalogData() for metadata');
         
-        console.log(`\n2. 🛡️  Enhance catalog-specific security`);
-        console.log(`   - Validate all resource URLs with SecurityUtils.validateResourceURL()`);
-        console.log(`   - Sanitize search queries with SecurityUtils.sanitizeSearchQuery()`);
-        console.log(`   - Secure registry synchronization operations`);
+        console.log('\n2. 🛡️  Enhance catalog-specific security');
+        console.log('   - Validate all resource URLs with SecurityUtils.validateResourceURL()');
+        console.log('   - Sanitize search queries with SecurityUtils.sanitizeSearchQuery()');
+        console.log('   - Secure registry synchronization operations');
         
-        console.log(`\n3. 🔒 Secure catalog communications`);
-        console.log(`   - Upgrade WebSocket to WSS for catalog updates`);
-        console.log(`   - Use HTTPS for EventSource catalog streams`);
-        console.log(`   - Implement secure catalog discovery protocols`);
+        console.log('\n3. 🔒 Secure catalog communications');
+        console.log('   - Upgrade WebSocket to WSS for catalog updates');
+        console.log('   - Use HTTPS for EventSource catalog streams');
+        console.log('   - Implement secure catalog discovery protocols');
 
-        console.log(`\n4. ⚡ Monitor catalog security`);
-        console.log(`   - Log all catalog operations for audit`);
-        console.log(`   - Monitor resource discovery for malicious URLs`);
-        console.log(`   - Track metadata injection attempts`);
+        console.log('\n4. ⚡ Monitor catalog security');
+        console.log('   - Log all catalog operations for audit');
+        console.log('   - Monitor resource discovery for malicious URLs');
+        console.log('   - Track metadata injection attempts');
 
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('='.repeat(80));
 

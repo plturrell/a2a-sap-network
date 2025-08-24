@@ -1,15 +1,15 @@
-'use strict'
+'use strict';
 
-const tape = require('tape')
-const { BufferList, BufferListStream } = require('../')
-const { Buffer } = require('buffer')
+const tape = require('tape');
+const { BufferList, BufferListStream } = require('../');
+const { Buffer } = require('buffer');
 
 tape('isBufferList positives', (t) => {
-  t.ok(BufferList.isBufferList(new BufferList()))
-  t.ok(BufferList.isBufferList(new BufferListStream()))
+  t.ok(BufferList.isBufferList(new BufferList()));
+  t.ok(BufferList.isBufferList(new BufferListStream()));
 
-  t.end()
-})
+  t.end();
+});
 
 tape('isBufferList negatives', (t) => {
   const types = [
@@ -22,11 +22,11 @@ tape('isBufferList negatives', (t) => {
     [],
     Buffer.alloc(0),
     [Buffer.alloc(0)]
-  ]
+  ];
 
   for (const obj of types) {
-    t.notOk(BufferList.isBufferList(obj))
+    t.notOk(BufferList.isBufferList(obj));
   }
 
-  t.end()
-})
+  t.end();
+});

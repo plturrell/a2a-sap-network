@@ -20,17 +20,17 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
 
-var thriftrw = require('../index');
-var DoubleRW = thriftrw.DoubleRW;
-var ThriftDouble = thriftrw.ThriftDouble;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const DoubleRW = thriftrw.DoubleRW;
+const ThriftDouble = thriftrw.ThriftDouble;
+const TYPE = require('../TYPE');
 
 /*eslint-disable space-in-brackets*/
-var validTestCases = [
+const validTestCases = [
     // Thrift is Big Endian
     [-1, [0xbf, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]],
     [ 0, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]],
@@ -38,7 +38,7 @@ var validTestCases = [
 ];
 /*eslint-enable space-in-brackets*/
 
-var testCases = [].concat(
+const testCases = [].concat(
     validTestCases
 );
 

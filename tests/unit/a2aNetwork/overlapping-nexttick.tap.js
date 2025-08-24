@@ -1,4 +1,4 @@
-var test   = require('tap').test
+const test   = require('tap').test
   , assert = require('assert')
   ;
 
@@ -35,25 +35,25 @@ Namespace.prototype.get = function (key) {
 };
 
 Namespace.prototype.enter = function (context) {
-  assert.ok(context, "context must be provided for entering");
+  assert.ok(context, 'context must be provided for entering');
 
   this._stack.push(this.active);
   this.active = context;
 };
 
 Namespace.prototype.exit = function (context) {
-  assert.ok(context, "context must be provided for exiting");
+  assert.ok(context, 'context must be provided for exiting');
 
   if (this.active === context) {
-    assert.ok(this._stack.length, "can't remove top context");
+    assert.ok(this._stack.length, 'can\'t remove top context');
     this.active = this._stack.pop();
     return;
   }
 
-  var index = this._stack.lastIndexOf(context);
+  const index = this._stack.lastIndexOf(context);
 
-  assert.ok(index >= 0, "context not currently entered; can't exit");
-  assert.ok(index,      "can't remove top context");
+  assert.ok(index >= 0, 'context not currently entered; can\'t exit');
+  assert.ok(index,      'can\'t remove top context');
 
   this.active = this._stack[index - 1];
   this._stack.length = index - 1;
@@ -64,7 +64,7 @@ Namespace.prototype.createContext = function () {
 };
 
 Namespace.prototype.run = function (fn) {
-  var context = this.createContext();
+  const context = this.createContext();
   this.enter(context);
   try {
     fn(context);
@@ -77,7 +77,7 @@ Namespace.prototype.run = function (fn) {
 
 Namespace.prototype.bind = function (fn, context) {
   if (!context) context = this.active;
-  var self = this;
+  const self = this;
   return function () {
     self.enter(context);
     try {
@@ -90,9 +90,9 @@ Namespace.prototype.bind = function (fn, context) {
 };
 
 function create(name) {
-  assert.ok(name, "namespace must be given a name!");
+  assert.ok(name, 'namespace must be given a name!');
 
-  var namespace = new Namespace(name);
+  const namespace = new Namespace(name);
   namespace.id = process.addAsyncListener(
     {
       create : function () { return namespace.active; },
@@ -107,23 +107,23 @@ function create(name) {
 /*
  * Transaction code
  */
-var id = 1337;
+let id = 1337;
 function Transaction() { this.id = id++; }
 
 /*
  * Tracer code
  */
-var namespace = create("__NR_tracer");
+const namespace = create('__NR_tracer');
 function getTransaction() {
-  var state = namespace.get('state');
+  const state = namespace.get('state');
   if (state) return state.transaction;
 }
 
 function transactionProxy(handler) {
   return function wrapTransactionInvocation() {
-    var state   = {transaction : new Transaction()};
+    const state   = {transaction : new Transaction()};
 
-    var context = namespace.createContext();
+    const context = namespace.createContext();
     context.state = state;
 
     return namespace.bind(handler, context).apply(this, arguments);
@@ -142,51 +142,51 @@ function transactionProxy(handler) {
  *
  */
 
-test("overlapping requests", function (t) {
+test('overlapping requests', (t) => {
   t.plan(2);
 
-  t.test("simple overlap", function (t) {
+  t.test('simple overlap', (t) => {
     t.plan(3);
 
-    setImmediate(function () { console.log('!'); });
+    setImmediate(() => { console.log('!'); });
 
-    var n = create("test2");
-    t.ok(!n.get('state'), "state should not yet be visible");
+    const n = create('test2');
+    t.ok(!n.get('state'), 'state should not yet be visible');
 
-    n.run(function () {
+    n.run(() => {
       n.set('state', true);
-      t.ok(n.get('state'), "state should be visible");
+      t.ok(n.get('state'), 'state should be visible');
 
-      setImmediate(function () { t.ok(n.get('state'), "state should be visible"); });
+      setImmediate(() => { t.ok(n.get('state'), 'state should be visible'); });
     });
   });
 
-  t.test("two process.nextTicks", function (t) {
+  t.test('two process.nextTicks', (t) => {
     t.plan(6);
 
     function handler(id) {
-      var transaction = getTransaction();
-      t.ok(transaction, "transaction should be visible");
-      t.equal((transaction || {}).id, id, "transaction matches");
+      const transaction = getTransaction();
+      t.ok(transaction, 'transaction should be visible');
+      t.equal((transaction || {}).id, id, 'transaction matches');
     }
 
-    t.ok(!getTransaction(), "transaction should not yet be visible");
+    t.ok(!getTransaction(), 'transaction should not yet be visible');
 
-    var first;
-    var proxied = transactionProxy(function () {
-      t.ok(getTransaction(), "transaction should be visible");
+    let first;
+    const proxied = transactionProxy(() => {
+      t.ok(getTransaction(), 'transaction should be visible');
 
       first = getTransaction().id;
-      process.nextTick(function () { handler(first); }, 42);
+      process.nextTick(() => { handler(first); }, 42);
     });
     proxied();
 
-    process.nextTick(transactionProxy(function () {
-      t.ok(getTransaction(), "transaction should be visible");
+    process.nextTick(transactionProxy(() => {
+      t.ok(getTransaction(), 'transaction should be visible');
 
-      var second = getTransaction().id;
-      t.notEqual(first, second, "different transaction IDs");
-      process.nextTick(function () { handler(second); }, 42);
+      const second = getTransaction().id;
+      t.notEqual(first, second, 'different transaction IDs');
+      process.nextTick(() => { handler(second); }, 42);
     }), 42);
   });
 });

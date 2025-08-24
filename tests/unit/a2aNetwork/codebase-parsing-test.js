@@ -122,7 +122,7 @@ async function testRealEnhancedParsing() {
         const totalVariables = successfulTests.reduce((sum, r) => sum + r.enhanced.variables, 0);
         const totalMethods = successfulTests.reduce((sum, r) => sum + r.enhanced.methods, 0);
         
-        console.log(`📋 Symbol Distribution:`);
+        console.log('📋 Symbol Distribution:');
         console.log(`   Imports: ${totalImports}`);
         console.log(`   Functions: ${totalFunctions}`);
         console.log(`   Classes: ${totalClasses}`);

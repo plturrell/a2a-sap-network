@@ -1,9 +1,9 @@
-var test = require('tape');
-var table = require('../');
+const test = require('tape');
+const table = require('../');
 
-test('center', function (t) {
+test('center', (t) => {
     t.plan(1);
-    var s = table([
+    const s = table([
         [ 'beep', '1024', 'xyz' ],
         [ 'boop', '3388450', 'tuv' ],
         [ 'foo', '10106', 'qrstuv' ],

@@ -43,7 +43,13 @@ class Agent0DataproductA2AHandler(SecureA2AAgent):
                 "get_queue_status",
                 "get_message_status",
                 "cancel_message",
-                "health_check"
+                "health_check",
+                # Registry capabilities
+                "data_product_creation",
+                "data_ingestion",
+                "data_transformation",
+                "quality_control",
+                "metadata_management"
             },
             enable_authentication=True,
             enable_rate_limiting=True,
@@ -256,6 +262,107 @@ class Agent0DataproductA2AHandler(SecureA2AAgent):
                 
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        # Registry capability handlers
+        @self.secure_handler("data_product_creation")
+        async def handle_data_product_creation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data product creation"""
+            try:
+                result = await self.agent_sdk.data_product_creation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_product_creation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to handle data_product_creation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_ingestion")
+        async def handle_data_ingestion(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data ingestion"""
+            try:
+                result = await self.agent_sdk.data_ingestion(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_ingestion",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to handle data_ingestion: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_transformation")
+        async def handle_data_transformation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data transformation"""
+            try:
+                result = await self.agent_sdk.data_transformation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_transformation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to handle data_transformation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("quality_control")
+        async def handle_quality_control(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle quality control"""
+            try:
+                result = await self.agent_sdk.quality_control(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="quality_control",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to handle quality_control: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("metadata_management")
+        async def handle_metadata_management(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle metadata management"""
+            try:
+                result = await self.agent_sdk.metadata_management(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="metadata_management",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to handle metadata_management: {e}")
                 return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:

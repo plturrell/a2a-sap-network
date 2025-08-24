@@ -1,7 +1,7 @@
 sap.ui.define([
-    "sap/base/Log"
-], function(Log) {
-    "use strict";
+    'sap/base/Log'
+], (Log) => {
+    'use strict';
 
     /**
      * SAP Enterprise Theme Configuration
@@ -12,103 +12,103 @@ sap.ui.define([
          * Available themes configuration
          */
         themes: {
-            "sap_horizon": {
-                name: "SAP Horizon",
-                description: "Modern, fresh design for contemporary business applications",
-                type: "light",
+            'sap_horizon': {
+                name: 'SAP Horizon',
+                description: 'Modern, fresh design for contemporary business applications',
+                type: 'light',
                 sapCompliant: true,
                 accessibility: {
-                    wcag: "AA",
-                    colorContrast: "4.5:1"
+                    wcag: 'AA',
+                    colorContrast: '4.5:1'
                 },
                 colors: {
-                    brand: "#0070f2",
-                    background: "#ffffff",
-                    surface: "#f7f7f7",
-                    text: "#32363a"
+                    brand: '#0070f2',
+                    background: '#ffffff',
+                    surface: '#f7f7f7',
+                    text: '#32363a'
                 },
                 fonts: {
-                    family: "72, Arial, sans-serif",
+                    family: '72, Arial, sans-serif',
                     sizes: {
-                        small: "0.75rem",
-                        medium: "0.875rem",
-                        large: "1rem",
-                        title: "1.125rem"
+                        small: '0.75rem',
+                        medium: '0.875rem',
+                        large: '1rem',
+                        title: '1.125rem'
                     }
                 }
             },
-            "sap_horizon_dark": {
-                name: "SAP Horizon Dark",
-                description: "Dark variant of SAP Horizon for reduced eye strain",
-                type: "dark",
+            'sap_horizon_dark': {
+                name: 'SAP Horizon Dark',
+                description: 'Dark variant of SAP Horizon for reduced eye strain',
+                type: 'dark',
                 sapCompliant: true,
                 accessibility: {
-                    wcag: "AA",
-                    colorContrast: "4.5:1"
+                    wcag: 'AA',
+                    colorContrast: '4.5:1'
                 },
                 colors: {
-                    brand: "#7996ff",
-                    background: "#1d2d3e",
-                    surface: "#233040",
-                    text: "#ffffff"
+                    brand: '#7996ff',
+                    background: '#1d2d3e',
+                    surface: '#233040',
+                    text: '#ffffff'
                 },
                 fonts: {
-                    family: "72, Arial, sans-serif",
+                    family: '72, Arial, sans-serif',
                     sizes: {
-                        small: "0.75rem",
-                        medium: "0.875rem",
-                        large: "1rem",
-                        title: "1.125rem"
+                        small: '0.75rem',
+                        medium: '0.875rem',
+                        large: '1rem',
+                        title: '1.125rem'
                     }
                 }
             },
-            "sap_horizon_hcb": {
-                name: "SAP Horizon High Contrast Black",
-                description: "High contrast black theme for accessibility",
-                type: "hc_black",
+            'sap_horizon_hcb': {
+                name: 'SAP Horizon High Contrast Black',
+                description: 'High contrast black theme for accessibility',
+                type: 'hc_black',
                 sapCompliant: true,
                 accessibility: {
-                    wcag: "AAA",
-                    colorContrast: "7:1"
+                    wcag: 'AAA',
+                    colorContrast: '7:1'
                 },
                 colors: {
-                    brand: "#7dd3f0",
-                    background: "#000000",
-                    surface: "#000000",
-                    text: "#ffffff"
+                    brand: '#7dd3f0',
+                    background: '#000000',
+                    surface: '#000000',
+                    text: '#ffffff'
                 },
                 fonts: {
-                    family: "72, Arial, sans-serif",
+                    family: '72, Arial, sans-serif',
                     sizes: {
-                        small: "0.75rem",
-                        medium: "0.875rem",
-                        large: "1rem",
-                        title: "1.125rem"
+                        small: '0.75rem',
+                        medium: '0.875rem',
+                        large: '1rem',
+                        title: '1.125rem'
                     }
                 }
             },
-            "sap_horizon_hcw": {
-                name: "SAP Horizon High Contrast White",
-                description: "High contrast white theme for accessibility",
-                type: "hc_white",
+            'sap_horizon_hcw': {
+                name: 'SAP Horizon High Contrast White',
+                description: 'High contrast white theme for accessibility',
+                type: 'hc_white',
                 sapCompliant: true,
                 accessibility: {
-                    wcag: "AAA",
-                    colorContrast: "7:1"
+                    wcag: 'AAA',
+                    colorContrast: '7:1'
                 },
                 colors: {
-                    brand: "#0070f2",
-                    background: "#ffffff",
-                    surface: "#ffffff",
-                    text: "#000000"
+                    brand: '#0070f2',
+                    background: '#ffffff',
+                    surface: '#ffffff',
+                    text: '#000000'
                 },
                 fonts: {
-                    family: "72, Arial, sans-serif",
+                    family: '72, Arial, sans-serif',
                     sizes: {
-                        small: "0.75rem",
-                        medium: "0.875rem",
-                        large: "1rem",
-                        title: "1.125rem"
+                        small: '0.75rem',
+                        medium: '0.875rem',
+                        large: '1rem',
+                        title: '1.125rem'
                     }
                 }
             }
@@ -120,9 +120,9 @@ sap.ui.define([
         switching: {
             enableUserSwitch: true,
             enableAutoDetection: true,
-            storageKey: "sap-ui-theme",
-            defaultTheme: "sap_horizon",
-            fallbackTheme: "sap_horizon"
+            storageKey: 'sap-ui-theme',
+            defaultTheme: 'sap_horizon',
+            fallbackTheme: 'sap_horizon'
         },
 
         /**
@@ -131,17 +131,17 @@ sap.ui.define([
         customization: {
             companyBranding: {
                 enabled: true,
-                logoPath: "/images/company-logo.png",
+                logoPath: '/images/company-logo.png',
                 brandColors: {
-                    primary: "#0070f2",
-                    secondary: "#42b883"
+                    primary: '#0070f2',
+                    secondary: '#42b883'
                 }
             },
             customCSS: {
                 enabled: true,
                 paths: [
-                    "./css/company-theme-overrides.css",
-                    "./css/accessibility-enhancements.css"
+                    './css/company-theme-overrides.css',
+                    './css/accessibility-enhancements.css'
                 ]
             }
         },
@@ -164,7 +164,7 @@ sap.ui.define([
                 this._loadCustomCSS();
             }
             
-            Log.info("Theme system initialized", { theme: userTheme });
+            Log.info('Theme system initialized', { theme: userTheme });
         },
 
         /**
@@ -173,7 +173,7 @@ sap.ui.define([
          */
         applyTheme: function(themeId) {
             if (!this.themes[themeId]) {
-                Log.warning("Unknown theme requested, using fallback", themeId);
+                Log.warning('Unknown theme requested, using fallback', themeId);
                 themeId = this.switching.fallbackTheme;
             }
 
@@ -193,7 +193,7 @@ sap.ui.define([
             // Trigger theme change event
             this._fireThemeChanged(themeId);
             
-            Log.info("Theme applied", { theme: themeId });
+            Log.info('Theme applied', { theme: themeId });
         },
 
         /**
@@ -227,7 +227,7 @@ sap.ui.define([
          */
         isHighContrast: function(themeId) {
             const theme = this.themes[themeId];
-            return theme && (theme.type === "hc_black" || theme.type === "hc_white");
+            return theme && (theme.type === 'hc_black' || theme.type === 'hc_white');
         },
 
         /**
@@ -237,7 +237,7 @@ sap.ui.define([
          */
         isDarkTheme: function(themeId) {
             const theme = this.themes[themeId];
-            return theme && (theme.type === "dark" || theme.type === "hc_black");
+            return theme && (theme.type === 'dark' || theme.type === 'hc_black');
         },
 
         /**
@@ -256,10 +256,10 @@ sap.ui.define([
             // 2. Check system preference
             if (this.switching.enableAutoDetection && window.matchMedia) {
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    return "sap_horizon_dark";
+                    return 'sap_horizon_dark';
                 }
                 if (window.matchMedia('(prefers-contrast: high)').matches) {
-                    return "sap_horizon_hcb";
+                    return 'sap_horizon_hcb';
                 }
             }
 
@@ -281,7 +281,7 @@ sap.ui.define([
             darkModeQuery.addEventListener('change', (e) => {
                 if (!localStorage.getItem(this.switching.storageKey)) {
                     // Only auto-switch if user hasn't manually set preference
-                    this.applyTheme(e.matches ? "sap_horizon_dark" : "sap_horizon");
+                    this.applyTheme(e.matches ? 'sap_horizon_dark' : 'sap_horizon');
                 }
             });
 
@@ -289,7 +289,7 @@ sap.ui.define([
             const contrastQuery = window.matchMedia('(prefers-contrast: high)');
             contrastQuery.addEventListener('change', (e) => {
                 if (!localStorage.getItem(this.switching.storageKey)) {
-                    this.applyTheme(e.matches ? "sap_horizon_hcb" : "sap_horizon");
+                    this.applyTheme(e.matches ? 'sap_horizon_hcb' : 'sap_horizon');
                 }
             });
         },
@@ -313,7 +313,7 @@ sap.ui.define([
 
             // Update font properties
             if (theme.fonts) {
-                root.style.setProperty(`--theme-font-family`, theme.fonts.family);
+                root.style.setProperty('--theme-font-family', theme.fonts.family);
                 if (theme.fonts.sizes) {
                     Object.entries(theme.fonts.sizes).forEach(([key, value]) => {
                         root.style.setProperty(`--theme-font-size-${key}`, value);
@@ -322,8 +322,8 @@ sap.ui.define([
             }
 
             // Add theme class to body
-            document.body.className = document.body.className
-                .replace(/\btheme-\w+/g, '') + ` theme-${themeId.replace('_', '-')}`;
+            document.body.className = `${document.body.className
+                .replace(/\btheme-\w+/g, '')  } theme-${themeId.replace('_', '-')}`;
         },
 
         /**
@@ -335,8 +335,8 @@ sap.ui.define([
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
                 link.href = path;
-                link.onload = () => Log.debug("Custom CSS loaded", path);
-                link.onerror = () => Log.warning("Failed to load custom CSS", path);
+                link.onload = () => Log.debug('Custom CSS loaded', path);
+                link.onerror = () => Log.warning('Failed to load custom CSS', path);
                 document.head.appendChild(link);
             });
         },

@@ -1,12 +1,12 @@
 const cds = require('@sap/cds');
-const { GET, POST, PATCH, DELETE, expect } = cds.test(__dirname + '/../..');
+const { GET, POST, PATCH, DELETE, expect } = cds.test(`${__dirname  }/../..`);
 
 describe('A2A Service Integration Tests', () => {
   let agentId, serviceId, workflowId;
   
   beforeAll(async () => {
     // Deploy to test database
-    await cds.deploy(__dirname + '/../../srv').to('sqlite::memory:');
+    await cds.deploy(`${__dirname  }/../../srv`).to('sqlite::memory:');
   });
   
   describe('Agent Management', () => {

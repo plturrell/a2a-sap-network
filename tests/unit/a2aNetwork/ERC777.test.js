@@ -17,7 +17,7 @@ const { shouldBehaveLikeERC20, shouldBehaveLikeERC20Approve } = require('../ERC2
 const ERC777 = artifacts.require('$ERC777Mock');
 const ERC777SenderRecipientMock = artifacts.require('$ERC777SenderRecipientMock');
 
-contract('ERC777', function (accounts) {
+contract('ERC777', (accounts) => {
   const [registryFunder, holder, defaultOperatorA, defaultOperatorB, newOperator, anyone] = accounts;
 
   const initialSupply = new BN('10000');
@@ -32,21 +32,21 @@ contract('ERC777', function (accounts) {
     this.erc1820 = await singletons.ERC1820Registry(registryFunder);
   });
 
-  context('with default operators', function () {
+  context('with default operators', () => {
     beforeEach(async function () {
       this.token = await ERC777.new(name, symbol, defaultOperators);
       await this.token.$_mint(holder, initialSupply, '0x', '0x');
     });
 
-    describe('as an ERC20 token', function () {
+    describe('as an ERC20 token', () => {
       shouldBehaveLikeERC20('ERC777', initialSupply, holder, anyone, defaultOperatorA);
 
-      describe('_approve', function () {
+      describe('_approve', () => {
         shouldBehaveLikeERC20Approve('ERC777', holder, anyone, initialSupply, function (owner, spender, amount) {
           return this.token.$_approve(owner, spender, amount);
         });
 
-        describe('when the owner is the zero address', function () {
+        describe('when the owner is the zero address', () => {
           it('reverts', async function () {
             await expectRevert(
               this.token.$_approve(ZERO_ADDRESS, anyone, initialSupply),
@@ -61,7 +61,7 @@ contract('ERC777', function (accounts) {
       await expectEvent.notEmitted.inConstruction(this.token, 'AuthorizedOperator');
     });
 
-    describe('basic information', function () {
+    describe('basic information', () => {
       it('returns the name', async function () {
         expect(await this.token.name()).to.equal(name);
       });
@@ -105,48 +105,48 @@ contract('ERC777', function (accounts) {
       });
     });
 
-    describe('balanceOf', function () {
-      context('for an account with no tokens', function () {
+    describe('balanceOf', () => {
+      context('for an account with no tokens', () => {
         it('returns zero', async function () {
           expect(await this.token.balanceOf(anyone)).to.be.bignumber.equal('0');
         });
       });
 
-      context('for an account with tokens', function () {
+      context('for an account with tokens', () => {
         it('returns their balance', async function () {
           expect(await this.token.balanceOf(holder)).to.be.bignumber.equal(initialSupply);
         });
       });
     });
 
-    context('with no ERC777TokensSender and no ERC777TokensRecipient implementers', function () {
-      describe('send/burn', function () {
+    context('with no ERC777TokensSender and no ERC777TokensRecipient implementers', () => {
+      describe('send/burn', () => {
         shouldBehaveLikeERC777DirectSendBurn(holder, anyone, data);
 
-        context('with self operator', function () {
+        context('with self operator', () => {
           shouldBehaveLikeERC777OperatorSendBurn(holder, anyone, holder, data, operatorData);
         });
 
-        context('with first default operator', function () {
+        context('with first default operator', () => {
           shouldBehaveLikeERC777OperatorSendBurn(holder, anyone, defaultOperatorA, data, operatorData);
         });
 
-        context('with second default operator', function () {
+        context('with second default operator', () => {
           shouldBehaveLikeERC777OperatorSendBurn(holder, anyone, defaultOperatorB, data, operatorData);
         });
 
-        context('before authorizing a new operator', function () {
+        context('before authorizing a new operator', () => {
           shouldBehaveLikeERC777UnauthorizedOperatorSendBurn(holder, anyone, newOperator, data, operatorData);
         });
 
-        context('with new authorized operator', function () {
+        context('with new authorized operator', () => {
           beforeEach(async function () {
             await this.token.authorizeOperator(newOperator, { from: holder });
           });
 
           shouldBehaveLikeERC777OperatorSendBurn(holder, anyone, newOperator, data, operatorData);
 
-          context('with revoked operator', function () {
+          context('with revoked operator', () => {
             beforeEach(async function () {
               await this.token.revokeOperator(newOperator, { from: holder });
             });
@@ -156,32 +156,32 @@ contract('ERC777', function (accounts) {
         });
       });
 
-      describe('mint (internal)', function () {
+      describe('mint (internal)', () => {
         const to = anyone;
         const amount = new BN('5');
 
-        context('with default operator', function () {
+        context('with default operator', () => {
           const operator = defaultOperatorA;
 
           shouldBehaveLikeERC777InternalMint(to, operator, amount, data, operatorData);
         });
 
-        context('with non operator', function () {
+        context('with non operator', () => {
           const operator = newOperator;
 
           shouldBehaveLikeERC777InternalMint(to, operator, amount, data, operatorData);
         });
       });
 
-      describe('mint (internal extended)', function () {
+      describe('mint (internal extended)', () => {
         const amount = new BN('5');
 
-        context('to anyone', function () {
+        context('to anyone', () => {
           beforeEach(async function () {
             this.recipient = anyone;
           });
 
-          context('with default operator', function () {
+          context('with default operator', () => {
             const operator = defaultOperatorA;
 
             it('without requireReceptionAck', async function () {
@@ -193,7 +193,7 @@ contract('ERC777', function (accounts) {
             });
           });
 
-          context('with non operator', function () {
+          context('with non operator', () => {
             const operator = newOperator;
 
             it('without requireReceptionAck', async function () {
@@ -206,13 +206,13 @@ contract('ERC777', function (accounts) {
           });
         });
 
-        context('to non ERC777TokensRecipient implementer', function () {
+        context('to non ERC777TokensRecipient implementer', () => {
           beforeEach(async function () {
             this.tokensRecipientImplementer = await ERC777SenderRecipientMock.new();
             this.recipient = this.tokensRecipientImplementer.address;
           });
 
-          context('with default operator', function () {
+          context('with default operator', () => {
             const operator = defaultOperatorA;
 
             it('without requireReceptionAck', async function () {
@@ -227,7 +227,7 @@ contract('ERC777', function (accounts) {
             });
           });
 
-          context('with non operator', function () {
+          context('with non operator', () => {
             const operator = newOperator;
 
             it('without requireReceptionAck', async function () {
@@ -245,7 +245,7 @@ contract('ERC777', function (accounts) {
       });
     });
 
-    describe('operator management', function () {
+    describe('operator management', () => {
       it('accounts are their own operator', async function () {
         expect(await this.token.isOperatorFor(holder, holder)).to.equal(true);
       });
@@ -279,7 +279,7 @@ contract('ERC777', function (accounts) {
         expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(true);
       });
 
-      describe('new operators', function () {
+      describe('new operators', () => {
         beforeEach(async function () {
           await this.token.authorizeOperator(newOperator, { from: holder });
         });
@@ -303,7 +303,7 @@ contract('ERC777', function (accounts) {
         });
       });
 
-      describe('default operators', function () {
+      describe('default operators', () => {
         it('can be re-authorized', async function () {
           const receipt = await this.token.authorizeOperator(defaultOperatorA, { from: holder });
           expectEvent(receipt, 'AuthorizedOperator', { operator: defaultOperatorA, tokenHolder: holder });
@@ -325,7 +325,7 @@ contract('ERC777', function (accounts) {
           );
         });
 
-        context('with revoked default operator', function () {
+        context('with revoked default operator', () => {
           beforeEach(async function () {
             await this.token.revokeOperator(defaultOperatorA, { from: holder });
           });
@@ -352,18 +352,18 @@ contract('ERC777', function (accounts) {
       });
     });
 
-    describe('send and receive hooks', function () {
+    describe('send and receive hooks', () => {
       const amount = new BN('1');
       const operator = defaultOperatorA;
       // sender and recipient are stored inside 'this', since in some tests their addresses are determined dynamically
 
-      describe('tokensReceived', function () {
+      describe('tokensReceived', () => {
         beforeEach(function () {
           this.sender = holder;
         });
 
-        context('with no ERC777TokensRecipient implementer', function () {
-          context('with contract recipient', function () {
+        context('with no ERC777TokensRecipient implementer', () => {
+          context('with contract recipient', () => {
             beforeEach(async function () {
               this.tokensRecipientImplementer = await ERC777SenderRecipientMock.new();
               this.recipient = this.tokensRecipientImplementer.address;
@@ -404,8 +404,8 @@ contract('ERC777', function (accounts) {
           });
         });
 
-        context('with ERC777TokensRecipient implementer', function () {
-          context('with contract as implementer for an externally owned account', function () {
+        context('with ERC777TokensRecipient implementer', () => {
+          context('with contract as implementer for an externally owned account', () => {
             beforeEach(async function () {
               this.tokensRecipientImplementer = await ERC777SenderRecipientMock.new();
               this.recipient = anyone;
@@ -423,7 +423,7 @@ contract('ERC777', function (accounts) {
             shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook(operator, amount, data, operatorData);
           });
 
-          context('with contract as implementer for another contract', function () {
+          context('with contract as implementer for another contract', () => {
             beforeEach(async function () {
               this.recipientContract = await ERC777SenderRecipientMock.new();
               this.recipient = this.recipientContract.address;
@@ -436,7 +436,7 @@ contract('ERC777', function (accounts) {
             shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook(operator, amount, data, operatorData);
           });
 
-          context('with contract as implementer for itself', function () {
+          context('with contract as implementer for itself', () => {
             beforeEach(async function () {
               this.tokensRecipientImplementer = await ERC777SenderRecipientMock.new();
               this.recipient = this.tokensRecipientImplementer.address;
@@ -449,12 +449,12 @@ contract('ERC777', function (accounts) {
         });
       });
 
-      describe('tokensToSend', function () {
+      describe('tokensToSend', () => {
         beforeEach(function () {
           this.recipient = anyone;
         });
 
-        context('with a contract as implementer for an externally owned account', function () {
+        context('with a contract as implementer for an externally owned account', () => {
           beforeEach(async function () {
             this.tokensSenderImplementer = await ERC777SenderRecipientMock.new();
             this.sender = holder;
@@ -472,7 +472,7 @@ contract('ERC777', function (accounts) {
           shouldBehaveLikeERC777SendBurnWithSendHook(operator, amount, data, operatorData);
         });
 
-        context('with contract as implementer for another contract', function () {
+        context('with contract as implementer for another contract', () => {
           beforeEach(async function () {
             this.senderContract = await ERC777SenderRecipientMock.new();
             this.sender = this.senderContract.address;
@@ -491,7 +491,7 @@ contract('ERC777', function (accounts) {
           shouldBehaveLikeERC777SendBurnWithSendHook(operator, amount, data, operatorData);
         });
 
-        context('with a contract as implementer for itself', function () {
+        context('with a contract as implementer for itself', () => {
           beforeEach(async function () {
             this.tokensSenderImplementer = await ERC777SenderRecipientMock.new();
             this.sender = this.tokensSenderImplementer.address;
@@ -511,7 +511,7 @@ contract('ERC777', function (accounts) {
     });
   });
 
-  context('with no default operators', function () {
+  context('with no default operators', () => {
     beforeEach(async function () {
       this.token = await ERC777.new(name, symbol, []);
     });
@@ -521,7 +521,7 @@ contract('ERC777', function (accounts) {
     });
   });
 
-  describe('relative order of hooks', function () {
+  describe('relative order of hooks', () => {
     beforeEach(async function () {
       await singletons.ERC1820Registry(registryFunder);
       this.sender = await ERC777SenderRecipientMock.new();

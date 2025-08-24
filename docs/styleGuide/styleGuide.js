@@ -1,70 +1,70 @@
 // Style Guide Interactive Examples
-sap.ui.getCore().attachInit(function() {
+sap.ui.getCore().attachInit(() => {
     // Button Examples
     const buttonContainer = new sap.m.HBox({
         items: [
-            new sap.m.Button({ text: "Default" }),
-            new sap.m.Button({ text: "Emphasized", type: sap.m.ButtonType.Emphasized }),
-            new sap.m.Button({ text: "Accept", type: sap.m.ButtonType.Accept }),
-            new sap.m.Button({ text: "Reject", type: sap.m.ButtonType.Reject }),
-            new sap.m.Button({ text: "Ghost", type: sap.m.ButtonType.Ghost }),
-            new sap.m.Button({ text: "Transparent", type: sap.m.ButtonType.Transparent })
+            new sap.m.Button({ text: 'Default' }),
+            new sap.m.Button({ text: 'Emphasized', type: sap.m.ButtonType.Emphasized }),
+            new sap.m.Button({ text: 'Accept', type: sap.m.ButtonType.Accept }),
+            new sap.m.Button({ text: 'Reject', type: sap.m.ButtonType.Reject }),
+            new sap.m.Button({ text: 'Ghost', type: sap.m.ButtonType.Ghost }),
+            new sap.m.Button({ text: 'Transparent', type: sap.m.ButtonType.Transparent })
         ],
         wrap: sap.m.FlexWrap.Wrap
     });
-    buttonContainer.placeAt("buttonExamples");
+    buttonContainer.placeAt('buttonExamples');
 
     // Card Example
     const card = new sap.f.Card({
-        width: "300px",
+        width: '300px',
         header: new sap.f.cards.Header({
-            title: "Agent Performance",
-            subtitle: "Last 24 hours",
-            iconSrc: "sap-icon://line-chart"
+            title: 'Agent Performance',
+            subtitle: 'Last 24 hours',
+            iconSrc: 'sap-icon://line-chart'
         }),
         content: new sap.f.cards.NumericContent({
-            value: "98.5",
+            value: '98.5',
             valueColor: sap.m.ValueColor.Good,
-            scale: "%",
+            scale: '%',
             indicator: sap.m.DeviationIndicator.Up,
             sideIndicators: [
                 new sap.f.cards.NumericSideIndicator({
-                    title: "Target",
-                    number: "95",
-                    unit: "%"
+                    title: 'Target',
+                    number: '95',
+                    unit: '%'
                 })
             ]
         })
     });
-    card.placeAt("cardExample");
+    card.placeAt('cardExample');
 
     // Form Example
     const form = new sap.ui.layout.form.SimpleForm({
         editable: true,
-        layout: "ResponsiveGridLayout",
+        layout: 'ResponsiveGridLayout',
         content: [
-            new sap.m.Label({ text: "Agent Name" }),
-            new sap.m.Input({ value: "Processing Agent 01", width: "100%" }),
-            new sap.m.Label({ text: "Type" }),
+            new sap.m.Label({ text: 'Agent Name' }),
+            new sap.m.Input({ value: 'Processing Agent 01', width: '100%' }),
+            new sap.m.Label({ text: 'Type' }),
             new sap.m.Select({
-                width: "100%",
+                width: '100%',
                 items: [
-                    new sap.ui.core.Item({ key: "1", text: "Processing" }),
-                    new sap.ui.core.Item({ key: "2", text: "Analytics" }),
-                    new sap.ui.core.Item({ key: "3", text: "Integration" })
+                    new sap.ui.core.Item({ key: '1', text: 'Processing' }),
+                    new sap.ui.core.Item({ key: '2', text: 'Analytics' }),
+                    new sap.ui.core.Item({ key: '3', text: 'Integration' })
                 ]
             }),
-            new sap.m.Label({ text: "Status" }),
+            new sap.m.Label({ text: 'Status' }),
             new sap.m.Switch({ state: true }),
-            new sap.m.Label({ text: "Description" }),
+            new sap.m.Label({ text: 'Description' }),
             new sap.m.TextArea({ 
-                value: "High-performance data processing agent",
-                width: "100%",
+                value: 'High-performance data processing agent',
+                width: '100%',
                 rows: 3
             })
         ]
     });
-    form.placeAt("formExample");
+    form.placeAt('formExample');
 
     // Animation Examples - Add click handlers
     document.querySelectorAll('.animation-box').forEach(box => {

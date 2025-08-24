@@ -1,16 +1,16 @@
-"use strict";
+'use strict';
 
 const lua     = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib  = require('../src/lualib.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 // TODO: remove
 test.skip('locals.lua', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         _soft = true
         require = function(lib) return _G[lib] end  -- NYI
         return dofile("tests/lua-tests/locals.lua")
@@ -24,10 +24,10 @@ test.skip('locals.lua', () => {
 
 
 test.skip('constructs.lua', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         _soft = true
         require = function(lib) return _G[lib] end  -- NYI
         return dofile("tests/lua-tests/constructs.lua")
@@ -41,10 +41,10 @@ test.skip('constructs.lua', () => {
 
 
 test.skip('strings.lua', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return dofile("tests/lua-tests/strings.lua")
     `;
     {
@@ -56,10 +56,10 @@ test.skip('strings.lua', () => {
 
 
 test('__newindex leaves nils', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local x = setmetatable({}, {
           __newindex = function(t,k,v)
             rawset(t,'_'..k,v)

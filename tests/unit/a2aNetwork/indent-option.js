@@ -1,9 +1,9 @@
-var test = require('tape');
-var forEach = require('for-each');
+const test = require('tape');
+const forEach = require('for-each');
 
-var inspect = require('../');
+const inspect = require('../');
 
-test('bad indent options', function (t) {
+test('bad indent options', (t) => {
     forEach([
         undefined,
         true,
@@ -13,29 +13,29 @@ test('bad indent options', function (t) {
         Infinity,
         -Infinity,
         NaN
-    ], function (indent) {
+    ], (indent) => {
         t['throws'](
-            function () { inspect('', { indent: indent }); },
+            () => { inspect('', { indent: indent }); },
             TypeError,
-            inspect(indent) + ' is invalid'
+            `${inspect(indent)  } is invalid`
         );
     });
 
     t.end();
 });
 
-test('simple object with indent', function (t) {
+test('simple object with indent', (t) => {
     t.plan(2);
 
-    var obj = { a: 1, b: 2 };
+    const obj = { a: 1, b: 2 };
 
-    var expectedSpaces = [
+    const expectedSpaces = [
         '{',
         '  a: 1,',
         '  b: 2',
         '}'
     ].join('\n');
-    var expectedTabs = [
+    const expectedTabs = [
         '{',
         '	a: 1,',
         '	b: 2',
@@ -46,12 +46,12 @@ test('simple object with indent', function (t) {
     t.equal(inspect(obj, { indent: '\t' }), expectedTabs, 'tabs');
 });
 
-test('two deep object with indent', function (t) {
+test('two deep object with indent', (t) => {
     t.plan(2);
 
-    var obj = { a: 1, b: { c: 3, d: 4 } };
+    const obj = { a: 1, b: { c: 3, d: 4 } };
 
-    var expectedSpaces = [
+    const expectedSpaces = [
         '{',
         '  a: 1,',
         '  b: {',
@@ -60,7 +60,7 @@ test('two deep object with indent', function (t) {
         '  }',
         '}'
     ].join('\n');
-    var expectedTabs = [
+    const expectedTabs = [
         '{',
         '	a: 1,',
         '	b: {',
@@ -74,23 +74,23 @@ test('two deep object with indent', function (t) {
     t.equal(inspect(obj, { indent: '\t' }), expectedTabs, 'tabs');
 });
 
-test('simple array with all single line elements', function (t) {
+test('simple array with all single line elements', (t) => {
     t.plan(2);
 
-    var obj = [1, 2, 3, 'asdf\nsdf'];
+    const obj = [1, 2, 3, 'asdf\nsdf'];
 
-    var expected = '[ 1, 2, 3, \'asdf\\nsdf\' ]';
+    const expected = '[ 1, 2, 3, \'asdf\\nsdf\' ]';
 
     t.equal(inspect(obj, { indent: 2 }), expected, 'two');
     t.equal(inspect(obj, { indent: '\t' }), expected, 'tabs');
 });
 
-test('array with complex elements', function (t) {
+test('array with complex elements', (t) => {
     t.plan(2);
 
-    var obj = [1, { a: 1, b: { c: 1 } }, 'asdf\nsdf'];
+    const obj = [1, { a: 1, b: { c: 1 } }, 'asdf\nsdf'];
 
-    var expectedSpaces = [
+    const expectedSpaces = [
         '[',
         '  1,',
         '  {',
@@ -102,7 +102,7 @@ test('array with complex elements', function (t) {
         '  \'asdf\\nsdf\'',
         ']'
     ].join('\n');
-    var expectedTabs = [
+    const expectedTabs = [
         '[',
         '	1,',
         '	{',
@@ -119,11 +119,11 @@ test('array with complex elements', function (t) {
     t.equal(inspect(obj, { indent: '\t' }), expectedTabs, 'tabs');
 });
 
-test('values', function (t) {
+test('values', (t) => {
     t.plan(2);
-    var obj = [{}, [], { 'a-b': 5 }];
+    const obj = [{}, [], { 'a-b': 5 }];
 
-    var expectedSpaces = [
+    const expectedSpaces = [
         '[',
         '  {},',
         '  [],',
@@ -132,7 +132,7 @@ test('values', function (t) {
         '  }',
         ']'
     ].join('\n');
-    var expectedTabs = [
+    const expectedTabs = [
         '[',
         '	{},',
         '	[],',
@@ -146,24 +146,24 @@ test('values', function (t) {
     t.equal(inspect(obj, { indent: '\t' }), expectedTabs, 'tabs');
 });
 
-test('Map', { skip: typeof Map !== 'function' }, function (t) {
-    var map = new Map();
+test('Map', { skip: typeof Map !== 'function' }, (t) => {
+    const map = new Map();
     map.set({ a: 1 }, ['b']);
     map.set(3, NaN);
 
-    var expectedStringSpaces = [
+    const expectedStringSpaces = [
         'Map (2) {',
         '  { a: 1 } => [ \'b\' ],',
         '  3 => NaN',
         '}'
     ].join('\n');
-    var expectedStringTabs = [
+    const expectedStringTabs = [
         'Map (2) {',
         '	{ a: 1 } => [ \'b\' ],',
         '	3 => NaN',
         '}'
     ].join('\n');
-    var expectedStringTabsDoubleQuotes = [
+    const expectedStringTabsDoubleQuotes = [
         'Map (2) {',
         '	{ a: 1 } => [ "b" ],',
         '	3 => NaN',
@@ -189,9 +189,9 @@ test('Map', { skip: typeof Map !== 'function' }, function (t) {
     t.equal(inspect(new Map(), { indent: 2 }), 'Map (0) {}', 'empty Map should show as empty (two)');
     t.equal(inspect(new Map(), { indent: '\t' }), 'Map (0) {}', 'empty Map should show as empty (tabs)');
 
-    var nestedMap = new Map();
+    const nestedMap = new Map();
     nestedMap.set(nestedMap, map);
-    var expectedNestedSpaces = [
+    const expectedNestedSpaces = [
         'Map (1) {',
         '  [Circular] => Map (2) {',
         '    { a: 1 } => [ \'b\' ],',
@@ -199,7 +199,7 @@ test('Map', { skip: typeof Map !== 'function' }, function (t) {
         '  }',
         '}'
     ].join('\n');
-    var expectedNestedTabs = [
+    const expectedNestedTabs = [
         'Map (1) {',
         '	[Circular] => Map (2) {',
         '		{ a: 1 } => [ \'b\' ],',
@@ -213,11 +213,11 @@ test('Map', { skip: typeof Map !== 'function' }, function (t) {
     t.end();
 });
 
-test('Set', { skip: typeof Set !== 'function' }, function (t) {
-    var set = new Set();
+test('Set', { skip: typeof Set !== 'function' }, (t) => {
+    const set = new Set();
     set.add({ a: 1 });
     set.add(['b']);
-    var expectedStringSpaces = [
+    const expectedStringSpaces = [
         'Set (2) {',
         '  {',
         '    a: 1',
@@ -225,7 +225,7 @@ test('Set', { skip: typeof Set !== 'function' }, function (t) {
         '  [ \'b\' ]',
         '}'
     ].join('\n');
-    var expectedStringTabs = [
+    const expectedStringTabs = [
         'Set (2) {',
         '	{',
         '		a: 1',
@@ -239,10 +239,10 @@ test('Set', { skip: typeof Set !== 'function' }, function (t) {
     t.equal(inspect(new Set(), { indent: 2 }), 'Set (0) {}', 'empty Set should show as empty (two)');
     t.equal(inspect(new Set(), { indent: '\t' }), 'Set (0) {}', 'empty Set should show as empty (tabs)');
 
-    var nestedSet = new Set();
+    const nestedSet = new Set();
     nestedSet.add(set);
     nestedSet.add(nestedSet);
-    var expectedNestedSpaces = [
+    const expectedNestedSpaces = [
         'Set (2) {',
         '  Set (2) {',
         '    {',
@@ -253,7 +253,7 @@ test('Set', { skip: typeof Set !== 'function' }, function (t) {
         '  [Circular]',
         '}'
     ].join('\n');
-    var expectedNestedTabs = [
+    const expectedNestedTabs = [
         'Set (2) {',
         '	Set (2) {',
         '		{',

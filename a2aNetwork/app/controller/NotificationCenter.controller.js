@@ -4,15 +4,15 @@
  */
 
 sap.ui.define([
-    "sap/ui/core/mvc/Controller",
-    "sap/ui/model/json/JSONModel",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function (Controller, JSONModel, MessageToast, MessageBox, Fragment) {
-    "use strict";
+    'sap/ui/core/mvc/Controller',
+    'sap/ui/model/json/JSONModel',
+    'sap/m/MessageToast',
+    'sap/m/MessageBox',
+    'sap/ui/core/Fragment'
+], (Controller, JSONModel, MessageToast, MessageBox, Fragment) => {
+    'use strict';
 
-    return Controller.extend("a2a.network.controller.NotificationCenter", {
+    return Controller.extend('a2a.network.controller.NotificationCenter', {
         
         onInit: function () {
             // Initialize models
@@ -41,16 +41,16 @@ sap.ui.define([
                 },
                 connectionStatus: 'disconnected'
             });
-            this.getView().setModel(this.oNotificationModel, "notificationModel");
+            this.getView().setModel(this.oNotificationModel, 'notificationModel');
 
             // Filter model
             this.oFilterModel = new JSONModel({
-                status: "",
-                type: "",
-                priority: "",
-                category: ""
+                status: '',
+                type: '',
+                priority: '',
+                category: ''
             });
-            this.getView().setModel(this.oFilterModel, "filterModel");
+            this.getView().setModel(this.oFilterModel, 'filterModel');
 
             // Pagination model
             this.oPaginationModel = new JSONModel({
@@ -60,11 +60,11 @@ sap.ui.define([
                 totalPages: 1,
                 total: 0
             });
-            this.getView().setModel(this.oPaginationModel, "paginationModel");
+            this.getView().setModel(this.oPaginationModel, 'paginationModel');
 
             // Settings model (loaded separately)
             this.oSettingsModel = new JSONModel();
-            this.getView().setModel(this.oSettingsModel, "settingsModel");
+            this.getView().setModel(this.oSettingsModel, 'settingsModel');
         },
 
         initializeWebSocket: function () {
@@ -90,8 +90,8 @@ sap.ui.define([
         },
 
         onWebSocketOpen: function () {
-            console.log("WebSocket connected");
-            this.oNotificationModel.setProperty("/connectionStatus", "connected");
+            console.log('WebSocket connected');
+            this.oNotificationModel.setProperty('/connectionStatus', 'connected');
             this.reconnectAttempts = 0;
             
             // Authenticate
@@ -107,27 +107,27 @@ sap.ui.define([
                 const message = JSON.parse(event.data);
                 this.handleWebSocketMessage(message);
             } catch (error) {
-                console.error("Failed to parse WebSocket message:", error);
+                console.error('Failed to parse WebSocket message:', error);
             }
         },
 
         onWebSocketClose: function (event) {
-            console.log("WebSocket disconnected:", event.code, event.reason);
-            this.oNotificationModel.setProperty("/connectionStatus", "disconnected");
+            console.log('WebSocket disconnected:', event.code, event.reason);
+            this.oNotificationModel.setProperty('/connectionStatus', 'disconnected');
             
             // Attempt reconnection
             this.attemptReconnection();
         },
 
         onWebSocketError: function (error) {
-            console.error("WebSocket error:", error);
-            this.oNotificationModel.setProperty("/connectionStatus", "error");
+            console.error('WebSocket error:', error);
+            this.oNotificationModel.setProperty('/connectionStatus', 'error');
         },
 
         attemptReconnection: function () {
             if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-                console.error("Max reconnection attempts reached");
-                MessageToast.show("Connection lost. Please refresh the page.");
+                console.error('Max reconnection attempts reached');
+                MessageToast.show('Connection lost. Please refresh the page.');
                 return;
             }
 
@@ -149,7 +149,7 @@ sap.ui.define([
                     break;
                     
                 case 'auth_success':
-                    console.log("Authentication successful");
+                    console.log('Authentication successful');
                     this.updateNotifications(message.notifications);
                     this.updateStats(message);
                     this.loadUserPreferences();
@@ -179,12 +179,12 @@ sap.ui.define([
                     
                 case 'preferences_updated':
                     this.oSettingsModel.setData(message.preferences);
-                    MessageToast.show("Preferences updated successfully");
+                    MessageToast.show('Preferences updated successfully');
                     break;
                     
                 case 'error':
-                    console.error("WebSocket error:", message.message);
-                    MessageToast.show("Error: " + message.message);
+                    console.error('WebSocket error:', message.message);
+                    MessageToast.show(`Error: ${  message.message}`);
                     break;
                     
                 case 'pong':
@@ -197,7 +197,7 @@ sap.ui.define([
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                 this.blockchainClient.publishEvent(JSON.stringify(message));
             } else {
-                console.warn("WebSocket not connected, message queued");
+                console.warn('WebSocket not connected, message queued');
                 // TODO: Implement message queuing
             }
         },
@@ -205,7 +205,7 @@ sap.ui.define([
         getCurrentUserId: function () {
             // Get current user ID from session or context
             // This is a placeholder - implement based on your authentication system
-            return sap.ushell?.Container?.getUser?.()?.getId?.() || "demo-user";
+            return sap.ushell?.Container?.getUser?.()?.getId?.() || 'demo-user';
         },
 
         loadNotifications: function () {
@@ -229,26 +229,26 @@ sap.ui.define([
         },
 
         updateNotifications: function (notifications) {
-            this.oNotificationModel.setProperty("/notifications", notifications || []);
+            this.oNotificationModel.setProperty('/notifications', notifications || []);
         },
 
         updateStats: function (stats) {
             if (stats) {
-                this.oNotificationModel.setProperty("/stats", stats);
+                this.oNotificationModel.setProperty('/stats', stats);
             }
         },
 
         addNotification: function (notification) {
-            const notifications = this.oNotificationModel.getProperty("/notifications");
+            const notifications = this.oNotificationModel.getProperty('/notifications');
             notifications.unshift(notification);
-            this.oNotificationModel.setProperty("/notifications", notifications);
+            this.oNotificationModel.setProperty('/notifications', notifications);
             
             // Update stats
             this.loadNotifications(); // Refresh to get updated stats
         },
 
         markNotificationAsRead: function (notificationId) {
-            const notifications = this.oNotificationModel.getProperty("/notifications");
+            const notifications = this.oNotificationModel.getProperty('/notifications');
             const notification = notifications.find(n => n.ID === notificationId);
             if (notification) {
                 notification.status = 'read';
@@ -258,7 +258,7 @@ sap.ui.define([
         },
 
         markAllNotificationsAsRead: function () {
-            const notifications = this.oNotificationModel.getProperty("/notifications");
+            const notifications = this.oNotificationModel.getProperty('/notifications');
             notifications.forEach(n => {
                 if (n.status === 'unread') {
                     n.status = 'read';
@@ -269,7 +269,7 @@ sap.ui.define([
         },
 
         removeNotification: function (notificationId) {
-            const notifications = this.oNotificationModel.getProperty("/notifications");
+            const notifications = this.oNotificationModel.getProperty('/notifications');
             const index = notifications.findIndex(n => n.ID === notificationId);
             if (index >= 0) {
                 notifications.splice(index, 1);
@@ -281,14 +281,14 @@ sap.ui.define([
             const message = `${notification.title}: ${notification.message}`;
             MessageToast.show(message, {
                 duration: 5000,
-                width: "25em"
+                width: '25em'
             });
         },
 
         setupAutoRefresh: function () {
             // Refresh notifications every 5 minutes as fallback
             this.autoRefreshInterval = setInterval(() => {
-                if (this.oNotificationModel.getProperty("/connectionStatus") === "disconnected") {
+                if (this.oNotificationModel.getProperty('/connectionStatus') === 'disconnected') {
                     this.loadNotifications();
                 }
             }, 300000);
@@ -302,7 +302,7 @@ sap.ui.define([
 
         onRefresh: function () {
             this.loadNotifications();
-            MessageToast.show("Notifications refreshed");
+            MessageToast.show('Notifications refreshed');
         },
 
         onOpenSettings: function () {
@@ -310,23 +310,23 @@ sap.ui.define([
         },
 
         onFilterChange: function () {
-            this.oPaginationModel.setProperty("/offset", 0);
-            this.oPaginationModel.setProperty("/currentPage", 1);
+            this.oPaginationModel.setProperty('/offset', 0);
+            this.oPaginationModel.setProperty('/currentPage', 1);
             this.loadNotifications();
         },
 
         onClearFilters: function () {
             this.oFilterModel.setData({
-                status: "",
-                type: "",
-                priority: "",
-                category: ""
+                status: '',
+                type: '',
+                priority: '',
+                category: ''
             });
             this.loadNotifications();
         },
 
         onNotificationPress: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("notificationModel");
+            const oContext = oEvent.getSource().getBindingContext('notificationModel');
             const notification = oContext.getObject();
             
             // Mark as read if unread
@@ -340,13 +340,13 @@ sap.ui.define([
         },
 
         onMarkRead: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("notificationModel");
+            const oContext = oEvent.getSource().getBindingContext('notificationModel');
             const notification = oContext.getObject();
             this.markNotificationRead(notification.ID);
         },
 
         onMarkAllRead: function () {
-            MessageBox.confirm("Mark all notifications as read?", {
+            MessageBox.confirm('Mark all notifications as read?', {
                 onOK: () => {
                     this.sendWebSocketMessage({
                         type: 'mark_all_read'
@@ -356,16 +356,16 @@ sap.ui.define([
         },
 
         onDismiss: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("notificationModel");
+            const oContext = oEvent.getSource().getBindingContext('notificationModel');
             const notification = oContext.getObject();
             this.dismissNotification(notification.ID);
         },
 
         onDelete: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("notificationModel");
+            const oContext = oEvent.getSource().getBindingContext('notificationModel');
             const notification = oContext.getObject();
             
-            MessageBox.confirm("Delete this notification?", {
+            MessageBox.confirm('Delete this notification?', {
                 onOK: () => {
                     this.deleteNotification(notification.ID);
                 }
@@ -373,8 +373,8 @@ sap.ui.define([
         },
 
         onActionPress: function (oEvent) {
-            const actionType = oEvent.getSource().data("actionType");
-            const target = oEvent.getSource().data("target");
+            const actionType = oEvent.getSource().data('actionType');
+            const target = oEvent.getSource().data('target');
             
             switch (actionType) {
                 case 'navigate':
@@ -412,7 +412,7 @@ sap.ui.define([
         openSettingsDialog: function () {
             if (!this.settingsDialog) {
                 Fragment.load({
-                    name: "a2a.network.view.fragment.NotificationSettings",
+                    name: 'a2a.network.view.fragment.NotificationSettings',
                     controller: this
                 }).then((oDialog) => {
                     this.settingsDialog = oDialog;
@@ -420,7 +420,7 @@ sap.ui.define([
                     
                     // Load current settings
                     const currentSettings = this.oSettingsModel.getData() || {};
-                    this.settingsDialog.getModel("settingsModel").setData(currentSettings);
+                    this.settingsDialog.getModel('settingsModel').setData(currentSettings);
                     
                     oDialog.open();
                 });
@@ -449,20 +449,20 @@ sap.ui.define([
                 this.registerServiceWorker().then(() => {
                     return this.subscribeToPush();
                 }).then((subscription) => {
-                    this.oSettingsModel.setProperty("/pushToken", subscription.endpoint);
-                    MessageToast.show("Push notifications enabled");
+                    this.oSettingsModel.setProperty('/pushToken', subscription.endpoint);
+                    MessageToast.show('Push notifications enabled');
                 }).catch((error) => {
-                    console.error("Failed to enable push notifications:", error);
-                    MessageToast.show("Failed to enable push notifications");
+                    console.error('Failed to enable push notifications:', error);
+                    MessageToast.show('Failed to enable push notifications');
                 });
             } else {
-                MessageToast.show("Push notifications not supported");
+                MessageToast.show('Push notifications not supported');
             }
         },
 
         onDisablePush: function () {
-            this.oSettingsModel.setProperty("/pushToken", null);
-            MessageToast.show("Push notifications disabled");
+            this.oSettingsModel.setProperty('/pushToken', null);
+            MessageToast.show('Push notifications disabled');
         },
 
         // Helper Methods
@@ -488,12 +488,12 @@ sap.ui.define([
 
         navigateToTarget: function (target) {
             // Implement navigation based on your router
-            console.log("Navigate to:", target);
+            console.log('Navigate to:', target);
         },
 
         callAPI: function (endpoint) {
             // Implement API call
-            console.log("Call API:", endpoint);
+            console.log('Call API:', endpoint);
         },
 
         registerServiceWorker: function () {

@@ -20,20 +20,20 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var path = require('path');
-var fs = require('fs');
-var Thrift = require('../thrift').Thrift;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const path = require('path');
+const fs = require('fs');
+const Thrift = require('../thrift').Thrift;
 
-var thrift = new Thrift({
+const thrift = new Thrift({
     entryPoint: path.join(__dirname, 'list.thrift'),
     fs: fs
 });
 
-var byteList = thrift.models.ListOfI8;
-var stringList = thrift.models.ListOfString;
-var listList = thrift.models.ListOfListOfStruct;
+const byteList = thrift.models.ListOfI8;
+const stringList = thrift.models.ListOfString;
+const listList = thrift.models.ListOfListOfStruct;
 
 test('ThriftList.rw: list of bytes', testRW.cases(byteList.rw, [
 

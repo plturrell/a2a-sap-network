@@ -373,12 +373,12 @@ sap.ui.define([
                 });
 
                 this._backupWs.onclose = function() {
-                    // console.info("Backup WebSocket closed, will reconnect...");
+                    // // console.info("Backup WebSocket closed, will reconnect...");
                     setTimeout(() => this._initializeBackupWebSocket(), 5000);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("Backup WebSocket not available");
+                // // console.warn("Backup WebSocket not available");
             }
         },
 
@@ -569,7 +569,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

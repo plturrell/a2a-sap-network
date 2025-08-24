@@ -20,11 +20,11 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var BufferRW = require('../base').BufferRW;
-var brokenRW = {
+const BufferRW = require('../base').BufferRW;
+const brokenRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(new Error('boom'));
     },
@@ -38,10 +38,10 @@ var brokenRW = {
 
 brokenRW.prototype = BufferRW.prototype;
 
-var atoms = require('../atoms');
-var VariableBufferRW = require('../variable_buffer_rw');
+const atoms = require('../atoms');
+const VariableBufferRW = require('../variable_buffer_rw');
 
-var normalTestCases = [
+const normalTestCases = [
     {
         lengthTest: {length: 1, value: undefined},
         writeTest: {bytes: [0x00], value: undefined}
@@ -95,7 +95,7 @@ test('VariableBufferRW: eager buf~1',
 test('VariableBufferRW: lazy buf~1',
     testRW.cases(VariableBufferRW(atoms.UInt8, true), normalTestCases));
 
-var brokenTestCases = [
+const brokenTestCases = [
     {
         lengthTest: {
             value: Buffer.from([2]),

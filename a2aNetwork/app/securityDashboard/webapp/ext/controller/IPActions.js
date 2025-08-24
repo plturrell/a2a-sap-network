@@ -1,15 +1,15 @@
 sap.ui.define([
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
-    "sap/m/Dialog",
-    "sap/m/Button",
-    "sap/m/Text",
-    "sap/m/Input",
-    "sap/m/Label",
-    "sap/m/VBox",
-    "sap/ui/core/ValueState"
-], function (MessageToast, MessageBox, Dialog, Button, Text, Input, Label, VBox, ValueState) {
-    "use strict";
+    'sap/m/MessageToast',
+    'sap/m/MessageBox',
+    'sap/m/Dialog',
+    'sap/m/Button',
+    'sap/m/Text',
+    'sap/m/Input',
+    'sap/m/Label',
+    'sap/m/VBox',
+    'sap/ui/core/ValueState'
+], (MessageToast, MessageBox, Dialog, Button, Text, Input, Label, VBox, ValueState) => {
+    'use strict';
 
     /**
      * IP Actions Controller Extension
@@ -27,7 +27,7 @@ sap.ui.define([
             const aSelectedContexts = this._getSelectedContexts(oEvent);
             
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
-                MessageToast.show("Please select at least one IP address to unblock");
+                MessageToast.show('Please select at least one IP address to unblock');
                 return;
             }
 
@@ -38,7 +38,7 @@ sap.ui.define([
             });
 
             if (aValidIPs.length === 0) {
-                MessageBox.error("Selected IP addresses are not currently blocked");
+                MessageBox.error('Selected IP addresses are not currently blocked');
                 return;
             }
 
@@ -56,7 +56,7 @@ sap.ui.define([
             const aSelectedContexts = this._getSelectedContexts(oEvent);
             
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
-                MessageToast.show("Please select at least one IP address to extend block");
+                MessageToast.show('Please select at least one IP address to extend block');
                 return;
             }
 
@@ -67,7 +67,7 @@ sap.ui.define([
             });
 
             if (aValidIPs.length === 0) {
-                MessageBox.error("Selected IP addresses cannot have their block extended (permanent blocks or inactive)");
+                MessageBox.error('Selected IP addresses cannot have their block extended (permanent blocks or inactive)');
                 return;
             }
 
@@ -83,7 +83,7 @@ sap.ui.define([
             const oBindingContext = this._getSelectedContexts(oEvent)[0];
             
             if (!oBindingContext) {
-                MessageToast.show("Please select an IP address to view details");
+                MessageToast.show('Please select an IP address to view details');
                 return;
             }
 
@@ -108,7 +108,7 @@ sap.ui.define([
             
             // Fallback to table selection
             if (aContexts.length === 0) {
-                const oTable = this.getView().byId("fe::table::BlockedIPs::LineItem");
+                const oTable = this.getView().byId('fe::table::BlockedIPs::LineItem');
                 if (oTable && oTable.getSelectedContexts) {
                     aContexts = oTable.getSelectedContexts();
                 }
@@ -125,7 +125,7 @@ sap.ui.define([
             
             // Create reason input
             const oReasonInput = new Input({
-                placeholder: "Enter reason for unblocking IP address(es)",
+                placeholder: 'Enter reason for unblocking IP address(es)',
                 required: true,
                 maxLength: 500
             });
@@ -135,9 +135,9 @@ sap.ui.define([
                 items: [
                     new Text({
                         text: `You are about to unblock ${aContexts.length} IP address(es). This will immediately allow traffic from these addresses.`
-                    }).addStyleClass("sapUiMediumMarginBottom"),
+                    }).addStyleClass('sapUiMediumMarginBottom'),
                     new Label({
-                        text: "Unblock Reason:",
+                        text: 'Unblock Reason:',
                         required: true
                     }),
                     oReasonInput
@@ -146,18 +146,18 @@ sap.ui.define([
 
             // Create dialog
             const oDialog = new Dialog({
-                title: "Unblock IP Addresses",
-                type: "Message",
-                state: "Warning",
+                title: 'Unblock IP Addresses',
+                type: 'Message',
+                state: 'Warning',
                 content: oDialogContent,
                 beginButton: new Button({
-                    text: "Unblock",
-                    type: "Emphasized",
+                    text: 'Unblock',
+                    type: 'Emphasized',
                     press: function () {
                         const sReason = oReasonInput.getValue().trim();
                         if (!sReason) {
                             oReasonInput.setValueState(ValueState.Error);
-                            oReasonInput.setValueStateText("Please provide a reason for unblocking");
+                            oReasonInput.setValueStateText('Please provide a reason for unblocking');
                             return;
                         }
                         
@@ -166,7 +166,7 @@ sap.ui.define([
                     }
                 }),
                 endButton: new Button({
-                    text: "Cancel",
+                    text: 'Cancel',
                     press: function () {
                         oDialog.close();
                     }
@@ -187,10 +187,10 @@ sap.ui.define([
             
             // Create duration input
             const oHoursInput = new Input({
-                placeholder: "24",
-                type: "Number",
+                placeholder: '24',
+                type: 'Number',
                 required: true,
-                value: "24"
+                value: '24'
             });
 
             // Create dialog content
@@ -198,32 +198,32 @@ sap.ui.define([
                 items: [
                     new Text({
                         text: `You are about to extend the block duration for ${aContexts.length} IP address(es).`
-                    }).addStyleClass("sapUiMediumMarginBottom"),
+                    }).addStyleClass('sapUiMediumMarginBottom'),
                     new Label({
-                        text: "Additional Hours:",
+                        text: 'Additional Hours:',
                         required: true
                     }),
                     oHoursInput,
                     new Text({
-                        text: "Note: This will extend the existing block duration by the specified hours."
-                    }).addStyleClass("sapUiSmallMarginTop")
+                        text: 'Note: This will extend the existing block duration by the specified hours.'
+                    }).addStyleClass('sapUiSmallMarginTop')
                 ]
             });
 
             // Create dialog
             const oDialog = new Dialog({
-                title: "Extend Block Duration",
-                type: "Message",
-                state: "Information",
+                title: 'Extend Block Duration',
+                type: 'Message',
+                state: 'Information',
                 content: oDialogContent,
                 beginButton: new Button({
-                    text: "Extend Block",
-                    type: "Emphasized",
+                    text: 'Extend Block',
+                    type: 'Emphasized',
                     press: function () {
                         const iHours = parseInt(oHoursInput.getValue());
                         if (!iHours || iHours < 1 || iHours > 8760) { // Max 1 year
                             oHoursInput.setValueState(ValueState.Error);
-                            oHoursInput.setValueStateText("Please enter a valid number between 1 and 8760 hours");
+                            oHoursInput.setValueStateText('Please enter a valid number between 1 and 8760 hours');
                             return;
                         }
                         
@@ -232,7 +232,7 @@ sap.ui.define([
                     }
                 }),
                 endButton: new Button({
-                    text: "Cancel",
+                    text: 'Cancel',
                     press: function () {
                         oDialog.close();
                     }
@@ -252,41 +252,41 @@ sap.ui.define([
             // Create dialog content with IP information
             const oDialogContent = new VBox({
                 items: [
-                    new Label({ text: "IP Address:" }),
-                    new Text({ text: oIPData.ipAddress }).addStyleClass("sapUiMediumMarginBottom"),
+                    new Label({ text: 'IP Address:' }),
+                    new Text({ text: oIPData.ipAddress }).addStyleClass('sapUiMediumMarginBottom'),
                     
-                    new Label({ text: "Block Type:" }),
-                    new Text({ text: oIPData.blockType }).addStyleClass("sapUiMediumMarginBottom"),
+                    new Label({ text: 'Block Type:' }),
+                    new Text({ text: oIPData.blockType }).addStyleClass('sapUiMediumMarginBottom'),
                     
-                    new Label({ text: "Reason:" }),
-                    new Text({ text: oIPData.reason }).addStyleClass("sapUiMediumMarginBottom"),
+                    new Label({ text: 'Reason:' }),
+                    new Text({ text: oIPData.reason }).addStyleClass('sapUiMediumMarginBottom'),
                     
-                    new Label({ text: "Country:" }),
-                    new Text({ text: oIPData.country || "Unknown" }).addStyleClass("sapUiMediumMarginBottom"),
+                    new Label({ text: 'Country:' }),
+                    new Text({ text: oIPData.country || 'Unknown' }).addStyleClass('sapUiMediumMarginBottom'),
                     
-                    new Label({ text: "Organization:" }),
-                    new Text({ text: oIPData.organization || "Unknown" }).addStyleClass("sapUiMediumMarginBottom"),
+                    new Label({ text: 'Organization:' }),
+                    new Text({ text: oIPData.organization || 'Unknown' }).addStyleClass('sapUiMediumMarginBottom'),
                     
-                    new Label({ text: "Blocked Since:" }),
-                    new Text({ text: new Date(oIPData.blockedAt).toLocaleString() }).addStyleClass("sapUiMediumMarginBottom"),
+                    new Label({ text: 'Blocked Since:' }),
+                    new Text({ text: new Date(oIPData.blockedAt).toLocaleString() }).addStyleClass('sapUiMediumMarginBottom'),
                     
-                    new Label({ text: "Attempt Count:" }),
-                    new Text({ text: oIPData.attemptCount.toString() }).addStyleClass("sapUiMediumMarginBottom")
+                    new Label({ text: 'Attempt Count:' }),
+                    new Text({ text: oIPData.attemptCount.toString() }).addStyleClass('sapUiMediumMarginBottom')
                 ]
             });
 
             // Add expiration info if temporary block
             if (oIPData.expiresAt) {
-                oDialogContent.addItem(new Label({ text: "Expires At:" }));
-                oDialogContent.addItem(new Text({ text: new Date(oIPData.expiresAt).toLocaleString() }).addStyleClass("sapUiMediumMarginBottom"));
+                oDialogContent.addItem(new Label({ text: 'Expires At:' }));
+                oDialogContent.addItem(new Text({ text: new Date(oIPData.expiresAt).toLocaleString() }).addStyleClass('sapUiMediumMarginBottom'));
             }
 
             // Create dialog
             const oDialog = new Dialog({
-                title: "IP Address Details",
+                title: 'IP Address Details',
                 content: oDialogContent,
                 endButton: new Button({
-                    text: "Close",
+                    text: 'Close',
                     press: function () {
                         oDialog.close();
                     }
@@ -410,11 +410,11 @@ sap.ui.define([
         _getCurrentUser: function () {
             // Try to get from user info service
             try {
-                const oUserInfoService = sap.ushell.Container.getService("UserInfo");
-                return oUserInfoService.getId() || "SYSTEM";
+                const oUserInfoService = sap.ushell.Container.getService('UserInfo');
+                return oUserInfoService.getId() || 'SYSTEM';
             } catch (e) {
                 // Fallback for non-Fiori Launchpad environments
-                return "SECURITY_ADMIN";
+                return 'SECURITY_ADMIN';
             }
         }
     };

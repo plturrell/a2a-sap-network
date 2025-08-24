@@ -1,11 +1,11 @@
 'use strict';
 
-var inspect = require('../');
-var test = require('tape');
-var hasToStringTag = require('has-tostringtag/shams')();
-var forEach = require('for-each');
+const inspect = require('../');
+const test = require('tape');
+const hasToStringTag = require('has-tostringtag/shams')();
+const forEach = require('for-each');
 
-test('fakes', { skip: !hasToStringTag }, function (t) {
+test('fakes', { skip: !hasToStringTag }, (t) => {
     forEach([
         'Array',
         'Boolean',
@@ -14,14 +14,14 @@ test('fakes', { skip: !hasToStringTag }, function (t) {
         'Number',
         'RegExp',
         'String'
-    ], function (expected) {
-        var faker = {};
+    ], (expected) => {
+        const faker = {};
         faker[Symbol.toStringTag] = expected;
 
         t.equal(
             inspect(faker),
-            '{ [Symbol(Symbol.toStringTag)]: \'' + expected + '\' }',
-            'faker masquerading as ' + expected + ' is not shown as one'
+            `{ [Symbol(Symbol.toStringTag)]: '${  expected  }' }`,
+            `faker masquerading as ${  expected  } is not shown as one`
         );
     });
 

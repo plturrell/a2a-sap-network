@@ -22,7 +22,7 @@ const TOKENS = [
   { Token: artifacts.require('$ERC20VotesLegacyMock'), mode: 'blocknumber' },
 ];
 
-contract('Governor', function (accounts) {
+contract('Governor', (accounts) => {
   const [owner, proposer, voter1, voter2, voter3, voter4] = accounts;
 
   const name = 'OZ-Governor';
@@ -34,7 +34,7 @@ contract('Governor', function (accounts) {
   const value = web3.utils.toWei('1');
 
   for (const { mode, Token } of TOKENS) {
-    describe(`using ${Token._json.contractName}`, function () {
+    describe(`using ${Token._json.contractName}`, () => {
       beforeEach(async function () {
         this.chainId = await web3.eth.getChainId();
         this.token = await Token.new(tokenName, tokenSymbol, tokenName);
@@ -226,15 +226,15 @@ contract('Governor', function (accounts) {
         expect(await web3.eth.getBalance(empty)).to.be.bignumber.equal(value);
       });
 
-      describe('should revert', function () {
-        describe('on propose', function () {
+      describe('should revert', () => {
+        describe('on propose', () => {
           it('if proposal already exists', async function () {
             await this.helper.propose();
             await expectRevert(this.helper.propose(), 'Governor: proposal already exists');
           });
         });
 
-        describe('on vote', function () {
+        describe('on vote', () => {
           it('if proposal does not exist', async function () {
             await expectRevert(
               this.helper.vote({ support: Enums.VoteType.For }, { from: voter1 }),
@@ -279,7 +279,7 @@ contract('Governor', function (accounts) {
           });
         });
 
-        describe('on execute', function () {
+        describe('on execute', () => {
           it('if proposal does not exist', async function () {
             await expectRevert(this.helper.execute(), 'Governor: unknown proposal id');
           });
@@ -352,7 +352,7 @@ contract('Governor', function (accounts) {
         });
       });
 
-      describe('state', function () {
+      describe('state', () => {
         it('Unset', async function () {
           await expectRevert(this.mock.state(this.proposal.id), 'Governor: unknown proposal id');
         });
@@ -394,8 +394,8 @@ contract('Governor', function (accounts) {
         });
       });
 
-      describe('cancel', function () {
-        describe('internal', function () {
+      describe('cancel', () => {
+        describe('internal', () => {
           it('before proposal', async function () {
             await expectRevert(this.helper.cancel('internal'), 'Governor: unknown proposal id');
           });
@@ -448,7 +448,7 @@ contract('Governor', function (accounts) {
           });
         });
 
-        describe('public', function () {
+        describe('public', () => {
           it('before proposal', async function () {
             await expectRevert(this.helper.cancel('external'), 'Governor: unknown proposal id');
           });
@@ -501,7 +501,7 @@ contract('Governor', function (accounts) {
         });
       });
 
-      describe('proposal length', function () {
+      describe('proposal length', () => {
         it('empty', async function () {
           this.helper.setProposal([], '<proposal description>');
           await expectRevert(this.helper.propose(), 'Governor: empty proposal');
@@ -544,7 +544,7 @@ contract('Governor', function (accounts) {
         });
       });
 
-      describe('onlyGovernance updates', function () {
+      describe('onlyGovernance updates', () => {
         it('setVotingDelay is protected', async function () {
           await expectRevert(this.mock.setVotingDelay('0'), 'Governor: onlyGovernance');
         });
@@ -643,8 +643,8 @@ contract('Governor', function (accounts) {
         });
       });
 
-      describe('safe receive', function () {
-        describe('ERC721', function () {
+      describe('safe receive', () => {
+        describe('ERC721', () => {
           const name = 'Non Fungible Token';
           const symbol = 'NFT';
           const tokenId = web3.utils.toBN(1);
@@ -659,7 +659,7 @@ contract('Governor', function (accounts) {
           });
         });
 
-        describe('ERC1155', function () {
+        describe('ERC1155', () => {
           const uri = 'https://token-cdn-domain/{id}.json';
           const tokenIds = {
             1: web3.utils.toBN(1000),

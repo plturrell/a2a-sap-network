@@ -20,16 +20,16 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var fs = require('fs');
-var path = require('path');
-var Thrift = require('../thrift').Thrift;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const fs = require('fs');
+const path = require('path');
+const Thrift = require('../thrift').Thrift;
 
-var source = fs.readFileSync(path.join(__dirname, 'exception.thrift'), 'ascii');
-var thrift = new Thrift({source: source});
+const source = fs.readFileSync(path.join(__dirname, 'exception.thrift'), 'ascii');
+const thrift = new Thrift({source: source});
 
-var err = new thrift.BogusNameError({message: 'Bogus name: Voldemort', bogusName: 'Voldemort'});
+const err = new thrift.BogusNameError({message: 'Bogus name: Voldemort', bogusName: 'Voldemort'});
 
 test('Exception RW', testRW.cases(thrift.BogusNameError.rw, [
 
@@ -52,7 +52,7 @@ test('Exception RW', testRW.cases(thrift.BogusNameError.rw, [
 
 ]));
 
-var err2 = new thrift.BogusWithType({message: 'Bogus name: Voldemort', type: 'Voldemort'});
+const err2 = new thrift.BogusWithType({message: 'Bogus name: Voldemort', type: 'Voldemort'});
 
 test('Exception RW with type', testRW.cases(thrift.BogusWithType.rw, [
 

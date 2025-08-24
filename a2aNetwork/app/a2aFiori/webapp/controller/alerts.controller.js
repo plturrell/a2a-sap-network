@@ -97,7 +97,7 @@ sap.ui.define([
                 ]).then((data) => {
                     sap.base.Log.info("Subscribed to alert topics", data, "Alerts");
                 }).catch((error) => {
-                    // console.error("Failed to subscribe to alert topics:", error);
+                    // // console.error("Failed to subscribe to alert topics:", error);
                 });
 
                 // Listen for real-time alert events
@@ -106,7 +106,7 @@ sap.ui.define([
                 WebSocketUtil.on("system.health.changed", this._handleSystemHealthChange.bind(this));
 
             }).catch((error) => {
-                // console.error("Failed to establish WebSocket connection:", error);
+                // // console.error("Failed to establish WebSocket connection:", error);
                 // Fallback: retry connection after 5 seconds
                 setTimeout(this._setupRealtimeAlerts.bind(this), 5000);
             });
@@ -193,7 +193,7 @@ sap.ui.define([
                 const audio = new Audio("/sounds/alert.mp3");
                 audio.play();
             } catch (e) {
-                // console.error("Failed to play alert sound:", e);
+                // // console.error("Failed to play alert sound:", e);
             }
         },
 
@@ -204,9 +204,9 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
 
             Promise.all([
-                blockchainClient.sendMessage(`${apiBaseUrl}/alerts/active`),
-                blockchainClient.sendMessage(`${apiBaseUrl}/alerts/history`),
-                blockchainClient.sendMessage(`${apiBaseUrl}/alerts/rules`)
+                fetch(`${apiBaseUrl}/alerts/active`),
+                fetch(`${apiBaseUrl}/alerts/history`),
+                fetch(`${apiBaseUrl}/alerts/rules`)
             ]).then(responses => {
                 return Promise.all(responses.map(r => r.json()));
             }).then(([activeAlerts, alertHistory, alertRules]) => {
@@ -217,7 +217,7 @@ sap.ui.define([
                 this._updateStatistics();
                 this.hideLoading();
             }).catch(error => {
-                // console.error("Failed to load alerts:", error);
+                // // console.error("Failed to load alerts:", error);
                 this.hideLoading();
                 this.showErrorMessage(this.getResourceBundle().getText("alerts.loadError"));
             });
@@ -577,7 +577,7 @@ sap.ui.define([
                     const oSettings = JSON.parse(sSavedSettings);
                     this.oSettingsModel.setData(oSettings);
                 } catch (e) {
-                    // console.error("Failed to load notification settings:", e);
+                    // // console.error("Failed to load notification settings:", e);
                 }
             }
         },
@@ -657,7 +657,7 @@ sap.ui.define([
                     "agent.events",
                     "service.events"
                 ]).catch((error) => {
-                    // console.error("Error unsubscribing from WebSocket topics:", error);
+                    // // console.error("Error unsubscribing from WebSocket topics:", error);
                 });
 
                 // Remove event listeners

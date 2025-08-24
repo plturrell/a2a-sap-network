@@ -1,21 +1,21 @@
-var find = require('../');
-var test = require('tap').test;
+const find = require('../');
+const test = require('tap').test;
 
-test('single file', function (t) {
+test('single file', (t) => {
     t.plan(2);
     
-    var finder = find(__filename);
-    var files = [];
-    finder.on('file', function (file) {
+    const finder = find(__filename);
+    const files = [];
+    finder.on('file', (file) => {
         t.equal(file, __filename);
         files.push(file);
     });
     
-    finder.on('directory', function (dir) {
+    finder.on('directory', (dir) => {
         t.fail(dir);
     });
     
-    finder.on('end', function () {
+    finder.on('end', () => {
         t.deepEqual(files, [ __filename ]);
     });
 });

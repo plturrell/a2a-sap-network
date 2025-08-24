@@ -20,17 +20,17 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
 
-var thriftrw = require('../index');
-var I16RW = thriftrw.I16RW;
-var ThriftI16 = thriftrw.ThriftI16;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const I16RW = thriftrw.I16RW;
+const ThriftI16 = thriftrw.ThriftI16;
+const TYPE = require('../TYPE');
 
 /*eslint-disable space-in-brackets,no-multi-spaces*/
-var testCases = [
+const testCases = [
     [-0x1234, [0xed, 0xcc]],
     [      0, [0x00, 0x00]],
     [ 0x1234, [0x12, 0x34]],

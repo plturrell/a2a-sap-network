@@ -1,15 +1,15 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"sap/ui/test/opaQunit",
-	"./pages/ProjectsList",
-	"./pages/App"
-], function (opaTest) {
-	"use strict";
+	'sap/ui/test/opaQunit',
+	'./pages/ProjectsList',
+	'./pages/App'
+], (opaTest) => {
+	'use strict';
 
-	QUnit.module("Projects List");
+	QUnit.module('Projects List');
 
-	opaTest("Should see the projects list", function (Given, When, Then) {
+	opaTest('Should see the projects list', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop();
 
@@ -18,16 +18,16 @@ sap.ui.define([
 
 		// Assertions
 		Then.onTheProjectsListPage.iShouldSeeTheProjectsList().
-			and.iShouldSeeThePageTitle("Projects");
+			and.iShouldSeeThePageTitle('Projects');
 
 		// Cleanup
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should be able to load projects", function (Given, When, Then) {
+	opaTest('Should be able to load projects', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -41,31 +41,31 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should be able to search for projects", function (Given, When, Then) {
+	opaTest('Should be able to search for projects', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
-		When.onTheProjectsListPage.iEnterSearchText("Test Project").
+		When.onTheProjectsListPage.iEnterSearchText('Test Project').
 			and.iPressTheSearchButton();
 
 		// Assertions
-		Then.onTheProjectsListPage.iShouldSeeSearchResults("Test Project");
+		Then.onTheProjectsListPage.iShouldSeeSearchResults('Test Project');
 
 		// Cleanup
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should be able to filter projects by status", function (Given, When, Then) {
+	opaTest('Should be able to filter projects by status', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
-		When.onTheProjectsListPage.iSelectStatusFilter("Active").
+		When.onTheProjectsListPage.iSelectStatusFilter('Active').
 			and.iPressTheGoButton();
 
 		// Assertions
@@ -75,10 +75,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should show no data message when no projects exist", function (Given, When, Then) {
+	opaTest('Should show no data message when no projects exist', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -92,10 +92,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should be able to create a new project", function (Given, When, Then) {
+	opaTest('Should be able to create a new project', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -108,10 +108,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should be able to select and delete projects", function (Given, When, Then) {
+	opaTest('Should be able to select and delete projects', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -127,10 +127,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should be responsive on mobile devices", function (Given, When, Then) {
+	opaTest('Should be responsive on mobile devices', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnAPhone({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -144,10 +144,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should handle error scenarios gracefully", function (Given, When, Then) {
+	opaTest('Should handle error scenarios gracefully', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -161,10 +161,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should export projects to Excel", function (Given, When, Then) {
+	opaTest('Should export projects to Excel', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions
@@ -179,10 +179,10 @@ sap.ui.define([
 		Then.iTeardownMyApp();
 	});
 
-	opaTest("Should support keyboard navigation", function (Given, When, Then) {
+	opaTest('Should support keyboard navigation', (Given, When, Then) => {
 		// Arrangements
 		Given.iStartMyAppOnADesktop({
-			hash: "projects"
+			hash: 'projects'
 		});
 
 		// Actions

@@ -20,15 +20,15 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
 
-var Thrift = require('../thrift').Thrift;
-var fs = require('fs');
-var path = require('path');
-var source = fs.readFileSync(path.join(__dirname, 'recursion.thrift'), 'ascii');
-var thrift = new Thrift({source: source});
-var Shark = thrift.Shark;
+const Thrift = require('../thrift').Thrift;
+const fs = require('fs');
+const path = require('path');
+const source = fs.readFileSync(path.join(__dirname, 'recursion.thrift'), 'ascii');
+const thrift = new Thrift({source: source});
+const Shark = thrift.Shark;
 
 test('recursive rw', testRW.cases(Shark.rw, [
 

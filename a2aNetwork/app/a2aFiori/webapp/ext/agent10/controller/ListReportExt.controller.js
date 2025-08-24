@@ -563,17 +563,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateDashboardMetrics(data, oDialog);
                     } catch (error) {
-                        // console.error("Error parsing metrics data:", error);
+                        // // console.error("Error parsing metrics data:", error);
                     }
                 }.bind(this);
 
                 this._metricsEventSource.onerror = function(error) {
-                    // console.warn("Metrics stream error, falling back to polling:", error);
+                    // // console.warn("Metrics stream error, falling back to polling:", error);
                     this._startMetricsPolling(oDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startMetricsPolling(oDialog);
             }
         },
@@ -608,7 +608,7 @@ sap.ui.define([
                     this._updateDashboardMetrics(data, oDialog);
                 }.bind(this),
                 error(error) {
-                    // console.warn("Failed to fetch metrics update:", error);
+                    // // console.warn("Failed to fetch metrics update:", error);
                 }
             });
         },
@@ -734,7 +734,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
+                // // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -784,7 +784,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                // console.error("Error processing calculation update:", error);
+                // // console.error("Error processing calculation update:", error);
             }
         },
 
@@ -1338,7 +1338,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

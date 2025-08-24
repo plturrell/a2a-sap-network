@@ -8,7 +8,7 @@ test('salt_length', () => {
     return Promise.all(Array.from({length: EXPECTED},
         () => bcrypt.genSalt(10)
             .then(salt => expect(salt).toHaveLength(29))));
-})
+});
 
 test('test_hash_length', () => {
     expect.assertions(EXPECTED);
@@ -16,7 +16,7 @@ test('test_hash_length', () => {
     return Promise.all(Array.from({length: EXPECTED},
         () => bcrypt.hash('test', SALT)
             .then(hash => expect(hash).toHaveLength(60))));
-})
+});
 
 test('test_compare', () => {
     expect.assertions(EXPECTED);
@@ -24,20 +24,20 @@ test('test_compare', () => {
     return Promise.all(Array.from({length: EXPECTED},
         () => bcrypt.compare('test', HASH)
             .then(match => expect(match).toEqual(true))));
-})
+});
 
 test('test_hash_and_compare', () => {
     expect.assertions(EXPECTED * 3);
-    const salt = bcrypt.genSaltSync(4)
+    const salt = bcrypt.genSaltSync(4);
 
     return Promise.all(Array.from({length: EXPECTED},
         () => {
-            const password = 'secret' + Math.random();
+            const password = `secret${  Math.random()}`;
             return bcrypt.hash(password, salt)
                 .then(hash => {
                     expect(hash).toHaveLength(60);
                     const goodCompare = bcrypt.compare(password, hash).then(res => expect(res).toEqual(true));
-                    const badCompare = bcrypt.compare('bad' + password, hash).then(res => expect(res).toEqual(false));
+                    const badCompare = bcrypt.compare(`bad${  password}`, hash).then(res => expect(res).toEqual(false));
 
                     return Promise.all([goodCompare, badCompare]);
                 });

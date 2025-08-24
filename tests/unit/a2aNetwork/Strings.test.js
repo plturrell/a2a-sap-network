@@ -4,12 +4,12 @@ const { expect } = require('chai');
 
 const Strings = artifacts.require('$Strings');
 
-contract('Strings', function () {
+contract('Strings', () => {
   before(async function () {
     this.strings = await Strings.new();
   });
 
-  describe('toString', function () {
+  describe('toString', () => {
     const values = [
       '0',
       '7',
@@ -31,7 +31,7 @@ contract('Strings', function () {
       '1234567890123456789012345678901234567890123456789012345678901234567890',
     ];
 
-    describe('uint256', function () {
+    describe('uint256', () => {
       it('converts MAX_UINT256', async function () {
         const value = constants.MAX_UINT256;
         expect(await this.strings.methods['$toString(uint256)'](value)).to.equal(value.toString(10));
@@ -44,7 +44,7 @@ contract('Strings', function () {
       }
     });
 
-    describe('int256', function () {
+    describe('int256', () => {
       it('converts MAX_INT256', async function () {
         const value = constants.MAX_INT256;
         expect(await this.strings.methods['$toString(int256)'](value)).to.equal(value.toString(10));
@@ -68,7 +68,7 @@ contract('Strings', function () {
     });
   });
 
-  describe('toHexString', function () {
+  describe('toHexString', () => {
     it('converts 0', async function () {
       expect(await this.strings.methods['$toHexString(uint256)'](0)).to.equal('0x00');
     });
@@ -84,7 +84,7 @@ contract('Strings', function () {
     });
   });
 
-  describe('toHexString fixed', function () {
+  describe('toHexString fixed', () => {
     it('converts a positive number (long)', async function () {
       expect(await this.strings.methods['$toHexString(uint256,uint256)'](0x4132, 32)).to.equal(
         '0x0000000000000000000000000000000000000000000000000000000000004132',
@@ -105,7 +105,7 @@ contract('Strings', function () {
     });
   });
 
-  describe('toHexString address', function () {
+  describe('toHexString address', () => {
     it('converts a random address', async function () {
       const addr = '0xa9036907dccae6a1e0033479b12e837e5cf5a02f';
       expect(await this.strings.methods['$toHexString(address)'](addr)).to.equal(addr);
@@ -117,7 +117,7 @@ contract('Strings', function () {
     });
   });
 
-  describe('equal', function () {
+  describe('equal', () => {
     it('compares two empty strings', async function () {
       expect(await this.strings.methods['$equal(string,string)']('', '')).to.equal(true);
     });
@@ -137,7 +137,7 @@ contract('Strings', function () {
 
     it('compares two different large strings', async function () {
       const str1 = 'a'.repeat(201);
-      const str2 = 'a'.repeat(200) + 'b';
+      const str2 = `${'a'.repeat(200)  }b`;
       expect(await this.strings.methods['$equal(string,string)'](str1, str2)).to.equal(false);
     });
 

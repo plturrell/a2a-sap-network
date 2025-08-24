@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const api_1 = require("@opentelemetry/api");
-const index_1 = require("../src/index");
+Object.defineProperty(exports, '__esModule', { value: true });
+const assert = require('assert');
+const api_1 = require('@opentelemetry/api');
+const index_1 = require('../src/index');
 describe('addSqlCommenterComment', () => {
     it('adds comment to a simple query', () => {
         const spanContext = {
@@ -26,7 +26,7 @@ describe('addSqlCommenterComment', () => {
             traceFlags: api_1.TraceFlags.SAMPLED,
         };
         const query = 'SELECT * from FOO;';
-        assert.strictEqual((0, index_1.addSqlCommenterComment)(api_1.trace.wrapSpanContext(spanContext), query), "SELECT * from FOO; /*traceparent='00-d4cda95b652f4a1592b449d5929fda1b-6e0c63257de34c92-01'*/");
+        assert.strictEqual((0, index_1.addSqlCommenterComment)(api_1.trace.wrapSpanContext(spanContext), query), 'SELECT * from FOO; /*traceparent=\'00-d4cda95b652f4a1592b449d5929fda1b-6e0c63257de34c92-01\'*/');
     });
     it('does not add a comment if query already has a comment', () => {
         const span = api_1.trace.wrapSpanContext({
@@ -59,17 +59,17 @@ describe('addSqlCommenterComment', () => {
             traceState: (0, api_1.createTraceState)('foo=bar,baz=qux'),
         };
         const query = 'SELECT * from FOO;';
-        assert.strictEqual((0, index_1.addSqlCommenterComment)(api_1.trace.wrapSpanContext(spanContext), query), "SELECT * from FOO; /*traceparent='00-d4cda95b652f4a1592b449d5929fda1b-6e0c63257de34c92-01',tracestate='foo%3Dbar%2Cbaz%3Dqux'*/");
+        assert.strictEqual((0, index_1.addSqlCommenterComment)(api_1.trace.wrapSpanContext(spanContext), query), 'SELECT * from FOO; /*traceparent=\'00-d4cda95b652f4a1592b449d5929fda1b-6e0c63257de34c92-01\',tracestate=\'foo%3Dbar%2Cbaz%3Dqux\'*/');
     });
     it('escapes special characters in values', () => {
         const spanContext = {
             traceId: 'd4cda95b652f4a1592b449d5929fda1b',
             spanId: '6e0c63257de34c92',
             traceFlags: api_1.TraceFlags.SAMPLED,
-            traceState: (0, api_1.createTraceState)("foo='bar,baz='qux!()*',hack='DROP TABLE"),
+            traceState: (0, api_1.createTraceState)('foo=\'bar,baz=\'qux!()*\',hack=\'DROP TABLE'),
         };
         const query = 'SELECT * from FOO;';
-        assert.strictEqual((0, index_1.addSqlCommenterComment)(api_1.trace.wrapSpanContext(spanContext), query), "SELECT * from FOO; /*traceparent='00-d4cda95b652f4a1592b449d5929fda1b-6e0c63257de34c92-01',tracestate='foo%3D%27bar%2Cbaz%3D%27qux%21%28%29%2A%27%2Chack%3D%27DROP%20TABLE'*/");
+        assert.strictEqual((0, index_1.addSqlCommenterComment)(api_1.trace.wrapSpanContext(spanContext), query), 'SELECT * from FOO; /*traceparent=\'00-d4cda95b652f4a1592b449d5929fda1b-6e0c63257de34c92-01\',tracestate=\'foo%3D%27bar%2Cbaz%3D%27qux%21%28%29%2A%27%2Chack%3D%27DROP%20TABLE\'*/');
     });
 });
 //# sourceMappingURL=sql-common.test.js.map

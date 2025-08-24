@@ -1,16 +1,16 @@
 sap.ui.define([
-    "sap/ui/test/Opa5",
-    "sap/ui/test/actions/Press",
-    "sap/ui/test/matchers/PropertyStrictEquals"
-], function (Opa5, Press, PropertyStrictEquals) {
-    "use strict";
+    'sap/ui/test/Opa5',
+    'sap/ui/test/actions/Press',
+    'sap/ui/test/matchers/PropertyStrictEquals'
+], (Opa5, Press, PropertyStrictEquals) => {
+    'use strict';
 
     /**
      * Accessibility Test Suite
      * Automated tests for WCAG 2.1 AA compliance
      */
     
-    QUnit.module("Accessibility Tests", {
+    QUnit.module('Accessibility Tests', {
         beforeEach: function () {
             // Initialize accessibility testing engine
             this.oAccessibilityEngine = new AccessibilityEngine();

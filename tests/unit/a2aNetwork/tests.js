@@ -33,17 +33,17 @@ module.exports = function runSymbolTests(t) {
 	t.equal(typeof Object.getOwnPropertySymbols, 'function', 'Object.getOwnPropertySymbols is a function');
 
 	/** @type {{ [k in symbol]?: unknown }} */
-	var obj = {};
-	var sym = Symbol('test');
-	var symObj = Object(sym);
+	const obj = {};
+	const sym = Symbol('test');
+	const symObj = Object(sym);
 	t.notEqual(typeof sym, 'string', 'Symbol is not a string');
 	t.equal(Object.prototype.toString.call(sym), '[object Symbol]', 'symbol primitive Object#toStrings properly');
 	t.equal(Object.prototype.toString.call(symObj), '[object Symbol]', 'symbol primitive Object#toStrings properly');
 
-	var symVal = 42;
+	const symVal = 42;
 	obj[sym] = symVal;
 	// eslint-disable-next-line no-restricted-syntax, no-unused-vars
-	for (var _ in obj) { t.fail('symbol property key was found in for..in of object'); }
+	for (const _ in obj) { t.fail('symbol property key was found in for..in of object'); }
 
 	t.deepEqual(Object.keys(obj), [], 'no enumerable own keys on symbol-valued object');
 	t.deepEqual(Object.getOwnPropertyNames(obj), [], 'no own names on symbol-valued object');

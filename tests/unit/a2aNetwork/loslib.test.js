@@ -1,15 +1,15 @@
-"use strict";
+'use strict';
 
 const lua     = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib  = require('../src/lualib.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 test('os.time', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return os.time()
     `;
     {
@@ -23,10 +23,10 @@ test('os.time', () => {
 
 
 test('os.time (with format)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return os.time({
             day = 8,
             month = 2,
@@ -45,10 +45,10 @@ test('os.time (with format)', () => {
 
 
 test('os.difftime', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t1 = os.time()
         local t2 = os.time()
         return os.difftime(t2, t1)
@@ -64,10 +64,10 @@ test('os.difftime', () => {
 
 
 test('os.date', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return os.date('%Y-%m-%d', os.time({
             day = 8,
             month = 2,
@@ -80,15 +80,15 @@ test('os.date', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("2015-02-08");
+    expect(lua.lua_tojsstring(L, -1)).toBe('2015-02-08');
 });
 
 
 test('os.date normalisation', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return os.date('%Y-%m-%d', os.time({
             day = 0,
             month = 0,
@@ -101,15 +101,15 @@ test('os.date normalisation', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("2013-11-30");
+    expect(lua.lua_tojsstring(L, -1)).toBe('2013-11-30');
 });
 
 
 test('os.time normalisation of table', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {
             day = 20,
             month = 2,
@@ -129,10 +129,10 @@ test('os.time normalisation of table', () => {
 
 
 test('os.getenv', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return os.getenv('PATH')
     `;
     {

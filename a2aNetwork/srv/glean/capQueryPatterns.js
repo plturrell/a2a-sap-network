@@ -374,7 +374,7 @@ class CAPQueryPatterns {
         
         // Add constraints
         if (constraints && constraints.length > 0) {
-            query += ' where ' + constraints.join(' && ');
+            query += ` where ${  constraints.join(' && ')}`;
         }
         
         return query;

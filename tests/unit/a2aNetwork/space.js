@@ -1,9 +1,9 @@
-var test = require('tape');
-var stringify = require('../');
+const test = require('tape');
+const stringify = require('../');
 
-test('space parameter', function (t) {
+test('space parameter', (t) => {
     t.plan(1);
-    var obj = { one: 1, two: 2 };
+    const obj = { one: 1, two: 2 };
     t.equal(stringify(obj, {space: '  '}), ''
         + '{\n'
         + '  "one": 1,\n'
@@ -12,9 +12,9 @@ test('space parameter', function (t) {
     );
 });
 
-test('space parameter (with tabs)', function (t) {
+test('space parameter (with tabs)', (t) => {
     t.plan(1);
-    var obj = { one: 1, two: 2 };
+    const obj = { one: 1, two: 2 };
     t.equal(stringify(obj, {space: '\t'}), ''
         + '{\n'
         + '\t"one": 1,\n'
@@ -23,9 +23,9 @@ test('space parameter (with tabs)', function (t) {
     );
 });
 
-test('space parameter (with a number)', function (t) {
+test('space parameter (with a number)', (t) => {
     t.plan(1);
-    var obj = { one: 1, two: 2 };
+    const obj = { one: 1, two: 2 };
     t.equal(stringify(obj, {space: 3}), ''
         + '{\n'
         + '   "one": 1,\n'
@@ -34,9 +34,9 @@ test('space parameter (with a number)', function (t) {
     );
 });
 
-test('space parameter (nested objects)', function (t) {
+test('space parameter (nested objects)', (t) => {
     t.plan(1);
-    var obj = { one: 1, two: { b: 4, a: [2,3] } };
+    const obj = { one: 1, two: { b: 4, a: [2,3] } };
     t.equal(stringify(obj, {space: '  '}), ''
         + '{\n'
         + '  "one": 1,\n'
@@ -51,9 +51,9 @@ test('space parameter (nested objects)', function (t) {
     );
 });
 
-test('space parameter (same as native)', function (t) {
+test('space parameter (same as native)', (t) => {
     t.plan(1);
     // for this test, properties need to be in alphabetical order
-    var obj = { one: 1, two: { a: [2,3], b: 4 } };
+    const obj = { one: 1, two: { a: [2,3], b: 4 } };
     t.equal(stringify(obj, {space: '  '}), JSON.stringify(obj, null, '  '));
 });

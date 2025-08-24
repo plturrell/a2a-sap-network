@@ -1,16 +1,16 @@
 sap.ui.define([
-    "sap/ui/test/Opa5",
-    "sap/ui/test/actions/Press",
-    "sap/ui/test/matchers/PropertyStrictEquals"
-], function(Opa5, Press, PropertyStrictEquals) {
-    "use strict";
+    'sap/ui/test/Opa5',
+    'sap/ui/test/actions/Press',
+    'sap/ui/test/matchers/PropertyStrictEquals'
+], (Opa5, Press, PropertyStrictEquals) => {
+    'use strict';
 
     /**
      * Accessibility Test Suite
      * Automated tests for WCAG 2.1 AA compliance
      */
 
-    QUnit.module("Accessibility Tests", {
+    QUnit.module('Accessibility Tests', {
         beforeEach() {
             // Initialize accessibility testing engine
             this.oAccessibilityEngine = new AccessibilityEngine();
@@ -46,7 +46,7 @@ sap.ui.define([
             const oResult = {
                 element,
                 tabIndex: element.tabIndex,
-                hasTabIndex: element.hasAttribute("tabindex"),
+                hasTabIndex: element.hasAttribute('tabindex'),
                 isKeyboardAccessible: this._isKeyboardAccessible(element),
                 hasVisualFocusIndicator: this._hasVisualFocusIndicator(element)
             };
@@ -56,19 +56,19 @@ sap.ui.define([
             // Check for violations
             if (!oResult.isKeyboardAccessible) {
                 this.aViolations.push({
-                    type: "keyboard-navigation",
-                    severity: "error",
+                    type: 'keyboard-navigation',
+                    severity: 'error',
                     element,
-                    message: "Element is not keyboard accessible"
+                    message: 'Element is not keyboard accessible'
                 });
             }
 
             if (!oResult.hasVisualFocusIndicator) {
                 this.aViolations.push({
-                    type: "focus-indicator",
-                    severity: "error",
+                    type: 'focus-indicator',
+                    severity: 'error',
                     element,
-                    message: "Element lacks visible focus indicator"
+                    message: 'Element lacks visible focus indicator'
                 });
             }
         });
@@ -103,8 +103,8 @@ sap.ui.define([
             // Check for AA violations
             if (!oResult.passesAA) {
                 this.aViolations.push({
-                    type: "color-contrast",
-                    severity: "error",
+                    type: 'color-contrast',
+                    severity: 'error',
                     element,
                     message: `Color contrast ratio ${fContrastRatio.toFixed(2)}:1 fails WCAG AA requirements`
                 });
@@ -118,16 +118,16 @@ sap.ui.define([
      * Test ARIA attributes and semantic structure
      */
     AccessibilityEngine.prototype.testARIACompliance = function(oElement) {
-        const aAllElements = oElement.querySelectorAll("*");
+        const aAllElements = oElement.querySelectorAll('*');
         const aResults = [];
 
         Array.from(aAllElements).forEach(element => {
             const oResult = {
                 element,
-                role: element.getAttribute("role"),
-                ariaLabel: element.getAttribute("aria-label"),
-                ariaLabelledBy: element.getAttribute("aria-labelledby"),
-                ariaDescribedBy: element.getAttribute("aria-describedby"),
+                role: element.getAttribute('role'),
+                ariaLabel: element.getAttribute('aria-label'),
+                ariaLabelledBy: element.getAttribute('aria-labelledby'),
+                ariaDescribedBy: element.getAttribute('aria-describedby'),
                 hasValidRole: this._hasValidARIARole(element),
                 hasAccessibleName: this._hasAccessibleName(element),
                 hasProperARIAAttributes: this._hasProperARIAAttributes(element)
@@ -138,17 +138,17 @@ sap.ui.define([
             // Check for violations
             if (this._requiresAccessibleName(element) && !oResult.hasAccessibleName) {
                 this.aViolations.push({
-                    type: "aria-missing-name",
-                    severity: "error",
+                    type: 'aria-missing-name',
+                    severity: 'error',
                     element,
-                    message: "Interactive element lacks accessible name"
+                    message: 'Interactive element lacks accessible name'
                 });
             }
 
             if (oResult.role && !oResult.hasValidRole) {
                 this.aViolations.push({
-                    type: "aria-invalid-role",
-                    severity: "error",
+                    type: 'aria-invalid-role',
+                    severity: 'error',
                     element,
                     message: `Invalid ARIA role: ${oResult.role}`
                 });
@@ -162,7 +162,7 @@ sap.ui.define([
      * Test heading hierarchy (H1-H6 structure)
      */
     AccessibilityEngine.prototype.testHeadingHierarchy = function(oElement) {
-        const aHeadings = Array.from(oElement.querySelectorAll("h1, h2, h3, h4, h5, h6, [role=\"heading\"]"));
+        const aHeadings = Array.from(oElement.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]'));
         const aResults = [];
         let iPreviousLevel = 0;
 
@@ -183,8 +183,8 @@ sap.ui.define([
             // Check for violations
             if (!bIsValidSequence) {
                 this.aViolations.push({
-                    type: "heading-hierarchy",
-                    severity: "error",
+                    type: 'heading-hierarchy',
+                    severity: 'error',
                     element: heading,
                     message: `Heading level ${iCurrentLevel} creates invalid hierarchy (previous: ${iPreviousLevel})`
                 });
@@ -192,10 +192,10 @@ sap.ui.define([
 
             if (!oResult.hasAccessibleText) {
                 this.aViolations.push({
-                    type: "heading-empty",
-                    severity: "error",
+                    type: 'heading-empty',
+                    severity: 'error',
                     element: heading,
-                    message: "Heading element has no accessible text"
+                    message: 'Heading element has no accessible text'
                 });
             }
 
@@ -209,7 +209,7 @@ sap.ui.define([
      * Test form accessibility (labels, fieldsets, etc.)
      */
     AccessibilityEngine.prototype.testFormAccessibility = function(oElement) {
-        const aFormElements = Array.from(oElement.querySelectorAll("input, select, textarea, button"));
+        const aFormElements = Array.from(oElement.querySelectorAll('input, select, textarea, button'));
         const aResults = [];
 
         aFormElements.forEach(element => {
@@ -218,7 +218,7 @@ sap.ui.define([
                 type: element.type || element.tagName.toLowerCase(),
                 hasLabel: this._hasAssociatedLabel(element),
                 hasAccessibleName: this._hasAccessibleName(element),
-                isRequired: element.hasAttribute("required") || element.getAttribute("aria-required") === "true",
+                isRequired: element.hasAttribute('required') || element.getAttribute('aria-required') === 'true',
                 hasRequiredIndicator: this._hasRequiredIndicator(element),
                 hasErrorMessage: this._hasErrorMessage(element)
             };
@@ -226,21 +226,21 @@ sap.ui.define([
             aResults.push(oResult);
 
             // Check for violations
-            if (["input", "select", "textarea"].includes(oResult.type) && !oResult.hasAccessibleName) {
+            if (['input', 'select', 'textarea'].includes(oResult.type) && !oResult.hasAccessibleName) {
                 this.aViolations.push({
-                    type: "form-missing-label",
-                    severity: "error",
+                    type: 'form-missing-label',
+                    severity: 'error',
                     element,
-                    message: "Form control lacks accessible label"
+                    message: 'Form control lacks accessible label'
                 });
             }
 
             if (oResult.isRequired && !oResult.hasRequiredIndicator) {
                 this.aViolations.push({
-                    type: "form-missing-required",
-                    severity: "warning",
+                    type: 'form-missing-required',
+                    severity: 'warning',
                     element,
-                    message: "Required form field lacks clear indication"
+                    message: 'Required form field lacks clear indication'
                 });
             }
         });
@@ -250,7 +250,7 @@ sap.ui.define([
 
     // Helper methods
     AccessibilityEngine.prototype._getFocusableElements = function(oElement) {
-        const sSelector = "a[href], button, input, select, textarea, [tabindex]:not([tabindex=\"-1\"]), [contenteditable=\"true\"]";
+        const sSelector = 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
         return Array.from(oElement.querySelectorAll(sSelector));
     };
 
@@ -262,10 +262,10 @@ sap.ui.define([
         // Simulate focus and check for visual changes
         const oOriginalStyle = window.getComputedStyle(oElement);
         oElement.focus();
-        const oFocusedStyle = window.getComputedStyle(oElement, ":focus");
+        const oFocusedStyle = window.getComputedStyle(oElement, ':focus');
 
         // Check if outline or border changes on focus
-        const bHasOutline = oFocusedStyle.outline !== "none" && oFocusedStyle.outline !== oOriginalStyle.outline;
+        const bHasOutline = oFocusedStyle.outline !== 'none' && oFocusedStyle.outline !== oOriginalStyle.outline;
         const bHasBorderChange = oFocusedStyle.border !== oOriginalStyle.border;
         const bHasBoxShadowChange = oFocusedStyle.boxShadow !== oOriginalStyle.boxShadow;
 
@@ -274,11 +274,11 @@ sap.ui.define([
 
     AccessibilityEngine.prototype._getTextElements = function(oElement) {
         // Get all elements that contain visible text
-        const aAllElements = Array.from(oElement.querySelectorAll("*"));
+        const aAllElements = Array.from(oElement.querySelectorAll('*'));
         return aAllElements.filter(el => {
             const sText = el.textContent.trim();
             const oStyle = window.getComputedStyle(el);
-            return sText.length > 0 && oStyle.display !== "none" && oStyle.visibility !== "hidden";
+            return sText.length > 0 && oStyle.display !== 'none' && oStyle.visibility !== 'hidden';
         });
     };
 
@@ -292,7 +292,7 @@ sap.ui.define([
 
     AccessibilityEngine.prototype._parseColor = function(sColor) {
         // Convert color to RGB values
-        const oDiv = document.createElement("div");
+        const oDiv = document.createElement('div');
         oDiv.style.color = sColor;
         document.body.appendChild(oDiv);
         const oComputedStyle = window.getComputedStyle(oDiv);
@@ -339,27 +339,27 @@ sap.ui.define([
         const sFontWeight = oStyle.fontWeight;
 
         // Large text is 18pt (24px) or 14pt (18.5px) if bold
-        return iFontSize >= 24 || (iFontSize >= 18.5 && (sFontWeight === "bold" || parseInt(sFontWeight) >= 700));
+        return iFontSize >= 24 || (iFontSize >= 18.5 && (sFontWeight === 'bold' || parseInt(sFontWeight) >= 700));
     };
 
     AccessibilityEngine.prototype._hasValidARIARole = function(oElement) {
-        const sRole = oElement.getAttribute("role");
+        const sRole = oElement.getAttribute('role');
         if (!sRole) {
             return true;
         } // No role is valid
 
         // List of valid ARIA roles
         const aValidRoles = [
-            "alert", "alertdialog", "application", "article", "banner", "button", "checkbox",
-            "columnheader", "combobox", "complementary", "contentinfo", "definition",
-            "dialog", "directory", "document", "form", "grid", "gridcell", "group",
-            "heading", "img", "link", "list", "listbox", "listitem", "log", "main",
-            "marquee", "math", "menu", "menubar", "menuitem", "menuitemcheckbox",
-            "menuitemradio", "navigation", "note", "option", "presentation", "progressbar",
-            "radio", "radiogroup", "region", "row", "rowgroup", "rowheader", "scrollbar",
-            "search", "separator", "slider", "spinbutton", "status", "tab", "tablist",
-            "tabpanel", "textbox", "timer", "toolbar", "tooltip", "tree", "treegrid",
-            "treeitem"
+            'alert', 'alertdialog', 'application', 'article', 'banner', 'button', 'checkbox',
+            'columnheader', 'combobox', 'complementary', 'contentinfo', 'definition',
+            'dialog', 'directory', 'document', 'form', 'grid', 'gridcell', 'group',
+            'heading', 'img', 'link', 'list', 'listbox', 'listitem', 'log', 'main',
+            'marquee', 'math', 'menu', 'menubar', 'menuitem', 'menuitemcheckbox',
+            'menuitemradio', 'navigation', 'note', 'option', 'presentation', 'progressbar',
+            'radio', 'radiogroup', 'region', 'row', 'rowgroup', 'rowheader', 'scrollbar',
+            'search', 'separator', 'slider', 'spinbutton', 'status', 'tab', 'tablist',
+            'tabpanel', 'textbox', 'timer', 'toolbar', 'tooltip', 'tree', 'treegrid',
+            'treeitem'
         ];
 
         return aValidRoles.includes(sRole);
@@ -367,9 +367,9 @@ sap.ui.define([
 
     AccessibilityEngine.prototype._hasAccessibleName = function(oElement) {
         return !!(
-            oElement.getAttribute("aria-label") ||
-            oElement.getAttribute("aria-labelledby") ||
-            oElement.getAttribute("title") ||
+            oElement.getAttribute('aria-label') ||
+            oElement.getAttribute('aria-labelledby') ||
+            oElement.getAttribute('title') ||
             this._getAssociatedLabelText(oElement) ||
             oElement.textContent.trim()
         );
@@ -378,11 +378,11 @@ sap.ui.define([
     AccessibilityEngine.prototype._requiresAccessibleName = function(oElement) {
         const sTagName = oElement.tagName.toLowerCase();
         const sType = oElement.type;
-        const sRole = oElement.getAttribute("role");
+        const sRole = oElement.getAttribute('role');
 
-        return ["button", "a", "input", "select", "textarea"].includes(sTagName) ||
-               ["button", "link", "textbox", "combobox"].includes(sRole) ||
-               (sTagName === "input" && ["button", "submit", "reset", "image"].includes(sType));
+        return ['button', 'a', 'input', 'select', 'textarea'].includes(sTagName) ||
+               ['button', 'link', 'textbox', 'combobox'].includes(sRole) ||
+               (sTagName === 'input' && ['button', 'submit', 'reset', 'image'].includes(sType));
     };
 
     AccessibilityEngine.prototype._getHeadingLevel = function(oElement) {
@@ -391,7 +391,7 @@ sap.ui.define([
             return parseInt(sTagName.charAt(1));
         }
 
-        const sAriaLevel = oElement.getAttribute("aria-level");
+        const sAriaLevel = oElement.getAttribute('aria-level');
         return sAriaLevel ? parseInt(sAriaLevel) : 2; // Default to level 2 for role="heading"
     };
 
@@ -404,18 +404,18 @@ sap.ui.define([
             }
         }
 
-        const oParentLabel = oElement.closest("label");
+        const oParentLabel = oElement.closest('label');
         return !!oParentLabel;
     };
 
     AccessibilityEngine.prototype._getAssociatedLabelText = function(oElement) {
-        const sLabelledBy = oElement.getAttribute("aria-labelledby");
+        const sLabelledBy = oElement.getAttribute('aria-labelledby');
         if (sLabelledBy) {
-            const aIds = sLabelledBy.split(" ");
+            const aIds = sLabelledBy.split(' ');
             return aIds.map(sId => {
                 const oElement = document.getElementById(sId);
-                return oElement ? oElement.textContent.trim() : "";
-            }).join(" ");
+                return oElement ? oElement.textContent.trim() : '';
+            }).join(' ');
         }
 
         const sId = oElement.id;
@@ -426,13 +426,13 @@ sap.ui.define([
             }
         }
 
-        const oParentLabel = oElement.closest("label");
-        return oParentLabel ? oParentLabel.textContent.trim() : "";
+        const oParentLabel = oElement.closest('label');
+        return oParentLabel ? oParentLabel.textContent.trim() : '';
     };
 
     AccessibilityEngine.prototype._hasRequiredIndicator = function(oElement) {
-        const bHasAriaRequired = oElement.getAttribute("aria-required") === "true";
-        const bHasRequiredAttr = oElement.hasAttribute("required");
+        const bHasAriaRequired = oElement.getAttribute('aria-required') === 'true';
+        const bHasRequiredAttr = oElement.hasAttribute('required');
         const bHasVisualIndicator = this._hasVisualRequiredIndicator(oElement);
 
         return bHasAriaRequired || bHasRequiredAttr || bHasVisualIndicator;
@@ -441,16 +441,16 @@ sap.ui.define([
     AccessibilityEngine.prototype._hasVisualRequiredIndicator = function(oElement) {
         // Check for common visual indicators like asterisks
         const sAssociatedText = this._getAssociatedLabelText(oElement);
-        return sAssociatedText.includes("*") || sAssociatedText.toLowerCase().includes("required");
+        return sAssociatedText.includes('*') || sAssociatedText.toLowerCase().includes('required');
     };
 
     AccessibilityEngine.prototype._hasErrorMessage = function(oElement) {
-        const sDescribedBy = oElement.getAttribute("aria-describedby");
+        const sDescribedBy = oElement.getAttribute('aria-describedby');
         if (sDescribedBy) {
-            const aIds = sDescribedBy.split(" ");
+            const aIds = sDescribedBy.split(' ');
             return aIds.some(sId => {
                 const oElement = document.getElementById(sId);
-                return oElement && oElement.getAttribute("role") === "alert";
+                return oElement && oElement.getAttribute('role') === 'alert';
             });
         }
         return false;

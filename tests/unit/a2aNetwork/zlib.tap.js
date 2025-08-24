@@ -1,25 +1,25 @@
 'use strict';
 
-var tap             = require('tap')
+const tap             = require('tap')
   , test            = tap.test
   , createNamespace = require('../context.js').createNamespace
   ;
 
-var zlib = require('zlib');
+const zlib = require('zlib');
 
-test("continuation-local state with zlib", function (t) {
+test('continuation-local state with zlib', (t) => {
   t.plan(1);
 
-  var namespace = createNamespace('namespace');
-  namespace.run(function () {
+  const namespace = createNamespace('namespace');
+  namespace.run(() => {
     namespace.set('test', 0xabad1dea);
 
-    t.test("deflate", function (t) {
-      namespace.run(function () {
+    t.test('deflate', (t) => {
+      namespace.run(() => {
         namespace.set('test', 42);
-        zlib.deflate(new Buffer("Goodbye World"), function (err) {
+        zlib.deflate(new Buffer('Goodbye World'), (err) => {
           if (err) throw err;
-          t.equal(namespace.get('test'), 42, "mutated state was preserved");
+          t.equal(namespace.get('test'), 42, 'mutated state was preserved');
           t.end();
         });
       });

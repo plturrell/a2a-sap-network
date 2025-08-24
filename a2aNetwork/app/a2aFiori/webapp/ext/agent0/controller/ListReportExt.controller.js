@@ -255,7 +255,7 @@ sap.ui.define([
                         this._handleProductUpdate(oData);
                     }.bind(this),
                     onerror: function(error) {
-                        // console.warn("Secure WebSocket error:", error);
+                        // // console.warn("Secure WebSocket error:", error);
                         this._initializePolling();
                     }.bind(this)
                 });
@@ -267,7 +267,7 @@ sap.ui.define([
                 }
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
+                // // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },

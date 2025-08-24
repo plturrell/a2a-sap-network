@@ -677,7 +677,7 @@ class Agent1UIScanner {
     }
 
     generateReport() {
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         console.log('📊 AGENT 1 UI SECURITY & STANDARDS REPORT');
         console.log('='.repeat(60));
 
@@ -700,7 +700,7 @@ class Agent1UIScanner {
             );
         }
 
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         
         if (percentage >= 95) {
             console.log('🎉 AGENT 1 UI ENTERPRISE READY');

@@ -132,26 +132,26 @@ class ChatAgentBridge extends EventEmitter {
             'agent_crash': {
                 greeting: `I can see Agent "${notificationContext.fromAgent}" has crashed. Let me help you diagnose and resolve this issue.`,
                 analysis: await this.analyzeAgentCrash(notificationContext),
-                nextSteps: "I can help you restart the agent safely, investigate the root cause, or escalate to the engineering team."
+                nextSteps: 'I can help you restart the agent safely, investigate the root cause, or escalate to the engineering team.'
             },
             
             'security_alert': {
                 greeting: `Security alert detected: "${notificationContext.title}". This requires immediate attention.`,
                 analysis: await this.analyzeSecurityThreat(notificationContext),
-                nextSteps: "I can help you assess the threat level, implement containment measures, or coordinate with the security team."
+                nextSteps: 'I can help you assess the threat level, implement containment measures, or coordinate with the security team.'
             },
             
             'workflow_approval': {
                 greeting: `You have a workflow approval request: "${notificationContext.title}"`,
                 analysis: await this.analyzeApprovalRequest(notificationContext), 
-                nextSteps: "I can provide more context about this request, check compliance requirements, or help you make an informed decision."
+                nextSteps: 'I can provide more context about this request, check compliance requirements, or help you make an informed decision.'
             }
         };
 
         const response = contextualResponses[notificationContext.type] || {
             greeting: `I'm here to help with: "${notificationContext.title}"`,
-            analysis: "Let me gather more information about this situation.",
-            nextSteps: "What specific aspect would you like me to help you with?"
+            analysis: 'Let me gather more information about this situation.',
+            nextSteps: 'What specific aspect would you like me to help you with?'
         };
 
         return `${response.greeting}\n\n${response.analysis}\n\n${response.nextSteps}`;
@@ -247,7 +247,7 @@ class ChatAgentBridge extends EventEmitter {
         } catch (error) {
             logger.error('Error routing to AI agent:', { error: error });
             return {
-                response: "I'm experiencing some technical difficulties. Let me try to help you with the basic information I have.",
+                response: 'I\'m experiencing some technical difficulties. Let me try to help you with the basic information I have.',
                 confidence: 0.3,
                 actions: ['retry', 'escalate_to_human']
             };
@@ -274,7 +274,7 @@ class ChatAgentBridge extends EventEmitter {
      */
     processAIAgentResponse(routingResponse, session) {
         // Extract meaningful response from A2A routing
-        const aiResponse = routingResponse.ai_response || routingResponse.response || "Let me look into this further.";
+        const aiResponse = routingResponse.ai_response || routingResponse.response || 'Let me look into this further.';
         
         return {
             response: aiResponse,
@@ -369,14 +369,14 @@ class ChatAgentBridge extends EventEmitter {
      * Generate unique session ID
      */
     generateSessionId() {
-        return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        return `chat_${  Date.now()  }_${  Math.random().toString(36).substr(2, 9)}`;
     }
 
     /**
      * Generate unique message ID
      */
     generateMessageId() {
-        return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        return `msg_${  Date.now()  }_${  Math.random().toString(36).substr(2, 5)}`;
     }
 
     /**

@@ -4,7 +4,7 @@ const { shouldBehaveLikeERC2981 } = require('../../common/ERC2981.behavior');
 
 const ERC721Royalty = artifacts.require('$ERC721Royalty');
 
-contract('ERC721Royalty', function (accounts) {
+contract('ERC721Royalty', (accounts) => {
   const [account1, account2] = accounts;
   const tokenId1 = new BN('1');
   const tokenId2 = new BN('2');
@@ -23,7 +23,7 @@ contract('ERC721Royalty', function (accounts) {
     this.salePrice = salePrice;
   });
 
-  describe('token specific functions', function () {
+  describe('token specific functions', () => {
     beforeEach(async function () {
       await this.token.$_setTokenRoyalty(tokenId1, account1, royalty);
     });

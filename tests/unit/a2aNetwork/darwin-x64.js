@@ -1,1 +1,1 @@
-module.exports = require('@node-rs/crc32-darwin-x64')
+module.exports = require('@node-rs/crc32-darwin-x64');

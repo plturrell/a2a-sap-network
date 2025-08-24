@@ -199,15 +199,15 @@ sap.ui.define([
 
         /* REMOVED: Fake log generation - now using real API data
         _generateSampleLogs: function() {
-            var aLogs = [];
-            var aSources = ["AgentService", "BlockchainService", "AuthService",
+            const aLogs = [];
+            const aSources = ["AgentService", "BlockchainService", "AuthService",
                 "WorkflowEngine", "MessageQueue", "CacheManager"];
-            var aLevels = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
-            var aUsers = ["system", "system-admin", "agent_scheduler", "blockchain_monitor", "api_gateway"];
+            const aLevels = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
+            const aUsers = ["system", "system-admin", "agent_scheduler", "blockchain_monitor", "api_gateway"];
 
-            for (var i = 0; i < 250; i++) {
-                var level = aLevels[Math.floor(Math.random() * aLevels.length)];
-                var timestamp = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+            for (const i = 0; i < 250; i++) {
+                const level = aLevels[Math.floor(Math.random() * aLevels.length)];
+                const timestamp = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
 
                 aLogs.push({
                     id: "log_" + i,
@@ -232,7 +232,7 @@ sap.ui.define([
         },
 
         _generateLogMessage: function(level) {
-            var messages = {
+            const messages = {
                 ERROR: [
                     "Failed to connect to blockchain node: Connection timeout",
                     "Agent execution failed: Insufficient gas",
@@ -270,7 +270,7 @@ sap.ui.define([
                 ]
             };
 
-            var levelMessages = messages[level] || messages.INFO;
+            const levelMessages = messages[level] || messages.INFO;
             return levelMessages[Math.floor(Math.random() * levelMessages.length)];
         },
 

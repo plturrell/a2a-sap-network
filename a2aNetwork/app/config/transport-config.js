@@ -1,7 +1,7 @@
 sap.ui.define([
-    "sap/base/Log"
-], function(Log) {
-    "use strict";
+    'sap/base/Log'
+], (Log) => {
+    'use strict';
 
     /**
      * Transport Management Configuration for SAP Enterprise
@@ -14,74 +14,74 @@ sap.ui.define([
         config: {
             // Transport system settings
             transportSystem: {
-                type: "CTS_PLUS", // CTS or CTS_PLUS
-                systemId: "A2A",
-                client: "100",
-                transportLayer: "ZA2A"
+                type: 'CTS_PLUS', // CTS or CTS_PLUS
+                systemId: 'A2A',
+                client: '100',
+                transportLayer: 'ZA2A'
             },
             
             // Development package configuration
             packages: {
-                root: "ZA2A_FIORI",
+                root: 'ZA2A_FIORI',
                 subPackages: {
-                    apps: "ZA2A_FIORI_APPS",
-                    catalogs: "ZA2A_FIORI_CATALOGS",
-                    groups: "ZA2A_FIORI_GROUPS",
-                    roles: "ZA2A_FIORI_ROLES",
-                    tiles: "ZA2A_FIORI_TILES"
+                    apps: 'ZA2A_FIORI_APPS',
+                    catalogs: 'ZA2A_FIORI_CATALOGS',
+                    groups: 'ZA2A_FIORI_GROUPS',
+                    roles: 'ZA2A_FIORI_ROLES',
+                    tiles: 'ZA2A_FIORI_TILES'
                 }
             },
             
             // Object types for transport
             objectTypes: {
-                "CHIP": {
-                    description: "Fiori Tile/Chip",
-                    package: "tiles",
+                'CHIP': {
+                    description: 'Fiori Tile/Chip',
+                    package: 'tiles',
                     transportRequired: true
                 },
-                "PAGE": {
-                    description: "Fiori Page",
-                    package: "apps",
+                'PAGE': {
+                    description: 'Fiori Page',
+                    package: 'apps',
                     transportRequired: true
                 },
-                "CATA": {
-                    description: "Fiori Catalog",
-                    package: "catalogs",
+                'CATA': {
+                    description: 'Fiori Catalog',
+                    package: 'catalogs',
                     transportRequired: true
                 },
-                "GRUP": {
-                    description: "Fiori Group",
-                    package: "groups",
+                'GRUP': {
+                    description: 'Fiori Group',
+                    package: 'groups',
                     transportRequired: true
                 },
-                "ROLE": {
-                    description: "PFCG Role",
-                    package: "roles",
+                'ROLE': {
+                    description: 'PFCG Role',
+                    package: 'roles',
                     transportRequired: true
                 },
-                "W3MI": {
-                    description: "Web Dynpro MIME Object",
-                    package: "apps",
+                'W3MI': {
+                    description: 'Web Dynpro MIME Object',
+                    package: 'apps',
                     transportRequired: true
                 },
-                "SICF": {
-                    description: "ICF Service",
-                    package: "apps",
+                'SICF': {
+                    description: 'ICF Service',
+                    package: 'apps',
                     transportRequired: true
                 }
             },
             
             // Transport request types
             requestTypes: {
-                "CUST": "Customizing Request",
-                "WORK": "Workbench Request",
-                "TRAN": "Transport of Copies"
+                'CUST': 'Customizing Request',
+                'WORK': 'Workbench Request',
+                'TRAN': 'Transport of Copies'
             },
             
             // Auto-transport settings
             autoTransport: {
                 enabled: false,
-                targetSystem: "QA2",
+                targetSystem: 'QA2',
                 importImmediately: false
             }
         },
@@ -94,27 +94,27 @@ sap.ui.define([
         createTransportRequest: function(params) {
             return new Promise((resolve, reject) => {
                 const requestData = {
-                    description: params.description || "A2A Fiori Content Transport",
-                    type: params.type || "WORK",
+                    description: params.description || 'A2A Fiori Content Transport',
+                    type: params.type || 'WORK',
                     targetSystem: params.targetSystem || this.config.autoTransport.targetSystem,
                     package: this._determinePackage(params.objectType)
                 };
 
                 jQuery.ajax({
-                    url: "/sap/bc/adt/cts/transportrequests",
-                    method: "POST",
+                    url: '/sap/bc/adt/cts/transportrequests',
+                    method: 'POST',
                     headers: {
-                        "Content-Type": "application/vnd.sap.adt.transportrequests.v1+xml",
-                        "Accept": "application/vnd.sap.adt.transportrequests.v1+xml"
+                        'Content-Type': 'application/vnd.sap.adt.transportrequests.v1+xml',
+                        'Accept': 'application/vnd.sap.adt.transportrequests.v1+xml'
                     },
                     data: this._buildTransportRequestXML(requestData),
                     success: (data) => {
                         const transportNumber = this._extractTransportNumber(data);
-                        Log.info("Transport request created", transportNumber);
+                        Log.info('Transport request created', transportNumber);
                         resolve(transportNumber);
                     },
                     error: (error) => {
-                        Log.error("Failed to create transport request", error);
+                        Log.error('Failed to create transport request', error);
                         // Fallback for non-SAP environments
                         if (error.status === 404) {
                             resolve(this._createLocalTransportRequest(params));
@@ -135,7 +135,7 @@ sap.ui.define([
         addObjectToTransport: function(transportNumber, object) {
             return new Promise((resolve, reject) => {
                 const objectData = {
-                    pgmid: object.pgmid || "R3TR",
+                    pgmid: object.pgmid || 'R3TR',
                     object: object.type,
                     objName: object.name,
                     package: this._determinePackage(object.type)
@@ -143,17 +143,17 @@ sap.ui.define([
 
                 jQuery.ajax({
                     url: `/sap/bc/adt/cts/transportrequests/${transportNumber}/tasks/objects`,
-                    method: "POST",
+                    method: 'POST',
                     headers: {
-                        "Content-Type": "application/vnd.sap.adt.transportobjects.v1+xml"
+                        'Content-Type': 'application/vnd.sap.adt.transportobjects.v1+xml'
                     },
                     data: this._buildTransportObjectXML(objectData),
                     success: () => {
-                        Log.info("Object added to transport", { transport: transportNumber, object: object.name });
+                        Log.info('Object added to transport', { transport: transportNumber, object: object.name });
                         resolve();
                     },
                     error: (error) => {
-                        Log.error("Failed to add object to transport", error);
+                        Log.error('Failed to add object to transport', error);
                         reject(error);
                     }
                 });
@@ -169,9 +169,9 @@ sap.ui.define([
             return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     url: `/sap/bc/adt/cts/transportrequests/${transportNumber}/release`,
-                    method: "POST",
+                    method: 'POST',
                     success: () => {
-                        Log.info("Transport request released", transportNumber);
+                        Log.info('Transport request released', transportNumber);
                         
                         if (this.config.autoTransport.enabled) {
                             this._triggerImport(transportNumber);
@@ -180,7 +180,7 @@ sap.ui.define([
                         resolve();
                     },
                     error: (error) => {
-                        Log.error("Failed to release transport request", error);
+                        Log.error('Failed to release transport request', error);
                         reject(error);
                     }
                 });
@@ -195,10 +195,10 @@ sap.ui.define([
         getTransportHistory: function(object) {
             return new Promise((resolve, reject) => {
                 jQuery.ajax({
-                    url: "/sap/bc/adt/vit/wb/object_requests",
-                    method: "GET",
+                    url: '/sap/bc/adt/vit/wb/object_requests',
+                    method: 'GET',
                     data: {
-                        pgmid: object.pgmid || "R3TR",
+                        pgmid: object.pgmid || 'R3TR',
                         object: object.type,
                         objName: object.name
                     },
@@ -207,7 +207,7 @@ sap.ui.define([
                         resolve(history);
                     },
                     error: (error) => {
-                        Log.error("Failed to get transport history", error);
+                        Log.error('Failed to get transport history', error);
                         resolve([]); // Return empty history on error
                     }
                 });
@@ -274,8 +274,8 @@ sap.ui.define([
          */
         _extractTransportNumber: function(xmlData) {
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlData, "text/xml");
-            const transportNode = xmlDoc.querySelector("TRKORR");
+            const xmlDoc = parser.parseFromString(xmlData, 'text/xml');
+            const transportNode = xmlDoc.querySelector('TRKORR');
             return transportNode ? transportNode.textContent : null;
         },
 
@@ -284,18 +284,18 @@ sap.ui.define([
          * @private
          */
         _createLocalTransportRequest: function(params) {
-            const transportNumber = "A2AK9" + Date.now().toString().substr(-5);
-            Log.info("Created local transport request", transportNumber);
+            const transportNumber = `A2AK9${  Date.now().toString().substr(-5)}`;
+            Log.info('Created local transport request', transportNumber);
             
             // Store in local storage for development
-            const transports = JSON.parse(localStorage.getItem("a2a_transports") || "[]");
+            const transports = JSON.parse(localStorage.getItem('a2a_transports') || '[]');
             transports.push({
                 number: transportNumber,
                 description: params.description,
                 created: new Date().toISOString(),
                 objects: []
             });
-            localStorage.setItem("a2a_transports", JSON.stringify(transports));
+            localStorage.setItem('a2a_transports', JSON.stringify(transports));
             
             return transportNumber;
         },
@@ -306,16 +306,16 @@ sap.ui.define([
          */
         _parseTransportHistory: function(xmlData) {
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlData, "text/xml");
-            const requests = xmlDoc.querySelectorAll("REQUEST");
+            const xmlDoc = parser.parseFromString(xmlData, 'text/xml');
+            const requests = xmlDoc.querySelectorAll('REQUEST');
             
             return Array.from(requests).map(req => ({
-                number: req.querySelector("TRKORR")?.textContent,
-                description: req.querySelector("AS4TEXT")?.textContent,
-                owner: req.querySelector("AS4USER")?.textContent,
-                date: req.querySelector("AS4DATE")?.textContent,
-                time: req.querySelector("AS4TIME")?.textContent,
-                status: req.querySelector("TRSTATUS")?.textContent
+                number: req.querySelector('TRKORR')?.textContent,
+                description: req.querySelector('AS4TEXT')?.textContent,
+                owner: req.querySelector('AS4USER')?.textContent,
+                date: req.querySelector('AS4DATE')?.textContent,
+                time: req.querySelector('AS4TIME')?.textContent,
+                status: req.querySelector('TRSTATUS')?.textContent
             }));
         },
 
@@ -329,7 +329,7 @@ sap.ui.define([
             }
             
             // Implementation would trigger TMS import
-            Log.info("Auto-import triggered for transport", transportNumber);
+            Log.info('Auto-import triggered for transport', transportNumber);
         }
     };
 });

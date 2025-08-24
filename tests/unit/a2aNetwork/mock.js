@@ -1,14 +1,14 @@
-var path = require('path');
-var test = require('tape');
-var resolve = require('../');
+const path = require('path');
+const test = require('tape');
+const resolve = require('../');
 
-test('mock', function (t) {
+test('mock', (t) => {
     t.plan(8);
 
-    var files = {};
+    const files = {};
     files[path.resolve('/foo/bar/baz.js')] = 'beep';
 
-    var dirs = {};
+    const dirs = {};
     dirs[path.resolve('/foo/bar')] = true;
 
     function opts(basedir) {
@@ -29,36 +29,36 @@ test('mock', function (t) {
         };
     }
 
-    resolve('./baz', opts('/foo/bar'), function (err, res, pkg) {
+    resolve('./baz', opts('/foo/bar'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/bar/baz.js'));
         t.equal(pkg, undefined);
     });
 
-    resolve('./baz.js', opts('/foo/bar'), function (err, res, pkg) {
+    resolve('./baz.js', opts('/foo/bar'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/bar/baz.js'));
         t.equal(pkg, undefined);
     });
 
-    resolve('baz', opts('/foo/bar'), function (err, res) {
-        t.equal(err.message, "Cannot find module 'baz' from '" + path.resolve('/foo/bar') + "'");
+    resolve('baz', opts('/foo/bar'), (err, res) => {
+        t.equal(err.message, `Cannot find module 'baz' from '${  path.resolve('/foo/bar')  }'`);
         t.equal(err.code, 'MODULE_NOT_FOUND');
     });
 
-    resolve('../baz', opts('/foo/bar'), function (err, res) {
-        t.equal(err.message, "Cannot find module '../baz' from '" + path.resolve('/foo/bar') + "'");
+    resolve('../baz', opts('/foo/bar'), (err, res) => {
+        t.equal(err.message, `Cannot find module '../baz' from '${  path.resolve('/foo/bar')  }'`);
         t.equal(err.code, 'MODULE_NOT_FOUND');
     });
 });
 
-test('mock from package', function (t) {
+test('mock from package', (t) => {
     t.plan(8);
 
-    var files = {};
+    const files = {};
     files[path.resolve('/foo/bar/baz.js')] = 'beep';
 
-    var dirs = {};
+    const dirs = {};
     dirs[path.resolve('/foo/bar')] = true;
 
     function opts(basedir) {
@@ -80,39 +80,39 @@ test('mock from package', function (t) {
         };
     }
 
-    resolve('./baz', opts('/foo/bar'), function (err, res, pkg) {
+    resolve('./baz', opts('/foo/bar'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/bar/baz.js'));
         t.equal(pkg && pkg.main, 'bar');
     });
 
-    resolve('./baz.js', opts('/foo/bar'), function (err, res, pkg) {
+    resolve('./baz.js', opts('/foo/bar'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/bar/baz.js'));
         t.equal(pkg && pkg.main, 'bar');
     });
 
-    resolve('baz', opts('/foo/bar'), function (err, res) {
-        t.equal(err.message, "Cannot find module 'baz' from '" + path.resolve('/foo/bar') + "'");
+    resolve('baz', opts('/foo/bar'), (err, res) => {
+        t.equal(err.message, `Cannot find module 'baz' from '${  path.resolve('/foo/bar')  }'`);
         t.equal(err.code, 'MODULE_NOT_FOUND');
     });
 
-    resolve('../baz', opts('/foo/bar'), function (err, res) {
-        t.equal(err.message, "Cannot find module '../baz' from '" + path.resolve('/foo/bar') + "'");
+    resolve('../baz', opts('/foo/bar'), (err, res) => {
+        t.equal(err.message, `Cannot find module '../baz' from '${  path.resolve('/foo/bar')  }'`);
         t.equal(err.code, 'MODULE_NOT_FOUND');
     });
 });
 
-test('mock package', function (t) {
+test('mock package', (t) => {
     t.plan(2);
 
-    var files = {};
+    const files = {};
     files[path.resolve('/foo/node_modules/bar/baz.js')] = 'beep';
     files[path.resolve('/foo/node_modules/bar/package.json')] = JSON.stringify({
         main: './baz.js'
     });
 
-    var dirs = {};
+    const dirs = {};
     dirs[path.resolve('/foo')] = true;
     dirs[path.resolve('/foo/node_modules')] = true;
 
@@ -134,23 +134,23 @@ test('mock package', function (t) {
         };
     }
 
-    resolve('bar', opts('/foo'), function (err, res, pkg) {
+    resolve('bar', opts('/foo'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/node_modules/bar/baz.js'));
         t.equal(pkg && pkg.main, './baz.js');
     });
 });
 
-test('mock package from package', function (t) {
+test('mock package from package', (t) => {
     t.plan(2);
 
-    var files = {};
+    const files = {};
     files[path.resolve('/foo/node_modules/bar/baz.js')] = 'beep';
     files[path.resolve('/foo/node_modules/bar/package.json')] = JSON.stringify({
         main: './baz.js'
     });
 
-    var dirs = {};
+    const dirs = {};
     dirs[path.resolve('/foo')] = true;
     dirs[path.resolve('/foo/node_modules')] = true;
 
@@ -173,21 +173,21 @@ test('mock package from package', function (t) {
         };
     }
 
-    resolve('bar', opts('/foo'), function (err, res, pkg) {
+    resolve('bar', opts('/foo'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/node_modules/bar/baz.js'));
         t.equal(pkg && pkg.main, './baz.js');
     });
 });
 
-test('symlinked', function (t) {
+test('symlinked', (t) => {
     t.plan(4);
 
-    var files = {};
+    const files = {};
     files[path.resolve('/foo/bar/baz.js')] = 'beep';
     files[path.resolve('/foo/bar/symlinked/baz.js')] = 'beep';
 
-    var dirs = {};
+    const dirs = {};
     dirs[path.resolve('/foo/bar')] = true;
     dirs[path.resolve('/foo/bar/symlinked')] = true;
 
@@ -205,18 +205,18 @@ test('symlinked', function (t) {
                 cb(null, files[path.resolve(file)]);
             },
             realpath: function (file, cb) {
-                var resolved = path.resolve(file);
+                const resolved = path.resolve(file);
 
                 if (resolved.indexOf('symlinked') >= 0) {
                     cb(null, resolved);
                     return;
                 }
 
-                var ext = path.extname(resolved);
+                const ext = path.extname(resolved);
 
                 if (ext) {
-                    var dir = path.dirname(resolved);
-                    var base = path.basename(resolved);
+                    const dir = path.dirname(resolved);
+                    const base = path.basename(resolved);
                     cb(null, path.join(dir, 'symlinked', base));
                 } else {
                     cb(null, path.join(resolved, 'symlinked'));
@@ -225,30 +225,30 @@ test('symlinked', function (t) {
         };
     }
 
-    resolve('./baz', opts('/foo/bar'), function (err, res, pkg) {
+    resolve('./baz', opts('/foo/bar'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/bar/symlinked/baz.js'));
         t.equal(pkg, undefined);
     });
 
-    resolve('./baz.js', opts('/foo/bar'), function (err, res, pkg) {
+    resolve('./baz.js', opts('/foo/bar'), (err, res, pkg) => {
         if (err) return t.fail(err);
         t.equal(res, path.resolve('/foo/bar/symlinked/baz.js'));
         t.equal(pkg, undefined);
     });
 });
 
-test('readPackage', function (t) {
+test('readPackage', (t) => {
     t.plan(3);
 
-    var files = {};
+    const files = {};
     files[path.resolve('/foo/node_modules/bar/something-else.js')] = 'beep';
     files[path.resolve('/foo/node_modules/bar/package.json')] = JSON.stringify({
         main: './baz.js'
     });
     files[path.resolve('/foo/node_modules/bar/baz.js')] = 'boop';
 
-    var dirs = {};
+    const dirs = {};
     dirs[path.resolve('/foo')] = true;
     dirs[path.resolve('/foo/node_modules')] = true;
 
@@ -271,18 +271,18 @@ test('readPackage', function (t) {
         };
     }
 
-    t.test('with readFile', function (st) {
+    t.test('with readFile', (st) => {
         st.plan(3);
 
-        resolve('bar', opts('/foo'), function (err, res, pkg) {
+        resolve('bar', opts('/foo'), (err, res, pkg) => {
             st.error(err);
             st.equal(res, path.resolve('/foo/node_modules/bar/baz.js'));
             st.equal(pkg && pkg.main, './baz.js');
         });
     });
 
-    var readPackage = function (readFile, file, cb) {
-        var barPackage = path.join('bar', 'package.json');
+    const readPackage = function (readFile, file, cb) {
+        const barPackage = path.join('bar', 'package.json');
         if (file.slice(-barPackage.length) === barPackage) {
             cb(null, { main: './something-else.js' });
         } else {
@@ -290,26 +290,26 @@ test('readPackage', function (t) {
         }
     };
 
-    t.test('with readPackage', function (st) {
+    t.test('with readPackage', (st) => {
         st.plan(3);
 
-        var options = opts('/foo');
+        const options = opts('/foo');
         delete options.readFile;
         options.readPackage = readPackage;
-        resolve('bar', options, function (err, res, pkg) {
+        resolve('bar', options, (err, res, pkg) => {
             st.error(err);
             st.equal(res, path.resolve('/foo/node_modules/bar/something-else.js'));
             st.equal(pkg && pkg.main, './something-else.js');
         });
     });
 
-    t.test('with readFile and readPackage', function (st) {
+    t.test('with readFile and readPackage', (st) => {
         st.plan(1);
 
-        var options = opts('/foo');
+        const options = opts('/foo');
         options.readPackage = readPackage;
-        resolve('bar', options, function (err) {
-            st.throws(function () { throw err; }, TypeError, 'errors when both readFile and readPackage are provided');
+        resolve('bar', options, (err) => {
+            st.throws(() => { throw err; }, TypeError, 'errors when both readFile and readPackage are provided');
         });
     });
 });

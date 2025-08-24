@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const ERC20Pausable = artifacts.require('$ERC20Pausable');
 
-contract('ERC20Pausable', function (accounts) {
+contract('ERC20Pausable', (accounts) => {
   const [holder, recipient, anotherAccount] = accounts;
 
   const initialSupply = new BN(100);
@@ -17,8 +17,8 @@ contract('ERC20Pausable', function (accounts) {
     await this.token.$_mint(holder, initialSupply);
   });
 
-  describe('pausable token', function () {
-    describe('transfer', function () {
+  describe('pausable token', () => {
+    describe('transfer', () => {
       it('allows to transfer when unpaused', async function () {
         await this.token.transfer(recipient, initialSupply, { from: holder });
 
@@ -46,7 +46,7 @@ contract('ERC20Pausable', function (accounts) {
       });
     });
 
-    describe('transfer from', function () {
+    describe('transfer from', () => {
       const allowance = new BN(40);
 
       beforeEach(async function () {
@@ -80,7 +80,7 @@ contract('ERC20Pausable', function (accounts) {
       });
     });
 
-    describe('mint', function () {
+    describe('mint', () => {
       const amount = new BN('42');
 
       it('allows to mint when unpaused', async function () {
@@ -105,7 +105,7 @@ contract('ERC20Pausable', function (accounts) {
       });
     });
 
-    describe('burn', function () {
+    describe('burn', () => {
       const amount = new BN('42');
 
       it('allows to burn when unpaused', async function () {

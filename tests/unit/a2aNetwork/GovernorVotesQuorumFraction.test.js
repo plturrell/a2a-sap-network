@@ -12,7 +12,7 @@ const TOKENS = [
   { Token: artifacts.require('$ERC20VotesTimestampMock'), mode: 'timestamp' },
 ];
 
-contract('GovernorVotesQuorumFraction', function (accounts) {
+contract('GovernorVotesQuorumFraction', (accounts) => {
   const [owner, voter1, voter2, voter3, voter4] = accounts;
 
   const name = 'OZ-Governor';
@@ -27,7 +27,7 @@ contract('GovernorVotesQuorumFraction', function (accounts) {
   const value = web3.utils.toWei('1');
 
   for (const { mode, Token } of TOKENS) {
-    describe(`using ${Token._json.contractName}`, function () {
+    describe(`using ${Token._json.contractName}`, () => {
       beforeEach(async function () {
         this.owner = owner;
         this.token = await Token.new(tokenName, tokenSymbol, tokenName);
@@ -86,7 +86,7 @@ contract('GovernorVotesQuorumFraction', function (accounts) {
         await expectRevert(this.helper.execute(), 'Governor: proposal not successful');
       });
 
-      describe('onlyGovernance updates', function () {
+      describe('onlyGovernance updates', () => {
         it('updateQuorumNumerator is protected', async function () {
           await expectRevert(this.mock.updateQuorumNumerator(newRatio), 'Governor: onlyGovernance');
         });

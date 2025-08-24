@@ -15,8 +15,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: '*',
+    methods: ['GET', 'POST']
   }
 });
 
@@ -191,7 +191,7 @@ app.get('*', (req, res) => {
 function parseMarkdownWithMeta(content) {
   const lines = content.split('\n');
   let meta = {};
-  let interactive = [];
+  const interactive = [];
   let contentStart = 0;
 
   // Parse YAML front matter

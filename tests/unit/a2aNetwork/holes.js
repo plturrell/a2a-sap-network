@@ -1,15 +1,15 @@
-var test = require('tape');
-var inspect = require('../');
+const test = require('tape');
+const inspect = require('../');
 
-var xs = ['a', 'b'];
+const xs = ['a', 'b'];
 xs[5] = 'f';
 xs[7] = 'j';
 xs[8] = 'k';
 
-test('holes', function (t) {
+test('holes', (t) => {
     t.plan(1);
     t.equal(
         inspect(xs),
-        "[ 'a', 'b', , , , 'f', , 'j', 'k' ]"
+        '[ \'a\', \'b\', , , , \'f\', , \'j\', \'k\' ]'
     );
 });

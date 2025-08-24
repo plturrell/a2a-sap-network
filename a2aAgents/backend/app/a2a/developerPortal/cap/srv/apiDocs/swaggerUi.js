@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /* global SwaggerUIBundle, SwaggerUIStandalonePreset */
 
 /**
@@ -12,20 +12,20 @@ const YAML = require('yamljs');
 const path = require('path');
 
 class SwaggerUIService {
-    constructor() {
-        this.router = express.Router();
-        this.swaggerDocument = null;
-    }
+  constructor() {
+    this.router = express.Router();
+    this.swaggerDocument = null;
+  }
 
-    /**
+  /**
      * Initialize Swagger UI with custom SAP styling
      */
-    initialize() {
-        // Load OpenAPI specification
-        this.swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
+  initialize() {
+    // Load OpenAPI specification
+    this.swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
 
-        // Custom CSS for SAP Fiori styling
-        const customCss = `
+    // Custom CSS for SAP Fiori styling
+    const customCss = `
             .swagger-ui .topbar { 
                 display: none; 
             }
@@ -95,119 +95,119 @@ class SwaggerUIService {
             }
         `;
 
-        // Custom favicon
-        const customfavIcon = '/assets/favicon.ico';
+    // Custom favicon
+    const customfavIcon = '/assets/favicon.ico';
 
-        // Custom site title
-        const customSiteTitle = 'A2A Developer Portal - API Documentation';
+    // Custom site title
+    const customSiteTitle = 'A2A Developer Portal - API Documentation';
 
-        // Swagger UI options
-        const swaggerOptions = {
-            customCss,
-            customfavIcon,
-            customSiteTitle,
-            swaggerOptions: {
-                docExpansion: 'none',
-                filter: true,
-                showRequestHeaders: true,
-                showCommonExtensions: true,
-                showExtensions: true,
-                tryItOutEnabled: true,
-                requestInterceptor: (request) => {
-                    // Add correlation ID to all requests
-                    request.headers['X-Correlation-Id'] = this._generateCorrelationId();
-                    request.headers['X-Request-Timestamp'] = new Date().toISOString();
-                    return request;
-                },
-                responseInterceptor: (response) => {
-                    // Log API calls for monitoring
-                    // eslint-disable-next-line no-console
-                    console.log({
-                        type: 'api_documentation_request',
-                        method: response.method,
-                        url: response.url,
-                        status: response.status,
-                        duration: response.duration,
-                        timestamp: new Date().toISOString()
-                    });
-                    return response;
-                },
-                onComplete: () => {
-                    // eslint-disable-next-line no-console
-                    // eslint-disable-next-line no-console
-                    console.log('Swagger UI loaded successfully');
-                },
-                plugins: [
-                    () => {
-                        return {
-                            wrapComponents: {
-                                InfoContainer: (Original, system) => (props) => {
-                                    return system.React.createElement(
-                                        'div',
-                                        { className: 'info-container' },
-                                        system.React.createElement(Original, props)
-                                    );
-                                }
-                            }
-                        };
-                    }
-                ],
-                presets: [
-                    SwaggerUIBundle.presets.apis,
-                    SwaggerUIStandalonePreset
-                ].filter(Boolean),
-                deepLinking: true,
-                displayOperationId: true,
-                defaultModelsExpandDepth: 1,
-                defaultModelExpandDepth: 1,
-                showAlternativeSchemaExample: true,
-                syntaxHighlight: {
-                    activate: true,
-                    theme: 'agate'
-                },
-                validatorUrl: null, // Disable validator
-                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-                onFailure: (error) => {
-                    console.error('Swagger UI initialization failed:', error);
+    // Swagger UI options
+    const swaggerOptions = {
+      customCss,
+      customfavIcon,
+      customSiteTitle,
+      swaggerOptions: {
+        docExpansion: 'none',
+        filter: true,
+        showRequestHeaders: true,
+        showCommonExtensions: true,
+        showExtensions: true,
+        tryItOutEnabled: true,
+        requestInterceptor: (request) => {
+          // Add correlation ID to all requests
+          request.headers['X-Correlation-Id'] = this._generateCorrelationId();
+          request.headers['X-Request-Timestamp'] = new Date().toISOString();
+          return request;
+        },
+        responseInterceptor: (response) => {
+          // Log API calls for monitoring
+          // eslint-disable-next-line no-console
+          console.log({
+            type: 'api_documentation_request',
+            method: response.method,
+            url: response.url,
+            status: response.status,
+            duration: response.duration,
+            timestamp: new Date().toISOString()
+          });
+          return response;
+        },
+        onComplete: () => {
+          // eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
+          console.log('Swagger UI loaded successfully');
+        },
+        plugins: [
+          () => {
+            return {
+              wrapComponents: {
+                InfoContainer: (Original, system) => (props) => {
+                  return system.React.createElement(
+                    'div',
+                    { className: 'info-container' },
+                    system.React.createElement(Original, props)
+                  );
                 }
-            }
-        };
+              }
+            };
+          }
+        ],
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ].filter(Boolean),
+        deepLinking: true,
+        displayOperationId: true,
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 1,
+        showAlternativeSchemaExample: true,
+        syntaxHighlight: {
+          activate: true,
+          theme: 'agate'
+        },
+        validatorUrl: null, // Disable validator
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+        onFailure: (error) => {
+          console.error('Swagger UI initialization failed:', error);
+        }
+      }
+    };
 
-        // Setup routes
-        this.router.use('/', swaggerUi.serve);
-        this.router.get('/', swaggerUi.setup(this.swaggerDocument, swaggerOptions));
+    // Setup routes
+    this.router.use('/', swaggerUi.serve);
+    this.router.get('/', swaggerUi.setup(this.swaggerDocument, swaggerOptions));
 
-        // Serve OpenAPI spec as JSON
-        this.router.get('/openapi.json', (req, res) => {
-            res.json(this.swaggerDocument);
-        });
+    // Serve OpenAPI spec as JSON
+    this.router.get('/openapi.json', (req, res) => {
+      res.json(this.swaggerDocument);
+    });
 
-        // Serve OpenAPI spec as YAML
-        this.router.get('/openapi.yaml', (req, res) => {
-            res.type('text/yaml');
-            res.sendFile(path.join(__dirname, 'openapi.yaml'));
-        });
+    // Serve OpenAPI spec as YAML
+    this.router.get('/openapi.yaml', (req, res) => {
+      res.type('text/yaml');
+      res.sendFile(path.join(__dirname, 'openapi.yaml'));
+    });
 
-        // API documentation home page
-        this.router.get('/home', (req, res) => {
-            res.send(this._getHomePage());
-        });
+    // API documentation home page
+    this.router.get('/home', (req, res) => {
+      res.send(this._getHomePage());
+    });
 
-        return this.router;
-    }
+    return this.router;
+  }
 
-    /**
+  /**
      * Generate correlation ID for request tracking
      */
-    _generateCorrelationId() {
-        return `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
+  _generateCorrelationId() {
+    return `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
 
-    /**
+  /**
      * Generate API documentation home page
      */
-    _getHomePage() {
-        return `
+  _getHomePage() {
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -398,7 +398,7 @@ class SwaggerUIService {
 </body>
 </html>
         `;
-    }
+  }
 }
 
 module.exports = new SwaggerUIService();

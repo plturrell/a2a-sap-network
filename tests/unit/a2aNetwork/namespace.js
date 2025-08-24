@@ -20,21 +20,21 @@ const PROJECT_DIR = process.env.PROJECT_DIR;
 
 // Load the jake global
 require(`${PROJECT_DIR}/lib/jake`);
-let { Namespace } = require(`${PROJECT_DIR}/lib/namespace`);
+const { Namespace } = require(`${PROJECT_DIR}/lib/namespace`);
 
 require('./jakefile');
 
-let assert = require('assert');
+const assert = require('assert');
 
 suite('namespace', function () {
 
   this.timeout(7000);
 
-  test('resolve namespace by relative name', function () {
+  test('resolve namespace by relative name', () => {
     let aaa, bbb, ccc;
-    aaa = namespace('aaa', function () {
-      bbb = namespace('bbb', function () {
-        ccc = namespace('ccc', function () {
+    aaa = namespace('aaa', () => {
+      bbb = namespace('bbb', () => {
+        ccc = namespace('ccc', () => {
         });
       });
     });
@@ -44,33 +44,33 @@ suite('namespace', function () {
     assert.ok(ccc === aaa.resolveNamespace('bbb:ccc'));
   });
 
-  test('resolve task in sub-namespace by relative path', function () {
-    let curr = Namespace.ROOT_NAMESPACE.resolveNamespace('zooby');
-    let task = curr.resolveTask('frang:w00t:bar');
+  test('resolve task in sub-namespace by relative path', () => {
+    const curr = Namespace.ROOT_NAMESPACE.resolveNamespace('zooby');
+    const task = curr.resolveTask('frang:w00t:bar');
     assert.ok(task.action.toString().indexOf('zooby:frang:w00t:bar') > -1);
   });
 
-  test('prefer local to top-level', function () {
-    let curr = Namespace.ROOT_NAMESPACE.resolveNamespace('zooby:frang:w00t');
-    let task = curr.resolveTask('bar');
+  test('prefer local to top-level', () => {
+    const curr = Namespace.ROOT_NAMESPACE.resolveNamespace('zooby:frang:w00t');
+    const task = curr.resolveTask('bar');
     assert.ok(task.action.toString().indexOf('zooby:frang:w00t:bar') > -1);
   });
 
-  test('does resolve top-level', function () {
-    let curr = Namespace.ROOT_NAMESPACE.resolveNamespace('zooby:frang:w00t');
-    let task = curr.resolveTask('foo');
+  test('does resolve top-level', () => {
+    const curr = Namespace.ROOT_NAMESPACE.resolveNamespace('zooby:frang:w00t');
+    const task = curr.resolveTask('foo');
     assert.ok(task.action.toString().indexOf('top-level foo') > -1);
   });
 
-  test('absolute lookup works from sub-namespaces', function () {
-    let curr = Namespace.ROOT_NAMESPACE.resolveNamespace('hurr:durr');
-    let task = curr.resolveTask('zooby:frang:w00t:bar');
+  test('absolute lookup works from sub-namespaces', () => {
+    const curr = Namespace.ROOT_NAMESPACE.resolveNamespace('hurr:durr');
+    const task = curr.resolveTask('zooby:frang:w00t:bar');
     assert.ok(task.action.toString().indexOf('zooby:frang:w00t:bar') > -1);
   });
 
-  test('resolution miss with throw error', function () {
-    let curr = Namespace.ROOT_NAMESPACE;
-    let task = curr.resolveTask('asdf:qwer');
+  test('resolution miss with throw error', () => {
+    const curr = Namespace.ROOT_NAMESPACE;
+    const task = curr.resolveTask('asdf:qwer');
     assert.ok(!task);
   });
 

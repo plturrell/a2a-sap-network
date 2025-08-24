@@ -58,7 +58,7 @@ class Blockchain {
       const network = await this.provider.getNetwork();
       const balance = await this.provider.getBalance(this.wallet.address);
       
-      logger.info(`Blockchain connection established:`, {
+      logger.info('Blockchain connection established:', {
         network: network.name,
         chainId: network.chainId.toString(),
         address: this.wallet.address,
@@ -413,7 +413,7 @@ class Blockchain {
         logger.info(`Stopped listening for '${eventName}' events on '${contractName}' contract`);
       }
     } catch (error) {
-      logger.error(`Failed to stop listening for events:`, error.message);
+      logger.error('Failed to stop listening for events:', error.message);
     }
   }
 

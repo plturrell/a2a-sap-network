@@ -36,7 +36,7 @@ function genOperationBatch(targets, values, payloads, predecessor, salt) {
   return { id, targets, values, payloads, predecessor, salt };
 }
 
-contract('TimelockController', function (accounts) {
+contract('TimelockController', (accounts) => {
   const [, admin, proposer, canceller, executor, other] = accounts;
 
   const TIMELOCK_ADMIN_ROLE = web3.utils.soliditySha3('TIMELOCK_ADMIN_ROLE');
@@ -80,15 +80,15 @@ contract('TimelockController', function (accounts) {
     ).to.be.deep.equal([false, false, true]);
   });
 
-  it('optional admin', async function () {
+  it('optional admin', async () => {
     const mock = await TimelockController.new(MINDELAY, [proposer], [executor], ZERO_ADDRESS, { from: other });
 
     expect(await mock.hasRole(TIMELOCK_ADMIN_ROLE, admin)).to.be.equal(false);
     expect(await mock.hasRole(TIMELOCK_ADMIN_ROLE, other)).to.be.equal(false);
   });
 
-  describe('methods', function () {
-    describe('operation hashing', function () {
+  describe('methods', () => {
+    describe('operation hashing', () => {
       it('hashOperation', async function () {
         this.operation = genOperation(
           '0x29cebefe301c6ce1bb36b58654fea275e1cacc83',
@@ -127,8 +127,8 @@ contract('TimelockController', function (accounts) {
         ).to.be.equal(this.operation.id);
       });
     });
-    describe('simple', function () {
-      describe('schedule', function () {
+    describe('simple', () => {
+      describe('schedule', () => {
         beforeEach(async function () {
           this.operation = genOperation(
             '0x31754f590B97fD975Eb86938f18Cc304E264D2F2',
@@ -240,7 +240,7 @@ contract('TimelockController', function (accounts) {
         });
       });
 
-      describe('execute', function () {
+      describe('execute', () => {
         beforeEach(async function () {
           this.operation = genOperation(
             '0xAe22104DCD970750610E6FE15E623468A98b15f7',
@@ -265,7 +265,7 @@ contract('TimelockController', function (accounts) {
           );
         });
 
-        describe('with scheduled operation', function () {
+        describe('with scheduled operation', () => {
           beforeEach(async function () {
             ({ receipt: this.receipt, logs: this.logs } = await this.mock.schedule(
               this.operation.target,
@@ -309,7 +309,7 @@ contract('TimelockController', function (accounts) {
             );
           });
 
-          describe('on time', function () {
+          describe('on time', () => {
             beforeEach(async function () {
               const timestamp = await this.mock.getTimestamp(this.operation.id);
               await time.increaseTo(timestamp);
@@ -427,8 +427,8 @@ contract('TimelockController', function (accounts) {
       });
     });
 
-    describe('batch', function () {
-      describe('schedule', function () {
+    describe('batch', () => {
+      describe('schedule', () => {
         beforeEach(async function () {
           this.operation = genOperationBatch(
             Array(8).fill('0xEd912250835c812D4516BBD80BdaEA1bB63a293C'),
@@ -559,7 +559,7 @@ contract('TimelockController', function (accounts) {
         });
       });
 
-      describe('execute', function () {
+      describe('execute', () => {
         beforeEach(async function () {
           this.operation = genOperationBatch(
             Array(8).fill('0x76E53CcEb05131Ef5248553bEBDb8F70536830b1'),
@@ -584,7 +584,7 @@ contract('TimelockController', function (accounts) {
           );
         });
 
-        describe('with scheduled operation', function () {
+        describe('with scheduled operation', () => {
           beforeEach(async function () {
             ({ receipt: this.receipt, logs: this.logs } = await this.mock.scheduleBatch(
               this.operation.targets,
@@ -628,7 +628,7 @@ contract('TimelockController', function (accounts) {
             );
           });
 
-          describe('on time', function () {
+          describe('on time', () => {
             beforeEach(async function () {
               const timestamp = await this.mock.getTimestamp(this.operation.id);
               await time.increaseTo(timestamp);
@@ -828,7 +828,7 @@ contract('TimelockController', function (accounts) {
       });
     });
 
-    describe('cancel', function () {
+    describe('cancel', () => {
       beforeEach(async function () {
         this.operation = genOperation(
           '0xC6837c44AA376dbe1d2709F13879E040CAb653ca',
@@ -869,7 +869,7 @@ contract('TimelockController', function (accounts) {
     });
   });
 
-  describe('maintenance', function () {
+  describe('maintenance', () => {
     it('prevent unauthorized maintenance', async function () {
       await expectRevert(this.mock.updateDelay(0, { from: other }), 'TimelockController: caller must be timelock');
     });
@@ -908,7 +908,7 @@ contract('TimelockController', function (accounts) {
     });
   });
 
-  describe('dependency', function () {
+  describe('dependency', () => {
     beforeEach(async function () {
       this.operation1 = genOperation(
         '0xdE66bD4c97304200A95aE0AadA32d6d01A867E39',
@@ -1200,8 +1200,8 @@ contract('TimelockController', function (accounts) {
     });
   });
 
-  describe('safe receive', function () {
-    describe('ERC721', function () {
+  describe('safe receive', () => {
+    describe('ERC721', () => {
       const name = 'Non Fungible Token';
       const symbol = 'NFT';
       const tokenId = new BN(1);
@@ -1216,7 +1216,7 @@ contract('TimelockController', function (accounts) {
       });
     });
 
-    describe('ERC1155', function () {
+    describe('ERC1155', () => {
       const uri = 'https://token-cdn-domain/{id}.json';
       const tokenIds = {
         1: new BN(1000),

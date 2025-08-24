@@ -54,7 +54,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-const timerId = setInterval(function (arg1, arg2) {
+const timerId = setInterval((arg1, arg2) => {
   timerCalled += 1;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
@@ -64,7 +64,7 @@ const timerId = setInterval(function (arg1, arg2) {
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, preUid);
   assert.equal(initUid, postUid);
   assert.equal(initUid, destroyUid);

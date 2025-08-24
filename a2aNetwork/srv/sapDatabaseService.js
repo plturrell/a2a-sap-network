@@ -379,12 +379,12 @@ class ConnectionPool extends EventEmitter {
             availableConnections: this.available.length,
             activeConnections: this.metrics.activeConnections,
             waitingRequests: this.metrics.waitingRequests,
-            poolUtilization: this.metrics.poolUtilization.toFixed(2) + '%',
-            averageWaitTime: this.metrics.averageWaitTime.toFixed(2) + 'ms',
-            averageConnectionTime: this.metrics.averageConnectionTime.toFixed(2) + 'ms',
+            poolUtilization: `${this.metrics.poolUtilization.toFixed(2)  }%`,
+            averageWaitTime: `${this.metrics.averageWaitTime.toFixed(2)  }ms`,
+            averageConnectionTime: `${this.metrics.averageConnectionTime.toFixed(2)  }ms`,
             circuitBreakerState: this.circuitBreaker.state,
             successRate: this.metrics.totalConnections > 0 
-                ? ((this.metrics.successfulAcquisitions / (this.metrics.successfulAcquisitions + this.metrics.failedAcquisitions)) * 100).toFixed(2) + '%'
+                ? `${((this.metrics.successfulAcquisitions / (this.metrics.successfulAcquisitions + this.metrics.failedAcquisitions)) * 100).toFixed(2)  }%`
                 : '0%'
         });
         
@@ -983,11 +983,11 @@ class DatabaseService extends cds.Service {
                 totalConnections: poolMetrics.poolSize,
                 activeConnections: poolMetrics.activeConnections,
                 availableConnections: poolMetrics.availableConnections,
-                utilization: poolMetrics.poolUtilization.toFixed(2) + '%',
+                utilization: `${poolMetrics.poolUtilization.toFixed(2)  }%`,
                 circuitBreakerState: poolMetrics.circuitBreakerState,
-                averageWaitTime: poolMetrics.averageWaitTime.toFixed(2) + 'ms',
+                averageWaitTime: `${poolMetrics.averageWaitTime.toFixed(2)  }ms`,
                 successRate: poolMetrics.successfulAcquisitions > 0 
-                    ? ((poolMetrics.successfulAcquisitions / (poolMetrics.successfulAcquisitions + poolMetrics.failedAcquisitions)) * 100).toFixed(2) + '%'
+                    ? `${((poolMetrics.successfulAcquisitions / (poolMetrics.successfulAcquisitions + poolMetrics.failedAcquisitions)) * 100).toFixed(2)  }%`
                     : '100%'
             },
             database: {
@@ -996,10 +996,10 @@ class DatabaseService extends cds.Service {
                 available: false
             },
             performance: {
-                avgQueryTime: this.poolMetrics.avgResponseTimes.query.toFixed(2) + 'ms',
-                avgInsertTime: this.poolMetrics.avgResponseTimes.insert.toFixed(2) + 'ms',
-                avgUpdateTime: this.poolMetrics.avgResponseTimes.update.toFixed(2) + 'ms',
-                avgDeleteTime: this.poolMetrics.avgResponseTimes.delete.toFixed(2) + 'ms',
+                avgQueryTime: `${this.poolMetrics.avgResponseTimes.query.toFixed(2)  }ms`,
+                avgInsertTime: `${this.poolMetrics.avgResponseTimes.insert.toFixed(2)  }ms`,
+                avgUpdateTime: `${this.poolMetrics.avgResponseTimes.update.toFixed(2)  }ms`,
+                avgDeleteTime: `${this.poolMetrics.avgResponseTimes.delete.toFixed(2)  }ms`,
                 totalOperations: Object.values(this.poolMetrics.operationCounts).reduce((a, b) => a + b, 0),
                 totalErrors: Object.values(this.poolMetrics.errorCounts).reduce((a, b) => a + b, 0)
             }

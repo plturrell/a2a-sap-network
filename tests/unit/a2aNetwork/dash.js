@@ -1,9 +1,9 @@
 'use strict';
 
-var parse = require('../');
-var test = require('tape');
+const parse = require('../');
+const test = require('tape');
 
-test('-', function (t) {
+test('-', (t) => {
 	t.plan(6);
 	t.deepEqual(parse(['-n', '-']), { n: '-', _: [] });
 	t.deepEqual(parse(['--nnn', '-']), { nnn: '-', _: [] });
@@ -19,13 +19,13 @@ test('-', function (t) {
 	);
 });
 
-test('-a -- b', function (t) {
+test('-a -- b', (t) => {
 	t.plan(2);
 	t.deepEqual(parse(['-a', '--', 'b']), { a: true, _: ['b'] });
 	t.deepEqual(parse(['--a', '--', 'b']), { a: true, _: ['b'] });
 });
 
-test('move arguments after the -- into their own `--` array', function (t) {
+test('move arguments after the -- into their own `--` array', (t) => {
 	t.plan(1);
 	t.deepEqual(
 		parse(['--name', 'John', 'before', '--', 'after'], { '--': true }),
@@ -33,7 +33,7 @@ test('move arguments after the -- into their own `--` array', function (t) {
 	);
 });
 
-test('--- option value', function (t) {
+test('--- option value', (t) => {
 	// A multi-dash value is largely an edge case, but check the behaviour is as expected,
 	// and in particular the same for short option and long option (as made consistent in Jan 2023).
 	t.plan(2);

@@ -6,9 +6,9 @@ const AddressArraysMock = artifacts.require('AddressArraysMock');
 const Bytes32ArraysMock = artifacts.require('Bytes32ArraysMock');
 const Uint256ArraysMock = artifacts.require('Uint256ArraysMock');
 
-contract('Arrays', function () {
-  describe('findUpperBound', function () {
-    context('Even number of elements', function () {
+contract('Arrays', () => {
+  describe('findUpperBound', () => {
+    context('Even number of elements', () => {
       const EVEN_ELEMENTS_ARRAY = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
       beforeEach(async function () {
@@ -36,7 +36,7 @@ contract('Arrays', function () {
       });
     });
 
-    context('Odd number of elements', function () {
+    context('Odd number of elements', () => {
       const ODD_ELEMENTS_ARRAY = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
 
       beforeEach(async function () {
@@ -64,7 +64,7 @@ contract('Arrays', function () {
       });
     });
 
-    context('Array with gap', function () {
+    context('Array with gap', () => {
       const WITH_GAP_ARRAY = [11, 12, 13, 14, 15, 20, 21, 22, 23, 24];
 
       beforeEach(async function () {
@@ -76,7 +76,7 @@ contract('Arrays', function () {
       });
     });
 
-    context('Empty array', function () {
+    context('Empty array', () => {
       beforeEach(async function () {
         this.arrays = await Uint256ArraysMock.new([]);
       });
@@ -87,7 +87,7 @@ contract('Arrays', function () {
     });
   });
 
-  describe('unsafeAccess', function () {
+  describe('unsafeAccess', () => {
     for (const { type, artifact, elements } of [
       {
         type: 'address',
@@ -111,7 +111,7 @@ contract('Arrays', function () {
           .map(() => web3.utils.randomHex(32)),
       },
     ]) {
-      it(type, async function () {
+      it(type, async () => {
         const contract = await artifact.new(elements);
 
         for (const i in elements) {

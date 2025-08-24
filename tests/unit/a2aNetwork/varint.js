@@ -20,13 +20,13 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var StringRW = require('../string_rw');
-var varint = require('../varint');
+const StringRW = require('../string_rw');
+const varint = require('../varint');
 
-var strn = StringRW(varint.unsigned);
+const strn = StringRW(varint.unsigned);
 
 test('Unsigned VarInt', testRW.cases(varint.unsigned, [
     [0, [0x00]],
@@ -85,16 +85,16 @@ test('Unsigned VarInt', testRW.cases(varint.unsigned, [
     }
 ]));
 
-var bigTestStr =
+const bigTestStr =
     '1234567890 1234567890 1234567890 1234567890\n' +
     '1234567890 1234567890 1234567890 1234567890\n' +
     '1234567890 1234567890 1234567890 1234567890\n' +
     '1234567890 1234567890 1234567890 1234567890\n';
 
-var bigTestBytes = [0x80 | 0x01, 0x30]; // 4 * 44 = 0xb0
-var testSeq = [0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30];
-for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 4; j++) {
+const bigTestBytes = [0x80 | 0x01, 0x30]; // 4 * 44 = 0xb0
+const testSeq = [0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30];
+for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
         if (j > 0) bigTestBytes.push(0x20);             // ' '
         bigTestBytes.push.apply(bigTestBytes, testSeq); // '1234567890'
     }                                                   //

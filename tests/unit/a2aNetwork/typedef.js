@@ -20,16 +20,16 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var fs = require('fs');
-var path = require('path');
-var Thrift = require('../thrift').Thrift;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const fs = require('fs');
+const path = require('path');
+const Thrift = require('../thrift').Thrift;
 
-var source = fs.readFileSync(path.join(__dirname, 'typedef.thrift'), 'ascii');
-var thrift = new Thrift({source: source});
+const source = fs.readFileSync(path.join(__dirname, 'typedef.thrift'), 'ascii');
+const thrift = new Thrift({source: source});
 
-test('follows references through typedefs', function t(assert) {
+test('follows references through typedefs', (assert) => {
     assert.strictEqual(thrift.getType('Structure'), thrift.getType('Tree'));
     assert.end();
 });

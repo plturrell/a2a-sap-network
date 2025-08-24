@@ -6,21 +6,21 @@ const GraphAlgorithms = require('../../../srv/algorithms/graphAlgorithms');
  * Unit tests for Graph Algorithms implementation
  * Following SAP testing standards and enterprise patterns
  */
-describe('GraphAlgorithms', function() {
+describe('GraphAlgorithms', () => {
     let graphAlgorithms;
     let sandbox;
 
-    beforeEach(function() {
+    beforeEach(() => {
         sandbox = sinon.createSandbox();
         graphAlgorithms = new GraphAlgorithms();
     });
 
-    afterEach(function() {
+    afterEach(() => {
         sandbox.restore();
     });
 
-    describe('Graph Creation and Management', function() {
-        it('should create an empty graph with correct structure', function() {
+    describe('Graph Creation and Management', () => {
+        it('should create an empty graph with correct structure', () => {
             const graph = graphAlgorithms.createGraph();
             
             expect(graph).to.have.property('nodes');
@@ -37,7 +37,7 @@ describe('GraphAlgorithms', function() {
             expect(graph.edges.size).to.equal(0);
         });
 
-        it('should add nodes with metadata correctly', function() {
+        it('should add nodes with metadata correctly', () => {
             const graph = graphAlgorithms.createGraph();
             const nodeId = 'test-node';
             const metadata = { type: 'file', path: '/test/path' };
@@ -53,7 +53,7 @@ describe('GraphAlgorithms', function() {
             expect(storedMetadata).to.have.property('addedAt');
         });
 
-        it('should throw error for invalid node ID', function() {
+        it('should throw error for invalid node ID', () => {
             const graph = graphAlgorithms.createGraph();
             
             expect(() => {
@@ -65,7 +65,7 @@ describe('GraphAlgorithms', function() {
             }).to.throw('Node ID is required');
         });
 
-        it('should add edges with weights correctly', function() {
+        it('should add edges with weights correctly', () => {
             const graph = graphAlgorithms.createGraph();
             const fromNode = 'node-a';
             const toNode = 'node-b';
@@ -80,10 +80,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Depth-First Search (DFS)', function() {
+    describe('Depth-First Search (DFS)', () => {
         let testGraph;
 
-        beforeEach(function() {
+        beforeEach(() => {
             // Create a test graph: A -> B -> D, A -> C -> D
             testGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(testGraph, 'A', 'B');
@@ -92,7 +92,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(testGraph, 'C', 'D');
         });
 
-        it('should perform DFS traversal correctly', function() {
+        it('should perform DFS traversal correctly', () => {
             const result = graphAlgorithms.depthFirstSearch(testGraph, 'A');
             
             expect(result).to.have.property('visitOrder');
@@ -110,7 +110,7 @@ describe('GraphAlgorithms', function() {
             expect(result.hasPath('NonExistent')).to.be.false;
         });
 
-        it('should handle disconnected components', function() {
+        it('should handle disconnected components', () => {
             graphAlgorithms.addNode(testGraph, 'E');
             
             const result = graphAlgorithms.depthFirstSearch(testGraph, 'A');
@@ -119,7 +119,7 @@ describe('GraphAlgorithms', function() {
             expect(result.hasPath('E')).to.be.true;
         });
 
-        it('should track discovery and finish times correctly', function() {
+        it('should track discovery and finish times correctly', () => {
             const result = graphAlgorithms.depthFirstSearch(testGraph, 'A');
             
             expect(result.discovered.get('A')).to.be.lessThan(result.finished.get('A'));
@@ -127,10 +127,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Breadth-First Search (BFS)', function() {
+    describe('Breadth-First Search (BFS)', () => {
         let testGraph;
 
-        beforeEach(function() {
+        beforeEach(() => {
             // Create a test graph: A -> B, A -> C, B -> D, C -> D
             testGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(testGraph, 'A', 'B');
@@ -139,7 +139,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(testGraph, 'C', 'D');
         });
 
-        it('should perform BFS traversal correctly', function() {
+        it('should perform BFS traversal correctly', () => {
             const result = graphAlgorithms.breadthFirstSearch(testGraph, 'A');
             
             expect(result).to.have.property('visitOrder');
@@ -153,7 +153,7 @@ describe('GraphAlgorithms', function() {
             expect(result.distances.get('D')).to.equal(2);
         });
 
-        it('should calculate shortest paths correctly', function() {
+        it('should calculate shortest paths correctly', () => {
             const result = graphAlgorithms.breadthFirstSearch(testGraph, 'A');
             
             const pathToD = result.getPath('D');
@@ -162,7 +162,7 @@ describe('GraphAlgorithms', function() {
             expect(pathToD[2]).to.equal('D');
         });
 
-        it('should handle unreachable nodes', function() {
+        it('should handle unreachable nodes', () => {
             const result = graphAlgorithms.breadthFirstSearch(testGraph, 'NonExistent');
             
             expect(result.visitOrder).to.be.empty;
@@ -170,10 +170,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Topological Sort', function() {
+    describe('Topological Sort', () => {
         let dagGraph;
 
-        beforeEach(function() {
+        beforeEach(() => {
             // Create a DAG: A -> B -> D, A -> C -> D
             dagGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(dagGraph, 'A', 'B');
@@ -182,7 +182,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(dagGraph, 'C', 'D');
         });
 
-        it('should produce valid topological ordering', function() {
+        it('should produce valid topological ordering', () => {
             const result = graphAlgorithms.topologicalSort(dagGraph);
             
             expect(result).to.be.an('array');
@@ -202,7 +202,7 @@ describe('GraphAlgorithms', function() {
             expect(indexC).to.be.lessThan(indexD);
         });
 
-        it('should detect cycles and throw error', function() {
+        it('should detect cycles and throw error', () => {
             // Add cycle: D -> A
             graphAlgorithms.addEdge(dagGraph, 'D', 'A');
             
@@ -212,10 +212,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Dijkstra\'s Algorithm', function() {
+    describe('Dijkstra\'s Algorithm', () => {
         let weightedGraph;
 
-        beforeEach(function() {
+        beforeEach(() => {
             // Create weighted graph
             weightedGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(weightedGraph, 'A', 'B', 4);
@@ -226,7 +226,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(weightedGraph, 'D', 'E', 2);
         });
 
-        it('should find shortest paths correctly', function() {
+        it('should find shortest paths correctly', () => {
             const result = graphAlgorithms.dijkstra(weightedGraph, 'A');
             
             expect(result).to.have.property('distances');
@@ -241,7 +241,7 @@ describe('GraphAlgorithms', function() {
             expect(result.getDistance('E')).to.equal(5); // A -> C -> D -> E
         });
 
-        it('should construct correct shortest paths', function() {
+        it('should construct correct shortest paths', () => {
             const result = graphAlgorithms.dijkstra(weightedGraph, 'A');
             
             const pathToE = result.getPath('E');
@@ -251,7 +251,7 @@ describe('GraphAlgorithms', function() {
             expect(pathToD).to.deep.equal(['A', 'C', 'D']);
         });
 
-        it('should handle unreachable nodes', function() {
+        it('should handle unreachable nodes', () => {
             graphAlgorithms.addNode(weightedGraph, 'F');
             
             const result = graphAlgorithms.dijkstra(weightedGraph, 'A');
@@ -261,10 +261,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Bellman-Ford Algorithm', function() {
+    describe('Bellman-Ford Algorithm', () => {
         let graphWithNegative;
 
-        beforeEach(function() {
+        beforeEach(() => {
             graphWithNegative = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(graphWithNegative, 'A', 'B', 1);
             graphAlgorithms.addEdge(graphWithNegative, 'A', 'C', 4);
@@ -273,7 +273,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(graphWithNegative, 'C', 'D', 3);
         });
 
-        it('should handle negative weights correctly', function() {
+        it('should handle negative weights correctly', () => {
             const result = graphAlgorithms.bellmanFord(graphWithNegative, 'A');
             
             expect(result).to.have.property('hasNegativeCycle');
@@ -283,7 +283,7 @@ describe('GraphAlgorithms', function() {
             expect(result.getDistance('D')).to.equal(1); // A -> B -> C -> D
         });
 
-        it('should detect negative cycles', function() {
+        it('should detect negative cycles', () => {
             // Add negative cycle
             graphAlgorithms.addEdge(graphWithNegative, 'D', 'B', -6);
             
@@ -293,10 +293,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Strongly Connected Components', function() {
+    describe('Strongly Connected Components', () => {
         let directedGraph;
 
-        beforeEach(function() {
+        beforeEach(() => {
             directedGraph = graphAlgorithms.createGraph();
             // Create SCCs: {A, B, C} and {D}
             graphAlgorithms.addEdge(directedGraph, 'A', 'B');
@@ -305,7 +305,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(directedGraph, 'B', 'D');
         });
 
-        it('should find strongly connected components correctly', function() {
+        it('should find strongly connected components correctly', () => {
             const components = graphAlgorithms.findStronglyConnectedComponents(directedGraph);
             
             expect(components).to.be.an('array');
@@ -321,10 +321,10 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Cycle Detection', function() {
+    describe('Cycle Detection', () => {
         let cyclicGraph;
 
-        beforeEach(function() {
+        beforeEach(() => {
             cyclicGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(cyclicGraph, 'A', 'B');
             graphAlgorithms.addEdge(cyclicGraph, 'B', 'C');
@@ -332,7 +332,7 @@ describe('GraphAlgorithms', function() {
             graphAlgorithms.addEdge(cyclicGraph, 'B', 'D');
         });
 
-        it('should detect cycles correctly', function() {
+        it('should detect cycles correctly', () => {
             const cycles = graphAlgorithms.detectCycles(cyclicGraph);
             
             expect(cycles).to.be.an('array');
@@ -344,7 +344,7 @@ describe('GraphAlgorithms', function() {
             expect(cycle).to.include('C');
         });
 
-        it('should return empty array for acyclic graph', function() {
+        it('should return empty array for acyclic graph', () => {
             const acyclicGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(acyclicGraph, 'A', 'B');
             graphAlgorithms.addEdge(acyclicGraph, 'A', 'C');
@@ -357,8 +357,8 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Error Handling and Edge Cases', function() {
-        it('should handle empty graphs gracefully', function() {
+    describe('Error Handling and Edge Cases', () => {
+        it('should handle empty graphs gracefully', () => {
             const emptyGraph = graphAlgorithms.createGraph();
             
             const dfsResult = graphAlgorithms.depthFirstSearch(emptyGraph, 'NonExistent');
@@ -371,7 +371,7 @@ describe('GraphAlgorithms', function() {
             expect(topSort).to.be.empty;
         });
 
-        it('should handle single node graphs', function() {
+        it('should handle single node graphs', () => {
             const singleNodeGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addNode(singleNodeGraph, 'Solo');
             
@@ -382,7 +382,7 @@ describe('GraphAlgorithms', function() {
             expect(bfsResult.visitOrder).to.deep.equal(['Solo']);
         });
 
-        it('should maintain graph immutability in operations', function() {
+        it('should maintain graph immutability in operations', () => {
             const originalGraph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(originalGraph, 'A', 'B');
             
@@ -396,8 +396,8 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Performance and Scalability', function() {
-        it('should handle moderately large graphs efficiently', function() {
+    describe('Performance and Scalability', () => {
+        it('should handle moderately large graphs efficiently', () => {
             const largeGraph = graphAlgorithms.createGraph();
             
             // Create a graph with 100 nodes
@@ -416,8 +416,8 @@ describe('GraphAlgorithms', function() {
         });
     });
 
-    describe('Integration with SAP Standards', function() {
-        it('should follow SAP naming conventions', function() {
+    describe('Integration with SAP Standards', () => {
+        it('should follow SAP naming conventions', () => {
             const graph = graphAlgorithms.createGraph();
             
             // Test SAP-style entity names
@@ -429,7 +429,7 @@ describe('GraphAlgorithms', function() {
             expect(graph.nodes.has('SalesOrder')).to.be.true;
         });
 
-        it('should support CAP-style relationships', function() {
+        it('should support CAP-style relationships', () => {
             const graph = graphAlgorithms.createGraph();
             
             // Test CAP association patterns

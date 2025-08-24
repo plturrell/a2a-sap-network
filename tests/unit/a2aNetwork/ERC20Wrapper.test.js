@@ -8,7 +8,7 @@ const NotAnERC20 = artifacts.require('CallReceiverMock');
 const ERC20Decimals = artifacts.require('$ERC20DecimalsMock');
 const ERC20Wrapper = artifacts.require('$ERC20Wrapper');
 
-contract('ERC20', function (accounts) {
+contract('ERC20', (accounts) => {
   const [initialHolder, recipient, anotherAccount] = accounts;
 
   const name = 'My Token';
@@ -39,7 +39,7 @@ contract('ERC20', function (accounts) {
     expect(await this.token.decimals()).to.be.bignumber.equal('9');
   });
 
-  it('decimals default back to 18 if token has no metadata', async function () {
+  it('decimals default back to 18 if token has no metadata', async () => {
     const noDecimals = await NotAnERC20.new();
     const otherToken = await ERC20Wrapper.new(`Wrapped ${name}`, `W${symbol}`, noDecimals.address);
     expect(await otherToken.decimals()).to.be.bignumber.equal('18');
@@ -49,7 +49,7 @@ contract('ERC20', function (accounts) {
     expect(await this.token.underlying()).to.be.bignumber.equal(this.underlying.address);
   });
 
-  describe('deposit', function () {
+  describe('deposit', () => {
     it('valid', async function () {
       await this.underlying.approve(this.token.address, initialSupply, { from: initialHolder });
       const { tx } = await this.token.depositFor(initialHolder, initialSupply, { from: initialHolder });
@@ -96,7 +96,7 @@ contract('ERC20', function (accounts) {
     });
   });
 
-  describe('withdraw', function () {
+  describe('withdraw', () => {
     beforeEach(async function () {
       await this.underlying.approve(this.token.address, initialSupply, { from: initialHolder });
       await this.token.depositFor(initialHolder, initialSupply, { from: initialHolder });
@@ -154,7 +154,7 @@ contract('ERC20', function (accounts) {
     });
   });
 
-  describe('recover', function () {
+  describe('recover', () => {
     it('nothing to recover', async function () {
       await this.underlying.approve(this.token.address, initialSupply, { from: initialHolder });
       await this.token.depositFor(initialHolder, initialSupply, { from: initialHolder });
@@ -179,7 +179,7 @@ contract('ERC20', function (accounts) {
     });
   });
 
-  describe('erc20 behaviour', function () {
+  describe('erc20 behaviour', () => {
     beforeEach(async function () {
       await this.underlying.approve(this.token.address, initialSupply, { from: initialHolder });
       await this.token.depositFor(initialHolder, initialSupply, { from: initialHolder });

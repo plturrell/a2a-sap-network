@@ -149,7 +149,7 @@ class SecurityValidator {
     }
 
     printResults() {
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         console.log('🔒 SECURITY VALIDATION RESULTS');
         console.log('='.repeat(60));
 
@@ -165,7 +165,7 @@ class SecurityValidator {
             this.warnings.forEach(warning => console.log(`   ⚠️  ${warning}`));
         }
 
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         
         if (this.errors.length === 0) {
             console.log('🎉 SECURITY VALIDATION PASSED - READY FOR DEPLOYMENT');

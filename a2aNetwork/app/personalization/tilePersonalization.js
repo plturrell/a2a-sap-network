@@ -151,7 +151,7 @@ class TilePersonalizationService {
                 // HANA query
                 const handleHanaResults = function(results) { return resolve(results); };
                 const handleHanaError = function(error) { return reject(error); };
-                this.db.run(`SELECT * FROM A2A_USER_TILE_CONFIG WHERE USER_ID = ?`, [userId])
+                this.db.run('SELECT * FROM A2A_USER_TILE_CONFIG WHERE USER_ID = ?', [userId])
                     .then(handleHanaResults)
                     .catch(handleHanaError);
             } else {
@@ -160,7 +160,7 @@ class TilePersonalizationService {
                     if (err) reject(err);
                     else resolve(rows || []);
                 };
-                this.db.all(`SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position`, 
+                this.db.all('SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position', 
                     [userId], handleSQLiteResults);
             }
         }.bind(this);
@@ -219,14 +219,14 @@ class TilePersonalizationService {
             if (this.isBTP) {
                 const handleHanaGroupResults = (results) => resolve(results);
                 const handleHanaGroupError = (error) => reject(error);
-                this.db.run(`SELECT * FROM A2A_USER_GROUP_CONFIG WHERE USER_ID = ?`, [userId])
+                this.db.run('SELECT * FROM A2A_USER_GROUP_CONFIG WHERE USER_ID = ?', [userId])
                     .then(handleHanaGroupResults).catch(handleHanaGroupError);
             } else {
                 const handleSQLiteGroupResults = (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
                 };
-                this.db.all(`SELECT * FROM user_group_config WHERE user_id = ? ORDER BY position`, 
+                this.db.all('SELECT * FROM user_group_config WHERE user_id = ? ORDER BY position', 
                     [userId], handleSQLiteGroupResults);
             }
         };
@@ -274,11 +274,11 @@ class TilePersonalizationService {
         
         return new Promise((resolve, reject) => {
             if (this.isBTP) {
-                this.db.run(`SELECT * FROM A2A_USER_PREFERENCES WHERE USER_ID = ?`, [userId])
+                this.db.run('SELECT * FROM A2A_USER_PREFERENCES WHERE USER_ID = ?', [userId])
                     .then(results => resolve(results[0] || null))
                     .catch(reject);
             } else {
-                this.db.get(`SELECT * FROM user_preferences WHERE user_id = ?`, [userId], (err, row) => {
+                this.db.get('SELECT * FROM user_preferences WHERE user_id = ?', [userId], (err, row) => {
                     if (err) reject(err);
                     else {
                         if (row && row.preferences_json) {
@@ -337,15 +337,15 @@ class TilePersonalizationService {
         return new Promise((resolve, reject) => {
             if (this.isBTP) {
                 Promise.all([
-                    this.db.run(`DELETE FROM A2A_USER_TILE_CONFIG WHERE USER_ID = ?`, [userId]),
-                    this.db.run(`DELETE FROM A2A_USER_GROUP_CONFIG WHERE USER_ID = ?`, [userId]),
-                    this.db.run(`DELETE FROM A2A_USER_PREFERENCES WHERE USER_ID = ?`, [userId])
+                    this.db.run('DELETE FROM A2A_USER_TILE_CONFIG WHERE USER_ID = ?', [userId]),
+                    this.db.run('DELETE FROM A2A_USER_GROUP_CONFIG WHERE USER_ID = ?', [userId]),
+                    this.db.run('DELETE FROM A2A_USER_PREFERENCES WHERE USER_ID = ?', [userId])
                 ]).then(() => resolve({ success: true })).catch(reject);
             } else {
                 this.db.serialize(() => {
-                    this.db.run(`DELETE FROM user_tile_config WHERE user_id = ?`, [userId]);
-                    this.db.run(`DELETE FROM user_group_config WHERE user_id = ?`, [userId]);
-                    this.db.run(`DELETE FROM user_preferences WHERE user_id = ?`, [userId], function(err) {
+                    this.db.run('DELETE FROM user_tile_config WHERE user_id = ?', [userId]);
+                    this.db.run('DELETE FROM user_group_config WHERE user_id = ?', [userId]);
+                    this.db.run('DELETE FROM user_preferences WHERE user_id = ?', [userId], (err) => {
                         if (err) reject(err);
                         else resolve({ success: true });
                     });

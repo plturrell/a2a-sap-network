@@ -10,20 +10,20 @@ const DummyImplementationV2 = artifacts.require('DummyImplementationV2');
 const BadBeaconNoImpl = artifacts.require('BadBeaconNoImpl');
 const BadBeaconNotContract = artifacts.require('BadBeaconNotContract');
 
-contract('BeaconProxy', function (accounts) {
+contract('BeaconProxy', (accounts) => {
   const [anotherAccount] = accounts;
 
-  describe('bad beacon is not accepted', async function () {
-    it('non-contract beacon', async function () {
+  describe('bad beacon is not accepted', async () => {
+    it('non-contract beacon', async () => {
       await expectRevert(BeaconProxy.new(anotherAccount, '0x'), 'ERC1967: new beacon is not a contract');
     });
 
-    it('non-compliant beacon', async function () {
+    it('non-compliant beacon', async () => {
       const beacon = await BadBeaconNoImpl.new();
       await expectRevert.unspecified(BeaconProxy.new(beacon.address, '0x'));
     });
 
-    it('non-contract implementation', async function () {
+    it('non-contract implementation', async () => {
       const beacon = await BadBeaconNotContract.new();
       await expectRevert(BeaconProxy.new(beacon.address, '0x'), 'ERC1967: beacon implementation is not a contract');
     });
@@ -34,7 +34,7 @@ contract('BeaconProxy', function (accounts) {
     this.implementationV1 = await DummyImplementationV2.new();
   });
 
-  describe('initialization', function () {
+  describe('initialization', () => {
     before(function () {
       this.assertInitialized = async ({ value, balance }) => {
         const beaconSlot = await getSlot(this.proxy, BeaconSlot);

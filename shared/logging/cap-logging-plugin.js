@@ -72,9 +72,9 @@ class CapLoggingPlugin {
   setupRequestLogging() {
     const self = this;
     
-    cds.on('bootstrap', function(app) {
+    cds.on('bootstrap', (app) => {
       // Add correlation ID middleware
-      app.use(function(req, res, next) {
+      app.use((req, res, next) => {
         const correlationId = req.get('x-correlation-id') || 
                             req.get('x-request-id') || 
                             cds.utils.uuid();
@@ -153,7 +153,7 @@ class CapLoggingPlugin {
     const self = this;
     
     // Intercept database operations
-    cds.on('connect', function(service) {
+    cds.on('connect', (service) => {
       if (service.constructor.name !== 'DatabaseService') return;
       
       const originalRun = service.run.bind(service);
@@ -238,7 +238,7 @@ class CapLoggingPlugin {
   setupServiceLogging() {
     const self = this;
     
-    cds.on('serving', function(service) {
+    cds.on('serving', (service) => {
       // Skip technical services
       if (service.name.startsWith('cds.') || service.name === 'db') return;
       
@@ -252,7 +252,7 @@ class CapLoggingPlugin {
       self.logger.createServiceLogger(service);
       
       // Track service operations
-      service.before('*', function(req) {
+      service.before('*', (req) => {
         if (self.config.enablePerformanceTracking && req._) {
           const opId = `${req._.correlationId || cds.utils.uuid()}-${req.event}`;
           const tracker = self.performanceTracker.startOperation(opId, {
@@ -268,7 +268,7 @@ class CapLoggingPlugin {
       });
       
       // Log service operation results
-      service.after('*', function(result, req) {
+      service.after('*', (result, req) => {
         if (req._.performanceTracker) {
           req._.performanceTracker.end({
             success: true,
@@ -286,7 +286,7 @@ class CapLoggingPlugin {
     const self = this;
     
     // Enhance errors with context
-    cds.on('error', function(err, req) {
+    cds.on('error', (err, req) => {
       // Add correlation ID
       if (req && req._ && req._.correlationId) {
         err.correlationId = req._.correlationId;

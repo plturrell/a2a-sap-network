@@ -7,7 +7,7 @@ const { expect } = require('chai');
 
 const { shouldSupportInterfaces } = require('../../../utils/introspection/SupportsInterface.behavior');
 
-contract('ERC1155Holder', function (accounts) {
+contract('ERC1155Holder', (accounts) => {
   const [creator] = accounts;
   const uri = 'https://token-cdn-domain/{id}.json';
   const multiTokenIds = [new BN(1), new BN(2), new BN(3)];

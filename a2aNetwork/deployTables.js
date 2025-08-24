@@ -97,7 +97,7 @@ async function deployTables() {
         
         for (const agent of sampleAgents) {
             try {
-                const stmt = `INSERT INTO a2a_network_Agents (ID, name, address, endpoint, reputation, isActive) VALUES (?, ?, ?, ?, ?, ?)`;
+                const stmt = 'INSERT INTO a2a_network_Agents (ID, name, address, endpoint, reputation, isActive) VALUES (?, ?, ?, ?, ?, ?)';
                 await new Promise((resolve, reject) => {
                     connection.prepare(stmt, (err, statement) => {
                         if (err) return reject(err);

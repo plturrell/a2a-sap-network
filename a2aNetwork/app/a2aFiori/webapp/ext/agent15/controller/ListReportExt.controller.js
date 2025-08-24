@@ -309,17 +309,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateDeploymentProgress(data, oProgressDialog);
                     } catch (error) {
-                        // console.error("Error parsing deployment progress data:", error);
+                        // // console.error("Error parsing deployment progress data:", error);
                     }
                 }.bind(this);
 
                 this._deploymentEventSource.onerror = function(error) {
-                    // console.warn("Deployment stream error, falling back to polling:", error);
+                    // // console.warn("Deployment stream error, falling back to polling:", error);
                     this._startDeploymentPolling(sDeploymentId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startDeploymentPolling(sDeploymentId, oProgressDialog);
             }
         },
@@ -370,7 +370,7 @@ sap.ui.define([
                 success: function(data) {
                     const oStatusModel = oDialog.getModel("status");
                     if (oStatusModel) {
-                        var oCurrentData = oStatusModel.getData();
+                        const oCurrentData = oStatusModel.getData();
                         oCurrentData.deployments = data.deployments || [];
                         oCurrentData.statistics = data.statistics || {};
                         oCurrentData.environmentStatus = data.environmentStatus || {};
@@ -500,7 +500,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
+                // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -528,37 +528,37 @@ sap.ui.define([
 
                 switch (data.type) {
                 case "DEPLOYMENT_STARTED":
-                    var sDeploymentStarted = oBundle.getText("msg.deploymentStarted") || "Deployment started";
+                    const sDeploymentStarted = oBundle.getText("msg.deploymentStarted") || "Deployment started";
                     MessageToast.show(sDeploymentStarted);
                     break;
                 case "DEPLOYMENT_PROGRESS":
                     this._updateDeploymentProgress(data);
                     break;
                 case "DEPLOYMENT_COMPLETED":
-                    var sDeploymentCompleted = oBundle.getText("msg.deploymentCompleted") || "Deployment completed";
+                    const sDeploymentCompleted = oBundle.getText("msg.deploymentCompleted") || "Deployment completed";
                     MessageToast.show(sDeploymentCompleted);
                     this._refreshDeploymentData();
                     break;
                 case "DEPLOYMENT_FAILED":
-                    var sDeploymentFailed = oBundle.getText("error.deploymentFailed") || "Deployment failed";
+                    const sDeploymentFailed = oBundle.getText("error.deploymentFailed") || "Deployment failed";
                     MessageBox.error(`${sDeploymentFailed }: ${ data.message}`);
                     break;
                 case "ROLLBACK_INITIATED":
-                    var sRollbackInitiated = oBundle.getText("msg.rollbackInitiated") || "Rollback initiated";
+                    const sRollbackInitiated = oBundle.getText("msg.rollbackInitiated") || "Rollback initiated";
                     MessageToast.show(sRollbackInitiated);
                     this._refreshDeploymentData();
                     break;
                 case "ENVIRONMENT_WARNING":
-                    var sEnvironmentWarning = oBundle.getText("msg.environmentWarning") || "Environment warning";
+                    const sEnvironmentWarning = oBundle.getText("msg.environmentWarning") || "Environment warning";
                     MessageBox.warning(`${sEnvironmentWarning }: ${ data.message}`);
                     break;
                 case "PIPELINE_UPDATED":
-                    var sPipelineUpdated = oBundle.getText("msg.pipelineUpdated") || "Pipeline configuration updated";
+                    const sPipelineUpdated = oBundle.getText("msg.pipelineUpdated") || "Pipeline configuration updated";
                     MessageToast.show(sPipelineUpdated);
                     break;
                 }
             } catch (error) {
-                console.error("Error processing deployment update:", error);
+                // console.error("Error processing deployment update:", error);
             }
         },
 
@@ -740,7 +740,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

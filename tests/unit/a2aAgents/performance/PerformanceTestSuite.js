@@ -1,8 +1,8 @@
 sap.ui.define([
-    "sap/ui/test/Opa5",
-    "sap/ui/performance/Measurement"
-], function (Opa5, Measurement) {
-    "use strict";
+    'sap/ui/test/Opa5',
+    'sap/ui/performance/Measurement'
+], (Opa5, Measurement) => {
+    'use strict';
 
     /**
      * Performance Test Suite
@@ -84,7 +84,7 @@ sap.ui.define([
             const startTime = performance.now();
             
             // Start measuring
-            Measurement.start("view-rendering", "View rendering performance test");
+            Measurement.start('view-rendering', 'View rendering performance test');
             
             // Create and render view
             sap.ui.core.mvc.XMLView.create({
@@ -92,13 +92,13 @@ sap.ui.define([
             }).then((oView) => {
                 const renderStartTime = performance.now();
                 
-                oView.placeAt("qunit-fixture");
+                oView.placeAt('qunit-fixture');
                 
                 // Wait for rendering to complete
                 oView.addEventDelegate({
                     onAfterRendering: () => {
                         const renderEndTime = performance.now();
-                        Measurement.end("view-rendering");
+                        Measurement.end('view-rendering');
                         
                         const result = {
                             viewCreationTime: renderStartTime - startTime,
@@ -106,7 +106,7 @@ sap.ui.define([
                             totalTime: renderEndTime - startTime,
                             passesThreshold: (renderEndTime - startTime) <= this.thresholds.viewRendering,
                             threshold: this.thresholds.viewRendering,
-                            measurements: Measurement.getAllMeasurements().filter(m => m.id === "view-rendering")
+                            measurements: Measurement.getAllMeasurements().filter(m => m.id === 'view-rendering')
                         };
                         
                         this.measurements.push({
@@ -143,7 +143,7 @@ sap.ui.define([
             const bindings = [];
             
             for (let i = 0; i < iterations; i++) {
-                const binding = model.bindProperty("/testProperty" + i);
+                const binding = model.bindProperty(`/testProperty${  i}`);
                 bindings.push(binding);
             }
             
@@ -151,7 +151,7 @@ sap.ui.define([
             
             // Test binding updates
             const updateStartTime = performance.now();
-            model.setProperty("/massUpdate", "Updated value");
+            model.setProperty('/massUpdate', 'Updated value');
             const updateTime = performance.now() - updateStartTime;
             
             const totalTime = performance.now() - startTime;
@@ -364,7 +364,7 @@ sap.ui.define([
                     .slice(0, 10)
                     .map(r => ({
                         name: r.name,
-                        size: Math.round((r.transferSize || 0) / 1024) + ' KB',
+                        size: `${Math.round((r.transferSize || 0) / 1024)  } KB`,
                         duration: Math.round(r.duration)
                     }))
             };
@@ -458,7 +458,7 @@ sap.ui.define([
                 const testData = this._generateTestData(size);
                 
                 componentFactory(testData).then(component => {
-                    component.placeAt("qunit-fixture");
+                    component.placeAt('qunit-fixture');
                     
                     component.addEventDelegate({
                         onAfterRendering: () => {

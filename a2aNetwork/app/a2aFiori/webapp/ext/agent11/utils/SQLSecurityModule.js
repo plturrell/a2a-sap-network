@@ -62,7 +62,7 @@ sap.ui.define([
                     .replace(/\0/g, "\\0") // Null bytes
                     .replace(/\n/g, "\\n") // Newlines
                     .replace(/\r/g, "\\r") // Carriage returns
-                    .replace(/\x1a/g, "\\Z"); // Ctrl-Z
+                    .replace(new RegExp(String.fromCharCode(26), "g"), "\\Z"); // Ctrl-Z
             } else if (typeof value === "number") {
                 // Validate number is finite
                 if (!isFinite(value)) {

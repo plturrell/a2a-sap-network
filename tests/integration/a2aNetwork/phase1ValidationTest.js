@@ -13,7 +13,7 @@ const path = require('path');
 
 async function validatePhase1() {
     console.log('🚀 A2A Network - Phase 1 Validation Test');
-    console.log('=' + '='.repeat(50));
+    console.log(`=${  '='.repeat(50)}`);
     
     let testsPassed = 0;
     let testsTotal = 0;
@@ -254,7 +254,7 @@ export { calculateComplexity, DataProcessor };
     }
     
     // Summary
-    console.log('\n' + '='.repeat(60));
+    console.log(`\n${  '='.repeat(60)}`);
     console.log(`📊 Phase 1 Validation Results: ${testsPassed}/${testsTotal} tests passed`);
     
     if (testsPassed === testsTotal) {

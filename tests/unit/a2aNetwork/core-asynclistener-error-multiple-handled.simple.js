@@ -23,10 +23,10 @@
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
+const assert = require('assert');
 
-var active = null;
-var cntr = 0;
+const active = null;
+const cntr = 0;
 
 function onAsync0() {
   return 0;
@@ -42,28 +42,28 @@ function onError(stor) {
 }
 
 var results = [];
-var asyncNoHandleError0 = {
+const asyncNoHandleError0 = {
   create: onAsync0,
   error: onError
 };
-var asyncNoHandleError1 = {
+const asyncNoHandleError1 = {
   create: onAsync1,
   error: onError
 };
 
-var listeners = [
+const listeners = [
   process.addAsyncListener(asyncNoHandleError0),
   process.addAsyncListener(asyncNoHandleError1)
 ];
 
-process.nextTick(function() {
+process.nextTick(() => {
   throw new Error();
 });
 
 process.removeAsyncListener(listeners[0]);
 process.removeAsyncListener(listeners[1]);
 
-process.on('exit', function(code) {
+process.on('exit', (code) => {
   // If the exit code isn't ok then return early to throw the stack that
   // caused the bad return code.
   if (code !== 0)

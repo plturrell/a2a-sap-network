@@ -274,17 +274,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateBackupProgress(data, oProgressDialog);
                     } catch (error) {
-                        // console.error("Error parsing backup progress data:", error);
+                        // // console.error("Error parsing backup progress data:", error);
                     }
                 }.bind(this);
 
                 this._backupEventSource.onerror = function(error) {
-                    // console.warn("Backup stream error, falling back to polling:", error);
+                    // // console.warn("Backup stream error, falling back to polling:", error);
                     this._startBackupPolling(sBackupId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startBackupPolling(sBackupId, oProgressDialog);
             }
         },
@@ -461,7 +461,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
+                // // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -519,7 +519,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                // console.error("Error processing backup update:", error);
+                // // console.error("Error processing backup update:", error);
             }
         },
 
@@ -701,7 +701,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

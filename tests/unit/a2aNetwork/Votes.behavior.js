@@ -20,7 +20,7 @@ const Delegation = [
 function shouldBehaveLikeVotes(mode = 'blocknumber') {
   shouldBehaveLikeEIP6372(mode);
 
-  describe('run votes workflow', function () {
+  describe('run votes workflow', () => {
     it('initial nonce is 0', async function () {
       expect(await this.votes.nonces(this.account1)).to.be.bignumber.equal('0');
     });
@@ -29,7 +29,7 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
       expect(await this.votes.DOMAIN_SEPARATOR()).to.equal(domainSeparator(await getDomain(this.votes)));
     });
 
-    describe('delegation with signature', function () {
+    describe('delegation with signature', () => {
       const delegator = Wallet.generate();
       const delegatorAddress = web3.utils.toChecksumAddress(delegator.getAddressString());
       const nonce = 0;
@@ -157,8 +157,8 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
       });
     });
 
-    describe('set delegation', function () {
-      describe('call', function () {
+    describe('set delegation', () => {
+      describe('call', () => {
         it('delegation with tokens', async function () {
           await this.votes.$_mint(this.account1, this.NFT0);
           expect(await this.votes.delegates(this.account1)).to.be.equal(ZERO_ADDRESS);
@@ -201,7 +201,7 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
       });
     });
 
-    describe('change delegation', function () {
+    describe('change delegation', () => {
       beforeEach(async function () {
         await this.votes.$_mint(this.account1, this.NFT0);
         await this.votes.delegate(this.account1, { from: this.account1 });
@@ -241,7 +241,7 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
       });
     });
 
-    describe('getPastTotalSupply', function () {
+    describe('getPastTotalSupply', () => {
       beforeEach(async function () {
         await this.votes.delegate(this.account1, { from: this.account1 });
       });
@@ -314,7 +314,7 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
 
     // The following tests are a adaptation of
     // https://github.com/compound-finance/compound-protocol/blob/master/tests/Governance/CompTest.js.
-    describe('Compound test suite', function () {
+    describe('Compound test suite', () => {
       beforeEach(async function () {
         await this.votes.$_mint(this.account1, this.NFT0);
         await this.votes.$_mint(this.account1, this.NFT1);
@@ -322,7 +322,7 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
         await this.votes.$_mint(this.account1, this.NFT3);
       });
 
-      describe('getPastVotes', function () {
+      describe('getPastVotes', () => {
         it('reverts if block number >= current block', async function () {
           await expectRevert(this.votes.getPastVotes(this.account2, 5e10), 'future lookup');
         });

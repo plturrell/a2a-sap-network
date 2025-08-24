@@ -13,7 +13,7 @@ const AccessControlCrossChainMock = artifacts.require('$AccessControlCrossChainM
 
 const ROLE = web3.utils.soliditySha3('ROLE');
 
-contract('AccessControl', function (accounts) {
+contract('AccessControl', (accounts) => {
   before(async function () {
     this.bridge = await BridgeHelper.deploy();
   });
@@ -25,7 +25,7 @@ contract('AccessControl', function (accounts) {
 
   shouldBehaveLikeAccessControl('AccessControl', ...accounts);
 
-  describe('CrossChain enabled', function () {
+  describe('CrossChain enabled', () => {
     beforeEach(async function () {
       await this.accessControl.grantRole(ROLE, accounts[0], { from: accounts[0] });
       await this.accessControl.grantRole(crossChainRoleAlias(ROLE), accounts[1], { from: accounts[0] });

@@ -1,5 +1,5 @@
-sap.ui.define([], function () {
-    "use strict";
+sap.ui.define([], () => {
+    'use strict';
 
     return {
         /**
@@ -9,18 +9,18 @@ sap.ui.define([], function () {
          */
         formatDate: function (date) {
             if (!date) {
-                return "";
+                return '';
             }
 
-            var oDate = date instanceof Date ? date : new Date(date);
+            const oDate = date instanceof Date ? date : new Date(date);
             
             if (isNaN(oDate.getTime())) {
-                return "";
+                return '';
             }
 
             // Use UI5 date formatter
-            var oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({
-                style: "medium"
+            const oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({
+                style: 'medium'
             });
 
             return oDateFormat.format(oDate);
@@ -33,17 +33,17 @@ sap.ui.define([], function () {
          */
         formatShortDate: function (date) {
             if (!date) {
-                return "";
+                return '';
             }
 
-            var oDate = date instanceof Date ? date : new Date(date);
+            const oDate = date instanceof Date ? date : new Date(date);
             
             if (isNaN(oDate.getTime())) {
-                return "";
+                return '';
             }
 
-            var oDateFormat = sap.ui.core.format.DateFormat.getDateInstance({
-                style: "short"
+            const oDateFormat = sap.ui.core.format.DateFormat.getDateInstance({
+                style: 'short'
             });
 
             return oDateFormat.format(oDate);
@@ -58,7 +58,7 @@ sap.ui.define([], function () {
             if (!address || address.length < 10) {
                 return address;
             }
-            return address.substr(0, 6) + "..." + address.substr(-4);
+            return `${address.substr(0, 6)  }...${  address.substr(-4)}`;
         },
 
         /**
@@ -68,9 +68,9 @@ sap.ui.define([], function () {
          */
         formatPercentage: function (value) {
             if (value === null || value === undefined || isNaN(value)) {
-                return "0%";
+                return '0%';
             }
-            return Math.round(value) + "%";
+            return `${Math.round(value)  }%`;
         },
 
         /**
@@ -80,11 +80,11 @@ sap.ui.define([], function () {
          */
         formatRatingState: function (rating) {
             if (rating >= 4) {
-                return "Success";
+                return 'Success';
             } else if (rating >= 3) {
-                return "Warning";
+                return 'Warning';
             } else {
-                return "Error";
+                return 'Error';
             }
         },
 
@@ -95,20 +95,20 @@ sap.ui.define([], function () {
          */
         formatStatusState: function (status) {
             switch (status) {
-                case "Active":
-                case "Validated":
-                case "Success":
-                    return "Success";
-                case "Pending":
-                case "Warning":
-                    return "Warning";
-                case "Inactive":
-                case "Rejected":
-                case "Failed":
-                case "Error":
-                    return "Error";
+                case 'Active':
+                case 'Validated':
+                case 'Success':
+                    return 'Success';
+                case 'Pending':
+                case 'Warning':
+                    return 'Warning';
+                case 'Inactive':
+                case 'Rejected':
+                case 'Failed':
+                case 'Error':
+                    return 'Error';
                 default:
-                    return "None";
+                    return 'None';
             }
         },
 
@@ -119,15 +119,15 @@ sap.ui.define([], function () {
          */
         formatDuration: function (milliseconds) {
             if (!milliseconds || isNaN(milliseconds)) {
-                return "0 ms";
+                return '0 ms';
             }
 
             if (milliseconds < 1000) {
-                return milliseconds + " ms";
+                return `${milliseconds  } ms`;
             } else if (milliseconds < 60000) {
-                return (milliseconds / 1000).toFixed(1) + " s";
+                return `${(milliseconds / 1000).toFixed(1)  } s`;
             } else {
-                return (milliseconds / 60000).toFixed(1) + " min";
+                return `${(milliseconds / 60000).toFixed(1)  } min`;
             }
         }
     };

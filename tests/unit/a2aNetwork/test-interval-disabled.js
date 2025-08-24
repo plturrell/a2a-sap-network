@@ -24,19 +24,19 @@ asyncHook.addHooks({
 asyncHook.enable();
 asyncHook.disable();
 
-const timerAId = setInterval(function () {
+const timerAId = setInterval(() => {
   timerACalled = true;
 });
 clearInterval(timerAId);
 
-const timerBId = setInterval(function (arg1, arg2) {
+const timerBId = setInterval((arg1, arg2) => {
   timerBCalled = true;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
   clearInterval(timerBId);
 }, 0, 'a', 'b');
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(timerACalled, false);
   assert.equal(timerBCalled, true);
 });

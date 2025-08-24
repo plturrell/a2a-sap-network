@@ -22,7 +22,7 @@ global.console = {
 global.testUtils = {
   // Mock data generators
   generateMockAgent: () => ({
-    id: 'test-agent-' + Math.random().toString(36).substr(2, 9),
+    id: `test-agent-${  Math.random().toString(36).substr(2, 9)}`,
     name: 'Test Agent',
     type: 'reasoning',
     status: 'active',
@@ -31,7 +31,7 @@ global.testUtils = {
   }),
   
   generateMockUser: () => ({
-    id: 'test-user-' + Math.random().toString(36).substr(2, 9),
+    id: `test-user-${  Math.random().toString(36).substr(2, 9)}`,
     username: 'testuser',
     email: 'test@example.com',
     role: 'user'

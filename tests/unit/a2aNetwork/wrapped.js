@@ -1,22 +1,22 @@
 'use strict';
 
-var test = require('tape');
-var net = require('net');
+const test = require('tape');
+const net = require('net');
 
-var WrappedError = require('../wrapped.js');
+const WrappedError = require('../wrapped.js');
 
-test('can create a wrapped error', function t(assert) {
-    var ServerListenError = WrappedError({
+test('can create a wrapped error', (assert) => {
+    const ServerListenError = WrappedError({
         message: 'server: {causeMessage}',
         type: 'server.listen-failed',
         requestedPort: null,
         host: null
     });
 
-    var err = new Error('listen EADDRINUSE');
+    const err = new Error('listen EADDRINUSE');
     err.code = 'EADDRINUSE';
 
-    var err2 = ServerListenError(err, {
+    const err2 = ServerListenError(err, {
         requestedPort: 3426,
         host: 'localhost'
     });
@@ -48,18 +48,18 @@ test('can create a wrapped error', function t(assert) {
     assert.end();
 });
 
-test('can create wrapped error with syscall', function t(assert) {
-    var SysCallError = WrappedError({
+test('can create wrapped error with syscall', (assert) => {
+    const SysCallError = WrappedError({
         'message': 'tchannel socket error ({code} from ' +
             '{syscall}): {origMessage}',
         type: 'syscall.error'
     });
 
-    var err = new Error('listen EADDRINUSE');
+    const err = new Error('listen EADDRINUSE');
     err.code = 'EADDRINUSE';
     err.syscall = 'listen';
 
-    var err2 = SysCallError(err);
+    const err2 = SysCallError(err);
 
     assert.equal(err2.message, 'tchannel socket error ' +
         '(EADDRINUSE from listen): listen EADDRINUSE');
@@ -70,23 +70,23 @@ test('can create wrapped error with syscall', function t(assert) {
     assert.end();
 });
 
-test('wrapping twice', function t(assert) {
-    var ReadError = WrappedError({
+test('wrapping twice', (assert) => {
+    const ReadError = WrappedError({
         type: 'my.read-error',
         message: 'read: {causeMessage}'
     });
 
-    var DatabaseError = WrappedError({
+    const DatabaseError = WrappedError({
         type: 'my.database-error',
         message: 'db: {causeMessage}'
     });
 
-    var BusinessError = WrappedError({
+    const BusinessError = WrappedError({
         type: 'my.business-error',
         message: 'business: {causeMessage}'
     });
 
-    var err = BusinessError(
+    const err = BusinessError(
         DatabaseError(
             ReadError(
                 new Error('oops')
@@ -105,13 +105,13 @@ test('wrapping twice', function t(assert) {
     assert.end();
 });
 
-test('handles bad recursive strings', function t(assert) {
-    var ReadError = WrappedError({
+test('handles bad recursive strings', (assert) => {
+    const ReadError = WrappedError({
         type: 'wat.wat',
         message: 'read: {causeMessage}'
     });
 
-    var err2 = ReadError(new Error('hi {causeMessage}'));
+    const err2 = ReadError(new Error('hi {causeMessage}'));
 
     assert.ok(err2);
     assert.equal(err2.message,
@@ -120,28 +120,28 @@ test('handles bad recursive strings', function t(assert) {
     assert.end();
 });
 
-test('can wrap real IO errors', function t(assert) {
-    var ServerListenError = WrappedError({
+test('can wrap real IO errors', (assert) => {
+    const ServerListenError = WrappedError({
         message: 'server: {causeMessage}',
         type: 'server.listen-failed',
         requestedPort: null,
         host: null
     });
 
-    var otherServer = net.createServer();
+    const otherServer = net.createServer();
     otherServer.once('listening', onPortAllocated);
     otherServer.listen(0);
 
     function onPortAllocated() {
-        var port = otherServer.address().port;
+        const port = otherServer.address().port;
 
-        var server = net.createServer();
+        const server = net.createServer();
         server.on('error', onError);
 
         server.listen(port);
 
         function onError(cause) {
-            var err = ServerListenError(cause, {
+            const err = ServerListenError(cause, {
                 host: 'localhost',
                 requestedPort: port
             });

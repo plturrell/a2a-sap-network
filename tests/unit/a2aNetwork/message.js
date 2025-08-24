@@ -22,18 +22,18 @@
 /* eslint max-len:[0, 120] */
 'use strict';
 
-var test = require('tape');
-var path = require('path');
-var Thrift = require('../thrift').Thrift;
+const test = require('tape');
+const path = require('path');
+const Thrift = require('../thrift').Thrift;
 
-var thrift = new Thrift({
+const thrift = new Thrift({
     entryPoint: path.join(__dirname, 'thrift.thrift'),
     allowFilesystemAccess: true
 });
 
-test('round-trip a non-strict message', function t(assert) {
+test('round-trip a non-strict message', (assert) => {
 
-    var message = new thrift.Service.foo.ArgumentsMessage({
+    const message = new thrift.Service.foo.ArgumentsMessage({
         id: 0,
         body: new thrift.Service.foo.Arguments({
             bar: new thrift.Struct({
@@ -43,11 +43,11 @@ test('round-trip a non-strict message', function t(assert) {
     });
 
     var result = thrift.Service.foo.argumentsMessageRW.byteLength(message);
-    var buffer = new Buffer(result.length);
+    const buffer = new Buffer(result.length);
 
     var result = thrift.Service.foo.argumentsMessageRW.writeInto(message, buffer, 0);
 
-    var expectedBuffer = new Buffer([
+    const expectedBuffer = new Buffer([
         0x00, 0x00, 0x00, 0x03, // name.length:4
         0x66, 0x6f, 0x6f,       // name:name.length
         0x01,                   // type:1 = CALL
@@ -70,8 +70,8 @@ test('round-trip a non-strict message', function t(assert) {
     assert.end();
 });
 
-test('round-trip a non-strict message', function t(assert) {
-    var message = new thrift.Service.foo.ArgumentsMessage({
+test('round-trip a non-strict message', (assert) => {
+    const message = new thrift.Service.foo.ArgumentsMessage({
         version: 1,
         id: 0,
         body: new thrift.Service.foo.Arguments({
@@ -82,10 +82,10 @@ test('round-trip a non-strict message', function t(assert) {
     });
 
     var result = thrift.Service.foo.argumentsMessageRW.byteLength(message);
-    var buffer = new Buffer(result.length);
+    const buffer = new Buffer(result.length);
     var result = thrift.Service.foo.argumentsMessageRW.writeInto(message, buffer, 0);
 
-    var expectedBuffer = new Buffer([
+    const expectedBuffer = new Buffer([
         0x80,                   // strict
         0x01,                   // version = 1
         0x00,                   // shrug
@@ -111,9 +111,9 @@ test('round-trip a non-strict message', function t(assert) {
     assert.end();
 });
 
-test('round trip an exception (legacy)', function t(assert) {
+test('round trip an exception (legacy)', (assert) => {
     // TODO exercise version=1
-    var message = new thrift.Service.foo.ResultMessage({
+    const message = new thrift.Service.foo.ResultMessage({
         id: 2,
         type: 'EXCEPTION',
         body: new thrift.exception.Constructor({
@@ -122,7 +122,7 @@ test('round trip an exception (legacy)', function t(assert) {
         })
     });
 
-    var expectedBuffer = new Buffer([
+    const expectedBuffer = new Buffer([
         0x00, 0x00, 0x00, 0x03, // name.length:4
         0x66, 0x6f, 0x6f,       // name:name.length -- "foo"
         0x03,                   // type:3 = EXCEPTION
@@ -144,7 +144,7 @@ test('round trip an exception (legacy)', function t(assert) {
     var result = thrift.Service.foo.resultMessageRW.byteLength(message);
     assert.equal(result.length, expectedBuffer.length, 'measured correctly');
 
-    var buffer = new Buffer(result.length);
+    const buffer = new Buffer(result.length);
     buffer.fill(0xCC);
 
     var result = thrift.Service.foo.resultMessageRW.writeInto(message, buffer, 0);
@@ -160,8 +160,8 @@ test('round trip an exception (legacy)', function t(assert) {
     assert.end();
 });
 
-test('read unexpected version error', function t(assert) {
-    var buffer = new Buffer([
+test('read unexpected version error', (assert) => {
+    const buffer = new Buffer([
         0x80,                   // strict
         0x02,                   // version = 2 XXX BUT WHAT IS GOING ON WITH VERSION 2!?
         0x00,                   // shrug
@@ -178,7 +178,7 @@ test('read unexpected version error', function t(assert) {
         0x00,                   // end of foo
         0x00                    // end of result
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message, 'unrecognized Thrift message envelope version: 2',
         'expected error message');
     assert.equal(result.err.type, 'thrift-unrecognized-message-envelope-version',
@@ -186,8 +186,8 @@ test('read unexpected version error', function t(assert) {
     assert.end();
 });
 
-test('read unexpected version error for undefined bits of strict', function t(assert) {
-    var buffer = new Buffer([
+test('read unexpected version error for undefined bits of strict', (assert) => {
+    const buffer = new Buffer([
         0x81,                   // strict XXX BUT WHAT IS GOING ON WITH THIS LOW BIT!?
         0x01,                   // version = 1
         0x00,                   // shrug
@@ -204,7 +204,7 @@ test('read unexpected version error for undefined bits of strict', function t(as
         0x00,                   // end of foo
         0x00                    // end of result
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message, 'unrecognized Thrift message envelope version: 257',
         'expected error message');
     assert.equal(result.err.type, 'thrift-unrecognized-message-envelope-version',
@@ -212,8 +212,8 @@ test('read unexpected version error for undefined bits of strict', function t(as
     assert.end();
 });
 
-test('read unrecognized message type error (strict)', function t(assert) {
-    var buffer = new Buffer([
+test('read unrecognized message type error (strict)', (assert) => {
+    const buffer = new Buffer([
         0x80,                   // strict
         0x01,                   // version = 1
         0x00,                   // shrug
@@ -230,7 +230,7 @@ test('read unrecognized message type error (strict)', function t(assert) {
         0x00,                   // end of foo
         0x00                    // end of result
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message, 'unrecognized Thrift message envelope type: 255',
         'expected error message');
     assert.equal(result.err.value, 255,
@@ -240,8 +240,8 @@ test('read unrecognized message type error (strict)', function t(assert) {
     assert.end();
 });
 
-test('read unrecognized message type error (legacy)', function t(assert) {
-    var buffer = new Buffer([
+test('read unrecognized message type error (legacy)', (assert) => {
+    const buffer = new Buffer([
         0x00, 0x00, 0x00, 0x03, // name.length:4
         0x66, 0x6f, 0x6f,       // name:name.length
         0xff,                   // type:1 = XXX WAT!?
@@ -255,7 +255,7 @@ test('read unrecognized message type error (legacy)', function t(assert) {
         0x00,                   // end of foo
         0x00                    // end of result
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message, 'unrecognized Thrift message envelope type: 255',
         'expected error message');
     assert.equal(result.err.value, 255,
@@ -265,8 +265,8 @@ test('read unrecognized message type error (legacy)', function t(assert) {
     assert.end();
 });
 
-test('read invalid message body error', function t(assert) {
-    var buffer = new Buffer([
+test('read invalid message body error', (assert) => {
+    const buffer = new Buffer([
         0x00, 0x00, 0x00, 0x03, // name.length:4
         0x66, 0x6f, 0x6f,       // name:name.length
         0x01,                   // type:1 = CALL
@@ -279,14 +279,14 @@ test('read invalid message body error', function t(assert) {
         0x00,                   // end of foo
         0x00                    // end of result
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message, 'missing required field "bar" with id 1 on foo_args',
         'expected message');
     assert.end();
 });
 
-test('read exception', function t(assert) {
-    var buffer = new Buffer([
+test('read exception', (assert) => {
+    const buffer = new Buffer([
         0x00, 0x00, 0x00, 0x03, // name.length:4
         0x66, 0x6f, 0x6f,       // name:name.length
         0x03,                   // type:3 = EXCEPTION
@@ -304,7 +304,7 @@ test('read exception', function t(assert) {
         0x00, 0x00, 0x00, 0x00, // type:4 -- 0 -- UNKNOWN
         0x00,                   // end of struct
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message, 'Unexpected error',
         'expected message');
     assert.equal(result.err.type, 'UNKNOWN',
@@ -312,8 +312,8 @@ test('read exception', function t(assert) {
     assert.end();
 });
 
-test('read invalid exception', function t(assert) {
-    var buffer = new Buffer([
+test('read invalid exception', (assert) => {
+    const buffer = new Buffer([
         0x00, 0x00, 0x00, 0x03, // name.length:4
         0x66, 0x6f, 0x6f,       // name:name.length
         0x03,                   // type:3 = EXCEPTION
@@ -323,7 +323,7 @@ test('read invalid exception', function t(assert) {
         0x00, 0x01,             // fieldid:2 -- 1 -- message
         // ...
     ]);
-    var result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.readFrom(buffer, 0);
     assert.equal(result.err.message,
         'unexpected typeid 8 (I32) for field "message" with id 1 on ' +
         'ThriftMessageEnvelopeException; expected 11 (STRING)',
@@ -332,35 +332,35 @@ test('read invalid exception', function t(assert) {
     assert.end();
 });
 
-test('write invalid message type (legacy)', function t(assert) {
-    var buffer = new Buffer(255);
-    var message = {
+test('write invalid message type (legacy)', (assert) => {
+    const buffer = new Buffer(255);
+    const message = {
         name: 'foo',
         type: 'BORK',
         version: 0
     };
-    var result = thrift.Service.foo.argumentsMessageRW.writeInto(message, buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.writeInto(message, buffer, 0);
     assert.equal(result.err.message, 'invalid Thrift message envelope type name: BORK',
         'expected message');
     assert.end();
 });
 
-test('write invalid message type (strict)', function t(assert) {
-    var buffer = new Buffer(255);
-    var message = {
+test('write invalid message type (strict)', (assert) => {
+    const buffer = new Buffer(255);
+    const message = {
         name: 'foo',
         type: 'BORK',
         version: 1
     };
-    var result = thrift.Service.foo.argumentsMessageRW.writeInto(message, buffer, 0);
+    const result = thrift.Service.foo.argumentsMessageRW.writeInto(message, buffer, 0);
     assert.equal(result.err.message, 'invalid Thrift message envelope type name: BORK',
         'expected message');
     assert.end();
 });
 
-test('measure byte length for invalid body', function t(assert) {
-    var buffer = new Buffer(255);
-    var message = {
+test('measure byte length for invalid body', (assert) => {
+    const buffer = new Buffer(255);
+    const message = {
         name: 'foo',
         type: 'BORK',
         version: 1,
@@ -370,22 +370,22 @@ test('measure byte length for invalid body', function t(assert) {
             }
         }
     };
-    var result = thrift.Service.foo.argumentsMessageRW.byteLength(message);
+    const result = thrift.Service.foo.argumentsMessageRW.byteLength(message);
     assert.equal(result.err.message, 'missing required field "number" with id 1 on Struct',
         'expected message');
     assert.end();
 });
 
-test('measure byte length for invalid exception', function t(assert) {
-    var buffer = new Buffer(255);
-    var message = {
+test('measure byte length for invalid exception', (assert) => {
+    const buffer = new Buffer(255);
+    const message = {
         name: 'foo',
         type: 'EXCEPTION',
         body: {
             message: 10
         }
     };
-    var result = thrift.Service.foo.argumentsMessageRW.byteLength(message);
+    const result = thrift.Service.foo.argumentsMessageRW.byteLength(message);
     assert.equal(result.err.message, 'invalid argument, expected string, null, or undefined',
         'expected message');
     assert.end();

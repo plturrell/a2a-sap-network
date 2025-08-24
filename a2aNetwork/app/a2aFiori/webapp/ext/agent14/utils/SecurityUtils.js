@@ -922,7 +922,7 @@ sap.ui.define([
 
         _sendToAuditService(logEntry) {
             // In production, implement actual audit service integration
-            console.log("AUDIT:", logEntry);
+            // console.log("AUDIT:", logEntry);
         },
 
         /**

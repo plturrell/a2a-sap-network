@@ -16,7 +16,7 @@ function expectStruct(value, expected) {
   }
 }
 
-contract('SafeMath', function () {
+contract('SafeMath', () => {
   beforeEach(async function () {
     this.safeMath = await SafeMath.new();
   });
@@ -41,8 +41,8 @@ contract('SafeMath', function () {
     expectStruct(await fn(rhs, lhs, ...extra), expected);
   }
 
-  describe('with flag', function () {
-    describe('add', function () {
+  describe('with flag', () => {
+    describe('add', () => {
       it('adds correctly', async function () {
         const a = new BN('5678');
         const b = new BN('1234');
@@ -58,7 +58,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('sub', function () {
+    describe('sub', () => {
       it('subtracts correctly', async function () {
         const a = new BN('5678');
         const b = new BN('1234');
@@ -74,7 +74,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('mul', function () {
+    describe('mul', () => {
       it('multiplies correctly', async function () {
         const a = new BN('1234');
         const b = new BN('5678');
@@ -97,7 +97,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('div', function () {
+    describe('div', () => {
       it('divides correctly', async function () {
         const a = new BN('5678');
         const b = new BN('5678');
@@ -127,8 +127,8 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('mod', function () {
-      describe('modulos correctly', async function () {
+    describe('mod', () => {
+      describe('modulos correctly', async () => {
         it('when the dividend is smaller than the divisor', async function () {
           const a = new BN('284');
           const b = new BN('5678');
@@ -167,8 +167,8 @@ contract('SafeMath', function () {
     });
   });
 
-  describe('with default revert message', function () {
-    describe('add', function () {
+  describe('with default revert message', () => {
+    describe('add', () => {
       it('adds correctly', async function () {
         const a = new BN('5678');
         const b = new BN('1234');
@@ -184,7 +184,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('sub', function () {
+    describe('sub', () => {
       it('subtracts correctly', async function () {
         const a = new BN('5678');
         const b = new BN('1234');
@@ -200,7 +200,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('mul', function () {
+    describe('mul', () => {
       it('multiplies correctly', async function () {
         const a = new BN('1234');
         const b = new BN('5678');
@@ -223,7 +223,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('div', function () {
+    describe('div', () => {
       it('divides correctly', async function () {
         const a = new BN('5678');
         const b = new BN('5678');
@@ -253,8 +253,8 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('mod', function () {
-      describe('modulos correctly', async function () {
+    describe('mod', () => {
+      describe('modulos correctly', async () => {
         it('when the dividend is smaller than the divisor', async function () {
           const a = new BN('284');
           const b = new BN('5678');
@@ -293,8 +293,8 @@ contract('SafeMath', function () {
     });
   });
 
-  describe('with custom revert message', function () {
-    describe('sub', function () {
+  describe('with custom revert message', () => {
+    describe('sub', () => {
       it('subtracts correctly', async function () {
         const a = new BN('5678');
         const b = new BN('1234');
@@ -315,7 +315,7 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('div', function () {
+    describe('div', () => {
       it('divides correctly', async function () {
         const a = new BN('5678');
         const b = new BN('5678');
@@ -354,8 +354,8 @@ contract('SafeMath', function () {
       });
     });
 
-    describe('mod', function () {
-      describe('modulos correctly', async function () {
+    describe('mod', () => {
+      describe('modulos correctly', async () => {
         it('when the dividend is smaller than the divisor', async function () {
           const a = new BN('284');
           const b = new BN('5678');
@@ -405,7 +405,7 @@ contract('SafeMath', function () {
     });
   });
 
-  describe('memory leakage', function () {
+  describe('memory leakage', () => {
     beforeEach(async function () {
       this.safeMathMemoryCheck = await SafeMathMemoryCheck.new();
     });

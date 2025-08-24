@@ -20,16 +20,16 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
 
-var thriftrw = require('../index');
-var StringRW = thriftrw.StringRW;
-var ThriftString = thriftrw.ThriftString;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const StringRW = thriftrw.StringRW;
+const ThriftString = thriftrw.ThriftString;
+const TYPE = require('../TYPE');
 
-var validTestCases = [
+const validTestCases = [
     ['', [
         0x00, 0x00, 0x00, 0x00
     ]],
@@ -39,7 +39,7 @@ var validTestCases = [
     ]]
 ];
 
-var testCases = [].concat(
+const testCases = [].concat(
     validTestCases
 );
 

@@ -174,7 +174,7 @@ sap.ui.define([
                         break;
                     case "error":
                         this._ws.close();
-                        var errorMsg = this._sanitizeErrorMessage(data.error);
+                        const errorMsg = this._sanitizeErrorMessage(data.error);
                         MessageBox.error(`Processing error: ${ errorMsg}`);
                         break;
                     }

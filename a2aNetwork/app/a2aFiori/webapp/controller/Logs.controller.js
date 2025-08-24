@@ -31,7 +31,7 @@ sap.ui.define([
             this.showBusyDialog("Loading logs...");
 
             // Call logs API endpoint
-            blockchainClient.sendMessage("/api/v1/operations/logs?limit=200")
+            fetch("/api/v1/operations/logs?limit=200")
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -48,7 +48,7 @@ sap.ui.define([
                     MessageToast.show(`Loaded ${data.logs?.length || 0} log entries`);
                 })
                 .catch(error => {
-                    // console.error("Failed to load logs:", error);
+                    // // console.error("Failed to load logs:", error);
                     MessageToast.show(`Failed to load logs: ${ error.message}`);
 
                     // Fallback to mock data

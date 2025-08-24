@@ -39,7 +39,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-const server = net.createServer(function (socket) {
+const server = net.createServer((socket) => {
   socket.end();
   server.close();
   called = true;
@@ -49,7 +49,7 @@ const server = net.createServer(function (socket) {
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(serverHandle, clientParentHandle);
   assert.equal(serverUid, clientParentUid);
 

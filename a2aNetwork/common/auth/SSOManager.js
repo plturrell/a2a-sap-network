@@ -136,9 +136,9 @@ window.A2A_SSO_Manager = {
 };
 
 // Auto-initialize when script loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     if (window.A2A_SSO_Manager) {
-        window.A2A_SSO_Manager.init().catch(function(error) {
+        window.A2A_SSO_Manager.init().catch((error) => {
             console.warn('SSO initialization failed:', error.message);
         });
     }

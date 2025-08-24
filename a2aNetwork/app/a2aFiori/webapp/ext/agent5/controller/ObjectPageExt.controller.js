@@ -505,7 +505,7 @@ sap.ui.define([
                 }
                 break;
             case "reportType":
-                var aValidTypes = ["EXECUTIVE", "DETAILED", "SUMMARY", "COMPLIANCE"];
+                const aValidTypes = ["EXECUTIVE", "DETAILED", "SUMMARY", "COMPLIANCE"];
                 if (!aValidTypes.includes(sSanitized)) {
                     return { isValid: false, message: "Invalid report type" };
                 }
@@ -516,7 +516,7 @@ sap.ui.define([
                 }
                 break;
             case "complianceStandard":
-                var aValidStandards = ["ISO27001", "SOX", "GDPR", "HIPAA", "PCI", "FISMA", "WCAG"];
+                const aValidStandards = ["ISO27001", "SOX", "GDPR", "HIPAA", "PCI", "FISMA", "WCAG"];
                 if (sSanitized && !aValidStandards.includes(sSanitized)) {
                     return { isValid: false, message: "Invalid compliance standard" };
                 }
@@ -604,7 +604,7 @@ sap.ui.define([
                 data: JSON.stringify(oAuditData),
                 async: true,
                 success() {
-                    console.log("Audit trail recorded:", sEventType);
+                    // console.log("Audit trail recorded:", sEventType);
                 },
                 error() {
                     // Fallback audit logging to local storage

@@ -1,9 +1,9 @@
-var test = require('tape');
-var table = require('../');
+const test = require('tape');
+const table = require('../');
 
-test('dot align', function (t) {
+test('dot align', (t) => {
     t.plan(1);
-    var s = table([
+    const s = table([
         [ '0.1.2' ],
         [ '11.22.33' ],
         [ '5.6.7' ],

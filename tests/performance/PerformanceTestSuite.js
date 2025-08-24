@@ -1,8 +1,8 @@
 sap.ui.define([
-    "sap/ui/test/Opa5",
-    "sap/ui/performance/Measurement"
-], function(Opa5, Measurement) {
-    "use strict";
+    'sap/ui/test/Opa5',
+    'sap/ui/performance/Measurement'
+], (Opa5, Measurement) => {
+    'use strict';
 
     /**
      * Performance Test Suite
@@ -65,7 +65,7 @@ sap.ui.define([
                     };
 
                     this.measurements.push({
-                        type: "application-startup",
+                        type: 'application-startup',
                         timestamp: Date.now(),
                         data: result
                     });
@@ -84,7 +84,7 @@ sap.ui.define([
             const startTime = performance.now();
 
             // Start measuring
-            Measurement.start("view-rendering", "View rendering performance test");
+            Measurement.start('view-rendering', 'View rendering performance test');
 
             // Create and render view
             sap.ui.core.mvc.XMLView.create({
@@ -92,13 +92,13 @@ sap.ui.define([
             }).then((oView) => {
                 const renderStartTime = performance.now();
 
-                oView.placeAt("qunit-fixture");
+                oView.placeAt('qunit-fixture');
 
                 // Wait for rendering to complete
                 oView.addEventDelegate({
                     onAfterRendering: () => {
                         const renderEndTime = performance.now();
-                        Measurement.end("view-rendering");
+                        Measurement.end('view-rendering');
 
                         const result = {
                             viewCreationTime: renderStartTime - startTime,
@@ -106,11 +106,11 @@ sap.ui.define([
                             totalTime: renderEndTime - startTime,
                             passesThreshold: (renderEndTime - startTime) <= this.thresholds.viewRendering,
                             threshold: this.thresholds.viewRendering,
-                            measurements: Measurement.getAllMeasurements().filter(m => m.id === "view-rendering")
+                            measurements: Measurement.getAllMeasurements().filter(m => m.id === 'view-rendering')
                         };
 
                         this.measurements.push({
-                            type: "view-rendering",
+                            type: 'view-rendering',
                             viewName,
                             timestamp: Date.now(),
                             data: result
@@ -151,7 +151,7 @@ sap.ui.define([
 
             // Test binding updates
             const updateStartTime = performance.now();
-            model.setProperty("/massUpdate", "Updated value");
+            model.setProperty('/massUpdate', 'Updated value');
             const updateTime = performance.now() - updateStartTime;
 
             const totalTime = performance.now() - startTime;
@@ -168,7 +168,7 @@ sap.ui.define([
             };
 
             this.measurements.push({
-                type: "data-binding",
+                type: 'data-binding',
                 timestamp: Date.now(),
                 data: result
             });
@@ -202,7 +202,7 @@ sap.ui.define([
                 };
 
                 this.measurements.push({
-                    type: "navigation",
+                    type: 'navigation',
                     timestamp: Date.now(),
                     data: result
                 });
@@ -220,7 +220,7 @@ sap.ui.define([
     /**
      * Test user interaction performance
      */
-    PerformanceEngine.prototype.testInteractionPerformance = function(element, interaction = "click") {
+    PerformanceEngine.prototype.testInteractionPerformance = function(element, interaction = 'click') {
         return new Promise((resolve) => {
             const startTime = performance.now();
 
@@ -231,13 +231,13 @@ sap.ui.define([
                 const result = {
                     interactionTime: endTime - startTime,
                     interactionType: interaction,
-                    elementId: element.id || "unknown",
+                    elementId: element.id || 'unknown',
                     passesThreshold: (endTime - startTime) <= this.thresholds.interaction,
                     threshold: this.thresholds.interaction
                 };
 
                 this.measurements.push({
-                    type: "interaction",
+                    type: 'interaction',
                     timestamp: Date.now(),
                     data: result
                 });
@@ -260,7 +260,7 @@ sap.ui.define([
         return new Promise((resolve) => {
             if (!performance.memory) {
                 resolve({
-                    error: "Performance.memory API not available",
+                    error: 'Performance.memory API not available',
                     supported: false
                 });
                 return;
@@ -296,7 +296,7 @@ sap.ui.define([
                         };
 
                         this.measurements.push({
-                            type: "memory-usage",
+                            type: 'memory-usage',
                             timestamp: Date.now(),
                             data: result
                         });
@@ -326,9 +326,9 @@ sap.ui.define([
     PerformanceEngine.prototype.testBundleSize = function() {
         return new Promise((resolve) => {
             // Get all loaded resources
-            const resources = performance.getEntriesByType("resource");
-            const jsResources = resources.filter(r => r.name.endsWith(".js"));
-            const cssResources = resources.filter(r => r.name.endsWith(".css"));
+            const resources = performance.getEntriesByType('resource');
+            const jsResources = resources.filter(r => r.name.endsWith('.js'));
+            const cssResources = resources.filter(r => r.name.endsWith('.css'));
 
             let totalSize = 0;
             let jsSize = 0;
@@ -337,9 +337,9 @@ sap.ui.define([
             resources.forEach(resource => {
                 if (resource.transferSize) {
                     totalSize += resource.transferSize;
-                    if (resource.name.endsWith(".js")) {
+                    if (resource.name.endsWith('.js')) {
                         jsSize += resource.transferSize;
-                    } else if (resource.name.endsWith(".css")) {
+                    } else if (resource.name.endsWith('.css')) {
                         cssSize += resource.transferSize;
                     }
                 }
@@ -370,7 +370,7 @@ sap.ui.define([
             };
 
             this.measurements.push({
-                type: "bundle-size",
+                type: 'bundle-size',
                 timestamp: Date.now(),
                 data: result
             });
@@ -391,7 +391,7 @@ sap.ui.define([
             };
 
             // Test Largest Contentful Paint (LCP)
-            if ("PerformanceObserver" in window) {
+            if ('PerformanceObserver' in window) {
                 const lcpObserver = new PerformanceObserver((entryList) => {
                     const entries = entryList.getEntries();
                     const lastEntry = entries[entries.length - 1];
@@ -402,7 +402,7 @@ sap.ui.define([
                 });
 
                 try {
-                    lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
+                    lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
                     this.observer = lcpObserver;
                 } catch (e) {
                     result.supported.lcp = false;
@@ -418,8 +418,8 @@ sap.ui.define([
                 result.supported.fid = true;
 
                 // Test First Contentful Paint (FCP)
-                const paintEntries = performance.getEntriesByType("paint");
-                const fcpEntry = paintEntries.find(entry => entry.name === "first-contentful-paint");
+                const paintEntries = performance.getEntriesByType('paint');
+                const fcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
 
                 if (fcpEntry) {
                     result.values.fcp = fcpEntry.startTime;
@@ -435,7 +435,7 @@ sap.ui.define([
                 result.supported.cls = true;
 
                 this.measurements.push({
-                    type: "core-web-vitals",
+                    type: 'core-web-vitals',
                     timestamp: Date.now(),
                     data: result
                 });
@@ -458,7 +458,7 @@ sap.ui.define([
                 const testData = this._generateTestData(size);
 
                 componentFactory(testData).then(component => {
-                    component.placeAt("qunit-fixture");
+                    component.placeAt('qunit-fixture');
 
                     component.addEventDelegate({
                         onAfterRendering: () => {
@@ -482,7 +482,7 @@ sap.ui.define([
                                 };
 
                                 this.measurements.push({
-                                    type: "rendering-scalability",
+                                    type: 'rendering-scalability',
                                     timestamp: Date.now(),
                                     data: finalResult
                                 });
@@ -524,11 +524,11 @@ sap.ui.define([
     PerformanceEngine.prototype._waitForFirstView = function() {
         return new Promise((resolve) => {
             // Simple implementation - wait for DOM content loaded
-            if (document.readyState === "complete") {
+            if (document.readyState === 'complete') {
                 resolve(0);
             } else {
                 const startTime = performance.now();
-                window.addEventListener("load", () => {
+                window.addEventListener('load', () => {
                     resolve(performance.now() - startTime);
                 });
             }
@@ -585,9 +585,9 @@ sap.ui.define([
             const avgRatio = ratios.reduce((a, b) => a + b) / ratios.length;
             if (avgRatio > 2) {
                 recommendations.push({
-                    type: "performance",
-                    severity: "high",
-                    message: "Rendering performance degrades significantly with data size. Consider virtualization or pagination."
+                    type: 'performance',
+                    severity: 'high',
+                    message: 'Rendering performance degrades significantly with data size. Consider virtualization or pagination.'
                 });
             }
         }
@@ -621,29 +621,29 @@ sap.ui.define([
 
     PerformanceEngine.prototype._getRecommendationForTest = function(testType, data) {
         const recommendations = {
-            "application-startup": {
-                type: "startup",
-                severity: "high",
+            'application-startup': {
+                type: 'startup',
+                severity: 'high',
                 message: `Application startup time (${Math.round(data.totalStartupTime)}ms) exceeds threshold. Consider lazy loading, code splitting, or reducing initial bundle size.`
             },
-            "view-rendering": {
-                type: "rendering",
-                severity: "medium",
+            'view-rendering': {
+                type: 'rendering',
+                severity: 'medium',
                 message: `View rendering time (${Math.round(data.totalTime)}ms) is slow. Optimize view structure and reduce DOM complexity.`
             },
-            "data-binding": {
-                type: "binding",
-                severity: "medium",
+            'data-binding': {
+                type: 'binding',
+                severity: 'medium',
                 message: `Data binding performance (${Math.round(data.totalTime)}ms) needs improvement. Consider using more efficient binding strategies.`
             },
-            "memory-usage": {
-                type: "memory",
-                severity: "high",
+            'memory-usage': {
+                type: 'memory',
+                severity: 'high',
                 message: `Potential memory leak detected (${Math.round(data.memoryIncrease)}MB increase). Check for proper cleanup of event listeners and object references.`
             },
-            "bundle-size": {
-                type: "bundle",
-                severity: "medium",
+            'bundle-size': {
+                type: 'bundle',
+                severity: 'medium',
                 message: `Bundle size (${data.totalSize}KB) is large. Consider code splitting and removing unused dependencies.`
             }
         };

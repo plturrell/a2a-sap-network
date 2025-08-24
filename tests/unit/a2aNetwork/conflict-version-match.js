@@ -1,10 +1,10 @@
 
-var test = require("tap").test;
+const test = require('tap').test;
 
-var first = global._stackChain = { version: require('../../package.json').version };
-var chain = require('../../');
+const first = global._stackChain = { version: require('../../package.json').version };
+const chain = require('../../');
 
-test("same version but copies", function (t) {
+test('same version but copies', (t) => {
   t.strictEqual(chain, first);
   t.end();
 });

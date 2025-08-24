@@ -24,8 +24,8 @@ class DevWebSocketService {
     async initialize(server) {
         this.io = new Server(server, {
             cors: {
-                origin: "*",
-                methods: ["GET", "POST"]
+                origin: '*',
+                methods: ['GET', 'POST']
             }
         });
         
@@ -42,14 +42,14 @@ class DevWebSocketService {
             logger.info('Client connected to dev services');
             
             // Test execution with real-time updates
-            socket.on('test:start', async function(data) {
+            socket.on('test:start', async (data) => {
                 await this.handleTestStart(socket, data);
-            }.bind(this));
+            });
             
             // Agent monitoring
-            socket.on('monitor:subscribe', function(agentId) {
+            socket.on('monitor:subscribe', (agentId) => {
                 this.devMonitor.subscribeToAgent(socket, agentId);
-            }.bind(this));
+            });
             
             socket.on('monitor:unsubscribe', function(agentId) {
                 this.devMonitor.unsubscribeFromAgent(socket, agentId);

@@ -20,30 +20,30 @@
 
 'use strict';
 
-var PassThrough = require('stream').PassThrough;
-var util = require('util');
+const PassThrough = require('stream').PassThrough;
+const util = require('util');
 
-var ChunkReader = require('../../stream/chunk_reader');
+const ChunkReader = require('../../stream/chunk_reader');
 
-var testExpectations = require('../lib/test_expectations');
-var byteLength = require('../../interface').byteLength;
-var intoBuffer = require('../../interface').intoBuffer;
-var UInt8 = require('../../atoms').UInt8;
-var StringRW = require('../../string_rw');
-var SeriesRW = require('../../series');
-var BufferRW = require('../../base').BufferRW;
+const testExpectations = require('../lib/test_expectations');
+const byteLength = require('../../interface').byteLength;
+const intoBuffer = require('../../interface').intoBuffer;
+const UInt8 = require('../../atoms').UInt8;
+const StringRW = require('../../string_rw');
+const SeriesRW = require('../../series');
+const BufferRW = require('../../base').BufferRW;
 
-var str1 = StringRW(UInt8);
-var frameRW = SeriesRW(UInt8, str1);
-var readErrorRW = {
+const str1 = StringRW(UInt8);
+const frameRW = SeriesRW(UInt8, str1);
+const readErrorRW = {
     poolReadFrom: function(destResult) {return destResult.reset(new Error('boom'), 0);},
     width: 1
 };
 
 readErrorRW.__proto__ = BufferRW.prototype;
 
-var buffers = [];
-var expectedFrames = [];
+const buffers = [];
+const expectedFrames = [];
 [
     'boot', 'cat',
     'boots', 'cats',
@@ -51,22 +51,22 @@ var expectedFrames = [];
     'cats', 'N',
     'boots', 'N',
     'cats'
-].forEach(function eachToken(token, i) {
-    var frame = [0, token];
+].forEach((token, i) => {
+    const frame = [0, token];
     frame[0] = byteLength(frameRW, frame);
-    var buf = intoBuffer(frameRW, Buffer.alloc(frame[0]), frame);
+    const buf = intoBuffer(frameRW, Buffer.alloc(frame[0]), frame);
     buffers.push(buf);
-    var assertMess = util.format('got expected[%s] payload token %j', i, token);
+    const assertMess = util.format('got expected[%s] payload token %j', i, token);
     expectedFrames.push({frame: expectToken});
     function expectToken(frame, assert) {
         assert.equal(frame[1], token, assertMess);
     }
 });
 
-var BigChunk = Buffer.concat(buffers);
+const BigChunk = Buffer.concat(buffers);
 
-var oneBytePer = new Array(BigChunk.length);
-for (var i = 0; i < BigChunk.length; i++) {
+const oneBytePer = new Array(BigChunk.length);
+for (let i = 0; i < BigChunk.length; i++) {
     oneBytePer.push(Buffer.from([BigChunk[i]]));
 }
 
@@ -75,17 +75,17 @@ readerTest('works from one big chunk', frameRW, [BigChunk], expectedFrames);
 readerTest('works byte-at-a-time', frameRW, oneBytePer, expectedFrames);
 
 function readerTest(desc, frameRW, chunks, expected) {
-    testExpectations(desc, expected, function run(expect, done) {
-        var reader = ChunkReader(frameRW.rws[0], frameRW);
-        var stream = PassThrough({highWaterMark: 1});
-        chunks.forEach(function(chunk) {
+    testExpectations(desc, expected, (expect, done) => {
+        const reader = ChunkReader(frameRW.rws[0], frameRW);
+        const stream = PassThrough({highWaterMark: 1});
+        chunks.forEach((chunk) => {
             stream.push(chunk);
         });
         stream.push(null);
-        reader.on('data', function onData(frame) {
+        reader.on('data', (frame) => {
             expect('frame', frame);
         });
-        reader.on('error', function onError(err) {
+        reader.on('error', (err) => {
             expect('error', err);
             reader.end();
         });

@@ -55,7 +55,7 @@ Promise
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid.length, 2, 'both handlers should init');
   assert.equal(preUid.length, 1, 'only the .catch should pre');
   assert.equal(postUid.length, 1, 'only the .catch should post');

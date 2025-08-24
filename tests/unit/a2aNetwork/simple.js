@@ -1,9 +1,9 @@
-var test = require('tape');
+const test = require('tape');
 
-var hex = require('../index');
+const hex = require('../index');
 
-test('hex(0 bytes)', function t(assert) {
-    var buf = Buffer(0);
+test('hex(0 bytes)', (assert) => {
+    const buf = Buffer(0);
     assert.equal(hex(buf), '');
     assert.equal(hex(buf, {
         nullHuman: 'DNE'
@@ -13,7 +13,7 @@ test('hex(0 bytes)', function t(assert) {
     assert.end();
 });
 
-test('hex(8 bytes)', function t(assert) {
+test('hex(8 bytes)', (assert) => {
     assert.equal(hex(Buffer([
         0x01, 0x02,
         0x03, 0x04,
@@ -24,7 +24,7 @@ test('hex(8 bytes)', function t(assert) {
     assert.end();
 });
 
-test('hex(16 bytes w/ cat)', function t(assert) {
+test('hex(16 bytes w/ cat)', (assert) => {
     assert.equal(hex(Buffer([
         0x00, 0x01,
         0x02, 0x03,
@@ -39,7 +39,7 @@ test('hex(16 bytes w/ cat)', function t(assert) {
     assert.end();
 });
 
-test('hex(24 bytes w/ dog & cat)', function t(assert) {
+test('hex(24 bytes w/ dog & cat)', (assert) => {
     assert.equal(hex(Buffer([
         0x00, 0x01,
         0x02, 0x03,
@@ -59,14 +59,14 @@ test('hex(24 bytes w/ dog & cat)', function t(assert) {
     assert.end();
 });
 
-test('nullHuman works', function t(assert) {
+test('nullHuman works', (assert) => {
     assert.equal(hex(Buffer(0), {
         nullHuman: 'empty'
     }), '00:                                          empty');
     assert.end();
 });
 
-test('hex(24 bytes w/ dog & cat + nullHuman option)', function t(assert) {
+test('hex(24 bytes w/ dog & cat + nullHuman option)', (assert) => {
     assert.equal(hex(Buffer([
         0x00, 0x01,
         0x02, 0x03,
@@ -88,7 +88,7 @@ test('hex(24 bytes w/ dog & cat + nullHuman option)', function t(assert) {
     assert.end();
 });
 
-test('hex(24 bytes w/ dog & cat + offsetWidth option)', function t(assert) {
+test('hex(24 bytes w/ dog & cat + offsetWidth option)', (assert) => {
     assert.equal(hex(Buffer([
         0x00, 0x01,
         0x02, 0x03,
@@ -110,27 +110,27 @@ test('hex(24 bytes w/ dog & cat + offsetWidth option)', function t(assert) {
     assert.end();
 });
 
-test('hex(string)', function t(assert) {
+test('hex(string)', (assert) => {
     assert.equal(hex('what even is a buffer?'),
         '00: 7768 6174 2065 7665 6e20 6973 2061 2062  what even is a b\n' +
         '10: 7566 6665 723f                           uffer?');
     assert.end();
 });
 
-test('hex(invalid)', function t(assert) {
-    assert.throws(function() {
+test('hex(invalid)', (assert) => {
+    assert.throws(() => {
         hex(undefined);
     }, 'no hex(undefined)');
-    assert.throws(function() {
+    assert.throws(() => {
         hex(null);
     }, 'no hex(null)');
-    assert.throws(function() {
+    assert.throws(() => {
         hex(123);
     }, 'no hex(number)');
-    assert.throws(function() {
+    assert.throws(() => {
         hex([]);
     }, 'no hex(Array)');
-    assert.throws(function() {
+    assert.throws(() => {
         hex({});
     }, 'no hex(Object)');
     assert.end();

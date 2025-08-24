@@ -24,7 +24,7 @@ const TOKENS = [
   { Token: artifacts.require('$ERC20VotesTimestampMock'), mode: 'timestamp' },
 ];
 
-contract('GovernorTimelockCompound', function (accounts) {
+contract('GovernorTimelockCompound', (accounts) => {
   const [owner, voter1, voter2, voter3, voter4, other] = accounts;
 
   const name = 'OZ-Governor';
@@ -37,7 +37,7 @@ contract('GovernorTimelockCompound', function (accounts) {
   const value = web3.utils.toWei('1');
 
   for (const { mode, Token } of TOKENS) {
-    describe(`using ${Token._json.contractName}`, function () {
+    describe(`using ${Token._json.contractName}`, () => {
       beforeEach(async function () {
         const [deployer] = await web3.eth.getAccounts();
 
@@ -84,7 +84,7 @@ contract('GovernorTimelockCompound', function (accounts) {
 
       shouldSupportInterfaces(['ERC165', 'Governor', 'GovernorWithParams', 'GovernorTimelock']);
 
-      it("doesn't accept ether transfers", async function () {
+      it('doesn\'t accept ether transfers', async function () {
         await expectRevert.unspecified(web3.eth.sendTransaction({ from: owner, to: this.mock.address, value: 1 }));
       });
 
@@ -120,8 +120,8 @@ contract('GovernorTimelockCompound', function (accounts) {
         await expectEvent.inTransaction(txExecute.tx, this.receiver, 'MockFunctionCalled');
       });
 
-      describe('should revert', function () {
-        describe('on queue', function () {
+      describe('should revert', () => {
+        describe('on queue', () => {
           it('if already queued', async function () {
             await this.helper.propose();
             await this.helper.waitForSnapshot();
@@ -150,7 +150,7 @@ contract('GovernorTimelockCompound', function (accounts) {
           });
         });
 
-        describe('on execute', function () {
+        describe('on execute', () => {
           it('if not queued', async function () {
             await this.helper.propose();
             await this.helper.waitForSnapshot();
@@ -173,7 +173,7 @@ contract('GovernorTimelockCompound', function (accounts) {
 
             await expectRevert(
               this.helper.execute(),
-              "Timelock::executeTransaction: Transaction hasn't surpassed time lock",
+              'Timelock::executeTransaction: Transaction hasn\'t surpassed time lock',
             );
           });
 
@@ -203,7 +203,7 @@ contract('GovernorTimelockCompound', function (accounts) {
         });
       });
 
-      describe('cancel', function () {
+      describe('cancel', () => {
         it('cancel before queue prevents scheduling', async function () {
           await this.helper.propose();
           await this.helper.waitForSnapshot();
@@ -230,8 +230,8 @@ contract('GovernorTimelockCompound', function (accounts) {
         });
       });
 
-      describe('onlyGovernance', function () {
-        describe('relay', function () {
+      describe('onlyGovernance', () => {
+        describe('relay', () => {
           beforeEach(async function () {
             await this.token.$_mint(this.mock.address, 1);
           });
@@ -278,7 +278,7 @@ contract('GovernorTimelockCompound', function (accounts) {
           });
         });
 
-        describe('updateTimelock', function () {
+        describe('updateTimelock', () => {
           beforeEach(async function () {
             this.newTimelock = await Timelock.new(this.mock.address, 7 * 86400);
           });

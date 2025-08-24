@@ -6,7 +6,7 @@ const http = require('http');
 const { promisify } = require('util');
 
 async function testEndpoint(path, expectedFields = []) {
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
         const options = {
             hostname: 'localhost',
             port: 4004,
@@ -18,19 +18,19 @@ async function testEndpoint(path, expectedFields = []) {
             }
         };
 
-        const req = http.request(options, function(res) {
+        const req = http.request(options, (res) => {
             let data = '';
-            res.on('data', function(chunk) {
+            res.on('data', (chunk) => {
                 data += chunk;
             });
-            res.on('end', function() {
+            res.on('end', () => {
                 try {
                     const result = JSON.parse(data);
                     const status = res.statusCode;
                     
                     // Check if expected fields exist
-                    let fieldsCheck = expectedFields.length === 0 ? true : 
-                        expectedFields.every(function(field) { return result.hasOwnProperty(field); });
+                    const fieldsCheck = expectedFields.length === 0 ? true : 
+                        expectedFields.every((field) => { return result.hasOwnProperty(field); });
                     
                     resolve({
                         path,

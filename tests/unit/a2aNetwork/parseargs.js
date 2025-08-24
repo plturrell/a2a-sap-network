@@ -18,9 +18,9 @@
 
 const PROJECT_DIR = process.env.PROJECT_DIR;
 
-let parseargs = require(`${PROJECT_DIR}/lib/parseargs`);
-let assert = require('assert');
-let optsReg = [
+const parseargs = require(`${PROJECT_DIR}/lib/parseargs`);
+const assert = require('assert');
+const optsReg = [
   { full: 'directory',
     abbr: 'C',
     preempts: false,
@@ -53,62 +53,62 @@ let optsReg = [
     preempts: true
   }
 ];
-let p = new parseargs.Parser(optsReg);
-let z = function (s) { return s.split(' '); };
+const p = new parseargs.Parser(optsReg);
+const z = function (s) { return s.split(' '); };
 let res;
 
-suite('parseargs', function () {
+suite('parseargs', () => {
 
-  test('long preemptive opt and val with equal-sign, ignore further opts', function () {
+  test('long preemptive opt and val with equal-sign, ignore further opts', () => {
     res = p.parse(z('--tasks=foo --jakefile=asdf'));
     assert.equal('foo', res.opts.tasks);
     assert.equal(undefined, res.opts.jakefile);
   });
 
-  test('long preemptive opt and val without equal-sign, ignore further opts', function () {
+  test('long preemptive opt and val without equal-sign, ignore further opts', () => {
     res = p.parse(z('--tasks foo --jakefile=asdf'));
     assert.equal('foo', res.opts.tasks);
     assert.equal(undefined, res.opts.jakefile);
   });
 
-  test('long preemptive opt and no val, ignore further opts', function () {
+  test('long preemptive opt and no val, ignore further opts', () => {
     res = p.parse(z('--tasks --jakefile=asdf'));
     assert.equal(true, res.opts.tasks);
     assert.equal(undefined, res.opts.jakefile);
   });
 
-  test('preemptive opt with no val, should be true', function () {
+  test('preemptive opt with no val, should be true', () => {
     res = p.parse(z('-T'));
     assert.equal(true, res.opts.tasks);
   });
 
-  test('preemptive opt with no val, should be true and ignore further opts', function () {
+  test('preemptive opt with no val, should be true and ignore further opts', () => {
     res = p.parse(z('-T -f'));
     assert.equal(true, res.opts.tasks);
     assert.equal(undefined, res.opts.jakefile);
   });
 
-  test('preemptive opt with val, should be val', function () {
+  test('preemptive opt with val, should be val', () => {
     res = p.parse(z('-T zoobie -f foo/bar/baz'));
     assert.equal('zoobie', res.opts.tasks);
     assert.equal(undefined, res.opts.jakefile);
   });
 
-  test('-f expects a value, -t does not (howdy is task-name)', function () {
+  test('-f expects a value, -t does not (howdy is task-name)', () => {
     res = p.parse(z('-f zoobie -t howdy'));
     assert.equal('zoobie', res.opts.jakefile);
     assert.equal(true, res.opts.trace);
     assert.equal('howdy', res.taskNames[0]);
   });
 
-  test('different order, -f expects a value, -t does not (howdy is task-name)', function () {
+  test('different order, -f expects a value, -t does not (howdy is task-name)', () => {
     res = p.parse(z('-f zoobie howdy -t'));
     assert.equal('zoobie', res.opts.jakefile);
     assert.equal(true, res.opts.trace);
     assert.equal('howdy', res.taskNames[0]);
   });
 
-  test('-f expects a value, -t does not (foo=bar is env var)', function () {
+  test('-f expects a value, -t does not (foo=bar is env var)', () => {
     res = p.parse(z('-f zoobie -t foo=bar'));
     assert.equal('zoobie', res.opts.jakefile);
     assert.equal(true, res.opts.trace);
@@ -116,7 +116,7 @@ suite('parseargs', function () {
     assert.equal(undefined, res.taskNames[0]);
   });
 
-  test('-f expects a value, -t does not (foo=bar is env-var, task-name follows)', function () {
+  test('-f expects a value, -t does not (foo=bar is env-var, task-name follows)', () => {
     res = p.parse(z('-f zoobie -t howdy foo=bar'));
     assert.equal('zoobie', res.opts.jakefile);
     assert.equal(true, res.opts.trace);
@@ -124,21 +124,21 @@ suite('parseargs', function () {
     assert.equal('howdy', res.taskNames[0]);
   });
 
-  test('-t does not expect a value, -f does (howdy is task-name)', function () {
+  test('-t does not expect a value, -f does (howdy is task-name)', () => {
     res = p.parse(z('-t howdy -f zoobie'));
     assert.equal(true, res.opts.trace);
     assert.equal('zoobie', res.opts.jakefile);
     assert.equal('howdy', res.taskNames[0]);
   });
 
-  test('--trace does not expect a value, -f does (howdy is task-name)', function () {
+  test('--trace does not expect a value, -f does (howdy is task-name)', () => {
     res = p.parse(z('--trace howdy --jakefile zoobie'));
     assert.equal(true, res.opts.trace);
     assert.equal('zoobie', res.opts.jakefile);
     assert.equal('howdy', res.taskNames[0]);
   });
 
-  test('--trace does not expect a value (equal), -f does (throw howdy away)', function () {
+  test('--trace does not expect a value (equal), -f does (throw howdy away)', () => {
     res = p.parse(z('--trace=howdy --jakefile=zoobie'));
     assert.equal(true, res.opts.trace);
     assert.equal('zoobie', res.opts.jakefile);

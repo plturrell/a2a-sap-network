@@ -8,7 +8,7 @@ const GleanService = require('../../srv/glean/gleanService');
  * Testing the integration of CLRS algorithms and Tree operations with Glean
  * Following SAP CAP testing standards
  */
-describe('GleanService Integration Tests', function() {
+describe('GleanService Integration Tests', () => {
     let gleanService;
     let sandbox;
     let mockCdsContext;
@@ -22,7 +22,7 @@ describe('GleanService Integration Tests', function() {
         cds.env.requires.db = { kind: 'sqlite', credentials: { url: ':memory:' } };
     });
 
-    beforeEach(function() {
+    beforeEach(() => {
         sandbox = sinon.createSandbox();
         
         // Create mock CDS context
@@ -47,12 +47,12 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    afterEach(function() {
+    afterEach(() => {
         sandbox.restore();
     });
 
-    describe('Service Initialization', function() {
-        it('should initialize service with algorithm services', async function() {
+    describe('Service Initialization', () => {
+        it('should initialize service with algorithm services', async () => {
             // Mock parent initialization
             sandbox.stub(gleanService.__proto__.__proto__, 'initializeService').resolves();
             
@@ -63,7 +63,7 @@ describe('GleanService Integration Tests', function() {
             expect(gleanService.logger).to.exist;
         });
 
-        it('should register actions correctly', async function() {
+        it('should register actions correctly', async () => {
             const onStub = sandbox.stub(gleanService, 'on');
             
             // Trigger action registration
@@ -76,8 +76,8 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Dependency Critical Path Analysis', function() {
-        beforeEach(function() {
+    describe('Dependency Critical Path Analysis', () => {
+        beforeEach(() => {
             // Mock graph building methods
             sandbox.stub(gleanService, '_buildDependencyGraph').resolves(
                 createMockDependencyGraph()
@@ -91,7 +91,7 @@ describe('GleanService Integration Tests', function() {
             });
         });
 
-        it('should analyze critical paths using Dijkstra algorithm', async function() {
+        it('should analyze critical paths using Dijkstra algorithm', async () => {
             const result = await gleanService.analyzeDependencyCriticalPaths('test-project', 'target.js');
             
             expect(result).to.have.property('criticalPaths');
@@ -103,7 +103,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.circularDependencies).to.be.an('array');
         });
 
-        it('should detect circular dependencies correctly', async function() {
+        it('should detect circular dependencies correctly', async () => {
             // Create graph with circular dependency
             const circularGraph = createMockCircularGraph();
             gleanService._buildDependencyGraph.resolves(circularGraph);
@@ -115,7 +115,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.circularDependencies[0]).to.have.property('severity');
         });
 
-        it('should handle topological sort errors gracefully', async function() {
+        it('should handle topological sort errors gracefully', async () => {
             // Mock graph with cycles that prevent topological sort
             const cyclicGraph = createMockCircularGraph();
             gleanService._buildDependencyGraph.resolves(cyclicGraph);
@@ -125,7 +125,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.buildOrder).to.be.empty;
         });
 
-        it('should calculate dependency metrics accurately', async function() {
+        it('should calculate dependency metrics accurately', async () => {
             const result = await gleanService.analyzeDependencyCriticalPaths('test-project', 'target.js');
             
             expect(result.dependencyMetrics).to.have.property('depth');
@@ -138,8 +138,8 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Code Similarity Detection', function() {
-        beforeEach(function() {
+    describe('Code Similarity Detection', () => {
+        beforeEach(() => {
             // Mock file operations
             sandbox.stub(gleanService, '_getIndexedFiles').resolves([
                 { path: 'file1.js' },
@@ -165,7 +165,7 @@ describe('GleanService Integration Tests', function() {
             ]);
         });
 
-        it('should find similar code using LCS algorithm', async function() {
+        it('should find similar code using LCS algorithm', async () => {
             // Mock similarity calculation
             sandbox.stub(gleanService, '_calculateSimilarity').returns(0.85);
             
@@ -180,7 +180,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.statistics).to.have.property('matchesFound');
         });
 
-        it('should filter results by similarity threshold', async function() {
+        it('should filter results by similarity threshold', async () => {
             // Mock varying similarity scores
             let callCount = 0;
             sandbox.stub(gleanService, '_calculateSimilarity').callsFake(() => {
@@ -193,7 +193,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.matches).to.have.lengthOf(1); // Only high similarity match
         });
 
-        it('should sort results by similarity score', async function() {
+        it('should sort results by similarity score', async () => {
             // Mock multiple matches with different scores
             sandbox.stub(gleanService, '_calculateSimilarity')
                 .onFirstCall().returns(0.85)
@@ -207,7 +207,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.matches[2].similarity).to.equal(0.75);
         });
 
-        it('should include refactoring suggestions for matches', async function() {
+        it('should include refactoring suggestions for matches', async () => {
             sandbox.stub(gleanService, '_calculateSimilarity').returns(0.9);
             
             const result = await gleanService.findSimilarCode('test code', 0.8);
@@ -217,8 +217,8 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Hierarchical Code Navigation', function() {
-        beforeEach(function() {
+    describe('Hierarchical Code Navigation', () => {
+        beforeEach(() => {
             // Mock tree building
             sandbox.stub(gleanService, '_buildCodeTree').resolves({
                 src: {
@@ -241,7 +241,7 @@ describe('GleanService Integration Tests', function() {
             });
         });
 
-        it('should navigate code hierarchy using tree algorithms', async function() {
+        it('should navigate code hierarchy using tree algorithms', async () => {
             const result = await gleanService.navigateCodeHierarchy('/project/src', '*.js');
             
             expect(result).to.have.property('rootPath');
@@ -254,7 +254,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.query).to.equal('*.js');
         });
 
-        it('should calculate hierarchy metrics correctly', async function() {
+        it('should calculate hierarchy metrics correctly', async () => {
             const result = await gleanService.navigateCodeHierarchy('/project/src', '*.js');
             
             expect(result.metrics).to.have.property('totalNodes');
@@ -266,7 +266,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.metrics.maxDepth).to.be.a('number');
         });
 
-        it('should apply query filters correctly', async function() {
+        it('should apply query filters correctly', async () => {
             gleanService._applyHierarchicalQuery.restore();
             sandbox.stub(gleanService, '_applyHierarchicalQuery').callsFake((tree, query) => {
                 if (query === 'function:test*') {
@@ -283,7 +283,7 @@ describe('GleanService Integration Tests', function() {
             );
         });
 
-        it('should format matched paths correctly', async function() {
+        it('should format matched paths correctly', async () => {
             const result = await gleanService.navigateCodeHierarchy('/project/src', '*.js');
             
             expect(result.matchedPaths).to.be.an('array');
@@ -295,8 +295,8 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Refactoring Suggestions', function() {
-        beforeEach(function() {
+    describe('Refactoring Suggestions', () => {
+        beforeEach(() => {
             // Mock AST parsing and analysis
             sandbox.stub(gleanService, '_parseFileAST').resolves({
                 type: 'Program',
@@ -337,7 +337,7 @@ describe('GleanService Integration Tests', function() {
             });
         });
 
-        it('should suggest refactorings using combined analysis', async function() {
+        it('should suggest refactorings using combined analysis', async () => {
             const result = await gleanService.suggestRefactorings('/project/src/complex.js', 2);
             
             expect(result).to.have.property('file');
@@ -350,7 +350,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.suggestions).to.be.an('array');
         });
 
-        it('should detect complex functions requiring refactoring', async function() {
+        it('should detect complex functions requiring refactoring', async () => {
             const result = await gleanService.suggestRefactorings('/project/src/complex.js', 2);
             
             const complexitySuggestions = result.suggestions.filter(s => s.type === 'EXTRACT_METHOD');
@@ -363,7 +363,7 @@ describe('GleanService Integration Tests', function() {
             expect(suggestion).to.have.property('refactoring');
         });
 
-        it('should sort suggestions by severity and feasibility', async function() {
+        it('should sort suggestions by severity and feasibility', async () => {
             // Mock multiple suggestions with different severities
             gleanService._findComplexFunctions.returns([
                 { name: 'highComplexity', complexity: 20, path: ['functions', 0] },
@@ -376,7 +376,7 @@ describe('GleanService Integration Tests', function() {
             expect(result.suggestions[0].description).to.include('highComplexity');
         });
 
-        it('should include automated refactoring code when possible', async function() {
+        it('should include automated refactoring code when possible', async () => {
             const result = await gleanService.suggestRefactorings('/project/src/complex.js', 2);
             
             const automatedSuggestions = result.suggestions.filter(s => s.automated);
@@ -387,7 +387,7 @@ describe('GleanService Integration Tests', function() {
             expect(suggestion.refactoring).to.have.property('code');
         });
 
-        it('should generate execution plan for refactorings', async function() {
+        it('should generate execution plan for refactorings', async () => {
             const result = await gleanService.suggestRefactorings('/project/src/complex.js', 2);
             
             expect(result.executionPlan).to.have.property('canExecuteAll');
@@ -399,22 +399,22 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Algorithm Integration', function() {
-        it('should use graph algorithms for dependency analysis', function() {
+    describe('Algorithm Integration', () => {
+        it('should use graph algorithms for dependency analysis', () => {
             expect(gleanService.graphAlgorithms).to.respondTo('depthFirstSearch');
             expect(gleanService.graphAlgorithms).to.respondTo('breadthFirstSearch');
             expect(gleanService.graphAlgorithms).to.respondTo('dijkstra');
             expect(gleanService.graphAlgorithms).to.respondTo('topologicalSort');
         });
 
-        it('should use tree algorithms for hierarchical operations', function() {
+        it('should use tree algorithms for hierarchical operations', () => {
             expect(gleanService.treeAlgorithms).to.respondTo('flatten');
             expect(gleanService.treeAlgorithms).to.respondTo('mapStructure');
             expect(gleanService.treeAlgorithms).to.respondTo('filterStructure');
             expect(gleanService.treeAlgorithms).to.respondTo('getAllPaths');
         });
 
-        it('should implement LCS algorithm for code similarity', function() {
+        it('should implement LCS algorithm for code similarity', () => {
             const lcsResult = gleanService._longestCommonSubsequence(
                 ['a', 'b', 'c', 'd'],
                 ['a', 'c', 'd', 'e']
@@ -423,7 +423,7 @@ describe('GleanService Integration Tests', function() {
             expect(lcsResult).to.deep.equal(['a', 'c', 'd']);
         });
 
-        it('should calculate similarity scores correctly', function() {
+        it('should calculate similarity scores correctly', () => {
             const similarity = gleanService._calculateSimilarity(
                 'function test() { return 1; }',
                 'function test() { return 2; }'
@@ -435,8 +435,8 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Error Handling and Resilience', function() {
-        it('should handle missing files gracefully', async function() {
+    describe('Error Handling and Resilience', () => {
+        it('should handle missing files gracefully', async () => {
             gleanService._getIndexedFiles.rejects(new Error('File not found'));
             
             try {
@@ -447,7 +447,7 @@ describe('GleanService Integration Tests', function() {
             }
         });
 
-        it('should handle invalid dependency graphs', async function() {
+        it('should handle invalid dependency graphs', async () => {
             gleanService._buildDependencyGraph.resolves(null);
             
             try {
@@ -458,7 +458,7 @@ describe('GleanService Integration Tests', function() {
             }
         });
 
-        it('should handle AST parsing errors', async function() {
+        it('should handle AST parsing errors', async () => {
             gleanService._parseFileAST.rejects(new Error('Syntax error'));
             
             try {
@@ -469,7 +469,7 @@ describe('GleanService Integration Tests', function() {
             }
         });
 
-        it('should provide meaningful error messages', async function() {
+        it('should provide meaningful error messages', async () => {
             gleanService._buildCodeTree.rejects(new Error('Access denied'));
             
             try {
@@ -481,8 +481,8 @@ describe('GleanService Integration Tests', function() {
         });
     });
 
-    describe('Performance Optimization', function() {
-        it('should handle large codebases efficiently', async function() {
+    describe('Performance Optimization', () => {
+        it('should handle large codebases efficiently', async () => {
             // Mock large codebase
             const largeMockTree = {};
             for (let i = 0; i < 1000; i++) {
@@ -498,7 +498,7 @@ describe('GleanService Integration Tests', function() {
             expect(endTime - startTime).to.be.lessThan(5000); // Should complete within 5 seconds
         });
 
-        it('should cache frequently accessed data', function() {
+        it('should cache frequently accessed data', () => {
             // Test that repeated calls use cached data
             const firstCall = gleanService._buildDependencyGraph('test-project');
             const secondCall = gleanService._buildDependencyGraph('test-project');

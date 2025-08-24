@@ -323,7 +323,7 @@ class LaunchpadTester {
     }
 
     printResults() {
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         console.log('📊 TEST RESULTS');
         console.log('='.repeat(60));
         console.log(`✅ Passed: ${this.results.passed}`);

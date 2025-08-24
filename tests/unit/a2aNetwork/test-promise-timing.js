@@ -22,15 +22,15 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-new Promise(function (s) {
+new Promise((s) => {
   setTimeout(s, 100); // 1
 })
-.then(function () {
+.then(() => {
   return new Promise((s) => setTimeout(s, 100)); // 4
 })
 .then();
 
-process.once('exit', function () {
+process.once('exit', () => {
   const nodeMajor = parseInt(process.versions.node.split('.')[0], 10);
 
   if (nodeMajor >= 6) {

@@ -22,21 +22,21 @@
 /* eslint max-len:[0, 120] */
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var Literal = require('../ast').Literal;
-var Thrift = require('../thrift').Thrift;
-var ThriftStruct = require('../struct').ThriftStruct;
-var ThriftBoolean = require('../boolean').ThriftBoolean;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const Literal = require('../ast').Literal;
+const Thrift = require('../thrift').Thrift;
+const ThriftStruct = require('../struct').ThriftStruct;
+const ThriftBoolean = require('../boolean').ThriftBoolean;
 
-var thriftHealth = new ThriftStruct();
+const thriftHealth = new ThriftStruct();
 
-var undefinedDefault = new Literal(undefined);
-var nullDefault = new Literal(null);
+const undefinedDefault = new Literal(undefined);
+const nullDefault = new Literal(null);
 
 // Manually drive compile(idl) and link(thrift). This would be done by the Spec.
 
-var thriftMock = {
+const thriftMock = {
     structs: {},
     resolve: function resolve() {
         // pretend all fields are boolean
@@ -64,9 +64,9 @@ thriftHealth.compile({
 
 thriftHealth.link(thriftMock);
 
-var Health = thriftHealth.Constructor;
+const Health = thriftHealth.Constructor;
 
-var cases = [
+const cases = [
 
     // good
     [new Health({ok: true}), [
@@ -88,20 +88,20 @@ var cases = [
 
 test('HealthRW', testRW.cases(Health.rw, cases));
 
-test('HealthRW to Buffer', function t(assert) {
-    var res = Health.rw.toBuffer(cases[0][0]);
+test('HealthRW to Buffer', (assert) => {
+    const res = Health.rw.toBuffer(cases[0][0]);
     assert.deepEqual(res.value, new Buffer(cases[0][1]), 'buffer matches');
     assert.end();
 });
 
-test('HealthRW from Buffer', function t(assert) {
-    var res = Health.rw.fromBuffer(new Buffer(cases[0][1]));
+test('HealthRW from Buffer', (assert) => {
+    const res = Health.rw.fromBuffer(new Buffer(cases[0][1]));
     assert.deepEqual(res.value, cases[0][0], 'object matches');
     assert.end();
 });
 
-test('complains of missing required field', function t(assert) {
-    var res = Health.rw.readFrom(new Buffer([
+test('complains of missing required field', (assert) => {
+    const res = Health.rw.readFrom(new Buffer([
         0x00                      // typeid:1 -- 0 -- STOP
     ]), 0);
     assert.ok(res.err, 'required field error');
@@ -110,8 +110,8 @@ test('complains of missing required field', function t(assert) {
     assert.end();
 });
 
-test('struct skips unknown void', function t(assert) {
-    var res = Health.rw.readFrom(new Buffer([
+test('struct skips unknown void', (assert) => {
+    const res = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1   -- 2 -- BOOL
         0x00, 0x02,               // id:2     -- 2 -- WHAT EVEN IS!?
         0x00,                     // bool:1
@@ -129,13 +129,13 @@ test('struct skips unknown void', function t(assert) {
     assert.end();
 });
 
-test('fails to read unexpected typeid for known field', function t(assert) {
-    var buffer = new Buffer([
+test('fails to read unexpected typeid for known field', (assert) => {
+    const buffer = new Buffer([
         0x01,       // typeid:1 -- 1 -- VOID
         0x00, 0x01, // fid:2    -- 1 -- ok
         0x00        // typeid:1 -- 0 -- STOP
     ]);
-    var res = Health.rw.readFrom(buffer, 0);
+    const res = Health.rw.readFrom(buffer, 0);
     if (!res.err) {
         assert.fail('should be an error');
         return assert.end();
@@ -145,8 +145,8 @@ test('fails to read unexpected typeid for known field', function t(assert) {
     assert.end();
 });
 
-test('struct skips unknown string', function t(assert) {
-    var res = Health.rw.readFrom(new Buffer([
+test('struct skips unknown string', (assert) => {
+    const res = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1   -- 2 -- BOOL
         0x00, 0x01,               // id:2     -- 1 -- ok
         0x01,                     // ok:1     -- 1 -- true
@@ -165,8 +165,8 @@ test('struct skips unknown string', function t(assert) {
     assert.end();
 });
 
-test('struct skips unknown struct', function t(assert) {
-    var res = Health.rw.readFrom(new Buffer([
+test('struct skips unknown struct', (assert) => {
+    const res = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1   -- 2 -- BOOL
         0x00, 0x01,               // id:2     -- 1 -- ok
         0x01,                     // ok:1     -- 1 -- true
@@ -191,8 +191,8 @@ test('struct skips unknown struct', function t(assert) {
     assert.end();
 });
 
-test('struct skips uknown map', function t(assert) {
-    var res = Health.rw.readFrom(new Buffer([
+test('struct skips uknown map', (assert) => {
+    const res = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1   -- 2 BOOL
         0x00, 0x01,               // id:2     -- 1 ok
         0x01,                     // ok:1     -- 1 true
@@ -249,8 +249,8 @@ test('struct skips uknown map', function t(assert) {
     assert.end();
 });
 
-test('struct skips unknown list', function t(assert) {
-    var res = Health.rw.readFrom(new Buffer([
+test('struct skips unknown list', (assert) => {
+    const res = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1   -- 2 BOOL
         0x00, 0x01,               // id:2     -- 1 ok
         0x00,                     // ok:1     -- 0 false
@@ -284,8 +284,8 @@ test('struct skips unknown list', function t(assert) {
     assert.end();
 });
 
-test('every field must be marked in strict mode', function t(assert) {
-    var thrift = new ThriftStruct();
+test('every field must be marked in strict mode', (assert) => {
+    const thrift = new ThriftStruct();
     try {
         thrift.compile({
             id: {name: 'Health'},
@@ -311,8 +311,8 @@ test('every field must be marked in strict mode', function t(assert) {
     assert.end();
 });
 
-test('structs and fields must be possible to rename with a js.name annotation', function t(assert) {
-    var thrift = new ThriftStruct({strict: false});
+test('structs and fields must be possible to rename with a js.name annotation', (assert) => {
+    const thrift = new ThriftStruct({strict: false});
     thrift.compile({
         id: {name: 'given'},
         annotations: {'js.name': 'alt'},
@@ -333,9 +333,9 @@ test('structs and fields must be possible to rename with a js.name annotation', 
     assert.end();
 });
 
-test('required fields are required on measuring byte length', function t(assert) {
-    var health = new Health();
-    var res = Health.rw.byteLength(health);
+test('required fields are required on measuring byte length', (assert) => {
+    const health = new Health();
+    const res = Health.rw.byteLength(health);
     if (!res.err) {
         assert.fail('should fail to assess byte length');
         return assert.end();
@@ -345,9 +345,9 @@ test('required fields are required on measuring byte length', function t(assert)
     assert.end();
 });
 
-test('required fields are required on writing into buffer', function t(assert) {
-    var health = new Health();
-    var res = Health.rw.writeInto(health, new Buffer(100), 0);
+test('required fields are required on writing into buffer', (assert) => {
+    const health = new Health();
+    const res = Health.rw.writeInto(health, new Buffer(100), 0);
     if (!res.err) {
         assert.fail('should fail to write');
         return assert.end();
@@ -357,8 +357,8 @@ test('required fields are required on writing into buffer', function t(assert) {
     assert.end();
 });
 
-test('arguments must not be marked optional', function t(assert) {
-    var argStruct = new ThriftStruct({strict: false});
+test('arguments must not be marked optional', (assert) => {
+    const argStruct = new ThriftStruct({strict: false});
     try {
         argStruct.compile({
             id: {name: 'foo_args'},
@@ -386,8 +386,8 @@ test('arguments must not be marked optional', function t(assert) {
     assert.end();
 });
 
-test('arguments may now be marked optional', function t(assert) {
-    var argStruct = new ThriftStruct({strict: false});
+test('arguments may now be marked optional', (assert) => {
+    const argStruct = new ThriftStruct({strict: false});
     argStruct.compile({
         id: {name: 'foo_args'},
         isArgument: true,
@@ -408,8 +408,8 @@ test('arguments may now be marked optional', function t(assert) {
     assert.end();
 });
 
-test('arguments are now optional by default', function t(assert) {
-    var argStruct = new ThriftStruct({strict: false});
+test('arguments are now optional by default', (assert) => {
+    const argStruct = new ThriftStruct({strict: false});
     argStruct.compile({
         id: {name: 'foo_args'},
         isArgument: true,
@@ -431,8 +431,8 @@ test('arguments are now optional by default', function t(assert) {
     assert.end();
 });
 
-test('skips optional elided arguments', function t(assert) {
-    var thrift = new ThriftStruct();
+test('skips optional elided arguments', (assert) => {
+    const thrift = new ThriftStruct();
     thrift.compile({
         id: {name: 'Health'},
         fields: [
@@ -449,14 +449,14 @@ test('skips optional elided arguments', function t(assert) {
         ]
     }, {});
     thrift.link(thriftMock);
-    var health = new thrift.Constructor();
+    const health = new thrift.Constructor();
 
-    var byteLengthRes = thrift.rw.byteLength(health);
+    const byteLengthRes = thrift.rw.byteLength(health);
     if (byteLengthRes.err) return assert.end(byteLengthRes.err);
     assert.equal(byteLengthRes.length, 1, 'only needs one byte');
 
-    var buffer = new Buffer(byteLengthRes.length);
-    var writeRes = thrift.rw.writeInto(health, buffer, 0);
+    const buffer = new Buffer(byteLengthRes.length);
+    const writeRes = thrift.rw.writeInto(health, buffer, 0);
     if (writeRes.err) return assert.end(writeRes.err);
     assert.equal(writeRes.offset, 1, 'writes to end of buffer');
     assert.deepEqual(buffer, new Buffer([0x00]), 'writes stop byte only');
@@ -464,8 +464,8 @@ test('skips optional elided arguments', function t(assert) {
     assert.end();
 });
 
-test('skips optional elided struct (all fields optional)', function t(assert) {
-    var thrift = new ThriftStruct();
+test('skips optional elided struct (all fields optional)', (assert) => {
+    const thrift = new ThriftStruct();
     thrift.compile({
         id: {name: 'Health'},
         fields: [
@@ -483,12 +483,12 @@ test('skips optional elided struct (all fields optional)', function t(assert) {
     }, {});
     thrift.link(thriftMock);
 
-    var byteLengthRes = thrift.rw.byteLength(null);
+    const byteLengthRes = thrift.rw.byteLength(null);
     if (byteLengthRes.err) return assert.end(byteLengthRes.err);
     assert.equal(byteLengthRes.length, 1, 'only needs one byte');
 
-    var buffer = new Buffer(byteLengthRes.length);
-    var writeRes = thrift.rw.writeInto(null, buffer, 0);
+    const buffer = new Buffer(byteLengthRes.length);
+    const writeRes = thrift.rw.writeInto(null, buffer, 0);
     if (writeRes.err) return assert.end(writeRes.err);
     assert.equal(writeRes.offset, 1, 'writes to end of buffer');
     assert.deepEqual(buffer, new Buffer([0x00]), 'writes stop byte only');
@@ -496,8 +496,8 @@ test('skips optional elided struct (all fields optional)', function t(assert) {
     assert.end();
 });
 
-test('enforces ordinal identifiers', function t(assert) {
-    var thrift = new ThriftStruct();
+test('enforces ordinal identifiers', (assert) => {
+    const thrift = new ThriftStruct();
     try {
         thrift.compile({
             id: {name: 'Health'},
@@ -521,9 +521,9 @@ test('enforces ordinal identifiers', function t(assert) {
     assert.end();
 });
 
-test('allows undefined as default', function t(assert) {
-    var defaultStruct = new ThriftStruct({strict: false, defaultValueDefinition: undefinedDefault});
-    var tMock = {
+test('allows undefined as default', (assert) => {
+    const defaultStruct = new ThriftStruct({strict: false, defaultValueDefinition: undefinedDefault});
+    const tMock = {
         structs: {},
         resolve: function resolve() {
             return new ThriftBoolean();
@@ -555,9 +555,9 @@ test('allows undefined as default', function t(assert) {
     assert.end();
 });
 
-test('defaults to null as default value', function t(assert) {
-    var defaultStruct = new ThriftStruct({strict: false, defaultValueDefinition: nullDefault});
-    var tMock = {
+test('defaults to null as default value', (assert) => {
+    const defaultStruct = new ThriftStruct({strict: false, defaultValueDefinition: nullDefault});
+    const tMock = {
         structs: {},
         resolve: function resolve() {
             return new ThriftBoolean();

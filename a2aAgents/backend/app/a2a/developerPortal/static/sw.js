@@ -2,7 +2,7 @@
  * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
  */
 
-"use strict";
+'use strict';
 /* global URL, self, caches, Request, Response, indexedDB */
 
 /**
@@ -62,15 +62,15 @@ self.addEventListener('install', event => {
       // Initialize static cache
       caches.open(STATIC_CACHE_NAME)
     ])
-    .then(() => {
+      .then(() => {
       // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console
-      console.log('[SW] Service worker installed successfully');
-      return self.skipWaiting();
-    })
-    .catch(error => {
-      console.error('[SW] Installation failed:', error);
-    })
+        console.log('[SW] Service worker installed successfully');
+        return self.skipWaiting();
+      })
+      .catch(error => {
+        console.error('[SW] Installation failed:', error);
+      })
   );
 });
 

@@ -1,12 +1,12 @@
 
-var test = require("tap").test;
-var uglify = require("uglify-js");
-var path = require("path");
+const test = require('tap').test;
+const uglify = require('uglify-js');
+const path = require('path');
 
-test("can be uglified", function (t) {
-  var files = ['format.js', 'index.js', 'stack-chain.js'].map(function (filename) {
-    return path.resolve(__dirname, '../../' + filename);
+test('can be uglified', (t) => {
+  const files = ['format.js', 'index.js', 'stack-chain.js'].map((filename) => {
+    return path.resolve(__dirname, `../../${  filename}`);
   });
   uglify.minify(files);
-  t.end()
+  t.end();
 });

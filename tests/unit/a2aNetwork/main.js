@@ -1,4 +1,4 @@
-var resolve = require('../../../');
+const resolve = require('../../../');
 
 module.exports = function (t, cb) {
     resolve('mymodule', null, cb);

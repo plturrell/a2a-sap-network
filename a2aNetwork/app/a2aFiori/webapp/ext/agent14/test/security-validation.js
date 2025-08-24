@@ -107,7 +107,7 @@ const testCases = [
 ];
 
 // Run tests
-// console.log("Running Security Validation Tests for Agent 14...\n");
+// // console.log("Running Security Validation Tests for Agent 14...\n");
 
 let _passed = 0;
 let failed = 0;
@@ -116,26 +116,26 @@ testCases.forEach((testCase, index) => {
     try {
         const result = testCase.test();
         if (result) {
-            // console.log(`✓ Test ${index + 1}: ${testCase.name} - PASSED`);
+            // // console.log(`✓ Test ${index + 1}: ${testCase.name} - PASSED`);
             _passed++;
         } else {
-            // console.log(`✗ Test ${index + 1}: ${testCase.name} - FAILED`);
+            // // console.log(`✗ Test ${index + 1}: ${testCase.name} - FAILED`);
             failed++;
         }
     } catch (error) {
-        // console.log(`✗ Test ${index + 1}: ${testCase.name} - ERROR: ${error.message}`);
+        // // console.log(`✗ Test ${index + 1}: ${testCase.name} - ERROR: ${error.message}`);
         failed++;
     }
 });
 
-// console.log("\nTest Results:");
-// console.log(`Passed: ${passed}`);
-// console.log(`Failed: ${failed}`);
-// console.log(`Total: ${testCases.length}`);
+// // console.log("\nTest Results:");
+// // console.log(`Passed: ${passed}`);
+// // console.log(`Failed: ${failed}`);
+// // console.log(`Total: ${testCases.length}`);
 
 if (failed === 0) {
-    // console.log("\n🎉 All security validation tests passed!");
-    // console.log("Agent 14 security measures are working correctly.");
+    // // console.log("\n🎉 All security validation tests passed!");
+    // // console.log("Agent 14 security measures are working correctly.");
 } else {
-    // console.log(`\n⚠️  ${failed} tests failed. Security measures need review.`);
+    // // console.log(`\n⚠️  ${failed} tests failed. Security measures need review.`);
 }

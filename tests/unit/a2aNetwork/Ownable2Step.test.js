@@ -4,14 +4,14 @@ const { expect } = require('chai');
 
 const Ownable2Step = artifacts.require('$Ownable2Step');
 
-contract('Ownable2Step', function (accounts) {
+contract('Ownable2Step', (accounts) => {
   const [owner, accountA, accountB] = accounts;
 
   beforeEach(async function () {
     this.ownable2Step = await Ownable2Step.new({ from: owner });
   });
 
-  describe('transfer ownership', function () {
+  describe('transfer ownership', () => {
     it('starting a transfer does not change owner', async function () {
       const receipt = await this.ownable2Step.transferOwnership(accountA, { from: owner });
       expectEvent(receipt, 'OwnershipTransferStarted', { previousOwner: owner, newOwner: accountA });
@@ -36,7 +36,7 @@ contract('Ownable2Step', function (accounts) {
     });
   });
 
-  it('renouncing ownership', async function () {
+  it('renouncing ownership', async () => {
     it('changes owner after renouncing ownership', async function () {
       await this.ownable2Step.renounceOwnership({ from: owner });
       // If renounceOwnership is removed from parent an alternative is needed ...

@@ -14,16 +14,16 @@ async function seedEssentialData() {
         const db = await cds.connect.to('db');
         
         log.debug('📊 Checking what we have...');
-        const agentCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents`);
+        const agentCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents');
         log.debug(`Current agents: ${agentCount[0].count}`);
         
         // 1. Add essential agent performance data if missing
-        const perfCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_AgentPerformance`);
+        const perfCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_AgentPerformance');
         log.debug(`Current performance records: ${perfCount[0].count}`);
         
         if (perfCount[0].count === 0) {
             log.debug('\n🎯 Adding agent performance data...');
-            const agents = await db.run(`SELECT ID FROM a2a_network_Agents LIMIT 15`);
+            const agents = await db.run('SELECT ID FROM a2a_network_Agents LIMIT 15');
             
             // Batch insert performance data instead of individual inserts
             const performanceDataBatch = agents.map(agent => {
@@ -58,7 +58,7 @@ async function seedEssentialData() {
         }
         
         // 2. Add essential blockchain stats if missing
-        const blockchainCount = await db.run(`SELECT COUNT(*) as count FROM BlockchainService_BlockchainStats`);
+        const blockchainCount = await db.run('SELECT COUNT(*) as count FROM BlockchainService_BlockchainStats');
         log.debug(`Current blockchain stats: ${blockchainCount[0].count}`);
         
         if (blockchainCount[0].count === 0) {
@@ -78,8 +78,8 @@ async function seedEssentialData() {
         
         try {
             // Test NetworkStats endpoint data
-            const totalAgents = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents`);
-            const activeAgents = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents WHERE isActive = 1`);
+            const totalAgents = await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents');
+            const activeAgents = await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents WHERE isActive = 1');
             log.debug(`✅ NetworkStats data: ${activeAgents[0].count} active agents of ${totalAgents[0].count} total`);
             
             // Test agent performance data for agent visualization
@@ -93,7 +93,7 @@ async function seedEssentialData() {
             log.debug(`✅ Top performers data available: ${topPerformers.length} records`);
             
             // Check messages count
-            const messageCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Messages`);
+            const messageCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Messages');
             log.debug(`✅ Messages: ${messageCount[0].count}`);
             
         } catch (error) {
@@ -101,10 +101,10 @@ async function seedEssentialData() {
         }
         
         // 4. Add some messages if none exist
-        const msgCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Messages`);
+        const msgCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Messages');
         if (msgCount[0].count < 10) {
             log.debug('\n💬 Adding sample messages...');
-            const agents = await db.run(`SELECT ID FROM a2a_network_Agents LIMIT 10`);
+            const agents = await db.run('SELECT ID FROM a2a_network_Agents LIMIT 10');
             
             for (let i = 0; i < 20; i++) {
                 const from = agents[Math.floor(Math.random() * agents.length)];
@@ -126,12 +126,12 @@ async function seedEssentialData() {
         }
         
         // 5. Update network stats
-        const statsCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_NetworkStats`);
+        const statsCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_NetworkStats');
         if (statsCount[0].count === 0) {
             log.debug('\n📈 Adding network statistics...');
-            const finalAgentCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents`);
-            const finalMsgCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Messages`);
-            const avgRep = await db.run(`SELECT AVG(reputation) as avg FROM a2a_network_Agents`);
+            const finalAgentCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents');
+            const finalMsgCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Messages');
+            const avgRep = await db.run('SELECT AVG(reputation) as avg FROM a2a_network_Agents');
             
             await db.run(`INSERT INTO a2a_network_NetworkStats 
                 (ID, totalAgents, activeAgents, totalServices, totalCapabilities, totalMessages, 
@@ -156,11 +156,11 @@ async function seedEssentialData() {
         log.debug('\n📊 Final Summary:');
         
         const finalStats = {
-            agents: await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents`),
-            performance: await db.run(`SELECT COUNT(*) as count FROM a2a_network_AgentPerformance`),
-            messages: await db.run(`SELECT COUNT(*) as count FROM a2a_network_Messages`),
-            blockchain: await db.run(`SELECT COUNT(*) as count FROM BlockchainService_BlockchainStats`),
-            networkStats: await db.run(`SELECT COUNT(*) as count FROM a2a_network_NetworkStats`)
+            agents: await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents'),
+            performance: await db.run('SELECT COUNT(*) as count FROM a2a_network_AgentPerformance'),
+            messages: await db.run('SELECT COUNT(*) as count FROM a2a_network_Messages'),
+            blockchain: await db.run('SELECT COUNT(*) as count FROM BlockchainService_BlockchainStats'),
+            networkStats: await db.run('SELECT COUNT(*) as count FROM a2a_network_NetworkStats')
         };
         
         log.debug(`   - Agents: ${finalStats.agents[0].count}`);

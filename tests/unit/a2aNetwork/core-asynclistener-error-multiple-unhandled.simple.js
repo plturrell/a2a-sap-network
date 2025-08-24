@@ -22,7 +22,7 @@
 
 if (!process.addAsyncListener) require('../index.js');
 
-var assert = require('assert');
+const assert = require('assert');
 
 function onAsync0() {
   return 0;
@@ -37,22 +37,22 @@ function onError(stor) {
 }
 
 var results = [];
-var asyncNoHandleError0 = {
+const asyncNoHandleError0 = {
   create: onAsync0,
   error: onError
 };
-var asyncNoHandleError1 = {
+const asyncNoHandleError1 = {
   create: onAsync1,
   error: onError
 };
 
-var listeners = [
+const listeners = [
   process.addAsyncListener(asyncNoHandleError0),
   process.addAsyncListener(asyncNoHandleError1)
 ];
 
-var uncaughtFired = false;
-process.on('uncaughtException', function() {
+let uncaughtFired = false;
+process.on('uncaughtException', () => {
   uncaughtFired = true;
 
   // Unhandled errors should propagate to all listeners.
@@ -61,18 +61,18 @@ process.on('uncaughtException', function() {
   assert.equal(results.length, 2);
 });
 
-process.nextTick(function() {
+process.nextTick(() => {
   throw new Error();
 });
 
-process.on('exit', function(code) {
+process.on('exit', (code) => {
   // If the exit code isn't ok then return early to throw the stack that
   // caused the bad return code.
   if (code !== 0)
     return;
 
   // Need to remove the async listeners or tests will always pass
-  for (var i = 0; i < listeners.length; i++)
+  for (let i = 0; i < listeners.length; i++)
     process.removeAsyncListener(listeners[i]);
 
   assert.ok(uncaughtFired);

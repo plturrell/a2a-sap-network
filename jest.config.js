@@ -1,7 +1,7 @@
 // A2A Enterprise Test Configuration
 // Unified Jest configuration following SAP enterprise standards
 
-"use strict";
+'use strict';
 
 module.exports = {
   // Base configuration

@@ -19,30 +19,30 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var PORT = 12346;
+const PORT = 12346;
 
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
-var net = require('net');
-var fs = require('fs');
-var dgram = require('dgram');
+const assert = require('assert');
+const net = require('net');
+const fs = require('fs');
+const dgram = require('dgram');
 
-var addListener = process.addAsyncListener;
-var removeListener = process.removeAsyncListener;
-var actualAsync = 0;
-var expectAsync = 0;
+const addListener = process.addAsyncListener;
+const removeListener = process.removeAsyncListener;
+let actualAsync = 0;
+let expectAsync = 0;
 
-var callbacks = {
+const callbacks = {
   create: function onAsync() {
     actualAsync++;
   }
 };
 
-var listener = process.createAsyncListener(callbacks);
+const listener = process.createAsyncListener(callbacks);
 
-process.on('exit', function() {
+process.on('exit', () => {
   console.log('expected', expectAsync);
   console.log('actual  ', actualAsync);
   // TODO(trevnorris): Not a great test. If one was missed, but others
@@ -52,41 +52,41 @@ process.on('exit', function() {
 
 
 // Test listeners side-by-side
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  var b = setInterval(function() {
+  var b = setInterval(() => {
     clearInterval(b);
   });
   expectAsync++;
 
-  var c = setInterval(function() {
+  var c = setInterval(() => {
     clearInterval(c);
   });
   expectAsync++;
 
-  setTimeout(function() { });
+  setTimeout(() => { });
   expectAsync++;
 
-  setTimeout(function() { });
+  setTimeout(() => { });
   expectAsync++;
 
-  process.nextTick(function() { });
+  process.nextTick(() => { });
   expectAsync++;
 
-  process.nextTick(function() { });
+  process.nextTick(() => { });
   expectAsync++;
 
-  setImmediate(function() { });
+  setImmediate(() => { });
   expectAsync++;
 
-  setImmediate(function() { });
+  setImmediate(() => { });
   expectAsync++;
 
-  setTimeout(function() { }, 10);
+  setTimeout(() => { }, 10);
   expectAsync++;
 
-  setTimeout(function() { }, 10);
+  setTimeout(() => { }, 10);
   expectAsync++;
 
   removeListener(listener);
@@ -94,23 +94,23 @@ process.nextTick(function() {
 
 
 // Async listeners should propagate with nested callbacks
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
-  var interval = 3;
+  let interval = 3;
 
-  process.nextTick(function() {
-    setTimeout(function() {
-      setImmediate(function() {
-        var i = setInterval(function() {
+  process.nextTick(() => {
+    setTimeout(() => {
+      setImmediate(() => {
+        var i = setInterval(() => {
           if (--interval <= 0)
             clearInterval(i);
         });
         expectAsync++;
       });
       expectAsync++;
-      process.nextTick(function() {
-        setImmediate(function() {
-          setTimeout(function() { }, 20);
+      process.nextTick(() => {
+        setImmediate(() => {
+          setTimeout(() => { }, 20);
           expectAsync++;
         });
         expectAsync++;
@@ -126,12 +126,12 @@ process.nextTick(function() {
 
 
 // Test triggers with two async listeners
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
   addListener(listener);
 
-  setTimeout(function() {
-    process.nextTick(function() { });
+  setTimeout(() => {
+    process.nextTick(() => { });
     expectAsync += 2;
   });
   expectAsync += 2;
@@ -142,14 +142,14 @@ process.nextTick(function() {
 
 
 // Test callbacks from fs I/O
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  fs.stat('something random', function(err, stat) { });
+  fs.stat('something random', (err, stat) => { });
   expectAsync++;
 
-  setImmediate(function() {
-    fs.stat('random again', function(err, stat) { });
+  setImmediate(() => {
+    fs.stat('random again', (err, stat) => { });
     expectAsync++;
   });
   expectAsync++;
@@ -159,13 +159,13 @@ process.nextTick(function() {
 
 
 // Test net I/O
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  var server = net.createServer(function(c) { });
+  const server = net.createServer((c) => { });
   expectAsync++;
 
-  server.listen(PORT, function() {
+  server.listen(PORT, () => {
     server.close();
     expectAsync++;
   });
@@ -176,10 +176,10 @@ process.nextTick(function() {
 
 
 // Test UDP
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  var server = dgram.createSocket('udp4');
+  const server = dgram.createSocket('udp4');
   expectAsync++;
 
   server.bind(PORT);

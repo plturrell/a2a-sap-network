@@ -23,36 +23,36 @@
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
+const assert = require('assert');
 
-var results = [];
-var asyncNoHandleError = {
+const results = [];
+const asyncNoHandleError = {
   error: function(stor) {
     results.push(1);
   }
 };
 
-var asyncHandleError = {
+const asyncHandleError = {
   error: function(stor) {
     results.push(0);
     return true;
   }
 };
 
-var listeners = [
+const listeners = [
   process.addAsyncListener(asyncHandleError),
   process.addAsyncListener(asyncNoHandleError)
 ];
 
 // Even if an error handler returns true, both should fire.
-process.nextTick(function() {
+process.nextTick(() => {
   throw new Error();
 });
 
 process.removeAsyncListener(listeners[0]);
 process.removeAsyncListener(listeners[1]);
 
-process.on('exit', function(code) {
+process.on('exit', (code) => {
   // If the exit code isn't ok then return early to throw the stack that
   // caused the bad return code.
   if (code !== 0)

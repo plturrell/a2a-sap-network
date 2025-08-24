@@ -237,7 +237,7 @@ sap.ui.define([
         lazyLoadImages(oContainer) {
             if (!window.IntersectionObserver) {return;}
 
-            var imageObserver = new IntersectionObserver(((entries) => {
+            const imageObserver = new IntersectionObserver(((entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
                         const img = entry.target;
@@ -356,7 +356,7 @@ sap.ui.define([
 
                 const measure = performance.getEntriesByName(sName)[0];
                 if (measure) {
-                    console.log(`${sName } took ${ measure.duration.toFixed(2) }ms`);
+                    // console.log(`${sName } took ${ measure.duration.toFixed(2) }ms`);
                 }
 
                 return result;

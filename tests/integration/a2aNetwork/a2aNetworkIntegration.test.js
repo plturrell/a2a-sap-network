@@ -12,16 +12,16 @@
  */
 
 sap.ui.define([
-    "sap/ui/test/opaQunit",
-    "a2a/network/fiori/test/integration/pages/Common",
-    "a2a/network/fiori/test/integration/pages/Overview",
-    "a2a/network/fiori/test/integration/pages/AgentManagement",
-    "a2a/network/fiori/test/integration/pages/BlockchainDashboard",
-    "a2a/network/fiori/test/integration/pages/Transactions",
-    "a2a/network/fiori/test/integration/pages/Operations",
-    "a2a/network/fiori/test/integration/pages/Settings"
-], function(opaTest) {
-    "use strict";
+    'sap/ui/test/opaQunit',
+    'a2a/network/fiori/test/integration/pages/Common',
+    'a2a/network/fiori/test/integration/pages/Overview',
+    'a2a/network/fiori/test/integration/pages/AgentManagement',
+    'a2a/network/fiori/test/integration/pages/BlockchainDashboard',
+    'a2a/network/fiori/test/integration/pages/Transactions',
+    'a2a/network/fiori/test/integration/pages/Operations',
+    'a2a/network/fiori/test/integration/pages/Settings'
+], (opaTest) => {
+    'use strict';
 
     /**
      * Integration test module for A2A Network Application
@@ -37,7 +37,7 @@ sap.ui.define([
      * @public
      * @static
      */
-    QUnit.module("A2A Network - Integration Tests", {
+    QUnit.module('A2A Network - Integration Tests', {
 
         /**
          * Set up integration test environment
@@ -50,13 +50,13 @@ sap.ui.define([
         beforeEach() {
             // Configure OPA5 for integration testing
             sap.ui.test.Opa5.extendConfig({
-                viewNamespace: "a2a.network.fiori.view",
+                viewNamespace: 'a2a.network.fiori.view',
                 autoWait: true,
                 timeout: 30,
                 pollingInterval: 100,
                 debugTimeout: 15,
                 appParams: {
-                    "sap-ui-language": "en"
+                    'sap-ui-language': 'en'
                 }
             });
         }
@@ -66,7 +66,7 @@ sap.ui.define([
      * Test application launch and initial load
      * Verifies that the application starts correctly and loads the overview dashboard
      */
-    opaTest("Should launch application and display overview dashboard", function(Given, When, Then) {
+    opaTest('Should launch application and display overview dashboard', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
@@ -87,42 +87,42 @@ sap.ui.define([
      * Test navigation between main application sections
      * Verifies that users can navigate to all main sections of the application
      */
-    opaTest("Should navigate between all main application sections", function(Given, When, Then) {
+    opaTest('Should navigate between all main application sections', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
         // Act & Assert - Navigate to Agent Management
-        When.onTheCommonPage.iPressTheNavigationItem("Agent Management");
+        When.onTheCommonPage.iPressTheNavigationItem('Agent Management');
         Then.onTheAgentManagementPage.iShouldSeeTheAgentList()
             .and.iShouldSeeAgentFilters()
             .and.iShouldSeeAgentActions();
 
         // Navigate to Blockchain Dashboard
-        When.onTheCommonPage.iPressTheNavigationItem("Blockchain Dashboard");
+        When.onTheCommonPage.iPressTheNavigationItem('Blockchain Dashboard');
         Then.onTheBlockchainDashboardPage.iShouldSeeTheBlockchainStatus()
             .and.iShouldSeeNetworkMetrics()
             .and.iShouldSeeBlockInformation();
 
         // Navigate to Transactions
-        When.onTheCommonPage.iPressTheNavigationItem("Transactions");
+        When.onTheCommonPage.iPressTheNavigationItem('Transactions');
         Then.onTheTransactionsPage.iShouldSeeTransactionList()
             .and.iShouldSeeTransactionFilters()
             .and.iShouldSeeTransactionAnalytics();
 
         // Navigate to Operations
-        When.onTheCommonPage.iPressTheNavigationItem("Operations");
+        When.onTheCommonPage.iPressTheNavigationItem('Operations');
         Then.onTheOperationsPage.iShouldSeeSystemHealth()
             .and.iShouldSeePerformanceMetrics()
             .and.iShouldSeeAlerts();
 
         // Navigate to Settings
-        When.onTheCommonPage.iPressTheNavigationItem("Settings");
+        When.onTheCommonPage.iPressTheNavigationItem('Settings');
         Then.onTheSettingsPage.iShouldSeeGeneralSettings()
             .and.iShouldSeePerformanceSettings()
             .and.iShouldSeeSecuritySettings();
 
         // Return to Overview
-        When.onTheCommonPage.iPressTheNavigationItem("Overview");
+        When.onTheCommonPage.iPressTheNavigationItem('Overview');
         Then.onTheOverviewPage.iShouldSeeTheOverviewDashboard();
 
         // Cleanup
@@ -133,29 +133,29 @@ sap.ui.define([
      * Test complete agent management workflow
      * Verifies end-to-end agent lifecycle from registration to monitoring
      */
-    opaTest("Should complete agent management workflow", function(Given, When, Then) {
+    opaTest('Should complete agent management workflow', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
         // Navigate to Agent Management
-        When.onTheCommonPage.iPressTheNavigationItem("Agent Management");
+        When.onTheCommonPage.iPressTheNavigationItem('Agent Management');
 
         // Act - Register new agent
         When.onTheAgentManagementPage.iPressAddAgent()
             .and.iFillAgentRegistrationForm({
-                name: "Test Computational Agent",
-                endpoint: "https://test-agent.a2a-network.com",
-                capabilities: ["computation", "analysis"],
-                owner: "test@sap.com"
+                name: 'Test Computational Agent',
+                endpoint: 'https://test-agent.a2a-network.com',
+                capabilities: ['computation', 'analysis'],
+                owner: 'test@sap.com'
             })
             .and.iPressRegisterAgent();
 
         // Assert - Verify agent was registered
         Then.onTheAgentManagementPage.iShouldSeeSuccessMessage()
-            .and.iShouldSeeAgentInList("Test Computational Agent");
+            .and.iShouldSeeAgentInList('Test Computational Agent');
 
         // Act - View agent details
-        When.onTheAgentManagementPage.iPressAgentListItem("Test Computational Agent");
+        When.onTheAgentManagementPage.iPressAgentListItem('Test Computational Agent');
 
         // Assert - Verify agent details are displayed
         Then.onTheAgentManagementPage.iShouldSeeAgentDetails()
@@ -166,7 +166,7 @@ sap.ui.define([
         When.onTheAgentManagementPage.iPressActivateAgent();
 
         // Assert - Verify agent is activated
-        Then.onTheAgentManagementPage.iShouldSeeAgentStatus("Active");
+        Then.onTheAgentManagementPage.iShouldSeeAgentStatus('Active');
 
         // Cleanup
         Then.iTeardownMyApp();
@@ -176,27 +176,27 @@ sap.ui.define([
      * Test blockchain transaction monitoring workflow
      * Verifies blockchain integration and transaction tracking
      */
-    opaTest("Should monitor blockchain transactions end-to-end", function(Given, When, Then) {
+    opaTest('Should monitor blockchain transactions end-to-end', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
         // Navigate to Blockchain Dashboard
-        When.onTheCommonPage.iPressTheNavigationItem("Blockchain Dashboard");
+        When.onTheCommonPage.iPressTheNavigationItem('Blockchain Dashboard');
 
         // Assert - Verify blockchain connection
-        Then.onTheBlockchainDashboardPage.iShouldSeeBlockchainStatus("Connected")
+        Then.onTheBlockchainDashboardPage.iShouldSeeBlockchainStatus('Connected')
             .and.iShouldSeeLatestBlockInfo()
             .and.iShouldSeeNetworkStatistics();
 
         // Navigate to Transactions
-        When.onTheCommonPage.iPressTheNavigationItem("Transactions");
+        When.onTheCommonPage.iPressTheNavigationItem('Transactions');
 
         // Act - Filter transactions by status
-        When.onTheTransactionsPage.iSelectStatusFilter("Confirmed")
+        When.onTheTransactionsPage.iSelectStatusFilter('Confirmed')
             .and.iPressRefreshTransactions();
 
         // Assert - Verify filtered results
-        Then.onTheTransactionsPage.iShouldSeeFilteredTransactions("Confirmed")
+        Then.onTheTransactionsPage.iShouldSeeFilteredTransactions('Confirmed')
             .and.iShouldSeeTransactionDetails();
 
         // Act - Export transaction data
@@ -221,12 +221,12 @@ sap.ui.define([
      * Test system operations monitoring workflow
      * Verifies system health monitoring and alert management
      */
-    opaTest("Should monitor system operations and handle alerts", function(Given, When, Then) {
+    opaTest('Should monitor system operations and handle alerts', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
         // Navigate to Operations
-        When.onTheCommonPage.iPressTheNavigationItem("Operations");
+        When.onTheCommonPage.iPressTheNavigationItem('Operations');
 
         // Assert - Verify operations dashboard
         Then.onTheOperationsPage.iShouldSeeSystemHealth()
@@ -265,12 +265,12 @@ sap.ui.define([
      * Test settings management and configuration
      * Verifies application configuration and preferences
      */
-    opaTest("Should manage application settings and configuration", function(Given, When, Then) {
+    opaTest('Should manage application settings and configuration', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
         // Navigate to Settings
-        When.onTheCommonPage.iPressTheNavigationItem("Settings");
+        When.onTheCommonPage.iPressTheNavigationItem('Settings');
 
         // Assert - Verify settings sections
         Then.onTheSettingsPage.iShouldSeeGeneralSettings()
@@ -280,13 +280,13 @@ sap.ui.define([
 
         // Act - Update performance settings
         When.onTheSettingsPage.iPressPerformanceTab()
-            .and.iChangeMonitoringInterval("5")
+            .and.iChangeMonitoringInterval('5')
             .and.iEnableAutoRefresh()
             .and.iPressSaveSettings();
 
         // Assert - Verify settings are saved
         Then.onTheSettingsPage.iShouldSeeSettingsSaved()
-            .and.iShouldSeeUpdatedMonitoringInterval("5")
+            .and.iShouldSeeUpdatedMonitoringInterval('5')
             .and.iShouldSeeAutoRefreshEnabled();
 
         // Act - Export settings
@@ -311,7 +311,7 @@ sap.ui.define([
      * Test error handling and recovery scenarios
      * Verifies application resilience and error handling
      */
-    opaTest("Should handle errors gracefully and provide recovery options", function(Given, When, Then) {
+    opaTest('Should handle errors gracefully and provide recovery options', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp()
             .and.iSimulateNetworkError();
@@ -335,13 +335,13 @@ sap.ui.define([
             .and.iShouldNotSeeErrorMessage();
 
         // Test invalid input handling
-        When.onTheCommonPage.iPressTheNavigationItem("Agent Management");
+        When.onTheCommonPage.iPressTheNavigationItem('Agent Management');
         When.onTheAgentManagementPage.iPressAddAgent()
             .and.iFillAgentRegistrationForm({
-                name: "", // Invalid: empty name
-                endpoint: "invalid-url", // Invalid: malformed URL
+                name: '', // Invalid: empty name
+                endpoint: 'invalid-url', // Invalid: malformed URL
                 capabilities: [],
-                owner: "invalid-email" // Invalid: malformed email
+                owner: 'invalid-email' // Invalid: malformed email
             })
             .and.iPressRegisterAgent();
 
@@ -358,10 +358,10 @@ sap.ui.define([
      * Test responsive design and mobile compatibility
      * Verifies application works on different screen sizes
      */
-    opaTest("Should adapt to different screen sizes and devices", function(Given, When, Then) {
+    opaTest('Should adapt to different screen sizes and devices', (Given, When, Then) => {
         // Test desktop view
         Given.iStartTheApp()
-            .and.iSetScreenSize("desktop");
+            .and.iSetScreenSize('desktop');
 
         When.onTheCommonPage.iWaitForTheAppToLoad();
 
@@ -370,13 +370,13 @@ sap.ui.define([
             .and.iShouldSeeAllNavigationItems();
 
         // Test tablet view
-        When.onTheCommonPage.iSetScreenSize("tablet");
+        When.onTheCommonPage.iSetScreenSize('tablet');
 
         Then.onTheCommonPage.iShouldSeeTabletLayout()
             .and.iShouldSeeCollapsedSidebar();
 
         // Test mobile view
-        When.onTheCommonPage.iSetScreenSize("mobile");
+        When.onTheCommonPage.iSetScreenSize('mobile');
 
         Then.onTheCommonPage.iShouldSeeMobileLayout()
             .and.iShouldSeeHamburgerMenu();
@@ -395,7 +395,7 @@ sap.ui.define([
      * Test accessibility compliance
      * Verifies application meets SAP accessibility standards
      */
-    opaTest("Should meet SAP accessibility standards", function(Given, When, Then) {
+    opaTest('Should meet SAP accessibility standards', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp();
 
@@ -425,13 +425,13 @@ sap.ui.define([
      * Test performance under load
      * Verifies application performance with large datasets
      */
-    opaTest("Should maintain performance with large datasets", function(Given, When, Then) {
+    opaTest('Should maintain performance with large datasets', (Given, When, Then) => {
         // Arrange
         Given.iStartTheApp()
             .and.iLoadLargeDataset();
 
         // Navigate to transactions with large dataset
-        When.onTheCommonPage.iPressTheNavigationItem("Transactions");
+        When.onTheCommonPage.iPressTheNavigationItem('Transactions');
 
         // Assert - Verify performance with large data
         Then.onTheTransactionsPage.iShouldLoadWithin(5000) // 5 seconds
@@ -439,13 +439,13 @@ sap.ui.define([
             .and.iShouldSupportVirtualScrolling();
 
         // Test search performance
-        When.onTheTransactionsPage.iSearchForTransaction("0x123");
+        When.onTheTransactionsPage.iSearchForTransaction('0x123');
 
         Then.onTheTransactionsPage.iShouldFilterWithin(2000) // 2 seconds
             .and.iShouldShowRelevantResults();
 
         // Test sorting performance
-        When.onTheTransactionsPage.iSortByColumn("timestamp");
+        When.onTheTransactionsPage.iSortByColumn('timestamp');
 
         Then.onTheTransactionsPage.iShouldSortWithin(3000) // 3 seconds
             .and.iShouldMaintainDataIntegrity();

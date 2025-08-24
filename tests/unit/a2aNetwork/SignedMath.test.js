@@ -4,7 +4,7 @@ const { MIN_INT256, MAX_INT256 } = constants;
 
 const SignedMath = artifacts.require('$SignedMath');
 
-contract('SignedMath', function () {
+contract('SignedMath', () => {
   const min = new BN('-1234');
   const max = new BN('5678');
 
@@ -12,7 +12,7 @@ contract('SignedMath', function () {
     this.math = await SignedMath.new();
   });
 
-  describe('max', function () {
+  describe('max', () => {
     it('is correctly detected in first argument position', async function () {
       expect(await this.math.$max(max, min)).to.be.bignumber.equal(max);
     });
@@ -22,7 +22,7 @@ contract('SignedMath', function () {
     });
   });
 
-  describe('min', function () {
+  describe('min', () => {
     it('is correctly detected in first argument position', async function () {
       expect(await this.math.$min(min, max)).to.be.bignumber.equal(min);
     });
@@ -32,7 +32,7 @@ contract('SignedMath', function () {
     });
   });
 
-  describe('average', function () {
+  describe('average', () => {
     function bnAverage(a, b) {
       return a.add(b).divn(2);
     }
@@ -77,7 +77,7 @@ contract('SignedMath', function () {
     });
   });
 
-  describe('abs', function () {
+  describe('abs', () => {
     for (const n of [
       MIN_INT256,
       MIN_INT256.addn(1),

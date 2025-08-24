@@ -633,7 +633,7 @@ sap.ui.define([
             // Validate EventSource URL for security
             const testStreamUrl = `/a2a/agent9/v1/test-stream?ids=${ encodeURIComponent(aIntegrationIds.join(","))}`;
             if (!this._securityUtils || !this._securityUtils.validateEventSourceUrl(testStreamUrl)) {
-                console.warn("Invalid test stream URL, skipping real-time monitoring");
+                // console.warn("Invalid test stream URL, skipping real-time monitoring");
                 return;
             }
 
@@ -644,7 +644,7 @@ sap.ui.define([
                     const data = JSON.parse(event.data);
                     this._updateTestProgress(data, oDialog);
                 } catch (error) {
-                    console.error("Error processing test update:", error);
+                    // console.error("Error processing test update:", error);
                 }
             }.bind(this);
 
@@ -1383,7 +1383,7 @@ sap.ui.define([
                         this._auditLog("AUTHENTICATION_FAILURE_DETECTED", "Real-time authentication failure event", data);
                     }
                 } catch (error) {
-                    // console.error("Error processing real-time update:", error);
+                    // // console.error("Error processing real-time update:", error);
                     this._auditLog("REALTIME_UPDATE_ERROR", "Error processing real-time update", { error: error.message });
                 }
             }.bind(this);
@@ -1501,7 +1501,7 @@ sap.ui.define([
          */
         _validateCreateIntegrationData(oData) {
             const oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
-            
+
             if (!oData.integrationName || !oData.integrationName.trim()) {
                 const sMessage = oResourceBundle.getText("validation.integrationNameRequired") || "Integration name is required";
                 return { isValid: false, message: sMessage };
@@ -1760,7 +1760,7 @@ sap.ui.define([
                 description,
                 details: details || {}
             };
-            console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+            // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
         },
 
         /**

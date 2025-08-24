@@ -1,8 +1,8 @@
-var PassThrough = require('stream').PassThrough;
-var test = require('tape');
-var expectReadableStream = require('./lib/expect_readable_stream');
+const PassThrough = require('stream').PassThrough;
+const test = require('tape');
+const expectReadableStream = require('./lib/expect_readable_stream');
 
-var HexSpy = require('../hex_spy');
+const HexSpy = require('../hex_spy');
 
 testSpyStream('hello world', [
     'hello', 'world'
@@ -75,38 +75,38 @@ function testSpyStream(name, options, parts, expectedLines) {
         parts = options;
         options = {};
     }
-    test('HexSpy: ' + name, function t(assert) {
-        var stream = PassThrough();
-        var sink = PassThrough({
+    test(`HexSpy: ${  name}`, (assert) => {
+        const stream = PassThrough();
+        const sink = PassThrough({
             encoding: 'utf8'
         });
-        var spy = HexSpy(sink, options);
+        const spy = HexSpy(sink, options);
 
         stream.pipe(spy);
-        parts.forEach(function eachPart(part) {
+        parts.forEach((part) => {
             stream.write(part);
         });
         stream.end();
 
-        var expected = expectedLines.map(function expectSinkLine(expectedLine, i) {
+        const expected = expectedLines.map((expectedLine, i) => {
             return function gotData(gotLine) {
-                assert.equal(gotLine, expectedLine, 'expected sink line[' + i + ']');
+                assert.equal(gotLine, expectedLine, `expected sink line[${  i  }]`);
             };
         });
 
-        var expectedPass = parts.map(function expectedPassChunk(part, i) {
-            var expectedChunk = Buffer(part);
+        const expectedPass = parts.map((part, i) => {
+            const expectedChunk = Buffer(part);
             return function gotData(gotChunk) {
-                assert.deepEqual(gotChunk, expectedChunk, 'expected pass chunk[' + i + ']');
+                assert.deepEqual(gotChunk, expectedChunk, `expected pass chunk[${  i  }]`);
             };
         });
 
-        var done = 0;
-        expectReadableStream(spy, expectedPass, function expectDone(err) {
+        let done = 0;
+        expectReadableStream(spy, expectedPass, (err) => {
             assert.ifError(err, 'no error from spy stream expectations');
             if (++done >= 2) assert.end();
         });
-        expectReadableStream(sink, expected, function expectDone(err) {
+        expectReadableStream(sink, expected, (err) => {
             assert.ifError(err, 'no error from sink stream expectations');
             if (++done >= 2) assert.end();
         });

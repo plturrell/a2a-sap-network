@@ -20,12 +20,12 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var ConcatReadBuffer = require('../../stream/concat_read_buffer');
+const ConcatReadBuffer = require('../../stream/concat_read_buffer');
 
-test('ConcatReadBuffer', function t(assert) {
-    var buf = ConcatReadBuffer();
+test('ConcatReadBuffer', (assert) => {
+    const buf = ConcatReadBuffer();
     assert.equal(buf.avail(), 0, 'starts out with no avail');
     assert.equal(buf.free(), 0, 'starts out with no free');
     assert.deepEqual(buf.shift(2), Buffer.alloc(0), 'expected empty shift at first');

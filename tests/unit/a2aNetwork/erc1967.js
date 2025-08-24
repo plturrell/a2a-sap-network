@@ -3,7 +3,7 @@ const AdminLabel = 'eip1967.proxy.admin';
 const BeaconLabel = 'eip1967.proxy.beacon';
 
 function labelToSlot(label) {
-  return '0x' + web3.utils.toBN(web3.utils.keccak256(label)).subn(1).toString(16);
+  return `0x${  web3.utils.toBN(web3.utils.keccak256(label)).subn(1).toString(16)}`;
 }
 
 function getSlot(address, slot) {

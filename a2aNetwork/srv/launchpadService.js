@@ -13,22 +13,22 @@ const LOG = cds.log('launchpad-service');
 
 // Agent metadata configuration (same as Express version)
 const AGENT_METADATA = {
-    0: { name: "Data Product Agent", port: 8000, type: "Core Processing", icon: "product" },
-    1: { name: "Data Standardization", port: 8001, type: "Core Processing", icon: "synchronize" },
-    2: { name: "AI Preparation", port: 8002, type: "Core Processing", icon: "artificial-intelligence" },
-    3: { name: "Vector Processing", port: 8003, type: "Core Processing", icon: "scatter-chart" },
-    4: { name: "Calc Validation", port: 8004, type: "Core Processing", icon: "validate" },
-    5: { name: "QA Validation", port: 8005, type: "Core Processing", icon: "quality-issue" },
-    6: { name: "Quality Control Manager", port: 8006, type: "Management", icon: "process" },
-    7: { name: "Agent Manager", port: 8007, type: "Management", icon: "org-chart" },
-    8: { name: "Data Manager", port: 8008, type: "Management", icon: "database" },
-    9: { name: "Reasoning Agent", port: 8009, type: "Management", icon: "decision" },
-    10: { name: "Calculation Agent", port: 8010, type: "Specialized", icon: "sum" },
-    11: { name: "SQL Agent", port: 8011, type: "Specialized", icon: "table-view" },
-    12: { name: "Catalog Manager", port: 8012, type: "Specialized", icon: "course-book" },
-    13: { name: "Agent Builder", port: 8013, type: "Specialized", icon: "build" },
-    14: { name: "Embedding Fine-Tuner", port: 8014, type: "Specialized", icon: "machine-learning" },
-    15: { name: "Orchestrator Agent", port: 8015, type: "Specialized", icon: "workflow-tasks" }
+    0: { name: 'Data Product Agent', port: 8000, type: 'Core Processing', icon: 'product' },
+    1: { name: 'Data Standardization', port: 8001, type: 'Core Processing', icon: 'synchronize' },
+    2: { name: 'AI Preparation', port: 8002, type: 'Core Processing', icon: 'artificial-intelligence' },
+    3: { name: 'Vector Processing', port: 8003, type: 'Core Processing', icon: 'scatter-chart' },
+    4: { name: 'Calc Validation', port: 8004, type: 'Core Processing', icon: 'validate' },
+    5: { name: 'QA Validation', port: 8005, type: 'Core Processing', icon: 'quality-issue' },
+    6: { name: 'Quality Control Manager', port: 8006, type: 'Management', icon: 'process' },
+    7: { name: 'Agent Manager', port: 8007, type: 'Management', icon: 'org-chart' },
+    8: { name: 'Data Manager', port: 8008, type: 'Management', icon: 'database' },
+    9: { name: 'Reasoning Agent', port: 8009, type: 'Management', icon: 'decision' },
+    10: { name: 'Calculation Agent', port: 8010, type: 'Specialized', icon: 'sum' },
+    11: { name: 'SQL Agent', port: 8011, type: 'Specialized', icon: 'table-view' },
+    12: { name: 'Catalog Manager', port: 8012, type: 'Specialized', icon: 'course-book' },
+    13: { name: 'Agent Builder', port: 8013, type: 'Specialized', icon: 'build' },
+    14: { name: 'Embedding Fine-Tuner', port: 8014, type: 'Specialized', icon: 'machine-learning' },
+    15: { name: 'Orchestrator Agent', port: 8015, type: 'Specialized', icon: 'workflow-tasks' }
 };
 
 // Helper function to check agent health via real HTTP endpoints
@@ -229,23 +229,23 @@ module.exports = function() {
             
             if (health.status === 'healthy') {
                 // Determine number state based on real metrics
-                let numberState = "Neutral";
-                let stateArrow = "None";
+                let numberState = 'Neutral';
+                let stateArrow = 'None';
                 
                 if (health.success_rate !== null) {
                     if (health.success_rate >= 95) {
-                        numberState = "Positive";
-                        stateArrow = "Up";
+                        numberState = 'Positive';
+                        stateArrow = 'Up';
                     } else if (health.success_rate >= 85) {
-                        numberState = "Critical";
-                        stateArrow = "None";
+                        numberState = 'Critical';
+                        stateArrow = 'None';
                     } else {
-                        numberState = "Error";
-                        stateArrow = "Down";
+                        numberState = 'Error';
+                        stateArrow = 'Down';
                     }
                 } else if (health.active_tasks > 0) {
-                    numberState = "Positive";
-                    stateArrow = "Up";
+                    numberState = 'Positive';
+                    stateArrow = 'Up';
                 }
                 
                 // Build subtitle with real performance data
@@ -264,7 +264,7 @@ module.exports = function() {
                     d: {
                         title: health.name || agent.name,
                         number: health.active_tasks.toString(),
-                        numberUnit: "active tasks",
+                        numberUnit: 'active tasks',
                         numberState: numberState,
                         subtitle: subtitle,
                         stateArrow: stateArrow,
@@ -304,11 +304,11 @@ module.exports = function() {
                 req.error(503, 'AGENT_UNHEALTHY', {
                     d: {
                         title: agent.name,
-                        number: "0",
+                        number: '0',
                         numberUnit: health.status,
-                        numberState: "Error",
+                        numberState: 'Error',
                         subtitle: health.message || `Port ${agent.port}`,
-                        stateArrow: "Down",
+                        stateArrow: 'Down',
                         info: `${agent.type} Agent - ${health.status}`,
                         status: health.status,
                         port: agent.port,
@@ -369,12 +369,12 @@ module.exports = function() {
                 
                 return {
                     d: {
-                        title: "Network Overview",
+                        title: 'Network Overview',
                         number: activeAgents.toString(),
-                        numberUnit: "active agents",
-                        numberState: overallSystemHealth > 80 ? "Positive" : overallSystemHealth > 50 ? "Critical" : "Error",
+                        numberUnit: 'active agents',
+                        numberState: overallSystemHealth > 80 ? 'Positive' : overallSystemHealth > 50 ? 'Critical' : 'Error',
                         subtitle: `${totalAgents} total agents, ${overallSystemHealth}% system health`,
-                        stateArrow: overallSystemHealth > 80 ? "Up" : "Down",
+                        stateArrow: overallSystemHealth > 80 ? 'Up' : 'Down',
                         info: `${totalActiveTasks} active tasks, ${totalSkills} skills, ${totalMcpTools} MCP tools`,
                         real_metrics: {
                             // Agent metrics (from healthy agents only)
@@ -421,12 +421,12 @@ module.exports = function() {
                     
                     return {
                         d: {
-                            title: "Blockchain Monitor",
+                            title: 'Blockchain Monitor',
                             number: registeredAgents.toString(),
-                            numberUnit: "registered agents",
-                            numberState: blockchainHealth.trust_integration ? "Positive" : "Critical",
+                            numberUnit: 'registered agents',
+                            numberState: blockchainHealth.trust_integration ? 'Positive' : 'Critical',
                             subtitle: `${contractCount} contracts deployed`,
-                            stateArrow: blockchainHealth.trust_integration ? "Up" : "None",
+                            stateArrow: blockchainHealth.trust_integration ? 'Up' : 'None',
                             info: `Network: ${blockchainHealth.network || 'Unknown'}, Trust: ${blockchainHealth.trust_integration ? 'Enabled' : 'Disabled'}`,
                             blockchain_metrics: {
                                 network: blockchainHealth.network || 'Unknown',
@@ -442,12 +442,12 @@ module.exports = function() {
                 } else {
                     req.error(503, 'BLOCKCHAIN_UNAVAILABLE', {
                         d: {
-                            title: "Blockchain Monitor",
-                            number: "0",
-                            numberUnit: "offline",
-                            numberState: "Error",
-                            subtitle: blockchainHealth.message || "Connection failed",
-                            stateArrow: "Down",
+                            title: 'Blockchain Monitor',
+                            number: '0',
+                            numberUnit: 'offline',
+                            numberState: 'Error',
+                            subtitle: blockchainHealth.message || 'Connection failed',
+                            stateArrow: 'Down',
                             info: `Status: ${blockchainHealth.status}`,
                             error: blockchainHealth.message,
                             timestamp: new Date().toISOString()
@@ -492,12 +492,12 @@ module.exports = function() {
             
             return {
                 d: {
-                    title: "Service Marketplace",
+                    title: 'Service Marketplace',
                     number: totalServices.toString(),
-                    numberUnit: "available services",
-                    numberState: providerHealthPercentage > 80 ? "Positive" : providerHealthPercentage > 50 ? "Critical" : "Error",
+                    numberUnit: 'available services',
+                    numberState: providerHealthPercentage > 80 ? 'Positive' : providerHealthPercentage > 50 ? 'Critical' : 'Error',
                     subtitle: `${activeProviders}/${totalProviders} providers active (${providerHealthPercentage}%)`,
-                    stateArrow: providerHealthPercentage > 80 ? "Up" : "Down",
+                    stateArrow: providerHealthPercentage > 80 ? 'Up' : 'Down',
                     info: `${totalSkills} skills, ${totalHandlers} handlers, ${totalMcpTools} MCP tools`,
                     service_breakdown: {
                         agent_skills: totalSkills,
@@ -568,12 +568,12 @@ module.exports = function() {
             
             return {
                 d: {
-                    title: "System Health",
+                    title: 'System Health',
                     number: overallHealth.toString(),
-                    numberUnit: "% system health",
-                    numberState: overallHealth > 80 ? "Positive" : overallHealth > 50 ? "Critical" : "Error",
+                    numberUnit: '% system health',
+                    numberState: overallHealth > 80 ? 'Positive' : overallHealth > 50 ? 'Critical' : 'Error',
                     subtitle: `${healthyAgents.length}/${totalAgents} agents healthy`,
-                    stateArrow: overallHealth > 80 ? "Up" : "Down",
+                    stateArrow: overallHealth > 80 ? 'Up' : 'Down',
                     info: `Agents: ${agentsHealth}%, Blockchain: ${blockchainHealth_score}%, MCP: ${mcpHealth_score}%`,
                     component_health: {
                         agents_health: agentsHealth,

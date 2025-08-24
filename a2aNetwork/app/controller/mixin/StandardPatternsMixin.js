@@ -1,12 +1,12 @@
 sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/ui/core/Fragment",
-    "sap/ui/model/json/JSONModel",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
-    "sap/base/Log"
-], function(BaseObject, Fragment, JSONModel, MessageToast, MessageBox, Log) {
-    "use strict";
+    'sap/ui/base/Object',
+    'sap/ui/core/Fragment',
+    'sap/ui/model/json/JSONModel',
+    'sap/m/MessageToast',
+    'sap/m/MessageBox',
+    'sap/base/Log'
+], (BaseObject, Fragment, JSONModel, MessageToast, MessageBox, Log) => {
+    'use strict';
 
     /**
      * Standard Patterns Mixin for SAP Fiori Compliance
@@ -21,19 +21,19 @@ sap.ui.define([
             // Create standard models for UI state
             this._standardModels = {
                 dialogState: new JSONModel({
-                    dialogId: "",
-                    title: "",
-                    formFragment: "",
-                    primaryButtonText: "",
-                    primaryButtonPress: "",
+                    dialogId: '',
+                    title: '',
+                    formFragment: '',
+                    primaryButtonText: '',
+                    primaryButtonPress: '',
                     primaryButtonEnabled: true,
-                    secondaryButtonText: "Cancel",
-                    secondaryButtonPress: "onCloseDialog"
+                    secondaryButtonText: 'Cancel',
+                    secondaryButtonPress: 'onCloseDialog'
                 }),
                 
                 pageState: new JSONModel({
-                    pageId: "",
-                    pageTitle: "",
+                    pageId: '',
+                    pageTitle: '',
                     headerExpanded: true,
                     showFooter: false,
                     breadcrumbsVisible: false,
@@ -45,10 +45,10 @@ sap.ui.define([
                     settingsVisible: true,
                     footerVisible: false,
                     statusVisible: false,
-                    statusMessage: "",
-                    statusType: "Information",
-                    searchQuery: "",
-                    viewMode: "table"
+                    statusMessage: '',
+                    statusType: 'Information',
+                    searchQuery: '',
+                    viewMode: 'table'
                 }),
                 
                 actionState: new JSONModel({
@@ -87,20 +87,20 @@ sap.ui.define([
         openStandardDialog: function(config) {
             // Update dialog state
             this._standardModels.dialogState.setData({
-                dialogId: config.id || "standardDialog",
-                title: config.title || "",
-                formFragment: config.formFragment || "",
-                primaryButtonText: config.primaryButtonText || "OK",
-                primaryButtonPress: config.primaryButtonPress || "onDialogOK",
+                dialogId: config.id || 'standardDialog',
+                title: config.title || '',
+                formFragment: config.formFragment || '',
+                primaryButtonText: config.primaryButtonText || 'OK',
+                primaryButtonPress: config.primaryButtonPress || 'onDialogOK',
                 primaryButtonEnabled: config.primaryButtonEnabled !== false,
-                secondaryButtonText: config.secondaryButtonText || "Cancel",
-                secondaryButtonPress: config.secondaryButtonPress || "onCloseDialog"
+                secondaryButtonText: config.secondaryButtonText || 'Cancel',
+                secondaryButtonPress: config.secondaryButtonPress || 'onCloseDialog'
             });
             
             // Load and open dialog
             if (!this._standardDialog) {
                 Fragment.load({
-                    name: "a2a.network.launchpad.fragment.StandardDialog",
+                    name: 'a2a.network.launchpad.fragment.StandardDialog',
                     controller: this
                 }).then(dialog => {
                     this._standardDialog = dialog;
@@ -152,7 +152,7 @@ sap.ui.define([
          * @param {string} message - Message text
          * @param {string} type - Message type (Success, Warning, Error, Information)
          */
-        showStatusMessage: function(message, type = "Information") {
+        showStatusMessage: function(message, type = 'Information') {
             this.updatePageState({
                 statusVisible: true,
                 statusMessage: message,
@@ -160,7 +160,7 @@ sap.ui.define([
             });
             
             // Auto-hide after 5 seconds for success/info messages
-            if (type === "Success" || type === "Information") {
+            if (type === 'Success' || type === 'Information') {
                 setTimeout(() => {
                     this.updatePageState({ statusVisible: false });
                 }, 5000);
@@ -172,16 +172,16 @@ sap.ui.define([
          * @param {Error} error - Error object
          */
         handleStandardError: function(error) {
-            Log.error("Standard error occurred", error);
+            Log.error('Standard error occurred', error);
             
-            const message = error.message || "An unexpected error occurred";
-            this.showStatusMessage(message, "Error");
+            const message = error.message || 'An unexpected error occurred';
+            this.showStatusMessage(message, 'Error');
             
             // Show error dialog for critical errors
             if (error.critical) {
                 MessageBox.error(message, {
-                    title: "Error",
-                    details: error.details || ""
+                    title: 'Error',
+                    details: error.details || ''
                 });
             }
         },
@@ -191,7 +191,7 @@ sap.ui.define([
          * @param {string} message - Success message
          */
         handleStandardSuccess: function(message) {
-            this.showStatusMessage(message, "Success");
+            this.showStatusMessage(message, 'Success');
             MessageToast.show(message);
         },
         
@@ -200,8 +200,8 @@ sap.ui.define([
          * @param {Object} config - Confirmation configuration
          */
         showStandardConfirmation: function(config) {
-            MessageBox.confirm(config.message || "Are you sure?", {
-                title: config.title || "Confirm",
+            MessageBox.confirm(config.message || 'Are you sure?', {
+                title: config.title || 'Confirm',
                 onClose: (action) => {
                     if (action === MessageBox.Action.OK && config.onConfirm) {
                         config.onConfirm();
@@ -225,7 +225,7 @@ sap.ui.define([
                 const value = field.getValue ? field.getValue() : field.value;
                 
                 // Required field validation
-                if (field.required && (!value || value.trim() === "")) {
+                if (field.required && (!value || value.trim() === '')) {
                     errors.push({
                         field: field.name || field.id,
                         message: `${field.label || field.name} is required`
@@ -233,13 +233,13 @@ sap.ui.define([
                     
                     // Set error state on field
                     if (field.setValueState) {
-                        field.setValueState("Error");
+                        field.setValueState('Error');
                         field.setValueStateText(`${field.label || field.name} is required`);
                     }
                 }
                 
                 // Custom validation
-                if (field.validate && typeof field.validate === "function") {
+                if (field.validate && typeof field.validate === 'function') {
                     const result = field.validate(value);
                     if (result.error) {
                         errors.push({
@@ -248,7 +248,7 @@ sap.ui.define([
                         });
                         
                         if (field.setValueState) {
-                            field.setValueState("Error");
+                            field.setValueState('Error');
                             field.setValueStateText(result.message);
                         }
                     } else if (result.warning) {
@@ -258,13 +258,13 @@ sap.ui.define([
                         });
                         
                         if (field.setValueState) {
-                            field.setValueState("Warning");
+                            field.setValueState('Warning');
                             field.setValueStateText(result.message);
                         }
                     } else {
                         // Clear error state
                         if (field.setValueState) {
-                            field.setValueState("None");
+                            field.setValueState('None');
                         }
                     }
                 }
@@ -284,7 +284,7 @@ sap.ui.define([
         clearFormValidation: function(fields) {
             fields.forEach(field => {
                 if (field.setValueState) {
-                    field.setValueState("None");
+                    field.setValueState('None');
                 }
             });
         },
@@ -294,7 +294,7 @@ sap.ui.define([
          * @param {Object} event - Search event
          */
         onSearch: function(event) {
-            const query = event.getParameter("query") || event.getParameter("newValue");
+            const query = event.getParameter('query') || event.getParameter('newValue');
             this.updatePageState({ searchQuery: query });
             this._performSearch(query);
         },
@@ -304,7 +304,7 @@ sap.ui.define([
          * @param {Object} event - Live search event
          */
         onLiveSearch: function(event) {
-            const query = event.getParameter("newValue");
+            const query = event.getParameter('newValue');
             this.updatePageState({ searchQuery: query });
             
             // Debounce live search
@@ -321,7 +321,7 @@ sap.ui.define([
          */
         _performSearch: function(query) {
             // Override in concrete controller
-            Log.info("Search performed", { query: query });
+            Log.info('Search performed', { query: query });
         },
         
         /**
@@ -329,7 +329,7 @@ sap.ui.define([
          * @param {Object} event - View mode change event
          */
         onViewModeChange: function(event) {
-            const viewMode = event.getParameter("item").getKey();
+            const viewMode = event.getParameter('item').getKey();
             this.updatePageState({ viewMode: viewMode });
             this._changeViewMode(viewMode);
         },
@@ -341,7 +341,7 @@ sap.ui.define([
          */
         _changeViewMode: function(viewMode) {
             // Override in concrete controller
-            Log.info("View mode changed", { viewMode: viewMode });
+            Log.info('View mode changed', { viewMode: viewMode });
         },
 
         /**
@@ -350,9 +350,9 @@ sap.ui.define([
          * @param {string} context - Context where error occurred
          * @param {boolean} showToUser - Whether to show error to user
          */
-        _handleError: function(error, context = "Application", showToUser = true) {
+        _handleError: function(error, context = 'Application', showToUser = true) {
             const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-            const errorMessage = error?.message || error?.statusText || "An unexpected error occurred";
+            const errorMessage = error?.message || error?.statusText || 'An unexpected error occurred';
             
             // Log error for debugging
             Log.error(`[${context}] Error ${errorId}: ${errorMessage}`, error);
@@ -360,7 +360,7 @@ sap.ui.define([
             if (showToUser) {
                 // Show user-friendly error
                 const userMessage = this._sanitizeErrorMessage(errorMessage, context);
-                this.showStatusMessage(userMessage, "Error");
+                this.showStatusMessage(userMessage, 'Error');
                 
                 // Update page state to reflect error
                 this.updatePageState({
@@ -382,7 +382,7 @@ sap.ui.define([
          */
         _sanitizeErrorMessage: function(message, context) {
             // Remove sensitive information patterns
-            let sanitized = message
+            const sanitized = message
                 .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
                 .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
                 .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')

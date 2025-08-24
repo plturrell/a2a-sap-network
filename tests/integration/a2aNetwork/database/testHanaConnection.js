@@ -13,7 +13,7 @@ const connection = hana.createConnection();
 console.log('Testing HANA connection...');
 console.log('Connection options:', { ...connOptions, pwd: '***' });
 
-connection.connect(connOptions, function(err) {
+connection.connect(connOptions, (err) => {
     if (err) {
         console.error('Connection failed:', err);
         process.exit(1);
@@ -22,7 +22,7 @@ connection.connect(connOptions, function(err) {
     console.log('Successfully connected to HANA!');
     
     // Test query
-    connection.exec('SELECT CURRENT_TIMESTAMP FROM DUMMY', function(err, result) {
+    connection.exec('SELECT CURRENT_TIMESTAMP FROM DUMMY', (err, result) => {
         if (err) {
             console.error('Query failed:', err);
         } else {

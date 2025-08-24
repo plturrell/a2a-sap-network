@@ -1,9 +1,9 @@
 
-var test = require("tap").test;
+const test = require('tap').test;
 
-global._stackChain = { version: "unlikely" };
+global._stackChain = { version: 'unlikely' };
 
-test("diffrent version but copies", function (t) {
+test('diffrent version but copies', (t) => {
   try {
     require('../../');
   } catch (e) {

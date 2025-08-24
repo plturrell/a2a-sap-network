@@ -435,7 +435,7 @@ class SecurityMonitoringService extends EventEmitter {
             await fs.mkdir(logDir, { recursive: true });
             
             // Append to daily log file
-            const logEntry = JSON.stringify(securityEvent) + '\n';
+            const logEntry = `${JSON.stringify(securityEvent)  }\n`;
             await fs.appendFile(logFile, logEntry);
         } catch (error) {
             this.log.error('Error persisting security log:', error);

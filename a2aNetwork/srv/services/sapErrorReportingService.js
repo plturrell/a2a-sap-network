@@ -468,7 +468,7 @@ class ErrorReportingService {
                 const start = now - (i + 1) * 60 * 60 * 1000;
                 const end = now - i * 60 * 60 * 1000;
                 intervals.push({
-                    label: new Date(start).getHours() + ':00',
+                    label: `${new Date(start).getHours()  }:00`,
                     start,
                     end
                 });

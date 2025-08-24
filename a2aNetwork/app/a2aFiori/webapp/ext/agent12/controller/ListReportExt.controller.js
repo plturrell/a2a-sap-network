@@ -357,17 +357,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateBenchmarkProgress(data, oProgressDialog);
                     } catch (error) {
-                        // console.error("Error parsing benchmark progress data:", error);
+                        // // console.error("Error parsing benchmark progress data:", error);
                     }
                 }.bind(this);
 
                 this._benchmarkEventSource.onerror = function(error) {
-                    // console.warn("Benchmark stream error, falling back to polling:", error);
+                    // // console.warn("Benchmark stream error, falling back to polling:", error);
                     this._startBenchmarkPolling(sBenchmarkId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startBenchmarkPolling(sBenchmarkId, oProgressDialog);
             }
         },
@@ -405,7 +405,7 @@ sap.ui.define([
                     this._updateBenchmarkProgress(data, oProgressDialog);
                 }.bind(this),
                 error(error) {
-                    // console.warn("Failed to fetch benchmark progress:", error);
+                    // // console.warn("Failed to fetch benchmark progress:", error);
                 }
             });
         },
@@ -604,7 +604,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
+                // // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -652,7 +652,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                // console.error("Error processing performance update:", error);
+                // // console.error("Error processing performance update:", error);
             }
         },
 
@@ -752,7 +752,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

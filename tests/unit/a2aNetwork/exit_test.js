@@ -20,10 +20,10 @@
     test.ifError(value)
 */
 
-var fs = require('fs');
-var exec = require('child_process').exec;
+const fs = require('fs');
+const exec = require('child_process').exec;
 
-var _which = require('which').sync;
+const _which = require('which').sync;
 function which(command) {
   try {
     _which(command);
@@ -35,7 +35,7 @@ function which(command) {
 
 // Look for grep first (any OS). If not found (but on Windows) look for find,
 // which is Windows' horribly crippled grep alternative.
-var grep = which('grep') || process.platform === 'win32' && which('find');
+const grep = which('grep') || process.platform === 'win32' && which('find');
 
 exports['exit'] = {
   setUp: function(done) {
@@ -63,7 +63,7 @@ function normalizeLineEndings(s) {
 
 // Capture command output, normalizing captured stdout to unix file endings.
 function run(command, callback) {
-  exec(command, function(error, stdout) {
+  exec(command, (error, stdout) => {
     callback(error ? error.code : 0, normalizeLineEndings(stdout));
   });
 }
@@ -75,17 +75,17 @@ function fixture(filename) {
 
 function buildTests() {
   // Build individual unit tests for command output.
-  var counts = [10, 100, 1000];
-  var outputs = [' stdout stderr', ' stdout', ' stderr'];
-  var pipes = ['', ' | ' + grep + ' "std"'];
-  counts.forEach(function(count) {
-    outputs.forEach(function(output) {
-      pipes.forEach(function(pipe) {
-        var command = 'node log.js 0 ' + count + output + ' 2>&1' + pipe;
-        exports['exit']['output (' + command + ')'] = function(test) {
+  const counts = [10, 100, 1000];
+  const outputs = [' stdout stderr', ' stdout', ' stderr'];
+  const pipes = ['', ` | ${  grep  } "std"`];
+  counts.forEach((count) => {
+    outputs.forEach((output) => {
+      pipes.forEach((pipe) => {
+        const command = `node log.js 0 ${  count  }${output  } 2>&1${  pipe}`;
+        exports['exit'][`output (${  command  })`] = function(test) {
           test.expect(2);
-          run(command, function(code, actual) {
-            var expected = fixture(count + output.replace(/ /g, '-') + '.txt');
+          run(command, (code, actual) => {
+            const expected = fixture(`${count + output.replace(/ /g, '-')  }.txt`);
             // Sometimes, the actual file lines are out of order on Windows.
             // But since the point of this lib is to drain the buffer and not
             // guarantee output order, we only test the length.
@@ -100,14 +100,14 @@ function buildTests() {
   });
 
   // Build individual unit tests for exit codes.
-  var codes = [0, 1, 123];
-  codes.forEach(function(code) {
-    var command = 'node log.js ' + code + ' 10 stdout stderr';
-    exports['exit']['exit code (' + command + ')'] = function(test) {
+  const codes = [0, 1, 123];
+  codes.forEach((code) => {
+    const command = `node log.js ${  code  } 10 stdout stderr`;
+    exports['exit'][`exit code (${  command  })`] = function(test) {
       test.expect(1);
-      run(command, function(actual) {
+      run(command, (actual) => {
         // The specified exit code should be passed through.
-        test.equal(actual, code, 'should exit with ' + code + ' error code.');
+        test.equal(actual, code, `should exit with ${  code  } error code.`);
         test.done();
       });
     };

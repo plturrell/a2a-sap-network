@@ -24,12 +24,12 @@ const TEST_CONFIG = {
 
 async function runComprehensiveTests() {
     console.log('🚀 A2A Platform Common Components - Comprehensive Test Suite\n');
-    console.log('=' + '='.repeat(70));
+    console.log(`=${  '='.repeat(70)}`);
     console.log('Test Configuration:');
     console.log(`  Timeout: ${TEST_CONFIG.timeout}ms`);
     console.log(`  Verbose: ${TEST_CONFIG.verbose}`);
     console.log(`  Generate Report: ${TEST_CONFIG.generateReport}`);
-    console.log('=' + '='.repeat(70) + '\n');
+    console.log(`=${  '='.repeat(70)  }\n`);
     
     // Initialize test tracker
     const testTracker = new TestTracker();
@@ -312,7 +312,7 @@ function generateJUnitXML(results) {
 }
 
 function printSummary(results) {
-    console.log('\n' + '='.repeat(80));
+    console.log(`\n${  '='.repeat(80)}`);
     console.log('🎯 TEST EXECUTION SUMMARY');
     console.log('='.repeat(80));
     

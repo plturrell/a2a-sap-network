@@ -1,9 +1,9 @@
 'use strict';
 
-var test = require('tape');
-var parse = require('../');
+const test = require('tape');
+const parse = require('../');
 
-test('long opts', function (t) {
+test('long opts', (t) => {
 	t.deepEqual(
 		parse(['--bool']),
 		{ bool: true, _: [] },

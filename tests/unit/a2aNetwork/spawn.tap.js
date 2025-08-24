@@ -1,4 +1,4 @@
-var test   = require('tap').test
+const test   = require('tap').test
   , assert = require('assert')
   ;
 
@@ -6,19 +6,19 @@ if (!global.setImmediate) global.setImmediate = setTimeout;
 
 if (!process.addAsyncListener) require('../index.js');
 
-var childProcess = require('child_process')
+const childProcess = require('child_process')
   , exec         = childProcess.exec
   , execFile     = childProcess.execFile
   , spawn        = childProcess.spawn
   ;
 
-test('ChildProcess', function (t) {
+test('ChildProcess', (t) => {
   t.plan(3);
 
-  t.test('exec', function (t) {
+  t.test('exec', (t) => {
     t.plan(3);
 
-    var active
+    let active
       , cntr   = 0
       ;
 
@@ -32,21 +32,21 @@ test('ChildProcess', function (t) {
 
     t.equal(active, undefined,
       'starts in initial context');
-    process.nextTick(function () {
+    process.nextTick(() => {
       t.equal(active, 1,
         'after tick: 1st context');
-      var child = exec('node --version');
-      child.on('exit', function (code) {
+      const child = exec('node --version');
+      child.on('exit', (code) => {
         t.ok(active >= 2,
           'after exec#exit: entered additional contexts');
-      })
+      });
     });
   });
 
-  t.test('execFile', function (t) {
+  t.test('execFile', (t) => {
     t.plan(3);
 
-    var active
+    let active
       , cntr   = 0
       ;
 
@@ -60,20 +60,20 @@ test('ChildProcess', function (t) {
 
     t.equal(active, undefined,
       'starts in initial context');
-    process.nextTick(function () {
+    process.nextTick(() => {
       t.equal(active, 1,
         'after nextTick: 1st context');
-      execFile('node', ['--version'], function (err, code) {
+      execFile('node', ['--version'], (err, code) => {
         t.ok(active >= 2,
           'after execFile: entered additional contexts');
       });
     });
   });
 
-  t.test('spawn', function (t) {
+  t.test('spawn', (t) => {
     t.plan(3);
 
-    var active
+    let active
       , cntr   = 0
       ;
 
@@ -87,14 +87,14 @@ test('ChildProcess', function (t) {
 
     t.equal(active, undefined,
       'starts in initial context');
-    process.nextTick(function () {
+    process.nextTick(() => {
       t.equal(active, 1,
         'after tick: 1st context');
-      var child = spawn('node', ['--version']);
-      child.on('exit', function (code) {
+      const child = spawn('node', ['--version']);
+      child.on('exit', (code) => {
         t.ok(active >= 2,
           'after spawn#exit: entered additional contexts');
-      })
+      });
     });
   });
 });

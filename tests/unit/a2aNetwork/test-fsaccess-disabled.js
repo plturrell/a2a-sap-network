@@ -24,10 +24,10 @@ asyncHook.addHooks({
 asyncHook.enable();
 asyncHook.disable();
 
-fs.access(__filename, function () {
+fs.access(__filename, () => {
   called = true;
 });
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(called, true);
 });

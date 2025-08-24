@@ -193,9 +193,9 @@ sap.ui.define([
 
             // Create accessible loading indicator
             const $loading = $(`
-                <div id="${loadingId}" 
-                     class="a2a-loading-indicator" 
-                     role="status" 
+                <div id="${loadingId}"
+                     class="a2a-loading-indicator"
+                     role="status"
                      aria-live="polite"
                      aria-label="${options.message || "Loading, please wait"}">
                     <span class="a2a-loading-spinner" aria-hidden="true">⟳</span>

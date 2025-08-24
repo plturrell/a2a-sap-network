@@ -19,24 +19,24 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var PORT = 12346;
+const PORT = 12346;
 
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
-var dns = require('dns');
-var fs = require('fs');
-var net = require('net');
-var addListener = process.addAsyncListener;
-var removeListener = process.removeAsyncListener;
+const assert = require('assert');
+const dns = require('dns');
+const fs = require('fs');
+const net = require('net');
+const addListener = process.addAsyncListener;
+const removeListener = process.removeAsyncListener;
 
-var caught = 0;
-var expectCaught = 0;
+let caught = 0;
+let expectCaught = 0;
 
 function asyncL() { }
 
-var callbacksObj = {
+const callbacksObj = {
   error: function(domain, er) {
     caught++;
 
@@ -67,18 +67,18 @@ var callbacksObj = {
   }
 };
 
-process.on('exit', function() {
+process.on('exit', () => {
   console.log('caught:', caught);
   console.log('expected:', expectCaught);
   assert.equal(caught, expectCaught, 'caught all expected errors');
   console.log('ok');
 });
 
-var listener = process.createAsyncListener(asyncL, callbacksObj);
+const listener = process.createAsyncListener(asyncL, callbacksObj);
 
 
 // Catch synchronous throws
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
   expectCaught++;
@@ -89,26 +89,26 @@ process.nextTick(function() {
 
 
 // Simple cases
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  setTimeout(function() {
+  setTimeout(() => {
     throw new Error('setTimeout - simple');
   });
   expectCaught++;
 
-  setImmediate(function() {
+  setImmediate(() => {
     throw new Error('setImmediate - simple');
   });
   expectCaught++;
 
-  var b = setInterval(function() {
+  var b = setInterval(() => {
     clearInterval(b);
     throw new Error('setInterval - simple');
   });
   expectCaught++;
 
-  process.nextTick(function() {
+  process.nextTick(() => {
     throw new Error('process.nextTick - simple');
   });
   expectCaught++;
@@ -118,13 +118,13 @@ process.nextTick(function() {
 
 
 // Deeply nested
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  setTimeout(function() {
-    process.nextTick(function() {
-      setImmediate(function() {
-        var b = setInterval(function() {
+  setTimeout(() => {
+    process.nextTick(() => {
+      setImmediate(() => {
+        var b = setInterval(() => {
           clearInterval(b);
           throw new Error('setInterval - nested');
         });
@@ -135,7 +135,7 @@ process.nextTick(function() {
       throw new Error('process.nextTick - nested');
     });
     expectCaught++;
-    setTimeout(function() {
+    setTimeout(() => {
       throw new Error('setTimeout2 - nested');
     });
     expectCaught++;
@@ -148,20 +148,20 @@ process.nextTick(function() {
 
 
 // FS
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  fs.stat('does not exist', function() {
+  fs.stat('does not exist', () => {
     throw new Error('fs - file does not exist');
   });
   expectCaught++;
 
-  fs.exists('hi all', function() {
+  fs.exists('hi all', () => {
     throw new Error('fs - exists');
   });
   expectCaught++;
 
-  fs.realpath('/some/path', function() {
+  fs.realpath('/some/path', () => {
     throw new Error('fs - realpath');
   });
   expectCaught++;
@@ -171,15 +171,15 @@ process.nextTick(function() {
 
 
 // Nested FS
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  setTimeout(function() {
-    setImmediate(function() {
-      var b = setInterval(function() {
+  setTimeout(() => {
+    setImmediate(() => {
+      var b = setInterval(() => {
         clearInterval(b);
-        process.nextTick(function() {
-          fs.stat('does not exist', function() {
+        process.nextTick(() => {
+          fs.stat('does not exist', () => {
             throw new Error('fs - nested file does not exist');
           });
           expectCaught++;
@@ -193,17 +193,17 @@ process.nextTick(function() {
 
 
 // Net
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  var server = net.createServer(function() {
+  var server = net.createServer(() => {
     server.close();
     throw new Error('net - connection listener');
   });
   expectCaught++;
 
-  server.listen(PORT, function() {
-    var client = net.connect(PORT, function() {
+  server.listen(PORT, () => {
+    var client = net.connect(PORT, () => {
       client.end();
       throw new Error('net - client connect');
     });
@@ -217,10 +217,10 @@ process.nextTick(function() {
 
 
 // DNS
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  dns.lookup('localhost', function() {
+  dns.lookup('localhost', () => {
     throw new Error('dns - lookup');
   });
   expectCaught++;

@@ -1,29 +1,29 @@
 'use strict';
 
-var fs = require('fs');
-var homedir = require('../lib/homedir');
-var path = require('path');
+const fs = require('fs');
+const homedir = require('../lib/homedir');
+const path = require('path');
 
-var test = require('tape');
-var mkdirp = require('mkdirp');
-var rimraf = require('rimraf');
-var mv = require('mv');
-var copyDir = require('copy-dir');
-var tmp = require('tmp');
+const test = require('tape');
+const mkdirp = require('mkdirp');
+const rimraf = require('rimraf');
+const mv = require('mv');
+const copyDir = require('copy-dir');
+const tmp = require('tmp');
 
-var HOME = homedir();
+const HOME = homedir();
 
-var hnm = path.join(HOME, '.node_modules');
-var hnl = path.join(HOME, '.node_libraries');
+const hnm = path.join(HOME, '.node_modules');
+const hnl = path.join(HOME, '.node_libraries');
 
-var resolve = require('../sync');
+const resolve = require('../sync');
 
 function makeDir(t, dir, cb) {
-    mkdirp(dir, function (err) {
+    mkdirp(dir, (err) => {
         if (err) {
             cb(err);
         } else {
-            t.teardown(function cleanup() {
+            t.teardown(() => {
                 rimraf.sync(dir);
             });
             cb();
@@ -33,14 +33,14 @@ function makeDir(t, dir, cb) {
 
 function makeTempDir(t, dir, cb) {
     if (fs.existsSync(dir)) {
-        var tmpResult = tmp.dirSync();
+        const tmpResult = tmp.dirSync();
         t.teardown(tmpResult.removeCallback);
-        var backup = path.join(tmpResult.name, path.basename(dir));
-        mv(dir, backup, function (err) {
+        const backup = path.join(tmpResult.name, path.basename(dir));
+        mv(dir, backup, (err) => {
             if (err) {
                 cb(err);
             } else {
-                t.teardown(function () {
+                t.teardown(() => {
                     mv(backup, dir, cb);
                 });
                 makeDir(t, dir, cb);
@@ -51,61 +51,61 @@ function makeTempDir(t, dir, cb) {
     }
 }
 
-test('homedir module paths', function (t) {
+test('homedir module paths', (t) => {
     t.plan(7);
 
-    makeTempDir(t, hnm, function (err) {
+    makeTempDir(t, hnm, (err) => {
         t.error(err, 'no error with HNM temp dir');
         if (err) {
             return t.end();
         }
 
-        var bazHNMDir = path.join(hnm, 'baz');
-        var dotMainDir = path.join(hnm, 'dot_main');
+        const bazHNMDir = path.join(hnm, 'baz');
+        const dotMainDir = path.join(hnm, 'dot_main');
         copyDir.sync(path.join(__dirname, 'resolver/baz'), bazHNMDir);
         copyDir.sync(path.join(__dirname, 'resolver/dot_main'), dotMainDir);
 
-        var bazHNMmain = path.join(bazHNMDir, 'quux.js');
+        const bazHNMmain = path.join(bazHNMDir, 'quux.js');
         t.equal(require.resolve('baz'), bazHNMmain, 'sanity check: require.resolve finds HNM `baz`');
-        var dotMainMain = path.join(dotMainDir, 'index.js');
+        const dotMainMain = path.join(dotMainDir, 'index.js');
         t.equal(require.resolve('dot_main'), dotMainMain, 'sanity check: require.resolve finds `dot_main`');
 
-        makeTempDir(t, hnl, function (err) {
+        makeTempDir(t, hnl, (err) => {
             t.error(err, 'no error with HNL temp dir');
             if (err) {
                 return t.end();
             }
-            var bazHNLDir = path.join(hnl, 'baz');
+            const bazHNLDir = path.join(hnl, 'baz');
             copyDir.sync(path.join(__dirname, 'resolver/baz'), bazHNLDir);
 
-            var dotSlashMainDir = path.join(hnl, 'dot_slash_main');
-            var dotSlashMainMain = path.join(dotSlashMainDir, 'index.js');
+            const dotSlashMainDir = path.join(hnl, 'dot_slash_main');
+            const dotSlashMainMain = path.join(dotSlashMainDir, 'index.js');
             copyDir.sync(path.join(__dirname, 'resolver/dot_slash_main'), dotSlashMainDir);
 
             t.equal(require.resolve('baz'), bazHNMmain, 'sanity check: require.resolve finds HNM `baz`');
             t.equal(require.resolve('dot_slash_main'), dotSlashMainMain, 'sanity check: require.resolve finds HNL `dot_slash_main`');
 
-            t.test('with temp dirs', function (st) {
+            t.test('with temp dirs', (st) => {
                 st.plan(3);
 
-                st.test('just in `$HOME/.node_modules`', function (s2t) {
+                st.test('just in `$HOME/.node_modules`', (s2t) => {
                     s2t.plan(1);
 
-                    var res = resolve('dot_main');
+                    const res = resolve('dot_main');
                     s2t.equal(res, dotMainMain, '`dot_main` resolves in `$HOME/.node_modules`');
                 });
 
-                st.test('just in `$HOME/.node_libraries`', function (s2t) {
+                st.test('just in `$HOME/.node_libraries`', (s2t) => {
                     s2t.plan(1);
 
-                    var res = resolve('dot_slash_main');
+                    const res = resolve('dot_slash_main');
                     s2t.equal(res, dotSlashMainMain, '`dot_slash_main` resolves in `$HOME/.node_libraries`');
                 });
 
-                st.test('in `$HOME/.node_libraries` and `$HOME/.node_modules`', function (s2t) {
+                st.test('in `$HOME/.node_libraries` and `$HOME/.node_modules`', (s2t) => {
                     s2t.plan(1);
 
-                    var res = resolve('baz');
+                    const res = resolve('baz');
                     s2t.equal(res, bazHNMmain, '`baz` resolves in `$HOME/.node_modules` when in both');
                 });
             });

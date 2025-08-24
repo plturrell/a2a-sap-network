@@ -1,30 +1,30 @@
 if (!process.addAsyncListener) require('../index.js');
 
-var test = require('tap').test;
-var net = require('net');
+const test = require('tap').test;
+const net = require('net');
 
-test('synchronous errors during connect return a null _handle', function(t){
+test('synchronous errors during connect return a null _handle', (t) =>{
   t.plan(3);
 
   // listening server
-  var server = net.createServer().listen(8000);
+  const server = net.createServer().listen(8000);
 
   // client
-  var client = net.connect({port: 8000});
+  const client = net.connect({port: 8000});
 
-  client.on('connect', function(){
+  client.on('connect', () =>{
     t.ok(true, 'connect');
     // kill connection
     client.end();
   });
 
-  client.on('error', function(){
+  client.on('error', () =>{
     server.close();
     t.ok(true, 'done test');
   });
 
-  client.on('end', function() {
-    setTimeout(function(){
+  client.on('end', () => {
+    setTimeout(() =>{
       // try to reconnect, but this has an error
       // rather than throw the right error, we're going to get an async-listener error
       t.ok(true, 'end');

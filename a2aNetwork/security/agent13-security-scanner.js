@@ -150,7 +150,7 @@ class Agent13SecurityScanner {
     }
 
     async scanDirectory(dirPath) {
-        console.log(`\n🔍 Starting Agent 13 Agent Builder Security Scan...`);
+        console.log('\n🔍 Starting Agent 13 Agent Builder Security Scan...');
         console.log(`📂 Scanning directory: ${dirPath}\n`);
         
         try {
@@ -609,7 +609,7 @@ class Agent13SecurityScanner {
         const endTime = performance.now();
         const duration = ((endTime - this.startTime) / 1000).toFixed(2);
 
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 13 AGENT BUILDER SECURITY SCAN REPORT');
         console.log('='.repeat(80));
 
@@ -619,7 +619,7 @@ class Agent13SecurityScanner {
         const medium = this.vulnerabilities.filter(v => v.severity === 'MEDIUM').length;
         const low = this.vulnerabilities.filter(v => v.severity === 'LOW').length;
 
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.scannedFiles}`);
         console.log(`   Scan Duration: ${duration}s`);
         console.log(`   Critical Issues: ${critical}`);
@@ -646,7 +646,7 @@ class Agent13SecurityScanner {
         }
 
         // Builder-specific findings
-        console.log(`\n🏗️  BUILDER-SPECIFIC SECURITY FINDINGS:`);
+        console.log('\n🏗️  BUILDER-SPECIFIC SECURITY FINDINGS:');
         
         const builderIssues = {
             'CODE_INJECTION': this.vulnerabilities.filter(v => v.type.includes('CODE_INJECTION')).length,
@@ -667,7 +667,7 @@ class Agent13SecurityScanner {
 
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:`);
+            console.log('\n🚨 VULNERABILITIES FOUND:');
             
             const processSeverityLevel = (severity) => {
                 const issues = this.vulnerabilities.filter(v => v.severity === severity);
@@ -687,28 +687,28 @@ class Agent13SecurityScanner {
         }
 
         // Recommendations
-        console.log(`\n💡 AGENT 13 BUILDER SECURITY RECOMMENDATIONS:`);
-        console.log(`\n1. 🔐 Implement SecurityUtils for builder operations`);
-        console.log(`   - Add SecurityUtils.validateAgentCode() for code generation`);
-        console.log(`   - Use SecurityUtils.secureCallFunction() for builder operations`);
-        console.log(`   - Implement SecurityUtils.sanitizeTemplate() for templates`);
+        console.log('\n💡 AGENT 13 BUILDER SECURITY RECOMMENDATIONS:');
+        console.log('\n1. 🔐 Implement SecurityUtils for builder operations');
+        console.log('   - Add SecurityUtils.validateAgentCode() for code generation');
+        console.log('   - Use SecurityUtils.secureCallFunction() for builder operations');
+        console.log('   - Implement SecurityUtils.sanitizeTemplate() for templates');
         
-        console.log(`\n2. 🛡️  Enhance builder-specific security`);
-        console.log(`   - Validate deployment configurations with SecurityUtils.validateDeploymentConfig()`);
-        console.log(`   - Sanitize pipeline commands with SecurityUtils.validatePipelineCommand()`);
-        console.log(`   - Secure file system access with path validation`);
+        console.log('\n2. 🛡️  Enhance builder-specific security');
+        console.log('   - Validate deployment configurations with SecurityUtils.validateDeploymentConfig()');
+        console.log('   - Sanitize pipeline commands with SecurityUtils.validatePipelineCommand()');
+        console.log('   - Secure file system access with path validation');
         
-        console.log(`\n3. 🔒 Secure builder communications`);
-        console.log(`   - Upgrade WebSocket to WSS for builder updates`);
-        console.log(`   - Use HTTPS for EventSource builder streams`);
-        console.log(`   - Implement secure agent deployment protocols`);
+        console.log('\n3. 🔒 Secure builder communications');
+        console.log('   - Upgrade WebSocket to WSS for builder updates');
+        console.log('   - Use HTTPS for EventSource builder streams');
+        console.log('   - Implement secure agent deployment protocols');
 
-        console.log(`\n4. ⚡ Monitor builder security`);
-        console.log(`   - Log all builder operations for audit`);
-        console.log(`   - Monitor code generation for malicious patterns`);
-        console.log(`   - Track deployment configuration changes`);
+        console.log('\n4. ⚡ Monitor builder security');
+        console.log('   - Log all builder operations for audit');
+        console.log('   - Monitor code generation for malicious patterns');
+        console.log('   - Track deployment configuration changes');
 
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('='.repeat(80));
 

@@ -607,8 +607,8 @@ cds.on('listening', async (info) => {
         // Initialize WebSocket server using CDS-managed HTTP server
         io = new Server(httpServer, {
             cors: {
-                origin: process.env.WEBSOCKET_CORS_ORIGIN || "*",
-                methods: ["GET", "POST"],
+                origin: process.env.WEBSOCKET_CORS_ORIGIN || '*',
+                methods: ['GET', 'POST'],
                 credentials: process.env.NODE_ENV === 'production'
             },
             transports: ['websocket', 'polling'],
@@ -681,7 +681,7 @@ cds.on('listening', async (info) => {
                 });
             } catch (error) {
                 log.error(`WebSocket authentication error: ${error.message}`);
-                next(new Error('WebSocket authentication failed: ' + error.message));
+                next(new Error(`WebSocket authentication failed: ${  error.message}`));
             }
         });
         

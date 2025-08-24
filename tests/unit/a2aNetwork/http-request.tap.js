@@ -1,20 +1,20 @@
 if (!process.addAsyncListener) require('../index.js');
 
-var extend = require('util')._extend;
-var test = require('tap').test;
-var http = require('http');
+const extend = require('util')._extend;
+const test = require('tap').test;
+const http = require('http');
 
 // Convert semver string to number set
 // TODO: This is *very* naive structure to check versions with,
 // but it works well enough for now...
-var nodeVersion = process.version.slice(1).split('.').map(Number)
+const nodeVersion = process.version.slice(1).split('.').map(Number);
 
-test('http.Agent socket reuse works', function(t){
+test('http.Agent socket reuse works', (t) =>{
   function main (done) {
-    var listener = addListner();
-    var times = 2;
+    const listener = addListner();
+    let times = 2;
 
-    var agent = new http.Agent({
+    const agent = new http.Agent({
       keepAlive: true,
       maxFreeSockets: 1,
       maxSockets: 1
@@ -35,53 +35,53 @@ test('http.Agent socket reuse works', function(t){
     }
 
     function ping(i) {
-      listener.currentName = 'ping #' + i + ' request';
-      var addr = server.address();
-      var req = http.request({
+      listener.currentName = `ping #${  i  } request`;
+      const addr = server.address();
+      const req = http.request({
         agent: agent,
         port: addr.port,
         host: addr.host,
         path: '/sub'
-      }, function (res) {
+      }, (res) => {
         // The second request is a logical continuation of
         // the first request, due to the http.Agent pooling
         if (i === 0) {
           t.equal(
             listener.current.name,
-            'ping #' + i + ' request',
-            'should be ping #' + i + ' request'
+            `ping #${  i  } request`,
+            `should be ping #${  i  } request`
           );
         } else {
           t.equal(
             listener.current.name,
-            'setImmediate to after #' + (i - 1),
-            'should be setImmediate to after #' + (i - 1)
+            `setImmediate to after #${  i - 1}`,
+            `should be setImmediate to after #${  i - 1}`
           );
         }
 
-        listener.currentName = 'res.resume ping #' + i;
+        listener.currentName = `res.resume ping #${  i}`;
         const bufs = [];
-        res.on('data', function (chunk) {
+        res.on('data', (chunk) => {
           bufs.push(chunk);
         });
-        res.on('end', function () {
+        res.on('end', () => {
           const body = Buffer.concat(bufs).toString();
-          t.equal('hello', body, 'should have body of "hello"')
+          t.equal('hello', body, 'should have body of "hello"');
           t.equal(
             listener.current.name,
-            'res.resume ping #' + i,
-            'should be res.resume ping #' + i
+            `res.resume ping #${  i}`,
+            `should be res.resume ping #${  i}`
           );
-          listener.currentName = 'setImmediate to after #' + i;
+          listener.currentName = `setImmediate to after #${  i}`;
           setImmediate(after, i);
         });
       });
-      listener.currentName = 'req.end ping #' + i;
+      listener.currentName = `req.end ping #${  i}`;
       req.end();
     }
 
-    for (var i = 0; i < times; i++) {
-      listener.currentName = 'setImmediate #' + i;
+    for (let i = 0; i < times; i++) {
+      listener.currentName = `setImmediate #${  i}`;
       setImmediate(ping, i);
     }
 
@@ -102,19 +102,19 @@ test('http.Agent socket reuse works', function(t){
         before: 1,
         after: 1,
         error: 0
-      }, override || {})
+      }, override || {});
     }
 
     //
     // First ping branch
     //
-    var innerResumeChildren = [];
+    const innerResumeChildren = [];
     if (nodeVersion[0] < 8) {
       innerResumeChildren.push(make('res.resume ping #0'));
     }
     innerResumeChildren.push(make('setImmediate to after #0'));
 
-    var innerResumeChildrenWrapped = [
+    const innerResumeChildrenWrapped = [
       make('res.resume ping #0', {
         children: innerResumeChildren
       }),
@@ -142,7 +142,7 @@ test('http.Agent socket reuse works', function(t){
       );
     }
 
-    var firstImmediateChildren = [
+    const firstImmediateChildren = [
       make('ping #0 request', {
         children: [
           make('ping #0 request', {
@@ -159,7 +159,7 @@ test('http.Agent socket reuse works', function(t){
 
     if (nodeVersion[0] > 4) {
       firstImmediateChildren.push(make('ping #0 request'));
-    };
+    }
     
     firstImmediateChildren.push(
       make('ping #0 request'),
@@ -169,7 +169,7 @@ test('http.Agent socket reuse works', function(t){
       })
     );
 
-    var firstImmediate = make('setImmediate #0', {
+    const firstImmediate = make('setImmediate #0', {
       children: firstImmediateChildren
     });
 
@@ -185,14 +185,14 @@ test('http.Agent socket reuse works', function(t){
       after: 0
     }));
 
-    var innerPingChildrenWrapped = [
+    const innerPingChildrenWrapped = [
       make('res.resume ping #1', {
         children: innerPingChildren
       }),
       make('res.resume ping #1'),
       make('res.resume ping #1')
     ];
-    var innerImmediateChildren = [];
+    const innerImmediateChildren = [];
     if (nodeVersion[0] == 0 && nodeVersion[1] < 12) {
       innerImmediateChildren.push(make('res.resume ping #1'));
     }
@@ -213,7 +213,7 @@ test('http.Agent socket reuse works', function(t){
       );
     }
 
-    var secondImmediate = make('setImmediate #1', {
+    const secondImmediate = make('setImmediate #1', {
       children: [
         make('ping #1 request', {
           children: [
@@ -241,17 +241,17 @@ test('http.Agent socket reuse works', function(t){
     });
   }
 
-  var server = http.createServer(function (req, res) {
+  var server = http.createServer((req, res) => {
     res.end('hello');
   });
 
   //
   // Test client
   //
-  server.listen(function () {
-    main(function () {
+  server.listen(() => {
+    main(() => {
       server.close();
-      server.on('close', function () {
+      server.on('close', () => {
         t.end();
       });
     });
@@ -259,14 +259,14 @@ test('http.Agent socket reuse works', function(t){
 });
 
 function addListner() {
-  var listener = process.addAsyncListener({
+  const listener = process.addAsyncListener({
     create: create,
     before: before,
     after: after,
     error: error
   });
 
-  var state = {
+  const state = {
     listener: listener,
     currentName: 'root'
   };
@@ -277,7 +277,7 @@ function addListner() {
   return state;
 
   function create () {
-    var node = {
+    const node = {
       name: state.currentName,
       children: [],
       before: 0,

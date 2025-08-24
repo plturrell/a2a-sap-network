@@ -3,7 +3,7 @@ const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
 function shouldBehaveLikeERC20Capped(accounts, cap) {
-  describe('capped token', function () {
+  describe('capped token', () => {
     const user = accounts[0];
 
     it('starts with the correct cap', async function () {

@@ -1,7 +1,7 @@
 const { clock } = require('../../helpers/time');
 
 function shouldBehaveLikeEIP6372(mode = 'blocknumber') {
-  describe('should implement EIP6372', function () {
+  describe('should implement EIP6372', () => {
     beforeEach(async function () {
       this.mock = this.mock ?? this.token ?? this.votes;
     });

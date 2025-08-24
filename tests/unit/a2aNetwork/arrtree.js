@@ -7,7 +7,7 @@ function ArrTree(comparator) {
 
 // returns true if inserted, false if duplicate
 ArrTree.prototype.insert = function(data) {
-  var elem_index = this._find_index(data);
+  const elem_index = this._find_index(data);
   if(elem_index >= 0) {
     return false;
   }
@@ -19,7 +19,7 @@ ArrTree.prototype.insert = function(data) {
 
 // returns true if removed, false if not found
 ArrTree.prototype.remove = function(data) {
-  var elem_index = this._find_index(data);
+  const elem_index = this._find_index(data);
   if(elem_index < 0) {
     return false;
   }
@@ -30,7 +30,7 @@ ArrTree.prototype.remove = function(data) {
 };
 
 ArrTree.prototype.find = function(data) {
-  var elem_index = this._find_index(data);
+  const elem_index = this._find_index(data);
   if(elem_index < 0) {
     return null;
   }
@@ -42,10 +42,10 @@ ArrTree.prototype.find = function(data) {
 // and the ones-complement of the index it should be inserted at if not
 // NOTE: the ones-complement will always be < 0
 ArrTree.prototype._find_index = function(data) {
-    var min_index = 0;
-    var max_index = this._arr.length - 1;
-    var current_index;
-    var current_element;
+    let min_index = 0;
+    let max_index = this._arr.length - 1;
+    let current_index;
+    let current_element;
 
     while(min_index <= max_index) {
         current_index = (min_index + max_index) / 2 | 0;
@@ -63,6 +63,6 @@ ArrTree.prototype._find_index = function(data) {
     }
 
     return ~min_index;
-}
+};
 
 module.exports = ArrTree;

@@ -21,16 +21,16 @@
 /* global Buffer */
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var test = require('tape');
-var Thrift = require('../thrift').Thrift;
+const fs = require('fs');
+const path = require('path');
+const test = require('tape');
+const Thrift = require('../thrift').Thrift;
 
-var thrift;
+let thrift;
 
-test('thrift parses from source', function t(assert) {
-    var filename = path.join(__dirname, 'thrift.thrift');
-    var source = fs.readFileSync(filename, 'ascii');
+test('thrift parses from source', (assert) => {
+    const filename = path.join(__dirname, 'thrift.thrift');
+    const source = fs.readFileSync(filename, 'ascii');
     thrift = new Thrift({source: source});
     assert.equal(
         thrift.getSources().entryPoint,
@@ -41,8 +41,8 @@ test('thrift parses from source', function t(assert) {
     assert.end();
 });
 
-test('thrift parses from entryPoint', function t(assert) {
-    var filename = path.join(__dirname, 'thrift.thrift');
+test('thrift parses from entryPoint', (assert) => {
+    const filename = path.join(__dirname, 'thrift.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true
@@ -56,21 +56,21 @@ test('thrift parses from entryPoint', function t(assert) {
     assert.end();
 });
 
-test('can get type result from thrift', function t(assert) {
-    var res = thrift.getTypeResult('Struct');
+test('can get type result from thrift', (assert) => {
+    const res = thrift.getTypeResult('Struct');
     if (res.err) return assert.end(res.err);
     assert.ok(res.value, 'got struct');
     assert.end();
 });
 
-test('can get type from thrift', function t(assert) {
-    var Struct = thrift.getType('Struct');
+test('can get type from thrift', (assert) => {
+    const Struct = thrift.getType('Struct');
     assert.ok(Struct, 'got struct');
     assert.end();
 });
 
-test('can read struct from buffer', function t(assert) {
-    var struct = thrift.Struct.fromBuffer(new Buffer([
+test('can read struct from buffer', (assert) => {
+    const struct = thrift.Struct.fromBuffer(new Buffer([
         0x08, // typeid:1 -- 8, i32
         0x00, 0x01, // id:2 -- 1, "number"
         0x00, 0x00, 0x00, 0x0a, // number:4 -- 10
@@ -81,8 +81,8 @@ test('can read struct from buffer', function t(assert) {
     assert.end();
 });
 
-test('can read struct result from buffer', function t(assert) {
-    var result = thrift.Struct.fromBufferResult(new Buffer([
+test('can read struct result from buffer', (assert) => {
+    const result = thrift.Struct.fromBufferResult(new Buffer([
         0x08, // typeid:1 -- 8, i32
         0x00, 0x01, // id:2 -- 1, "number"
         0x00, 0x00, 0x00, 0x0a, // number:4 -- 10
@@ -93,8 +93,8 @@ test('can read struct result from buffer', function t(assert) {
     assert.end();
 });
 
-test('can write struct to buffer', function t(assert) {
-    var buffer = thrift.Struct.toBuffer(new thrift.Struct({number: 10}));
+test('can write struct to buffer', (assert) => {
+    const buffer = thrift.Struct.toBuffer(new thrift.Struct({number: 10}));
     assert.deepEqual(buffer, new Buffer([
         0x08, // typeid:1 -- 8, i32
         0x00, 0x01, // id:2 -- 1, "number"
@@ -104,8 +104,8 @@ test('can write struct to buffer', function t(assert) {
     assert.end();
 });
 
-test('can write struct to buffer', function t(assert) {
-    var result = thrift.Struct.toBufferResult(new thrift.Struct({number: 10}));
+test('can write struct to buffer', (assert) => {
+    const result = thrift.Struct.toBufferResult(new thrift.Struct({number: 10}));
     assert.deepEqual(result.value, new Buffer([
         0x08, // typeid:1 -- 8, i32
         0x00, 0x01, // id:2 -- 1, "number"
@@ -115,15 +115,15 @@ test('can write struct to buffer', function t(assert) {
     assert.end();
 });
 
-test('can get type error result from thrift', function t(assert) {
-    var res = thrift.getTypeResult('Bogus');
+test('can get type error result from thrift', (assert) => {
+    const res = thrift.getTypeResult('Bogus');
     assert.ok(res.err, 'got error');
     if (!res.err) return assert.end();
     assert.equal(res.err.message, 'type Bogus not found');
     assert.end();
 });
 
-test('can get type error from thrift', function t(assert) {
+test('can get type error from thrift', (assert) => {
     try {
         thrift.getType('Bogus');
         assert.fail('error expected');
@@ -133,9 +133,9 @@ test('can get type error from thrift', function t(assert) {
     assert.end();
 });
 
-test('reference error in thrift', function t(assert) {
-    var filename = path.join(__dirname, 'reference-error.thrift');
-    var source = fs.readFileSync(filename, 'ascii');
+test('reference error in thrift', (assert) => {
+    const filename = path.join(__dirname, 'reference-error.thrift');
+    const source = fs.readFileSync(filename, 'ascii');
     try {
         thrift = new Thrift({source: source});
         assert.fail('thrift should not parse');
@@ -145,9 +145,9 @@ test('reference error in thrift', function t(assert) {
     assert.end();
 });
 
-test('duplicate reference in thrift', function t(assert) {
-    var filename = path.join(__dirname, 'duplicate-error.thrift');
-    var source = fs.readFileSync(filename, 'ascii');
+test('duplicate reference in thrift', (assert) => {
+    const filename = path.join(__dirname, 'duplicate-error.thrift');
+    const source = fs.readFileSync(filename, 'ascii');
     try {
         thrift = new Thrift({source: source});
         assert.fail('thrift should not parse');
@@ -157,8 +157,8 @@ test('duplicate reference in thrift', function t(assert) {
     assert.end();
 });
 
-test('get endpoints single service', function t(assert) {
-    var filename = path.join(__dirname, 'thrift.thrift');
+test('get endpoints single service', (assert) => {
+    const filename = path.join(__dirname, 'thrift.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true
@@ -171,8 +171,8 @@ test('get endpoints single service', function t(assert) {
     assert.end();
 });
 
-test('get endpoints multi service', function t(assert) {
-    var filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
+test('get endpoints multi service', (assert) => {
+    const filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true
@@ -185,14 +185,14 @@ test('get endpoints multi service', function t(assert) {
     assert.end();
 });
 
-test('respects default as undefined', function t(assert) {
-    var filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
+test('respects default as undefined', (assert) => {
+    const filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true,
         defaultAsUndefined: true
     });
-    var valueDefinition = thrift.defaultValueDefinition;
+    const valueDefinition = thrift.defaultValueDefinition;
     assert.true(
         valueDefinition.type === 'Literal',
         'Correct value definition type'
@@ -204,13 +204,13 @@ test('respects default as undefined', function t(assert) {
     assert.end();
 });
 
-test('defaults to null default value', function t(assert) {
-    var filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
+test('defaults to null default value', (assert) => {
+    const filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true
     });
-    var valueDefinition = thrift.defaultValueDefinition;
+    const valueDefinition = thrift.defaultValueDefinition;
     assert.true(
         valueDefinition.type === 'Literal',
         'Correct value definition type'
@@ -222,8 +222,8 @@ test('defaults to null default value', function t(assert) {
     assert.end();
 });
 
-test('get endpoints multi service target', function t(assert) {
-    var filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
+test('get endpoints multi service target', (assert) => {
+    const filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true
@@ -236,8 +236,8 @@ test('get endpoints multi service target', function t(assert) {
     assert.end();
 });
 
-test('get endpoints multi service bad target', function t(assert) {
-    var filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
+test('get endpoints multi service bad target', (assert) => {
+    const filename = path.join(__dirname, 'thrift', 'MultiService.thrift');
     thrift = new Thrift({
         entryPoint: filename,
         allowFilesystemAccess: true

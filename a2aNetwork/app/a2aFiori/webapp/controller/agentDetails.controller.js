@@ -99,7 +99,7 @@ sap.ui.define([
         },
 
         _fetchAgentStatus(agentId) {
-            blockchainClient.sendMessage(`/api/v1/agents/${agentId}/status`)
+            fetch(`/api/v1/agents/${agentId}/status`)
                 .then(response => response.json())
                 .then(data => {
                     const oModel = this.getView().getModel();
@@ -109,13 +109,13 @@ sap.ui.define([
                     oModel.setProperty("/busy", false);
                 })
                 .catch(error => {
-                    // console.error("Error fetching agent status:", error);
+                    // // console.error("Error fetching agent status:", error);
                     this.getView().getModel().setProperty("/busy", false);
                 });
         },
 
         _fetchAgentPerformance(agentId) {
-            blockchainClient.sendMessage(`/api/v1/agents/${agentId}/performance`)
+            fetch(`/api/v1/agents/${agentId}/performance`)
                 .then(response => response.json())
                 .then(data => {
                     this.getView().getModel().setProperty("/performance", data.d || {
@@ -126,7 +126,7 @@ sap.ui.define([
                     });
                 })
                 .catch(error => {
-                    // console.error("Error fetching agent performance:", error);
+                    // // console.error("Error fetching agent performance:", error);
                 });
         },
 

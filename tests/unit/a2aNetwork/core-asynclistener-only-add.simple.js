@@ -22,15 +22,15 @@
 
 if (!process.addAsyncListener) require('../index.js');
 
-var assert = require('assert');
-var net = require('net');
-var fs = require('fs');
+const assert = require('assert');
+const net = require('net');
+const fs = require('fs');
 
-var actualAsync = 0;
-var expectAsync = 0;
+let actualAsync = 0;
+let expectAsync = 0;
 
 
-process.on('exit', function() {
+process.on('exit', () => {
   console.log('expected', expectAsync);
   console.log('actual  ', actualAsync);
   assert.equal(expectAsync, actualAsync);
@@ -49,57 +49,57 @@ process.addAsyncListener(onAsync);
 
 
 // Test listeners side-by-side
-var b = setInterval(function() {
+var b = setInterval(() => {
   clearInterval(b);
 });
 expectAsync++;
 
-var c = setInterval(function() {
+var c = setInterval(() => {
   clearInterval(c);
 });
 expectAsync++;
 
-setTimeout(function() { });
+setTimeout(() => { });
 expectAsync++;
 
-setTimeout(function() { });
+setTimeout(() => { });
 expectAsync++;
 
-process.nextTick(function() { });
+process.nextTick(() => { });
 expectAsync++;
 
-process.nextTick(function() { });
+process.nextTick(() => { });
 expectAsync++;
 
-setImmediate(function() { });
+setImmediate(() => { });
 expectAsync++;
 
-setImmediate(function() { });
+setImmediate(() => { });
 expectAsync++;
 
-setTimeout(function() { }, 100);
+setTimeout(() => { }, 100);
 expectAsync++;
 
-setTimeout(function() { }, 100);
+setTimeout(() => { }, 100);
 expectAsync++;
 
 
 // Async listeners should propagate with nested callbacks
-var interval = 3;
+let interval = 3;
 
-process.nextTick(function() {
-  setTimeout(function() {
-    setImmediate(function() {
-      var i = setInterval(function() {
+process.nextTick(() => {
+  setTimeout(() => {
+    setImmediate(() => {
+      var i = setInterval(() => {
         if (--interval <= 0)
           clearInterval(i);
       });
       expectAsync++;
     });
     expectAsync++;
-    process.nextTick(function() {
-      setImmediate(function() {
-        setTimeout(function() { }, 200);
+    process.nextTick(() => {
+      setImmediate(() => {
+        setTimeout(() => { }, 200);
         expectAsync++;
       });
       expectAsync++;
@@ -112,21 +112,21 @@ expectAsync++;
 
 
 // Test callbacks from fs I/O
-fs.stat('something random', function() { });
+fs.stat('something random', () => { });
 expectAsync++;
 
-setImmediate(function() {
-  fs.stat('random again', function() { });
+setImmediate(() => {
+  fs.stat('random again', () => { });
   expectAsync++;
 });
 expectAsync++;
 
 
 // Test net I/O
-var server = net.createServer(function() { });
+const server = net.createServer(() => { });
 expectAsync++;
 
-server.listen(8080, function() {
+server.listen(8080, () => {
   server.close();
   expectAsync++;
 });

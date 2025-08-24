@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const {
 	lua: {
@@ -19,9 +19,9 @@ const {
 		luaL_openlibs
 	},
 	to_luastring
-} = require("fengari");
+} = require('fengari');
 
-describe("fengari-interop", function() {
+describe('fengari-interop', () => {
 	const {
 		FENGARI_INTEROP_RELEASE,
 		FENGARI_INTEROP_VERSION,
@@ -29,24 +29,24 @@ describe("fengari-interop", function() {
 		luaopen_js,
 		push,
 		tojs
-	} = require("../src/js.js");
+	} = require('../src/js.js');
 	const new_state = function() {
 		const L = luaL_newstate();
 		luaL_openlibs(L);
-		luaL_requiref(L, to_luastring("js"), luaopen_js, 0);
+		luaL_requiref(L, to_luastring('js'), luaopen_js, 0);
 		return L;
 	};
 
-	it("loads successfully", function() {
-		expect(typeof luaopen_js).toBe("function");
+	it('loads successfully', () => {
+		expect(typeof luaopen_js).toBe('function');
 	});
 
-	it("version present from JS", function() {
-		expect(require("../package.json").version).toEqual(expect.stringContaining(FENGARI_INTEROP_VERSION));
-		expect(require("../package.json").version).toEqual(expect.stringContaining(FENGARI_INTEROP_RELEASE));
+	it('version present from JS', () => {
+		expect(require('../package.json').version).toEqual(expect.stringContaining(FENGARI_INTEROP_VERSION));
+		expect(require('../package.json').version).toEqual(expect.stringContaining(FENGARI_INTEROP_RELEASE));
 	});
 
-	it("version present from lua", function() {
+	it('version present from lua', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -58,14 +58,14 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("can be required from lua", function() {
+	it('can be required from lua', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring('require("js")')) !== LUA_OK) {
 			throw lua_tojsstring(L, -1);
 		}
 	});
 
-	it("pushes same null every time", function() {
+	it('pushes same null every time', () => {
 		const L = new_state();
 		if (luaL_loadstring(L, to_luastring(`
 		local null = ...
@@ -81,7 +81,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("test all types js -> lua", function() {
+	it('test all types js -> lua', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -98,7 +98,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("test all types lua -> js", function() {
+	it('test all types lua -> js', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -115,7 +115,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("can round trip lua->js->lua", function() {
+	it('can round trip lua->js->lua', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -127,7 +127,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("allows calls with no 'this' or arguments", function() {
+	it('allows calls with no \'this\' or arguments', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -137,7 +137,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("tostring on js objects", function() {
+	it('tostring on js objects', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -148,8 +148,8 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	describe("manipulating lua objects from JS", function() {
-		test("apply success", function() {
+	describe('manipulating lua objects from JS', () => {
+		test('apply success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -164,7 +164,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("apply with odd 'args' argument", function() {
+		test('apply with odd \'args\' argument', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -181,7 +181,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("apply throwing", function() {
+		test('apply throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -191,10 +191,10 @@ describe("fengari-interop", function() {
 					return this.apply(1, [])
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		test("invoke success", function() {
+		test('invoke success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -210,7 +210,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("invoke throwing", function() {
+		test('invoke throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -220,10 +220,10 @@ describe("fengari-interop", function() {
 					return this.invoke(1, [])
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		test("get success", function() {
+		test('get success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -239,7 +239,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("get throwing", function() {
+		test('get throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -253,10 +253,10 @@ describe("fengari-interop", function() {
 					this.get("foo")
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		test("has success", function() {
+		test('has success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -272,7 +272,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("has throwing", function() {
+		test('has throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -286,10 +286,10 @@ describe("fengari-interop", function() {
 					this.has("foo")
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		test("set success", function() {
+		test('set success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -304,7 +304,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("set throwing", function() {
+		test('set throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -318,10 +318,10 @@ describe("fengari-interop", function() {
 					this.set("foo", "bar")
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		test("delete success", function() {
+		test('delete success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -338,7 +338,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("delete throwing", function() {
+		test('delete throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -353,10 +353,10 @@ describe("fengari-interop", function() {
 					this.delete("foo")
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		test("toString success", function() {
+		test('toString success', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -374,7 +374,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		test("toString throwing", function() {
+		test('toString throwing', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -388,12 +388,12 @@ describe("fengari-interop", function() {
 					this.toString()
 				]]):call(t)
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 	});
 
-	describe("iterating lua objects with Symbol.iterator", function() {
-		it("works", function() {
+	describe('iterating lua objects with Symbol.iterator', () => {
+		it('works', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -420,7 +420,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("handles error at pairs() time", function() {
+		it('handles error at pairs() time', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -428,10 +428,10 @@ describe("fengari-interop", function() {
 					for (let o of this) {}
 				]]):call(setmetatable({}, { __pairs = function() error("injected failure") end}))
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 
-		it("handles error at next() time", function() {
+		it('handles error at next() time', () => {
 			const L = new_state();
 			expect(luaL_dostring(L, to_luastring(`
 				local js = require "js"
@@ -444,11 +444,11 @@ describe("fengari-interop", function() {
 					end)
 				end}))
 			`))).toBe(LUA_ERRRUN);
-			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+			expect(tojs(L, -1)).toEqual(expect.stringContaining('injected failure'));
 		});
 	});
 
-	it("js.new works for #args 0..5", function() {
+	it('js.new works for #args 0..5', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -470,7 +470,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("js.tonumber works", function() {
+	it('js.tonumber works', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -483,7 +483,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("js.tostring works", function() {
+	it('js.tostring works', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -494,7 +494,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("js.instanceof works", function() {
+	it('js.instanceof works', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -509,7 +509,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("js.typeof works", function() {
+	it('js.typeof works', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -524,7 +524,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("js.of works", function() {
+	it('js.of works', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -540,7 +540,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("js.of fails on invalid args", function() {
+	it('js.of fails on invalid args', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -558,7 +558,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("__len on typed arrays works", function() {
+	it('__len on typed arrays works', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -569,7 +569,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("non-function __len fails", function() {
+	it('non-function __len fails', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -583,7 +583,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("allows iterating over objects with pairs()", function() {
+	it('allows iterating over objects with pairs()', () => {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
@@ -604,7 +604,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("well formed custom __pairs", function() {
+	it('well formed custom __pairs', () => {
 		const L = new_state();
 		if (luaL_loadstring(L, to_luastring(`
 		local o = ...
@@ -625,13 +625,13 @@ describe("fengari-interop", function() {
 			throw lua_tojsstring(L, -1);
 		}
 		push(L, {
-			[Symbol.for("__pairs")]: function() {
+			[Symbol.for('__pairs')]: function() {
 				return {
 					iter: function(last) {
 						if (last === void 0) {
-							return [1, "one"];
+							return [1, 'one'];
 						} else if (last && last === 1) {
-							return [2, "two"];
+							return [2, 'two'];
 						} else {
 							return void 0;
 						}
@@ -645,7 +645,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("catches badly formed custom __pairs", function() {
+	it('catches badly formed custom __pairs', () => {
 		const L = new_state();
 		if (luaL_loadstring(L, to_luastring(`
 		local o = ...
@@ -658,39 +658,39 @@ describe("fengari-interop", function() {
 
 		lua_pushvalue(L, -1);
 		push(L, {
-			[Symbol.for("__pairs")]: function() {}
+			[Symbol.for('__pairs')]: function() {}
 		});
 		expect(lua_pcall(L, 1, 0, 0)).toBe(LUA_ERRRUN);
-		expect(tojs(L, -1)).toEqual(expect.stringContaining("bad '__pairs' result"));
+		expect(tojs(L, -1)).toEqual(expect.stringContaining('bad \'__pairs\' result'));
 		lua_pop(L, 1);
 
 		lua_pushvalue(L, -1);
 		push(L, {
-			[Symbol.for("__pairs")]: function() {
+			[Symbol.for('__pairs')]: function() {
 				return {};
 			}
 		});
 		expect(lua_pcall(L, 1, 0, 0)).toBe(LUA_ERRRUN);
-		expect(tojs(L, -1)).toEqual(expect.stringContaining("bad '__pairs' result"));
+		expect(tojs(L, -1)).toEqual(expect.stringContaining('bad \'__pairs\' result'));
 		lua_pop(L, 1);
 
 		lua_pushvalue(L, -1);
 		push(L, {
-			[Symbol.for("__pairs")]: function() {
+			[Symbol.for('__pairs')]: function() {
 				return {
 					iter: function() {
-						return "invalid result";
+						return 'invalid result';
 					}
 				};
 			}
 		});
 		expect(lua_pcall(L, 1, 0, 0)).toBe(LUA_ERRRUN);
-		expect(tojs(L, -1)).toEqual(expect.stringContaining("bad iterator result"));
+		expect(tojs(L, -1)).toEqual(expect.stringContaining('bad iterator result'));
 		lua_pop(L, 1);
 	});
 
-	describe("js.createproxy implements all proxy methods", function() {
-		it("implements get/__index", function() {
+	describe('js.createproxy implements all proxy methods', () => {
+		it('implements get/__index', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -713,7 +713,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements has/__index", function() {
+		it('implements has/__index', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -736,7 +736,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements set/__newindex", function() {
+		it('implements set/__newindex', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -759,7 +759,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements delete", function() {
+		it('implements delete', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -783,7 +783,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements apply/__call", function() {
+		it('implements apply/__call', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -816,7 +816,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements defineProperty", function() {
+		it('implements defineProperty', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -844,7 +844,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements getOwnPropertyDescriptor", function() {
+		it('implements getOwnPropertyDescriptor', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -872,7 +872,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements getPrototypeOf", function() {
+		it('implements getPrototypeOf', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -898,7 +898,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements setPrototypeOf", function() {
+		it('implements setPrototypeOf', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -926,7 +926,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements construct", function() {
+		it('implements construct', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -964,7 +964,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it("implements ownKeys", function() {
+		it('implements ownKeys', () => {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"

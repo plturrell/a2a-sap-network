@@ -1,17 +1,17 @@
 'use strict';
 
-var parse = require('../');
-var test = require('tape');
+const parse = require('../');
+const test = require('tape');
 
-test('boolean and alias is not unknown', function (t) {
-	var unknown = [];
+test('boolean and alias is not unknown', (t) => {
+	const unknown = [];
 	function unknownFn(arg) {
 		unknown.push(arg);
 		return false;
 	}
-	var aliased = ['-h', 'true', '--derp', 'true'];
-	var regular = ['--herp', 'true', '-d', 'true'];
-	var opts = {
+	const aliased = ['-h', 'true', '--derp', 'true'];
+	const regular = ['--herp', 'true', '-d', 'true'];
+	const opts = {
 		alias: { h: 'herp' },
 		boolean: 'h',
 		unknown: unknownFn,
@@ -23,13 +23,13 @@ test('boolean and alias is not unknown', function (t) {
 	t.end();
 });
 
-test('flag boolean true any double hyphen argument is not unknown', function (t) {
-	var unknown = [];
+test('flag boolean true any double hyphen argument is not unknown', (t) => {
+	const unknown = [];
 	function unknownFn(arg) {
 		unknown.push(arg);
 		return false;
 	}
-	var argv = parse(['--honk', '--tacos=good', 'cow', '-p', '55'], {
+	const argv = parse(['--honk', '--tacos=good', 'cow', '-p', '55'], {
 		boolean: true,
 		unknown: unknownFn,
 	});
@@ -41,15 +41,15 @@ test('flag boolean true any double hyphen argument is not unknown', function (t)
 	t.end();
 });
 
-test('string and alias is not unknown', function (t) {
-	var unknown = [];
+test('string and alias is not unknown', (t) => {
+	const unknown = [];
 	function unknownFn(arg) {
 		unknown.push(arg);
 		return false;
 	}
-	var aliased = ['-h', 'hello', '--derp', 'goodbye'];
-	var regular = ['--herp', 'hello', '-d', 'moon'];
-	var opts = {
+	const aliased = ['-h', 'hello', '--derp', 'goodbye'];
+	const regular = ['--herp', 'hello', '-d', 'moon'];
+	const opts = {
 		alias: { h: 'herp' },
 		string: 'h',
 		unknown: unknownFn,
@@ -61,15 +61,15 @@ test('string and alias is not unknown', function (t) {
 	t.end();
 });
 
-test('default and alias is not unknown', function (t) {
-	var unknown = [];
+test('default and alias is not unknown', (t) => {
+	const unknown = [];
 	function unknownFn(arg) {
 		unknown.push(arg);
 		return false;
 	}
-	var aliased = ['-h', 'hello'];
-	var regular = ['--herp', 'hello'];
-	var opts = {
+	const aliased = ['-h', 'hello'];
+	const regular = ['--herp', 'hello'];
+	const opts = {
 		default: { h: 'bar' },
 		alias: { h: 'herp' },
 		unknown: unknownFn,
@@ -82,18 +82,18 @@ test('default and alias is not unknown', function (t) {
 	unknownFn(); // exercise fn for 100% coverage
 });
 
-test('value following -- is not unknown', function (t) {
-	var unknown = [];
+test('value following -- is not unknown', (t) => {
+	const unknown = [];
 	function unknownFn(arg) {
 		unknown.push(arg);
 		return false;
 	}
-	var aliased = ['--bad', '--', 'good', 'arg'];
-	var opts = {
+	const aliased = ['--bad', '--', 'good', 'arg'];
+	const opts = {
 		'--': true,
 		unknown: unknownFn,
 	};
-	var argv = parse(aliased, opts);
+	const argv = parse(aliased, opts);
 
 	t.same(unknown, ['--bad']);
 	t.same(argv, {

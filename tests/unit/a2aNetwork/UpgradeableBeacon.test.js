@@ -5,14 +5,14 @@ const UpgradeableBeacon = artifacts.require('UpgradeableBeacon');
 const Implementation1 = artifacts.require('Implementation1');
 const Implementation2 = artifacts.require('Implementation2');
 
-contract('UpgradeableBeacon', function (accounts) {
+contract('UpgradeableBeacon', (accounts) => {
   const [owner, other] = accounts;
 
-  it('cannot be created with non-contract implementation', async function () {
+  it('cannot be created with non-contract implementation', async () => {
     await expectRevert(UpgradeableBeacon.new(accounts[0]), 'UpgradeableBeacon: implementation is not a contract');
   });
 
-  context('once deployed', async function () {
+  context('once deployed', async () => {
     beforeEach('deploying beacon', async function () {
       this.v1 = await Implementation1.new();
       this.beacon = await UpgradeableBeacon.new(this.v1.address, { from: owner });

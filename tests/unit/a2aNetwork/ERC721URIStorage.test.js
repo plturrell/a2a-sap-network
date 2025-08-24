@@ -5,7 +5,7 @@ const { shouldSupportInterfaces } = require('../../../utils/introspection/Suppor
 
 const ERC721URIStorageMock = artifacts.require('$ERC721URIStorageMock');
 
-contract('ERC721URIStorage', function (accounts) {
+contract('ERC721URIStorage', (accounts) => {
   const [owner] = accounts;
 
   const name = 'Non Fungible Token';
@@ -20,7 +20,7 @@ contract('ERC721URIStorage', function (accounts) {
 
   shouldSupportInterfaces(['0x49064906']);
 
-  describe('token URI', function () {
+  describe('token URI', () => {
     beforeEach(async function () {
       await this.token.$_mint(owner, firstTokenId);
     });

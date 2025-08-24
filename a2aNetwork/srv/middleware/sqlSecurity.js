@@ -77,7 +77,7 @@ function sanitizeInput(input) {
   }
   
   // Escape single quotes
-  return input.replace(/'/g, "''");
+  return input.replace(/'/g, '\'\'');
 }
 
 /**

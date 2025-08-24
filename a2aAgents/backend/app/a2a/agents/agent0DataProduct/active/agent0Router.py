@@ -18,12 +18,22 @@ agent0 = None
 @router.get("/.well-known/agent.json")
 async def get_agent_card():
     """Get the agent card for Agent 0"""
+    if agent0 is None:
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Agent 0 not initialized yet"}
+        )
     return await agent0.get_agent_card()
 
 
 @router.post("/rpc")
 async def json_rpc_handler(request: Request):
     """Handle JSON-RPC 2.0 requests for Agent 0"""
+    if agent0 is None:
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Agent 0 not initialized yet"}
+        )
     try:
         body = await request.json()
         

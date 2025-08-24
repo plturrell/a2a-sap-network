@@ -1,20 +1,20 @@
 /*global fetch*/
-"use strict";
+'use strict';
 
 require('../fetch-npm-node');
-var expect = require('chai').expect;
-var nock = require('nock');
-var good = 'hello world. 你好世界。';
-var bad = 'good bye cruel world. 再见残酷的世界。';
+const expect = require('chai').expect;
+const nock = require('nock');
+const good = 'hello world. 你好世界。';
+const bad = 'good bye cruel world. 再见残酷的世界。';
 
 function responseToText(response) {
-	if (response.status >= 400) throw new Error("Bad server response");
+	if (response.status >= 400) throw new Error('Bad server response');
 	return response.text();
 }
 
-describe('fetch', function() {
+describe('fetch', () => {
 
-	before(function() {
+	before(() => {
 		nock('https://mattandre.ws')
 			.get('/succeed.txt')
 			.reply(200, good);
@@ -23,25 +23,25 @@ describe('fetch', function() {
 			.reply(404, bad);
 	});
 
-	it('should be defined', function() {
+	it('should be defined', () => {
 		expect(fetch).to.be.a('function');
 	});
 
-	it('should facilitate the making of requests', function(done) {
+	it('should facilitate the making of requests', (done) => {
 		fetch('//mattandre.ws/succeed.txt')
 			.then(responseToText)
-			.then(function(data) {
+			.then((data) => {
 				expect(data).to.equal(good);
 				done();
 			})
 			.catch(done);
 	});
 
-	it('should do the right thing with bad requests', function(done) {
+	it('should do the right thing with bad requests', (done) => {
 		fetch('//mattandre.ws/fail.txt')
 			.then(responseToText)
-			.catch(function(err) {
-				expect(err.toString()).to.equal("Error: Bad server response");
+			.catch((err) => {
+				expect(err.toString()).to.equal('Error: Bad server response');
 				done();
 			})
 			.catch(done);

@@ -77,7 +77,7 @@ export default TestComponent;
     try {
         const result = await indexer.parseTypeScript(testFilePath, testContent, document);
         
-        console.log(`✅ AST Parsing`);
+        console.log('✅ AST Parsing');
         console.log(`   Extracted ${result.symbols.length} symbols with full AST metadata`);
         
         // Validate symbol extraction
@@ -87,7 +87,7 @@ export default TestComponent;
         const variables = result.symbols.filter(s => s.definition?.syntax_kind === 'VariableDeclaration');
         const methods = result.symbols.filter(s => s.definition?.syntax_kind === 'MethodDefinition');
         
-        console.log(`✅ Symbol Type Detection`);
+        console.log('✅ Symbol Type Detection');
         console.log(`   Imports: ${imports.length}, Classes: ${classes.length}, Functions: ${functions.length}`);
         console.log(`   Variables: ${variables.length}, Methods: ${methods.length}`);
         
@@ -95,7 +95,7 @@ export default TestComponent;
         const facts = indexer.scipToGleanFacts(result, 'test-component.ts');
         const enhancedFacts = facts.filter(f => f.value.enhanced_ast !== false);
         
-        console.log(`✅ Fact Generation`);
+        console.log('✅ Fact Generation');
         console.log(`   Generated ${facts.length} total facts`);
         console.log(`   ${enhancedFacts.length} facts with AST metadata`);
         
@@ -104,7 +104,7 @@ export default TestComponent;
         const classFacts = facts.filter(f => f.key.class);
         const importFacts = facts.filter(f => f.key.import);
         
-        console.log(`✅ Specialized Fact Types`);
+        console.log('✅ Specialized Fact Types');
         console.log(`   Function facts: ${functionFacts.length}`);
         console.log(`   Class facts: ${classFacts.length}`);
         console.log(`   Import facts: ${importFacts.length}`);
@@ -117,7 +117,7 @@ export default TestComponent;
             hasImportSpecifiers: importFacts.some(f => f.value.specifiers)
         };
         
-        console.log(`✅ Metadata Validation`);
+        console.log('✅ Metadata Validation');
         console.log(`   Parameter info: ${metadataValidation.hasParameterInfo ? '✓' : '✗'}`);
         console.log(`   Async/await info: ${metadataValidation.hasAsyncInfo ? '✓' : '✗'}`);
         console.log(`   Class methods: ${metadataValidation.hasClassMethods ? '✓' : '✗'}`);
@@ -134,7 +134,7 @@ export default TestComponent;
         
         const fallbackResult = await indexer.parseTypeScriptFallback(testFilePath, testContent, fallbackDoc);
         
-        console.log(`✅ Fallback Comparison`);
+        console.log('✅ Fallback Comparison');
         console.log(`   symbols: ${result.symbols.length}`);
         console.log(`   Fallback symbols: ${fallbackResult.symbols.length}`);
         console.log(`   Enhancement ratio: ${(result.symbols.length / Math.max(fallbackResult.symbols.length, 1)).toFixed(1)}x`);

@@ -3,7 +3,7 @@ const { expect } = require('chai');
 
 const BitMap = artifacts.require('$BitMaps');
 
-contract('BitMap', function () {
+contract('BitMap', () => {
   const keyA = new BN('7891');
   const keyB = new BN('451');
   const keyC = new BN('9592328');
@@ -18,7 +18,7 @@ contract('BitMap', function () {
     expect(await this.bitmap.$get(0, keyC)).to.equal(false);
   });
 
-  describe('setTo', function () {
+  describe('setTo', () => {
     it('set a key to true', async function () {
       await this.bitmap.$setTo(0, keyA, true);
       expect(await this.bitmap.$get(0, keyA)).to.equal(true);
@@ -50,7 +50,7 @@ contract('BitMap', function () {
     });
   });
 
-  describe('set', function () {
+  describe('set', () => {
     it('adds a key', async function () {
       await this.bitmap.$set(0, keyA);
       expect(await this.bitmap.$get(0, keyA)).to.equal(true);
@@ -78,7 +78,7 @@ contract('BitMap', function () {
     });
   });
 
-  describe('unset', function () {
+  describe('unset', () => {
     it('removes added keys', async function () {
       await this.bitmap.$set(0, keyA);
       await this.bitmap.$set(0, keyB);

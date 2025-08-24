@@ -116,53 +116,53 @@ const rateLimiters = {
 const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
+      defaultSrc: ['\'self\''],
       scriptSrc: [
-        "'self'",
-        "'unsafe-inline'", // Required for SAP UI5
-        "https://ui5.sap.com",
-        "https://sapui5.hana.ondemand.com",
-        "https://openui5.hana.ondemand.com",
-        "https://sdk.openui5.org"
+        '\'self\'',
+        '\'unsafe-inline\'', // Required for SAP UI5
+        'https://ui5.sap.com',
+        'https://sapui5.hana.ondemand.com',
+        'https://openui5.hana.ondemand.com',
+        'https://sdk.openui5.org'
       ],
       styleSrc: [
-        "'self'",
-        "'unsafe-inline'", // Required for SAP UI5
-        "https://ui5.sap.com",
-        "https://sapui5.hana.ondemand.com",
-        "https://openui5.hana.ondemand.com",
-        "https://sdk.openui5.org"
+        '\'self\'',
+        '\'unsafe-inline\'', // Required for SAP UI5
+        'https://ui5.sap.com',
+        'https://sapui5.hana.ondemand.com',
+        'https://openui5.hana.ondemand.com',
+        'https://sdk.openui5.org'
       ],
       imgSrc: [
-        "'self'",
-        "data:",
-        "https:",
-        ...(process.env.NODE_ENV !== 'production' ? ["http://localhost:*"] : []),
-        "blob:"
+        '\'self\'',
+        'data:',
+        'https:',
+        ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:*'] : []),
+        'blob:'
       ].filter(Boolean),
       fontSrc: [
-        "'self'",
-        "https://ui5.sap.com",
-        "https://sapui5.hana.ondemand.com",
-        "https://openui5.hana.ondemand.com",
-        "https://sdk.openui5.org"
+        '\'self\'',
+        'https://ui5.sap.com',
+        'https://sapui5.hana.ondemand.com',
+        'https://openui5.hana.ondemand.com',
+        'https://sdk.openui5.org'
       ],
       connectSrc: [
-        "'self'",
-        ...(process.env.NODE_ENV !== 'production' ? ['blockchain://a2a-events', "wss://localhost:*"] : []),
-        "https://ui5.sap.com",
-        "https://sapui5.hana.ondemand.com",
+        '\'self\'',
+        ...(process.env.NODE_ENV !== 'production' ? ['blockchain://a2a-events', 'wss://localhost:*'] : []),
+        'https://ui5.sap.com',
+        'https://sapui5.hana.ondemand.com',
         ...(process.env.BLOCKCHAIN_RPC_URL ? [process.env.BLOCKCHAIN_RPC_URL] : [])
       ].filter(Boolean),
-      mediaSrc: ["'none'"],
-      objectSrc: ["'none'"],
-      frameSrc: ["'self'"],
-      workerSrc: ["'self'", "blob:"],
-      childSrc: ["'self'", "blob:"],
-      formAction: ["'self'"],
-      frameAncestors: ["'none'"],
-      baseUri: ["'self'"],
-      manifestSrc: ["'self'"]
+      mediaSrc: ['\'none\''],
+      objectSrc: ['\'none\''],
+      frameSrc: ['\'self\''],
+      workerSrc: ['\'self\'', 'blob:'],
+      childSrc: ['\'self\'', 'blob:'],
+      formAction: ['\'self\''],
+      frameAncestors: ['\'none\''],
+      baseUri: ['\'self\''],
+      manifestSrc: ['\'self\'']
     },
     reportOnly: false
   },

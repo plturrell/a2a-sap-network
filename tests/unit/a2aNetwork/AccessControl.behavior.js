@@ -15,21 +15,21 @@ const ZERO = web3.utils.toBN(0);
 function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, otherAdmin) {
   shouldSupportInterfaces(['AccessControl']);
 
-  describe('default admin', function () {
+  describe('default admin', () => {
     it('deployer has default admin role', async function () {
       expect(await this.accessControl.hasRole(DEFAULT_ADMIN_ROLE, admin)).to.equal(true);
     });
 
-    it("other roles's admin is the default admin role", async function () {
+    it('other roles\'s admin is the default admin role', async function () {
       expect(await this.accessControl.getRoleAdmin(ROLE)).to.equal(DEFAULT_ADMIN_ROLE);
     });
 
-    it("default admin role's admin is itself", async function () {
+    it('default admin role\'s admin is itself', async function () {
       expect(await this.accessControl.getRoleAdmin(DEFAULT_ADMIN_ROLE)).to.equal(DEFAULT_ADMIN_ROLE);
     });
   });
 
-  describe('granting', function () {
+  describe('granting', () => {
     beforeEach(async function () {
       await this.accessControl.grantRole(ROLE, authorized, { from: admin });
     });
@@ -48,7 +48,7 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
     });
   });
 
-  describe('revoking', function () {
+  describe('revoking', () => {
     it('roles that are not had can be revoked', async function () {
       expect(await this.accessControl.hasRole(ROLE, authorized)).to.equal(false);
 
@@ -56,7 +56,7 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
       expectEvent.notEmitted(receipt, 'RoleRevoked');
     });
 
-    context('with granted role', function () {
+    context('with granted role', () => {
       beforeEach(async function () {
         await this.accessControl.grantRole(ROLE, authorized, { from: admin });
       });
@@ -84,13 +84,13 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
     });
   });
 
-  describe('renouncing', function () {
+  describe('renouncing', () => {
     it('roles that are not had can be renounced', async function () {
       const receipt = await this.accessControl.renounceRole(ROLE, authorized, { from: authorized });
       expectEvent.notEmitted(receipt, 'RoleRevoked');
     });
 
-    context('with granted role', function () {
+    context('with granted role', () => {
       beforeEach(async function () {
         await this.accessControl.grantRole(ROLE, authorized, { from: admin });
       });
@@ -118,7 +118,7 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
     });
   });
 
-  describe('setting role admin', function () {
+  describe('setting role admin', () => {
     beforeEach(async function () {
       const receipt = await this.accessControl.$_setRoleAdmin(ROLE, OTHER_ROLE);
       expectEvent(receipt, 'RoleAdminChanged', {
@@ -130,7 +130,7 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
       await this.accessControl.grantRole(OTHER_ROLE, otherAdmin, { from: admin });
     });
 
-    it("a role's admin role can be changed", async function () {
+    it('a role\'s admin role can be changed', async function () {
       expect(await this.accessControl.getRoleAdmin(ROLE)).to.equal(OTHER_ROLE);
     });
 
@@ -145,14 +145,14 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
       expectEvent(receipt, 'RoleRevoked', { account: authorized, role: ROLE, sender: otherAdmin });
     });
 
-    it("a role's previous admins no longer grant roles", async function () {
+    it('a role\'s previous admins no longer grant roles', async function () {
       await expectRevert(
         this.accessControl.grantRole(ROLE, authorized, { from: admin }),
         `${errorPrefix}: account ${admin.toLowerCase()} is missing role ${OTHER_ROLE}`,
       );
     });
 
-    it("a role's previous admins no longer revoke roles", async function () {
+    it('a role\'s previous admins no longer revoke roles', async function () {
       await expectRevert(
         this.accessControl.revokeRole(ROLE, authorized, { from: admin }),
         `${errorPrefix}: account ${admin.toLowerCase()} is missing role ${OTHER_ROLE}`,
@@ -160,7 +160,7 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
     });
   });
 
-  describe('onlyRole modifier', function () {
+  describe('onlyRole modifier', () => {
     beforeEach(async function () {
       await this.accessControl.grantRole(ROLE, authorized, { from: admin });
     });
@@ -169,14 +169,14 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
       await this.accessControl.methods['$_checkRole(bytes32)'](ROLE, { from: authorized });
     });
 
-    it("revert if sender doesn't have role #1", async function () {
+    it('revert if sender doesn\'t have role #1', async function () {
       await expectRevert(
         this.accessControl.methods['$_checkRole(bytes32)'](ROLE, { from: other }),
         `${errorPrefix}: account ${other.toLowerCase()} is missing role ${ROLE}`,
       );
     });
 
-    it("revert if sender doesn't have role #2", async function () {
+    it('revert if sender doesn\'t have role #2', async function () {
       await expectRevert(
         this.accessControl.methods['$_checkRole(bytes32)'](OTHER_ROLE, { from: authorized }),
         `${errorPrefix}: account ${authorized.toLowerCase()} is missing role ${OTHER_ROLE}`,
@@ -188,7 +188,7 @@ function shouldBehaveLikeAccessControl(errorPrefix, admin, authorized, other, ot
 function shouldBehaveLikeAccessControlEnumerable(errorPrefix, admin, authorized, other, otherAdmin, otherAuthorized) {
   shouldSupportInterfaces(['AccessControlEnumerable']);
 
-  describe('enumerating', function () {
+  describe('enumerating', () => {
     it('role bearers can be enumerated', async function () {
       await this.accessControl.grantRole(ROLE, authorized, { from: admin });
       await this.accessControl.grantRole(ROLE, other, { from: admin });
@@ -228,7 +228,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
   }
 
   for (const getter of ['owner', 'defaultAdmin']) {
-    describe(`${getter}()`, function () {
+    describe(`${getter}()`, () => {
       it('has a default set to the initial default admin', async function () {
         const value = await this.accessControl[getter]();
         expect(value).to.equal(defaultAdmin);
@@ -250,14 +250,14 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   }
 
-  describe('pendingDefaultAdmin()', function () {
+  describe('pendingDefaultAdmin()', () => {
     it('returns 0 if no pending default admin transfer', async function () {
       const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
       expect(newAdmin).to.eq(ZERO_ADDRESS);
       expect(schedule).to.be.bignumber.eq(ZERO);
     });
 
-    describe('when there is a scheduled default admin transfer', function () {
+    describe('when there is a scheduled default admin transfer', () => {
       beforeEach('begins admin transfer', async function () {
         await this.accessControl.beginDefaultAdminTransfer(newDefaultAdmin, { from: defaultAdmin });
       });
@@ -294,12 +294,12 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('defaultAdminDelay()', function () {
+  describe('defaultAdminDelay()', () => {
     it('returns the current delay', async function () {
       expect(await this.accessControl.defaultAdminDelay()).to.be.bignumber.eq(delay);
     });
 
-    describe('when there is a scheduled delay change', function () {
+    describe('when there is a scheduled delay change', () => {
       const newDelay = web3.utils.toBN(0xdead); // Any change
 
       beforeEach('begins delay change', async function () {
@@ -324,14 +324,14 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('pendingDefaultAdminDelay()', function () {
+  describe('pendingDefaultAdminDelay()', () => {
     it('returns 0 if not set', async function () {
       const { newDelay, schedule } = await this.accessControl.pendingDefaultAdminDelay();
       expect(newDelay).to.be.bignumber.eq(ZERO);
       expect(schedule).to.be.bignumber.eq(ZERO);
     });
 
-    describe('when there is a scheduled delay change', function () {
+    describe('when there is a scheduled delay change', () => {
       const newDelay = web3.utils.toBN(0xdead); // Any change
 
       beforeEach('begins admin transfer', async function () {
@@ -357,7 +357,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('defaultAdminDelayIncreaseWait()', function () {
+  describe('defaultAdminDelayIncreaseWait()', () => {
     it('should return 5 days (default)', async function () {
       expect(await this.accessControl.defaultAdminDelayIncreaseWait()).to.be.bignumber.eq(
         web3.utils.toBN(time.duration.days(5)),
@@ -379,7 +379,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     );
   });
 
-  it("should revert if defaultAdmin's admin is changed", async function () {
+  it('should revert if defaultAdmin\'s admin is changed', async function () {
     await expectRevert(
       this.accessControl.$_setRoleAdmin(DEFAULT_ADMIN_ROLE, defaultAdmin),
       `${errorPrefix}: can't violate default admin rules`,
@@ -393,7 +393,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     );
   });
 
-  describe('begins a default admin transfer', function () {
+  describe('begins a default admin transfer', () => {
     let receipt;
     let acceptSchedule;
 
@@ -404,7 +404,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       );
     });
 
-    describe('when there is no pending delay nor pending admin transfer', function () {
+    describe('when there is no pending delay nor pending admin transfer', () => {
       beforeEach('begins admin transfer', async function () {
         receipt = await this.accessControl.beginDefaultAdminTransfer(newDefaultAdmin, { from: defaultAdmin });
         acceptSchedule = web3.utils.toBN(await time.latest()).add(delay);
@@ -421,7 +421,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       });
     });
 
-    describe('when there is a pending admin transfer', function () {
+    describe('when there is a pending admin transfer', () => {
       beforeEach('sets a pending default admin transfer', async function () {
         await this.accessControl.beginDefaultAdminTransfer(newDefaultAdmin, { from: defaultAdmin });
         acceptSchedule = web3.utils.toBN(await time.latest()).add(delay);
@@ -460,7 +460,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       });
     });
 
-    describe('when there is a pending delay', function () {
+    describe('when there is a pending delay', () => {
       const newDelay = web3.utils.toBN(time.duration.hours(3));
 
       beforeEach('schedule a delay change', async function () {
@@ -496,7 +496,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('accepts transfer admin', function () {
+  describe('accepts transfer admin', () => {
     let acceptSchedule;
 
     beforeEach(async function () {
@@ -512,8 +512,8 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       );
     });
 
-    describe('when caller is pending default admin and delay has passed', function () {
-      beforeEach(async function () {
+    describe('when caller is pending default admin and delay has passed', () => {
+      beforeEach(async () => {
         await time.setNextBlockTimestamp(acceptSchedule.addn(1));
       });
 
@@ -542,7 +542,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       });
     });
 
-    describe('schedule not passed', function () {
+    describe('schedule not passed', () => {
       for (const [fromSchedule, tag] of [
         [-1, 'less'],
         [0, 'equal'],
@@ -558,7 +558,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('cancels a default admin transfer', function () {
+  describe('cancels a default admin transfer', () => {
     it('reverts if called by non default admin accounts', async function () {
       await expectRevert(
         this.accessControl.cancelDefaultAdminTransfer({ from: other }),
@@ -566,7 +566,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       );
     });
 
-    describe('when there is a pending default admin transfer', function () {
+    describe('when there is a pending default admin transfer', () => {
       let acceptSchedule;
 
       beforeEach(async function () {
@@ -607,7 +607,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       });
     });
 
-    describe('when there is no pending default admin transfer', async function () {
+    describe('when there is no pending default admin transfer', async () => {
       it('should succeed without changes', async function () {
         const receipt = await this.accessControl.cancelDefaultAdminTransfer({ from: defaultAdmin });
 
@@ -620,7 +620,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('renounces admin', function () {
+  describe('renounces admin', () => {
     let expectedSchedule;
     let delayPassed;
     let delayNotPassed;
@@ -640,7 +640,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       );
     });
 
-    it("renouncing the admin role when not an admin doesn't affect the schedule", async function () {
+    it('renouncing the admin role when not an admin doesn\'t affect the schedule', async function () {
       await time.setNextBlockTimestamp(delayPassed);
       await this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, other, { from: other });
 
@@ -686,7 +686,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       });
     });
 
-    describe('schedule not passed', function () {
+    describe('schedule not passed', () => {
       for (const [fromSchedule, tag] of [
         [-1, 'less'],
         [0, 'equal'],
@@ -702,7 +702,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     });
   });
 
-  describe('changes delay', function () {
+  describe('changes delay', () => {
     it('reverts if called by non default admin accounts', async function () {
       await expectRevert(
         this.accessControl.changeDefaultAdminDelay(time.duration.hours(4), {
@@ -717,7 +717,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       [web3.utils.toBN(delay).addn(time.duration.hours(1)), 'increased'],
       [web3.utils.toBN(delay).addn(time.duration.days(5)), 'increased to more than 5 days'],
     ]) {
-      describe(`when the delay is ${delayChangeType}`, function () {
+      describe(`when the delay is ${delayChangeType}`, () => {
         it('begins the delay change to the new delay', async function () {
           // Begins the change
           const receipt = await this.accessControl.changeDefaultAdminDelay(newDefaultAdminDelay, {
@@ -742,7 +742,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
           });
         });
 
-        describe('scheduling again', function () {
+        describe('scheduling again', () => {
           beforeEach('schedule once', async function () {
             await this.accessControl.changeDefaultAdminDelay(newDefaultAdminDelay, { from: defaultAdmin });
           });
@@ -801,7 +801,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
     }
   });
 
-  describe('rollbacks a delay change', function () {
+  describe('rollbacks a delay change', () => {
     it('reverts if called by non default admin accounts', async function () {
       await expectRevert(
         this.accessControl.rollbackDefaultAdminDelay({ from: other }),
@@ -809,7 +809,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       );
     });
 
-    describe('when there is a pending delay', function () {
+    describe('when there is a pending delay', () => {
       beforeEach('set pending delay', async function () {
         await this.accessControl.changeDefaultAdminDelay(time.duration.hours(12), { from: defaultAdmin });
       });
@@ -847,7 +847,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(errorPrefix, delay, defa
       }
     });
 
-    describe('when there is no pending delay', function () {
+    describe('when there is no pending delay', () => {
       it('succeeds without changes', async function () {
         await this.accessControl.rollbackDefaultAdminDelay({ from: defaultAdmin });
 

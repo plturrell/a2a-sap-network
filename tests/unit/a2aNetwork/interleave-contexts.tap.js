@@ -1,6 +1,6 @@
 'use strict';
 
-var cls  = require('../context.js')
+const cls  = require('../context.js')
   , test = require('tap').test
   ;
 
@@ -9,50 +9,50 @@ function cleanNamespace(name){
   return cls.createNamespace(name);
 }
 
-test("interleaved contexts", function (t) {
+test('interleaved contexts', (t) => {
   t.plan(3);
 
-  t.test("interleaving with run", function (t) {
+  t.test('interleaving with run', (t) => {
     t.plan(2);
 
-    var ns = cleanNamespace('test');
+    const ns = cleanNamespace('test');
 
-    var ctx = ns.createContext();
+    const ctx = ns.createContext();
 
     ns.enter(ctx);
-    ns.run(function () {
-      t.equal(ns._set.length, 2, "2 contexts in the active set");
-      t.doesNotThrow(function () { ns.exit(ctx); });
+    ns.run(() => {
+      t.equal(ns._set.length, 2, '2 contexts in the active set');
+      t.doesNotThrow(() => { ns.exit(ctx); });
     });
   });
 
-  t.test("entering and exiting staggered", function (t) {
+  t.test('entering and exiting staggered', (t) => {
     t.plan(4);
 
-    var ns = cleanNamespace('test');
+    const ns = cleanNamespace('test');
 
-    var ctx1 = ns.createContext();
-    var ctx2 = ns.createContext();
+    const ctx1 = ns.createContext();
+    const ctx2 = ns.createContext();
 
-    t.doesNotThrow(function () { ns.enter(ctx1); });
-    t.doesNotThrow(function () { ns.enter(ctx2); });
+    t.doesNotThrow(() => { ns.enter(ctx1); });
+    t.doesNotThrow(() => { ns.enter(ctx2); });
 
-    t.doesNotThrow(function () { ns.exit(ctx1); });
-    t.doesNotThrow(function () { ns.exit(ctx2); });
+    t.doesNotThrow(() => { ns.exit(ctx1); });
+    t.doesNotThrow(() => { ns.exit(ctx2); });
   });
 
-  t.test("creating, entering and exiting staggered", function (t) {
+  t.test('creating, entering and exiting staggered', (t) => {
     t.plan(4);
 
-    var ns = cleanNamespace('test');
+    const ns = cleanNamespace('test');
 
-    var ctx1 = ns.createContext();
-    t.doesNotThrow(function () { ns.enter(ctx1); });
+    const ctx1 = ns.createContext();
+    t.doesNotThrow(() => { ns.enter(ctx1); });
 
-    var ctx2 = ns.createContext();
-    t.doesNotThrow(function () { ns.enter(ctx2); });
+    const ctx2 = ns.createContext();
+    t.doesNotThrow(() => { ns.enter(ctx2); });
 
-    t.doesNotThrow(function () { ns.exit(ctx1); });
-    t.doesNotThrow(function () { ns.exit(ctx2); });
+    t.doesNotThrow(() => { ns.exit(ctx1); });
+    t.doesNotThrow(() => { ns.exit(ctx2); });
   });
 });

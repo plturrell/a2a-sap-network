@@ -1,5 +1,5 @@
-sap.ui.define([], function() {
-    "use strict";
+sap.ui.define([], () => {
+    'use strict';
 
     /**
      * PFCG Role Mapping Configuration for SAP Enterprise
@@ -11,38 +11,38 @@ sap.ui.define([], function() {
          * Defines which catalogs are available for each role
          */
         roleToCatalogMapping: {
-            "SAP_UI2_USER_700": [
-                "SAP_FIORI_FOUNDATION",
-                "SAP_FIORI_EXTENSIBILITY",
-                "A2A_NETWORK_STANDARD"
+            'SAP_UI2_USER_700': [
+                'SAP_FIORI_FOUNDATION',
+                'SAP_FIORI_EXTENSIBILITY',
+                'A2A_NETWORK_STANDARD'
             ],
-            "SAP_UI2_USER_750": [
-                "SAP_FIORI_FOUNDATION",
-                "SAP_FIORI_EXTENSIBILITY",
-                "A2A_NETWORK_STANDARD",
-                "A2A_NETWORK_ADVANCED"
+            'SAP_UI2_USER_750': [
+                'SAP_FIORI_FOUNDATION',
+                'SAP_FIORI_EXTENSIBILITY',
+                'A2A_NETWORK_STANDARD',
+                'A2A_NETWORK_ADVANCED'
             ],
-            "SAP_UI2_ADMIN_700": [
-                "SAP_FIORI_FOUNDATION_ADMIN",
-                "SAP_FIORI_EXTENSIBILITY_ADMIN",
-                "A2A_NETWORK_ADMIN"
+            'SAP_UI2_ADMIN_700': [
+                'SAP_FIORI_FOUNDATION_ADMIN',
+                'SAP_FIORI_EXTENSIBILITY_ADMIN',
+                'A2A_NETWORK_ADMIN'
             ],
-            "FLP_USER": [
-                "A2A_NETWORK_STANDARD"
+            'FLP_USER': [
+                'A2A_NETWORK_STANDARD'
             ],
-            "FLP_ADMIN": [
-                "A2A_NETWORK_STANDARD",
-                "A2A_NETWORK_ADMIN"
+            'FLP_ADMIN': [
+                'A2A_NETWORK_STANDARD',
+                'A2A_NETWORK_ADMIN'
             ],
-            "A2A_AGENT_OPERATOR": [
-                "A2A_AGENT_CATALOG"
+            'A2A_AGENT_OPERATOR': [
+                'A2A_AGENT_CATALOG'
             ],
-            "A2A_WORKFLOW_DESIGNER": [
-                "A2A_WORKFLOW_CATALOG",
-                "A2A_SERVICE_CATALOG"
+            'A2A_WORKFLOW_DESIGNER': [
+                'A2A_WORKFLOW_CATALOG',
+                'A2A_SERVICE_CATALOG'
             ],
-            "A2A_SECURITY_AUDITOR": [
-                "A2A_SECURITY_CATALOG"
+            'A2A_SECURITY_AUDITOR': [
+                'A2A_SECURITY_CATALOG'
             ]
         },
 
@@ -51,37 +51,37 @@ sap.ui.define([], function() {
          * Defines default tile groups for each role
          */
         roleToGroupMapping: {
-            "SAP_UI2_USER_700": [
-                "core_processing_agents",
-                "analytics_monitoring"
+            'SAP_UI2_USER_700': [
+                'core_processing_agents',
+                'analytics_monitoring'
             ],
-            "SAP_UI2_USER_750": [
-                "core_processing_agents",
-                "analytics_monitoring",
-                "services_workflow"
+            'SAP_UI2_USER_750': [
+                'core_processing_agents',
+                'analytics_monitoring',
+                'services_workflow'
             ],
-            "SAP_UI2_ADMIN_700": [
-                "*" // All groups
+            'SAP_UI2_ADMIN_700': [
+                '*' // All groups
             ],
-            "FLP_USER": [
-                "core_processing_agents",
-                "analytics_monitoring",
-                "services_workflow"
+            'FLP_USER': [
+                'core_processing_agents',
+                'analytics_monitoring',
+                'services_workflow'
             ],
-            "FLP_ADMIN": [
-                "*" // All groups
+            'FLP_ADMIN': [
+                '*' // All groups
             ],
-            "A2A_AGENT_OPERATOR": [
-                "core_processing_agents",
-                "specialized_agents"
+            'A2A_AGENT_OPERATOR': [
+                'core_processing_agents',
+                'specialized_agents'
             ],
-            "A2A_WORKFLOW_DESIGNER": [
-                "services_workflow",
-                "integration_governance"
+            'A2A_WORKFLOW_DESIGNER': [
+                'services_workflow',
+                'integration_governance'
             ],
-            "A2A_SECURITY_AUDITOR": [
-                "security_compliance",
-                "analytics_monitoring"
+            'A2A_SECURITY_AUDITOR': [
+                'security_compliance',
+                'analytics_monitoring'
             ]
         },
 
@@ -90,23 +90,23 @@ sap.ui.define([], function() {
          * Maps PFCG authorization objects to Fiori capabilities
          */
         authObjectMapping: {
-            "S_SERVICE": {
-                "checkFunction": function(authValues, requestedService) {
+            'S_SERVICE': {
+                'checkFunction': function(authValues, requestedService) {
                     return authValues.SRV_NAME && authValues.SRV_NAME.includes(requestedService);
                 }
             },
-            "/UI2/CHIP": {
-                "checkFunction": function(authValues, requestedChip) {
+            '/UI2/CHIP': {
+                'checkFunction': function(authValues, requestedChip) {
                     return authValues.CHIP_ID && 
-                           (authValues.CHIP_ID.includes("*") || authValues.CHIP_ID.includes(requestedChip));
+                           (authValues.CHIP_ID.includes('*') || authValues.CHIP_ID.includes(requestedChip));
                 }
             },
-            "S_RFCACL": {
-                "checkFunction": function(authValues, requestedRFC) {
+            'S_RFCACL': {
+                'checkFunction': function(authValues, requestedRFC) {
                     if (!authValues.RFC_NAME) return false;
                     return authValues.RFC_NAME.some(pattern => {
-                        if (pattern.includes("*")) {
-                            const regex = new RegExp("^" + pattern.replace("*", ".*") + "$");
+                        if (pattern.includes('*')) {
+                            const regex = new RegExp(`^${  pattern.replace('*', '.*')  }$`);
                             return regex.test(requestedRFC);
                         }
                         return pattern === requestedRFC;
@@ -120,30 +120,30 @@ sap.ui.define([], function() {
          * Maps tiles to required authorization objects
          */
         tileAuthorizationMapping: {
-            "agent0_data_product": {
-                "authObject": "/UI2/CHIP",
-                "authField": "CHIP_ID",
-                "authValue": "A2A_AGENT_0"
+            'agent0_data_product': {
+                'authObject': '/UI2/CHIP',
+                'authField': 'CHIP_ID',
+                'authValue': 'A2A_AGENT_0'
             },
-            "agent1_validation": {
-                "authObject": "/UI2/CHIP",
-                "authField": "CHIP_ID",
-                "authValue": "A2A_AGENT_1"
+            'agent1_validation': {
+                'authObject': '/UI2/CHIP',
+                'authField': 'CHIP_ID',
+                'authValue': 'A2A_AGENT_1'
             },
-            "service_marketplace": {
-                "authObject": "S_SERVICE",
-                "authField": "SRV_NAME",
-                "authValue": "A2A_MARKETPLACE"
+            'service_marketplace': {
+                'authObject': 'S_SERVICE',
+                'authField': 'SRV_NAME',
+                'authValue': 'A2A_MARKETPLACE'
             },
-            "workflow_designer": {
-                "authObject": "S_SERVICE",
-                "authField": "SRV_NAME",
-                "authValue": "A2A_WORKFLOW"
+            'workflow_designer': {
+                'authObject': 'S_SERVICE',
+                'authField': 'SRV_NAME',
+                'authValue': 'A2A_WORKFLOW'
             },
-            "security_audit": {
-                "authObject": "S_SERVICE",
-                "authField": "SRV_NAME",
-                "authValue": "A2A_SECURITY"
+            'security_audit': {
+                'authObject': 'S_SERVICE',
+                'authField': 'SRV_NAME',
+                'authValue': 'A2A_SECURITY'
             }
         },
 
@@ -173,8 +173,8 @@ sap.ui.define([], function() {
             userRoles.forEach(role => {
                 const roleGroups = this.roleToGroupMapping[role];
                 if (roleGroups) {
-                    if (roleGroups.includes("*")) {
-                        return ["*"]; // All groups
+                    if (roleGroups.includes('*')) {
+                        return ['*']; // All groups
                     }
                     roleGroups.forEach(group => groups.add(group));
                 }

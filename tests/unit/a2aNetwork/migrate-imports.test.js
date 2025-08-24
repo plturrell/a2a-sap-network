@@ -7,8 +7,8 @@ const { expect } = require('chai');
 
 const { pathUpdates, updateImportPaths, getUpgradeablePath } = require('../scripts/migrate-imports.js');
 
-describe('migrate-imports.js', function () {
-  it('every new path exists', async function () {
+describe('migrate-imports.js', () => {
+  it('every new path exists', async () => {
     for (const p of Object.values(pathUpdates)) {
       try {
         await fs.access(path.join('contracts', p), F_OK);
@@ -19,7 +19,7 @@ describe('migrate-imports.js', function () {
     }
   });
 
-  it('replaces import paths in a file', async function () {
+  it('replaces import paths in a file', async () => {
     const source = `
 import '@openzeppelin/contracts/math/Math.sol';
 import '@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol';

@@ -316,17 +316,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateComplianceProgress(data, oProgressDialog);
                     } catch (error) {
-                        // console.error("Error parsing compliance progress data:", error);
+                        // // console.error("Error parsing compliance progress data:", error);
                     }
                 }.bind(this);
 
                 this._complianceEventSource.onerror = function(error) {
-                    // console.warn("Compliance progress stream error, falling back to polling:", error);
+                    // // console.warn("Compliance progress stream error, falling back to polling:", error);
                     this._startCompliancePolling(aTaskIds, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startCompliancePolling(aTaskIds, oProgressDialog);
             }
         },
@@ -364,7 +364,7 @@ sap.ui.define([
                     this._updateComplianceProgress(data, oProgressDialog);
                 }.bind(this),
                 error(error) {
-                    // console.warn("Failed to fetch compliance progress:", error);
+                    // // console.warn("Failed to fetch compliance progress:", error);
                 }
             });
         },
@@ -530,7 +530,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
+                // // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -577,7 +577,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                // console.error("Error processing compliance update:", error);
+                // // console.error("Error processing compliance update:", error);
             }
         },
 
@@ -677,7 +677,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

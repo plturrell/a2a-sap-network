@@ -27,10 +27,10 @@ async function runUITests() {
     try {
         const apiResponse = await fetch('http://localhost:4004/api/v1');
         results.backend.apiAvailable = apiResponse.ok;
-        console.log(`   ✅ API endpoint available`);
+        console.log('   ✅ API endpoint available');
     } catch (error) {
         results.backend.apiAvailable = false;
-        console.log(`   ❌ API not available`);
+        console.log('   ❌ API not available');
     }
     
     // Test 3: Frontend UI

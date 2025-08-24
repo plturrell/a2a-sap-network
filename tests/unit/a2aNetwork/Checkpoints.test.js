@@ -14,7 +14,7 @@ const traceLengths = [160, 224];
 const first = array => (array.length ? array[0] : undefined);
 const last = array => (array.length ? array[array.length - 1] : undefined);
 
-contract('Checkpoints', function () {
+contract('Checkpoints', () => {
   beforeEach(async function () {
     this.mock = await $Checkpoints.new();
 
@@ -42,8 +42,8 @@ contract('Checkpoints', function () {
     }
   });
 
-  describe('History checkpoints', function () {
-    describe('without checkpoints', function () {
+  describe('History checkpoints', () => {
+    describe('without checkpoints', () => {
       it('returns zero as latest value', async function () {
         expect(await this.methods.history.latest()).to.be.bignumber.equal('0');
 
@@ -62,7 +62,7 @@ contract('Checkpoints', function () {
       });
     });
 
-    describe('with checkpoints', function () {
+    describe('with checkpoints', () => {
       beforeEach('pushing checkpoints', async function () {
         this.tx1 = await this.methods.history.push(1);
         this.tx2 = await this.methods.history.push(2);
@@ -82,7 +82,7 @@ contract('Checkpoints', function () {
       });
 
       for (const getAtBlockVariant of ['getAtBlock', 'getAtRecentBlock']) {
-        describe(`lookup: ${getAtBlockVariant}`, function () {
+        describe(`lookup: ${getAtBlockVariant}`, () => {
           it('returns past values', async function () {
             expect(
               await this.methods.history[getAtBlockVariant](this.tx1.receipt.blockNumber - 1),
@@ -146,8 +146,8 @@ contract('Checkpoints', function () {
   });
 
   for (const length of traceLengths) {
-    describe(`Trace${length}`, function () {
-      describe('without checkpoints', function () {
+    describe(`Trace${length}`, () => {
+      describe('without checkpoints', () => {
         it('returns zero as latest value', async function () {
           expect(await this.methods.trace[length].latest()).to.be.bignumber.equal('0');
 
@@ -164,7 +164,7 @@ contract('Checkpoints', function () {
         });
       });
 
-      describe('with checkpoints', function () {
+      describe('with checkpoints', () => {
         beforeEach('pushing checkpoints', async function () {
           this.checkpoints = [
             { key: '2', value: '17' },

@@ -15,10 +15,10 @@ async function populateDevelopmentData() {
         
         // 1. Populate Agent Performance data
         log.debug('📊 Creating agent performance records...');
-        const agents = await db.run(`SELECT ID FROM a2a_network_Agents`);
+        const agents = await db.run('SELECT ID FROM a2a_network_Agents');
         
         // Clear existing performance data
-        await db.run(`DELETE FROM a2a_network_AgentPerformance`);
+        await db.run('DELETE FROM a2a_network_AgentPerformance');
         
         for (const agent of agents) {
             const totalTasks = Math.floor(Math.random() * 1000) + 100;
@@ -53,7 +53,7 @@ async function populateDevelopmentData() {
         
         // 2. Populate Blockchain Stats
         log.debug('\n⛓️  Creating blockchain statistics...');
-        await db.run(`DELETE FROM BlockchainService_BlockchainStats`);
+        await db.run('DELETE FROM BlockchainService_BlockchainStats');
         
         const blockchainStats = {
             ID: cds.utils.uuid(),
@@ -76,7 +76,7 @@ async function populateDevelopmentData() {
         
         // 3. Populate Capabilities (without foreign key constraints)
         log.debug('\n🔧 Creating capabilities...');
-        await db.run(`DELETE FROM a2a_network_Capabilities`);
+        await db.run('DELETE FROM a2a_network_Capabilities');
         
         const capabilities = [
             { name: 'Data Processing', description: 'Advanced data processing and transformation' },
@@ -101,9 +101,9 @@ async function populateDevelopmentData() {
         
         // 4. Link capabilities to agents
         log.debug('\n🔗 Linking capabilities to agents...');
-        await db.run(`DELETE FROM a2a_network_AgentCapabilities`);
+        await db.run('DELETE FROM a2a_network_AgentCapabilities');
         
-        const capabilityIds = await db.run(`SELECT ID FROM a2a_network_Capabilities`);
+        const capabilityIds = await db.run('SELECT ID FROM a2a_network_Capabilities');
         
         // Give each agent 1-3 random capabilities
         for (const agent of agents) {
@@ -130,7 +130,7 @@ async function populateDevelopmentData() {
         
         // 5. Create messages between agents
         log.debug('\n💬 Creating messages...');
-        await db.run(`DELETE FROM a2a_network_Messages`);
+        await db.run('DELETE FROM a2a_network_Messages');
         
         const messageStatuses = ['sent', 'delivered', 'read', 'failed'];
         const protocols = ['REST', 'GRPC', 'WEBSOCKET', 'MQTT'];
@@ -157,7 +157,7 @@ async function populateDevelopmentData() {
         
         // 6. Create workflows
         log.debug('\n🔄 Creating workflows...');
-        await db.run(`DELETE FROM a2a_network_Workflows`);
+        await db.run('DELETE FROM a2a_network_Workflows');
         
         const workflows = [
             { name: 'Data Processing Pipeline', description: 'ETL workflow for data transformation', status: 'active' },
@@ -190,7 +190,7 @@ async function populateDevelopmentData() {
         
         // 7. Create performance snapshots
         log.debug('\n📸 Creating performance snapshots...');
-        await db.run(`DELETE FROM a2a_network_PerformanceSnapshots`);
+        await db.run('DELETE FROM a2a_network_PerformanceSnapshots');
         
         // Create hourly snapshots for the last 24 hours
         const now = Date.now();
@@ -215,12 +215,12 @@ async function populateDevelopmentData() {
         
         // 8. Update Network Stats
         log.debug('\n📈 Updating network statistics...');
-        await db.run(`DELETE FROM a2a_network_NetworkStats`);
+        await db.run('DELETE FROM a2a_network_NetworkStats');
         
-        const agentCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents`);
-        const capCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Capabilities`);
-        const msgCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Messages`);
-        const avgRep = await db.run(`SELECT AVG(reputation) as avg FROM a2a_network_Agents`);
+        const agentCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents');
+        const capCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Capabilities');
+        const msgCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Messages');
+        const avgRep = await db.run('SELECT AVG(reputation) as avg FROM a2a_network_Agents');
         
         await db.run(`INSERT INTO a2a_network_NetworkStats 
             (ID, totalAgents, activeAgents, totalServices, totalCapabilities, 
@@ -246,7 +246,7 @@ async function populateDevelopmentData() {
         log.debug(`   - Agents: ${agents.length}`);
         log.debug(`   - Performance records: ${agents.length}`);
         log.debug(`   - Capabilities: ${capabilities.length}`);
-        log.debug(`   - Messages: 50`);
+        log.debug('   - Messages: 50');
         log.debug(`   - Workflows: ${workflows.length}`);
         log.debug(`   - Performance snapshots: ${5 * 24}`);
         log.debug('\nAll tiles should now display properly! 🚀');

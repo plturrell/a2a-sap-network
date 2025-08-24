@@ -30,8 +30,8 @@ function shouldBehaveLikeReceiver(sender = randomAddress()) {
   });
 }
 
-contract('CrossChainEnabled', function () {
-  describe('AMB', function () {
+contract('CrossChainEnabled', () => {
+  describe('AMB', () => {
     beforeEach(async function () {
       this.bridge = await BridgeHelper.deploy('AMB');
       this.receiver = await CrossChainEnabledAMBMock.new(this.bridge.address);
@@ -40,7 +40,7 @@ contract('CrossChainEnabled', function () {
     shouldBehaveLikeReceiver();
   });
 
-  describe('Arbitrum-L1', function () {
+  describe('Arbitrum-L1', () => {
     beforeEach(async function () {
       this.bridge = await BridgeHelper.deploy('Arbitrum-L1');
       this.receiver = await CrossChainEnabledArbitrumL1Mock.new(this.bridge.address);
@@ -49,7 +49,7 @@ contract('CrossChainEnabled', function () {
     shouldBehaveLikeReceiver();
   });
 
-  describe('Arbitrum-L2', function () {
+  describe('Arbitrum-L2', () => {
     beforeEach(async function () {
       this.bridge = await BridgeHelper.deploy('Arbitrum-L2');
       this.receiver = await CrossChainEnabledArbitrumL2Mock.new();
@@ -58,7 +58,7 @@ contract('CrossChainEnabled', function () {
     shouldBehaveLikeReceiver();
   });
 
-  describe('Optimism', function () {
+  describe('Optimism', () => {
     beforeEach(async function () {
       this.bridge = await BridgeHelper.deploy('Optimism');
       this.receiver = await CrossChainEnabledOptimismMock.new(this.bridge.address);
@@ -67,7 +67,7 @@ contract('CrossChainEnabled', function () {
     shouldBehaveLikeReceiver();
   });
 
-  describe('Polygon-Child', function () {
+  describe('Polygon-Child', () => {
     beforeEach(async function () {
       this.bridge = await BridgeHelper.deploy('Polygon-Child');
       this.receiver = await CrossChainEnabledPolygonChildMock.new(this.bridge.address);

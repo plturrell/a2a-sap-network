@@ -1,9 +1,9 @@
-var test = require('tape');
-var table = require('../');
+const test = require('tape');
+const table = require('../');
 
-test('table', function (t) {
+test('table', (t) => {
     t.plan(1);
-    var s = table([
+    const s = table([
         [ 'master', '0123456789abcdef' ],
         [ 'staging', 'fedcba9876543210' ]
     ]);

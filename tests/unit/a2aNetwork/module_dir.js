@@ -1,55 +1,55 @@
-var path = require('path');
-var test = require('tape');
-var resolve = require('../');
+const path = require('path');
+const test = require('tape');
+const resolve = require('../');
 
-test('moduleDirectory strings', function (t) {
+test('moduleDirectory strings', (t) => {
     t.plan(4);
-    var dir = path.join(__dirname, 'module_dir');
-    var xopts = {
+    const dir = path.join(__dirname, 'module_dir');
+    const xopts = {
         basedir: dir,
         moduleDirectory: 'xmodules'
     };
-    resolve('aaa', xopts, function (err, res, pkg) {
+    resolve('aaa', xopts, (err, res, pkg) => {
         t.ifError(err);
         t.equal(res, path.join(dir, '/xmodules/aaa/index.js'));
     });
 
-    var yopts = {
+    const yopts = {
         basedir: dir,
         moduleDirectory: 'ymodules'
     };
-    resolve('aaa', yopts, function (err, res, pkg) {
+    resolve('aaa', yopts, (err, res, pkg) => {
         t.ifError(err);
         t.equal(res, path.join(dir, '/ymodules/aaa/index.js'));
     });
 });
 
-test('moduleDirectory array', function (t) {
+test('moduleDirectory array', (t) => {
     t.plan(6);
-    var dir = path.join(__dirname, 'module_dir');
-    var aopts = {
+    const dir = path.join(__dirname, 'module_dir');
+    const aopts = {
         basedir: dir,
         moduleDirectory: ['xmodules', 'ymodules', 'zmodules']
     };
-    resolve('aaa', aopts, function (err, res, pkg) {
+    resolve('aaa', aopts, (err, res, pkg) => {
         t.ifError(err);
         t.equal(res, path.join(dir, '/xmodules/aaa/index.js'));
     });
 
-    var bopts = {
+    const bopts = {
         basedir: dir,
         moduleDirectory: ['zmodules', 'ymodules', 'xmodules']
     };
-    resolve('aaa', bopts, function (err, res, pkg) {
+    resolve('aaa', bopts, (err, res, pkg) => {
         t.ifError(err);
         t.equal(res, path.join(dir, '/ymodules/aaa/index.js'));
     });
 
-    var copts = {
+    const copts = {
         basedir: dir,
         moduleDirectory: ['xmodules', 'ymodules', 'zmodules']
     };
-    resolve('bbb', copts, function (err, res, pkg) {
+    resolve('bbb', copts, (err, res, pkg) => {
         t.ifError(err);
         t.equal(res, path.join(dir, '/zmodules/bbb/main.js'));
     });

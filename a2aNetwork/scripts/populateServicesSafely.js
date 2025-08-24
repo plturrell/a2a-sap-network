@@ -14,7 +14,7 @@ async function populateServices() {
         
         // First, check if we have agents to reference
         log.debug('1. Checking existing agents...');
-        const agentResult = await db.run(`SELECT ID, name FROM a2a_network_Agents LIMIT 5`);
+        const agentResult = await db.run('SELECT ID, name FROM a2a_network_Agents LIMIT 5');
         
         if (agentResult.length === 0) {
             log.debug('❌ No agents found. Running agent seeding first...');
@@ -22,7 +22,7 @@ async function populateServices() {
             execSync('node scripts/seedTestAgents.js', { stdio: 'inherit' });
             
             // Re-check agents
-            const newAgentResult = await db.run(`SELECT ID, name FROM a2a_network_Agents LIMIT 5`);
+            const newAgentResult = await db.run('SELECT ID, name FROM a2a_network_Agents LIMIT 5');
             if (newAgentResult.length === 0) {
                 throw new Error('Failed to seed agents');
             }
@@ -32,14 +32,14 @@ async function populateServices() {
         }
         
         // Get available agent IDs
-        const availableAgents = await db.run(`SELECT ID FROM a2a_network_Agents LIMIT 10`);
+        const availableAgents = await db.run('SELECT ID FROM a2a_network_Agents LIMIT 10');
         const agentIds = availableAgents.map(a => a.ID);
         
         log.debug('2. Setting up currencies...');
         // First ensure EUR currency exists
         try {
-            await db.run(`INSERT OR IGNORE INTO sap_common_Currencies (code, name) VALUES ('EUR', 'Euro')`);
-            await db.run(`INSERT OR IGNORE INTO sap_common_Currencies (code, name) VALUES ('USD', 'US Dollar')`);
+            await db.run('INSERT OR IGNORE INTO sap_common_Currencies (code, name) VALUES (\'EUR\', \'Euro\')');
+            await db.run('INSERT OR IGNORE INTO sap_common_Currencies (code, name) VALUES (\'USD\', \'US Dollar\')');
         } catch (error) {
             console.warn('Currency setup warning:', error.message);
         }
@@ -221,8 +221,8 @@ async function populateServices() {
         }
         
         log.debug('6. Verifying services...');
-        const serviceCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Services`);
-        const activeServiceCount = await db.run(`SELECT COUNT(*) as count FROM a2a_network_Services WHERE isActive = 1`);
+        const serviceCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Services');
+        const activeServiceCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Services WHERE isActive = 1');
         
         log.debug(`✅ Total services: ${serviceCount[0]?.count || 0}`);
         log.debug(`✅ Active services: ${activeServiceCount[0]?.count || 0}`);

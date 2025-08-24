@@ -1,11 +1,11 @@
 'use strict';
 
-var inspect = require('../');
-var test = require('tape');
-var hasToStringTag = require('has-tostringtag/shams')();
+const inspect = require('../');
+const test = require('tape');
+const hasToStringTag = require('has-tostringtag/shams')();
 
-test('bigint', { skip: typeof BigInt === 'undefined' }, function (t) {
-    t.test('primitives', function (st) {
+test('bigint', { skip: typeof BigInt === 'undefined' }, (t) => {
+    t.test('primitives', (st) => {
         st.plan(3);
 
         st.equal(inspect(BigInt(-256)), '-256n');
@@ -13,7 +13,7 @@ test('bigint', { skip: typeof BigInt === 'undefined' }, function (t) {
         st.equal(inspect(BigInt(256)), '256n');
     });
 
-    t.test('objects', function (st) {
+    t.test('objects', (st) => {
         st.plan(3);
 
         st.equal(inspect(Object(BigInt(-256))), 'Object(-256n)');
@@ -21,7 +21,7 @@ test('bigint', { skip: typeof BigInt === 'undefined' }, function (t) {
         st.equal(inspect(Object(BigInt(256))), 'Object(256n)');
     });
 
-    t.test('syntactic primitives', function (st) {
+    t.test('syntactic primitives', (st) => {
         st.plan(3);
 
         /* eslint-disable no-new-func */
@@ -30,10 +30,10 @@ test('bigint', { skip: typeof BigInt === 'undefined' }, function (t) {
         st.equal(inspect(Function('return 256n')()), '256n');
     });
 
-    t.test('toStringTag', { skip: !hasToStringTag }, function (st) {
+    t.test('toStringTag', { skip: !hasToStringTag }, (st) => {
         st.plan(1);
 
-        var faker = {};
+        const faker = {};
         faker[Symbol.toStringTag] = 'BigInt';
         st.equal(
             inspect(faker),
@@ -42,7 +42,7 @@ test('bigint', { skip: typeof BigInt === 'undefined' }, function (t) {
         );
     });
 
-    t.test('numericSeparator', function (st) {
+    t.test('numericSeparator', (st) => {
         st.equal(inspect(BigInt(0), { numericSeparator: false }), '0n', '0n, numericSeparator false');
         st.equal(inspect(BigInt(0), { numericSeparator: true }), '0n', '0n, numericSeparator true');
 

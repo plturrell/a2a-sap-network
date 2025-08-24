@@ -1,16 +1,16 @@
-var cc =require('../lib/utils')
-var INI = require('ini')
-var assert = require('assert')
+const cc =require('../lib/utils');
+const INI = require('ini');
+const assert = require('assert');
 
 function test(obj) {
 
-  var _json, _ini
-  var json = cc.parse (_json = JSON.stringify(obj))
-  var ini = cc.parse (_ini = INI.stringify(obj))
-  console.log(_ini, _json)
-  assert.deepEqual(json, ini)
+  let _json, _ini;
+  const json = cc.parse (_json = JSON.stringify(obj));
+  const ini = cc.parse (_ini = INI.stringify(obj));
+  console.log(_ini, _json);
+  assert.deepEqual(json, ini);
 }
 
 
-test({hello: true})
+test({hello: true});
 

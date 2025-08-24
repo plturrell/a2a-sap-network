@@ -16,14 +16,14 @@ const Wallet = require('ethereumjs-wallet').default;
 const name = 'ERC20Mock';
 const symbol = 'ERC20Mock';
 
-contract('SafeERC20', function (accounts) {
+contract('SafeERC20', (accounts) => {
   const [hasNoCode] = accounts;
 
   before(async function () {
     this.mock = await SafeERC20.new();
   });
 
-  describe('with address that has no contract code', function () {
+  describe('with address that has no contract code', () => {
     beforeEach(async function () {
       this.token = { address: hasNoCode };
     });
@@ -31,7 +31,7 @@ contract('SafeERC20', function (accounts) {
     shouldRevertOnAllCalls(accounts, 'Address: call to non-contract');
   });
 
-  describe('with token that returns false on all calls', function () {
+  describe('with token that returns false on all calls', () => {
     beforeEach(async function () {
       this.token = await ERC20ReturnFalseMock.new(name, symbol);
     });
@@ -39,7 +39,7 @@ contract('SafeERC20', function (accounts) {
     shouldRevertOnAllCalls(accounts, 'SafeERC20: ERC20 operation did not succeed');
   });
 
-  describe('with token that returns true on all calls', function () {
+  describe('with token that returns true on all calls', () => {
     beforeEach(async function () {
       this.token = await ERC20ReturnTrueMock.new(name, symbol);
     });
@@ -47,7 +47,7 @@ contract('SafeERC20', function (accounts) {
     shouldOnlyRevertOnErrors(accounts);
   });
 
-  describe('with token that returns no boolean values', function () {
+  describe('with token that returns no boolean values', () => {
     beforeEach(async function () {
       this.token = await ERC20NoReturnMock.new(name, symbol);
     });
@@ -55,7 +55,7 @@ contract('SafeERC20', function (accounts) {
     shouldOnlyRevertOnErrors(accounts);
   });
 
-  describe("with token that doesn't revert on invalid permit", function () {
+  describe('with token that doesn\'t revert on invalid permit', () => {
     const wallet = Wallet.generate();
     const owner = wallet.getAddressString();
     const spender = hasNoCode;
@@ -170,14 +170,14 @@ contract('SafeERC20', function (accounts) {
     });
   });
 
-  describe('with usdt approval beaviour', function () {
+  describe('with usdt approval beaviour', () => {
     const spender = hasNoCode;
 
     beforeEach(async function () {
       this.token = await ERC20ForceApproveMock.new(name, symbol);
     });
 
-    describe('with initial approval', function () {
+    describe('with initial approval', () => {
       beforeEach(async function () {
         await this.token.$_approve(this.mock.address, spender, 100);
       });
@@ -237,14 +237,14 @@ function shouldRevertOnAllCalls([receiver, spender], reason) {
 }
 
 function shouldOnlyRevertOnErrors([owner, receiver, spender]) {
-  describe('transfers', function () {
+  describe('transfers', () => {
     beforeEach(async function () {
       await this.token.$_mint(owner, 100);
       await this.token.$_mint(this.mock.address, 100);
       await this.token.approve(this.mock.address, constants.MAX_UINT256, { from: owner });
     });
 
-    it("doesn't revert on transfer", async function () {
+    it('doesn\'t revert on transfer', async function () {
       const { tx } = await this.mock.$safeTransfer(this.token.address, receiver, 10);
       await expectEvent.inTransaction(tx, this.token, 'Transfer', {
         from: this.mock.address,
@@ -253,7 +253,7 @@ function shouldOnlyRevertOnErrors([owner, receiver, spender]) {
       });
     });
 
-    it("doesn't revert on transferFrom", async function () {
+    it('doesn\'t revert on transferFrom', async function () {
       const { tx } = await this.mock.$safeTransferFrom(this.token.address, owner, receiver, 10);
       await expectEvent.inTransaction(tx, this.token, 'Transfer', {
         from: owner,
@@ -263,33 +263,33 @@ function shouldOnlyRevertOnErrors([owner, receiver, spender]) {
     });
   });
 
-  describe('approvals', function () {
-    context('with zero allowance', function () {
+  describe('approvals', () => {
+    context('with zero allowance', () => {
       beforeEach(async function () {
         await this.token.$_approve(this.mock.address, spender, 0);
       });
 
-      it("doesn't revert when approving a non-zero allowance", async function () {
+      it('doesn\'t revert when approving a non-zero allowance', async function () {
         await this.mock.$safeApprove(this.token.address, spender, 100);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('100');
       });
 
-      it("doesn't revert when approving a zero allowance", async function () {
+      it('doesn\'t revert when approving a zero allowance', async function () {
         await this.mock.$safeApprove(this.token.address, spender, 0);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('0');
       });
 
-      it("doesn't revert when force approving a non-zero allowance", async function () {
+      it('doesn\'t revert when force approving a non-zero allowance', async function () {
         await this.mock.$forceApprove(this.token.address, spender, 100);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('100');
       });
 
-      it("doesn't revert when force approving a zero allowance", async function () {
+      it('doesn\'t revert when force approving a zero allowance', async function () {
         await this.mock.$forceApprove(this.token.address, spender, 0);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('0');
       });
 
-      it("doesn't revert when increasing the allowance", async function () {
+      it('doesn\'t revert when increasing the allowance', async function () {
         await this.mock.$safeIncreaseAllowance(this.token.address, spender, 10);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('10');
       });
@@ -302,7 +302,7 @@ function shouldOnlyRevertOnErrors([owner, receiver, spender]) {
       });
     });
 
-    context('with non-zero allowance', function () {
+    context('with non-zero allowance', () => {
       beforeEach(async function () {
         await this.token.$_approve(this.mock.address, spender, 100);
       });
@@ -314,27 +314,27 @@ function shouldOnlyRevertOnErrors([owner, receiver, spender]) {
         );
       });
 
-      it("doesn't revert when approving a zero allowance", async function () {
+      it('doesn\'t revert when approving a zero allowance', async function () {
         await this.mock.$safeApprove(this.token.address, spender, 0);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('0');
       });
 
-      it("doesn't revert when force approving a non-zero allowance", async function () {
+      it('doesn\'t revert when force approving a non-zero allowance', async function () {
         await this.mock.$forceApprove(this.token.address, spender, 20);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('20');
       });
 
-      it("doesn't revert when force approving a zero allowance", async function () {
+      it('doesn\'t revert when force approving a zero allowance', async function () {
         await this.mock.$forceApprove(this.token.address, spender, 0);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('0');
       });
 
-      it("doesn't revert when increasing the allowance", async function () {
+      it('doesn\'t revert when increasing the allowance', async function () {
         await this.mock.$safeIncreaseAllowance(this.token.address, spender, 10);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('110');
       });
 
-      it("doesn't revert when decreasing the allowance to a positive value", async function () {
+      it('doesn\'t revert when decreasing the allowance to a positive value', async function () {
         await this.mock.$safeDecreaseAllowance(this.token.address, spender, 50);
         expect(await this.token.allowance(this.mock.address, spender)).to.be.bignumber.equal('50');
       });

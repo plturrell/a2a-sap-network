@@ -20,16 +20,16 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
 
-var thriftrw = require('../index');
-var BinaryRW = thriftrw.BinaryRW;
-var ThriftBinary = thriftrw.ThriftBinary;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const BinaryRW = thriftrw.BinaryRW;
+const ThriftBinary = thriftrw.ThriftBinary;
+const TYPE = require('../TYPE');
 
-var Buffer = require('buffer').Buffer;
+const Buffer = require('buffer').Buffer;
 
 test('BinaryRW', testRW.cases(BinaryRW, [
 

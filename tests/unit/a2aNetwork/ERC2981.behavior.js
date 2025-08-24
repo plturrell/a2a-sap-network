@@ -9,7 +9,7 @@ function shouldBehaveLikeERC2981() {
 
   shouldSupportInterfaces(['ERC2981']);
 
-  describe('default royalty', function () {
+  describe('default royalty', () => {
     beforeEach(async function () {
       await this.token.$_setDefaultRoyalty(this.account1, royaltyFraction);
     });
@@ -69,7 +69,7 @@ function shouldBehaveLikeERC2981() {
     });
   });
 
-  describe('token based royalty', function () {
+  describe('token based royalty', () => {
     beforeEach(async function () {
       await this.token.$_setTokenRoyalty(this.tokenId1, this.account1, royaltyFraction);
     });

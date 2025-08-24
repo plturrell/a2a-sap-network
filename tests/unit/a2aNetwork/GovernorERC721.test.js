@@ -11,7 +11,7 @@ const TOKENS = [
   { Token: artifacts.require('$ERC721VotesTimestampMock'), mode: 'timestamp' },
 ];
 
-contract('GovernorERC721', function (accounts) {
+contract('GovernorERC721', (accounts) => {
   const [owner, voter1, voter2, voter3, voter4] = accounts;
 
   const name = 'OZ-Governor';
@@ -28,7 +28,7 @@ contract('GovernorERC721', function (accounts) {
   const value = web3.utils.toWei('1');
 
   for (const { mode, Token } of TOKENS) {
-    describe(`using ${Token._json.contractName}`, function () {
+    describe(`using ${Token._json.contractName}`, () => {
       beforeEach(async function () {
         this.owner = owner;
         this.token = await Token.new(tokenName, tokenSymbol, tokenName, '1');

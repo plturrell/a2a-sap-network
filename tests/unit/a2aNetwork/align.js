@@ -1,9 +1,9 @@
-var test = require('tape');
-var table = require('../');
+const test = require('tape');
+const table = require('../');
 
-test('align', function (t) {
+test('align', (t) => {
     t.plan(1);
-    var s = table([
+    const s = table([
         [ 'beep', '1024' ],
         [ 'boop', '33450' ],
         [ 'foo', '1006' ],

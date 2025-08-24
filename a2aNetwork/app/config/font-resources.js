@@ -1,5 +1,5 @@
-sap.ui.define([], function() {
-    "use strict";
+sap.ui.define([], () => {
+    'use strict';
 
     /**
      * SAP Enterprise Font Resource Configuration
@@ -11,85 +11,85 @@ sap.ui.define([], function() {
          */
         fonts: {
             // SAP 72 Font Family
-            "72": {
-                name: "72",
+            '72': {
+                name: '72',
                 weights: {
                     light: {
                         weight: 300,
-                        style: "normal",
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Light.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Light.woff"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Light.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Light.woff'
                         }
                     },
                     regular: {
                         weight: 400,
-                        style: "normal",
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Regular.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Regular.woff"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Regular.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Regular.woff'
                         }
                     },
                     bold: {
                         weight: 700,
-                        style: "normal",
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Bold.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Bold.woff"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Bold.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Bold.woff'
                         }
                     },
                     black: {
                         weight: 900,
-                        style: "normal",
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Black.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Black.woff"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Black.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Black.woff'
                         }
                     }
                 }
             },
             
             // SAP Icons Font
-            "SAP-icons": {
-                name: "SAP-icons",
+            'SAP-icons': {
+                name: 'SAP-icons',
                 weights: {
                     normal: {
-                        weight: "normal",
-                        style: "normal",
+                        weight: 'normal',
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.woff",
-                            ttf: "https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.ttf"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.woff',
+                            ttf: 'https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.ttf'
                         }
                     }
                 }
             },
             
             // SAP Icons TNT (Technical Icons)
-            "SAP-icons-TNT": {
-                name: "SAP-icons-TNT",
+            'SAP-icons-TNT': {
+                name: 'SAP-icons-TNT',
                 weights: {
                     normal: {
-                        weight: "normal",
-                        style: "normal",
+                        weight: 'normal',
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/tnt/themes/sap_horizon/fonts/SAP-icons-TNT.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/tnt/themes/sap_horizon/fonts/SAP-icons-TNT.woff"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/tnt/themes/sap_horizon/fonts/SAP-icons-TNT.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/tnt/themes/sap_horizon/fonts/SAP-icons-TNT.woff'
                         }
                     }
                 }
             },
             
             // SAP Icons Business Suite
-            "BusinessSuiteInAppSymbols": {
-                name: "BusinessSuiteInAppSymbols",
+            'BusinessSuiteInAppSymbols': {
+                name: 'BusinessSuiteInAppSymbols',
                 weights: {
                     normal: {
-                        weight: "normal",
-                        style: "normal",
+                        weight: 'normal',
+                        style: 'normal',
                         urls: {
-                            woff2: "https://ui5.sap.com/1.120.0/resources/sap/ushell/themes/sap_horizon/fonts/BusinessSuiteInAppSymbols.woff2",
-                            woff: "https://ui5.sap.com/1.120.0/resources/sap/ushell/themes/sap_horizon/fonts/BusinessSuiteInAppSymbols.woff"
+                            woff2: 'https://ui5.sap.com/1.120.0/resources/sap/ushell/themes/sap_horizon/fonts/BusinessSuiteInAppSymbols.woff2',
+                            woff: 'https://ui5.sap.com/1.120.0/resources/sap/ushell/themes/sap_horizon/fonts/BusinessSuiteInAppSymbols.woff'
                         }
                     }
                 }
@@ -102,18 +102,18 @@ sap.ui.define([], function() {
         preloadFonts: function() {
             const criticalFonts = [
                 // Most important fonts to preload
-                this.fonts["72"].weights.regular.urls.woff2,
-                this.fonts["72"].weights.bold.urls.woff2,
-                this.fonts["SAP-icons"].weights.normal.urls.woff2
+                this.fonts['72'].weights.regular.urls.woff2,
+                this.fonts['72'].weights.bold.urls.woff2,
+                this.fonts['SAP-icons'].weights.normal.urls.woff2
             ];
 
             criticalFonts.forEach(url => {
-                const link = document.createElement("link");
-                link.rel = "preload";
-                link.as = "font";
-                link.type = "font/woff2";
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'font';
+                link.type = 'font/woff2';
                 link.href = url;
-                link.crossOrigin = "anonymous";
+                link.crossOrigin = 'anonymous';
                 document.head.appendChild(link);
             });
         },
@@ -122,7 +122,7 @@ sap.ui.define([], function() {
          * Generate @font-face CSS rules
          */
         generateFontFaceRules: function() {
-            let css = "";
+            let css = '';
             
             Object.values(this.fonts).forEach(font => {
                 Object.values(font.weights).forEach(weight => {
@@ -157,7 +157,7 @@ sap.ui.define([], function() {
                 sources.push(`url("${urls.ttf}") format("truetype")`);
             }
             
-            return sources.join(",\n         ");
+            return sources.join(',\n         ');
         },
 
         /**
@@ -168,15 +168,15 @@ sap.ui.define([], function() {
             this.preloadFonts();
             
             // Add font-face rules
-            const style = document.createElement("style");
+            const style = document.createElement('style');
             style.textContent = this.generateFontFaceRules();
             document.head.appendChild(style);
             
             // Monitor font loading
-            if ("fonts" in document) {
+            if ('fonts' in document) {
                 document.fonts.ready.then(() => {
-                    document.documentElement.classList.add("fonts-loaded");
-                    console.log("All fonts loaded successfully");
+                    document.documentElement.classList.add('fonts-loaded');
+                    console.log('All fonts loaded successfully');
                 });
             }
         },
@@ -186,19 +186,19 @@ sap.ui.define([], function() {
          */
         getIconMappings: function() {
             return {
-                "sap-icon": {
-                    fontFamily: "SAP-icons",
-                    prefix: "sap-icon://",
+                'sap-icon': {
+                    fontFamily: 'SAP-icons',
+                    prefix: 'sap-icon://',
                     codepoint: 0xe000 // Starting codepoint for SAP icons
                 },
-                "sap-icon-tnt": {
-                    fontFamily: "SAP-icons-TNT",
-                    prefix: "sap-icon://tnt/",
+                'sap-icon-tnt': {
+                    fontFamily: 'SAP-icons-TNT',
+                    prefix: 'sap-icon://tnt/',
                     codepoint: 0xe000
                 },
-                "sap-icon-business": {
-                    fontFamily: "BusinessSuiteInAppSymbols",
-                    prefix: "sap-icon://business-suite/",
+                'sap-icon-business': {
+                    fontFamily: 'BusinessSuiteInAppSymbols',
+                    prefix: 'sap-icon://business-suite/',
                     codepoint: 0xe000
                 }
             };
@@ -221,7 +221,7 @@ sap.ui.define([], function() {
                 
                 caches.open('sap-fonts-v1').then(cache => {
                     cache.addAll(fontUrls).then(() => {
-                        console.log("Fonts cached for offline use");
+                        console.log('Fonts cached for offline use');
                     });
                 });
             }

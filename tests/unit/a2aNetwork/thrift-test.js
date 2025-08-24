@@ -23,13 +23,13 @@
 function testThrift(ThriftConstructor, rw, typeid) {
     return t;
     function t(assert) {
-        var thrift = new ThriftConstructor();
+        const thrift = new ThriftConstructor();
         assert.equal(typeof thrift, 'object',
-            ThriftConstructor.name + ' is constructor');
+            `${ThriftConstructor.name  } is constructor`);
         assert.equal(thrift.rw, rw,
-            ThriftConstructor.name + ' has `rw` property');
+            `${ThriftConstructor.name  } has \`rw\` property`);
         assert.equal(thrift.typeid, typeid,
-            ThriftConstructor.name + ' has string typeid');
+            `${ThriftConstructor.name  } has string typeid`);
         assert.end();
     }
 }

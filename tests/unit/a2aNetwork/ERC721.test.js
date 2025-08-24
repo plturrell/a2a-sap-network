@@ -2,7 +2,7 @@ const { shouldBehaveLikeERC721, shouldBehaveLikeERC721Metadata } = require('./ER
 
 const ERC721 = artifacts.require('$ERC721');
 
-contract('ERC721', function (accounts) {
+contract('ERC721', (accounts) => {
   const name = 'Non Fungible Token';
   const symbol = 'NFT';
 

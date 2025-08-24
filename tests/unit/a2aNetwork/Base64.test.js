@@ -2,12 +2,12 @@ const { expect } = require('chai');
 
 const Base64 = artifacts.require('$Base64');
 
-contract('Strings', function () {
+contract('Strings', () => {
   beforeEach(async function () {
     this.base64 = await Base64.new();
   });
 
-  describe('from bytes - base64', function () {
+  describe('from bytes - base64', () => {
     it('converts to base64 encoded string with double padding', async function () {
       const TEST_MESSAGE = 'test';
       const input = web3.utils.asciiToHex(TEST_MESSAGE);

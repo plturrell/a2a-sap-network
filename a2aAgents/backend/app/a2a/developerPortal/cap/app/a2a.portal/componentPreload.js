@@ -1,55 +1,55 @@
 sap.ui.require.preload({
-    "a2a/portal/Component.js": function() {
-        sap.ui.define([
-            "sap/ui/core/UIComponent",
-            "sap/ui/Device",
-            "sap/ui/model/json/JSONModel"
-        ], (UIComponent, Device, JSONModel) => {
-            "use strict";
+  'a2a/portal/Component.js': function() {
+    sap.ui.define([
+      'sap/ui/core/UIComponent',
+      'sap/ui/Device',
+      'sap/ui/model/json/JSONModel'
+    ], (UIComponent, Device, JSONModel) => {
+      'use strict';
 
-            return UIComponent.extend("a2a.portal.Component", {
+      return UIComponent.extend('a2a.portal.Component', {
 
-                metadata: {
-                    manifest: "json"
-                },
+        metadata: {
+          manifest: 'json'
+        },
 
-                /**
+        /**
                  * The component is initialized by UI5 automatically during the startup of the app and calls the init method once.
                  * @public
                  * @override
                  */
-                init: function () {
-                    // call the base component's init function
-                    // eslint-disable-next-line prefer-rest-params
-                    UIComponent.prototype.init.apply(this, arguments);
+        init: function () {
+          // call the base component's init function
+          // eslint-disable-next-line prefer-rest-params
+          UIComponent.prototype.init.apply(this, arguments);
 
-                    // Create and set the device model inline
-                    const deviceModel = new JSONModel(Device);
-                    deviceModel.setDefaultBindingMode("OneWay");
-                    this.setModel(deviceModel, "device");
+          // Create and set the device model inline
+          const deviceModel = new JSONModel(Device);
+          deviceModel.setDefaultBindingMode('OneWay');
+          this.setModel(deviceModel, 'device');
                     
-                    // Create and set the projects model inline
-                    const projectsModel = new JSONModel();
-                    projectsModel.setData({
-                        projects: [],
-                        templates: [],
-                        busy: false,
-                        viewSettings: {
-                            viewMode: "tiles",
-                            sortBy: "lastModified",
-                            sortDescending: true
-                        }
-                    });
-                    this.setModel(projectsModel, "projects");
+          // Create and set the projects model inline
+          const projectsModel = new JSONModel();
+          projectsModel.setData({
+            projects: [],
+            templates: [],
+            busy: false,
+            viewSettings: {
+              viewMode: 'tiles',
+              sortBy: 'lastModified',
+              sortDescending: true
+            }
+          });
+          this.setModel(projectsModel, 'projects');
                     
-                    // Create the views
-                    this.getRootControl();
+          // Create the views
+          this.getRootControl();
                     
-                    // Initialize the router
-                    this.getRouter().initialize();
-                }
-            });
-        });
-    },
-    "a2a/portal/manifest.json": '{"_version":"1.58.0","sap.app":{"id":"a2a.portal","type":"application"}}'
-}, "a2a/portal/Component-preload");
+          // Initialize the router
+          this.getRouter().initialize();
+        }
+      });
+    });
+  },
+  'a2a/portal/manifest.json': '{"_version":"1.58.0","sap.app":{"id":"a2a.portal","type":"application"}}'
+}, 'a2a/portal/Component-preload');

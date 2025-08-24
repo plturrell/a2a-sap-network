@@ -1,23 +1,23 @@
-var test = require('tap').test;
+const test = require('tap').test;
 
-test("asyncListener preserves function length", function (t) {
+test('asyncListener preserves function length', (t) => {
   t.plan(2);
 
-  var fsLengthsPre = computeValueLengths(require('fs'));
-  var httpLengthsPre = computeValueLengths(require('http'));
+  const fsLengthsPre = computeValueLengths(require('fs'));
+  const httpLengthsPre = computeValueLengths(require('http'));
 
   if (!process.addAsyncListener) require('../index.js');
 
-  var fsLengthsPost = computeValueLengths(require('fs'));
-  var httpLengthsPost = computeValueLengths(require('http'));
+  const fsLengthsPost = computeValueLengths(require('fs'));
+  const httpLengthsPost = computeValueLengths(require('http'));
 
   t.same(fsLengthsPre, fsLengthsPost);
   t.same(httpLengthsPre, httpLengthsPost);
 });
 
 function computeValueLengths(o) {
-  var lengths = [];
-  for (var k in o) {
+  const lengths = [];
+  for (const k in o) {
     lengths.push(o[k].length);
   }
   return lengths;

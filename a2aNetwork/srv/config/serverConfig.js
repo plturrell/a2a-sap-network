@@ -270,13 +270,13 @@ function setupSAPFioriServices(app) {
     // SAP Fiori flexibility services stub endpoints
     app.get('/sap/bc/lrep/flex/settings', (req, res) => {
         res.status(200).json({
-            "isKeyUser": false,
-            "isAtoAvailable": false,
-            "isAtoEnabled": false,
-            "isProductiveSystem": true,
-            "isZeroDowntimeUpgradeRunning": false,
-            "system": "",
-            "client": ""
+            'isKeyUser': false,
+            'isAtoAvailable': false,
+            'isAtoEnabled': false,
+            'isProductiveSystem': true,
+            'isZeroDowntimeUpgradeRunning': false,
+            'system': '',
+            'client': ''
         });
     });
     

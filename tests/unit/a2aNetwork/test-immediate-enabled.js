@@ -48,7 +48,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-setImmediate(function (arg1, arg2) {
+setImmediate((arg1, arg2) => {
   timerCalled = true;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
@@ -56,7 +56,7 @@ setImmediate(function (arg1, arg2) {
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, preUid);
   assert.equal(initUid, postUid);
   assert.equal(initUid, destroyUid);

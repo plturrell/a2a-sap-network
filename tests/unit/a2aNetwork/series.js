@@ -20,11 +20,11 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var BufferRW = require('../base').BufferRW;
-var brokenRW = {
+const BufferRW = require('../base').BufferRW;
+const brokenRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(new Error('boom'));
     },
@@ -38,8 +38,8 @@ var brokenRW = {
 
 brokenRW.prototype = BufferRW.prototype;
 
-var atoms = require('../atoms');
-var SeriesRW = require('../series');
+const atoms = require('../atoms');
+const SeriesRW = require('../series');
 
 function orFillZero(rw) {
     return new BufferRW(
@@ -49,7 +49,7 @@ function orFillZero(rw) {
         true);
     function writeInto(destResult, value, buffer, offset) {
         if (value === null || value === undefined) {
-            var end = offset + rw.width;
+            const end = offset + rw.width;
             buffer.fill(0, offset, end);
             return destResult.reset(null, end);
         } else {
@@ -58,12 +58,12 @@ function orFillZero(rw) {
     }
 }
 
-var tinyShortWord = SeriesRW(
+const tinyShortWord = SeriesRW(
     orFillZero(atoms.UInt8),
     orFillZero(atoms.UInt16BE),
     orFillZero(atoms.UInt32BE));
 
-var duduple = SeriesRW(
+const duduple = SeriesRW(
     SeriesRW(atoms.UInt8, atoms.UInt8),
     SeriesRW(atoms.UInt8, atoms.UInt8));
 

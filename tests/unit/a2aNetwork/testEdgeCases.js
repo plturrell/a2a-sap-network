@@ -153,7 +153,7 @@ async function testNavigationEdgeCases() {
     console.log('  Testing deep link parameter safety...');
     const maliciousParams = {
         script: '<script>alert("xss")</script>',
-        sql: "'; DROP TABLE users; --",
+        sql: '\'; DROP TABLE users; --',
         path: '../../../etc/passwd'
     };
     
@@ -422,7 +422,7 @@ async function testDREdgeCases() {
 // Run edge case tests if this file is executed directly
 if (require.main === module) {
     runEdgeCaseTests().then(success => {
-        console.log('\n' + '='.repeat(50));
+        console.log(`\n${  '='.repeat(50)}`);
         console.log(success ? 'All edge case tests passed!' : 'Some edge case tests failed!');
         process.exit(success ? 0 : 1);
     }).catch(error => {

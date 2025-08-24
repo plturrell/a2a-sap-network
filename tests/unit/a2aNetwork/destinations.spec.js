@@ -1,516 +1,516 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+'use strict';
+const __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { 'default': mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const chai_1 = require("chai");
-const sinon_1 = __importDefault(require("sinon"));
-const url_1 = require("url");
-const destinations_1 = require("../../src/utils/destinations");
-const bas_sdk_sinon_helper_1 = require("@sap/bas-sdk-sinon-helper");
-const description = "destination description";
-const someUsage = "some usage";
-describe("index-destinations-utils", () => {
+Object.defineProperty(exports, '__esModule', { value: true });
+const chai_1 = require('chai');
+const sinon_1 = __importDefault(require('sinon'));
+const url_1 = require('url');
+const destinations_1 = require('../../src/utils/destinations');
+const bas_sdk_sinon_helper_1 = require('@sap/bas-sdk-sinon-helper');
+const description = 'destination description';
+const someUsage = 'some usage';
+describe('index-destinations-utils', () => {
     afterEach(() => {
         sinon_1.default.restore();
     });
-    describe("strToDestinationType", () => {
-        it(`return error message when the destination name is unknown`, () => {
+    describe('strToDestinationType', () => {
+        it('return error message when the destination name is unknown', () => {
             (0, chai_1.expect)(() => {
-                (0, destinations_1.strToDestinationType)("unknowndestinationType");
-            }).to.throw(Error, "unknown unknowndestinationType destination type");
+                (0, destinations_1.strToDestinationType)('unknowndestinationType');
+            }).to.throw(Error, 'unknown unknowndestinationType destination type');
         });
         //go through all the failure use cases
-        ["HTTP"].forEach((expDestinationTypeName) => {
-            it(`convert ${expDestinationTypeName} destination type to enum`, function () {
+        ['HTTP'].forEach((expDestinationTypeName) => {
+            it(`convert ${expDestinationTypeName} destination type to enum`, () => {
                 const actualDestinatioType = (0, destinations_1.strToDestinationType)(expDestinationTypeName);
                 (0, chai_1.expect)(actualDestinatioType).equals(expDestinationTypeName);
             });
         });
     });
-    describe("strToAuthenticationType", () => {
-        it(`return error message when the authentication type is unknown`, () => {
+    describe('strToAuthenticationType', () => {
+        it('return error message when the authentication type is unknown', () => {
             (0, chai_1.expect)(() => {
-                (0, destinations_1.strToAuthenticationType)("unknownAutenticationType");
-            }).to.throw(Error, "unknown unknownAutenticationType authentication type");
+                (0, destinations_1.strToAuthenticationType)('unknownAutenticationType');
+            }).to.throw(Error, 'unknown unknownAutenticationType authentication type');
         });
         //go through all the failure use cases
-        ["NoAuthentication", "BasicAuthentication"].forEach((expectedAuthenticationTypeName) => {
-            it(`convert ${expectedAuthenticationTypeName} autentication type to enum`, function () {
+        ['NoAuthentication', 'BasicAuthentication'].forEach((expectedAuthenticationTypeName) => {
+            it(`convert ${expectedAuthenticationTypeName} autentication type to enum`, () => {
                 const actualAuthenticationTypet = (0, destinations_1.strToAuthenticationType)(expectedAuthenticationTypeName);
                 (0, chai_1.expect)(actualAuthenticationTypet).equals(expectedAuthenticationTypeName);
             });
         });
     });
-    describe("strToProxyType", () => {
-        it(`return error message when the proxy type is unknown`, () => {
+    describe('strToProxyType', () => {
+        it('return error message when the proxy type is unknown', () => {
             (0, chai_1.expect)(() => {
-                (0, destinations_1.strToProxyType)("unknownProxyType");
-            }).to.throw(Error, "unknown unknownProxyType proxy type");
+                (0, destinations_1.strToProxyType)('unknownProxyType');
+            }).to.throw(Error, 'unknown unknownProxyType proxy type');
         });
         //go through all the failure use cases
-        ["Internet", "OnPremise"].forEach((expectedProxyTypeName) => {
-            it(`convert ${expectedProxyTypeName} proxy type to enum`, function () {
+        ['Internet', 'OnPremise'].forEach((expectedProxyTypeName) => {
+            it(`convert ${expectedProxyTypeName} proxy type to enum`, () => {
                 const actualProxyTypet = (0, destinations_1.strToProxyType)(expectedProxyTypeName);
                 (0, chai_1.expect)(actualProxyTypet).equals(expectedProxyTypeName);
             });
         });
     });
-    describe("strToTokenServiceUrlType", () => {
-        it(`return error message when the token service url type is unknown`, () => {
+    describe('strToTokenServiceUrlType', () => {
+        it('return error message when the token service url type is unknown', () => {
             (0, chai_1.expect)(() => {
-                (0, destinations_1.strToTokenServiceUrlType)("unknownTokenServiceUrlType");
-            }).to.throw(Error, "unknown unknownTokenServiceUrlType token service url type");
+                (0, destinations_1.strToTokenServiceUrlType)('unknownTokenServiceUrlType');
+            }).to.throw(Error, 'unknown unknownTokenServiceUrlType token service url type');
         });
-        ["Dedicated", "Common"].forEach((expectedTokenServiceUrlType) => {
-            it(`convert ${expectedTokenServiceUrlType} token service url type to enum`, function () {
+        ['Dedicated', 'Common'].forEach((expectedTokenServiceUrlType) => {
+            it(`convert ${expectedTokenServiceUrlType} token service url type to enum`, () => {
                 const actualUrlType = (0, destinations_1.strToTokenServiceUrlType)(expectedTokenServiceUrlType);
                 (0, chai_1.expect)(actualUrlType).equals(expectedTokenServiceUrlType);
             });
         });
     });
-    describe("strToBoolean", () => {
+    describe('strToBoolean', () => {
         const useCases = [
             {
-                desc: "return true when the text is true",
-                text: "true",
+                desc: 'return true when the text is true',
+                text: 'true',
                 expValue: true,
             },
             {
-                desc: "return true when the text is TRUE",
-                text: "TRUE",
+                desc: 'return true when the text is TRUE',
+                text: 'TRUE',
                 expValue: true,
             },
             {
-                desc: "return false when the text is false",
-                text: "false",
+                desc: 'return false when the text is false',
+                text: 'false',
                 expValue: false,
             },
             {
-                desc: "return false when the text is FALSE",
-                text: "FALSE",
+                desc: 'return false when the text is FALSE',
+                text: 'FALSE',
                 expValue: false,
             },
             {
-                desc: "return false when the text is empty",
-                text: "",
+                desc: 'return false when the text is empty',
+                text: '',
                 expValue: false,
             },
             {
-                desc: "return false when the text is not match to boolean values (true/false)",
-                text: "unknown",
+                desc: 'return false when the text is not match to boolean values (true/false)',
+                text: 'unknown',
                 expValue: false,
             },
         ];
-        useCases.forEach(function (useCase) {
-            it(`${useCase.desc}`, function () {
+        useCases.forEach((useCase) => {
+            it(`${useCase.desc}`, () => {
                 const boolValue = (0, destinations_1.strToBoolean)(useCase.text);
                 (0, chai_1.expect)(boolValue).equals(useCase.expValue);
             });
         });
     });
-    describe("destinationInfoToAnswerDestination", () => {
-        const EXPECTED_URL = "https://host.com/";
-        it(`return all AnswerDestination fields`, () => {
+    describe('destinationInfoToAnswerDestination', () => {
+        const EXPECTED_URL = 'https://host.com/';
+        it('return all AnswerDestination fields', () => {
             const destination = {
-                name: "dest1",
+                name: 'dest1',
                 url: new url_1.URL(EXPECTED_URL),
-                type: "HTTP",
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
-                description: "my Description",
+                proxyType: 'OnPremise',
+                description: 'my Description',
                 basProperties: {
                     usage: someUsage,
-                    additionalData: "additional",
-                    sapClient: "001",
-                    productName: "product",
-                    apiKey: "asdf",
-                    applicationID: "app_123",
-                    apiBusinessHubEnterpriseURL: "/url.com",
-                    html5DynamicDestination: "true",
-                    comSapCatalogPropagateCredential: "true",
-                    xCorrelationId: "corrId",
-                    xSystemId: "systemId",
-                    xSystemType: "SAP system"
+                    additionalData: 'additional',
+                    sapClient: '001',
+                    productName: 'product',
+                    apiKey: 'asdf',
+                    applicationID: 'app_123',
+                    apiBusinessHubEnterpriseURL: '/url.com',
+                    html5DynamicDestination: 'true',
+                    comSapCatalogPropagateCredential: 'true',
+                    xCorrelationId: 'corrId',
+                    xSystemId: 'systemId',
+                    xSystemType: 'SAP system'
                 },
             };
             const expectedFlatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "NoAuthentication",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'NoAuthentication',
+                ProxyType: 'OnPremise',
                 URL: EXPECTED_URL,
-                Description: "my Description",
-                WebIDEEnabled: "true",
-                "sap-client": "001",
+                Description: 'my Description',
+                WebIDEEnabled: 'true',
+                'sap-client': '001',
                 WebIDEUsage: someUsage,
-                WebIDEAdditionalData: "additional",
-                "product.name": "product",
-                "HTML5.DynamicDestination": "true",
-                "URL.headers.ApiKey": "asdf",
-                applicationID: "app_123",
-                apiBusinessHubEnterpriseURL: "/url.com",
-                "com.sap.catalog.propagate.credential": "true",
-                "x-system-type": "SAP system",
-                "x-correlation-id": "corrId",
-                "x-system-id": "systemId"
+                WebIDEAdditionalData: 'additional',
+                'product.name': 'product',
+                'HTML5.DynamicDestination': 'true',
+                'URL.headers.ApiKey': 'asdf',
+                applicationID: 'app_123',
+                apiBusinessHubEnterpriseURL: '/url.com',
+                'com.sap.catalog.propagate.credential': 'true',
+                'x-system-type': 'SAP system',
+                'x-correlation-id': 'corrId',
+                'x-system-id': 'systemId'
             };
             const actualFlatDestination = (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             (0, chai_1.expect)(actualFlatDestination).to.deep.equal(expectedFlatDestination);
         });
-        it(`return mandatory AnswerDestination fields`, () => {
+        it('return mandatory AnswerDestination fields', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             const expectedFlatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "NoAuthentication",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'NoAuthentication',
+                ProxyType: 'OnPremise',
                 URL: EXPECTED_URL,
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
             };
             const actualFlatDestination = (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             (0, chai_1.expect)(actualFlatDestination).to.deep.equal(expectedFlatDestination);
         });
-        it(`return mandatory answer destination fields with BasicAuthentication`, () => {
+        it('return mandatory answer destination fields with BasicAuthentication', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "BasicAuthentication",
+                    authentication: 'BasicAuthentication',
                     basicAuthentication: {
-                        userName: "testUser",
-                        userPassword: "123456",
+                        userName: 'testUser',
+                        userPassword: '123456',
                     },
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             const expectedFlatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "BasicAuthentication",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'BasicAuthentication',
+                ProxyType: 'OnPremise',
                 URL: EXPECTED_URL,
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
-                User: "testUser",
-                Password: "123456",
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
+                User: 'testUser',
+                Password: '123456',
             };
             const actualFlatDestination = (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             (0, chai_1.expect)(actualFlatDestination).to.deep.equal(expectedFlatDestination);
         });
-        it(`throw exception when username and password are empty for basic authentication`, () => {
+        it('throw exception when username and password are empty for basic authentication', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "BasicAuthentication",
+                    authentication: 'BasicAuthentication',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             (0, chai_1.expect)(() => {
                 (0, destinations_1.destinationInfoToAnswerDestination)(destination);
-            }).to.throw(Error, "Missing user and password for Basic Authentication");
+            }).to.throw(Error, 'Missing user and password for Basic Authentication');
         });
-        it(`flat destination fails because sap-client value length does not equal 3`, () => {
+        it('flat destination fails because sap-client value length does not equal 3', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
                 basProperties: {
-                    sapClient: "1234",
+                    sapClient: '1234',
                 },
             };
             (0, chai_1.expect)(() => {
                 (0, destinations_1.destinationInfoToAnswerDestination)(destination);
-            }).to.throw(Error, `sap-client "1234" property length must equal 3.`);
+            }).to.throw(Error, 'sap-client "1234" property length must equal 3.');
         });
-        it("return mandatory answer destination fields with OAuth2ClientCredentials", () => {
+        it('return mandatory answer destination fields with OAuth2ClientCredentials', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "OAuth2ClientCredentials",
+                    authentication: 'OAuth2ClientCredentials',
                     oauth2ClientCredentials: {
-                        tokenServiceURL: "https://token.service.url",
-                        tokenServiceURLType: "Dedicated",
-                        clientId: "testClientId",
-                        clientSecret: "testClientSecret",
-                        tokenServiceUser: "tokenUser",
-                        tokenServicePassword: "tokenPassword",
+                        tokenServiceURL: 'https://token.service.url',
+                        tokenServiceURLType: 'Dedicated',
+                        clientId: 'testClientId',
+                        clientSecret: 'testClientSecret',
+                        tokenServiceUser: 'tokenUser',
+                        tokenServicePassword: 'tokenPassword',
                     },
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             const expectedFlatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "OAuth2ClientCredentials",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'OAuth2ClientCredentials',
+                ProxyType: 'OnPremise',
                 URL: EXPECTED_URL,
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
-                tokenServiceURL: "https://token.service.url",
-                tokenServiceURLType: "Dedicated",
-                clientId: "testClientId",
-                clientSecret: "testClientSecret",
-                tokenServiceUser: "tokenUser",
-                tokenServicePassword: "tokenPassword",
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
+                tokenServiceURL: 'https://token.service.url',
+                tokenServiceURLType: 'Dedicated',
+                clientId: 'testClientId',
+                clientSecret: 'testClientSecret',
+                tokenServiceUser: 'tokenUser',
+                tokenServicePassword: 'tokenPassword',
             };
             const actualFlatDestination = (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             (0, chai_1.expect)(actualFlatDestination).to.deep.equal(expectedFlatDestination);
         });
-        it("throw exception when OAuth2ClientCredentials fields are missing", () => {
+        it('throw exception when OAuth2ClientCredentials fields are missing', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "OAuth2ClientCredentials",
+                    authentication: 'OAuth2ClientCredentials',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             (0, chai_1.expect)(() => {
                 (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             }).to.throw(Error, `Missing credentials for ${destination.credentials.authentication}`);
         });
-        it("return mandatory answer destination fields with OAuth2UserTokenExchange", () => {
+        it('return mandatory answer destination fields with OAuth2UserTokenExchange', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "OAuth2UserTokenExchange",
+                    authentication: 'OAuth2UserTokenExchange',
                     oauth2UserTokenExchange: {
-                        tokenServiceURL: "https://token.service.url",
-                        tokenServiceURLType: "Dedicated",
-                        clientId: "testClientId",
-                        clientSecret: "testClientSecret",
+                        tokenServiceURL: 'https://token.service.url',
+                        tokenServiceURLType: 'Dedicated',
+                        clientId: 'testClientId',
+                        clientSecret: 'testClientSecret',
                     },
                 },
-                basProperties: { html5Timeout: "60000" },
-                proxyType: "OnPremise",
+                basProperties: { html5Timeout: '60000' },
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             const expectedFlatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "OAuth2UserTokenExchange",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'OAuth2UserTokenExchange',
+                ProxyType: 'OnPremise',
                 URL: EXPECTED_URL,
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
-                "HTML5.Timeout": "60000",
-                tokenServiceURL: "https://token.service.url",
-                tokenServiceURLType: "Dedicated",
-                clientId: "testClientId",
-                clientSecret: "testClientSecret",
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
+                'HTML5.Timeout': '60000',
+                tokenServiceURL: 'https://token.service.url',
+                tokenServiceURLType: 'Dedicated',
+                clientId: 'testClientId',
+                clientSecret: 'testClientSecret',
                 tokenServiceUser: undefined,
                 tokenServicePassword: undefined,
             };
             const actualFlatDestination = (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             (0, chai_1.expect)(actualFlatDestination).to.deep.equal(expectedFlatDestination);
         });
-        it("throw exception when OAuth2UserTokenExchange fields are missing", () => {
+        it('throw exception when OAuth2UserTokenExchange fields are missing', () => {
             const destination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "OAuth2UserTokenExchange",
+                    authentication: 'OAuth2UserTokenExchange',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 url: new url_1.URL(EXPECTED_URL),
             };
             (0, chai_1.expect)(() => {
                 (0, destinations_1.destinationInfoToAnswerDestination)(destination);
             }).to.throw(Error, `Missing credentials for ${destination.credentials.authentication}`);
         });
-        it("handled undefined for non-oauth authentication methods", () => {
+        it('handled undefined for non-oauth authentication methods', () => {
             (0, chai_1.expect)(destinations_1.authenticationTypeToProperties[destinations_1.AuthenticationType.NoAuthentication]({})).to.be.undefined;
             (0, chai_1.expect)(destinations_1.authenticationTypeToProperties[destinations_1.AuthenticationType.BasicAuthentication]({})).to.be.undefined;
         });
     });
-    describe("flatDestinationToDestinationBaseInfo", () => {
-        it(`return all destination fields`, () => {
+    describe('flatDestinationToDestinationBaseInfo', () => {
+        it('return all destination fields', () => {
             const flatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "NoAuthentication",
-                ProxyType: "OnPremise",
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
-                WebIDEAdditionalData: "additional",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'NoAuthentication',
+                ProxyType: 'OnPremise',
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
+                WebIDEAdditionalData: 'additional',
                 WebIDEUsage: someUsage,
-                "sap-client": "sapClient",
-                "product.name": "product",
-                "URL.headers.ApiKey": "asdf",
-                applicationID: "app_123",
-                apiBusinessHubEnterpriseURL: "/url.com",
-                "com.sap.catalog.propagate.credential": "true",
-                "x-system-type": "SAP system",
-                "x-correlation-id": "corrId",
-                "x-system-id": "systemId",
-                "HTML5.Timeout": "60000"
+                'sap-client': 'sapClient',
+                'product.name': 'product',
+                'URL.headers.ApiKey': 'asdf',
+                applicationID: 'app_123',
+                apiBusinessHubEnterpriseURL: '/url.com',
+                'com.sap.catalog.propagate.credential': 'true',
+                'x-system-type': 'SAP system',
+                'x-correlation-id': 'corrId',
+                'x-system-id': 'systemId',
+                'HTML5.Timeout': '60000'
             };
             const expectedDestination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 basProperties: {
                     usage: someUsage,
-                    additionalData: "additional",
-                    sapClient: "sapClient",
-                    productName: "product",
-                    apiKey: "asdf",
-                    applicationID: "app_123",
-                    apiBusinessHubEnterpriseURL: "/url.com",
-                    html5DynamicDestination: "true",
-                    comSapCatalogPropagateCredential: "true",
-                    xCorrelationId: "corrId",
-                    xSystemId: "systemId",
-                    xSystemType: "SAP system",
-                    html5Timeout: "60000"
+                    additionalData: 'additional',
+                    sapClient: 'sapClient',
+                    productName: 'product',
+                    apiKey: 'asdf',
+                    applicationID: 'app_123',
+                    apiBusinessHubEnterpriseURL: '/url.com',
+                    html5DynamicDestination: 'true',
+                    comSapCatalogPropagateCredential: 'true',
+                    xCorrelationId: 'corrId',
+                    xSystemId: 'systemId',
+                    xSystemType: 'SAP system',
+                    html5Timeout: '60000'
                 },
             };
             const actualDestination = (0, destinations_1.flatDestinationToDestinationBaseInfo)(flatDestination);
             (0, chai_1.expect)(actualDestination).to.deep.equal(expectedDestination);
         });
-        it(`return mandatory destination fields`, () => {
+        it('return mandatory destination fields', () => {
             const flatDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "NoAuthentication",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'NoAuthentication',
+                ProxyType: 'OnPremise',
                 Description: description,
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
             };
             const expectedDestination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 description: description,
                 basProperties: {
-                    html5DynamicDestination: "true",
+                    html5DynamicDestination: 'true',
                 },
             };
             const actualDestination = (0, destinations_1.flatDestinationToDestinationBaseInfo)(flatDestination);
             (0, chai_1.expect)(actualDestination).to.deep.equal(expectedDestination);
         });
     });
-    describe("responseDestinationToDestinationListInfo", () => {
-        it(`return all destination list info fields`, () => {
+    describe('responseDestinationToDestinationListInfo', () => {
+        it('return all destination list info fields', () => {
             const responseDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "NoAuthentication",
-                ProxyType: "OnPremise",
-                Host: "host",
-                WebIDEEnabled: "true",
-                "sap-client": "sapClient",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'NoAuthentication',
+                ProxyType: 'OnPremise',
+                Host: 'host',
+                WebIDEEnabled: 'true',
+                'sap-client': 'sapClient',
                 WebIDEUsage: someUsage,
-                WebIDEAdditionalData: "additional",
-                "product.name": "product",
-                "HTML5.DynamicDestination": "true",
-                "URL.headers.ApiKey": "asdf",
-                applicationID: "app_123",
-                apiBusinessHubEnterpriseURL: "/url.com",
+                WebIDEAdditionalData: 'additional',
+                'product.name': 'product',
+                'HTML5.DynamicDestination': 'true',
+                'URL.headers.ApiKey': 'asdf',
+                applicationID: 'app_123',
+                apiBusinessHubEnterpriseURL: '/url.com',
             };
             const expectedDestination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
-                host: "host",
+                proxyType: 'OnPremise',
+                host: 'host',
                 basProperties: {
                     usage: someUsage,
-                    additionalData: "additional",
-                    sapClient: "sapClient",
-                    productName: "product",
-                    apiKey: "asdf",
-                    applicationID: "app_123",
-                    apiBusinessHubEnterpriseURL: "/url.com",
-                    html5DynamicDestination: "true",
+                    additionalData: 'additional',
+                    sapClient: 'sapClient',
+                    productName: 'product',
+                    apiKey: 'asdf',
+                    applicationID: 'app_123',
+                    apiBusinessHubEnterpriseURL: '/url.com',
+                    html5DynamicDestination: 'true',
                 },
             };
             const actualDestination = (0, destinations_1.responseDestinationToDestinationListInfo)(responseDestination);
             (0, chai_1.expect)(actualDestination).to.deep.equal(expectedDestination);
         });
-        it(`return mandatory destination list fields`, () => {
+        it('return mandatory destination list fields', () => {
             const responseDestination = {
-                Name: "dest1",
-                Type: "HTTP",
-                Authentication: "NoAuthentication",
-                ProxyType: "OnPremise",
+                Name: 'dest1',
+                Type: 'HTTP',
+                Authentication: 'NoAuthentication',
+                ProxyType: 'OnPremise',
                 Description: description,
-                Host: "host",
-                WebIDEEnabled: "true",
-                "HTML5.DynamicDestination": "true",
+                Host: 'host',
+                WebIDEEnabled: 'true',
+                'HTML5.DynamicDestination': 'true',
             };
             const expectedDestination = {
-                name: "dest1",
-                type: "HTTP",
+                name: 'dest1',
+                type: 'HTTP',
                 credentials: {
-                    authentication: "NoAuthentication",
+                    authentication: 'NoAuthentication',
                 },
-                proxyType: "OnPremise",
+                proxyType: 'OnPremise',
                 description: description,
-                host: "host",
+                host: 'host',
                 basProperties: {
-                    html5DynamicDestination: "true",
+                    html5DynamicDestination: 'true',
                 },
             };
             const actualDestination = (0, destinations_1.responseDestinationToDestinationListInfo)(responseDestination);
             (0, chai_1.expect)(actualDestination).to.deep.equal(expectedDestination);
         });
     });
-    describe("getDestinationHeaders", () => {
-        const WS_BASE_URL = "WS-BASE-VALUE";
-        it("return headers when the environment is application studio", () => {
+    describe('getDestinationHeaders', () => {
+        const WS_BASE_URL = 'WS-BASE-VALUE';
+        it('return headers when the environment is application studio', () => {
             (0, bas_sdk_sinon_helper_1.stubEnv)({ WS_BASE_URL: WS_BASE_URL });
             const expectedHeaders = {
-                "Content-Type": "application/json",
-                "User-Agent": "Bas",
+                'Content-Type': 'application/json',
+                'User-Agent': 'Bas',
             };
             (0, chai_1.expect)((0, destinations_1.getDestinationHeaders)()).deep.equals(expectedHeaders);
         });
-        it("return headers when the environment is not application studio", () => {
-            (0, bas_sdk_sinon_helper_1.stubEnv)({ H2O_JWT: "H2O_JWT_VALUE" });
+        it('return headers when the environment is not application studio', () => {
+            (0, bas_sdk_sinon_helper_1.stubEnv)({ H2O_JWT: 'H2O_JWT_VALUE' });
             const expectedHeaders = {
-                "Content-Type": "application/json",
-                "x-approuter-authorization": `Bearer H2O_JWT_VALUE`,
-                "User-Agent": "Bas",
+                'Content-Type': 'application/json',
+                'x-approuter-authorization': 'Bearer H2O_JWT_VALUE',
+                'User-Agent': 'Bas',
             };
             (0, chai_1.expect)((0, destinations_1.getDestinationHeaders)()).deep.equals(expectedHeaders);
         });
-        it("throw exception when the environment is not is not application studio and the the H2O_JWT environement variable is missing", () => {
+        it('throw exception when the environment is not is not application studio and the the H2O_JWT environement variable is missing', () => {
             (0, chai_1.expect)(() => {
                 (0, chai_1.expect)((0, destinations_1.getDestinationHeaders)()).deep.equals({});
-            }).to.throw(Error, `The H2O_JWT environment variable is missing.`);
+            }).to.throw(Error, 'The H2O_JWT environment variable is missing.');
         });
     });
 });

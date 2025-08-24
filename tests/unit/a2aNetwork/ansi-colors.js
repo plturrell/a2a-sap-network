@@ -1,15 +1,15 @@
-var test = require('tape');
-var table = require('../');
-var color = require('cli-color');
-var ansiTrim = require('cli-color/lib/trim');
+const test = require('tape');
+const table = require('../');
+const color = require('cli-color');
+const ansiTrim = require('cli-color/lib/trim');
 
-test('center', function (t) {
+test('center', (t) => {
     t.plan(1);
-    var opts = {
+    const opts = {
         align: [ 'l', 'c', 'l' ],
-        stringLength: function(s) { return ansiTrim(s).length }
+        stringLength: function(s) { return ansiTrim(s).length; }
     };
-    var s = table([
+    const s = table([
         [
             color.red('Red'), color.green('Green'), color.blue('Blue')
         ],

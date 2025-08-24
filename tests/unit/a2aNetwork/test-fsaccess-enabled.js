@@ -49,13 +49,13 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-fs.access(__filename, function () {
+fs.access(__filename, () => {
   called = true;
 });
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, preUid);
   assert.equal(initUid, postUid);
   assert.equal(initUid, destroyUid);

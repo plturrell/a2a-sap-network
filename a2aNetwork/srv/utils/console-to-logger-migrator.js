@@ -58,7 +58,7 @@ class ConsoleToLoggerMigrator {
             return null;
         }
         
-        return "const { LoggerFactory } = require('../../shared/logging/structured-logger');";
+        return 'const { LoggerFactory } = require(\'../../shared/logging/structured-logger\');';
     }
 
     /**
@@ -106,7 +106,7 @@ class ConsoleToLoggerMigrator {
         for (let i = 0; i < argsString.length; i++) {
             const char = argsString[i];
             
-            if (!inString && (char === '"' || char === "'" || char === '`')) {
+            if (!inString && (char === '"' || char === '\'' || char === '`')) {
                 inString = true;
                 stringChar = char;
             } else if (inString && char === stringChar && argsString[i-1] !== '\\') {
@@ -196,7 +196,7 @@ class ConsoleToLoggerMigrator {
             
             // Check if logger is already imported
             const hasLoggerImport = content.includes('LoggerFactory') || 
-                                  content.includes("require('../logging") ||
+                                  content.includes('require(\'../logging') ||
                                   content.includes('logger =');
             
             let modifiedContent = content;

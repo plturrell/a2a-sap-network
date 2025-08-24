@@ -1,28 +1,28 @@
 
-var test = require("tap").test;
-var defaultFormater = require('../../format.js');
-var produce = require('../produce.js');
+const test = require('tap').test;
+const defaultFormater = require('../../format.js');
+const produce = require('../produce.js');
 
 // Set a formater before stack-chain is required
 Error.prepareStackTrace = function (error, frames) {
   if (error.test) {
-    var lines = [];
+    const lines = [];
         lines.push(error.toString());
 
-    for (var i = 0, l = frames.length; i < l; i++) {
+    for (let i = 0, l = frames.length; i < l; i++) {
         lines.push(frames[i].getFunctionName());
     }
 
-    return lines.join("\n");
+    return lines.join('\n');
   }
 
   return defaultFormater(error, frames);
 };
 
-var chain = require('../../');
+const chain = require('../../');
 
-test("set Error.prepareStackTrace before require", function (t) {
-  t.test("default formatter replaced", function (t) {
+test('set Error.prepareStackTrace before require', (t) => {
+  t.test('default formatter replaced', (t) => {
     t.equal(produce.real(3), produce.fake([
       'Error: trace',
       '',
@@ -33,7 +33,7 @@ test("set Error.prepareStackTrace before require", function (t) {
     t.end();
   });
 
-  t.test("restore default formater", function (t) {
+  t.test('restore default formater', (t) => {
     chain.format.restore();
 
     t.equal(produce.real(3), produce.fake([

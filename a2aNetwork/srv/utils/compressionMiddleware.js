@@ -261,8 +261,8 @@ class EnterpriseCompressionManager {
                     algorithm: strategy.algorithm,
                     originalSize: totalBytes,
                     compressedSize,
-                    ratio: ((1 - (compressedSize / totalBytes)) * 100).toFixed(2) + '%',
-                    time: compressionTime + 'ms'
+                    ratio: `${((1 - (compressedSize / totalBytes)) * 100).toFixed(2)  }%`,
+                    time: `${compressionTime  }ms`
                 });
             }
             
@@ -280,11 +280,11 @@ class EnterpriseCompressionManager {
         return {
             ...this.metrics,
             compressionRate: this.metrics.totalRequests > 0 
-                ? (this.metrics.compressedRequests / this.metrics.totalRequests * 100).toFixed(2) + '%'
+                ? `${(this.metrics.compressedRequests / this.metrics.totalRequests * 100).toFixed(2)  }%`
                 : '0%',
-            avgCompressionRatio: this.metrics.compressionRatio.toFixed(2) + '%',
+            avgCompressionRatio: `${this.metrics.compressionRatio.toFixed(2)  }%`,
             totalSaved: this.metrics.totalBytesIn - this.metrics.totalBytesOut,
-            avgCompressionTime: this.metrics.avgCompressionTime.toFixed(2) + 'ms'
+            avgCompressionTime: `${this.metrics.avgCompressionTime.toFixed(2)  }ms`
         };
     }
 

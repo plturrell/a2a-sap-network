@@ -503,7 +503,7 @@ class NotificationPersistenceService {
 
     convertToUserTimezone(date, timezone) {
         // Simple timezone conversion - in production, use a proper timezone library
-        return new Date(date.toLocaleString("en-US", { timeZone: timezone }));
+        return new Date(date.toLocaleString('en-US', { timeZone: timezone }));
     }
 
     calculateRetryDelay(attemptNumber) {

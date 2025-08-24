@@ -1,8 +1,8 @@
-'use strict'
+'use strict';
 
-const test = require('tape')
-const fastifyURI = require('../')
-const urijs = require('uri-js')
+const test = require('tape');
+const fastifyURI = require('../');
+const urijs = require('uri-js');
 
 test('compatibility Parse', (t) => {
   const toParse = [
@@ -56,12 +56,12 @@ test('compatibility Parse', (t) => {
     //  'mailto:user@example.org?subject=%3D%3Fiso-8859-1%3FQ%3Fcaf%3DE9%3F%3D',
     //  'mailto:user@example.org?subject=caf%C3%A9&body=caf%C3%A9',
     //  'mailto:user@%E7%B4%8D%E8%B1%86.example.org?subject=Test&body=NATTO'
-  ]
+  ];
   toParse.forEach((x) => {
-    t.same(fastifyURI.parse(x), urijs.parse(x), 'Compatibility parse: ' + x)
-  })
-  t.end()
-})
+    t.same(fastifyURI.parse(x), urijs.parse(x), `Compatibility parse: ${  x}`);
+  });
+  t.end();
+});
 
 test('compatibility serialize', (t) => {
   const toSerialize = [
@@ -118,14 +118,14 @@ test('compatibility serialize', (t) => {
       scheme: 'scheme',
       path: 'with:colon'
     }
-  ]
+  ];
   toSerialize.forEach((x) => {
-    const r = JSON.stringify(x)
+    const r = JSON.stringify(x);
     t.same(
       fastifyURI.serialize(x),
       urijs.serialize(x),
-      'Compatibility serialize: ' + JSON.stringify(r)
-    )
-  })
-  t.end()
-})
+      `Compatibility serialize: ${  JSON.stringify(r)}`
+    );
+  });
+  t.end();
+});

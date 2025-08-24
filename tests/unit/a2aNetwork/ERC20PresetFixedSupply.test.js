@@ -5,7 +5,7 @@ const { expect } = require('chai');
 
 const ERC20PresetFixedSupply = artifacts.require('ERC20PresetFixedSupply');
 
-contract('ERC20PresetFixedSupply', function (accounts) {
+contract('ERC20PresetFixedSupply', (accounts) => {
   const [deployer, owner] = accounts;
 
   const name = 'PresetFixedSupply';
@@ -26,7 +26,7 @@ contract('ERC20PresetFixedSupply', function (accounts) {
     expect(await this.token.totalSupply()).to.be.bignumber.equal(initialSupply);
   });
 
-  describe('burning', function () {
+  describe('burning', () => {
     it('holders can burn their tokens', async function () {
       const remainingBalance = initialSupply.sub(amount);
       const receipt = await this.token.burn(amount, { from: owner });

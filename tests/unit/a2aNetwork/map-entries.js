@@ -20,25 +20,25 @@
 
 'use strict';
 
-var test = require('tape');
-var bufrw = require('bufrw');
-var testRW = require('bufrw/test_rw');
+const test = require('tape');
+const bufrw = require('bufrw');
+const testRW = require('bufrw/test_rw');
 
-var thriftrw = require('../index');
-var MapEntriesRW = thriftrw.MapEntriesRW;
+const thriftrw = require('../index');
+const MapEntriesRW = thriftrw.MapEntriesRW;
 
-var strType = {
+const strType = {
     name: 'string',
     typeid: 1,
     rw: bufrw.str1
 };
-var i16Type = {
+const i16Type = {
     name: 'i16',
     typeid: 2,
     rw: bufrw.Int16BE
 };
 
-var strI16MapRW = new MapEntriesRW(strType, i16Type);
+const strI16MapRW = new MapEntriesRW(strType, i16Type);
 test('MapEntriesRW: strI16MapRW', testRW.cases(strI16MapRW, [
     [[], [
         0x01,                  // key_type:1 -- 99
@@ -101,7 +101,7 @@ test('MapEntriesRW: strI16MapRW', testRW.cases(strI16MapRW, [
     }
 ]));
 
-var i16StrMapRW = new MapEntriesRW(i16Type, strType);
+const i16StrMapRW = new MapEntriesRW(i16Type, strType);
 test('MapEntriesRW: i16StrMapRW', testRW.cases(i16StrMapRW, [
     [[
         [1, 'abc'],
@@ -126,7 +126,7 @@ test('MapEntriesRW: i16StrMapRW', testRW.cases(i16StrMapRW, [
     ]]
 ]));
 
-var i16I16MapRW = new MapEntriesRW(i16Type, i16Type);
+const i16I16MapRW = new MapEntriesRW(i16Type, i16Type);
 test('MapEntriesRW: i16I16MapRW', testRW.cases(i16I16MapRW, [
     [[
         [1, 4],
@@ -148,7 +148,7 @@ test('MapEntriesRW: i16I16MapRW', testRW.cases(i16I16MapRW, [
     ]]
 ]));
 
-var strStrMapRW = new MapEntriesRW(strType, strType);
+const strStrMapRW = new MapEntriesRW(strType, strType);
 test('MapEntriesRW: strStrMapRW', testRW.cases(strStrMapRW, [
     [[
         ['abc', 'ABC'],

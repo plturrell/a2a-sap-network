@@ -4,13 +4,13 @@
  */
 
 sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/ui/core/Fragment"
-], function(
+    'sap/ui/base/Object',
+    'sap/ui/core/Fragment'
+], (
     BaseObject,
     Fragment
-) {
-    "use strict";
+) => {
+    'use strict';
 
     /**
      * Loading State Mixin
@@ -31,59 +31,59 @@ sap.ui.define([
             // Default loading configurations
             this._loadingConfigs = {
                 mainContent: {
-                    type: "spinner",
-                    size: "large",
-                    message: "Loading content...",
+                    type: 'spinner',
+                    size: 'large',
+                    message: 'Loading content...',
                     overlay: false
                 },
                 data: {
-                    type: "skeleton", 
-                    size: "medium",
-                    message: "Loading data...",
+                    type: 'skeleton', 
+                    size: 'medium',
+                    message: 'Loading data...',
                     overlay: false
                 },
                 chart: {
-                    type: "shimmer",
-                    size: "large", 
-                    message: "Preparing visualization...",
+                    type: 'shimmer',
+                    size: 'large', 
+                    message: 'Preparing visualization...',
                     overlay: false
                 },
                 agentProcessing: {
-                    type: "dots",
-                    size: "medium",
-                    message: "Processing with AI agents...",
+                    type: 'dots',
+                    size: 'medium',
+                    message: 'Processing with AI agents...',
                     overlay: false
                 },
                 search: {
-                    type: "pulse",
-                    size: "small",
-                    message: "Searching...",
+                    type: 'pulse',
+                    size: 'small',
+                    message: 'Searching...',
                     overlay: false
                 },
                 upload: {
-                    type: "progress",
-                    size: "medium", 
-                    message: "Uploading file...",
+                    type: 'progress',
+                    size: 'medium', 
+                    message: 'Uploading file...',
                     overlay: false
                 },
                 pageTransition: {
-                    type: "spinner",
-                    size: "medium",
-                    message: "Loading page...",
+                    type: 'spinner',
+                    size: 'medium',
+                    message: 'Loading page...',
                     overlay: true
                 },
                 network: {
-                    type: "dots",
-                    size: "small",
-                    message: "Connecting...",
+                    type: 'dots',
+                    size: 'small',
+                    message: 'Connecting...',
                     overlay: false
                 },
                 computation: {
-                    type: "pulse",
-                    size: "large",
-                    message: "Processing complex calculations...",
+                    type: 'pulse',
+                    size: 'large',
+                    message: 'Processing complex calculations...',
                     overlay: false,
-                    speed: "slow"
+                    speed: 'slow'
                 }
             };
         },
@@ -96,7 +96,7 @@ sap.ui.define([
             if (!this._loadingFragment) {
                 this._loadingFragment = await Fragment.load({
                     id: this.getView().getId(),
-                    name: "com.sap.a2a.portal.fragment.LoadingStateManager",
+                    name: 'com.sap.a2a.portal.fragment.LoadingStateManager',
                     controller: this
                 });
                 
@@ -128,7 +128,7 @@ sap.ui.define([
                 );
                 
                 // Get or create loading indicator
-                let loadingIndicator = this._getLoadingIndicator(loadingId, config);
+                const loadingIndicator = this._getLoadingIndicator(loadingId, config);
                 
                 if (!loadingIndicator) {
                     console.warn(`Loading indicator not found for ID: ${loadingId}`);
@@ -160,7 +160,7 @@ sap.ui.define([
                 }
                 
             } catch (error) {
-                console.error("Error showing loading state:", error);
+                console.error('Error showing loading state:', error);
             }
         },
 
@@ -191,7 +191,7 @@ sap.ui.define([
                 }
                 
             } catch (error) {
-                console.error("Error hiding loading state:", error);
+                console.error('Error hiding loading state:', error);
             }
         },
 
@@ -205,7 +205,7 @@ sap.ui.define([
             try {
                 const loadingIndicator = this._getLoadingIndicator(loadingId);
                 
-                if (loadingIndicator && loadingIndicator.getType() === "progress") {
+                if (loadingIndicator && loadingIndicator.getType() === 'progress') {
                     loadingIndicator.setProgress(progress);
                     
                     if (message) {
@@ -213,7 +213,7 @@ sap.ui.define([
                     }
                 }
             } catch (error) {
-                console.error("Error updating loading progress:", error);
+                console.error('Error updating loading progress:', error);
             }
         },
 
@@ -237,7 +237,7 @@ sap.ui.define([
                 } else if (operation && typeof operation.then === 'function') {
                     result = await operation;
                 } else {
-                    throw new Error("Operation must be a Promise or Function");
+                    throw new Error('Operation must be a Promise or Function');
                 }
                 
                 // Hide loading on success
@@ -256,7 +256,7 @@ sap.ui.define([
          * Show global page loading overlay
          * @param {string} message - Loading message
          */
-        showGlobalLoading: function(message = "Loading...") {
+        showGlobalLoading: function(message = 'Loading...') {
             sap.ui.core.BusyIndicator.show(0, message);
         },
 
@@ -303,12 +303,12 @@ sap.ui.define([
             if (!this._loadingFragment) return null;
             
             // Try predefined loaders first
-            const predefinedId = loadingId + "Loader";
-            let indicator = sap.ui.getCore().byId(this.getView().getId() + "--" + predefinedId);
+            const predefinedId = `${loadingId  }Loader`;
+            let indicator = sap.ui.getCore().byId(`${this.getView().getId()  }--${  predefinedId}`);
             
             if (!indicator) {
                 // Try direct ID
-                indicator = sap.ui.getCore().byId(this.getView().getId() + "--" + loadingId);
+                indicator = sap.ui.getCore().byId(`${this.getView().getId()  }--${  loadingId}`);
             }
             
             return indicator;
@@ -341,7 +341,7 @@ sap.ui.define([
                     targetControl.addItem(loadingIndicator);
                 }
             } catch (error) {
-                console.warn("Could not attach loading indicator to target:", error);
+                console.warn('Could not attach loading indicator to target:', error);
             }
         },
 
@@ -358,7 +358,7 @@ sap.ui.define([
                     targetControl.removeItem(loadingIndicator);
                 }
             } catch (error) {
-                console.warn("Could not detach loading indicator from target:", error);
+                console.warn('Could not detach loading indicator from target:', error);
             }
         },
 
@@ -367,53 +367,53 @@ sap.ui.define([
          */
         
         showMainContentLoading: function(message) {
-            return this.showLoading("mainContent", { message: message });
+            return this.showLoading('mainContent', { message: message });
         },
         
         showDataLoading: function() {
-            return this.showLoading("data");
+            return this.showLoading('data');
         },
         
         showChartLoading: function() {
-            return this.showLoading("chart");
+            return this.showLoading('chart');
         },
         
         showAgentProcessingLoading: function(agentName) {
-            return this.showLoading("agentProcessing", {
+            return this.showLoading('agentProcessing', {
                 message: `Processing with ${agentName}...`
             });
         },
         
         showSearchLoading: function() {
-            return this.showLoading("search");
+            return this.showLoading('search');
         },
         
         showUploadLoading: function() {
-            return this.showLoading("upload");
+            return this.showLoading('upload');
         },
         
         hideMainContentLoading: function() {
-            this.hideLoading("mainContent");
+            this.hideLoading('mainContent');
         },
         
         hideDataLoading: function() {
-            this.hideLoading("data");
+            this.hideLoading('data');
         },
         
         hideChartLoading: function() {
-            this.hideLoading("chart");
+            this.hideLoading('chart');
         },
         
         hideAgentProcessingLoading: function() {
-            this.hideLoading("agentProcessing");
+            this.hideLoading('agentProcessing');
         },
         
         hideSearchLoading: function() {
-            this.hideLoading("search");
+            this.hideLoading('search');
         },
         
         hideUploadLoading: function() {
-            this.hideLoading("upload");
+            this.hideLoading('upload');
         }
     };
 });

@@ -18,7 +18,7 @@ module.exports = function() {
     // Connect to BlockchainService on startup
     let blockchainService;
     
-    this.before('*', async function() {
+    this.before('*', async () => {
         if (!blockchainService) {
             try {
                 blockchainService = await cds.connect.to('BlockchainService');

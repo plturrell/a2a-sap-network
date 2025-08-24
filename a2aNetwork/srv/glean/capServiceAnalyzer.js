@@ -237,7 +237,7 @@ class CAPServiceAnalyzer {
             }
             
             // Analyze handler function
-            let handlerInfo = {
+            const handlerInfo = {
                 type: handlerType,
                 event: eventName,
                 entity: entityName,

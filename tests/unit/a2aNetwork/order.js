@@ -1,10 +1,10 @@
 
-var test = require("tap").test;
-var chain = require('../../');
-var produce = require('../produce.js');
+const test = require('tap').test;
+const chain = require('../../');
+const produce = require('../produce.js');
 
-test("modifier execution order", function (t) {
-  var filter = function (error, frames) {
+test('modifier execution order', (t) => {
+  const filter = function (error, frames) {
     if (error.test) {
       frames.splice(0, 1);
     }
@@ -12,9 +12,9 @@ test("modifier execution order", function (t) {
     return frames;
   };
 
-  var modify = function (error, frames) {
+  const modify = function (error, frames) {
     if (error.test) {
-      frames.splice(1, 0, "wonder land");
+      frames.splice(1, 0, 'wonder land');
     }
 
     return frames;

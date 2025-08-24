@@ -2,7 +2,7 @@ const shouldBehaveLikeProxy = require('../Proxy.behaviour');
 
 const ERC1967Proxy = artifacts.require('ERC1967Proxy');
 
-contract('ERC1967Proxy', function (accounts) {
+contract('ERC1967Proxy', (accounts) => {
   const [proxyAdminOwner] = accounts;
 
   const createProxy = async function (implementation, _admin, initData, opts) {

@@ -10,13 +10,13 @@ const DisableBad1 = artifacts.require('DisableBad1');
 const DisableBad2 = artifacts.require('DisableBad2');
 const DisableOk = artifacts.require('DisableOk');
 
-contract('Initializable', function () {
-  describe('basic testing without inheritance', function () {
+contract('Initializable', () => {
+  describe('basic testing without inheritance', () => {
     beforeEach('deploying', async function () {
       this.contract = await InitializableMock.new();
     });
 
-    describe('before initialize', function () {
+    describe('before initialize', () => {
       it('initializer has not run', async function () {
         expect(await this.contract.initializerRan()).to.equal(false);
       });
@@ -26,7 +26,7 @@ contract('Initializable', function () {
       });
     });
 
-    describe('after initialize', function () {
+    describe('after initialize', () => {
       beforeEach('initializing', async function () {
         await this.contract.initialize();
       });
@@ -44,7 +44,7 @@ contract('Initializable', function () {
       });
     });
 
-    describe('nested under an initializer', function () {
+    describe('nested under an initializer', () => {
       it('initializer modifier reverts', async function () {
         await expectRevert(this.contract.initializerNested(), 'Initializable: contract is already initialized');
       });
@@ -60,20 +60,20 @@ contract('Initializable', function () {
     });
   });
 
-  it('nested initializer can run during construction', async function () {
+  it('nested initializer can run during construction', async () => {
     const contract2 = await ConstructorInitializableMock.new();
     expect(await contract2.initializerRan()).to.equal(true);
     expect(await contract2.onlyInitializingRan()).to.equal(true);
   });
 
-  it('multiple constructor levels can be initializers', async function () {
+  it('multiple constructor levels can be initializers', async () => {
     const contract2 = await ChildConstructorInitializableMock.new();
     expect(await contract2.initializerRan()).to.equal(true);
     expect(await contract2.childInitializerRan()).to.equal(true);
     expect(await contract2.onlyInitializingRan()).to.equal(true);
   });
 
-  describe('reinitialization', function () {
+  describe('reinitialization', () => {
     beforeEach('deploying', async function () {
       this.contract = await ReinitializerMock.new();
     });
@@ -116,7 +116,7 @@ contract('Initializable', function () {
       expect(await this.contract.getInitializedVersion()).to.be.bignumber.equal('12');
     });
 
-    describe('contract locking', function () {
+    describe('contract locking', () => {
       it('prevents initialization', async function () {
         await this.contract.disableInitializers();
         await expectRevert(this.contract.initialize(), 'Initializable: contract is already initialized');
@@ -135,14 +135,14 @@ contract('Initializable', function () {
     });
   });
 
-  describe('events', function () {
-    it('constructor initialization emits event', async function () {
+  describe('events', () => {
+    it('constructor initialization emits event', async () => {
       const contract = await ConstructorInitializableMock.new();
 
       await expectEvent.inTransaction(contract.transactionHash, contract, 'Initialized', { version: '1' });
     });
 
-    it('initialization emits event', async function () {
+    it('initialization emits event', async () => {
       const contract = await ReinitializerMock.new();
 
       const { receipt } = await contract.initialize();
@@ -150,7 +150,7 @@ contract('Initializable', function () {
       expectEvent(receipt, 'Initialized', { version: '1' });
     });
 
-    it('reinitialization emits event', async function () {
+    it('reinitialization emits event', async () => {
       const contract = await ReinitializerMock.new();
 
       const { receipt } = await contract.reinitialize(128);
@@ -158,7 +158,7 @@ contract('Initializable', function () {
       expectEvent(receipt, 'Initialized', { version: '128' });
     });
 
-    it('chained reinitialization emits multiple events', async function () {
+    it('chained reinitialization emits multiple events', async () => {
       const contract = await ReinitializerMock.new();
 
       const { receipt } = await contract.chainReinitialize(2, 3);
@@ -168,7 +168,7 @@ contract('Initializable', function () {
     });
   });
 
-  describe('complex testing with inheritance', function () {
+  describe('complex testing with inheritance', () => {
     const mother = '12';
     const gramps = '56';
     const father = '34';
@@ -203,13 +203,13 @@ contract('Initializable', function () {
     });
   });
 
-  describe('disabling initialization', function () {
-    it('old and new patterns in bad sequence', async function () {
+  describe('disabling initialization', () => {
+    it('old and new patterns in bad sequence', async () => {
       await expectRevert(DisableBad1.new(), 'Initializable: contract is already initialized');
       await expectRevert(DisableBad2.new(), 'Initializable: contract is initializing');
     });
 
-    it('old and new patterns in good sequence', async function () {
+    it('old and new patterns in good sequence', async () => {
       const ok = await DisableOk.new();
       await expectEvent.inConstruction(ok, 'Initialized', { version: '1' });
       await expectEvent.inConstruction(ok, 'Initialized', { version: '255' });

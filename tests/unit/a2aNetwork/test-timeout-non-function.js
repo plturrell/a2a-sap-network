@@ -16,6 +16,6 @@ try {
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert(throws);
 });

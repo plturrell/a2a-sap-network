@@ -3,14 +3,14 @@ const { expect } = require('chai');
 const ERC721Holder = artifacts.require('ERC721Holder');
 const ERC721 = artifacts.require('$ERC721');
 
-contract('ERC721Holder', function (accounts) {
+contract('ERC721Holder', (accounts) => {
   const [owner] = accounts;
 
   const name = 'Non Fungible Token';
   const symbol = 'NFT';
   const tokenId = web3.utils.toBN(1);
 
-  it('receives an ERC721 token', async function () {
+  it('receives an ERC721 token', async () => {
     const token = await ERC721.new(name, symbol);
     await token.$_mint(owner, tokenId);
 

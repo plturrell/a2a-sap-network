@@ -5,7 +5,7 @@ const { expect } = require('chai');
 
 const SignedSafeMath = artifacts.require('$SignedSafeMath');
 
-contract('SignedSafeMath', function () {
+contract('SignedSafeMath', () => {
   beforeEach(async function () {
     this.safeMath = await SignedSafeMath.new();
   });
@@ -20,7 +20,7 @@ contract('SignedSafeMath', function () {
     await expectRevert.unspecified(fn(rhs, lhs));
   }
 
-  describe('add', function () {
+  describe('add', () => {
     it('adds correctly if it does not overflow and the result is positive', async function () {
       const a = new BN('1234');
       const b = new BN('5678');
@@ -50,7 +50,7 @@ contract('SignedSafeMath', function () {
     });
   });
 
-  describe('sub', function () {
+  describe('sub', () => {
     it('subtracts correctly if it does not overflow and the result is positive', async function () {
       const a = new BN('5678');
       const b = new BN('1234');
@@ -82,7 +82,7 @@ contract('SignedSafeMath', function () {
     });
   });
 
-  describe('mul', function () {
+  describe('mul', () => {
     it('multiplies correctly', async function () {
       const a = new BN('5678');
       const b = new BN('-1234');
@@ -112,7 +112,7 @@ contract('SignedSafeMath', function () {
     });
   });
 
-  describe('div', function () {
+  describe('div', () => {
     it('divides correctly', async function () {
       const a = new BN('-5678');
       const b = new BN('5678');

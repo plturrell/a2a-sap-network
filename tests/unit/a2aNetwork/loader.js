@@ -1,12 +1,12 @@
-var fs = require('fs');
-var _ = require('underscore');
+const fs = require('fs');
+const _ = require('underscore');
 
 function load(filename) {
-    var ret = [];
-    var nums = fs.readFileSync(filename, 'ascii').split('\n');
-    nums.forEach(function(s) {
+    const ret = [];
+    const nums = fs.readFileSync(filename, 'ascii').split('\n');
+    nums.forEach((s) => {
         if(s.length) {
-            var n = s*1;
+            const n = s*1;
             ret.push(n);
         }
     });
@@ -15,21 +15,21 @@ function load(filename) {
 }
 
 function get_inserts(tests) {
-    return _.select(tests, function(n) { return n > 0; });
+    return _.select(tests, (n) => { return n > 0; });
 }
 
 function get_removes(tests) {
-    return _.select(tests, function(n) { return n < 0; });
+    return _.select(tests, (n) => { return n < 0; });
 }
 
 function new_tree(tree_type) {
-    return new tree_type(function(a,b) { return a - b });
+    return new tree_type((a,b) => { return a - b; });
 }
 
 function build_tree(tree_type, inserts) {
-    var tree = new_tree(tree_type);
+    const tree = new_tree(tree_type);
     
-    inserts.forEach(function(n) {
+    inserts.forEach((n) => {
         tree.insert(n);
     });
 
@@ -37,8 +37,8 @@ function build_tree(tree_type, inserts) {
 }
 
 function load_tree(tree_type, filename) {
-    var tests = load(filename);
-    var inserts = get_inserts(tests);
+    const tests = load(filename);
+    const inserts = get_inserts(tests);
     return build_tree(tree_type, inserts);
 }
 

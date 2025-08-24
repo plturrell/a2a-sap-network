@@ -6,7 +6,7 @@ const { shouldBehaveLikeERC721 } = require('../ERC721.behavior');
 const ERC721 = artifacts.require('$ERC721');
 const ERC721Wrapper = artifacts.require('$ERC721Wrapper');
 
-contract('ERC721Wrapper', function (accounts) {
+contract('ERC721Wrapper', (accounts) => {
   const [initialHolder, anotherAccount, approvedAccount] = accounts;
 
   const name = 'My Token';
@@ -34,7 +34,7 @@ contract('ERC721Wrapper', function (accounts) {
     expect(await this.token.underlying()).to.be.bignumber.equal(this.underlying.address);
   });
 
-  describe('depositFor', function () {
+  describe('depositFor', () => {
     it('works with token approval', async function () {
       await this.underlying.approve(this.token.address, firstTokenId, { from: initialHolder });
 
@@ -122,7 +122,7 @@ contract('ERC721Wrapper', function (accounts) {
     });
   });
 
-  describe('withdrawTo', function () {
+  describe('withdrawTo', () => {
     beforeEach(async function () {
       await this.underlying.approve(this.token.address, firstTokenId, { from: initialHolder });
       await this.token.depositFor(initialHolder, [firstTokenId], { from: initialHolder });
@@ -177,7 +177,7 @@ contract('ERC721Wrapper', function (accounts) {
       });
     });
 
-    it("doesn't work for a non-owner nor approved", async function () {
+    it('doesn\'t work for a non-owner nor approved', async function () {
       await expectRevert(
         this.token.withdrawTo(initialHolder, [firstTokenId], { from: anotherAccount }),
         'ERC721Wrapper: caller is not token owner or approved',
@@ -228,7 +228,7 @@ contract('ERC721Wrapper', function (accounts) {
     });
   });
 
-  describe('onERC721Received', function () {
+  describe('onERC721Received', () => {
     it('only allows calls from underlying', async function () {
       await expectRevert(
         this.token.onERC721Received(
@@ -255,7 +255,7 @@ contract('ERC721Wrapper', function (accounts) {
     });
   });
 
-  describe('_recover', function () {
+  describe('_recover', () => {
     it('works if there is something to recover', async function () {
       // Should use `transferFrom` to avoid `onERC721Received` minting
       await this.underlying.transferFrom(initialHolder, this.token.address, firstTokenId, { from: initialHolder });
@@ -277,7 +277,7 @@ contract('ERC721Wrapper', function (accounts) {
     });
   });
 
-  describe('ERC712 behavior', function () {
+  describe('ERC712 behavior', () => {
     shouldBehaveLikeERC721('ERC721', ...accounts);
   });
 });

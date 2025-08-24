@@ -20,11 +20,11 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var Thrift = require('../thrift').Thrift;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const Thrift = require('../thrift').Thrift;
 
-var thrift = new Thrift({source: 'union Foo { 1: i32 six, 2: i32 halfDozen }'});
+const thrift = new Thrift({source: 'union Foo { 1: i32 six, 2: i32 halfDozen }'});
 
 test('UnionRW', testRW.cases(thrift.Foo.rw, [
 

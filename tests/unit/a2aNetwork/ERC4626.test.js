@@ -10,14 +10,14 @@ const ERC4626FeesMock = artifacts.require('$ERC4626FeesMock');
 const ERC20ExcessDecimalsMock = artifacts.require('ERC20ExcessDecimalsMock');
 const ERC20Reentrant = artifacts.require('$ERC20Reentrant');
 
-contract('ERC4626', function (accounts) {
+contract('ERC4626', (accounts) => {
   const [holder, recipient, spender, other, user1, user2] = accounts;
 
   const name = 'My Token';
   const symbol = 'MTKN';
   const decimals = web3.utils.toBN(18);
 
-  it('inherit decimals if from asset', async function () {
+  it('inherit decimals if from asset', async () => {
     for (const decimals of [0, 9, 12, 18, 36].map(web3.utils.toBN)) {
       const token = await ERC20Decimals.new('', '', decimals);
       const vault = await ERC4626.new('', '', token.address);
@@ -25,21 +25,21 @@ contract('ERC4626', function (accounts) {
     }
   });
 
-  it('asset has not yet been created', async function () {
+  it('asset has not yet been created', async () => {
     const vault = await ERC4626.new('', '', other);
     expect(await vault.decimals()).to.be.bignumber.equal(decimals);
   });
 
-  it('underlying excess decimals', async function () {
+  it('underlying excess decimals', async () => {
     const token = await ERC20ExcessDecimalsMock.new();
     const vault = await ERC4626.new('', '', token.address);
     expect(await vault.decimals()).to.be.bignumber.equal(decimals);
   });
 
-  it('decimals overflow', async function () {
+  it('decimals overflow', async () => {
     for (const offset of [243, 250, 255].map(web3.utils.toBN)) {
       const token = await ERC20Decimals.new('', '', decimals);
-      const vault = await ERC4626OffsetMock.new(name + ' Vault', symbol + 'V', token.address, offset);
+      const vault = await ERC4626OffsetMock.new(`${name  } Vault`, `${symbol  }V`, token.address, offset);
       await expectRevert(
         vault.decimals(),
         'reverted with panic code 0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)',
@@ -47,7 +47,7 @@ contract('ERC4626', function (accounts) {
     }
   });
 
-  describe('reentrancy', async function () {
+  describe('reentrancy', async () => {
     const reenterType = Enum('No', 'Before', 'After');
 
     const amount = web3.utils.toBN(1000000000000000000);
@@ -55,7 +55,7 @@ contract('ERC4626', function (accounts) {
     let token;
     let vault;
 
-    beforeEach(async function () {
+    beforeEach(async () => {
       token = await ERC20Reentrant.new();
       // Use offset 1 so the rate is not 1:1 and we can't possibly confuse assets and shares
       vault = await ERC4626OffsetMock.new('', '', token.address, 1);
@@ -71,7 +71,7 @@ contract('ERC4626', function (accounts) {
     // such that a reentrancy BEFORE the transfer guarantees the price is kept the same.
     // If the order of transfer -> mint is changed to mint -> transfer, the reentrancy could be triggered on an
     // intermediate state in which the ratio of assets/shares has been decreased (more shares than assets).
-    it('correct share price is observed during reentrancy before deposit', async function () {
+    it('correct share price is observed during reentrancy before deposit', async () => {
       // mint token for deposit
       await token.$_mint(token.address, reenterAmount);
 
@@ -113,7 +113,7 @@ contract('ERC4626', function (accounts) {
     // such that a reentrancy AFTER the transfer guarantees the price is kept the same.
     // If the order of burn -> transfer is changed to transfer -> burn, the reentrancy could be triggered on an
     // intermediate state in which the ratio of shares/assets has been decreased (more assets than shares).
-    it('correct share price is observed during reentrancy after withdraw', async function () {
+    it('correct share price is observed during reentrancy after withdraw', async () => {
       // Deposit into the vault: holder gets `amount` share, token.address gets `reenterAmount` shares
       await vault.deposit(amount, holder, { from: holder });
       await vault.deposit(reenterAmount, token.address, { from: other });
@@ -157,7 +157,7 @@ contract('ERC4626', function (accounts) {
     // Donate newly minted tokens to the vault during the reentracy causes the share price to increase.
     // Still, the deposit that trigger the reentracy is not affected and get the previewed price.
     // Further deposits will get a different price (getting fewer shares for the same amount of assets)
-    it('share price change during reentracy does not affect deposit', async function () {
+    it('share price change during reentracy does not affect deposit', async () => {
       // Schedules a reentrancy from the token contract that mess up the share price
       await token.scheduleReenter(
         reenterType.Before,
@@ -187,7 +187,7 @@ contract('ERC4626', function (accounts) {
     // Burn some tokens from the vault during the reentracy causes the share price to drop.
     // Still, the withdraw that trigger the reentracy is not affected and get the previewed price.
     // Further withdraw will get a different price (needing more shares for the same amount of assets)
-    it('share price change during reentracy does not affect withdraw', async function () {
+    it('share price change during reentracy does not affect withdraw', async () => {
       await vault.deposit(amount, other, { from: other });
       await vault.deposit(amount, holder, { from: holder });
 
@@ -226,10 +226,10 @@ contract('ERC4626', function (accounts) {
     const virtualAssets = web3.utils.toBN(1);
     const virtualShares = web3.utils.toBN(10).pow(offset);
 
-    describe(`offset: ${offset}`, function () {
+    describe(`offset: ${offset}`, () => {
       beforeEach(async function () {
         this.token = await ERC20Decimals.new(name, symbol, decimals);
-        this.vault = await ERC4626OffsetMock.new(name + ' Vault', symbol + 'V', this.token.address, offset);
+        this.vault = await ERC4626OffsetMock.new(`${name  } Vault`, `${symbol  }V`, this.token.address, offset);
 
         await this.token.$_mint(holder, constants.MAX_INT256); // 50% of maximum
         await this.token.approve(this.vault.address, constants.MAX_UINT256, { from: holder });
@@ -237,13 +237,13 @@ contract('ERC4626', function (accounts) {
       });
 
       it('metadata', async function () {
-        expect(await this.vault.name()).to.be.equal(name + ' Vault');
-        expect(await this.vault.symbol()).to.be.equal(symbol + 'V');
+        expect(await this.vault.name()).to.be.equal(`${name  } Vault`);
+        expect(await this.vault.symbol()).to.be.equal(`${symbol  }V`);
         expect(await this.vault.decimals()).to.be.bignumber.equal(decimals.add(offset));
         expect(await this.vault.asset()).to.be.equal(this.token.address);
       });
 
-      describe('empty vault: no assets & no shares', function () {
+      describe('empty vault: no assets & no shares', () => {
         it('status', async function () {
           expect(await this.vault.totalAssets()).to.be.bignumber.equal('0');
         });
@@ -355,7 +355,7 @@ contract('ERC4626', function (accounts) {
         });
       });
 
-      describe('inflation attack: offset price by direct deposit of assets', function () {
+      describe('inflation attack: offset price by direct deposit of assets', () => {
         beforeEach(async function () {
           // Donate 1 token to the vault to offset the price
           await this.token.$_mint(this.vault.address, parseToken(1));
@@ -507,7 +507,7 @@ contract('ERC4626', function (accounts) {
         });
       });
 
-      describe('full vault: assets & shares', function () {
+      describe('full vault: assets & shares', () => {
         beforeEach(async function () {
           // Add 1 token of underlying asset and 100 shares to the vault
           await this.token.$_mint(this.vault.address, parseToken(1));
@@ -688,18 +688,18 @@ contract('ERC4626', function (accounts) {
     });
   }
 
-  describe('ERC4626Fees', function () {
+  describe('ERC4626Fees', () => {
     const feeBasePoint = web3.utils.toBN(5e3);
     const amountWithoutFees = web3.utils.toBN(10000);
     const fees = amountWithoutFees.mul(feeBasePoint).divn(1e5);
     const amountWithFees = amountWithoutFees.add(fees);
 
-    describe('input fees', function () {
+    describe('input fees', () => {
       beforeEach(async function () {
         this.token = await ERC20Decimals.new(name, symbol, 18);
         this.vault = await ERC4626FeesMock.new(
-          name + ' Vault',
-          symbol + 'V',
+          `${name  } Vault`,
+          `${symbol  }V`,
           this.token.address,
           feeBasePoint,
           other,
@@ -753,12 +753,12 @@ contract('ERC4626', function (accounts) {
       });
     });
 
-    describe('output fees', function () {
+    describe('output fees', () => {
       beforeEach(async function () {
         this.token = await ERC20Decimals.new(name, symbol, 18);
         this.vault = await ERC4626FeesMock.new(
-          name + ' Vault',
-          symbol + 'V',
+          `${name  } Vault`,
+          `${symbol  }V`,
           this.token.address,
           0,
           constants.ZERO_ADDRESS,
@@ -819,7 +819,7 @@ contract('ERC4626', function (accounts) {
   it('multiple mint, deposit, redeem & withdrawal', async function () {
     // test designed with both asset using similar decimals
     this.token = await ERC20Decimals.new(name, symbol, 18);
-    this.vault = await ERC4626.new(name + ' Vault', symbol + 'V', this.token.address);
+    this.vault = await ERC4626.new(`${name  } Vault`, `${symbol  }V`, this.token.address);
 
     await this.token.$_mint(user1, 4000);
     await this.token.$_mint(user2, 7001);

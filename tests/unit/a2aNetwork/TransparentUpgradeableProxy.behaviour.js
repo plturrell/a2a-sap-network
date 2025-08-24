@@ -32,7 +32,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
     this.proxyAddress = this.proxy.address;
   });
 
-  describe('implementation', function () {
+  describe('implementation', () => {
     it('returns the current implementation address', async function () {
       const implementation = await this.proxy.implementation({ from: proxyAdminAddress });
 
@@ -47,11 +47,11 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
     });
   });
 
-  describe('upgradeTo', function () {
-    describe('when the sender is the admin', function () {
+  describe('upgradeTo', () => {
+    describe('when the sender is the admin', () => {
       const from = proxyAdminAddress;
 
-      describe('when the given implementation is different from the current one', function () {
+      describe('when the given implementation is different from the current one', () => {
         it('upgrades to the requested implementation', async function () {
           await this.proxy.upgradeTo(this.implementationV1, { from });
 
@@ -66,7 +66,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
         });
       });
 
-      describe('when the given implementation is the zero address', function () {
+      describe('when the given implementation is the zero address', () => {
         it('reverts', async function () {
           await expectRevert(
             this.proxy.upgradeTo(ZERO_ADDRESS, { from }),
@@ -76,7 +76,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
       });
     });
 
-    describe('when the sender is not the admin', function () {
+    describe('when the sender is not the admin', () => {
       const from = anotherAccount;
 
       it('reverts', async function () {
@@ -85,16 +85,16 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
     });
   });
 
-  describe('upgradeToAndCall', function () {
-    describe('without migrations', function () {
+  describe('upgradeToAndCall', () => {
+    describe('without migrations', () => {
       beforeEach(async function () {
         this.behavior = await InitializableMock.new();
       });
 
-      describe('when the call does not fail', function () {
+      describe('when the call does not fail', () => {
         const initializeData = new InitializableMock('').contract.methods['initializeWithX(uint256)'](42).encodeABI();
 
-        describe('when the sender is the admin', function () {
+        describe('when the sender is the admin', () => {
           const from = proxyAdminAddress;
           const value = 1e5;
 
@@ -131,7 +131,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
           });
         });
 
-        describe('when the sender is not the admin', function () {
+        describe('when the sender is not the admin', () => {
           it('reverts', async function () {
             await expectRevert.unspecified(
               this.proxy.upgradeToAndCall(this.behavior.address, initializeData, { from: anotherAccount }),
@@ -140,7 +140,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
         });
       });
 
-      describe('when the call does fail', function () {
+      describe('when the call does fail', () => {
         const initializeData = new InitializableMock('').contract.methods.fail().encodeABI();
 
         it('reverts', async function () {
@@ -151,12 +151,12 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
       });
     });
 
-    describe('with migrations', function () {
-      describe('when the sender is the admin', function () {
+    describe('with migrations', () => {
+      describe('when the sender is the admin', () => {
         const from = proxyAdminAddress;
         const value = 1e5;
 
-        describe('when upgrading to V1', function () {
+        describe('when upgrading to V1', () => {
           const v1MigrationData = new MigratableMockV1('').contract.methods.initialize(42).encodeABI();
 
           beforeEach(async function () {
@@ -171,7 +171,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
             expectEvent(this.receipt, 'Upgraded', { implementation: this.behaviorV1.address });
           });
 
-          it("calls the 'initialize' function and sends given value to the proxy", async function () {
+          it('calls the \'initialize\' function and sends given value to the proxy', async function () {
             const migratable = new MigratableMockV1(this.proxyAddress);
 
             const x = await migratable.x();
@@ -181,7 +181,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
             expect(new BN(balance)).to.be.bignumber.equal(this.balancePreviousV1.addn(value));
           });
 
-          describe('when upgrading to V2', function () {
+          describe('when upgrading to V2', () => {
             const v2MigrationData = new MigratableMockV2('').contract.methods.migrate(10, 42).encodeABI();
 
             beforeEach(async function () {
@@ -199,7 +199,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
               expectEvent(this.receipt, 'Upgraded', { implementation: this.behaviorV2.address });
             });
 
-            it("calls the 'migrate' function and sends given value to the proxy", async function () {
+            it('calls the \'migrate\' function and sends given value to the proxy', async function () {
               const migratable = new MigratableMockV2(this.proxyAddress);
 
               const x = await migratable.x();
@@ -212,7 +212,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
               expect(balance).to.be.bignumber.equal(this.balancePreviousV2.addn(value));
             });
 
-            describe('when upgrading to V3', function () {
+            describe('when upgrading to V3', () => {
               const v3MigrationData = new MigratableMockV3('').contract.methods['migrate()']().encodeABI();
 
               beforeEach(async function () {
@@ -230,7 +230,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
                 expectEvent(this.receipt, 'Upgraded', { implementation: this.behaviorV3.address });
               });
 
-              it("calls the 'migrate' function and sends given value to the proxy", async function () {
+              it('calls the \'migrate\' function and sends given value to the proxy', async function () {
                 const migratable = new MigratableMockV3(this.proxyAddress);
 
                 const x = await migratable.x();
@@ -247,7 +247,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
         });
       });
 
-      describe('when the sender is not the admin', function () {
+      describe('when the sender is not the admin', () => {
         const from = anotherAccount;
 
         it('reverts', async function () {
@@ -259,11 +259,11 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
     });
   });
 
-  describe('changeAdmin', function () {
-    describe('when the new proposed admin is not the zero address', function () {
+  describe('changeAdmin', () => {
+    describe('when the new proposed admin is not the zero address', () => {
       const newAdmin = anotherAccount;
 
-      describe('when the sender is the admin', function () {
+      describe('when the sender is the admin', () => {
         beforeEach('transferring', async function () {
           this.receipt = await this.proxy.changeAdmin(newAdmin, { from: proxyAdminAddress });
         });
@@ -281,14 +281,14 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
         });
       });
 
-      describe('when the sender is not the admin', function () {
+      describe('when the sender is not the admin', () => {
         it('reverts', async function () {
           await expectRevert.unspecified(this.proxy.changeAdmin(newAdmin, { from: anotherAccount }));
         });
       });
     });
 
-    describe('when the new proposed admin is the zero address', function () {
+    describe('when the new proposed admin is the zero address', () => {
       it('reverts', async function () {
         await expectRevert(
           this.proxy.changeAdmin(ZERO_ADDRESS, { from: proxyAdminAddress }),
@@ -298,7 +298,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
     });
   });
 
-  describe('storage', function () {
+  describe('storage', () => {
     it('should store the implementation address in specified location', async function () {
       const implementationSlot = await getSlot(this.proxy, ImplementationSlot);
       const implementationAddress = web3.utils.toChecksumAddress(implementationSlot.substr(-40));
@@ -312,7 +312,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
     });
   });
 
-  describe('transparent proxy', function () {
+  describe('transparent proxy', () => {
     beforeEach('creating proxy', async function () {
       const initializeData = Buffer.from('');
       this.impl = await ClashingImplementation.new();
@@ -328,7 +328,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy(createProx
       );
     });
 
-    describe('when function names clash', function () {
+    describe('when function names clash', () => {
       it('when sender is proxy admin should run the proxy function', async function () {
         const value = await this.proxy.admin({ from: proxyAdminAddress, value: 0 });
         expect(value).to.be.equal(proxyAdminAddress);

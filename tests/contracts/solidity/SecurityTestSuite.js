@@ -7,7 +7,7 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers');
 
-describe('Security Test Suite', function () {
+describe('Security Test Suite', () => {
     let agentMarketplace;
     let reputationSystem;
     let multiSigManager;
@@ -42,8 +42,8 @@ describe('Security Test Suite', function () {
         return { agentMarketplace, reputationSystem, multiSigManager, owner, user1, user2, attacker };
     }
 
-    describe('Reentrancy Attack Tests', function () {
-        it('should prevent reentrancy in releasePayment', async function () {
+    describe('Reentrancy Attack Tests', () => {
+        it('should prevent reentrancy in releasePayment', async () => {
             const { agentMarketplace, owner, user1 } = await loadFixture(deployContractsFixture);
 
             // Deploy malicious contract
@@ -79,7 +79,7 @@ describe('Security Test Suite', function () {
             ).to.be.revertedWith('ReentrancyGuard: reentrant call');
         });
 
-        it('should prevent reentrancy in dispute resolution', async function () {
+        it('should prevent reentrancy in dispute resolution', async () => {
             const { agentMarketplace, owner, user1 } = await loadFixture(deployContractsFixture);
 
             // Similar setup for dispute resolution reentrancy test
@@ -87,8 +87,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Access Control Tests', function () {
-        it('should restrict admin functions to admin role', async function () {
+    describe('Access Control Tests', () => {
+        it('should restrict admin functions to admin role', async () => {
             const { agentMarketplace, user1, attacker } = await loadFixture(deployContractsFixture);
 
             // Test that non-admin cannot call admin functions
@@ -97,7 +97,7 @@ describe('Security Test Suite', function () {
             ).to.be.revertedWith('AccessControl: account');
         });
 
-        it('should properly manage role assignments', async function () {
+        it('should properly manage role assignments', async () => {
             const { reputationSystem, owner, user1 } = await loadFixture(deployContractsFixture);
 
             const METRIC_UPDATER_ROLE = await reputationSystem.METRIC_UPDATER_ROLE();
@@ -112,8 +112,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Input Validation Tests', function () {
-        it('should validate service listing parameters', async function () {
+    describe('Input Validation Tests', () => {
+        it('should validate service listing parameters', async () => {
             const { agentMarketplace, user1 } = await loadFixture(deployContractsFixture);
 
             // Test empty name
@@ -139,7 +139,7 @@ describe('Security Test Suite', function () {
             ).to.be.reverted;
         });
 
-        it('should validate reputation update parameters', async function () {
+        it('should validate reputation update parameters', async () => {
             const { reputationSystem, owner, user1 } = await loadFixture(deployContractsFixture);
 
             const METRIC_UPDATER_ROLE = await reputationSystem.METRIC_UPDATER_ROLE();
@@ -159,8 +159,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Overflow/Underflow Tests', function () {
-        it('should handle large numbers safely', async function () {
+    describe('Overflow/Underflow Tests', () => {
+        it('should handle large numbers safely', async () => {
             const { reputationSystem, owner, user1 } = await loadFixture(deployContractsFixture);
 
             const METRIC_UPDATER_ROLE = await reputationSystem.METRIC_UPDATER_ROLE();
@@ -183,8 +183,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Gas Limit Tests', function () {
-        it('should not exceed block gas limit', async function () {
+    describe('Gas Limit Tests', () => {
+        it('should not exceed block gas limit', async () => {
             const { reputationSystem, owner } = await loadFixture(deployContractsFixture);
 
             // Test operations that might consume excessive gas
@@ -213,8 +213,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Multi-Signature Security Tests', function () {
-        it('should require minimum confirmations', async function () {
+    describe('Multi-Signature Security Tests', () => {
+        it('should require minimum confirmations', async () => {
             const { multiSigManager, owner, user1 } = await loadFixture(deployContractsFixture);
 
             // Submit transaction
@@ -231,7 +231,7 @@ describe('Security Test Suite', function () {
             ).to.be.revertedWith('Insufficient confirmations');
         });
 
-        it('should enforce execution delay', async function () {
+        it('should enforce execution delay', async () => {
             const { multiSigManager, owner, user1, user2 } = await loadFixture(deployContractsFixture);
 
             // Submit and confirm transaction
@@ -250,8 +250,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Upgrade Security Tests', function () {
-        it('should enforce upgrade timelock', async function () {
+    describe('Upgrade Security Tests', () => {
+        it('should enforce upgrade timelock', async () => {
             const { agentMarketplace, owner } = await loadFixture(deployContractsFixture);
 
             // Deploy new implementation
@@ -267,7 +267,7 @@ describe('Security Test Suite', function () {
             ).to.be.revertedWith('Timelock not expired');
         });
 
-        it('should validate implementation code hash', async function () {
+        it('should validate implementation code hash', async () => {
             const { agentMarketplace, owner } = await loadFixture(deployContractsFixture);
 
             // This would test that the implementation hasn't changed
@@ -275,8 +275,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Economic Attack Tests', function () {
-        it('should prevent price manipulation attacks', async function () {
+    describe('Economic Attack Tests', () => {
+        it('should prevent price manipulation attacks', async () => {
             const { agentMarketplace, user1, attacker } = await loadFixture(deployContractsFixture);
 
             // Test that attackers cannot manipulate service prices
@@ -301,8 +301,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('State Consistency Tests', function () {
-        it('should maintain consistent state across operations', async function () {
+    describe('State Consistency Tests', () => {
+        it('should maintain consistent state across operations', async () => {
             const { agentMarketplace, owner, user1 } = await loadFixture(deployContractsFixture);
 
             // Create service
@@ -331,8 +331,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Edge Case Tests', function () {
-        it('should handle zero values correctly', async function () {
+    describe('Edge Case Tests', () => {
+        it('should handle zero values correctly', async () => {
             const { reputationSystem, owner } = await loadFixture(deployContractsFixture);
 
             // Test division by zero protection
@@ -344,7 +344,7 @@ describe('Security Test Suite', function () {
             ).to.not.be.reverted;
         });
 
-        it('should handle maximum capacity scenarios', async function () {
+        it('should handle maximum capacity scenarios', async () => {
             const { agentMarketplace, user1, owner } = await loadFixture(deployContractsFixture);
 
             // Create service with max concurrent = 1
@@ -376,8 +376,8 @@ describe('Security Test Suite', function () {
         });
     });
 
-    describe('Performance Tests', function () {
-        it('should complete operations within gas limits', async function () {
+    describe('Performance Tests', () => {
+        it('should complete operations within gas limits', async () => {
             const { agentMarketplace, user1 } = await loadFixture(deployContractsFixture);
 
             const tx = await agentMarketplace.connect(user1).listService(

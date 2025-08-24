@@ -6,7 +6,7 @@ const { expect } = require('chai');
 const { shouldBehaveLikeERC1155 } = require('./ERC1155.behavior');
 const ERC1155Mock = artifacts.require('$ERC1155');
 
-contract('ERC1155', function (accounts) {
+contract('ERC1155', (accounts) => {
   const [operator, tokenHolder, tokenBatchHolder, ...otherAccounts] = accounts;
 
   const initialURI = 'https://token-cdn-domain/{id}.json';
@@ -17,7 +17,7 @@ contract('ERC1155', function (accounts) {
 
   shouldBehaveLikeERC1155(otherAccounts);
 
-  describe('internal functions', function () {
+  describe('internal functions', () => {
     const tokenId = new BN(1990);
     const mintAmount = new BN(9001);
     const burnAmount = new BN(3000);
@@ -28,7 +28,7 @@ contract('ERC1155', function (accounts) {
 
     const data = '0x12345678';
 
-    describe('_mint', function () {
+    describe('_mint', () => {
       it('reverts with a zero destination address', async function () {
         await expectRevert(
           this.token.$_mint(ZERO_ADDRESS, tokenId, mintAmount, data),
@@ -36,7 +36,7 @@ contract('ERC1155', function (accounts) {
         );
       });
 
-      context('with minted tokens', function () {
+      context('with minted tokens', () => {
         beforeEach(async function () {
           this.receipt = await this.token.$_mint(tokenHolder, tokenId, mintAmount, data, { from: operator });
         });
@@ -57,7 +57,7 @@ contract('ERC1155', function (accounts) {
       });
     });
 
-    describe('_mintBatch', function () {
+    describe('_mintBatch', () => {
       it('reverts with a zero destination address', async function () {
         await expectRevert(
           this.token.$_mintBatch(ZERO_ADDRESS, tokenBatchIds, mintAmounts, data),
@@ -77,7 +77,7 @@ contract('ERC1155', function (accounts) {
         );
       });
 
-      context('with minted batch of tokens', function () {
+      context('with minted batch of tokens', () => {
         beforeEach(async function () {
           this.receipt = await this.token.$_mintBatch(tokenBatchHolder, tokenBatchIds, mintAmounts, data, {
             from: operator,
@@ -105,8 +105,8 @@ contract('ERC1155', function (accounts) {
       });
     });
 
-    describe('_burn', function () {
-      it("reverts when burning the zero account's tokens", async function () {
+    describe('_burn', () => {
+      it('reverts when burning the zero account\'s tokens', async function () {
         await expectRevert(this.token.$_burn(ZERO_ADDRESS, tokenId, mintAmount), 'ERC1155: burn from the zero address');
       });
 
@@ -123,7 +123,7 @@ contract('ERC1155', function (accounts) {
         );
       });
 
-      context('with minted-then-burnt tokens', function () {
+      context('with minted-then-burnt tokens', () => {
         beforeEach(async function () {
           await this.token.$_mint(tokenHolder, tokenId, mintAmount, data);
           this.receipt = await this.token.$_burn(tokenHolder, tokenId, burnAmount, { from: operator });
@@ -145,8 +145,8 @@ contract('ERC1155', function (accounts) {
       });
     });
 
-    describe('_burnBatch', function () {
-      it("reverts when burning the zero account's tokens", async function () {
+    describe('_burnBatch', () => {
+      it('reverts when burning the zero account\'s tokens', async function () {
         await expectRevert(
           this.token.$_burnBatch(ZERO_ADDRESS, tokenBatchIds, burnAmounts),
           'ERC1155: burn from the zero address',
@@ -172,7 +172,7 @@ contract('ERC1155', function (accounts) {
         );
       });
 
-      context('with minted-then-burnt tokens', function () {
+      context('with minted-then-burnt tokens', () => {
         beforeEach(async function () {
           await this.token.$_mintBatch(tokenBatchHolder, tokenBatchIds, mintAmounts, data);
           this.receipt = await this.token.$_burnBatch(tokenBatchHolder, tokenBatchIds, burnAmounts, { from: operator });
@@ -202,7 +202,7 @@ contract('ERC1155', function (accounts) {
     });
   });
 
-  describe('ERC1155MetadataURI', function () {
+  describe('ERC1155MetadataURI', () => {
     const firstTokenID = new BN('42');
     const secondTokenID = new BN('1337');
 
@@ -215,7 +215,7 @@ contract('ERC1155', function (accounts) {
       expect(await this.token.uri(secondTokenID)).to.be.equal(initialURI);
     });
 
-    describe('_setURI', function () {
+    describe('_setURI', () => {
       const newURI = 'https://token-cdn-domain/{locale}/{id}.json';
 
       it('emits no URI event', async function () {

@@ -5,7 +5,7 @@ const { expect } = require('chai');
 
 const ERC20PresetMinterPauser = artifacts.require('ERC20PresetMinterPauser');
 
-contract('ERC20PresetMinterPauser', function (accounts) {
+contract('ERC20PresetMinterPauser', (accounts) => {
   const [deployer, other] = accounts;
 
   const name = 'MinterPauserToken';
@@ -41,7 +41,7 @@ contract('ERC20PresetMinterPauser', function (accounts) {
     expect(await this.token.getRoleAdmin(PAUSER_ROLE)).to.equal(DEFAULT_ADMIN_ROLE);
   });
 
-  describe('minting', function () {
+  describe('minting', () => {
     it('deployer can mint tokens', async function () {
       const receipt = await this.token.mint(other, amount, { from: deployer });
       expectEvent(receipt, 'Transfer', { from: ZERO_ADDRESS, to: other, value: amount });
@@ -57,7 +57,7 @@ contract('ERC20PresetMinterPauser', function (accounts) {
     });
   });
 
-  describe('pausing', function () {
+  describe('pausing', () => {
     it('deployer can pause', async function () {
       const receipt = await this.token.pause({ from: deployer });
       expectEvent(receipt, 'Paused', { account: deployer });
@@ -97,7 +97,7 @@ contract('ERC20PresetMinterPauser', function (accounts) {
     });
   });
 
-  describe('burning', function () {
+  describe('burning', () => {
     it('holders can burn their tokens', async function () {
       await this.token.mint(other, amount, { from: deployer });
 

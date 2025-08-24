@@ -12,11 +12,11 @@ const MODES = {
   timestamp: artifacts.require('$VotesTimestampMock'),
 };
 
-contract('Votes', function (accounts) {
+contract('Votes', (accounts) => {
   const [account1, account2, account3] = accounts;
 
   for (const [mode, artifact] of Object.entries(MODES)) {
-    describe(`vote with ${mode}`, function () {
+    describe(`vote with ${mode}`, () => {
       beforeEach(async function () {
         this.name = 'My Vote';
         this.votes = await artifact.new(this.name, '1');
@@ -26,7 +26,7 @@ contract('Votes', function (accounts) {
         expect(await this.votes.getTotalSupply()).to.be.bignumber.equal('0');
       });
 
-      describe('performs voting operations', function () {
+      describe('performs voting operations', () => {
         beforeEach(async function () {
           this.tx1 = await this.votes.$_mint(account1, 1);
           this.tx2 = await this.votes.$_mint(account2, 1);
@@ -51,7 +51,7 @@ contract('Votes', function (accounts) {
         });
       });
 
-      describe('performs voting workflow', function () {
+      describe('performs voting workflow', () => {
         beforeEach(async function () {
           this.chainId = await getChainId();
           this.account1 = account1;

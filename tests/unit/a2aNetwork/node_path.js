@@ -1,16 +1,16 @@
-var fs = require('fs');
-var path = require('path');
-var test = require('tape');
-var resolve = require('../');
+const fs = require('fs');
+const path = require('path');
+const test = require('tape');
+const resolve = require('../');
 
-test('$NODE_PATH', function (t) {
+test('$NODE_PATH', (t) => {
     t.plan(8);
 
-    var isDir = function (dir, cb) {
+    const isDir = function (dir, cb) {
         if (dir === '/node_path' || dir === 'node_path/x') {
             return cb(null, true);
         }
-        fs.stat(dir, function (err, stat) {
+        fs.stat(dir, (err, stat) => {
             if (!err) {
                 return cb(null, stat.isDirectory());
             }
@@ -26,7 +26,7 @@ test('$NODE_PATH', function (t) {
         ],
         basedir: __dirname,
         isDirectory: isDir
-    }, function (err, res) {
+    }, (err, res) => {
         t.error(err);
         t.equal(res, path.join(__dirname, '/node_path/x/aaa/index.js'), 'aaa resolves');
     });
@@ -38,7 +38,7 @@ test('$NODE_PATH', function (t) {
         ],
         basedir: __dirname,
         isDirectory: isDir
-    }, function (err, res) {
+    }, (err, res) => {
         t.error(err);
         t.equal(res, path.join(__dirname, '/node_path/y/bbb/index.js'), 'bbb resolves');
     });
@@ -50,7 +50,7 @@ test('$NODE_PATH', function (t) {
         ],
         basedir: __dirname,
         isDirectory: isDir
-    }, function (err, res) {
+    }, (err, res) => {
         t.error(err);
         t.equal(res, path.join(__dirname, '/node_path/x/ccc/index.js'), 'ccc resolves');
     });
@@ -62,8 +62,8 @@ test('$NODE_PATH', function (t) {
         ],
         basedir: path.join(__dirname, 'node_path/x'),
         isDirectory: isDir
-    }, function (err, res) {
-        var root = require('tap/package.json').main; // eslint-disable-line global-require
+    }, (err, res) => {
+        const root = require('tap/package.json').main; // eslint-disable-line global-require
         t.error(err);
         t.equal(res, path.resolve(__dirname, '..', 'node_modules/tap', root), 'tap resolves');
     });

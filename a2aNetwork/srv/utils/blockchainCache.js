@@ -66,7 +66,7 @@ class BlockchainCache {
             if (this.redisClient) {
                 const cached = await this.redisClient.get(key);
                 if (cached) {
-                    log.debug('Cache hit (Redis)', { operation, key: key.substring(0, 50) + '...' });
+                    log.debug('Cache hit (Redis)', { operation, key: `${key.substring(0, 50)  }...` });
                     return JSON.parse(cached);
                 }
             }
@@ -75,7 +75,7 @@ class BlockchainCache {
             if (this.cache.has(key)) {
                 const entry = this.cache.get(key);
                 if (entry.expires > Date.now()) {
-                    log.debug('Cache hit (memory)', { operation, key: key.substring(0, 50) + '...' });
+                    log.debug('Cache hit (memory)', { operation, key: `${key.substring(0, 50)  }...` });
                     return entry.data;
                 } else {
                     // Expired entry
@@ -183,7 +183,7 @@ class BlockchainCache {
                 
                 this.cache.delete(key);
                 
-                log.debug('Cache entry invalidated', { operation, key: key.substring(0, 50) + '...' });
+                log.debug('Cache entry invalidated', { operation, key: `${key.substring(0, 50)  }...` });
             }
         } catch (error) {
             log.error('Cache invalidation error', { operation, error: error.message });

@@ -275,7 +275,7 @@ class PerformanceOptimizer {
                 const startTime = Date.now();
                 
                 // Use indexes for optimized querying
-                let results = this.executeOptimizedQuery(query, factDatabase, indexes);
+                const results = this.executeOptimizedQuery(query, factDatabase, indexes);
                 
                 const executionTime = Date.now() - startTime;
                 

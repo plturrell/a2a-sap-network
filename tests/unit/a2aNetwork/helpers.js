@@ -1,13 +1,13 @@
-var exec = require('child_process').exec;
+const exec = require('child_process').exec;
 
 var helpers = new (function () {
-  var _tests;
-  var _names = [];
-  var _name;
-  var _callback;
-  var _runner = function () {
+  let _tests;
+  let _names = [];
+  let _name;
+  let _callback;
+  const _runner = function () {
     if ((_name = _names.shift())) {
-      console.log('Running ' + _name);
+      console.log(`Running ${  _name}`);
       _tests[_name]();
     }
     else {
@@ -16,14 +16,14 @@ var helpers = new (function () {
   };
 
   this.exec = function () {
-    var args = Array.prototype.slice.call(arguments);
-    var arg;
-    var cmd = args.shift();
-    var opts = {};
-    var callback;
+    const args = Array.prototype.slice.call(arguments);
+    let arg;
+    let cmd = args.shift();
+    let opts = {};
+    let callback;
     // Optional opts/callback or callback/opts
     while ((arg = args.shift())) {
-      if (typeof arg == 'function') {
+      if (typeof arg === 'function') {
         callback = arg;
       }
       else {
@@ -32,9 +32,9 @@ var helpers = new (function () {
     }
 
     cmd += ' --trace';
-    var execOpts = opts.execOpts ? opts.execOpts : {};
-    exec(cmd, execOpts, function (err, stdout, stderr) {
-      var out = helpers.trim(stdout);
+    const execOpts = opts.execOpts ? opts.execOpts : {};
+    exec(cmd, execOpts, (err, stdout, stderr) => {
+      const out = helpers.trim(stdout);
       if (err) {
         if (opts.breakOnError === false) {
           return callback(err);
@@ -53,12 +53,12 @@ var helpers = new (function () {
   };
 
   this.trim = function (s) {
-    var str = s || '';
+    const str = s || '';
     return str.replace(/^\s*|\s*$/g, '');
   };
 
   this.parse = function (s) {
-    var str = s || '';
+    let str = s || '';
     str = helpers.trim(str);
     str = str.replace(/'/g, '"');
     return JSON.parse(str);

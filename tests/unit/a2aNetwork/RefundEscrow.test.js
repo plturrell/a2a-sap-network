@@ -5,25 +5,25 @@ const { expect } = require('chai');
 
 const RefundEscrow = artifacts.require('RefundEscrow');
 
-contract('RefundEscrow', function (accounts) {
+contract('RefundEscrow', (accounts) => {
   const [owner, beneficiary, refundee1, refundee2] = accounts;
 
   const amount = ether('54');
   const refundees = [refundee1, refundee2];
 
-  it('requires a non-null beneficiary', async function () {
+  it('requires a non-null beneficiary', async () => {
     await expectRevert(
       RefundEscrow.new(ZERO_ADDRESS, { from: owner }),
       'RefundEscrow: beneficiary is the zero address',
     );
   });
 
-  context('once deployed', function () {
+  context('once deployed', () => {
     beforeEach(async function () {
       this.escrow = await RefundEscrow.new(beneficiary, { from: owner });
     });
 
-    context('active state', function () {
+    context('active state', () => {
       it('has beneficiary and state', async function () {
         expect(await this.escrow.beneficiary()).to.equal(beneficiary);
         expect(await this.escrow.state()).to.be.bignumber.equal('0');
@@ -56,7 +56,7 @@ contract('RefundEscrow', function (accounts) {
       expectEvent(receipt, 'RefundsClosed');
     });
 
-    context('closed state', function () {
+    context('closed state', () => {
       beforeEach(async function () {
         await Promise.all(refundees.map(refundee => this.escrow.deposit(refundee, { from: owner, value: amount })));
 
@@ -99,7 +99,7 @@ contract('RefundEscrow', function (accounts) {
       expectEvent(receipt, 'RefundsEnabled');
     });
 
-    context('refund state', function () {
+    context('refund state', () => {
       beforeEach(async function () {
         await Promise.all(refundees.map(refundee => this.escrow.deposit(refundee, { from: owner, value: amount })));
 

@@ -577,11 +577,11 @@ class Agent1SecurityScanner {
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 1 DATA STANDARDIZATION SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
         console.log(`   Critical Issues: ${criticalCount}`);
@@ -597,19 +597,19 @@ class Agent1SecurityScanner {
         
         console.log(`\n🎯 DATA STANDARDIZATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
-            console.log(`   Status: ✅ EXCELLENT - Well secured`);
+            console.log('   Status: ✅ EXCELLENT - Well secured');
         } else if (score >= 70) {
-            console.log(`   Status: ⚠️  GOOD - Minor issues to address`);
+            console.log('   Status: ⚠️  GOOD - Minor issues to address');
         } else if (score >= 50) {
-            console.log(`   Status: ⚠️  FAIR - Several issues need attention`);
+            console.log('   Status: ⚠️  FAIR - Several issues need attention');
         } else {
-            console.log(`   Status: ❌ POOR - Significant security improvements needed`);
+            console.log('   Status: ❌ POOR - Significant security improvements needed');
         }
         
         // Data standardization-specific findings
         const dataStandardizationIssues = this.vulnerabilities.filter(v => v.type.startsWith('DATA_'));
         if (dataStandardizationIssues.length > 0) {
-            console.log(`\n🔄 DATA STANDARDIZATION-SPECIFIC SECURITY FINDINGS:`);
+            console.log('\n🔄 DATA STANDARDIZATION-SPECIFIC SECURITY FINDINGS:');
             const issueCounts = {};
             dataStandardizationIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
@@ -622,7 +622,7 @@ class Agent1SecurityScanner {
         
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:\n`);
+            console.log('\n🚨 VULNERABILITIES FOUND:\n');
             
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
@@ -644,44 +644,44 @@ class Agent1SecurityScanner {
         }
         
         // Data standardization security recommendations
-        console.log(`💡 AGENT 1 DATA STANDARDIZATION SECURITY RECOMMENDATIONS:\n`);
-        console.log(`1. 🔐 Secure transformation scripts`);
-        console.log(`   - Validate all transformation scripts before execution`);
-        console.log(`   - Use safe evaluation environments (sandboxing)`);
-        console.log(`   - Implement script content filtering and sanitization`);
-        console.log(`   - Avoid dynamic code execution (eval, new Function)`);
+        console.log('💡 AGENT 1 DATA STANDARDIZATION SECURITY RECOMMENDATIONS:\n');
+        console.log('1. 🔐 Secure transformation scripts');
+        console.log('   - Validate all transformation scripts before execution');
+        console.log('   - Use safe evaluation environments (sandboxing)');
+        console.log('   - Implement script content filtering and sanitization');
+        console.log('   - Avoid dynamic code execution (eval, new Function)');
         
-        console.log(`\n2. 🛡️  Protect schema integrity`);
-        console.log(`   - Validate all schema templates against approved patterns`);
-        console.log(`   - Implement schema versioning and approval workflows`);
-        console.log(`   - Use cryptographic signatures for schema validation`);
-        console.log(`   - Prevent unauthorized schema modifications`);
+        console.log('\n2. 🛡️  Protect schema integrity');
+        console.log('   - Validate all schema templates against approved patterns');
+        console.log('   - Implement schema versioning and approval workflows');
+        console.log('   - Use cryptographic signatures for schema validation');
+        console.log('   - Prevent unauthorized schema modifications');
         
-        console.log(`\n3. 🔒 Secure ETL pipeline operations`);
-        console.log(`   - Implement input validation for all pipeline parameters`);
-        console.log(`   - Use resource quotas and rate limiting for batch operations`);
-        console.log(`   - Monitor and audit all data transformation activities`);
-        console.log(`   - Implement secure communication between pipeline components`);
+        console.log('\n3. 🔒 Secure ETL pipeline operations');
+        console.log('   - Implement input validation for all pipeline parameters');
+        console.log('   - Use resource quotas and rate limiting for batch operations');
+        console.log('   - Monitor and audit all data transformation activities');
+        console.log('   - Implement secure communication between pipeline components');
         
-        console.log(`\n4. ⚡ Validate data formats and mappings`);
-        console.log(`   - Always enable format validation for data inputs`);
-        console.log(`   - Use whitelist-based validation for file types and formats`);
-        console.log(`   - Validate all field mappings before transformation`);
-        console.log(`   - Implement data lineage tracking for audit purposes`);
+        console.log('\n4. ⚡ Validate data formats and mappings');
+        console.log('   - Always enable format validation for data inputs');
+        console.log('   - Use whitelist-based validation for file types and formats');
+        console.log('   - Validate all field mappings before transformation');
+        console.log('   - Implement data lineage tracking for audit purposes');
         
-        console.log(`\n5. 🚀 Secure file upload and export`);
-        console.log(`   - Implement strict file type and size validation`);
-        console.log(`   - Scan uploaded files for malicious content`);
-        console.log(`   - Apply data classification controls to exports`);
-        console.log(`   - Use secure temporary file handling and cleanup`);
+        console.log('\n5. 🚀 Secure file upload and export');
+        console.log('   - Implement strict file type and size validation');
+        console.log('   - Scan uploaded files for malicious content');
+        console.log('   - Apply data classification controls to exports');
+        console.log('   - Use secure temporary file handling and cleanup');
         
-        console.log(`\n6. 🎯 Monitor standardization workflows`);
-        console.log(`   - Implement comprehensive audit logging`);
-        console.log(`   - Monitor for unusual processing patterns`);
-        console.log(`   - Set up alerts for security violations`);
-        console.log(`   - Regular security assessments of transformation logic`);
+        console.log('\n6. 🎯 Monitor standardization workflows');
+        console.log('   - Implement comprehensive audit logging');
+        console.log('   - Monitor for unusual processing patterns');
+        console.log('   - Set up alerts for security violations');
+        console.log('   - Regular security assessments of transformation logic');
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('Focus on transformation injection and schema manipulation vulnerabilities.');
         console.log('='.repeat(80));

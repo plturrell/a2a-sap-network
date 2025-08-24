@@ -6,7 +6,7 @@ const optimizationsEnabled = config.solidity.compilers.some(c => c.settings.opti
 async function expectRevertCustomError(promise, reason) {
   try {
     await promise;
-    expect.fail("Expected promise to throw but it didn't");
+    expect.fail('Expected promise to throw but it didn\'t');
   } catch (revert) {
     if (reason) {
       if (optimizationsEnabled) {

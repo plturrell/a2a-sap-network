@@ -3,11 +3,11 @@
  */
 
 sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], function (BaseObject, MessageToast, MessageBox) {
-    "use strict";
+    'sap/ui/base/Object',
+    'sap/m/MessageToast',
+    'sap/m/MessageBox'
+], (BaseObject, MessageToast, MessageBox) => {
+    'use strict';
 
     /**
      * OfflineMixin - Provides offline capabilities for UI5 controllers
@@ -20,7 +20,7 @@ sap.ui.define([
          */
         initOfflineCapabilities: function () {
             this._oOfflineModel = new sap.ui.model.json.JSONModel();
-            this.getView().setModel(this._oOfflineModel, "offline");
+            this.getView().setModel(this._oOfflineModel, 'offline');
             
             this._registerServiceWorker();
             this._initializeOfflineModel();
@@ -57,7 +57,7 @@ sap.ui.define([
                 navigator.serviceWorker.addEventListener('message', this._handleServiceWorkerMessage.bind(this));
             } else {
                 console.warn('[Offline] Service Workers not supported');
-                this._oOfflineModel.setProperty("/serviceWorkerSupported", false);
+                this._oOfflineModel.setProperty('/serviceWorkerSupported', false);
             }
         },
 
@@ -70,54 +70,54 @@ sap.ui.define([
                 isOnline: navigator.onLine,
                 isOfflineModeEnabled: true,
                 serviceWorkerSupported: 'serviceWorker' in navigator,
-                connectionIcon: navigator.onLine ? "sap-icon://connected" : "sap-icon://disconnected",
-                connectionColor: navigator.onLine ? "Positive" : "Critical",
-                connectionText: navigator.onLine ? "Connected" : "Offline",
+                connectionIcon: navigator.onLine ? 'sap-icon://connected' : 'sap-icon://disconnected',
+                connectionColor: navigator.onLine ? 'Positive' : 'Critical',
+                connectionText: navigator.onLine ? 'Connected' : 'Offline',
                 isReconnecting: false,
                 lastSyncTime: this._formatDate(new Date()),
-                cacheSize: "Calculating...",
+                cacheSize: 'Calculating...',
                 queuedRequests: [],
                 availableFeatures: [
                     {
-                        id: "viewProjects",
-                        title: "View Projects",
-                        description: "Browse cached project data",
-                        icon: "sap-icon://folder-blank"
+                        id: 'viewProjects',
+                        title: 'View Projects',
+                        description: 'Browse cached project data',
+                        icon: 'sap-icon://folder-blank'
                     },
                     {
-                        id: "viewAgents",
-                        title: "View Agents",
-                        description: "Check agent status and information",
-                        icon: "sap-icon://group"
+                        id: 'viewAgents',
+                        title: 'View Agents',
+                        description: 'Check agent status and information',
+                        icon: 'sap-icon://group'
                     },
                     {
-                        id: "viewDashboard",
-                        title: "Dashboard",
-                        description: "View cached analytics and metrics",
-                        icon: "sap-icon://business-objects-experience"
+                        id: 'viewDashboard',
+                        title: 'Dashboard',
+                        description: 'View cached analytics and metrics',
+                        icon: 'sap-icon://business-objects-experience'
                     },
                     {
-                        id: "offlineSettings",
-                        title: "Settings",
-                        description: "Configure offline preferences",
-                        icon: "sap-icon://action-settings"
+                        id: 'offlineSettings',
+                        title: 'Settings',
+                        description: 'Configure offline preferences',
+                        icon: 'sap-icon://action-settings'
                     }
                 ],
                 helpItems: [
                     {
-                        title: "Data Synchronization",
-                        description: "Changes made offline will sync when connection is restored",
-                        icon: "sap-icon://synchronize"
+                        title: 'Data Synchronization',
+                        description: 'Changes made offline will sync when connection is restored',
+                        icon: 'sap-icon://synchronize'
                     },
                     {
-                        title: "Limited Functionality",
-                        description: "Some features require an active internet connection",
-                        icon: "sap-icon://information"
+                        title: 'Limited Functionality',
+                        description: 'Some features require an active internet connection',
+                        icon: 'sap-icon://information'
                     },
                     {
-                        title: "Cache Management",
-                        description: "Cached data is automatically cleaned based on your settings",
-                        icon: "sap-icon://database"
+                        title: 'Cache Management',
+                        description: 'Cached data is automatically cleaned based on your settings',
+                        icon: 'sap-icon://database'
                     }
                 ],
                 settings: {
@@ -153,13 +153,13 @@ sap.ui.define([
         _handleOnline: function () {
             console.log('[Offline] Connection restored');
             
-            this._oOfflineModel.setProperty("/isOnline", true);
-            this._oOfflineModel.setProperty("/connectionIcon", "sap-icon://connected");
-            this._oOfflineModel.setProperty("/connectionColor", "Positive");
-            this._oOfflineModel.setProperty("/connectionText", "Connected");
-            this._oOfflineModel.setProperty("/isReconnecting", false);
+            this._oOfflineModel.setProperty('/isOnline', true);
+            this._oOfflineModel.setProperty('/connectionIcon', 'sap-icon://connected');
+            this._oOfflineModel.setProperty('/connectionColor', 'Positive');
+            this._oOfflineModel.setProperty('/connectionText', 'Connected');
+            this._oOfflineModel.setProperty('/isReconnecting', false);
 
-            MessageToast.show("Connection restored. Syncing data...");
+            MessageToast.show('Connection restored. Syncing data...');
             
             // Trigger background sync
             this._triggerBackgroundSync();
@@ -175,23 +175,23 @@ sap.ui.define([
         _handleOffline: function () {
             console.log('[Offline] Connection lost');
             
-            this._oOfflineModel.setProperty("/isOnline", false);
-            this._oOfflineModel.setProperty("/connectionIcon", "sap-icon://disconnected");
-            this._oOfflineModel.setProperty("/connectionColor", "Critical");
-            this._oOfflineModel.setProperty("/connectionText", "Offline");
+            this._oOfflineModel.setProperty('/isOnline', false);
+            this._oOfflineModel.setProperty('/connectionIcon', 'sap-icon://disconnected');
+            this._oOfflineModel.setProperty('/connectionColor', 'Critical');
+            this._oOfflineModel.setProperty('/connectionText', 'Offline');
 
-            MessageToast.show("Connection lost. Working offline...");
+            MessageToast.show('Connection lost. Working offline...');
             
             // Navigate to offline page if not already there
-            if (this.getRouter && this.getRouter().getHashChanger().getHash() !== "offline") {
+            if (this.getRouter && this.getRouter().getHashChanger().getHash() !== 'offline') {
                 setTimeout(() => {
-                    MessageBox.information("You are now offline. Some features may be limited.", {
-                        title: "Offline Mode",
-                        actions: [MessageBox.Action.OK, "Go to Offline Page"],
+                    MessageBox.information('You are now offline. Some features may be limited.', {
+                        title: 'Offline Mode',
+                        actions: [MessageBox.Action.OK, 'Go to Offline Page'],
                         emphasizedAction: MessageBox.Action.OK,
                         onClose: (sAction) => {
-                            if (sAction === "Go to Offline Page") {
-                                this.getRouter().navTo("offline");
+                            if (sAction === 'Go to Offline Page') {
+                                this.getRouter().navTo('offline');
                             }
                         }
                     });
@@ -218,13 +218,13 @@ sap.ui.define([
             })
             .then(response => {
                 clearTimeout(timeoutId);
-                if (response.ok && !this._oOfflineModel.getProperty("/isOnline")) {
+                if (response.ok && !this._oOfflineModel.getProperty('/isOnline')) {
                     this._handleOnline();
                 }
             })
             .catch(() => {
                 clearTimeout(timeoutId);
-                if (this._oOfflineModel.getProperty("/isOnline")) {
+                if (this._oOfflineModel.getProperty('/isOnline')) {
                     this._handleOffline();
                 }
             });
@@ -241,10 +241,10 @@ sap.ui.define([
             if (data.type === 'CACHE_UPDATED') {
                 this._updateCacheStatus();
             } else if (data.type === 'SYNC_COMPLETE') {
-                MessageToast.show("Data synchronized successfully");
-                this._oOfflineModel.setProperty("/lastSyncTime", this._formatDate(new Date()));
+                MessageToast.show('Data synchronized successfully');
+                this._oOfflineModel.setProperty('/lastSyncTime', this._formatDate(new Date()));
             } else if (data.type === 'SYNC_ERROR') {
-                MessageToast.show("Synchronization failed. Will retry later.");
+                MessageToast.show('Synchronization failed. Will retry later.');
             }
         },
 
@@ -269,10 +269,10 @@ sap.ui.define([
                         totalSize += cache.size * 5; // 5KB average per cached item
                     });
                     
-                    this._oOfflineModel.setProperty("/cacheSize", this._formatBytes(totalSize * 1024));
+                    this._oOfflineModel.setProperty('/cacheSize', this._formatBytes(totalSize * 1024));
                 } else {
                     console.error('[Offline] Failed to get cache status:', error);
-                    this._oOfflineModel.setProperty("/cacheSize", "Unknown");
+                    this._oOfflineModel.setProperty('/cacheSize', 'Unknown');
                 }
             };
 
@@ -303,8 +303,8 @@ sap.ui.define([
             if (savedSettings) {
                 try {
                     const settings = JSON.parse(savedSettings);
-                    this._oOfflineModel.setProperty("/settings", {
-                        ...this._oOfflineModel.getProperty("/settings"),
+                    this._oOfflineModel.setProperty('/settings', {
+                        ...this._oOfflineModel.getProperty('/settings'),
                         ...settings
                     });
                 } catch (error) {
@@ -318,7 +318,7 @@ sap.ui.define([
          * @private
          */
         _saveOfflineSettings: function () {
-            const settings = this._oOfflineModel.getProperty("/settings");
+            const settings = this._oOfflineModel.getProperty('/settings');
             localStorage.setItem('a2a-offline-settings', JSON.stringify(settings));
         },
 
@@ -328,13 +328,13 @@ sap.ui.define([
          */
         _showUpdateAvailableMessage: function () {
             MessageBox.information(
-                "A new version of the application is available. Please refresh to update.",
+                'A new version of the application is available. Please refresh to update.',
                 {
-                    title: "Update Available",
-                    actions: [MessageBox.Action.OK, "Refresh Now"],
-                    emphasizedAction: "Refresh Now",
+                    title: 'Update Available',
+                    actions: [MessageBox.Action.OK, 'Refresh Now'],
+                    emphasizedAction: 'Refresh Now',
                     onClose: (sAction) => {
-                        if (sAction === "Refresh Now") {
+                        if (sAction === 'Refresh Now') {
                             window.location.reload();
                         }
                     }
@@ -347,11 +347,11 @@ sap.ui.define([
          * @public
          */
         onRetryConnection: function () {
-            this._oOfflineModel.setProperty("/isReconnecting", true);
+            this._oOfflineModel.setProperty('/isReconnecting', true);
             
             setTimeout(() => {
                 this._checkConnectionStatus();
-                this._oOfflineModel.setProperty("/isReconnecting", false);
+                this._oOfflineModel.setProperty('/isReconnecting', false);
             }, 2000);
         },
 
@@ -361,23 +361,23 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Press event
          */
         onOfflineFeaturePress: function (oEvent) {
-            const sFeatureId = oEvent.getSource().data("featureId");
+            const sFeatureId = oEvent.getSource().data('featureId');
             
             switch (sFeatureId) {
-                case "viewProjects":
-                    this.getRouter().navTo("ProjectsList");
+                case 'viewProjects':
+                    this.getRouter().navTo('ProjectsList');
                     break;
-                case "viewAgents":
-                    this.getRouter().navTo("AgentsList");
+                case 'viewAgents':
+                    this.getRouter().navTo('AgentsList');
                     break;
-                case "viewDashboard":
-                    this.getRouter().navTo("dashboard");
+                case 'viewDashboard':
+                    this.getRouter().navTo('dashboard');
                     break;
-                case "offlineSettings":
+                case 'offlineSettings':
                     // Settings are on the same page
                     break;
                 default:
-                    MessageToast.show("Feature not available offline");
+                    MessageToast.show('Feature not available offline');
             }
         },
 
@@ -387,9 +387,9 @@ sap.ui.define([
          */
         onClearCache: function () {
             MessageBox.warning(
-                "This will clear all cached data. You may need to reload data when online.",
+                'This will clear all cached data. You may need to reload data when online.',
                 {
-                    title: "Clear Cache",
+                    title: 'Clear Cache',
                     actions: [MessageBox.Action.YES, MessageBox.Action.NO],
                     emphasizedAction: MessageBox.Action.NO,
                     onClose: (sAction) => {
@@ -412,10 +412,10 @@ sap.ui.define([
             messageChannel.port1.onmessage = (event) => {
                 const { success } = event.data;
                 if (success) {
-                    MessageToast.show("Cache cleared successfully");
+                    MessageToast.show('Cache cleared successfully');
                     this._updateCacheStatus();
                 } else {
-                    MessageToast.show("Failed to clear cache");
+                    MessageToast.show('Failed to clear cache');
                 }
             };
 
@@ -431,7 +431,7 @@ sap.ui.define([
          */
         onExportOfflineData: function () {
             // Implementation for exporting cached data
-            MessageToast.show("Export functionality coming soon");
+            MessageToast.show('Export functionality coming soon');
         },
 
         /**
@@ -440,7 +440,7 @@ sap.ui.define([
          */
         onProcessSyncQueue: function () {
             this._triggerBackgroundSync();
-            MessageToast.show("Processing sync queue...");
+            MessageToast.show('Processing sync queue...');
         },
 
         /**
@@ -449,14 +449,14 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Switch event
          */
         onOfflineModeToggle: function (oEvent) {
-            const bEnabled = oEvent.getParameter("state");
-            this._oOfflineModel.setProperty("/settings/enableOffline", bEnabled);
+            const bEnabled = oEvent.getParameter('state');
+            this._oOfflineModel.setProperty('/settings/enableOffline', bEnabled);
             this._saveOfflineSettings();
             
             if (bEnabled) {
-                MessageToast.show("Offline mode enabled");
+                MessageToast.show('Offline mode enabled');
             } else {
-                MessageToast.show("Offline mode disabled");
+                MessageToast.show('Offline mode disabled');
             }
         },
 
@@ -466,8 +466,8 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Switch event
          */
         onAutoSyncToggle: function (oEvent) {
-            const bEnabled = oEvent.getParameter("state");
-            this._oOfflineModel.setProperty("/settings/autoSync", bEnabled);
+            const bEnabled = oEvent.getParameter('state');
+            this._oOfflineModel.setProperty('/settings/autoSync', bEnabled);
             this._saveOfflineSettings();
         },
 
@@ -477,8 +477,8 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Selection change event
          */
         onCacheTimeoutChange: function (oEvent) {
-            const sValue = oEvent.getParameter("selectedItem").getKey();
-            this._oOfflineModel.setProperty("/settings/cacheTimeout", parseInt(sValue));
+            const sValue = oEvent.getParameter('selectedItem').getKey();
+            this._oOfflineModel.setProperty('/settings/cacheTimeout', parseInt(sValue));
             this._saveOfflineSettings();
         },
 
@@ -488,8 +488,8 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Selection change event
          */
         onMaxCacheSizeChange: function (oEvent) {
-            const sValue = oEvent.getParameter("selectedItem").getKey();
-            this._oOfflineModel.setProperty("/settings/maxCacheSize", parseInt(sValue));
+            const sValue = oEvent.getParameter('selectedItem').getKey();
+            this._oOfflineModel.setProperty('/settings/maxCacheSize', parseInt(sValue));
             this._saveOfflineSettings();
         },
 
@@ -498,7 +498,7 @@ sap.ui.define([
          * @public
          */
         onBackToApp: function () {
-            this.getRouter().navTo("ProjectsList");
+            this.getRouter().navTo('ProjectsList');
         },
 
         /**
@@ -514,7 +514,7 @@ sap.ui.define([
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))  } ${  sizes[i]}`;
         },
 
         /**

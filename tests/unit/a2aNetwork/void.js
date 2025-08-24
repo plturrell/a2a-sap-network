@@ -20,20 +20,20 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
 
-var thriftrw = require('../index');
-var VoidRW = thriftrw.VoidRW;
-var ThriftVoid = thriftrw.ThriftVoid;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const VoidRW = thriftrw.VoidRW;
+const ThriftVoid = thriftrw.ThriftVoid;
+const TYPE = require('../TYPE');
 
-var validTestCases = [
+const validTestCases = [
     [null, []]
 ];
 
-var testCases = [].concat(
+const testCases = [].concat(
     validTestCases
 );
 

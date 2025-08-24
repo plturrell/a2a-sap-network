@@ -5,7 +5,7 @@ const { Rounding } = require('../../helpers/enums.js');
 
 const Math = artifacts.require('$Math');
 
-contract('Math', function () {
+contract('Math', () => {
   const min = new BN('1234');
   const max = new BN('5678');
   const MAX_UINT256_SUB1 = MAX_UINT256.sub(new BN('1'));
@@ -15,7 +15,7 @@ contract('Math', function () {
     this.math = await Math.new();
   });
 
-  describe('max', function () {
+  describe('max', () => {
     it('is correctly detected in first argument position', async function () {
       expect(await this.math.$max(max, min)).to.be.bignumber.equal(max);
     });
@@ -25,7 +25,7 @@ contract('Math', function () {
     });
   });
 
-  describe('min', function () {
+  describe('min', () => {
     it('is correctly detected in first argument position', async function () {
       expect(await this.math.$min(min, max)).to.be.bignumber.equal(min);
     });
@@ -35,7 +35,7 @@ contract('Math', function () {
     });
   });
 
-  describe('average', function () {
+  describe('average', () => {
     function bnAverage(a, b) {
       return a.add(b).divn(2);
     }
@@ -64,7 +64,7 @@ contract('Math', function () {
     });
   });
 
-  describe('ceilDiv', function () {
+  describe('ceilDiv', () => {
     it('does not round up on exact division', async function () {
       const a = new BN('10');
       const b = new BN('5');
@@ -89,12 +89,12 @@ contract('Math', function () {
     });
   });
 
-  describe('muldiv', function () {
+  describe('muldiv', () => {
     it('divide by 0', async function () {
       await expectRevert.unspecified(this.math.$mulDiv(1, 1, 0, Rounding.Down));
     });
 
-    describe('does round down', async function () {
+    describe('does round down', async () => {
       it('small values', async function () {
         expect(await this.math.$mulDiv('3', '4', '5', Rounding.Down)).to.be.bignumber.equal('2');
         expect(await this.math.$mulDiv('3', '5', '5', Rounding.Down)).to.be.bignumber.equal('3');
@@ -123,7 +123,7 @@ contract('Math', function () {
       });
     });
 
-    describe('does round up', async function () {
+    describe('does round up', async () => {
       it('small values', async function () {
         expect(await this.math.$mulDiv('3', '4', '5', Rounding.Up)).to.be.bignumber.equal('3');
         expect(await this.math.$mulDiv('3', '5', '5', Rounding.Up)).to.be.bignumber.equal('3');
@@ -153,7 +153,7 @@ contract('Math', function () {
     });
   });
 
-  describe('sqrt', function () {
+  describe('sqrt', () => {
     it('rounds down', async function () {
       expect(await this.math.$sqrt('0', Rounding.Down)).to.be.bignumber.equal('0');
       expect(await this.math.$sqrt('1', Rounding.Down)).to.be.bignumber.equal('1');
@@ -189,8 +189,8 @@ contract('Math', function () {
     });
   });
 
-  describe('log', function () {
-    describe('log2', function () {
+  describe('log', () => {
+    describe('log2', () => {
       it('rounds down', async function () {
         // For some reason calling .$log2() directly fails
         expect(await this.math.methods['$log2(uint256,uint8)']('0', Rounding.Down)).to.be.bignumber.equal('0');
@@ -224,7 +224,7 @@ contract('Math', function () {
       });
     });
 
-    describe('log10', function () {
+    describe('log10', () => {
       it('rounds down', async function () {
         expect(await this.math.$log10('0', Rounding.Down)).to.be.bignumber.equal('0');
         expect(await this.math.$log10('1', Rounding.Down)).to.be.bignumber.equal('0');
@@ -258,7 +258,7 @@ contract('Math', function () {
       });
     });
 
-    describe('log256', function () {
+    describe('log256', () => {
       it('rounds down', async function () {
         expect(await this.math.$log256('0', Rounding.Down)).to.be.bignumber.equal('0');
         expect(await this.math.$log256('1', Rounding.Down)).to.be.bignumber.equal('0');

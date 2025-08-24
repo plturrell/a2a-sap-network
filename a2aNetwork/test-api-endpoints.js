@@ -406,18 +406,18 @@ class APIEndpointTester {
      * Generate comprehensive test report
      */
     generateReport() {
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('📊 API ENDPOINT TEST REPORT');
         console.log('='.repeat(80));
         
-        console.log(`\n📈 Summary:`);
+        console.log('\n📈 Summary:');
         console.log(`   Total Tests: ${this.results.length}`);
         console.log(`   ✅ Successful: ${this.successCount}`);
         console.log(`   ❌ Failed: ${this.errorCount}`);
         console.log(`   📊 Success Rate: ${((this.successCount / this.results.length) * 100).toFixed(1)}%`);
         
         if (this.errorCount > 0) {
-            console.log(`\n❌ Failed Tests:`);
+            console.log('\n❌ Failed Tests:');
             const filterFailedResults = (r) => !r.success;
             const logFailedResult = (result) => {
                 console.log(`   • ${result.name}: ${result.error || `HTTP ${result.actualStatus}`}`);
@@ -427,7 +427,7 @@ class APIEndpointTester {
                 .forEach(logFailedResult);
         }
         
-        console.log(`\n⏱️  Performance:`);
+        console.log('\n⏱️  Performance:');
         const calculateTotalDuration = (sum, r) => sum + r.duration;
         const avgDuration = this.results.reduce(calculateTotalDuration, 0) / this.results.length;
         const getDurationValue = (r) => r.duration;
@@ -446,13 +446,13 @@ class APIEndpointTester {
         const systemEndpoints = this.results.filter(isSystemEndpoint);
         const versionEndpoints = this.results.filter(isVersionEndpoint);
         
-        console.log(`\n📋 Results by Category:`);
+        console.log('\n📋 Results by Category:');
         const isSuccessful = (r) => r.success;
         console.log(`   🎯 Tile Endpoints: ${tileEndpoints.filter(isSuccessful).length}/${tileEndpoints.length} successful`);
         console.log(`   🔧 System Endpoints: ${systemEndpoints.filter(isSuccessful).length}/${systemEndpoints.length} successful`);
         console.log(`   📝 Version Endpoints: ${versionEndpoints.filter(isSuccessful).length}/${versionEndpoints.length} successful`);
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         
         return {
             total: this.results.length,

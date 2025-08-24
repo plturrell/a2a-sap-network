@@ -5,7 +5,7 @@ const { artifacts } = require('hardhat');
 
 const ERC1155URIStorage = artifacts.require('$ERC1155URIStorage');
 
-contract(['ERC1155URIStorage'], function (accounts) {
+contract(['ERC1155URIStorage'], (accounts) => {
   const [holder] = accounts;
 
   const erc1155Uri = 'https://token.com/nfts/';
@@ -14,7 +14,7 @@ contract(['ERC1155URIStorage'], function (accounts) {
   const tokenId = new BN('1');
   const amount = new BN('3000');
 
-  describe('with base uri set', function () {
+  describe('with base uri set', () => {
     beforeEach(async function () {
       this.token = await ERC1155URIStorage.new(erc1155Uri);
       await this.token.$_setBaseURI(baseUri);
@@ -40,7 +40,7 @@ contract(['ERC1155URIStorage'], function (accounts) {
     });
   });
 
-  describe('with base uri set to the empty string', function () {
+  describe('with base uri set to the empty string', () => {
     beforeEach(async function () {
       this.token = await ERC1155URIStorage.new('');
 

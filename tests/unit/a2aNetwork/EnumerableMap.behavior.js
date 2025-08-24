@@ -44,7 +44,7 @@ function shouldBehaveLikeMap(keys, values, zeroValue, methods, events) {
     await expectMembersMatch(this.map, [], []);
   });
 
-  describe('set', function () {
+  describe('set', () => {
     it('adds a key', async function () {
       const receipt = await methods.set(this.map, keyA, valueA);
       expectEvent(receipt, events.setReturn, { ret0: true });
@@ -77,7 +77,7 @@ function shouldBehaveLikeMap(keys, values, zeroValue, methods, events) {
     });
   });
 
-  describe('remove', function () {
+  describe('remove', () => {
     it('removes added keys', async function () {
       await methods.set(this.map, keyA, valueA);
 
@@ -140,12 +140,12 @@ function shouldBehaveLikeMap(keys, values, zeroValue, methods, events) {
     });
   });
 
-  describe('read', function () {
+  describe('read', () => {
     beforeEach(async function () {
       await methods.set(this.map, keyA, valueA);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       it('existing value', async function () {
         expect(await methods.get(this.map, keyA).then(r => r.toString())).to.be.equal(valueA.toString());
       });
@@ -154,7 +154,7 @@ function shouldBehaveLikeMap(keys, values, zeroValue, methods, events) {
       });
     });
 
-    describe('get with message', function () {
+    describe('get with message', () => {
       it('existing value', async function () {
         expect(await methods.getWithMessage(this.map, keyA, 'custom error string').then(r => r.toString())).to.be.equal(
           valueA.toString(),
@@ -165,7 +165,7 @@ function shouldBehaveLikeMap(keys, values, zeroValue, methods, events) {
       });
     });
 
-    describe('tryGet', function () {
+    describe('tryGet', () => {
       it('existing value', async function () {
         const result = await methods.tryGet(this.map, keyA);
         expect(result['0']).to.be.equal(true);

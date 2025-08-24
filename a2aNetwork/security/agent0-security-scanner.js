@@ -405,11 +405,11 @@ class Agent0SecurityScanner {
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 0 DATA PRODUCT SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
         console.log(`   Critical Issues: ${criticalCount}`);
@@ -425,19 +425,19 @@ class Agent0SecurityScanner {
         
         console.log(`\n🎯 DATA PRODUCT SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
-            console.log(`   Status: ✅ EXCELLENT - Well secured`);
+            console.log('   Status: ✅ EXCELLENT - Well secured');
         } else if (score >= 70) {
-            console.log(`   Status: ⚠️  GOOD - Minor issues to address`);
+            console.log('   Status: ⚠️  GOOD - Minor issues to address');
         } else if (score >= 50) {
-            console.log(`   Status: ⚠️  FAIR - Several issues need attention`);
+            console.log('   Status: ⚠️  FAIR - Several issues need attention');
         } else {
-            console.log(`   Status: ❌ POOR - Significant security improvements needed`);
+            console.log('   Status: ❌ POOR - Significant security improvements needed');
         }
         
         // Data product-specific findings
         const dataProductIssues = this.vulnerabilities.filter(v => v.type.startsWith('DATA_'));
         if (dataProductIssues.length > 0) {
-            console.log(`\n🗂️  DATA PRODUCT-SPECIFIC SECURITY FINDINGS:`);
+            console.log('\n🗂️  DATA PRODUCT-SPECIFIC SECURITY FINDINGS:');
             const issueCounts = {};
             dataProductIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
@@ -450,7 +450,7 @@ class Agent0SecurityScanner {
         
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:\n`);
+            console.log('\n🚨 VULNERABILITIES FOUND:\n');
             
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
@@ -472,28 +472,28 @@ class Agent0SecurityScanner {
         }
         
         // Data product security recommendations
-        console.log(`💡 AGENT 0 DATA PRODUCT SECURITY RECOMMENDATIONS:\n`);
-        console.log(`1. 🔐 Implement metadata validation`);
-        console.log(`   - Validate all Dublin Core metadata before processing`);
-        console.log(`   - Use schema validation for data product definitions`);
-        console.log(`   - Implement metadata sanitization and encoding`);
+        console.log('💡 AGENT 0 DATA PRODUCT SECURITY RECOMMENDATIONS:\n');
+        console.log('1. 🔐 Implement metadata validation');
+        console.log('   - Validate all Dublin Core metadata before processing');
+        console.log('   - Use schema validation for data product definitions');
+        console.log('   - Implement metadata sanitization and encoding');
         
-        console.log(`\n2. 🛡️  Secure data lineage tracking`);
-        console.log(`   - Implement cryptographic signatures for lineage data`);
-        console.log(`   - Use immutable audit trails for data provenance`);
-        console.log(`   - Validate lineage data integrity on access`);
+        console.log('\n2. 🛡️  Secure data lineage tracking');
+        console.log('   - Implement cryptographic signatures for lineage data');
+        console.log('   - Use immutable audit trails for data provenance');
+        console.log('   - Validate lineage data integrity on access');
         
-        console.log(`\n3. 🔒 Protect data product workflows`);
-        console.log(`   - Enforce approval workflows for publication`);
-        console.log(`   - Implement access controls for sensitive data products`);
-        console.log(`   - Validate quality metrics and prevent manipulation`);
+        console.log('\n3. 🔒 Protect data product workflows');
+        console.log('   - Enforce approval workflows for publication');
+        console.log('   - Implement access controls for sensitive data products');
+        console.log('   - Validate quality metrics and prevent manipulation');
         
-        console.log(`\n4. ⚡ Implement export security`);
-        console.log(`   - Apply data classification to control exports`);
-        console.log(`   - Implement audit logging for all export operations`);
-        console.log(`   - Use encryption for sensitive metadata exports`);
+        console.log('\n4. ⚡ Implement export security');
+        console.log('   - Apply data classification to control exports');
+        console.log('   - Implement audit logging for all export operations');
+        console.log('   - Use encryption for sensitive metadata exports');
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('='.repeat(80));
     }

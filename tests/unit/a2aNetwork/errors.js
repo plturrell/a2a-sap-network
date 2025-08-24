@@ -20,20 +20,20 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var errors = require('../errors');
+const errors = require('../errors');
 
-test('all errors should be classified', function t(assert) {
-    var keys = Object.keys(errors);
-    for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
+test('all errors should be classified', (assert) => {
+    const keys = Object.keys(errors);
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
         if (key[0].toUpperCase() === key[0]) {
-            var Type = errors[key];
-            var err = new Type(new Error('e'));
+            const Type = errors[key];
+            const err = new Type(new Error('e'));
             assert.notEquals(
                 errors.classify(err), null,
-                'expected ' + err.type + ' to be classified');
+                `expected ${  err.type  } to be classified`);
         }
     }
 

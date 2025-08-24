@@ -1,7 +1,7 @@
 sap.ui.define([
-    "sap/base/Log"
-], function(Log) {
-    "use strict";
+    'sap/base/Log'
+], (Log) => {
+    'use strict';
 
     /**
      * Production Deployment Validation
@@ -37,7 +37,7 @@ sap.ui.define([
                 if (vcapServices.xsuaa && vcapServices.xsuaa[0]) {
                     const xsuaaConfig = vcapServices.xsuaa[0].credentials;
                     if (!xsuaaConfig.clientid || !xsuaaConfig.clientsecret || !xsuaaConfig.url) {
-                        errors.push("Invalid XSUAA service binding configuration");
+                        errors.push('Invalid XSUAA service binding configuration');
                     }
                 }
                 
@@ -45,16 +45,16 @@ sap.ui.define([
                 if (vcapServices.hana && vcapServices.hana[0]) {
                     const hanaConfig = vcapServices.hana[0].credentials;
                     if (!hanaConfig.host || !hanaConfig.port || !hanaConfig.user) {
-                        errors.push("Invalid HANA service binding configuration");
+                        errors.push('Invalid HANA service binding configuration');
                     }
                 }
                 
             } else {
                 // For non-BTP environments, check for alternative configuration
-                Log.warning("VCAP_SERVICES not found - checking alternative configuration");
+                Log.warning('VCAP_SERVICES not found - checking alternative configuration');
                 
                 if (!window.A2A_CONFIG) {
-                    errors.push("No configuration found - neither VCAP_SERVICES nor window.A2A_CONFIG");
+                    errors.push('No configuration found - neither VCAP_SERVICES nor window.A2A_CONFIG');
                 }
             }
             
@@ -101,11 +101,11 @@ sap.ui.define([
                 
                 // Validate URLs are not localhost
                 if (process.env.BLOCKCHAIN_RPC_URL && process.env.BLOCKCHAIN_RPC_URL.includes('localhost')) {
-                    errors.push("BLOCKCHAIN_RPC_URL cannot contain localhost in production");
+                    errors.push('BLOCKCHAIN_RPC_URL cannot contain localhost in production');
                 }
                 
                 if (process.env.WS_LOGS_URL && process.env.WS_LOGS_URL.includes('localhost')) {
-                    errors.push("WS_LOGS_URL cannot contain localhost in production");
+                    errors.push('WS_LOGS_URL cannot contain localhost in production');
                 }
             }
             
@@ -126,21 +126,21 @@ sap.ui.define([
             // Check HTTPS enforcement
             if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && 
                 window.location.hostname !== 'localhost') {
-                errors.push("HTTPS is required for production deployment");
+                errors.push('HTTPS is required for production deployment');
             }
             
             // Check CSP headers
             if (typeof document !== 'undefined') {
                 const metaCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
                 if (!metaCSP) {
-                    warnings.push("Content Security Policy not configured");
+                    warnings.push('Content Security Policy not configured');
                 }
             }
             
             // Validate authentication configuration
             if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
                 if (!process.env.SAP_JWT_TRUST_ACL) {
-                    errors.push("JWT trust ACL not configured for production");
+                    errors.push('JWT trust ACL not configured for production');
                 }
             }
             
@@ -164,15 +164,15 @@ sap.ui.define([
                     const packageJson = require('../../../../package.json');
                     
                     if (!packageJson.sap || !packageJson.sap.transport) {
-                        warnings.push("No SAP transport configuration found in package.json");
+                        warnings.push('No SAP transport configuration found in package.json');
                     } else {
                         const transport = packageJson.sap.transport;
                         if (!transport.target || !transport.package) {
-                            errors.push("Incomplete SAP transport configuration");
+                            errors.push('Incomplete SAP transport configuration');
                         }
                     }
                 } catch (e) {
-                    warnings.push("Could not read package.json for transport configuration");
+                    warnings.push('Could not read package.json for transport configuration');
                 }
             }
             
@@ -187,7 +187,7 @@ sap.ui.define([
          * Run complete deployment validation
          */
         runFullValidation: function() {
-            Log.info("Starting comprehensive deployment validation...");
+            Log.info('Starting comprehensive deployment validation...');
             
             const results = {
                 btpBindings: this.validateBTPBindings(),
@@ -213,7 +213,7 @@ sap.ui.define([
             
             // Log results
             if (overallValid) {
-                Log.info("✅ Deployment validation PASSED");
+                Log.info('✅ Deployment validation PASSED');
                 if (allWarnings.length > 0) {
                     Log.warning(`⚠️  ${allWarnings.length} warnings found:`, allWarnings);
                 }
@@ -249,8 +249,8 @@ sap.ui.define([
                         // In development, show validation result in console
                         if (typeof process !== 'undefined' && process.env && 
                             process.env.NODE_ENV !== 'production') {
-                            console.group("🔍 A2A Deployment Validation");
-                            console.log("Validation Result:", result);
+                            console.group('🔍 A2A Deployment Validation');
+                            console.log('Validation Result:', result);
                             console.groupEnd();
                         }
                         

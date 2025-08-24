@@ -24,19 +24,19 @@ asyncHook.addHooks({
 asyncHook.enable();
 asyncHook.disable();
 
-const timerId = setImmediate(function () {
+const timerId = setImmediate(() => {
   timerACalled = true;
 });
 
 clearImmediate(timerId);
 
-setImmediate(function (arg1, arg2) {
+setImmediate((arg1, arg2) => {
   timerBCalled = true;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
 }, 'a', 'b');
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(timerACalled, false);
   assert.equal(timerBCalled, true);
 });

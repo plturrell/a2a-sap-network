@@ -1,26 +1,26 @@
 
-var test = require("tap").test;
-var chain = require('../../');
-var produce = require('../produce.js');
+const test = require('tap').test;
+const chain = require('../../');
+const produce = require('../produce.js');
 
 Error.stackTraceLimit = Infinity;
 
-test("stack extend part", function (t) {
-  var extend = function (error, frames) {
+test('stack extend part', (t) => {
+  const extend = function (error, frames) {
     frames.splice(1, 0, 'EXTEND', 'FILTER ME');
     return frames;
   };
 
-  var filter = function (error, frames) {
-    return frames.filter(function (callSite) {
+  const filter = function (error, frames) {
+    return frames.filter((callSite) => {
       return callSite !== 'FILTER ME';
     });
   };
 
-  var callSites = function (level, options) {
-    var limit = Error.stackTraceLimit;
-    var callSites;
-    produce.deepStack(0, level, function () {
+  const callSites = function (level, options) {
+    const limit = Error.stackTraceLimit;
+    let callSites;
+    produce.deepStack(0, level, () => {
       Error.stackTraceLimit = level;
       callSites = chain.callSite(options);
       Error.stackTraceLimit = limit;
@@ -29,9 +29,9 @@ test("stack extend part", function (t) {
     return callSites.slice(1, Infinity);
   };
 
-  t.test("callSite method matches simple case property length", function (t) {
-    var method = chain.callSite();
-    var propery = (new Error()).callSite.original;
+  t.test('callSite method matches simple case property length', (t) => {
+    const method = chain.callSite();
+    const propery = (new Error()).callSite.original;
     t.strictEqual(method.length, propery.length);
 
     // The other stuff still works
@@ -45,7 +45,7 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("pretest: toString of callSites array", function (t) {
+  t.test('pretest: toString of callSites array', (t) => {
     t.equal(produce.convert(callSites(3)), produce.fake([
       '    at deepStack ({where}:5:5)',
       '    at deepStack ({where}:7:5)'
@@ -54,10 +54,10 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("callSite with extend", function (t) {
+  t.test('callSite with extend', (t) => {
     chain.extend.attach(extend);
-    var textA = produce.convert(callSites(3, { extend: true }));
-    var textB = produce.convert(callSites(3));
+    const textA = produce.convert(callSites(3, { extend: true }));
+    const textB = produce.convert(callSites(3));
     chain.extend.deattach(extend);
 
     t.equal(textA, produce.fake([
@@ -75,11 +75,11 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("callSite with extend and filter", function (t) {
+  t.test('callSite with extend and filter', (t) => {
     chain.extend.attach(extend);
     chain.filter.attach(filter);
-    var textA = produce.convert(callSites(3, { extend: true, filter: true }));
-    var textB = produce.convert(callSites(3, { filter: true }));
+    const textA = produce.convert(callSites(3, { extend: true, filter: true }));
+    const textB = produce.convert(callSites(3, { filter: true }));
     chain.filter.deattach(filter);
     chain.extend.deattach(extend);
 
@@ -97,11 +97,11 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("callSite with extend and filter and slice", function (t) {
+  t.test('callSite with extend and filter and slice', (t) => {
     chain.extend.attach(extend);
     chain.filter.attach(filter);
-    var textA = produce.convert(callSites(3, { extend: true, filter: true, slice: 1 }));
-    var textB = produce.convert(callSites(3, { slice: 1 }));
+    const textA = produce.convert(callSites(3, { extend: true, filter: true, slice: 1 }));
+    const textB = produce.convert(callSites(3, { slice: 1 }));
     chain.filter.deattach(filter);
     chain.extend.deattach(extend);
 

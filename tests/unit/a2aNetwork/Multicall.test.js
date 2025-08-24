@@ -2,7 +2,7 @@ const { BN, expectRevert } = require('@openzeppelin/test-helpers');
 
 const ERC20MulticallMock = artifacts.require('$ERC20MulticallMock');
 
-contract('Multicall', function (accounts) {
+contract('Multicall', (accounts) => {
   const [deployer, alice, bob] = accounts;
   const amount = 12000;
 

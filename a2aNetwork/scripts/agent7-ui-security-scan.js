@@ -326,7 +326,7 @@ class Agent7SecurityScanner {
         
         console.log('\n📊 AGENT 7 SECURITY SCAN RESULTS');
         console.log('═══════════════════════════════════════════════════');
-        console.log(`🎯 Agent: Agent Manager`);
+        console.log('🎯 Agent: Agent Manager');
         console.log(`📈 Compliance Score: ${compliancePercentage}%`);
         console.log(`✅ Passed: ${this.passed}/${this.total}`);
         console.log(`❌ Issues Found: ${this.issues.length}`);
@@ -395,10 +395,10 @@ class Agent7SecurityScanner {
         console.log('\n═══════════════════════════════════════════════════');
         
         if (compliancePercentage < 100) {
-            console.log(`❌ Agent 7 UI requires security enhancements to achieve 100% compliance`);
+            console.log('❌ Agent 7 UI requires security enhancements to achieve 100% compliance');
             process.exit(1);
         } else {
-            console.log(`✅ Agent 7 UI meets all security and compliance requirements`);
+            console.log('✅ Agent 7 UI meets all security and compliance requirements');
         }
     }
 }

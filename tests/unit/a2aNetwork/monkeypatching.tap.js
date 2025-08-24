@@ -1,16 +1,16 @@
 'use strict';
-var test = require('tap').test;
+const test = require('tap').test;
 
 if (!process.addAsyncListener) {
-  test("overwriting startup.processNextTick", function (t) {
+  test('overwriting startup.processNextTick', (t) => {
     t.plan(2);
 
-    t.doesNotThrow(function () { require('../context.js'); });
+    t.doesNotThrow(() => { require('../context.js'); });
 
-    t.ok(process.nextTick.__wrapped, "should wrap process.nextTick()");
+    t.ok(process.nextTick.__wrapped, 'should wrap process.nextTick()');
   });
 
-  test("overwriting domain helpers", function (t) {
+  test('overwriting domain helpers', (t) => {
     // domain helpers were only in 0.10.x
     if (!(process._nextDomainTick && process._tickDomainCallback)) {
       return t.end();
@@ -19,17 +19,17 @@ if (!process.addAsyncListener) {
     t.plan(2);
 
     t.ok(process._nextDomainTick.__wrapped,
-         "should wrap process._nextDomainTick()");
+         'should wrap process._nextDomainTick()');
     t.ok(process._tickDomainCallback.__wrapped,
-         "should wrap process._tickDomainCallback()");
+         'should wrap process._tickDomainCallback()');
   });
 
-  test("overwriting timers", function (t) {
+  test('overwriting timers', (t) => {
     t.plan(2);
 
-    var timers = require('timers');
-    t.ok(timers.setTimeout.__wrapped, "should wrap setTimeout()");
-    t.ok(timers.setInterval.__wrapped, "should wrap setInterval()");
+    const timers = require('timers');
+    t.ok(timers.setTimeout.__wrapped, 'should wrap setTimeout()');
+    t.ok(timers.setInterval.__wrapped, 'should wrap setInterval()');
 
     /* It would be nice to test that monkeypatching preserves the status quo
      * ante, but assert thinks setTimeout !== global.setTimeout (why?) and both of
@@ -38,13 +38,13 @@ if (!process.addAsyncListener) {
      */
   });
 
-  test("overwriting setImmediate", function (t) {
+  test('overwriting setImmediate', (t) => {
     // setTimeout's a johnny-come-lately
     if (!global.setImmediate) return t.end();
 
     t.plan(1);
 
-    t.ok(require('timers').setImmediate.__wrapped, "should wrap setImmediate()");
+    t.ok(require('timers').setImmediate.__wrapped, 'should wrap setImmediate()');
 
     /* It would be nice to test that monkeypatching preserves the status quo
      * ante, but assert thinks setTimeout !== global.setTimeout (why?) and both of

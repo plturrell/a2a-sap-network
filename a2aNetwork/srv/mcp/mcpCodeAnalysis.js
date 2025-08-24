@@ -40,213 +40,213 @@ class EnhancedMcpCodeAnalysis extends BaseService {
         this.mcpTools = {
             // Advanced dependency analysis tool
             analyze_dependency_graph: {
-                name: "analyze_dependency_graph",
-                description: "Analyze code dependencies using advanced graph algorithms (Dijkstra, DFS, BFS)",
+                name: 'analyze_dependency_graph',
+                description: 'Analyze code dependencies using advanced graph algorithms (Dijkstra, DFS, BFS)',
                 inputSchema: {
-                    type: "object",
+                    type: 'object',
                     properties: {
                         projectPath: {
-                            type: "string",
-                            description: "Root path of the project to analyze"
+                            type: 'string',
+                            description: 'Root path of the project to analyze'
                         },
                         targetFile: {
-                            type: "string",
-                            description: "Specific file to analyze dependencies for"
+                            type: 'string',
+                            description: 'Specific file to analyze dependencies for'
                         },
                         analysisType: {
-                            type: "string",
-                            enum: ["critical_paths", "circular_deps", "build_order", "full"],
-                            description: "Type of dependency analysis to perform",
-                            default: "full"
+                            type: 'string',
+                            enum: ['critical_paths', 'circular_deps', 'build_order', 'full'],
+                            description: 'Type of dependency analysis to perform',
+                            default: 'full'
                         },
                         maxDepth: {
-                            type: "integer",
+                            type: 'integer',
                             minimum: 1,
                             maximum: 10,
-                            description: "Maximum dependency depth to analyze",
+                            description: 'Maximum dependency depth to analyze',
                             default: 5
                         }
                     },
-                    required: ["projectPath"]
+                    required: ['projectPath']
                 },
                 handler: this._handleDependencyAnalysis.bind(this)
             },
 
             // Code complexity analysis tool
             analyze_code_complexity: {
-                name: "analyze_code_complexity",
-                description: "Analyze code complexity using graph algorithms for control flow analysis",
+                name: 'analyze_code_complexity',
+                description: 'Analyze code complexity using graph algorithms for control flow analysis',
                 inputSchema: {
-                    type: "object",
+                    type: 'object',
                     properties: {
                         filePath: {
-                            type: "string",
-                            description: "Path to the file to analyze"
+                            type: 'string',
+                            description: 'Path to the file to analyze'
                         },
                         includeMetrics: {
-                            type: "array",
+                            type: 'array',
                             items: {
-                                type: "string",
-                                enum: ["cyclomatic", "cognitive", "nesting", "halstead"]
+                                type: 'string',
+                                enum: ['cyclomatic', 'cognitive', 'nesting', 'halstead']
                             },
-                            description: "Complexity metrics to calculate",
-                            default: ["cyclomatic", "cognitive"]
+                            description: 'Complexity metrics to calculate',
+                            default: ['cyclomatic', 'cognitive']
                         },
                         functionFilter: {
-                            type: "string",
-                            description: "Regex pattern to filter functions for analysis"
+                            type: 'string',
+                            description: 'Regex pattern to filter functions for analysis'
                         }
                     },
-                    required: ["filePath"]
+                    required: ['filePath']
                 },
                 handler: this._handleComplexityAnalysis.bind(this)
             },
 
             // Intelligent code search tool
             smart_code_search: {
-                name: "smart_code_search",
-                description: "Search code using advanced pattern matching algorithms (KMP, fuzzy matching)",
+                name: 'smart_code_search',
+                description: 'Search code using advanced pattern matching algorithms (KMP, fuzzy matching)',
                 inputSchema: {
-                    type: "object",
+                    type: 'object',
                     properties: {
                         pattern: {
-                            type: "string",
-                            description: "Code pattern to search for"
+                            type: 'string',
+                            description: 'Code pattern to search for'
                         },
                         searchType: {
-                            type: "string",
-                            enum: ["exact", "fuzzy", "semantic", "structural"],
-                            description: "Type of search to perform",
-                            default: "semantic"
+                            type: 'string',
+                            enum: ['exact', 'fuzzy', 'semantic', 'structural'],
+                            description: 'Type of search to perform',
+                            default: 'semantic'
                         },
                         fuzzyThreshold: {
-                            type: "number",
+                            type: 'number',
                             minimum: 0.1,
                             maximum: 1.0,
-                            description: "Similarity threshold for fuzzy matching",
+                            description: 'Similarity threshold for fuzzy matching',
                             default: 0.8
                         },
                         maxResults: {
-                            type: "integer",
+                            type: 'integer',
                             minimum: 1,
                             maximum: 100,
-                            description: "Maximum number of results to return",
+                            description: 'Maximum number of results to return',
                             default: 20
                         },
                         includeContext: {
-                            type: "boolean",
-                            description: "Include surrounding code context in results",
+                            type: 'boolean',
+                            description: 'Include surrounding code context in results',
                             default: true
                         }
                     },
-                    required: ["pattern"]
+                    required: ['pattern']
                 },
                 handler: this._handleSmartSearch.bind(this)
             },
 
             // Code refactoring suggestions tool
             suggest_refactorings: {
-                name: "suggest_refactorings",
-                description: "Generate intelligent refactoring suggestions using tree and graph analysis",
+                name: 'suggest_refactorings',
+                description: 'Generate intelligent refactoring suggestions using tree and graph analysis',
                 inputSchema: {
-                    type: "object",
+                    type: 'object',
                     properties: {
                         filePath: {
-                            type: "string",
-                            description: "Path to the file to analyze for refactoring"
+                            type: 'string',
+                            description: 'Path to the file to analyze for refactoring'
                         },
                         refactoringTypes: {
-                            type: "array",
+                            type: 'array',
                             items: {
-                                type: "string",
-                                enum: ["extract_method", "extract_class", "reduce_complexity", "optimize_imports", "eliminate_duplicates"]
+                                type: 'string',
+                                enum: ['extract_method', 'extract_class', 'reduce_complexity', 'optimize_imports', 'eliminate_duplicates']
                             },
-                            description: "Types of refactorings to suggest",
-                            default: ["extract_method", "reduce_complexity", "eliminate_duplicates"]
+                            description: 'Types of refactorings to suggest',
+                            default: ['extract_method', 'reduce_complexity', 'eliminate_duplicates']
                         },
                         severityFilter: {
-                            type: "string",
-                            enum: ["high", "medium", "low", "all"],
-                            description: "Minimum severity level of suggestions",
-                            default: "medium"
+                            type: 'string',
+                            enum: ['high', 'medium', 'low', 'all'],
+                            description: 'Minimum severity level of suggestions',
+                            default: 'medium'
                         },
                         generateAutomatedRefactorings: {
-                            type: "boolean",
-                            description: "Generate automated refactoring scripts",
+                            type: 'boolean',
+                            description: 'Generate automated refactoring scripts',
                             default: false
                         }
                     },
-                    required: ["filePath"]
+                    required: ['filePath']
                 },
                 handler: this._handleRefactoringSuggestions.bind(this)
             },
 
             // Hierarchical code navigation tool
             navigate_code_hierarchy: {
-                name: "navigate_code_hierarchy",
-                description: "Navigate and analyze hierarchical code structure using tree algorithms",
+                name: 'navigate_code_hierarchy',
+                description: 'Navigate and analyze hierarchical code structure using tree algorithms',
                 inputSchema: {
-                    type: "object",
+                    type: 'object',
                     properties: {
                         rootPath: {
-                            type: "string",
-                            description: "Root path to start navigation from"
+                            type: 'string',
+                            description: 'Root path to start navigation from'
                         },
                         query: {
-                            type: "string",
-                            description: "Query pattern for navigation (e.g., '*.controller.js', 'function:onClick*')"
+                            type: 'string',
+                            description: 'Query pattern for navigation (e.g., \'*.controller.js\', \'function:onClick*\')'
                         },
                         includeMetrics: {
-                            type: "boolean",
-                            description: "Include hierarchical metrics in response",
+                            type: 'boolean',
+                            description: 'Include hierarchical metrics in response',
                             default: true
                         },
                         expandLevel: {
-                            type: "integer",
+                            type: 'integer',
                             minimum: 1,
                             maximum: 10,
-                            description: "Number of levels to expand in hierarchy",
+                            description: 'Number of levels to expand in hierarchy',
                             default: 3
                         }
                     },
-                    required: ["rootPath"]
+                    required: ['rootPath']
                 },
                 handler: this._handleHierarchicalNavigation.bind(this)
             },
 
             // Code quality assessment tool
             assess_code_quality: {
-                name: "assess_code_quality",
-                description: "Comprehensive code quality assessment using multiple algorithms",
+                name: 'assess_code_quality',
+                description: 'Comprehensive code quality assessment using multiple algorithms',
                 inputSchema: {
-                    type: "object",
+                    type: 'object',
                     properties: {
                         projectPath: {
-                            type: "string",
-                            description: "Path to the project to assess"
+                            type: 'string',
+                            description: 'Path to the project to assess'
                         },
                         assessmentAreas: {
-                            type: "array",
+                            type: 'array',
                             items: {
-                                type: "string",
-                                enum: ["complexity", "dependencies", "duplicates", "patterns", "security", "performance"]
+                                type: 'string',
+                                enum: ['complexity', 'dependencies', 'duplicates', 'patterns', 'security', 'performance']
                             },
-                            description: "Areas to include in quality assessment",
-                            default: ["complexity", "dependencies", "duplicates"]
+                            description: 'Areas to include in quality assessment',
+                            default: ['complexity', 'dependencies', 'duplicates']
                         },
                         outputFormat: {
-                            type: "string",
-                            enum: ["summary", "detailed", "metrics_only"],
-                            description: "Level of detail in the assessment report",
-                            default: "detailed"
+                            type: 'string',
+                            enum: ['summary', 'detailed', 'metrics_only'],
+                            description: 'Level of detail in the assessment report',
+                            default: 'detailed'
                         },
                         includeRecommendations: {
-                            type: "boolean",
-                            description: "Include improvement recommendations",
+                            type: 'boolean',
+                            description: 'Include improvement recommendations',
                             default: true
                         }
                     },
-                    required: ["projectPath"]
+                    required: ['projectPath']
                 },
                 handler: this._handleQualityAssessment.bind(this)
             }
@@ -261,33 +261,33 @@ class EnhancedMcpCodeAnalysis extends BaseService {
         this.mcpResources = {
             // Real-time code quality dashboard
             'code-intelligence://quality-dashboard': {
-                name: "Code Quality Dashboard",
-                description: "Real-time code quality metrics and insights",
-                mimeType: "application/json",
+                name: 'Code Quality Dashboard',
+                description: 'Real-time code quality metrics and insights',
+                mimeType: 'application/json',
                 handler: this._getQualityDashboard.bind(this)
             },
 
             // Dependency graph visualization
             'code-intelligence://dependency-graph': {
-                name: "Dependency Graph",
-                description: "Interactive dependency graph visualization data",
-                mimeType: "application/json",
+                name: 'Dependency Graph',
+                description: 'Interactive dependency graph visualization data',
+                mimeType: 'application/json',
                 handler: this._getDependencyGraph.bind(this)
             },
 
             // Code patterns repository
             'code-intelligence://patterns': {
-                name: "Code Patterns Repository",
-                description: "Identified code patterns and their usage statistics",
-                mimeType: "application/json",
+                name: 'Code Patterns Repository',
+                description: 'Identified code patterns and their usage statistics',
+                mimeType: 'application/json',
                 handler: this._getCodePatterns.bind(this)
             },
 
             // Refactoring opportunities
             'code-intelligence://refactoring-opportunities': {
-                name: "Refactoring Opportunities",
-                description: "Current refactoring opportunities across the codebase",
-                mimeType: "application/json",
+                name: 'Refactoring Opportunities',
+                description: 'Current refactoring opportunities across the codebase',
+                mimeType: 'application/json',
                 handler: this._getRefactoringOpportunities.bind(this)
             }
         };
@@ -301,17 +301,17 @@ class EnhancedMcpCodeAnalysis extends BaseService {
         this.mcpPrompts = {
             // Code review prompt
             code_review_assistant: {
-                name: "Code Review Assistant",
-                description: "Intelligent code review assistance with algorithmic analysis",
+                name: 'Code Review Assistant',
+                description: 'Intelligent code review assistance with algorithmic analysis',
                 arguments: [
                     {
-                        name: "filePath",
-                        description: "Path to the file being reviewed",
+                        name: 'filePath',
+                        description: 'Path to the file being reviewed',
                         required: true
                     },
                     {
-                        name: "reviewFocus",
-                        description: "Specific areas to focus on (complexity, security, performance, etc.)",
+                        name: 'reviewFocus',
+                        description: 'Specific areas to focus on (complexity, security, performance, etc.)',
                         required: false
                     }
                 ],
@@ -320,17 +320,17 @@ class EnhancedMcpCodeAnalysis extends BaseService {
 
             // Refactoring guide prompt
             refactoring_guide: {
-                name: "Refactoring Guide",
-                description: "Step-by-step refactoring guidance based on code analysis",
+                name: 'Refactoring Guide',
+                description: 'Step-by-step refactoring guidance based on code analysis',
                 arguments: [
                     {
-                        name: "targetCode",
-                        description: "Code snippet or file to refactor",
+                        name: 'targetCode',
+                        description: 'Code snippet or file to refactor',
                         required: true
                     },
                     {
-                        name: "refactoringGoal",
-                        description: "Specific refactoring goal (reduce complexity, improve readability, etc.)",
+                        name: 'refactoringGoal',
+                        description: 'Specific refactoring goal (reduce complexity, improve readability, etc.)',
                         required: false
                     }
                 ],

@@ -1,5 +1,5 @@
-let assert = require('assert');
-let exec = require('child_process').execSync;
+const assert = require('assert');
+const exec = require('child_process').execSync;
 
 const PROJECT_DIR = process.env.PROJECT_DIR;
 const JAKE_CMD = `${PROJECT_DIR}/bin/cli.js`;
@@ -8,9 +8,9 @@ suite('publishTask', function () {
 
   this.timeout(7000);
 
-  test('default task', function () {
-    let out = exec(`${JAKE_CMD} -q publish`).toString().trim();
-    let expected = [
+  test('default task', () => {
+    const out = exec(`${JAKE_CMD} -q publish`).toString().trim();
+    const expected = [
       'Fetched remote tags.'
       , 'On branch v0.0'
       , 'Bumped version number to v0.0.2.'

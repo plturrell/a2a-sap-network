@@ -1,10 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+'use strict';
+const __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { 'default': mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const ava_1 = __importDefault(require("ava"));
-const printf_1 = require("../../src/printf");
+Object.defineProperty(exports, '__esModule', { value: true });
+const ava_1 = __importDefault(require('ava'));
+const printf_1 = require('../../src/printf');
 (0, ava_1.default)('interpolates %b', (t) => {
     t.is((0, printf_1.printf)('%b', true), 'true');
     t.is((0, printf_1.printf)('%b', false), 'false');

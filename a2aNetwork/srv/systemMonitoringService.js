@@ -117,18 +117,18 @@ module.exports = function() {
             const cpuUsage = process.cpuUsage();
             
             const metrics = [
-                `# HELP nodejs_memory_heap_used_bytes Process heap memory used`,
-                `# TYPE nodejs_memory_heap_used_bytes gauge`,
+                '# HELP nodejs_memory_heap_used_bytes Process heap memory used',
+                '# TYPE nodejs_memory_heap_used_bytes gauge',
                 `nodejs_memory_heap_used_bytes ${memUsage.heapUsed}`,
-                ``,
-                `# HELP nodejs_memory_heap_total_bytes Process heap memory total`,
-                `# TYPE nodejs_memory_heap_total_bytes gauge`,
+                '',
+                '# HELP nodejs_memory_heap_total_bytes Process heap memory total',
+                '# TYPE nodejs_memory_heap_total_bytes gauge',
                 `nodejs_memory_heap_total_bytes ${memUsage.heapTotal}`,
-                ``,
-                `# HELP process_uptime_seconds Process uptime in seconds`,
-                `# TYPE process_uptime_seconds counter`,
+                '',
+                '# HELP process_uptime_seconds Process uptime in seconds',
+                '# TYPE process_uptime_seconds counter',
                 `process_uptime_seconds ${Math.floor(process.uptime())}`,
-                ``
+                ''
             ].join('\n');
             
             return metrics;

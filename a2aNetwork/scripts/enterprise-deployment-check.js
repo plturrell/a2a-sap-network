@@ -20,7 +20,7 @@ function addCheck(name, passed, details = '') {
     if (!passed) allPassed = false;
     
     const status = passed ? '✅' : '❌';
-    console.log(`${status} ${name}${details ? ': ' + details : ''}`);
+    console.log(`${status} ${name}${details ? `: ${  details}` : ''}`);
 }
 
 function checkFileExists(filePath, description) {
@@ -173,7 +173,7 @@ if (allPassed) {
     console.log('Please fix the failed checks before deploying to production.');
     console.log('\nFailed checks:');
     checks.filter(c => !c.passed).forEach(check => {
-        console.log(`  - ${check.name}${check.details ? ': ' + check.details : ''}`);
+        console.log(`  - ${check.name}${check.details ? `: ${  check.details}` : ''}`);
     });
 }
 

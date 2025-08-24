@@ -1,10 +1,10 @@
-var path = require('path');
-var test = require('tape');
-var resolve = require('../');
+const path = require('path');
+const test = require('tape');
+const resolve = require('../');
 
-var resolverDir = path.join(__dirname, '/pathfilter/deep_ref');
+const resolverDir = path.join(__dirname, '/pathfilter/deep_ref');
 
-var pathFilterFactory = function (t) {
+const pathFilterFactory = function (t) {
     return function (pkg, x, remainder) {
         t.equal(pkg.version, '1.2.3');
         t.equal(x, path.join(resolverDir, 'node_modules/deep/ref'));
@@ -13,28 +13,28 @@ var pathFilterFactory = function (t) {
     };
 };
 
-test('#62: deep module references and the pathFilter', function (t) {
-    t.test('deep/ref.js', function (st) {
+test('#62: deep module references and the pathFilter', (t) => {
+    t.test('deep/ref.js', (st) => {
         st.plan(3);
 
-        resolve('deep/ref', { basedir: resolverDir }, function (err, res, pkg) {
+        resolve('deep/ref', { basedir: resolverDir }, (err, res, pkg) => {
             if (err) st.fail(err);
 
             st.equal(pkg.version, '1.2.3');
             st.equal(res, path.join(resolverDir, 'node_modules/deep/ref.js'));
         });
 
-        var res = resolve.sync('deep/ref', { basedir: resolverDir });
+        const res = resolve.sync('deep/ref', { basedir: resolverDir });
         st.equal(res, path.join(resolverDir, 'node_modules/deep/ref.js'));
     });
 
-    t.test('deep/deeper/ref', function (st) {
+    t.test('deep/deeper/ref', (st) => {
         st.plan(4);
 
         resolve(
             'deep/deeper/ref',
             { basedir: resolverDir },
-            function (err, res, pkg) {
+            (err, res, pkg) => {
                 if (err) t.fail(err);
                 st.notEqual(pkg, undefined);
                 st.equal(pkg.version, '1.2.3');
@@ -42,19 +42,19 @@ test('#62: deep module references and the pathFilter', function (t) {
             }
         );
 
-        var res = resolve.sync(
+        const res = resolve.sync(
             'deep/deeper/ref',
             { basedir: resolverDir }
         );
         st.equal(res, path.join(resolverDir, 'node_modules/deep/deeper/ref.js'));
     });
 
-    t.test('deep/ref alt', function (st) {
+    t.test('deep/ref alt', (st) => {
         st.plan(8);
 
-        var pathFilter = pathFilterFactory(st);
+        const pathFilter = pathFilterFactory(st);
 
-        var res = resolve.sync(
+        const res = resolve.sync(
             'deep/ref',
             { basedir: resolverDir, pathFilter: pathFilter }
         );
@@ -63,7 +63,7 @@ test('#62: deep module references and the pathFilter', function (t) {
         resolve(
             'deep/ref',
             { basedir: resolverDir, pathFilter: pathFilter },
-            function (err, res, pkg) {
+            (err, res, pkg) => {
                 if (err) st.fail(err);
                 st.equal(res, path.join(resolverDir, 'node_modules/deep/alt.js'));
                 st.end();

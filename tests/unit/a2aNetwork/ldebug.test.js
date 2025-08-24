@@ -1,15 +1,15 @@
-"use strict";
+'use strict';
 
 const lua = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib = require('../src/lualib.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 test('luaG_typeerror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = true
         return #a
     `;
@@ -20,15 +20,15 @@ test('luaG_typeerror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("attempt to get length of a boolean value (local 'a')");
+        .toMatch('attempt to get length of a boolean value (local \'a\')');
 });
 
 
 test('luaG_typeerror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = true
         return a.yo
     `;
@@ -39,15 +39,15 @@ test('luaG_typeerror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("attempt to index a boolean value (local 'a')");
+        .toMatch('attempt to index a boolean value (local \'a\')');
 });
 
 
 test('luaG_typeerror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = true
         return a.yo
     `;
@@ -58,15 +58,15 @@ test('luaG_typeerror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("attempt to index a boolean value (local 'a')");
+        .toMatch('attempt to index a boolean value (local \'a\')');
 });
 
 
 test('luaG_typeerror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = true
         a.yo = 1
     `;
@@ -77,15 +77,15 @@ test('luaG_typeerror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("attempt to index a boolean value (local 'a')");
+        .toMatch('attempt to index a boolean value (local \'a\')');
 });
 
 
 test('luaG_concaterror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return {} .. 'hello'
     `;
     {
@@ -95,15 +95,15 @@ test('luaG_concaterror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("attempt to concatenate a table value");
+        .toMatch('attempt to concatenate a table value');
 });
 
 
 test('luaG_opinterror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return {} + 'hello'
     `;
     {
@@ -113,15 +113,15 @@ test('luaG_opinterror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("attempt to perform arithmetic on a table value");
+        .toMatch('attempt to perform arithmetic on a table value');
 });
 
 
 test('luaG_tointerror', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return 123.5 & 12
     `;
     {
@@ -131,5 +131,5 @@ test('luaG_tointerror', () => {
     }
 
     expect(lua.lua_tojsstring(L, -1))
-        .toMatch("number has no integer representation");
+        .toMatch('number has no integer representation');
 });

@@ -44,9 +44,9 @@ const generators = {
   // Generate mock blockchain transaction
   mockTransaction: function(overrides = {}) {
     return {
-      hash: '0x' + generators.uniqueId(),
-      from: '0x' + generators.uniqueId(),
-      to: '0x' + generators.uniqueId(),
+      hash: `0x${  generators.uniqueId()}`,
+      from: `0x${  generators.uniqueId()}`,
+      to: `0x${  generators.uniqueId()}`,
       value: '1000000000000000000',
       gasUsed: 21000,
       status: 'success',
@@ -116,7 +116,7 @@ const api = {
 const async = {
   // Wait for specified time
   wait: function(ms) { 
-    return new Promise(function(resolve) { 
+    return new Promise((resolve) => { 
       setTimeout(resolve, ms); 
     }); 
   },
@@ -162,14 +162,14 @@ const environment = {
   
   // Set test environment variables
   setTestVars: function(vars = {}) {
-    Object.entries(vars).forEach(function([key, value]) {
+    Object.entries(vars).forEach(([key, value]) => {
       process.env[key] = value;
     });
   },
   
   // Restore environment variables
   restoreVars: function(originalEnv = {}) {
-    Object.entries(originalEnv).forEach(function([key, value]) {
+    Object.entries(originalEnv).forEach(([key, value]) => {
       if (value === undefined) {
         delete process.env[key];
       } else {

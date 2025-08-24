@@ -22,36 +22,36 @@
 
 if (!process.addAsyncListener) require('../../index.js');
 
-var assert = require('assert');
+const assert = require('assert');
 
 function onAsync0() {}
 function onAsync1() {}
 
-var once = 0;
-var handlers0 = {
+let once = 0;
+const handlers0 = {
   error: function (stor, err) {
     // should catch the error *once*
     once++;
   }
-}
+};
 
-var handlers1 = {
+const handlers1 = {
   error: function (stor, err) {
     // this error handler is bound *after* the async callback
     // and it should not handle the error
-    throw "Should Never Be Called";
+    throw 'Should Never Be Called';
   }
-}
+};
 
-var key0 = process.addAsyncListener(onAsync0, handlers0);
+const key0 = process.addAsyncListener(onAsync0, handlers0);
 
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', (err) => {
   // handlers0 error handler must be called once only
   assert.equal(once, 1);
   console.log('ok');
 });
 
-setImmediate(function () {
+setImmediate(() => {
   throw 1;
 });
 

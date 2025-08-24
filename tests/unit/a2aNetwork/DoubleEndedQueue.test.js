@@ -13,7 +13,7 @@ const getContent = deque =>
     ),
   );
 
-contract('DoubleEndedQueue', function () {
+contract('DoubleEndedQueue', () => {
   const bytesA = '0xdeadbeef'.padEnd(66, '0');
   const bytesB = '0x0123456789'.padEnd(66, '0');
   const bytesC = '0x42424242'.padEnd(66, '0');
@@ -23,7 +23,7 @@ contract('DoubleEndedQueue', function () {
     this.deque = await DoubleEndedQueue.new();
   });
 
-  describe('when empty', function () {
+  describe('when empty', () => {
     it('getters', async function () {
       expect(await this.deque.$empty(0)).to.be.equal(true);
       expect(await getContent(this.deque)).to.have.ordered.members([]);
@@ -37,7 +37,7 @@ contract('DoubleEndedQueue', function () {
     });
   });
 
-  describe('when not empty', function () {
+  describe('when not empty', () => {
     beforeEach(async function () {
       await this.deque.$pushBack(0, bytesB);
       await this.deque.$pushFront(0, bytesA);
@@ -57,7 +57,7 @@ contract('DoubleEndedQueue', function () {
       await expectRevertCustomError(this.deque.$at(0, this.content.length), 'OutOfBounds()');
     });
 
-    describe('push', function () {
+    describe('push', () => {
       it('front', async function () {
         await this.deque.$pushFront(0, bytesD);
         this.content.unshift(bytesD); // add element at the beginning
@@ -73,7 +73,7 @@ contract('DoubleEndedQueue', function () {
       });
     });
 
-    describe('pop', function () {
+    describe('pop', () => {
       it('front', async function () {
         const value = this.content.shift(); // remove first element
         expectEvent(await this.deque.$popFront(0), 'return$popFront', { value });

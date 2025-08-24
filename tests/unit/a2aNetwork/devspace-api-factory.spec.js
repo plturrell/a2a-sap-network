@@ -1,42 +1,42 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 // eslint-disable-next-line eslint-comments/disable-enable-pair -- ignore for testing scope
 /* eslint-disable @typescript-eslint/no-explicit-any -- ignore for testing scope */
-const chai_1 = require("chai");
-const ws_1 = require("ws");
-const assert_1 = require("assert");
-const index_1 = require("../../src/index");
+const chai_1 = require('chai');
+const ws_1 = require('ws');
+const assert_1 = require('assert');
+const index_1 = require('../../src/index');
 const { devspaceApiFactory } = index_1.devspaceApi;
-describe("index-devspace-api", () => {
-    describe("devspaceApiFactory", () => {
+describe('index-devspace-api', () => {
+    describe('devspaceApiFactory', () => {
         let wss;
         let wsMockServer;
         let wsMockHandler;
-        const prompt = `$ [6n`;
+        const prompt = '$ [6n';
         beforeEach(() => {
             wss = new ws_1.WebSocketServer({ port: 8989 });
-            wss.on("connection", function connection(ws) {
+            wss.on('connection', (ws) => {
                 wsMockServer = ws;
-                wsMockServer.on("message", wsMockHandler);
+                wsMockServer.on('message', wsMockHandler);
             });
         });
         afterEach(() => {
             wss.close();
         });
-        it("execute command without connect command", function () {
-            (0, chai_1.expect)(devspaceApiFactory("ws://localhost:8991").execute({
-                command: "ls",
-                args: ["-la"],
+        it('execute command without connect command', () => {
+            (0, chai_1.expect)(devspaceApiFactory('ws://localhost:8991').execute({
+                command: 'ls',
+                args: ['-la'],
             })).to.be.undefined;
         });
-        it("create devspace API", function () {
+        it('create devspace API', () => {
             // prep the mock
             wsMockHandler = (data) => {
-                console.log("received: %s", data);
-                wsMockServer.send("lala");
+                console.log('received: %s', data);
+                wsMockServer.send('lala');
             };
-            const host1 = "ws://localhost:8989";
-            const host2 = "ws://localhost:9090";
+            const host1 = 'ws://localhost:8989';
+            const host2 = 'ws://localhost:9090';
             // create devspace api
             const devspaceApi = devspaceApiFactory(host1);
             const devspaceApi2 = devspaceApiFactory(host1);
@@ -45,85 +45,85 @@ describe("index-devspace-api", () => {
             (0, chai_1.expect)(devspaceApi).to.not.be.equals(devspaceApi2);
             (0, chai_1.expect)(devspaceApi).to.not.be.equals(devspaceApi3);
         });
-        it("execute command on the devspace API", function (done) {
+        it('execute command on the devspace API', (done) => {
             // prep the mock
             wsMockHandler = (data) => {
-                console.log("received: %s", data.toString());
+                console.log('received: %s', data.toString());
                 wsMockServer.send(`/home/usr/ ${prompt}`);
                 wsMockServer.send(`lala/home/bin/ ${prompt}`);
             };
             // create devspace api
-            const devspaceApi = devspaceApiFactory("ws://localhost:8989");
+            const devspaceApi = devspaceApiFactory('ws://localhost:8989');
             // register
             devspaceApi.onMessage((value) => {
                 // assert we recived from server the valid response for the "ls -la" we execute later
                 devspaceApi.disconnect();
-                (0, chai_1.expect)(value).to.equals("lala");
+                (0, chai_1.expect)(value).to.equals('lala');
                 done();
             });
-            devspaceApi.connect("jwt").then(() => {
-                devspaceApi.execute({ command: "ls", args: ["-la"] });
+            devspaceApi.connect('jwt').then(() => {
+                devspaceApi.execute({ command: 'ls', args: ['-la'] });
             });
         });
-        it("execute command - server close connection", function (done) {
+        it('execute command - server close connection', (done) => {
             // prep the mock
             wsMockHandler = (data) => {
-                console.log("received: %s", data.toString());
+                console.log('received: %s', data.toString());
                 wsMockServer.send(`/home/bin/ ${prompt}`);
-                wsMockServer.send(`lala`);
-                wsMockServer.send(`bye!`);
+                wsMockServer.send('lala');
+                wsMockServer.send('bye!');
             };
             // create devspace api
-            const devspaceApi = devspaceApiFactory("ws://localhost:8989");
+            const devspaceApi = devspaceApiFactory('ws://localhost:8989');
             // register
             devspaceApi.onMessage((value) => {
                 // assert we received from server the valid response for the "ls -la" we execute later
                 devspaceApi.disconnect();
-                (0, chai_1.expect)(value).to.equals("lala - connection interrupted...");
+                (0, chai_1.expect)(value).to.equals('lala - connection interrupted...');
             });
-            devspaceApi.connect("jwt").then(async () => {
+            devspaceApi.connect('jwt').then(async () => {
                 (0, chai_1.expect)(devspaceApi.connectionOpen).to.be.true;
-                devspaceApi.execute({ command: "ls" });
-                await new Promise((resolve) => setTimeout(() => resolve(""), 1000)); // 2 sec
+                devspaceApi.execute({ command: 'ls' });
+                await new Promise((resolve) => setTimeout(() => resolve(''), 1000)); // 2 sec
                 (0, chai_1.expect)(devspaceApi.connectionOpen).to.be.false;
                 done();
             });
         });
-        it("execute command on the devspace API - connection closed", function () {
+        it('execute command on the devspace API - connection closed', () => {
             // create devspace api
-            const devspaceApi = devspaceApiFactory("ws://localhost:8990");
+            const devspaceApi = devspaceApiFactory('ws://localhost:8990');
             devspaceApi
-                .connect("jwt")
+                .connect('jwt')
                 .then(() => {
-                (0, assert_1.fail)("should fail");
+                (0, assert_1.fail)('should fail');
             })
                 .catch((e) => {
-                (0, chai_1.expect)(e.code).to.contain("ECONNREFUSED");
+                (0, chai_1.expect)(e.code).to.contain('ECONNREFUSED');
             });
         });
-        it("swapCallback 'error' listener - connection closed", function () {
+        it('swapCallback \'error\' listener - connection closed', () => {
             // create devspace api
-            const devspaceApi = devspaceApiFactory("ws://localhost:8990");
+            const devspaceApi = devspaceApiFactory('ws://localhost:8990');
             const cb = () => undefined;
-            devspaceApi["swapCallback"]("error", "callbackOnError", cb);
-            (0, chai_1.expect)(devspaceApi["callbackOnError"]).to.equal(cb);
-            const other = () => "undefined";
-            devspaceApi["swapCallback"]("error", "callbackOnError", other);
-            (0, chai_1.expect)(devspaceApi["callbackOnError"]).to.be.equal(other);
+            devspaceApi['swapCallback']('error', 'callbackOnError', cb);
+            (0, chai_1.expect)(devspaceApi['callbackOnError']).to.equal(cb);
+            const other = () => 'undefined';
+            devspaceApi['swapCallback']('error', 'callbackOnError', other);
+            (0, chai_1.expect)(devspaceApi['callbackOnError']).to.be.equal(other);
         });
-        it("swapCallback 'close' listener", function (done) {
+        it('swapCallback \'close\' listener', (done) => {
             // create devspace api
-            const devspaceApi = devspaceApiFactory("ws://localhost:8989");
-            devspaceApi.connect("jwt").then(() => {
+            const devspaceApi = devspaceApiFactory('ws://localhost:8989');
+            devspaceApi.connect('jwt').then(() => {
                 let onCloseOut;
-                const closeText = "conn closed";
+                const closeText = 'conn closed';
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- test scope
                 const cb = () => {
                     onCloseOut = closeText;
                     return;
                 };
-                devspaceApi["swapCallback"]("close", "callbackOnClose", cb);
-                (0, chai_1.expect)(devspaceApi["callbackOnClose"]).to.equal(cb);
+                devspaceApi['swapCallback']('close', 'callbackOnClose', cb);
+                (0, chai_1.expect)(devspaceApi['callbackOnClose']).to.equal(cb);
                 devspaceApi.disconnect();
                 setTimeout(() => {
                     (0, chai_1.expect)(onCloseOut).to.be.equals(closeText);
@@ -131,8 +131,8 @@ describe("index-devspace-api", () => {
                 }, 1000);
             });
         });
-        it("disconnect when no connection", function () {
-            const devspaceApi = devspaceApiFactory("ws://localhost:8989");
+        it('disconnect when no connection', () => {
+            const devspaceApi = devspaceApiFactory('ws://localhost:8989');
             devspaceApi.disconnect();
         });
     });

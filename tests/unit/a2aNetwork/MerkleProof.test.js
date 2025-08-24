@@ -8,12 +8,12 @@ const { expect } = require('chai');
 
 const MerkleProof = artifacts.require('$MerkleProof');
 
-contract('MerkleProof', function () {
+contract('MerkleProof', () => {
   beforeEach(async function () {
     this.merkleProof = await MerkleProof.new();
   });
 
-  describe('verify', function () {
+  describe('verify', () => {
     it('returns true for a valid Merkle proof', async function () {
       const elements = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split('');
       const merkleTree = new MerkleTree(elements, keccak256, { hashLeaves: true, sortPairs: true });
@@ -68,7 +68,7 @@ contract('MerkleProof', function () {
     });
   });
 
-  describe('multiProofVerify', function () {
+  describe('multiProofVerify', () => {
     it('returns true for a valid Merkle multi proof', async function () {
       const leaves = ['a', 'b', 'c', 'd', 'e', 'f'].map(keccak256).sort(Buffer.compare);
       const merkleTree = new MerkleTree(leaves, keccak256, { sort: true });

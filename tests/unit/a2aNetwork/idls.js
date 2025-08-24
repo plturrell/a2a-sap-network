@@ -20,23 +20,23 @@
 
 'use strict';
 
-var test = require('tape');
-var fs = require('fs');
-var path = require('path');
-var Thrift = require('../thrift').Thrift;
-var IDL = require('./thrift-idl');
+const test = require('tape');
+const fs = require('fs');
+const path = require('path');
+const Thrift = require('../thrift').Thrift;
+const IDL = require('./thrift-idl');
 
-test('can round trip a thrift file through sources', function t(assert) {
+test('can round trip a thrift file through sources', (assert) => {
 
-    var thrift = new Thrift({
+    const thrift = new Thrift({
         entryPoint: path.join(__dirname, 'include-cyclic-a.thrift'),
         fs: fs,
         allowFsAccess: true,
         allowIncludeAlias: true
     });
 
-    var sources = thrift.getSources();
-    var rethrift = new Thrift({
+    const sources = thrift.getSources();
+    const rethrift = new Thrift({
         entryPoint: sources.entryPoint,
         idls: sources.idls,
         allowIncludeAlias: true

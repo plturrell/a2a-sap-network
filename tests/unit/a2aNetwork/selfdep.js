@@ -1,5 +1,5 @@
-let assert = require('assert');
-let exec = require('child_process').execSync;
+const assert = require('assert');
+const exec = require('child_process').execSync;
 
 const PROJECT_DIR = process.env.PROJECT_DIR;
 const JAKE_CMD = `${PROJECT_DIR}/bin/cli.js`;
@@ -10,16 +10,16 @@ suite('selfDep', function () {
 
   let origStderrWrite;
 
-  setup(function () {
+  setup(() => {
     origStderrWrite = process.stderr.write;
     process.stderr.write = function () {};
   });
 
-  teardown(function () {
+  teardown(() => {
     process.stderr.write = origStderrWrite;
   });
 
-  test('self dep const', function () {
+  test('self dep const', () => {
     try {
       exec(`${JAKE_CMD} selfdepconst`);
     }
@@ -28,7 +28,7 @@ suite('selfDep', function () {
     }
   });
 
-  test('self dep dyn', function () {
+  test('self dep dyn', () => {
     try {
       exec(`${JAKE_CMD} selfdepdyn`);
     }

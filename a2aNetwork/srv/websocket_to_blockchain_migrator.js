@@ -211,9 +211,9 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                     if (requireMatches) {
                         const lastRequireIndex = content.lastIndexOf(requireMatches[requireMatches.length - 1]);
                         const insertPos = content.indexOf('\n', lastRequireIndex) + 1;
-                        content = content.slice(0, insertPos) + 
-                            'const { BlockchainEventServer, BlockchainEventClient } = require(\'./blockchain-event-adapter\');\n' +
-                            content.slice(insertPos);
+                        content = `${content.slice(0, insertPos)  
+                            }const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');\n${ 
+                            content.slice(insertPos)}`;
                     }
                 }
             }

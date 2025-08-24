@@ -210,7 +210,7 @@ class TestTracker {
                 'running',
                 process.version,
                 options.gitCommit || null
-            ], function(err) {
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -254,7 +254,7 @@ class TestTracker {
                 description,
                 suite.startTime.toISOString(),
                 'running'
-            ], function(err) {
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -314,7 +314,7 @@ class TestTracker {
                 assertions.total,
                 assertions.passed,
                 JSON.stringify(performanceData)
-            ], function(err) {
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -326,7 +326,7 @@ class TestTracker {
                     this.currentRun.totalTests++;
                     resolve();
                 }
-            }.bind(this));
+            });
         });
     }
 
@@ -352,7 +352,7 @@ class TestTracker {
                 unit,
                 component,
                 new Date().toISOString()
-            ], function(err) {
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -390,7 +390,7 @@ class TestTracker {
                 this.currentRun.runId, suiteName,
                 endTime,
                 this.currentRun.runId, suiteName
-            ], function(err) {
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -437,7 +437,7 @@ class TestTracker {
                 endTime,
                 coverage,
                 this.currentRun.runId
-            ], function(err) {
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -445,7 +445,7 @@ class TestTracker {
                     this.currentRun = null;
                     resolve();
                 }
-            }.bind(this));
+            });
         });
     }
 

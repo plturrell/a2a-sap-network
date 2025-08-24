@@ -2,12 +2,12 @@
  * tst.basic.js: tests various valid invocation
  */
 
-var mod_assert = require('assert');
-var mod_extsprintf = require('../lib/extsprintf');
-var mod_path = require('path');
-var sprintf = mod_extsprintf.sprintf;
+const mod_assert = require('assert');
+const mod_extsprintf = require('../lib/extsprintf');
+const mod_path = require('path');
+const sprintf = mod_extsprintf.sprintf;
 
-var testcases = [ {
+const testcases = [ {
     'name': 'empty string',
     'args': [ '' ],
     'result': ''
@@ -91,18 +91,18 @@ function main(verbose) {
 	/*
 	 * Create one test case with a very large input string.
 	 */
-	var input = '1234';
+	let input = '1234';
 	while (input.length < 100 * 1024) {
 		input += input;
 	}
 	testcases.push({
-	    'name': 'long string argument (' + input.length + ' characters)',
+	    'name': `long string argument (${  input.length  } characters)`,
 	    'args': [ '%s', input ],
 	    'result': input
 	});
 
-	testcases.forEach(function (tc) {
-		var result;
+	testcases.forEach((tc) => {
+		let result;
 		console.error('test case: %s', tc.name);
 		result = sprintf.apply(null, tc.args);
 		if (verbose) {

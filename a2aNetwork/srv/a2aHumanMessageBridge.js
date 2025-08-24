@@ -4,7 +4,7 @@
  * Routes messages based on Python communication configuration
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 const WebSocket = require('ws');
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
@@ -436,9 +436,9 @@ class A2AHumanMessageBridge extends EventEmitter {
         // Always add reply action for requests
         if (routingDecision.requires_human_confirmation) {
             actions.push({
-                text: "Reply",
-                action: "reply_to_agent",
-                type: "Emphasized"
+                text: 'Reply',
+                action: 'reply_to_agent',
+                type: 'Emphasized'
             });
         }
         
@@ -446,14 +446,14 @@ class A2AHumanMessageBridge extends EventEmitter {
         if (messageType === 'approval_request') {
             actions.push(
                 {
-                    text: "Approve",
-                    action: "approve_request",
-                    type: "Accept"
+                    text: 'Approve',
+                    action: 'approve_request',
+                    type: 'Accept'
                 },
                 {
-                    text: "Reject", 
-                    action: "reject_request",
-                    type: "Reject"
+                    text: 'Reject', 
+                    action: 'reject_request',
+                    type: 'Reject'
                 }
             );
         }
@@ -461,23 +461,23 @@ class A2AHumanMessageBridge extends EventEmitter {
         if (messageType === 'data_request') {
             actions.push(
                 {
-                    text: "Grant Access",
-                    action: "grant_data_access",
-                    type: "Accept"
+                    text: 'Grant Access',
+                    action: 'grant_data_access',
+                    type: 'Accept'
                 },
                 {
-                    text: "Deny Access",
-                    action: "deny_data_access", 
-                    type: "Reject"
+                    text: 'Deny Access',
+                    action: 'deny_data_access', 
+                    type: 'Reject'
                 }
             );
         }
         
         // Generic actions
         actions.push({
-            text: "Delegate",
-            action: "delegate_to_agent",
-            type: "Default"
+            text: 'Delegate',
+            action: 'delegate_to_agent',
+            type: 'Default'
         });
         
         return actions;
@@ -708,11 +708,11 @@ class A2AHumanMessageBridge extends EventEmitter {
     
     // Utility methods
     generateMessageId() {
-        return 'bridge_msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        return `bridge_msg_${  Date.now()  }_${  Math.random().toString(36).substr(2, 9)}`;
     }
     
     generateNotificationId() {
-        return 'bridge_notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        return `bridge_notif_${  Date.now()  }_${  Math.random().toString(36).substr(2, 9)}`;
     }
     
     generateConversationId(agentId) {

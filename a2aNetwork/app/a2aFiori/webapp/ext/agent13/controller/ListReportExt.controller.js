@@ -366,17 +366,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateScanProgress(data, oProgressDialog);
                     } catch (error) {
-                        // console.error("Error parsing scan progress data:", error);
+                        // // console.error("Error parsing scan progress data:", error);
                     }
                 }.bind(this);
 
                 this._scanEventSource.onerror = function(error) {
-                    // console.warn("Scan stream error, falling back to polling:", error);
+                    // // console.warn("Scan stream error, falling back to polling:", error);
                     this._startScanPolling(sScanId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startScanPolling(sScanId, oProgressDialog);
             }
         },
@@ -414,7 +414,7 @@ sap.ui.define([
                     this._updateScanProgress(data, oProgressDialog);
                 }.bind(this),
                 error(error) {
-                    // console.warn("Failed to fetch scan progress:", error);
+                    // // console.warn("Failed to fetch scan progress:", error);
                 }
             });
         },
@@ -617,7 +617,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
+                // // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -670,7 +670,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                // console.error("Error processing security update:", error);
+                // // console.error("Error processing security update:", error);
             }
         },
 
@@ -770,7 +770,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

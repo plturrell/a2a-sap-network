@@ -23,13 +23,13 @@
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
+const assert = require('assert');
 
-var once = 0;
+let once = 0;
 function onAsync0() {}
 function onAsync1() {}
 
-var handlers = {
+const handlers = {
   before : function () {
     throw 1;
   },
@@ -43,7 +43,7 @@ var handlers = {
   }
 };
 
-var handlers1 = {
+const handlers1 = {
   before : function () {
     throw 2;
   },
@@ -57,23 +57,23 @@ var handlers1 = {
   }
 };
 
-var keys = [
+const keys = [
   process.addAsyncListener(onAsync0, handlers),
   process.addAsyncListener(onAsync1, handlers1)
 ];
 
-process.on('uncaughtException', function () {
+process.on('uncaughtException', () => {
   // both error handlers must fire
   assert.equal(once, 2);
 
   console.log('ok');
 });
 
-setImmediate(function () {
+setImmediate(() => {
   return 1;
 });
 
-keys.forEach(function (key) {
+keys.forEach((key) => {
   process.removeAsyncListener(key);
 });
 

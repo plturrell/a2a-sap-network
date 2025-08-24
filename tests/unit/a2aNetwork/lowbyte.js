@@ -1,12 +1,12 @@
-var test = require('tape');
-var inspect = require('../');
+const test = require('tape');
+const inspect = require('../');
 
-var obj = { x: 'a\r\nb', y: '\x05! \x1f \x12' };
+const obj = { x: 'a\r\nb', y: '\x05! \x1f \x12' };
 
-test('interpolate low bytes', function (t) {
+test('interpolate low bytes', (t) => {
     t.plan(1);
     t.equal(
         inspect(obj),
-        "{ x: 'a\\r\\nb', y: '\\x05! \\x1F \\x12' }"
+        '{ x: \'a\\r\\nb\', y: \'\\x05! \\x1F \\x12\' }'
     );
 });

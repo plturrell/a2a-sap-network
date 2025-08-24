@@ -8,12 +8,12 @@ async function test() {
     
     const testData = [
         {
-            "Location (L0)": "Americas",
-            "Location (L1)": "United States", 
-            "Location (L2)": "New York",
-            "Location (L3)": "New York City",
-            "Location (L4)": "Manhattan",
-            "_row_number": 1
+            'Location (L0)': 'Americas',
+            'Location (L1)': 'United States', 
+            'Location (L2)': 'New York',
+            'Location (L3)': 'New York City',
+            'Location (L4)': 'Manhattan',
+            '_row_number': 1
         }
     ];
     

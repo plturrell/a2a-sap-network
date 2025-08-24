@@ -20,10 +20,10 @@
 
 'use strict';
 
-var test = require('tape');
-var lcp = require('../lib/lcp');
+const test = require('tape');
+const lcp = require('../lib/lcp');
 
-var prefixTests = [
+const prefixTests = [
     {strings: [], length: Infinity},
     {strings: [''], length: 0},
     {strings: ['a', 'b'], length: 0},
@@ -33,20 +33,20 @@ var prefixTests = [
     {strings: ['aaaa', 'aaa', 'aa', 'a'], length: 1}
 ];
 
-test('lengths of common prefixes', function t(assert) {
-    for (var i = 0; i < prefixTests.length; i++) {
-        var prefixTest = prefixTests[i];
+test('lengths of common prefixes', (assert) => {
+    for (let i = 0; i < prefixTests.length; i++) {
+        const prefixTest = prefixTests[i];
         assert.equal(
             lcp.lengthOfCommonPrefix(prefixTest.strings),
             prefixTest.length,
-            'length of common prefix among ' +
-            JSON.stringify(prefixTest.strings)
+            `length of common prefix among ${ 
+            JSON.stringify(prefixTest.strings)}`
         );
     }
     assert.end();
 });
 
-var pathTests = [
+const pathTests = [
     {paths: [
         '/home/luser/app/idl/alice/alice.thrift',
         '/home/luser/app/idl/bob/bob.thrift',
@@ -73,14 +73,14 @@ var pathTests = [
     ], path: '/home/luser/app/idl/'}
 ];
 
-test('common parent directory', function t(assert) {
-    for (var i = 0; i < pathTests.length; i++) {
-        var pathTest = pathTests[i];
+test('common parent directory', (assert) => {
+    for (let i = 0; i < pathTests.length; i++) {
+        const pathTest = pathTests[i];
         assert.equal(
             lcp.longestCommonPath(pathTest.paths),
             pathTest.path,
-            'length of common parent directory among ' +
-            JSON.stringify(pathTest.paths)
+            `length of common parent directory among ${ 
+            JSON.stringify(pathTest.paths)}`
         );
     }
     assert.end();

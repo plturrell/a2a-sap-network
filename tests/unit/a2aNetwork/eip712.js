@@ -18,7 +18,7 @@ const Permit = [
 ];
 
 function bufferToHexString(buffer) {
-  return '0x' + buffer.toString('hex');
+  return `0x${  buffer.toString('hex')}`;
 }
 
 function hexStringToBuffer(hexstr) {

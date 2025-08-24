@@ -96,7 +96,7 @@ class AdvancedCDSParser {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const symbolId = `import_${this.symbolCounter++}`;
                 
-                let importData = {
+                const importData = {
                     symbol: symbolId,
                     definition: {
                         range: this.createRange(content, match.index, match[0].length),

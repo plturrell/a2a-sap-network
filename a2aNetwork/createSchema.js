@@ -12,7 +12,7 @@ const connection = hana.createConnection();
 
 console.log('Connecting to HANA...');
 
-connection.connect(connOptions, function(err) {
+connection.connect(connOptions, (err) => {
     if (err) {
         console.error('Connection failed:', err);
         process.exit(1);
@@ -22,7 +22,7 @@ connection.connect(connOptions, function(err) {
     
     // Create schema
     console.log('Creating schema A2A_DEV...');
-    connection.exec('CREATE SCHEMA A2A_DEV', function(err, result) {
+    connection.exec('CREATE SCHEMA A2A_DEV', (err, result) => {
         if (err) {
             if (err.code === 386) {
                 console.log('Schema A2A_DEV already exists');
@@ -37,7 +37,7 @@ connection.connect(connOptions, function(err) {
         
         // Grant privileges
         console.log('Granting privileges...');
-        connection.exec('GRANT ALL PRIVILEGES ON SCHEMA A2A_DEV TO DBADMIN WITH GRANT OPTION', function(err, result) {
+        connection.exec('GRANT ALL PRIVILEGES ON SCHEMA A2A_DEV TO DBADMIN WITH GRANT OPTION', (err, result) => {
             if (err) {
                 console.error('Failed to grant privileges:', err);
             } else {

@@ -63,7 +63,7 @@ async function testCAPIntegration() {
             
             // Show some example symbols
             if (result.scip.symbols.length > 0) {
-                console.log(`   🔍 Sample symbols:`);
+                console.log('   🔍 Sample symbols:');
                 result.scip.symbols.slice(0, 3).forEach(symbol => {
                     console.log(`      ${symbol.type}: ${symbol.name}`);
                 });
@@ -185,7 +185,7 @@ aspect Auditable {
         // Parse the sample CDS
         const result = await indexer.scipCDSIndexer(tempCDSFile);
         
-        console.log(`✅ Sample CDS parsed successfully`);
+        console.log('✅ Sample CDS parsed successfully');
         console.log(`   Symbols: ${result.scip.symbols.length}`);
         console.log(`   Facts: ${result.glean.length}`);
         
@@ -195,10 +195,10 @@ aspect Auditable {
             symbolsByType[symbol.type] = (symbolsByType[symbol.type] || 0) + 1;
         });
         
-        console.log(`   Symbol breakdown:`, symbolsByType);
+        console.log('   Symbol breakdown:', symbolsByType);
         
         // Show sample symbols
-        console.log(`   🔍 Sample symbols:`);
+        console.log('   🔍 Sample symbols:');
         result.scip.symbols.slice(0, 5).forEach(symbol => {
             console.log(`      ${symbol.type}: ${symbol.name} (line ${symbol.definition?.range?.start?.line || 'unknown'})`);
         });

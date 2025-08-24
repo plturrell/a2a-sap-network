@@ -56,7 +56,7 @@ Promise
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, preUid);
   assert.equal(initUid, postUid);
   assert.equal(initUid, destroyUid);

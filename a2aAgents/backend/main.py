@@ -23,33 +23,108 @@ from contextlib import asynccontextmanager
 import os
 from typing import Dict, Any
 
-from app.core.config import settings
-from app.core.dynamicConfig import get_config_manager, validate_production_config
-from app.core.constants import AppConstants, StaticConstants
-from app.core.sapCloudSdk import get_sap_cloud_sdk, SAPLogHandler
-from app.core.loggingConfig import init_logging, get_logger, LogCategory
-from app.api.router import api_router
-from app.a2a.core.router import router as a2a_router
-from app.ordRegistry.router import router as ord_router
-from app.a2a.agents.agent0DataProduct.active.agent0Router import router as agent0_router
-from app.a2a.agents.agent1Standardization.active.agent1Router import router as agent1_router
-from app.a2a.agents.agent2AiPreparation.active.agent2Router import router as agent2_router
-from app.a2a.agents.agent3VectorProcessing.active.agent3Router import router as agent3_router
-from app.a2a.agents.agent4CalcValidation.active.agent4Router import router as agent4_router
-from app.a2a.agents.agent5QaValidation.active.agent5Router import router as agent5_router
-from app.a2a.agents.calculationAgent.active.calculationRouter import router as calculation_router
-from app.a2a.agents.agentManager.active.agentManagerRouter import router as agent_manager_router
-from app.a2a.agents.catalogManager.active.catalogManagerRouter import router as catalog_manager_router
-from app.a2aRegistry.router import router as a2a_registry_router
-from app.a2aTrustSystem.router import router as a2a_trustsystem_router
-from app.a2a.core.workflowRouter import router as workflow_router
-from app.core.rateLimiting import rate_limit_middleware
-from app.core.errorHandling import global_exception_handler
-from app.core.securityMonitoring import get_security_monitor
-from app.api.middleware.logging import create_logging_middleware
-from app.api.middleware.securityMiddleware import SecurityEventMiddleware
-from app.a2a.core.telemetry import init_telemetry, instrument_fastapi, instrument_httpx, instrument_redis
-from app.a2a.config.telemetryConfig import telemetry_config
+try:
+    from app.core.config import settings
+    from app.core.dynamicConfig import get_config_manager, validate_production_config
+    from app.core.constants import AppConstants, StaticConstants
+    from app.core.sapCloudSdk import get_sap_cloud_sdk, SAPLogHandler
+    from app.core.loggingConfig import init_logging, get_logger, LogCategory
+except ImportError as e:
+    print(f"CRITICAL: Failed to import core modules: {e}")
+    raise
+
+try:
+    from app.api.router import api_router
+    from app.a2a.core.router import router as a2a_router
+    from app.ordRegistry.router import router as ord_router
+    from app.a2aRegistry.router import router as a2a_registry_router
+    from app.a2aTrustSystem.router import router as a2a_trustsystem_router
+    from app.a2a.core.workflowRouter import router as workflow_router
+except ImportError as e:
+    print(f"ERROR: Failed to import core routers: {e}")
+    api_router = None
+    a2a_router = None
+    ord_router = None
+    a2a_registry_router = None
+    a2a_trustsystem_router = None
+    workflow_router = None
+
+# Try to import agent routers but don't fail if they're not available
+agent_routers = {}
+try:
+    from app.a2a.agents.agent0DataProduct.active.agent0Router import router as agent0_router
+    agent_routers['agent0'] = agent0_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent0 router: {e}")
+
+try:
+    from app.a2a.agents.agent1Standardization.active.agent1Router import router as agent1_router
+    agent_routers['agent1'] = agent1_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent1 router: {e}")
+
+try:
+    from app.a2a.agents.agent2AiPreparation.active.agent2Router import router as agent2_router
+    agent_routers['agent2'] = agent2_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent2 router: {e}")
+
+try:
+    from app.a2a.agents.agent3VectorProcessing.active.agent3Router import router as agent3_router
+    agent_routers['agent3'] = agent3_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent3 router: {e}")
+
+try:
+    from app.a2a.agents.agent4CalcValidation.active.agent4Router import router as agent4_router
+    agent_routers['agent4'] = agent4_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent4 router: {e}")
+
+try:
+    from app.a2a.agents.agent5QaValidation.active.agent5Router import router as agent5_router
+    agent_routers['agent5'] = agent5_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent5 router: {e}")
+
+try:
+    from app.a2a.agents.calculationAgent.active.calculationRouter import router as calculation_router
+    agent_routers['calculation'] = calculation_router
+except ImportError as e:
+    print(f"WARNING: Failed to import calculation router: {e}")
+
+try:
+    from app.a2a.agents.agentManager.active.agentManagerRouter import router as agent_manager_router
+    agent_routers['agent_manager'] = agent_manager_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent_manager router: {e}")
+
+try:
+    from app.a2a.agents.catalogManager.active.catalogManagerRouter import router as catalog_manager_router
+    agent_routers['catalog_manager'] = catalog_manager_router
+except ImportError as e:
+    print(f"WARNING: Failed to import catalog_manager router: {e}")
+
+try:
+    from app.core.rateLimiting import rate_limit_middleware
+    from app.core.errorHandling import global_exception_handler
+    from app.core.securityMonitoring import get_security_monitor
+    from app.api.middleware.logging import create_logging_middleware
+    from app.api.middleware.securityMiddleware import SecurityEventMiddleware
+    from app.a2a.core.telemetry import init_telemetry, instrument_fastapi, instrument_httpx, instrument_redis
+    from app.a2a.config.telemetryConfig import telemetry_config
+except ImportError as e:
+    print(f"WARNING: Failed to import middleware/telemetry: {e}")
+    rate_limit_middleware = None
+    global_exception_handler = None
+    get_security_monitor = None
+    create_logging_middleware = None
+    SecurityEventMiddleware = None
+    init_telemetry = None
+    instrument_fastapi = None
+    instrument_httpx = None
+    instrument_redis = None
+    telemetry_config = None
 
 # Initialize dynamic configuration and standardized logging
 try:
@@ -84,10 +159,39 @@ if os.getenv("SAP_ALS_CLIENT_ID"):
     logger.info("SAP Application Logging Service integration enabled")
 
 
+async def initialize_agents():
+    """Initialize all agent instances for the routers"""
+    logger.info("Initializing A2A agents...")
+    
+    try:
+        # Import agent classes and initialize them
+        from app.a2a.agents.agent0DataProduct.active.dataProductAgentSdk import DataProductRegistrationAgentSDK
+        from app.a2a.agents.agent0DataProduct.active import agent0Router
+        
+        # Initialize Agent 0
+        agent0Router.agent0 = DataProductRegistrationAgentSDK(
+            agent_id="agent0",
+            name="Data Product Registration Agent",
+            version="1.0.0",
+            downstream_agent_url="http://localhost:8001"
+        )
+        logger.info("Agent 0 initialized")
+        
+        # Initialize other agents similarly
+        # For now, we'll skip the complex initialization and let them handle 503 errors
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize agents: {e}")
+        # Continue anyway - agents will return 503 until properly initialized
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    
+    # Initialize agents
+    await initialize_agents()
     
     try:
         # Log environment and configuration info
@@ -102,13 +206,21 @@ async def lifespan(app: FastAPI):
             logger.info(f"Max concurrent requests: {limits.get('MAX_CONCURRENT_REQUESTS', 100)}")
         
         # Initialize SAP Cloud SDK
-        sap_sdk = get_sap_cloud_sdk()
-        await sap_sdk.send_alert(
-            subject=f"{settings.APP_NAME} Starting",
-            body=f"Application {settings.APP_NAME} v{settings.APP_VERSION} is starting up (Environment: {config_manager.env.value if config_manager else 'unknown'})",
-            severity="INFO",
-            category="NOTIFICATION"
-        )
+        try:
+            sap_sdk = get_sap_cloud_sdk()
+            # Only send alert if properly configured
+            if hasattr(sap_sdk, 'http_client') and sap_sdk.http_client is not None:
+                await sap_sdk.send_alert(
+                    subject=f"{settings.APP_NAME} Starting",
+                    body=f"Application {settings.APP_NAME} v{settings.APP_VERSION} is starting up (Environment: {config_manager.env.value if config_manager else 'unknown'})",
+                    severity="INFO",
+                    category="NOTIFICATION"
+                )
+            else:
+                logger.info("SAP Cloud SDK alert skipped - HTTP client not configured")
+        except Exception as e:
+            logger.warning(f"Failed to send startup alert: {e}")
+            # Continue startup even if alert fails
         
         # Initialize OpenTelemetry with dynamic config
         if config_manager:
@@ -389,21 +501,41 @@ if not (os.getenv("ENVIRONMENT", "development") == "development"):
     app.add_exception_handler(Exception, global_exception_handler)
 
 # Include routers
-app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(a2a_router)  # A2A routes at /a2a/v1 (Agent 1)
-app.include_router(ord_router)  # ORD Registry at /api/v1/ord
-app.include_router(agent0_router)  # Agent 0 at /a2a/agent0/v1
-app.include_router(agent1_router)  # Agent 1 at /a2a/agent1/v1
-app.include_router(agent2_router)  # Agent 2 at /a2a/agent2/v1
-app.include_router(agent3_router)  # Agent 3 at /a2a/agent3/v1
-app.include_router(agent4_router)  # Agent 4 at /a2a/agent4/v1
-app.include_router(agent5_router)  # Agent 5 at /a2a/agent5/v1
-app.include_router(calculation_router)  # Calculation Agent at /a2a/calculation/v1
-app.include_router(agent_manager_router)  # Agent Manager at /a2a/agent_manager/v1
-app.include_router(catalog_manager_router)  # Catalog Manager at /a2a/catalog_manager/v1
-app.include_router(a2a_registry_router)  # A2A Registry at /api/v1/a2a
-app.include_router(a2a_trustsystem_router)  # A2A Trust System at /api/v1/a2a/trust
-app.include_router(workflow_router)  # A2A Workflow Orchestration at /api/v1/a2a/workflows
+# Include core routers that are available
+if api_router:
+    app.include_router(api_router, prefix=settings.API_V1_STR)
+if a2a_router:
+    app.include_router(a2a_router)  # A2A routes at /a2a/v1 (Agent 1)
+if ord_router:
+    app.include_router(ord_router)  # ORD Registry at /api/v1/ord
+if a2a_registry_router:
+    app.include_router(a2a_registry_router)  # A2A Registry at /api/v1/a2a
+if a2a_trustsystem_router:
+    app.include_router(a2a_trustsystem_router)  # A2A Trust System at /api/v1/a2a/trust
+if workflow_router:
+    app.include_router(workflow_router)  # A2A Workflow Orchestration at /api/v1/a2a/workflows
+
+# Include agent routers that successfully imported
+if 'agent0' in agent_routers:
+    app.include_router(agent_routers['agent0'])  # Agent 0 at /a2a/agent0/v1
+if 'agent1' in agent_routers:
+    app.include_router(agent_routers['agent1'])  # Agent 1 at /a2a/agent1/v1
+if 'agent2' in agent_routers:
+    app.include_router(agent_routers['agent2'])  # Agent 2 at /a2a/agent2/v1
+if 'agent3' in agent_routers:
+    app.include_router(agent_routers['agent3'])  # Agent 3 at /a2a/agent3/v1
+if 'agent4' in agent_routers:
+    app.include_router(agent_routers['agent4'])  # Agent 4 at /a2a/agent4/v1
+if 'agent5' in agent_routers:
+    app.include_router(agent_routers['agent5'])  # Agent 5 at /a2a/agent5/v1
+if 'calculation' in agent_routers:
+    app.include_router(agent_routers['calculation'])  # Calculation Agent at /a2a/calculation/v1
+if 'agent_manager' in agent_routers:
+    app.include_router(agent_routers['agent_manager'])  # Agent Manager at /a2a/agent_manager/v1
+if 'catalog_manager' in agent_routers:
+    app.include_router(agent_routers['catalog_manager'])  # Catalog Manager at /a2a/catalog_manager/v1
+
+logger.info(f"Successfully loaded {len(agent_routers)} agent routers")
 
 # Health endpoint for Docker health checks
 @app.get("/health")

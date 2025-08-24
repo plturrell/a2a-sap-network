@@ -5,7 +5,7 @@ if (process.env.hasOwnProperty('ASYNC_HOOK_TEST_CHILD')) {
 
   asyncHook.enable();
 
-  process.nextTick(function () {
+  process.nextTick(() => {
     throw new Error('test error');
   });
 } else {
@@ -18,12 +18,12 @@ if (process.env.hasOwnProperty('ASYNC_HOOK_TEST_CHILD')) {
   });
 
   let stderr = null;
-  child.stderr.pipe(endpoint(function (err, _stderr) {
+  child.stderr.pipe(endpoint((err, _stderr) => {
     if (err) throw err;
     stderr = _stderr;
   }));
 
-  child.once('close', function (statusCode) {
+  child.once('close', (statusCode) => {
     if (statusCode !== 1 || stderr.toString().indexOf('test error') === -1) {
       process.stderr.write(stderr);
       process.exit(statusCode);

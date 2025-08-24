@@ -7,12 +7,12 @@ const StorageSlotMock = artifacts.require('StorageSlotMock');
 const slot = web3.utils.keccak256('some.storage.slot');
 const otherSlot = web3.utils.keccak256('some.other.storage.slot');
 
-contract('StorageSlot', function (accounts) {
+contract('StorageSlot', (accounts) => {
   beforeEach(async function () {
     this.store = await StorageSlotMock.new();
   });
 
-  describe('boolean storage slot', function () {
+  describe('boolean storage slot', () => {
     beforeEach(async function () {
       this.value = true;
     });
@@ -21,7 +21,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setBoolean(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setBoolean(slot, this.value);
       });
@@ -36,7 +36,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('address storage slot', function () {
+  describe('address storage slot', () => {
     beforeEach(async function () {
       this.value = accounts[1];
     });
@@ -45,7 +45,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setAddress(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setAddress(slot, this.value);
       });
@@ -60,7 +60,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('bytes32 storage slot', function () {
+  describe('bytes32 storage slot', () => {
     beforeEach(async function () {
       this.value = web3.utils.keccak256('some byte32 value');
     });
@@ -69,7 +69,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setBytes32(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setBytes32(slot, this.value);
       });
@@ -84,7 +84,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('uint256 storage slot', function () {
+  describe('uint256 storage slot', () => {
     beforeEach(async function () {
       this.value = new BN(1742);
     });
@@ -93,7 +93,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setUint256(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setUint256(slot, this.value);
       });
@@ -108,7 +108,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('string storage slot', function () {
+  describe('string storage slot', () => {
     beforeEach(async function () {
       this.value = 'lorem ipsum';
     });
@@ -117,7 +117,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setString(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setString(slot, this.value);
       });
@@ -132,7 +132,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('string storage pointer', function () {
+  describe('string storage pointer', () => {
     beforeEach(async function () {
       this.value = 'lorem ipsum';
     });
@@ -141,7 +141,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setStringStorage(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setStringStorage(slot, this.value);
       });
@@ -158,7 +158,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('bytes storage slot', function () {
+  describe('bytes storage slot', () => {
     beforeEach(async function () {
       this.value = web3.utils.randomHex(128);
     });
@@ -167,7 +167,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setBytes(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setBytes(slot, this.value);
       });
@@ -182,7 +182,7 @@ contract('StorageSlot', function (accounts) {
     });
   });
 
-  describe('bytes storage pointer', function () {
+  describe('bytes storage pointer', () => {
     beforeEach(async function () {
       this.value = web3.utils.randomHex(128);
     });
@@ -191,7 +191,7 @@ contract('StorageSlot', function (accounts) {
       await this.store.setBytesStorage(slot, this.value);
     });
 
-    describe('get', function () {
+    describe('get', () => {
       beforeEach(async function () {
         await this.store.setBytesStorage(slot, this.value);
       });

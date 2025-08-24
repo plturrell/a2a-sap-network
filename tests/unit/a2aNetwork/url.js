@@ -1,6 +1,6 @@
-var test = require('tape');
-var github = require('../');
-var packages = {
+const test = require('tape');
+const github = require('../');
+const packages = {
     a : require('./a.json'),
     b : require('./b.json'),
     c : require('./c.json'),
@@ -8,9 +8,9 @@ var packages = {
     e : require('./e.json')
 };
 
-test(function (t) {
+test((t) => {
     t.plan(5);
-    var url = 'https://github.com/substack/beep-boop';
+    const url = 'https://github.com/substack/beep-boop';
     t.equal(url, github(packages.a), 'a.json comparison');
     t.equal(url, github(packages.b), 'b.json comparison');
     t.equal(url, github(packages.c), 'c.json comparison');

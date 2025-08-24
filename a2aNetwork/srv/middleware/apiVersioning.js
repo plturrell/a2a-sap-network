@@ -468,7 +468,7 @@ class APIVersionManager {
         metrics.lastUsed = new Date();
         
         // Track unique clients
-        const clientId = req.ip + '-' + (req.headers['user-agent'] || 'unknown');
+        const clientId = `${req.ip  }-${  req.headers['user-agent'] || 'unknown'}`;
         metrics.uniqueClients.add(clientId);
         
         // Track endpoint usage

@@ -2,9 +2,9 @@
 //
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2021 Datadog, Inc.
 
-'use strict'
+'use strict';
 
 module.exports = function bar () {
-  return 42
-}
-module.exports.foo = 42
+  return 42;
+};
+module.exports.foo = 42;

@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const ERC1155Supply = artifacts.require('$ERC1155Supply');
 
-contract('ERC1155Supply', function (accounts) {
+contract('ERC1155Supply', (accounts) => {
   const [holder] = accounts;
 
   const uri = 'https://token.com';
@@ -19,7 +19,7 @@ contract('ERC1155Supply', function (accounts) {
     this.token = await ERC1155Supply.new(uri);
   });
 
-  context('before mint', function () {
+  context('before mint', () => {
     it('exist', async function () {
       expect(await this.token.exists(firstTokenId)).to.be.equal(false);
     });
@@ -29,8 +29,8 @@ contract('ERC1155Supply', function (accounts) {
     });
   });
 
-  context('after mint', function () {
-    context('single', function () {
+  context('after mint', () => {
+    context('single', () => {
       beforeEach(async function () {
         await this.token.$_mint(holder, firstTokenId, firstTokenAmount, '0x');
       });
@@ -44,7 +44,7 @@ contract('ERC1155Supply', function (accounts) {
       });
     });
 
-    context('batch', function () {
+    context('batch', () => {
       beforeEach(async function () {
         await this.token.$_mintBatch(
           holder,
@@ -66,8 +66,8 @@ contract('ERC1155Supply', function (accounts) {
     });
   });
 
-  context('after burn', function () {
-    context('single', function () {
+  context('after burn', () => {
+    context('single', () => {
       beforeEach(async function () {
         await this.token.$_mint(holder, firstTokenId, firstTokenAmount, '0x');
         await this.token.$_burn(holder, firstTokenId, firstTokenAmount);
@@ -82,7 +82,7 @@ contract('ERC1155Supply', function (accounts) {
       });
     });
 
-    context('batch', function () {
+    context('batch', () => {
       beforeEach(async function () {
         await this.token.$_mintBatch(
           holder,

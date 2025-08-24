@@ -98,7 +98,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * @dev Registry contract for managing autonomous agents in the A2A Network
  */
 contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
-    
+
     struct Agent {
         address owner;
         string endpoint;
@@ -107,19 +107,19 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
         bool active;
         uint256 registrationTime;
     }
-    
+
     mapping(address => Agent) public agents;
     address[] public agentList;
-    
+
     event AgentRegistered(address indexed agentAddress, address indexed owner);
     event AgentUpdated(address indexed agentAddress);
     event AgentDeactivated(address indexed agentAddress);
-    
+
     modifier onlyAgentOwner(address _agentAddress) {
         require(agents[_agentAddress].owner == msg.sender, "Not agent owner");
         _;
     }
-    
+
     /**
      * @dev Register a new agent
      * @param _agentAddress Address of the agent
@@ -133,7 +133,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
     ) external whenNotPaused {
         require(_agentAddress != address(0), "Invalid agent address");
         require(!agents[_agentAddress].active, "Agent already registered");
-        
+
         agents[_agentAddress] = Agent({
             owner: msg.sender,
             endpoint: _endpoint,
@@ -142,11 +142,11 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
             active: true,
             registrationTime: block.timestamp
         });
-        
+
         agentList.push(_agentAddress);
         emit AgentRegistered(_agentAddress, msg.sender);
     }
-    
+
     /**
      * @dev Update agent information
      */
@@ -159,18 +159,18 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
         agents[_agentAddress].metadata = _metadata;
         emit AgentUpdated(_agentAddress);
     }
-    
+
     /**
      * @dev Deactivate an agent
      */
-    function deactivateAgent(address _agentAddress) 
-        external 
-        onlyAgentOwner(_agentAddress) 
+    function deactivateAgent(address _agentAddress)
+        external
+        onlyAgentOwner(_agentAddress)
     {
         agents[_agentAddress].active = false;
         emit AgentDeactivated(_agentAddress);
     }
-    
+
     /**
      * @dev Get total number of registered agents
      */

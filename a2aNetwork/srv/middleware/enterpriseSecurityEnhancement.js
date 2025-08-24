@@ -91,15 +91,15 @@ const SECURITY_CONFIG = {
         },
         contentSecurityPolicy: {
             directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "'strict-dynamic'"],
-                styleSrc: ["'self'", "'unsafe-inline'"],
-                imgSrc: ["'self'", "data:", "https:"],
-                connectSrc: ["'self'"],
-                fontSrc: ["'self'"],
-                objectSrc: ["'none'"],
-                mediaSrc: ["'self'"],
-                frameSrc: ["'none'"],
+                defaultSrc: ['\'self\''],
+                scriptSrc: ['\'self\'', '\'strict-dynamic\''],
+                styleSrc: ['\'self\'', '\'unsafe-inline\''],
+                imgSrc: ['\'self\'', 'data:', 'https:'],
+                connectSrc: ['\'self\''],
+                fontSrc: ['\'self\''],
+                objectSrc: ['\'none\''],
+                mediaSrc: ['\'self\''],
+                frameSrc: ['\'none\''],
                 sandbox: ['allow-forms', 'allow-scripts', 'allow-same-origin'],
                 reportUri: '/api/security/csp-report'
             }

@@ -20,17 +20,17 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var Thrift = require('..').Thrift;
-var fs = require('fs');
-var path = require('path');
-var entryIdl = path.join(__dirname, 'default.thrift');
-var model;
+const Thrift = require('..').Thrift;
+const fs = require('fs');
+const path = require('path');
+const entryIdl = path.join(__dirname, 'default.thrift');
+let model;
 
-test('default values on structs work', function t(assert) {
+test('default values on structs work', (assert) => {
     model = new Thrift({entryPoint: entryIdl, allowFilesystemAccess: true});
-    var health = new model.Health({name: 'grand'});
+    const health = new model.Health({name: 'grand'});
     assert.equals(health.ok, true, 'default truth value passes through');
     assert.equals(health.notOk, false, 'default false value passes through');
     assert.equals(health.message, 'OK', 'default string passes through');
@@ -41,9 +41,9 @@ test('default values on structs work', function t(assert) {
     assert.end();
 });
 
-test('default value as undefined respected in constructor', function t(assert) {
+test('default value as undefined respected in constructor', (assert) => {
     model = new Thrift({entryPoint: entryIdl, allowFilesystemAccess: true, defaultAsUndefined: true});
-    var health = new model.Health({name: 'grand'});
+    const health = new model.Health({name: 'grand'});
     assert.equals(health.respected, undefined, 'undefined as default value');
     assert.equals(health.ragdoll, undefined, 'undefined as default value for dependent thrifts');
     assert.end();

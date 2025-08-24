@@ -1,8 +1,8 @@
-var test = require('tape');
-var archy = require('../');
+const test = require('tape');
+const archy = require('../');
 
-test('multi-line', function (t) {
-    var s = archy({
+test('multi-line', (t) => {
+    const s = archy({
       label : 'beep\none\ntwo',
       nodes : [
         'ity',

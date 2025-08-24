@@ -54,7 +54,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -413,7 +413,7 @@ sap.ui.define([
 
             const monitoringUrl = `/a2a/agent9/v1/integrations/${ encodeURIComponent(sIntegrationId) }/monitor`;
             if (this._securityUtils && !this._securityUtils.validateEventSourceUrl(monitoringUrl)) {
-                console.warn("Invalid integration monitoring URL, skipping real-time monitoring");
+                // console.warn("Invalid integration monitoring URL, skipping real-time monitoring");
                 return;
             }
 
@@ -424,7 +424,7 @@ sap.ui.define([
                     const data = JSON.parse(event.data);
                     this._updateIntegrationProgress(data);
                 } catch (error) {
-                    console.error("Error processing integration update:", error);
+                    // console.error("Error processing integration update:", error);
                 }
             }.bind(this);
 

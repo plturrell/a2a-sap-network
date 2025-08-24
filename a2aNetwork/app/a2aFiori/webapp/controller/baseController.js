@@ -419,7 +419,7 @@ sap.ui.define([
          */
         async _fetchCSRFToken() {
             try {
-                const response = await blockchainClient.sendMessage("/api/v1/csrf-token", {
+                const response = await fetch("/api/v1/csrf-token", {
                     method: "GET",
                     credentials: "same-origin",
                     headers: {
@@ -434,7 +434,7 @@ sap.ui.define([
                     this.oUIModel.setProperty("/securityInitialized", true);
                 }
             } catch (error) {
-                // console.warn("Failed to fetch CSRF token:", error);
+                // // console.warn("Failed to fetch CSRF token:", error);
                 // Continue without CSRF in development
                 this.oUIModel.setProperty("/securityInitialized", true);
             }
@@ -495,7 +495,7 @@ sap.ui.define([
             }
 
             try {
-                const response = await blockchainClient.sendMessage(sUrl, requestOptions);
+                const response = await fetch(sUrl, requestOptions);
                 return await this._handleSecureResponse(response);
             } catch (error) {
                 return this._handleRequestError(error, sUrl, method);
@@ -581,7 +581,7 @@ sap.ui.define([
 
                 // Log security-related errors
                 if (response.status === 403 || response.status === 401) {
-                    // console.warn(`[SECURITY] ${response.status} response for correlation ID: ${correlationId}`);
+                    // // console.warn(`[SECURITY] ${response.status} response for correlation ID: ${correlationId}`);
                 }
 
                 throw new Error(errorData.error || `HTTP ${response.status}`);
@@ -612,7 +612,7 @@ sap.ui.define([
             const _correlationId = this.oUIModel.getProperty("/correlationId");
 
             // Log error with correlation ID
-            // console.error(`[REQUEST ERROR] ${sMethod} ${sUrl} - Correlation ID: ${correlationId}`, error);
+            // // console.error(`[REQUEST ERROR] ${sMethod} ${sUrl} - Correlation ID: ${correlationId}`, error);
 
             // Return sanitized error message
             const sanitizedMessage = error.message.replace(/</g, "&lt;").replace(/>/g, "&gt;");

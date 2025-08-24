@@ -1,7 +1,7 @@
-var test = require('tape');
-var commondir = require('../');
+const test = require('tape');
+const commondir = require('../');
 
-test('common', function (t) {
+test('common', (t) => {
     t.equal(
         commondir([ '/foo', '//foo/bar', '/foo//bar/baz' ]),
         '/foo'
@@ -26,13 +26,13 @@ test('common', function (t) {
         commondir([ 'X:\\x\\y\\z\\w', '\\\\xy\\z', '\\x\\y\\z' ]),
         '/'
     );
-    t.throws(function () {
+    t.throws(() => {
         commondir([ '/x/y/z/w', 'qrs', '/x/y/z' ]);
     });
     t.end();
 });
 
-test('base', function (t) {
+test('base', (t) => {
     t.equal(
         commondir('/foo/bar', [ 'baz', './quux', '../bar/bazzy' ]),
         '/foo/bar'

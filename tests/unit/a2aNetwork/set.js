@@ -1,27 +1,27 @@
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var setDunderProto = require('../set');
+const setDunderProto = require('../set');
 
-test('setDunderProto', { skip: !setDunderProto }, function (t) {
+test('setDunderProto', { skip: !setDunderProto }, (t) => {
 	if (!setDunderProto) {
 		throw 'should never happen; this is just for type narrowing'; // eslint-disable-line no-throw-literal
 	}
 
 	// @ts-expect-error
-	t['throws'](function () { setDunderProto(); }, TypeError, 'throws if no arguments');
+	t['throws'](() => { setDunderProto(); }, TypeError, 'throws if no arguments');
 	// @ts-expect-error
-	t['throws'](function () { setDunderProto(undefined); }, TypeError, 'throws with undefined and nothing');
+	t['throws'](() => { setDunderProto(undefined); }, TypeError, 'throws with undefined and nothing');
 	// @ts-expect-error
-	t['throws'](function () { setDunderProto(undefined, undefined); }, TypeError, 'throws with undefined and undefined');
+	t['throws'](() => { setDunderProto(undefined, undefined); }, TypeError, 'throws with undefined and undefined');
 	// @ts-expect-error
-	t['throws'](function () { setDunderProto(null); }, TypeError, 'throws with null and undefined');
+	t['throws'](() => { setDunderProto(null); }, TypeError, 'throws with null and undefined');
 	// @ts-expect-error
-	t['throws'](function () { setDunderProto(null, undefined); }, TypeError, 'throws with null and undefined');
+	t['throws'](() => { setDunderProto(null, undefined); }, TypeError, 'throws with null and undefined');
 
 	/** @type {{ inherited?: boolean }} */
-	var obj = {};
+	const obj = {};
 	t.ok('toString' in obj, 'object initially has toString');
 
 	setDunderProto(obj, null);
@@ -34,11 +34,11 @@ test('setDunderProto', { skip: !setDunderProto }, function (t) {
 	t.end();
 });
 
-test('no dunder proto', { skip: !!setDunderProto }, function (t) {
+test('no dunder proto', { skip: !!setDunderProto }, (t) => {
 	if ('__proto__' in Object.prototype) {
 		t['throws'](
 			// @ts-expect-error
-			function () { ({}).__proto__ = null; }, // eslint-disable-line no-proto
+			() => { ({}).__proto__ = null; }, // eslint-disable-line no-proto
 			Error,
 			'throws when setting Object.prototype.__proto__'
 		);

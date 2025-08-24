@@ -799,7 +799,7 @@ class Agent2UIScanner {
     }
 
     generateReport() {
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         console.log('📊 AGENT 2 UI SECURITY & STANDARDS REPORT');
         console.log('='.repeat(60));
 
@@ -822,7 +822,7 @@ class Agent2UIScanner {
             );
         }
 
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         
         if (percentage >= 95) {
             console.log('🎉 AGENT 2 UI ENTERPRISE READY');

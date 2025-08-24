@@ -1,10 +1,10 @@
-var inspect = require('../../');
-var test = require('tape');
+const inspect = require('../../');
+const test = require('tape');
 
-test('dom element', function (t) {
+test('dom element', (t) => {
     t.plan(1);
 
-    var d = document.createElement('div');
+    const d = document.createElement('div');
     d.setAttribute('id', 'beep');
     d.innerHTML = '<b>wooo</b><i>iiiii</i>';
 

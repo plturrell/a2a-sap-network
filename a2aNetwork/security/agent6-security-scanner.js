@@ -307,7 +307,7 @@ class Agent6SecurityScanner {
      * Main scan method
      */
     async scan(targetPath) {
-        console.log(`🔍 Starting Agent 6 (Quality Control Manager) Security Scan`);
+        console.log('🔍 Starting Agent 6 (Quality Control Manager) Security Scan');
         console.log(`📁 Target: ${path.resolve(targetPath)}\n`);
         
         if (!fs.existsSync(targetPath)) {
@@ -486,7 +486,7 @@ class Agent6SecurityScanner {
                     message: 'Hardcoded quality thresholds detected',
                     impact: 'Could make quality control system inflexible and harder to maintain',
                     pattern: pattern.toString(),
-                    match: matches[0].substring(0, 50) + '...',
+                    match: `${matches[0].substring(0, 50)  }...`,
                     isPositive: false,
                     timestamp: new Date().toISOString()
                 });
@@ -594,11 +594,11 @@ class Agent6SecurityScanner {
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🛡️  AGENT 6 (QUALITY CONTROL MANAGER) SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`📊 SCAN SUMMARY:`);
+        console.log('📊 SCAN SUMMARY:');
         console.log(`   📂 Files Scanned: ${this.filesScanned}`);
         console.log(`   ⏱️  Scan Duration: ${(scanDuration / 1000).toFixed(2)}s`);
         console.log(`   🚨 Total Issues: ${this.vulnerabilities.length}`);
@@ -658,7 +658,7 @@ class Agent6SecurityScanner {
         this.saveReport();
         
         console.log('\n✅ Scan completed successfully!');
-        console.log(`📄 Report saved to: agent6-security-report.json`);
+        console.log('📄 Report saved to: agent6-security-report.json');
         
         if (criticalCount > 0 || highCount > 0) {
             console.log(`\n⚠️  ${criticalCount + highCount} critical/high severity issues found!`);

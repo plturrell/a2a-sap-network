@@ -17,7 +17,7 @@ const getMethods = ms => {
 // Get the name of the library. In the transpiled code it will be EnumerableMapUpgradeable.
 const library = EnumerableMap._json.contractName.replace(/^\$/, '');
 
-contract('EnumerableMap', function (accounts) {
+contract('EnumerableMap', (accounts) => {
   const [accountA, accountB, accountC] = accounts;
 
   const keyA = new BN('7891');
@@ -33,7 +33,7 @@ contract('EnumerableMap', function (accounts) {
   });
 
   // AddressToUintMap
-  describe('AddressToUintMap', function () {
+  describe('AddressToUintMap', () => {
     shouldBehaveLikeMap(
       [accountA, accountB, accountC],
       [keyA, keyB, keyC],
@@ -57,7 +57,7 @@ contract('EnumerableMap', function (accounts) {
   });
 
   // UintToAddressMap
-  describe('UintToAddressMap', function () {
+  describe('UintToAddressMap', () => {
     shouldBehaveLikeMap(
       [keyA, keyB, keyC],
       [accountA, accountB, accountC],
@@ -81,9 +81,9 @@ contract('EnumerableMap', function (accounts) {
   });
 
   // Bytes32ToBytes32Map
-  describe('Bytes32ToBytes32Map', function () {
+  describe('Bytes32ToBytes32Map', () => {
     shouldBehaveLikeMap(
-      [keyA, keyB, keyC].map(k => '0x' + k.toString(16).padEnd(64, '0')),
+      [keyA, keyB, keyC].map(k => `0x${  k.toString(16).padEnd(64, '0')}`),
       [bytesA, bytesB, bytesC],
       constants.ZERO_BYTES32,
       getMethods({
@@ -105,7 +105,7 @@ contract('EnumerableMap', function (accounts) {
   });
 
   // UintToUintMap
-  describe('UintToUintMap', function () {
+  describe('UintToUintMap', () => {
     shouldBehaveLikeMap(
       [keyA, keyB, keyC],
       [keyA, keyB, keyC].map(k => k.add(new BN('1332'))),
@@ -129,7 +129,7 @@ contract('EnumerableMap', function (accounts) {
   });
 
   // Bytes32ToUintMap
-  describe('Bytes32ToUintMap', function () {
+  describe('Bytes32ToUintMap', () => {
     shouldBehaveLikeMap(
       [bytesA, bytesB, bytesC],
       [keyA, keyB, keyC],

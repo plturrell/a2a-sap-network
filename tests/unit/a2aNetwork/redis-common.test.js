@@ -1,5 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const index_1 = require("../src/index");
-const assert = require("assert");
+const index_1 = require('../src/index');
+const assert = require('assert');
 describe('#defaultDbStatementSerializer()', () => {
     [
         {

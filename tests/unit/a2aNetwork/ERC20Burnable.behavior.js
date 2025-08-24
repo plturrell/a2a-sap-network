@@ -4,13 +4,13 @@ const { ZERO_ADDRESS } = constants;
 const { expect } = require('chai');
 
 function shouldBehaveLikeERC20Burnable(owner, initialBalance, [burner]) {
-  describe('burn', function () {
-    describe('when the given amount is not greater than balance of the sender', function () {
-      context('for a zero amount', function () {
+  describe('burn', () => {
+    describe('when the given amount is not greater than balance of the sender', () => {
+      context('for a zero amount', () => {
         shouldBurn(new BN(0));
       });
 
-      context('for a non-zero amount', function () {
+      context('for a non-zero amount', () => {
         shouldBurn(new BN(100));
       });
 
@@ -33,7 +33,7 @@ function shouldBehaveLikeERC20Burnable(owner, initialBalance, [burner]) {
       }
     });
 
-    describe('when the given amount is greater than the balance of the sender', function () {
+    describe('when the given amount is greater than the balance of the sender', () => {
       const amount = initialBalance.addn(1);
 
       it('reverts', async function () {
@@ -42,13 +42,13 @@ function shouldBehaveLikeERC20Burnable(owner, initialBalance, [burner]) {
     });
   });
 
-  describe('burnFrom', function () {
-    describe('on success', function () {
-      context('for a zero amount', function () {
+  describe('burnFrom', () => {
+    describe('on success', () => {
+      context('for a zero amount', () => {
         shouldBurnFrom(new BN(0));
       });
 
-      context('for a non-zero amount', function () {
+      context('for a non-zero amount', () => {
         shouldBurnFrom(new BN(100));
       });
 
@@ -78,7 +78,7 @@ function shouldBehaveLikeERC20Burnable(owner, initialBalance, [burner]) {
       }
     });
 
-    describe('when the given amount is greater than the balance of the sender', function () {
+    describe('when the given amount is greater than the balance of the sender', () => {
       const amount = initialBalance.addn(1);
 
       it('reverts', async function () {
@@ -87,7 +87,7 @@ function shouldBehaveLikeERC20Burnable(owner, initialBalance, [burner]) {
       });
     });
 
-    describe('when the given amount is greater than the allowance', function () {
+    describe('when the given amount is greater than the allowance', () => {
       const allowance = new BN(100);
 
       it('reverts', async function () {

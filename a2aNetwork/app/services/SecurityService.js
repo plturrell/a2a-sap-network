@@ -1,14 +1,14 @@
 sap.ui.define([
-    "sap/base/Log",
-    "sap/ui/base/Object"
-], function(Log, BaseObject) {
-    "use strict";
+    'sap/base/Log',
+    'sap/ui/base/Object'
+], (Log, BaseObject) => {
+    'use strict';
 
     /**
      * Enterprise Security Service for SAP Fiori Launchpad
      * Handles CSRF tokens, authentication, and authorization
      */
-    return BaseObject.extend("a2a.network.launchpad.services.SecurityService", {
+    return BaseObject.extend('a2a.network.launchpad.services.SecurityService', {
         
         _csrfToken: null,
         _csrfTokenExpiry: null,
@@ -42,16 +42,16 @@ sap.ui.define([
         fetchCSRFToken: function() {
             return new Promise((resolve, reject) => {
                 jQuery.ajax({
-                    url: "/sap/bc/ui2/start_up",
-                    method: "HEAD",
+                    url: '/sap/bc/ui2/start_up',
+                    method: 'HEAD',
                     headers: {
-                        "X-CSRF-Token": "Fetch",
-                        "X-Requested-With": "XMLHttpRequest"
+                        'X-CSRF-Token': 'Fetch',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     success: (data, textStatus, jqXHR) => {
-                        this._csrfToken = jqXHR.getResponseHeader("X-CSRF-Token");
+                        this._csrfToken = jqXHR.getResponseHeader('X-CSRF-Token');
                         this._csrfTokenExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-                        Log.info("CSRF token fetched successfully");
+                        Log.info('CSRF token fetched successfully');
                         resolve(this._csrfToken);
                     },
                     error: (jqXHR, textStatus, errorThrown) => {
@@ -60,7 +60,7 @@ sap.ui.define([
                             // Try alternative endpoint
                             this._fetchCSRFTokenFallback().then(resolve).catch(reject);
                         } else {
-                            Log.error("Failed to fetch CSRF token", errorThrown);
+                            Log.error('Failed to fetch CSRF token', errorThrown);
                             reject(errorThrown);
                         }
                     }
@@ -73,10 +73,10 @@ sap.ui.define([
          */
         _fetchCSRFTokenFallback: function() {
             return jQuery.ajax({
-                url: "/api/v1/security/csrf",
-                method: "GET",
+                url: '/api/v1/security/csrf',
+                method: 'GET',
                 headers: {
-                    "X-Requested-With": "XMLHttpRequest"
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             }).then(response => {
                 this._csrfToken = response.token;
@@ -102,7 +102,7 @@ sap.ui.define([
         _initializeUserContext: function() {
             if (sap.ushell && sap.ushell.Container) {
                 try {
-                    const userInfoService = sap.ushell.Container.getService("UserInfo");
+                    const userInfoService = sap.ushell.Container.getService('UserInfo');
                     const user = userInfoService.getUser();
                     
                     // Get user ID and roles
@@ -118,7 +118,7 @@ sap.ui.define([
                         this._authToken = user.getAccessToken();
                     }
                 } catch (error) {
-                    Log.warning("Could not initialize user context from shell", error);
+                    Log.warning('Could not initialize user context from shell', error);
                     this._initializeUserContextFallback();
                 }
             } else {
@@ -132,10 +132,10 @@ sap.ui.define([
         _initializeUserContextFallback: function() {
             // Try to get user info from session
             jQuery.ajax({
-                url: "/api/v1/user/current",
-                method: "GET",
+                url: '/api/v1/user/current',
+                method: 'GET',
                 headers: {
-                    "X-CSRF-Token": this._csrfToken
+                    'X-CSRF-Token': this._csrfToken
                 },
                 success: (userData) => {
                     this._userId = userData.id;
@@ -145,7 +145,7 @@ sap.ui.define([
                     this._authToken = userData.token;
                 },
                 error: (error) => {
-                    Log.error("Failed to fetch user context", error);
+                    Log.error('Failed to fetch user context', error);
                 }
             });
         },
@@ -155,24 +155,24 @@ sap.ui.define([
          */
         _fetchUserRoles: function() {
             jQuery.ajax({
-                url: "/sap/bc/ui2/start_up",
-                method: "GET",
+                url: '/sap/bc/ui2/start_up',
+                method: 'GET',
                 headers: {
-                    "X-CSRF-Token": this._csrfToken,
-                    "X-Requested-With": "XMLHttpRequest"
+                    'X-CSRF-Token': this._csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 success: (data) => {
                     if (data && data.userRoles) {
                         this._userRoles = data.userRoles;
                         // Check for standard SAP roles
-                        this._hasSAPUI2User = this._userRoles.includes("SAP_UI2_USER_700") || 
-                                             this._userRoles.includes("SAP_UI2_USER_750");
-                        this._hasSAPUI2Admin = this._userRoles.includes("SAP_UI2_ADMIN_700") || 
-                                              this._userRoles.includes("SAP_UI2_ADMIN_750");
+                        this._hasSAPUI2User = this._userRoles.includes('SAP_UI2_USER_700') || 
+                                             this._userRoles.includes('SAP_UI2_USER_750');
+                        this._hasSAPUI2Admin = this._userRoles.includes('SAP_UI2_ADMIN_700') || 
+                                              this._userRoles.includes('SAP_UI2_ADMIN_750');
                     }
                 },
                 error: (error) => {
-                    Log.warning("Could not fetch user roles", error);
+                    Log.warning('Could not fetch user roles', error);
                     // Fallback to custom endpoint
                     this._fetchUserRolesFallback();
                 }
@@ -184,10 +184,10 @@ sap.ui.define([
          */
         _fetchUserRolesFallback: function() {
             jQuery.ajax({
-                url: "/api/v1/user/roles",
-                method: "GET",
+                url: '/api/v1/user/roles',
+                method: 'GET',
                 headers: {
-                    "Authorization": "Bearer " + this._authToken
+                    'Authorization': `Bearer ${  this._authToken}`
                 },
                 success: (roles) => {
                     this._userRoles = roles;
@@ -211,14 +211,14 @@ sap.ui.define([
             }
             
             // For NetWeaver environments
-            if (window.location.pathname.indexOf("/sap/bc/") !== -1) {
+            if (window.location.pathname.indexOf('/sap/bc/') !== -1) {
                 return new Promise((resolve) => {
                     jQuery.ajax({
-                        url: "/sap/bc/ui2/check_auth",
-                        method: "POST",
+                        url: '/sap/bc/ui2/check_auth',
+                        method: 'POST',
                         headers: {
-                            "X-CSRF-Token": this._csrfToken,
-                            "Content-Type": "application/json"
+                            'X-CSRF-Token': this._csrfToken,
+                            'Content-Type': 'application/json'
                         },
                         data: JSON.stringify({
                             authObject: authObject,
@@ -250,22 +250,22 @@ sap.ui.define([
         _checkLocalAuthorization: function(authObject, authField, authValue) {
             // Map common authorization objects to roles
             const authMap = {
-                "S_SERVICE": {
-                    "SRV_NAME": {
-                        "ZFIORI_LAUNCHPAD": this._hasSAPUI2User || this._userRoles.includes("FLP_USER"),
-                        "ZFIORI_ADMIN": this._hasSAPUI2Admin || this._userRoles.includes("FLP_ADMIN")
+                'S_SERVICE': {
+                    'SRV_NAME': {
+                        'ZFIORI_LAUNCHPAD': this._hasSAPUI2User || this._userRoles.includes('FLP_USER'),
+                        'ZFIORI_ADMIN': this._hasSAPUI2Admin || this._userRoles.includes('FLP_ADMIN')
                     }
                 },
-                "/UI2/CHIP": {
-                    "CHIP_ID": {
-                        "*": this._hasSAPUI2User || this._userRoles.includes("FLP_USER")
+                '/UI2/CHIP': {
+                    'CHIP_ID': {
+                        '*': this._hasSAPUI2User || this._userRoles.includes('FLP_USER')
                     }
                 }
             };
             
             if (authMap[authObject] && authMap[authObject][authField]) {
                 return authMap[authObject][authField][authValue] || 
-                       authMap[authObject][authField]["*"] || false;
+                       authMap[authObject][authField]['*'] || false;
             }
             
             // Default allow for development
@@ -279,12 +279,12 @@ sap.ui.define([
         getSecureHeaders: function() {
             return this.getCSRFToken().then(csrfToken => {
                 const headers = {
-                    "X-CSRF-Token": csrfToken,
-                    "X-Requested-With": "XMLHttpRequest"
+                    'X-CSRF-Token': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
                 };
                 
                 if (this._authToken) {
-                    headers["Authorization"] = "Bearer " + this._authToken;
+                    headers['Authorization'] = `Bearer ${  this._authToken}`;
                 }
                 
                 return headers;
@@ -303,9 +303,9 @@ sap.ui.define([
                 // Add error handler for 403 CSRF token errors
                 const originalError = settings.error;
                 settings.error = (jqXHR, textStatus, errorThrown) => {
-                    if (jqXHR.status === 403 && jqXHR.getResponseHeader("X-CSRF-Token") === "Required") {
+                    if (jqXHR.status === 403 && jqXHR.getResponseHeader('X-CSRF-Token') === 'Required') {
                         // CSRF token expired, fetch new one and retry
-                        Log.info("CSRF token expired, fetching new token and retrying");
+                        Log.info('CSRF token expired, fetching new token and retrying');
                         return this.fetchCSRFToken().then(() => {
                             return this.secureAjax(settings);
                         });

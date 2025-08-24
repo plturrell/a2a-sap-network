@@ -20,88 +20,88 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var iface = require('../interface');
-var BufferRW = require('../base').BufferRW;
+const iface = require('../interface');
+const BufferRW = require('../base').BufferRW;
 
-var byteRW = {
+const byteRW = {
     poolByteLength: function(destResult) {return destResult.reset(null, 1);},
     poolWriteInto: function(destResult, b, buffer, offset) {
         buffer[offset] = b;
         return destResult.reset(null, ++offset);
     },
     poolReadFrom: function(destResult, buffer, offset) {
-        var b = buffer[offset];
+        const b = buffer[offset];
         return destResult.reset(null, ++offset, b);
     },
 };
 
 byteRW.__proto__ = BufferRW.prototype;
 
-var lengthErrorRW = {
+const lengthErrorRW = {
     poolByteLength: function(destResult) {return destResult.reset(new Error('boom'));}
 };
 
 lengthErrorRW.__proto__ = BufferRW.prototype;
 
-var writeErrorRW = {
+const writeErrorRW = {
     poolByteLength: function(destResult) {return destResult.reset(null, 0);},
     poolWriteInto: function(destResult) {return destResult.reset(new Error('bang'));}
 };
 
 writeErrorRW.__proto__ = BufferRW.prototype;
 
-var readErrorRW = {
+const readErrorRW = {
     poolReadFrom: function(destResult) {return destResult.reset(new Error('zot'));}
 };
 
 readErrorRW.__proto__ = BufferRW.prototype;
 
-test('byteLength', function t(assert) {
+test('byteLength', (assert) => {
     assert.deepEqual(
         iface.byteLength(byteRW, 1),
         1, 'write 1 uint8');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.byteLength(lengthErrorRW, 1);
     }, /boom/, 'length error throws');
     assert.end();
 });
 
-test('toBuffer', function t(assert) {
+test('toBuffer', (assert) => {
     assert.deepEqual(
         iface.toBuffer(byteRW, 1),
         Buffer.from([0x01]), 'write 1 uint8');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.toBuffer(lengthErrorRW, 1);
     }, /boom/, 'length error throws');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.toBuffer(writeErrorRW, 1);
     }, /bang/, 'write error throws');
     assert.end();
 });
 
-test('intoBuffer', function t(assert) {
+test('intoBuffer', (assert) => {
     assert.deepEqual(
         iface.intoBuffer(byteRW, Buffer.from([0]), 1),
         Buffer.from([0x01]), 'write 1 uint8');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.intoBuffer(writeErrorRW, Buffer.from([0]), 1);
     }, /bang/, 'write error throws');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.intoBuffer(byteRW, Buffer.from([0, 0]), 1);
     }, /short write, 1 byte left over after writing 1/, 'short write error');
     assert.end();
 });
 
-test('fromBuffer', function t(assert) {
+test('fromBuffer', (assert) => {
     assert.equal(
         iface.fromBuffer(byteRW, Buffer.from([0x01])),
         1, 'read 1 uint8');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.fromBuffer(readErrorRW, Buffer.alloc(0));
     }, /zot/, 'read error throws');
-    assert.throws(function() {
+    assert.throws(() => {
         iface.fromBuffer(byteRW, Buffer.from([0, 0]));
     }, /short read, 1 byte left over after consuming 1/, 'short read error');
     assert.end();

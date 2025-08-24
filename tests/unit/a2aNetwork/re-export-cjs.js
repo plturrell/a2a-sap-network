@@ -1,1 +1,1 @@
-module.exports = require('some-external-cjs-module').foo
+module.exports = require('some-external-cjs-module').foo;

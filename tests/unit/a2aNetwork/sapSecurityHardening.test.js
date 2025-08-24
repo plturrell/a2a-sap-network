@@ -79,9 +79,9 @@ describe('TC-BE-NET-087: Security Hardening Measures', () => {
       // Verify CSP header configuration
       const csp = response.headers['content-security-policy'];
       if (csp) {
-        expect(csp).toContain("default-src 'self'");
-        expect(csp).toContain("script-src 'self'");
-        expect(csp).toContain("style-src 'self'");
+        expect(csp).toContain('default-src \'self\'');
+        expect(csp).toContain('script-src \'self\'');
+        expect(csp).toContain('style-src \'self\'');
       }
     });
 
@@ -90,10 +90,10 @@ describe('TC-BE-NET-087: Security Hardening Measures', () => {
       const csp = response.headers['content-security-policy'];
 
       expect(csp).toBeDefined();
-      expect(csp).toContain("default-src 'self'");
-      expect(csp).not.toContain("'unsafe-eval'");
+      expect(csp).toContain('default-src \'self\'');
+      expect(csp).not.toContain('\'unsafe-eval\'');
       // Note: UI5 requires unsafe-inline for scripts, so we check it's properly configured
-      if (csp.includes("'unsafe-inline'")) {
+      if (csp.includes('\'unsafe-inline\'')) {
         expect(csp).toMatch(/script-src[^;]*'unsafe-inline'/);
         expect(csp).toContain('https://ui5.sap.com');
       }
@@ -186,10 +186,10 @@ describe('TC-BE-NET-087: Security Hardening Measures', () => {
 
     test('should prevent SQL injection attempts', async () => {
       const sqlInjectionPayloads = [
-        "1' OR '1'='1",
-        "1'; DROP TABLE users; --",
-        "1 UNION SELECT * FROM users",
-        "' OR 1=1 #"
+        '1\' OR \'1\'=\'1',
+        '1\'; DROP TABLE users; --',
+        '1 UNION SELECT * FROM users',
+        '\' OR 1=1 #'
       ];
 
       for (const payload of sqlInjectionPayloads) {
@@ -201,8 +201,8 @@ describe('TC-BE-NET-087: Security Hardening Measures', () => {
         
         if (response.status === 200) {
           // Verify payload was sanitized
-          expect(JSON.stringify(response.body)).not.toContain("DROP TABLE");
-          expect(JSON.stringify(response.body)).not.toContain("UNION SELECT");
+          expect(JSON.stringify(response.body)).not.toContain('DROP TABLE');
+          expect(JSON.stringify(response.body)).not.toContain('UNION SELECT');
         }
       }
     });
@@ -394,7 +394,7 @@ describe('TC-BE-NET-087: Security Hardening Measures', () => {
   function createMockSecurityMiddleware() {
     return (req, res, next) => {
       // Mock security headers
-      res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'");
+      res.setHeader('Content-Security-Policy', 'default-src \'self\'; script-src \'self\'');
       res.setHeader('X-Frame-Options', 'DENY');
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('X-XSS-Protection', '1; mode=block');

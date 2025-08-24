@@ -19,10 +19,10 @@
 // THE SOFTWARE.
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var brokenRW = {
+const brokenRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(new Error('boom'));
     },
@@ -35,10 +35,10 @@ var brokenRW = {
 };
 
 brokenRW.prototype = require('../base').BufferRW.prototype;
-var atoms = require('../atoms');
-var StringRW = require('../string_rw');
+const atoms = require('../atoms');
+const StringRW = require('../string_rw');
 
-var str1 = StringRW(atoms.UInt8, 'utf8');
+const str1 = StringRW(atoms.UInt8, 'utf8');
 
 test('StringRW: simple str~1 in utf8', testRW.cases(str1, [
     {

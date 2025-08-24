@@ -339,7 +339,7 @@ sap.ui.define([
 
                 // Enhanced sanitization
                 const sanitized = value
-                    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "") // Remove control characters
+                    .replace(/[^\x20-\x7E]/g, "") // Remove control characters - keep only printable ASCII
                     .replace(/[\\]/g, "\\\\") // Escape backslashes
                     .replace(/["]/g, "\\\"") // Escape double quotes
                     .replace(/[']/g, "\\'") // Escape single quotes

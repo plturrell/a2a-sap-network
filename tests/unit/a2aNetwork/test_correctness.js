@@ -1,24 +1,24 @@
-var fs = require('fs');
-var assert = require('assert');
+const fs = require('fs');
+const assert = require('assert');
 
-var loader = require('./loader');
+const loader = require('./loader');
 
-var BASE_DIR = __dirname + '/samples';
-var TREES = ['rbtree', 'bintree'];
+const BASE_DIR = `${__dirname  }/samples`;
+const TREES = ['rbtree', 'bintree'];
 
 function bt_assert(root, comparator) {
     if(root === null) {
         return true;
     }
     else {
-        var ln = root.left;
-        var rn = root.right;
+        const ln = root.left;
+        const rn = root.right;
 
         // invalid binary search tree
         assert.equal((ln !== null && comparator(ln.data, root.data) >= 0) ||
                          (rn !== null && comparator(rn.data, root.data) <= 0),
                      false,
-                     "binary tree violation");
+                     'binary tree violation');
 
         return bt_assert(ln, comparator) && bt_assert(rn, comparator);
     }
@@ -33,25 +33,25 @@ function rb_assert(root, comparator) {
         return 1;
     }
     else {
-        var ln = root.left;
-        var rn = root.right;
+        const ln = root.left;
+        const rn = root.right;
 
         // red violation
         if(is_red(root)) {
-            assert.equal(is_red(ln) || is_red(rn), false, "red violation");
+            assert.equal(is_red(ln) || is_red(rn), false, 'red violation');
         }
 
-        var lh = rb_assert(ln, comparator);
-        var rh = rb_assert(rn, comparator);
+        const lh = rb_assert(ln, comparator);
+        const rh = rb_assert(rn, comparator);
 
         // invalid binary search tree
         assert.equal((ln !== null && comparator(ln.data, root.data) >= 0) ||
                          (rn !== null && comparator(rn.data, root.data) <= 0),
                      false,
-                     "binary tree violation");
+                     'binary tree violation');
 
         // black height mismatch
-        assert.equal(lh !== 0 && rh !== 0 && lh !== rh, false, "black violation");
+        assert.equal(lh !== 0 && rh !== 0 && lh !== rh, false, 'black violation');
 
         // count black links
         if(lh !== 0 && rh !== 0) {
@@ -63,7 +63,7 @@ function rb_assert(root, comparator) {
     }
 }
 
-var assert_func = {
+const assert_func = {
     rbtree: rb_assert,
     bintree: bt_assert
 };
@@ -71,16 +71,16 @@ var assert_func = {
 function tree_assert(tree_name) {
     return function(tree) {
         return assert_func[tree_name](tree._root, tree._comparator) !== 0;
-    }
+    };
 }
 
 function run_test(assert, tree_assert, tree_class, test_path) {
-    var tree = loader.new_tree(tree_class);
+    const tree = loader.new_tree(tree_class);
 
-    var tests = loader.load(test_path);
+    const tests = loader.load(test_path);
 
-    var elems = 0;
-    tests.forEach(function(n) {
+    let elems = 0;
+    tests.forEach((n) => {
         if(n > 0) {
             // insert
             assert.ok(tree.insert(n));
@@ -99,15 +99,15 @@ function run_test(assert, tree_assert, tree_class, test_path) {
     });
 }
 
-var tests = fs.readdirSync(BASE_DIR);
+const tests = fs.readdirSync(BASE_DIR);
 
-var test_funcs = {};
-TREES.forEach(function(tree) {
-    var tree_class = require('../lib/' + tree);
+const test_funcs = {};
+TREES.forEach((tree) => {
+    const tree_class = require(`../lib/${  tree}`);
 
-    tests.forEach(function(test) {
-       var test_path = BASE_DIR + "/" + test;
-       test_funcs[tree + "_" + test] = function(assert) {
+    tests.forEach((test) => {
+       const test_path = `${BASE_DIR  }/${  test}`;
+       test_funcs[`${tree  }_${  test}`] = function(assert) {
           run_test(assert, tree_assert(tree), tree_class, test_path);
           assert.done();
        };

@@ -1,15 +1,15 @@
-"use strict";
+'use strict';
 
 const lua = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib = require('../src/lualib.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 test('__index, __newindex: with actual table', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {yo=1}
         return t.yo, t.lo
     `;
@@ -25,10 +25,10 @@ test('__index, __newindex: with actual table', () => {
 
 
 test('__newindex: with non table', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = "a string"
         t.yo = "hello"
     `;
@@ -44,10 +44,10 @@ test('__newindex: with non table', () => {
 
 
 test('__index function in metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __index = function (table, key)
                 return "__index"
@@ -66,15 +66,15 @@ test('__index function in metatable', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("__index");
+    expect(lua.lua_tojsstring(L, -1)).toBe('__index');
 });
 
 
 test('__newindex function in metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __newindex = function (table, key, value)
                 return "__newindex"
@@ -100,10 +100,10 @@ test('__newindex function in metatable', () => {
 
 
 test('__index table in metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mmt = {
             yo = "hello"
         }
@@ -124,15 +124,15 @@ test('__index table in metatable', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('__newindex table in metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mmt = {
             yo = "hello"
         }
@@ -155,16 +155,16 @@ test('__newindex table in metatable', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("world");
+    expect(lua.lua_tojsstring(L, -1)).toBe('world');
     expect(lua.lua_isnil(L, -2)).toBe(true);
 });
 
 
 test('__index table with own metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mmmt = {
             __index = function (t, k)
                 return "hello"
@@ -193,15 +193,15 @@ test('__index table with own metatable', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('__newindex table with own metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local up = nil
 
         local mmmt = {
@@ -234,16 +234,16 @@ test('__newindex table with own metatable', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
     expect(lua.lua_isnil(L, -2)).toBe(true);
 });
 
 
 test('binary __xxx functions in metatable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __add = function (a, b)
                 return "{} + " .. b
@@ -321,27 +321,27 @@ test('binary __xxx functions in metatable', () => {
 
     expect(L.stack.slice(L.top - 12, L.top).map(e => e.jsstring()))
         .toEqual([
-            "{} + 1",
-            "{} - 1",
-            "{} * 1",
-            "{} % 1",
-            "{} ^ 1",
-            "{} / 1",
-            "{} // 1",
-            "{} & 1",
-            "{} | 1",
-            "{} ~ 1",
-            "{} << 1",
-            "{} >> 1"
+            '{} + 1',
+            '{} - 1',
+            '{} * 1',
+            '{} % 1',
+            '{} ^ 1',
+            '{} / 1',
+            '{} // 1',
+            '{} & 1',
+            '{} | 1',
+            '{} ~ 1',
+            '{} << 1',
+            '{} >> 1'
         ]);
 });
 
 
 test('__eq', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __eq = function (a, b)
                 return true
@@ -365,10 +365,10 @@ test('__eq', () => {
 
 
 test('__lt', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __lt = function (a, b)
                 return true
@@ -392,10 +392,10 @@ test('__lt', () => {
 
 
 test('__le', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __le = function (a, b)
                 return true
@@ -419,10 +419,10 @@ test('__le', () => {
 
 
 test('__le that uses __lt', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __lt = function (a, b)
                 return false
@@ -446,10 +446,10 @@ test('__le that uses __lt', () => {
 
 
 test('__unm, __bnot', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __unm = function (a)
                 return "hello"
@@ -472,16 +472,16 @@ test('__unm, __bnot', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("world");
-    expect(lua.lua_tojsstring(L, -2)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('world');
+    expect(lua.lua_tojsstring(L, -2)).toBe('hello');
 });
 
 
 test('__len', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __len = function (a)
                 return "hello"
@@ -500,15 +500,15 @@ test('__len', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('__concat', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __concat = function (a)
                 return "hello"
@@ -527,15 +527,15 @@ test('__concat', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('__call', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local mt = {
             __call = function (a, ...)
                 return "hello", ...
@@ -555,5 +555,5 @@ test('__call', () => {
     }
 
     expect(L.stack.slice(L.top - 3, L.top).map(e => e.jsstring()))
-        .toEqual(["hello", "world", "wow"]);
+        .toEqual(['hello', 'world', 'wow']);
 });

@@ -38,7 +38,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-const timerId = setImmediate(function () {
+const timerId = setImmediate(() => {
   timerCalled = true;
 });
 
@@ -46,7 +46,7 @@ clearImmediate(timerId);
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, destroyUid);
 
   assert.equal(initHandleName, 'ImmediateWrap');

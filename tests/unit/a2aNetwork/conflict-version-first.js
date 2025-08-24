@@ -1,8 +1,8 @@
 
-var test = require("tap").test;
-var chain = require('../../');
+const test = require('tap').test;
+const chain = require('../../');
 
-test("no other copy", function (t) {
+test('no other copy', (t) => {
   t.strictEqual(global._stackChain, chain);
   t.end();
 });

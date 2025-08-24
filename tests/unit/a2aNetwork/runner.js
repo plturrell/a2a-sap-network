@@ -12,11 +12,11 @@ const allPassed = clc.green;
 const failed = clc.yellow;
 const passed = (t) => t;
 
-const files = fs.readdirSync(__dirname).filter(function (filename) {
+const files = fs.readdirSync(__dirname).filter((filename) => {
   return filename.slice(0, 5) === 'test-';
 });
 
-async.mapSeries(files, runTest, function (err, passed) {
+async.mapSeries(files, runTest, (err, passed) => {
   if (err) throw err;
 
   let failed = 0;
@@ -25,9 +25,9 @@ async.mapSeries(files, runTest, function (err, passed) {
   }
 
   if (failed > 0) {
-    console.log(allFailed('failed') + ` - ${failed} tests failed`);
+    console.log(`${allFailed('failed')  } - ${failed} tests failed`);
   } else {
-    console.log(allPassed('passed') + ` - ${passed.length} tests passed`);
+    console.log(`${allPassed('passed')  } - ${passed.length} tests passed`);
   }
 });
 
@@ -41,13 +41,13 @@ function runTest(filename, done) {
     }
   });
 
-  p.once('close', function (statusCode) {
+  p.once('close', (statusCode) => {
     const ok = (statusCode === 0);
 
     if (ok) {
-      console.log(' ' + passed('ok'));
+      console.log(` ${  passed('ok')}`);
     } else {
-      console.log(' - ' + failed('failed'));
+      console.log(` - ${  failed('failed')}`);
     }
 
     done(null, ok);

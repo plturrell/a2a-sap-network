@@ -20,22 +20,22 @@
 
 'use strict';
 
-var PassThrough = require('stream').PassThrough;
-var util = require('util');
+const PassThrough = require('stream').PassThrough;
+const util = require('util');
 
-var ChunkWriter = require('../../stream/chunk_writer.js');
+const ChunkWriter = require('../../stream/chunk_writer.js');
 
-var testExpectations = require('../lib/test_expectations');
-var byteLength = require('../../interface').byteLength;
-var intoBuffer = require('../../interface').intoBuffer;
-var UInt8 = require('../../atoms').UInt8;
-var StringRW = require('../../string_rw');
-var SeriesRW = require('../../series');
-var BufferRW = require('../../base').BufferRW;
+const testExpectations = require('../lib/test_expectations');
+const byteLength = require('../../interface').byteLength;
+const intoBuffer = require('../../interface').intoBuffer;
+const UInt8 = require('../../atoms').UInt8;
+const StringRW = require('../../string_rw');
+const SeriesRW = require('../../series');
+const BufferRW = require('../../base').BufferRW;
 
-var str1 = StringRW(UInt8);
-var frameRW = SeriesRW(UInt8, str1);
-var writeErrorRW = {
+const str1 = StringRW(UInt8);
+const frameRW = SeriesRW(UInt8, str1);
+const writeErrorRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(null, 0);
     },
@@ -46,8 +46,8 @@ var writeErrorRW = {
 
 writeErrorRW.__proto__ = BufferRW.prototype;
 
-var frames = [];
-var expectedBuffers = [];
+const frames = [];
+const expectedBuffers = [];
 [
     'boot', 'cat',
     'boots', 'cats',
@@ -55,11 +55,11 @@ var expectedBuffers = [];
     'cats', 'N',
     'boots', 'N',
     'cats'
-].forEach(function eachToken(token, i) {
-    var frame = [0, token];
+].forEach((token, i) => {
+    const frame = [0, token];
     frame[0] = byteLength(frameRW, frame);
-    var expectedBuffer = intoBuffer(frameRW, Buffer.alloc(frame[0]), frame);
-    var assertMess = util.format('got expected[%s] buffer', i);
+    const expectedBuffer = intoBuffer(frameRW, Buffer.alloc(frame[0]), frame);
+    const assertMess = util.format('got expected[%s] buffer', i);
     frames.push(frame);
     expectedBuffers.push({
         buffer: function expectToken(buffer, assert) {
@@ -69,19 +69,19 @@ var expectedBuffers = [];
 });
 
 function writerTest(desc, frameRW, frames, expected) {
-    testExpectations(desc, expected, function run(expect, done) {
-        var writer = ChunkWriter(frameRW);
-        var stream = PassThrough({
+    testExpectations(desc, expected, (expect, done) => {
+        const writer = ChunkWriter(frameRW);
+        const stream = PassThrough({
             objectMode: true
         });
-        frames.forEach(function(frame) {
+        frames.forEach((frame) => {
             stream.push(frame);
         });
         stream.push(null);
-        writer.on('data', function onData(buffer) {
+        writer.on('data', (buffer) => {
             expect('buffer', buffer);
         });
-        writer.on('error', function onError(err) {
+        writer.on('error', (err) => {
             expect('error', err);
             writer.end();
         });

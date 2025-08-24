@@ -1,17 +1,17 @@
-"use strict";
+'use strict';
 
-const {toByteCode} = require("./tests.js");
+const {toByteCode} = require('./tests.js');
 
 const lua = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib = require('../src/lualib.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 test('luaL_loadstring', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = "hello world"
         return a
     `;
@@ -21,15 +21,15 @@ test('luaL_loadstring', () => {
         lua.lua_call(L, 0, -1);
     }
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("hello world");
+        .toBe('hello world');
 });
 
 
 test('load', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = load("return 'js running lua running lua'")
         return f()
     `;
@@ -39,15 +39,15 @@ test('load', () => {
         lua.lua_call(L, 0, -1);
     }
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("js running lua running lua");
+        .toBe('js running lua running lua');
 });
 
 
 test('undump empty string', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         assert(load(string.dump(function()
             local str = ""
             return #str -- something that inspects the string
@@ -62,29 +62,29 @@ test('undump empty string', () => {
 
 
 test('luaL_loadbuffer', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = "hello world"
         return a
     `;
     {
         lualib.luaL_openlibs(L);
-        let bc = toByteCode(luaCode);
-        lauxlib.luaL_loadbuffer(L, bc, null, to_luastring("test"));
+        const bc = toByteCode(luaCode);
+        lauxlib.luaL_loadbuffer(L, bc, null, to_luastring('test'));
         lua.lua_call(L, 0, -1);
     }
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("hello world");
+        .toBe('hello world');
 });
 
 // TODO: test stdin
 test('loadfile', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = assert(loadfile("test/loadfile-test.lua"))
         return f()
     `;
@@ -94,15 +94,15 @@ test('loadfile', () => {
         lua.lua_call(L, 0, -1);
     }
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("hello world");
+        .toBe('hello world');
 });
 
 
 test('loadfile (binary)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = assert(loadfile("test/loadfile-test.bc"))
         return f()
     `;
@@ -112,15 +112,15 @@ test('loadfile (binary)', () => {
         lua.lua_call(L, 0, -1);
     }
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("hello world");
+        .toBe('hello world');
 });
 
 
 test('dofile', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return dofile("test/loadfile-test.lua")
     `;
     {
@@ -129,5 +129,5 @@ test('dofile', () => {
         lua.lua_call(L, 0, -1);
     }
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("hello world");
+        .toBe('hello world');
 });

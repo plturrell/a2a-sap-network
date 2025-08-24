@@ -147,7 +147,7 @@ class Agent14SecurityScanner {
     }
 
     async scanDirectory(dirPath) {
-        console.log(`\n🔍 Starting Agent 14 Embedding Fine-Tuner Security Scan...`);
+        console.log('\n🔍 Starting Agent 14 Embedding Fine-Tuner Security Scan...');
         console.log(`📂 Scanning directory: ${dirPath}\n`);
         
         try {
@@ -601,7 +601,7 @@ class Agent14SecurityScanner {
         const endTime = performance.now();
         const duration = ((endTime - this.startTime) / 1000).toFixed(2);
 
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 14 EMBEDDING FINE-TUNER SECURITY SCAN REPORT');
         console.log('='.repeat(80));
 
@@ -616,7 +616,7 @@ class Agent14SecurityScanner {
         const medium = this.vulnerabilities.filter(isMedium).length;
         const low = this.vulnerabilities.filter(isLow).length;
 
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.scannedFiles}`);
         console.log(`   Scan Duration: ${duration}s`);
         console.log(`   Critical Issues: ${critical}`);
@@ -643,7 +643,7 @@ class Agent14SecurityScanner {
         }
 
         // Embedding-specific findings
-        console.log(`\n🤖 EMBEDDING-SPECIFIC SECURITY FINDINGS:`);
+        console.log('\n🤖 EMBEDDING-SPECIFIC SECURITY FINDINGS:');
         
         const hasModelInjection = function(v) { return v.type.includes('MODEL_INJECTION'); };
         const hasPathTraversal = function(v) { return v.type.includes('PATH_TRAVERSAL'); };
@@ -672,7 +672,7 @@ class Agent14SecurityScanner {
 
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:`);
+            console.log('\n🚨 VULNERABILITIES FOUND:');
             
             const logSeverityIssues = (severity) => {
                 const filterBySeverity = function(v) { return v.severity === severity; };
@@ -696,28 +696,28 @@ class Agent14SecurityScanner {
         }
 
         // Recommendations
-        console.log(`\n💡 AGENT 14 EMBEDDING SECURITY RECOMMENDATIONS:`);
-        console.log(`\n1. 🔐 Implement SecurityUtils for embedding operations`);
-        console.log(`   - Add SecurityUtils.validateModelPath() for model loading`);
-        console.log(`   - Use SecurityUtils.secureCallFunction() for ML operations`);
-        console.log(`   - Implement SecurityUtils.validateTrainingData() for data validation`);
+        console.log('\n💡 AGENT 14 EMBEDDING SECURITY RECOMMENDATIONS:');
+        console.log('\n1. 🔐 Implement SecurityUtils for embedding operations');
+        console.log('   - Add SecurityUtils.validateModelPath() for model loading');
+        console.log('   - Use SecurityUtils.secureCallFunction() for ML operations');
+        console.log('   - Implement SecurityUtils.validateTrainingData() for data validation');
         
-        console.log(`\n2. 🛡️  Enhance ML-specific security`);
-        console.log(`   - Validate hyperparameters with SecurityUtils.validateHyperparameters()`);
-        console.log(`   - Secure model serialization with SecurityUtils.secureModelSave()`);
-        console.log(`   - Validate vector queries with SecurityUtils.validateVectorQuery()`);
+        console.log('\n2. 🛡️  Enhance ML-specific security');
+        console.log('   - Validate hyperparameters with SecurityUtils.validateHyperparameters()');
+        console.log('   - Secure model serialization with SecurityUtils.secureModelSave()');
+        console.log('   - Validate vector queries with SecurityUtils.validateVectorQuery()');
         
-        console.log(`\n3. 🔒 Secure ML communications`);
-        console.log(`   - Upgrade WebSocket to WSS for training monitoring`);
-        console.log(`   - Use HTTPS for EventSource embedding streams`);
-        console.log(`   - Implement secure model deployment protocols`);
+        console.log('\n3. 🔒 Secure ML communications');
+        console.log('   - Upgrade WebSocket to WSS for training monitoring');
+        console.log('   - Use HTTPS for EventSource embedding streams');
+        console.log('   - Implement secure model deployment protocols');
 
-        console.log(`\n4. ⚡ Monitor ML security`);
-        console.log(`   - Log all model operations for audit`);
-        console.log(`   - Monitor training data for poisoning attempts`);
-        console.log(`   - Track model deployment and access patterns`);
+        console.log('\n4. ⚡ Monitor ML security');
+        console.log('   - Log all model operations for audit');
+        console.log('   - Monitor training data for poisoning attempts');
+        console.log('   - Track model deployment and access patterns');
 
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('='.repeat(80));
 

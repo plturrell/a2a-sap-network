@@ -1,23 +1,23 @@
-var path = require('path');
-var fs = require('fs');
-var test = require('tape');
+const path = require('path');
+const fs = require('fs');
+const test = require('tape');
 
-var resolve = require('../');
-var sync = require('../sync');
+const resolve = require('../');
+const sync = require('../sync');
 
-var requireResolveSupportsPaths = require.resolve.length > 1
+const requireResolveSupportsPaths = require.resolve.length > 1
     && !(/^v12\.[012]\./).test(process.version); // broken in v12.0-12.2, see https://github.com/nodejs/node/issues/27794
 
-var requireResolveDefaultPathsBroken = (/^v8\.9\.|^v9\.[01]\.0|^v9\.2\./).test(process.version);
+const requireResolveDefaultPathsBroken = (/^v8\.9\.|^v9\.[01]\.0|^v9\.2\./).test(process.version);
 // broken in node v8.9.x, v9.0, v9.1, v9.2.x. see https://github.com/nodejs/node/pull/17113
 
-test('`./sync` entry point', function (t) {
+test('`./sync` entry point', (t) => {
     t.equal(resolve.sync, sync, '`./sync` entry point is the same as `.sync` on `main`');
     t.end();
 });
 
-test('foo', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('foo', (t) => {
+    const dir = path.join(__dirname, 'resolver');
 
     t.equal(
         resolve.sync('./foo', { basedir: dir }),
@@ -50,28 +50,28 @@ test('foo', function (t) {
         path.join(dir, 'foo.js')
     );
 
-    t.throws(function () {
+    t.throws(() => {
         resolve.sync('foo', { basedir: dir });
     });
 
     // Test that filename is reported as the "from" value when passed.
     t.throws(
-        function () {
+        () => {
             resolve.sync('foo', { basedir: dir, filename: path.join(dir, 'bar.js') });
         },
         {
             name: 'Error',
-            message: "Cannot find module 'foo' from '" + path.join(dir, 'bar.js') + "'"
+            message: `Cannot find module 'foo' from '${  path.join(dir, 'bar.js')  }'`
         }
     );
 
     t.end();
 });
 
-test('bar', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('bar', (t) => {
+    const dir = path.join(__dirname, 'resolver');
 
-    var basedir = path.join(dir, 'bar');
+    const basedir = path.join(dir, 'bar');
 
     t.equal(
         resolve.sync('foo', { basedir: basedir }),
@@ -89,8 +89,8 @@ test('bar', function (t) {
     t.end();
 });
 
-test('baz', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('baz', (t) => {
+    const dir = path.join(__dirname, 'resolver');
 
     t.equal(
         resolve.sync('./baz', { basedir: dir }),
@@ -108,8 +108,8 @@ test('baz', function (t) {
     t.end();
 });
 
-test('biz', function (t) {
-    var dir = path.join(__dirname, 'resolver/biz/node_modules');
+test('biz', (t) => {
+    const dir = path.join(__dirname, 'resolver/biz/node_modules');
 
     t.equal(
         resolve.sync('./grux', { basedir: dir }),
@@ -123,7 +123,7 @@ test('biz', function (t) {
         );
     }
 
-    var tivDir = path.join(dir, 'grux');
+    const tivDir = path.join(dir, 'grux');
     t.equal(
         resolve.sync('tiv', { basedir: tivDir }),
         path.join(dir, 'tiv/index.js')
@@ -136,7 +136,7 @@ test('biz', function (t) {
         );
     }
 
-    var gruxDir = path.join(dir, 'tiv');
+    const gruxDir = path.join(dir, 'tiv');
     t.equal(
         resolve.sync('grux', { basedir: gruxDir }),
         path.join(dir, 'grux/index.js')
@@ -152,8 +152,8 @@ test('biz', function (t) {
     t.end();
 });
 
-test('normalize', function (t) {
-    var dir = path.join(__dirname, 'resolver/biz/node_modules/grux');
+test('normalize', (t) => {
+    const dir = path.join(__dirname, 'resolver/biz/node_modules/grux');
 
     t.equal(
         resolve.sync('../grux', { basedir: dir }),
@@ -170,8 +170,8 @@ test('normalize', function (t) {
     t.end();
 });
 
-test('cup', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('cup', (t) => {
+    const dir = path.join(__dirname, 'resolver');
 
     t.equal(
         resolve.sync('./cup', {
@@ -188,7 +188,7 @@ test('cup', function (t) {
         './cup.coffee'
     );
 
-    t.throws(function () {
+    t.throws(() => {
         resolve.sync('./cup', {
             basedir: dir,
             extensions: ['.js']
@@ -206,8 +206,8 @@ test('cup', function (t) {
     t.end();
 });
 
-test('mug', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('mug', (t) => {
+    const dir = path.join(__dirname, 'resolver');
 
     t.equal(
         resolve.sync('./mug', { basedir: dir }),
@@ -243,10 +243,10 @@ test('mug', function (t) {
     t.end();
 });
 
-test('other path', function (t) {
-    var resolverDir = path.join(__dirname, 'resolver');
-    var dir = path.join(resolverDir, 'bar');
-    var otherDir = path.join(resolverDir, 'other_path');
+test('other path', (t) => {
+    const resolverDir = path.join(__dirname, 'resolver');
+    const dir = path.join(resolverDir, 'bar');
+    const otherDir = path.join(resolverDir, 'other_path');
 
     t.equal(
         resolve.sync('root', {
@@ -264,11 +264,11 @@ test('other path', function (t) {
         path.join(resolverDir, 'other_path/lib/other-lib.js')
     );
 
-    t.throws(function () {
+    t.throws(() => {
         resolve.sync('root', { basedir: dir });
     });
 
-    t.throws(function () {
+    t.throws(() => {
         resolve.sync('zzz', {
             basedir: dir,
             paths: [otherDir]
@@ -278,10 +278,10 @@ test('other path', function (t) {
     t.end();
 });
 
-test('path iterator', function (t) {
-    var resolverDir = path.join(__dirname, 'resolver');
+test('path iterator', (t) => {
+    const resolverDir = path.join(__dirname, 'resolver');
 
-    var exactIterator = function (x, start, getPackageCandidates, opts) {
+    const exactIterator = function (x, start, getPackageCandidates, opts) {
         return [path.join(resolverDir, x)];
     };
 
@@ -293,9 +293,9 @@ test('path iterator', function (t) {
     t.end();
 });
 
-test('incorrect main', function (t) {
-    var resolverDir = path.join(__dirname, 'resolver');
-    var dir = path.join(resolverDir, 'incorrect_main');
+test('incorrect main', (t) => {
+    const resolverDir = path.join(__dirname, 'resolver');
+    const dir = path.join(resolverDir, 'incorrect_main');
 
     t.equal(
         resolve.sync('./incorrect_main', { basedir: resolverDir }),
@@ -312,10 +312,10 @@ test('incorrect main', function (t) {
     t.end();
 });
 
-test('missing index', function (t) {
+test('missing index', (t) => {
     t.plan(requireResolveSupportsPaths ? 2 : 1);
 
-    var resolverDir = path.join(__dirname, 'resolver');
+    const resolverDir = path.join(__dirname, 'resolver');
     try {
         resolve.sync('./missing_index', { basedir: resolverDir });
         t.fail('did not fail');
@@ -332,8 +332,8 @@ test('missing index', function (t) {
     }
 });
 
-test('missing main', function (t) {
-    var resolverDir = path.join(__dirname, 'resolver');
+test('missing main', (t) => {
+    const resolverDir = path.join(__dirname, 'resolver');
 
     try {
         resolve.sync('./missing_main', { basedir: resolverDir });
@@ -353,8 +353,8 @@ test('missing main', function (t) {
     t.end();
 });
 
-test('null main', function (t) {
-    var resolverDir = path.join(__dirname, 'resolver');
+test('null main', (t) => {
+    const resolverDir = path.join(__dirname, 'resolver');
 
     try {
         resolve.sync('./null_main', { basedir: resolverDir });
@@ -374,9 +374,9 @@ test('null main', function (t) {
     t.end();
 });
 
-test('main: false', function (t) {
-    var basedir = path.join(__dirname, 'resolver');
-    var dir = path.join(basedir, 'false_main');
+test('main: false', (t) => {
+    const basedir = path.join(__dirname, 'resolver');
+    const dir = path.join(basedir, 'false_main');
     t.equal(
         resolve.sync('./false_main', { basedir: basedir }),
         path.join(dir, 'index.js'),
@@ -393,8 +393,8 @@ test('main: false', function (t) {
     t.end();
 });
 
-var stubStatSync = function stubStatSync(fn) {
-    var statSync = fs.statSync;
+const stubStatSync = function stubStatSync(fn) {
+    const statSync = fs.statSync;
     try {
         fs.statSync = function () {
             throw new EvalError('Unknown Error');
@@ -405,11 +405,11 @@ var stubStatSync = function stubStatSync(fn) {
     }
 };
 
-test('#79 - re-throw non ENOENT errors from stat', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('#79 - re-throw non ENOENT errors from stat', (t) => {
+    const dir = path.join(__dirname, 'resolver');
 
-    stubStatSync(function () {
-        t.throws(function () {
+    stubStatSync(() => {
+        t.throws(() => {
             resolve.sync('foo', { basedir: dir });
         }, /Unknown Error/);
     });
@@ -417,9 +417,9 @@ test('#79 - re-throw non ENOENT errors from stat', function (t) {
     t.end();
 });
 
-test('#52 - incorrectly resolves module-paths like "./someFolder/" when there is a file of the same name', function (t) {
-    var dir = path.join(__dirname, 'resolver');
-    var basedir = path.join(dir, 'same_names');
+test('#52 - incorrectly resolves module-paths like "./someFolder/" when there is a file of the same name', (t) => {
+    const dir = path.join(__dirname, 'resolver');
+    const basedir = path.join(dir, 'same_names');
 
     t.equal(
         resolve.sync('./foo', { basedir: basedir }),
@@ -448,9 +448,9 @@ test('#52 - incorrectly resolves module-paths like "./someFolder/" when there is
     t.end();
 });
 
-test('#211 - incorrectly resolves module-paths like "." when from inside a folder with a sibling file of the same name', function (t) {
-    var dir = path.join(__dirname, 'resolver');
-    var basedir = path.join(dir, 'same_names/foo');
+test('#211 - incorrectly resolves module-paths like "." when from inside a folder with a sibling file of the same name', (t) => {
+    const dir = path.join(__dirname, 'resolver');
+    const basedir = path.join(dir, 'same_names/foo');
 
     t.equal(
         resolve.sync('./', { basedir: basedir }),
@@ -482,26 +482,26 @@ test('#211 - incorrectly resolves module-paths like "." when from inside a folde
     t.end();
 });
 
-test('sync: #121 - treating an existing file as a dir when no basedir', function (t) {
-    var testFile = path.basename(__filename);
+test('sync: #121 - treating an existing file as a dir when no basedir', (t) => {
+    const testFile = path.basename(__filename);
 
-    t.test('sanity check', function (st) {
+    t.test('sanity check', (st) => {
         st.equal(
-            resolve.sync('./' + testFile),
+            resolve.sync(`./${  testFile}`),
             __filename,
             'sanity check'
         );
         st.equal(
-            resolve.sync('./' + testFile),
-            require.resolve('./' + testFile),
+            resolve.sync(`./${  testFile}`),
+            require.resolve(`./${  testFile}`),
             'sanity check: resolve.sync === require.resolve'
         );
 
         st.end();
     });
 
-    t.test('with a fake directory', function (st) {
-        function run() { return resolve.sync('./' + testFile + '/blah'); }
+    t.test('with a fake directory', (st) => {
+        function run() { return resolve.sync(`./${  testFile  }/blah`); }
 
         st.throws(run, 'throws an error');
 
@@ -511,7 +511,7 @@ test('sync: #121 - treating an existing file as a dir when no basedir', function
             st.equal(e.code, 'MODULE_NOT_FOUND', 'error code matches require.resolve');
             st.equal(
                 e.message,
-                'Cannot find module \'./' + testFile + '/blah\' from \'' + __dirname + '\'',
+                `Cannot find module './${  testFile  }/blah' from '${  __dirname  }'`,
                 'can not find nonexistent module'
             );
         }
@@ -522,8 +522,8 @@ test('sync: #121 - treating an existing file as a dir when no basedir', function
     t.end();
 });
 
-test('sync dot main', function (t) {
-    var start = new Date();
+test('sync dot main', (t) => {
+    const start = new Date();
 
     t.equal(
         resolve.sync('./resolver/dot_main'),
@@ -541,8 +541,8 @@ test('sync dot main', function (t) {
     t.end();
 });
 
-test('sync dot slash main', function (t) {
-    var start = new Date();
+test('sync dot slash main', (t) => {
+    const start = new Date();
 
     t.equal(
         resolve.sync('./resolver/dot_slash_main'),
@@ -559,23 +559,23 @@ test('sync dot slash main', function (t) {
     t.end();
 });
 
-test('not a directory', function (t) {
-    var path = './foo';
+test('not a directory', (t) => {
+    const path = './foo';
     try {
         resolve.sync(path, { basedir: __filename });
         t.fail();
     } catch (err) {
         t.ok(err, 'a non-directory errors');
-        t.equal(err && err.message, 'Cannot find module \'' + path + "' from '" + __filename + "'");
+        t.equal(err && err.message, `Cannot find module '${  path  }' from '${  __filename  }'`);
         t.equal(err && err.code, 'MODULE_NOT_FOUND');
     }
     t.end();
 });
 
-test('non-string "main" field in package.json', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('non-string "main" field in package.json', (t) => {
+    const dir = path.join(__dirname, 'resolver');
     try {
-        var result = resolve.sync('./invalid_main', { basedir: dir });
+        const result = resolve.sync('./invalid_main', { basedir: dir });
         t.equal(result, undefined, 'result should not exist');
         t.fail('should not get here');
     } catch (err) {
@@ -586,10 +586,10 @@ test('non-string "main" field in package.json', function (t) {
     t.end();
 });
 
-test('non-string "main" field in package.json', function (t) {
-    var dir = path.join(__dirname, 'resolver');
+test('non-string "main" field in package.json', (t) => {
+    const dir = path.join(__dirname, 'resolver');
     try {
-        var result = resolve.sync('./invalid_main', { basedir: dir });
+        const result = resolve.sync('./invalid_main', { basedir: dir });
         t.equal(result, undefined, 'result should not exist');
         t.fail('should not get here');
     } catch (err) {
@@ -600,9 +600,9 @@ test('non-string "main" field in package.json', function (t) {
     t.end();
 });
 
-test('browser field in package.json', function (t) {
-    var dir = path.join(__dirname, 'resolver');
-    var res = resolve.sync('./browser_field', {
+test('browser field in package.json', (t) => {
+    const dir = path.join(__dirname, 'resolver');
+    const res = resolve.sync('./browser_field', {
         basedir: dir,
         packageFilter: function packageFilter(pkg) {
             if (pkg.browser) {
@@ -616,8 +616,8 @@ test('browser field in package.json', function (t) {
     t.end();
 });
 
-test('absolute paths', function (t) {
-    var extensionless = __filename.slice(0, -path.extname(__filename).length);
+test('absolute paths', (t) => {
+    const extensionless = __filename.slice(0, -path.extname(__filename).length);
 
     t.equal(
         resolve.sync(__filename),
@@ -670,12 +670,12 @@ test('absolute paths', function (t) {
     t.end();
 });
 
-var malformedDir = path.join(__dirname, 'resolver/malformed_package_json');
-test('malformed package.json', { skip: !fs.existsSync(malformedDir) }, function (t) {
+const malformedDir = path.join(__dirname, 'resolver/malformed_package_json');
+test('malformed package.json', { skip: !fs.existsSync(malformedDir) }, (t) => {
     t.plan(5 + (requireResolveSupportsPaths ? 1 : 0));
 
-    var basedir = malformedDir;
-    var expected = path.join(basedir, 'index.js');
+    const basedir = malformedDir;
+    const expected = path.join(basedir, 'index.js');
 
     t.equal(
         resolve.sync('./index.js', { basedir: basedir }),
@@ -690,7 +690,7 @@ test('malformed package.json', { skip: !fs.existsSync(malformedDir) }, function 
         );
     }
 
-    var res1 = resolve.sync(
+    const res1 = resolve.sync(
         './index.js',
         {
             basedir: basedir,
@@ -706,13 +706,13 @@ test('malformed package.json', { skip: !fs.existsSync(malformedDir) }, function 
         'with packageFilter: malformed package.json is silently ignored'
     );
 
-    var res2 = resolve.sync(
+    const res2 = resolve.sync(
         './index.js',
         {
             basedir: basedir,
             readPackageSync: function (readFileSync, pkgfile) {
                 t.equal(pkgfile, path.join(basedir, 'package.json'), 'readPackageSync: `pkgfile` is package.json path');
-                var result = String(readFileSync(pkgfile));
+                const result = String(readFileSync(pkgfile));
                 try {
                     return JSON.parse(result);
                 } catch (e) {

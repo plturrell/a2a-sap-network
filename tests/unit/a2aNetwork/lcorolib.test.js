@@ -1,16 +1,16 @@
-"use strict";
+'use strict';
 
 const lua = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib = require('../src/lualib.js');
 const lstate = require('../src/lstate.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 test('coroutine.create, coroutine.yield, coroutine.resume', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local co = coroutine.create(function (start)
             local b = coroutine.yield(start * start);
             coroutine.yield(b * b)
@@ -33,10 +33,10 @@ test('coroutine.create, coroutine.yield, coroutine.resume', () => {
 
 
 test('coroutine.status', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local co = coroutine.create(function (start)
             local b = coroutine.yield(start * start);
             coroutine.yield(b * b)
@@ -60,18 +60,18 @@ test('coroutine.status', () => {
     }
 
     expect(lua.lua_tojsstring(L, -2))
-        .toBe("suspended");
+        .toBe('suspended');
 
     expect(lua.lua_tojsstring(L, -1))
-        .toBe("dead");
+        .toBe('dead');
 });
 
 
 test('coroutine.isyieldable', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local co = coroutine.create(function ()
             coroutine.yield(coroutine.isyieldable());
         end)
@@ -92,10 +92,10 @@ test('coroutine.isyieldable', () => {
 
 
 test('coroutine.running', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local running, ismain
 
         local co = coroutine.create(function ()
@@ -118,10 +118,10 @@ test('coroutine.running', () => {
 
 
 test('coroutine.wrap', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local co = coroutine.wrap(function (start)
             local b = coroutine.yield(start * start);
             coroutine.yield(b * b)

@@ -19,22 +19,22 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var PORT = 12346;
+const PORT = 12346;
 
 if (!process.addAsyncListener) require('../index.js');
 
-var assert = require('assert');
-var dns = require('dns');
-var fs = require('fs');
-var net = require('net');
+const assert = require('assert');
+const dns = require('dns');
+const fs = require('fs');
+const net = require('net');
 
-var errorMsgs = [];
-var caught = 0;
-var expectCaught = 0;
+const errorMsgs = [];
+let caught = 0;
+let expectCaught = 0;
 
-var callbacksObj = {
+const callbacksObj = {
   error: function(value, er) {
-    var idx = errorMsgs.indexOf(er.message);
+    const idx = errorMsgs.indexOf(er.message);
     caught++;
 
     // process._rawDebug('Handling error: ' + er.message);
@@ -42,22 +42,22 @@ var callbacksObj = {
     if (-1 < idx)
       errorMsgs.splice(idx, 1);
     else
-      throw new Error('Message not found: ' + er.message);
+      throw new Error(`Message not found: ${  er.message}`);
 
     return true;
   }
 };
 
-var listener = process.addAsyncListener(callbacksObj);
+const listener = process.addAsyncListener(callbacksObj);
 
-process.on('exit', function(code) {
+process.on('exit', (code) => {
   process.removeAsyncListener(listener);
 
   if (code > 0)
     return;
 
   if (errorMsgs.length > 0)
-    throw new Error('Errors not fired: ' + errorMsgs);
+    throw new Error(`Errors not fired: ${  errorMsgs}`);
 
   assert.equal(caught, expectCaught);
   console.log('ok');
@@ -65,18 +65,18 @@ process.on('exit', function(code) {
 
 
 // Net
-var iter = 3;
-for (var i = 0; i < iter; i++) {
+let iter = 3;
+for (let i = 0; i < iter; i++) {
   errorMsgs.push('net - error: server connection');
   errorMsgs.push('net - error: client data');
   errorMsgs.push('net - error: server data');
 }
 errorMsgs.push('net - error: server closed');
 
-var server = net.createServer(function(c) {
-  c.on('data', function() {
+var server = net.createServer((c) => {
+  c.on('data', () => {
     if (0 === --iter) {
-      server.close(function() {
+      server.close(() => {
         console.log('net - server closing');
         throw new Error('net - error: server closed');
       });
@@ -93,15 +93,15 @@ var server = net.createServer(function(c) {
 });
 expectCaught += iter;
 
-server.listen(PORT, function() {
-  for (var i = 0; i < iter; i++)
+server.listen(PORT, () => {
+  for (let i = 0; i < iter; i++)
     clientConnect();
 });
 
 function clientConnect() {
-  var client = net.connect(PORT, function() { });
+  const client = net.connect(PORT, () => { });
 
-  client.on('data', function() {
+  client.on('data', () => {
     client.end('see ya');
     console.log('net - client received data');
     throw new Error('net - error: client data');

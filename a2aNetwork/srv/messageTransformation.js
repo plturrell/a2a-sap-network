@@ -131,7 +131,7 @@ class MessageTransformationService extends cds.Service {
             });
 
             // Parse source content
-            let parsedContent = await this._parseContent(content, detectedSourceFormat);
+            const parsedContent = await this._parseContent(content, detectedSourceFormat);
 
             // Apply transformation rule
             let transformedContent = parsedContent;
@@ -584,8 +584,8 @@ class MessageTransformationService extends cds.Service {
     _formatAsOData(content) {
         // Convert to OData format
         return {
-            "@odata.context": "$metadata#Collection(Edm.String)",
-            "@odata.count": Array.isArray(content) ? content.length : 1,
+            '@odata.context': '$metadata#Collection(Edm.String)',
+            '@odata.count': Array.isArray(content) ? content.length : 1,
             value: Array.isArray(content) ? content : [content]
         };
     }
@@ -745,7 +745,7 @@ class MessageTransformationService extends cds.Service {
 
     async _enrichContent(content, enrichmentOptions) {
         // Content enrichment based on options
-        let enriched = { ...content };
+        const enriched = { ...content };
         
         if (enrichmentOptions.addTimestamp) {
             enriched.timestamp = new Date().toISOString();

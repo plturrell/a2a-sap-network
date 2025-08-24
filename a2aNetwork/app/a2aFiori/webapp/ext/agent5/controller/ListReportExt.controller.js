@@ -122,7 +122,7 @@ sap.ui.define([
                 break;
             case "testCase":
                 // Use SecurityUtils for test case validation
-                var oValidation = this._securityUtils.validateTestCase(sSanitized);
+                const oValidation = this._securityUtils.validateTestCase(sSanitized);
                 if (!oValidation.isValid) {
                     return { isValid: false, message: oValidation.errors.join(", ") };
                 }
@@ -199,7 +199,7 @@ sap.ui.define([
                 data: JSON.stringify(oAuditData),
                 async: true,
                 success() {
-                    console.log("Audit event logged:", sEventType);
+                    // console.log("Audit event logged:", sEventType);
                 },
                 error() {
                     // Fallback audit logging to local storage

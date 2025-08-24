@@ -15,13 +15,13 @@ const getMethods = ms => {
 // Get the name of the library. In the transpiled code it will be EnumerableSetUpgradeable.
 const library = EnumerableSet._json.contractName.replace(/^\$/, '');
 
-contract('EnumerableSet', function (accounts) {
+contract('EnumerableSet', (accounts) => {
   beforeEach(async function () {
     this.set = await EnumerableSet.new();
   });
 
   // Bytes32Set
-  describe('EnumerableBytes32Set', function () {
+  describe('EnumerableBytes32Set', () => {
     shouldBehaveLikeSet(
       ['0xdeadbeef', '0x0123456789', '0x42424242'].map(e => e.padEnd(66, '0')),
       getMethods({
@@ -40,7 +40,7 @@ contract('EnumerableSet', function (accounts) {
   });
 
   // AddressSet
-  describe('EnumerableAddressSet', function () {
+  describe('EnumerableAddressSet', () => {
     shouldBehaveLikeSet(
       accounts,
       getMethods({
@@ -59,7 +59,7 @@ contract('EnumerableSet', function (accounts) {
   });
 
   // UintSet
-  describe('EnumerableUintSet', function () {
+  describe('EnumerableUintSet', () => {
     shouldBehaveLikeSet(
       [1234, 5678, 9101112].map(e => web3.utils.toBN(e)),
       getMethods({

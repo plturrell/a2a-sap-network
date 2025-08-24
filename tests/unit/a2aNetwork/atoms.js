@@ -20,10 +20,10 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var atoms = require('../atoms');
+const atoms = require('../atoms');
 
 test('atoms.Int8', testRW.cases(atoms.Int8, [
     [-0x12, [0xee]],

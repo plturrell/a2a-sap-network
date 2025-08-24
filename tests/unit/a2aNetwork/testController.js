@@ -75,7 +75,7 @@ class TestController {
         
         let totalPassed = 0;
         let totalFailed = 0;
-        let results = [];
+        const results = [];
 
         for (const [groupKey, group] of Object.entries(this.testGroups)) {
             const result = await this.runGroup(groupKey, { runId, silent: true });
@@ -428,7 +428,7 @@ class TestController {
     }
 
     printSummary(results, passed, failed) {
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🎯 TEST EXECUTION SUMMARY');
         console.log('='.repeat(80));
         

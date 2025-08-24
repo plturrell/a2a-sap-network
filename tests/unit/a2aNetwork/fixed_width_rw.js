@@ -20,13 +20,13 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var FixedWidthRW = require('../fixed_width_rw');
+const FixedWidthRW = require('../fixed_width_rw');
 
-var fix8 = FixedWidthRW(8);
-var fixed8 = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+const fix8 = FixedWidthRW(8);
+const fixed8 = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
 test('FixedWidthRW: simple fix:8', testRW.cases(fix8, [
     [Buffer.from(fixed8), fixed8],
 

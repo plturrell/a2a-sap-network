@@ -1,10 +1,10 @@
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var callBound = require('../callBound');
+const callBound = require('../callBound');
 
-test('callBound', function (t) {
+test('callBound', (t) => {
 	// static primitive
 	t.equal(callBound('Array.length'), Array.length, 'Array.length yields itself');
 	t.equal(callBound('%Array.length%'), Array.length, '%Array.length% yields itself');
@@ -30,19 +30,19 @@ test('callBound', function (t) {
 	t.equal(callBound('%Object.prototype.toString%')(true), Object.prototype.toString.call(true), 'call-bound %Object.prototype.toString% calls into the original');
 
 	t['throws'](
-		function () { callBound('does not exist'); },
+		() => { callBound('does not exist'); },
 		SyntaxError,
 		'nonexistent intrinsic throws'
 	);
 	t['throws'](
-		function () { callBound('does not exist', true); },
+		() => { callBound('does not exist', true); },
 		SyntaxError,
 		'allowMissing arg still throws for unknown intrinsic'
 	);
 
-	t.test('real but absent intrinsic', { skip: typeof WeakRef !== 'undefined' }, function (st) {
+	t.test('real but absent intrinsic', { skip: typeof WeakRef !== 'undefined' }, (st) => {
 		st['throws'](
-			function () { callBound('WeakRef'); },
+			() => { callBound('WeakRef'); },
 			TypeError,
 			'real but absent intrinsic throws'
 		);

@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
-const promisify = require("util.promisify");
-const gensync = require("../");
+const promisify = require('util.promisify');
+const gensync = require('../');
 
-const TEST_ERROR = new Error("TEST_ERROR");
+const TEST_ERROR = new Error('TEST_ERROR');
 
-const DID_ERROR = new Error("DID_ERROR");
+const DID_ERROR = new Error('DID_ERROR');
 
 const doSuccess = gensync({
   sync: () => 42,
@@ -59,9 +59,9 @@ async function expectResult(
   });
 }
 
-describe("gensync({})", () => {
-  describe("option validation", () => {
-    test("disallow async and errback handler together", () => {
+describe('gensync({})', () => {
+  describe('option validation', () => {
+    test('disallow async and errback handler together', () => {
       try {
         gensync({
           sync: throwTestError,
@@ -74,11 +74,11 @@ describe("gensync({})", () => {
         expect(err.message).toMatch(
           /Expected one of either opts.async or opts.errback, but got _both_\./
         );
-        expect(err.code).toBe("GENSYNC_OPTIONS_ERROR");
+        expect(err.code).toBe('GENSYNC_OPTIONS_ERROR');
       }
     });
 
-    test("disallow missing sync handler", () => {
+    test('disallow missing sync handler', () => {
       try {
         gensync({
           async: throwTestError,
@@ -87,11 +87,11 @@ describe("gensync({})", () => {
         throwTestError();
       } catch (err) {
         expect(err.message).toMatch(/Expected opts.sync to be a function./);
-        expect(err.code).toBe("GENSYNC_OPTIONS_ERROR");
+        expect(err.code).toBe('GENSYNC_OPTIONS_ERROR');
       }
     });
 
-    test("errback callback required", () => {
+    test('errback callback required', () => {
       const fn = gensync({
         sync: throwTestError,
         async: throwTestError,
@@ -103,82 +103,82 @@ describe("gensync({})", () => {
         throwTestError();
       } catch (err) {
         expect(err.message).toMatch(/function called without callback/);
-        expect(err.code).toBe("GENSYNC_ERRBACK_NO_CALLBACK");
+        expect(err.code).toBe('GENSYNC_ERRBACK_NO_CALLBACK');
       }
     });
   });
 
-  describe("generator function metadata", () => {
-    test("automatic naming", () => {
+  describe('generator function metadata', () => {
+    test('automatic naming', () => {
       expect(
         gensync({
           sync: function readFileSync() {},
           async: () => {},
         }).name
-      ).toBe("readFile");
+      ).toBe('readFile');
       expect(
         gensync({
           sync: function readFile() {},
           async: () => {},
         }).name
-      ).toBe("readFile");
+      ).toBe('readFile');
       expect(
         gensync({
           sync: function readFileAsync() {},
           async: () => {},
         }).name
-      ).toBe("readFileAsync");
+      ).toBe('readFileAsync');
 
       expect(
         gensync({
           sync: () => {},
           async: function readFileSync() {},
         }).name
-      ).toBe("readFileSync");
+      ).toBe('readFileSync');
       expect(
         gensync({
           sync: () => {},
           async: function readFile() {},
         }).name
-      ).toBe("readFile");
+      ).toBe('readFile');
       expect(
         gensync({
           sync: () => {},
           async: function readFileAsync() {},
         }).name
-      ).toBe("readFile");
+      ).toBe('readFile');
 
       expect(
         gensync({
           sync: () => {},
           errback: function readFileSync() {},
         }).name
-      ).toBe("readFileSync");
+      ).toBe('readFileSync');
       expect(
         gensync({
           sync: () => {},
           errback: function readFile() {},
         }).name
-      ).toBe("readFile");
+      ).toBe('readFile');
       expect(
         gensync({
           sync: () => {},
           errback: function readFileAsync() {},
         }).name
-      ).toBe("readFileAsync");
+      ).toBe('readFileAsync');
     });
 
-    test("explicit naming", () => {
+    test('explicit naming', () => {
       expect(
         gensync({
-          name: "readFile",
+          name: 'readFile',
           sync: () => {},
           async: () => {},
         }).name
-      ).toBe("readFile");
+      ).toBe('readFile');
     });
 
-    test("default arity", () => {
+    test('default arity', () => {
       expect(
         gensync({
           sync: function(a, b, c, d, e, f, g) {
@@ -189,7 +189,7 @@ describe("gensync({})", () => {
       ).toBe(7);
     });
 
-    test("explicit arity", () => {
+    test('explicit arity', () => {
       expect(
         gensync({
           arity: 3,
@@ -200,91 +200,91 @@ describe("gensync({})", () => {
     });
   });
 
-  describe("'sync' handler", async () => {
-    test("success", async () => {
+  describe('\'sync\' handler', async () => {
+    test('success', async () => {
       const fn = gensync({
         sync: (...args) => JSON.stringify(args),
       });
 
-      await expectResult(fn, 42, { value: "[42]", expectSync: true });
+      await expectResult(fn, 42, { value: '[42]', expectSync: true });
     });
 
-    test("failure", async () => {
+    test('failure', async () => {
       const fn = gensync({
         sync: (...args) => {
           throw JSON.stringify(args);
         },
       });
 
-      await expectResult(fn, 42, { error: "[42]", expectSync: true });
+      await expectResult(fn, 42, { error: '[42]', expectSync: true });
     });
   });
 
-  describe("'async' handler", async () => {
-    test("success", async () => {
+  describe('\'async\' handler', async () => {
+    test('success', async () => {
       const fn = gensync({
         sync: throwTestError,
         async: (...args) => Promise.resolve(JSON.stringify(args)),
       });
 
-      await expectResult(fn, 42, { value: "[42]" });
+      await expectResult(fn, 42, { value: '[42]' });
     });
 
-    test("failure", async () => {
+    test('failure', async () => {
       const fn = gensync({
         sync: throwTestError,
         async: (...args) => Promise.reject(JSON.stringify(args)),
       });
 
-      await expectResult(fn, 42, { error: "[42]" });
+      await expectResult(fn, 42, { error: '[42]' });
     });
   });
 
-  describe("'errback' sync handler", async () => {
-    test("success", async () => {
+  describe('\'errback\' sync handler', async () => {
+    test('success', async () => {
       const fn = gensync({
         sync: throwTestError,
         errback: (...args) => args.pop()(null, JSON.stringify(args)),
       });
 
-      await expectResult(fn, 42, { value: "[42]", syncErrback: true });
+      await expectResult(fn, 42, { value: '[42]', syncErrback: true });
     });
 
-    test("failure", async () => {
+    test('failure', async () => {
       const fn = gensync({
         sync: throwTestError,
         errback: (...args) => args.pop()(JSON.stringify(args)),
       });
 
-      await expectResult(fn, 42, { error: "[42]", syncErrback: true });
+      await expectResult(fn, 42, { error: '[42]', syncErrback: true });
     });
   });
 
-  describe("'errback' async handler", async () => {
-    test("success", async () => {
+  describe('\'errback\' async handler', async () => {
+    test('success', async () => {
       const fn = gensync({
         sync: throwTestError,
         errback: (...args) =>
           process.nextTick(() => args.pop()(null, JSON.stringify(args))),
       });
 
-      await expectResult(fn, 42, { value: "[42]" });
+      await expectResult(fn, 42, { value: '[42]' });
     });
 
-    test("failure", async () => {
+    test('failure', async () => {
       const fn = gensync({
         sync: throwTestError,
         errback: (...args) =>
           process.nextTick(() => args.pop()(JSON.stringify(args))),
       });
 
-      await expectResult(fn, 42, { error: "[42]" });
+      await expectResult(fn, 42, { error: '[42]' });
     });
   });
 });
 
-describe("gensync(function* () {})", () => {
-  test("sync throw before body", async () => {
+describe('gensync(function* () {})', () => {
+  test('sync throw before body', async () => {
     const fn = gensync(function*(arg = throwTestError()) {});
 
     await expectResult(fn, undefined, {
@@ -293,7 +293,7 @@ describe("gensync(function* () {})", () => {
     });
   });
 
-  test("sync throw inside body", async () => {
+  test('sync throw inside body', async () => {
     const fn = gensync(function*() {
       throwTestError();
     });
@@ -304,7 +304,7 @@ describe("gensync(function* () {})", () => {
     });
   });
 
-  test("async throw inside body", async () => {
+  test('async throw inside body', async () => {
     const fn = gensync(function*() {
       const val = yield* doSuccess();
       throwTestError();
@@ -315,7 +315,7 @@ describe("gensync(function* () {})", () => {
     });
   });
 
-  test("error inside body", async () => {
+  test('error inside body', async () => {
     const fn = gensync(function*() {
       yield* doError();
     });
@@ -327,7 +327,7 @@ describe("gensync(function* () {})", () => {
     });
   });
 
-  test("successful return value", async () => {
+  test('successful return value', async () => {
     const fn = gensync(function*() {
       const value = yield* doSuccess();
 
@@ -343,7 +343,7 @@ describe("gensync(function* () {})", () => {
     });
   });
 
-  test("successful final value", async () => {
+  test('successful final value', async () => {
     const fn = gensync(function*() {
       return 42;
     });
@@ -354,7 +354,7 @@ describe("gensync(function* () {})", () => {
     });
   });
 
-  test("yield unexpected object", async () => {
+  test('yield unexpected object', async () => {
     const fn = gensync(function*() {
       yield {};
     });
@@ -367,13 +367,13 @@ describe("gensync(function* () {})", () => {
       expect(err.message).toMatch(
         /Got unexpected yielded value in gensync generator/
       );
-      expect(err.code).toBe("GENSYNC_EXPECTED_START");
+      expect(err.code).toBe('GENSYNC_EXPECTED_START');
     }
   });
 
-  test("yield suspend yield", async () => {
+  test('yield suspend yield', async () => {
     const fn = gensync(function*() {
-      yield Symbol.for("gensync:v1:start");
+      yield Symbol.for('gensync:v1:start');
 
       // Should be "yield*" for no error.
       yield {};
@@ -385,13 +385,13 @@ describe("gensync(function* () {})", () => {
       throwTestError();
     } catch (err) {
       expect(err.message).toMatch(/Expected GENSYNC_SUSPEND, got {}/);
-      expect(err.code).toBe("GENSYNC_EXPECTED_SUSPEND");
+      expect(err.code).toBe('GENSYNC_EXPECTED_SUSPEND');
     }
   });
 
-  test("yield suspend return", async () => {
+  test('yield suspend return', async () => {
     const fn = gensync(function*() {
-      yield Symbol.for("gensync:v1:start");
+      yield Symbol.for('gensync:v1:start');
 
       // Should be "yield*" for no error.
       return {};
@@ -403,13 +403,13 @@ describe("gensync(function* () {})", () => {
       throwTestError();
     } catch (err) {
       expect(err.message).toMatch(/Unexpected generator completion/);
-      expect(err.code).toBe("GENSYNC_EXPECTED_SUSPEND");
+      expect(err.code).toBe('GENSYNC_EXPECTED_SUSPEND');
     }
   });
 });
 
-describe("gensync.all()", () => {
-  test("success", async () => {
+describe('gensync.all()', () => {
+  test('success', async () => {
     const fn = gensync(function*() {
       const result = yield* gensync.all([doSuccess(), doSuccess()]);
 
@@ -423,7 +423,7 @@ describe("gensync.all()", () => {
     });
   });
 
-  test("error first", async () => {
+  test('error first', async () => {
     const fn = gensync(function*() {
       yield* gensync.all([doError(), doSuccess()]);
     });
@@ -435,7 +435,7 @@ describe("gensync.all()", () => {
     });
   });
 
-  test("error last", async () => {
+  test('error last', async () => {
     const fn = gensync(function*() {
       yield* gensync.all([doSuccess(), doError()]);
     });
@@ -447,7 +447,7 @@ describe("gensync.all()", () => {
     });
   });
 
-  test("empty list", async () => {
+  test('empty list', async () => {
     const fn = gensync(function*() {
       yield* gensync.all([]);
     });
@@ -460,8 +460,8 @@ describe("gensync.all()", () => {
   });
 });
 
-describe("gensync.race()", () => {
-  test("success", async () => {
+describe('gensync.race()', () => {
+  test('success', async () => {
     const fn = gensync(function*() {
       const result = yield* gensync.race([doSuccess(), doError()]);
 
@@ -475,7 +475,7 @@ describe("gensync.race()", () => {
     });
   });
 
-  test("error", async () => {
+  test('error', async () => {
     const fn = gensync(function*() {
       yield* gensync.race([doError(), doSuccess()]);
     });

@@ -1,9 +1,9 @@
 'use strict';
 
-var parse = require('../');
-var test = require('tape');
+const parse = require('../');
+const test = require('tape');
 
-test('numeric short args', function (t) {
+test('numeric short args', (t) => {
 	t.plan(2);
 	t.deepEqual(parse(['-n123']), { n: 123, _: [] });
 	t.deepEqual(
@@ -12,7 +12,7 @@ test('numeric short args', function (t) {
 	);
 });
 
-test('short', function (t) {
+test('short', (t) => {
 	t.deepEqual(
 		parse(['-b']),
 		{ b: true, _: [] },
@@ -46,7 +46,7 @@ test('short', function (t) {
 	t.end();
 });
 
-test('mixed short bool and capture', function (t) {
+test('mixed short bool and capture', (t) => {
 	t.same(
 		parse(['-h', 'localhost', '-fp', '555', 'script.js']),
 		{
@@ -57,7 +57,7 @@ test('mixed short bool and capture', function (t) {
 	t.end();
 });
 
-test('short and long', function (t) {
+test('short and long', (t) => {
 	t.deepEqual(
 		parse(['-h', 'localhost', '-fp', '555', 'script.js']),
 		{

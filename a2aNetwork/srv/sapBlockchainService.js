@@ -75,7 +75,7 @@ class BlockchainService extends BaseService {
                 }
                 
                 // Ensure private key is properly formatted
-                const privateKey = rawKey.startsWith('0x') ? rawKey : '0x' + rawKey;
+                const privateKey = rawKey.startsWith('0x') ? rawKey : `0x${  rawKey}`;
                 
                 // Validate hexadecimal format
                 if (!/^0x[0-9a-fA-F]{64}$/.test(privateKey)) {
@@ -626,7 +626,7 @@ class BlockchainService extends BaseService {
         }
         
         // Validate not zero address
-        if (account === '0x' + '0'.repeat(40)) {
+        if (account === `0x${  '0'.repeat(40)}`) {
             throw new Error('Cannot use zero address as default account');
         }
         

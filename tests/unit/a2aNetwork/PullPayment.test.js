@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const PullPaymentMock = artifacts.require('PullPaymentMock');
 
-contract('PullPayment', function (accounts) {
+contract('PullPayment', (accounts) => {
   const [payer, payee1, payee2] = accounts;
 
   const amount = ether('17');
@@ -13,7 +13,7 @@ contract('PullPayment', function (accounts) {
     this.contract = await PullPaymentMock.new({ value: amount });
   });
 
-  describe('payments', function () {
+  describe('payments', () => {
     it('can record an async payment correctly', async function () {
       await this.contract.callTransfer(payee1, 100, { from: payer });
       expect(await this.contract.payments(payee1)).to.be.bignumber.equal('100');
@@ -35,7 +35,7 @@ contract('PullPayment', function (accounts) {
     });
   });
 
-  describe('withdrawPayments', function () {
+  describe('withdrawPayments', () => {
     it('can withdraw payment', async function () {
       const balanceTracker = await balance.tracker(payee1);
 

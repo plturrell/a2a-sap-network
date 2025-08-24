@@ -80,10 +80,10 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
 
             Promise.all([
-                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/services`),
-                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/data-products`),
-                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/categories`),
-                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/my-listings`)
+                fetch(`${apiBaseUrl}/marketplace/services`),
+                fetch(`${apiBaseUrl}/marketplace/data-products`),
+                fetch(`${apiBaseUrl}/marketplace/categories`),
+                fetch(`${apiBaseUrl}/marketplace/my-listings`)
             ]).then(responses => {
                 return Promise.all(responses.map(r => r.json()));
             }).then(([services, dataProducts, categories, myListings]) => {
@@ -97,7 +97,7 @@ sap.ui.define([
                 this._restoreCart();
                 this.hideLoading();
             }).catch(error => {
-                // console.error("Failed to load marketplace data:", error);
+                // // console.error("Failed to load marketplace data:", error);
                 // Load fallback categories only
                 this.oMarketplaceModel.setProperty("/categories", this._getFallbackCategories());
                 this.hideLoading();
@@ -347,7 +347,7 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
             const oCart = this.oMarketplaceModel.getProperty("/cart");
 
-            blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/checkout`, {
+            fetch(`${apiBaseUrl}/marketplace/checkout`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(oCart)
@@ -371,7 +371,7 @@ sap.ui.define([
                 }
             }).catch(error => {
                 this.hideLoading();
-                // console.error("Checkout failed:", error);
+                // // console.error("Checkout failed:", error);
                 MessageBox.error(this.getResourceBundle().getText("marketplace.checkout.error"));
             });
         },
@@ -471,7 +471,7 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
 
             // Launch service trial environment
-            blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/services/${oService.id}/trial`, {
+            fetch(`${apiBaseUrl}/marketplace/services/${oService.id}/trial`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             }).then(response => response.json()).then(data => {
@@ -482,7 +482,7 @@ sap.ui.define([
                     MessageToast.show(this.getResourceBundle().getText("marketplace.trial.unavailable"));
                 }
             }).catch(error => {
-                // console.error("Failed to launch trial:", error);
+                // // console.error("Failed to launch trial:", error);
                 MessageToast.show(this.getResourceBundle().getText("marketplace.trial.error"));
             });
         },
@@ -527,7 +527,7 @@ sap.ui.define([
                     const oCart = JSON.parse(sSavedCart);
                     this.oMarketplaceModel.setProperty("/cart", oCart);
                 } catch (e) {
-                    // console.error("Failed to restore cart:", e);
+                    // // console.error("Failed to restore cart:", e);
                 }
             }
         },

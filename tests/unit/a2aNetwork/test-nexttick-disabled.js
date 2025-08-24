@@ -23,12 +23,12 @@ asyncHook.addHooks({
 asyncHook.enable();
 asyncHook.disable();
 
-process.nextTick(function (arg1, arg2) {
+process.nextTick((arg1, arg2) => {
   called = true;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
 }, 'a', 'b');
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(called, true);
 });

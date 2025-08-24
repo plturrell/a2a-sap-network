@@ -1,9 +1,9 @@
-var common = require('../common');
-var assert = common.assert;
-var retry = require(common.dir.lib + '/retry');
+const common = require('../common');
+const assert = common.assert;
+const retry = require(`${common.dir.lib  }/retry`);
 
 (function testDefaultValues() {
-  var timeouts = retry.timeouts();
+  const timeouts = retry.timeouts();
 
   assert.equal(timeouts.length, 10);
   assert.equal(timeouts[0], 1000);
@@ -12,8 +12,8 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testDefaultValuesWithRandomize() {
-  var minTimeout = 5000;
-  var timeouts = retry.timeouts({
+  const minTimeout = 5000;
+  const timeouts = retry.timeouts({
     minTimeout: minTimeout,
     randomize: true
   });
@@ -25,45 +25,45 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testPassedTimeoutsAreUsed() {
-  var timeoutsArray = [1000, 2000, 3000];
-  var timeouts = retry.timeouts(timeoutsArray);
+  const timeoutsArray = [1000, 2000, 3000];
+  const timeouts = retry.timeouts(timeoutsArray);
   assert.deepEqual(timeouts, timeoutsArray);
   assert.notStrictEqual(timeouts, timeoutsArray);
 })();
 
 (function testTimeoutsAreWithinBoundaries() {
-  var minTimeout = 1000;
-  var maxTimeout = 10000;
-  var timeouts = retry.timeouts({
+  const minTimeout = 1000;
+  const maxTimeout = 10000;
+  const timeouts = retry.timeouts({
     minTimeout: minTimeout,
     maxTimeout: maxTimeout
   });
-  for (var i = 0; i < timeouts; i++) {
+  for (let i = 0; i < timeouts; i++) {
     assert.ok(timeouts[i] >= minTimeout);
     assert.ok(timeouts[i] <= maxTimeout);
   }
 })();
 
 (function testTimeoutsAreIncremental() {
-  var timeouts = retry.timeouts();
-  var lastTimeout = timeouts[0];
-  for (var i = 0; i < timeouts; i++) {
+  const timeouts = retry.timeouts();
+  let lastTimeout = timeouts[0];
+  for (let i = 0; i < timeouts; i++) {
     assert.ok(timeouts[i] > lastTimeout);
     lastTimeout = timeouts[i];
   }
 })();
 
 (function testTimeoutsAreIncrementalForFactorsLessThanOne() {
-  var timeouts = retry.timeouts({
+  const timeouts = retry.timeouts({
     retries: 3,
     factor: 0.5
   });
 
-  var expected = [250, 500, 1000];
+  const expected = [250, 500, 1000];
   assert.deepEqual(expected, timeouts);
 })();
 
 (function testRetries() {
-  var timeouts = retry.timeouts({retries: 2});
+  const timeouts = retry.timeouts({retries: 2});
   assert.strictEqual(timeouts.length, 2);
 })();

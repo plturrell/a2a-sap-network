@@ -109,10 +109,10 @@ sap.ui.define([
 
             // Remove potentially dangerous characters
             const sanitized = url.trim().replace(/[<>'"]/g, '');
-            
+
             try {
                 const urlObj = new URL(sanitized);
-                
+
                 // Check for allowed protocols
                 const allowedProtocols = ['http:', 'https:'];
                 if (!allowedProtocols.includes(urlObj.protocol)) {
@@ -151,7 +151,7 @@ sap.ui.define([
 
                 validation.isValid = true;
                 validation.sanitizedUrl = sanitized;
-                
+
             } catch (error) {
                 validation.error = `Invalid URL format: ${error.message}`;
             }
@@ -241,7 +241,7 @@ sap.ui.define([
          */
         escapeHTML: function (html) {
             if (!html) return '';
-            
+
             const div = document.createElement('div');
             div.textContent = html;
             return div.innerHTML;
@@ -308,7 +308,7 @@ sap.ui.define([
 
             // Check operation-specific permissions
             const requiredPermissions = this._getCatalogPermissions(operation);
-            const hasPermission = requiredPermissions.every(permission => 
+            const hasPermission = requiredPermissions.every(permission =>
                 this._userHasPermission(user, permission)
             );
 
@@ -386,7 +386,7 @@ sap.ui.define([
             try {
                 // Ensure secure protocol
                 const secureUrl = url.replace(/^ws:\/\//, 'wss://').replace(/^http:\/\//, 'https://');
-                
+
                 // Validate URL
                 const urlValidation = this.validateResourceURL(secureUrl);
                 if (!urlValidation.isValid) {
@@ -395,13 +395,13 @@ sap.ui.define([
                 }
 
                 const ws = new WebSocket(urlValidation.sanitizedUrl);
-                
+
                 // Add security event handlers
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
                         const sanitizedData = this._sanitizeWebSocketData(data);
-                        
+
                         if (options.onmessage) {
                             options.onmessage({
                                 ...event,
@@ -421,7 +421,7 @@ sap.ui.define([
                 };
 
                 return ws;
-                
+
             } catch (error) {
                 Log.error("Failed to create secure WebSocket", error);
                 return null;
@@ -438,7 +438,7 @@ sap.ui.define([
             try {
                 // Ensure secure protocol
                 const secureUrl = url.replace(/^http:\/\//, 'https://');
-                
+
                 // Validate URL
                 const urlValidation = this.validateResourceURL(secureUrl);
                 if (!urlValidation.isValid) {
@@ -447,15 +447,16 @@ sap.ui.define([
                 }
 
                 const eventSource = new EventSource(urlValidation.sanitizedUrl);
-                
+
                 // Add security event handlers
                 const originalAddEventListener = eventSource.addEventListener;
                 eventSource.addEventListener = function(type, listener, options) {
-                    const secureListener = (event) => {
+                    const self = this;
+                    const secureListener = function(event) {
                         try {
                             const data = JSON.parse(event.data);
-                            const sanitizedData = this._sanitizeWebSocketData(data);
-                            
+                            const sanitizedData = self._sanitizeWebSocketData(data);
+
                             listener({
                                 ...event,
                                 data: JSON.stringify(sanitizedData)
@@ -463,13 +464,13 @@ sap.ui.define([
                         } catch (error) {
                             Log.error("Invalid EventSource message format", error);
                         }
-                    }.bind(this);
-                    
+                    };
+
                     originalAddEventListener.call(eventSource, type, secureListener, options);
                 }.bind(this);
 
                 return eventSource;
-                
+
             } catch (error) {
                 Log.error("Failed to create secure EventSource", error);
                 return null;
@@ -503,7 +504,7 @@ sap.ui.define([
         // Private helper methods
         _containsScriptTags: function (str) {
             if (!str || typeof str !== 'string') return false;
-            
+
             const scriptPatterns = [
                 /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
                 /javascript:/gi,
@@ -513,7 +514,7 @@ sap.ui.define([
                 /<embed/gi,
                 /<form/gi
             ];
-            
+
             return scriptPatterns.some(pattern => pattern.test(str));
         },
 
@@ -523,10 +524,10 @@ sap.ui.define([
             }
 
             const sanitized = {};
-            
+
             for (const [key, value] of Object.entries(obj)) {
                 const sanitizedKey = this.sanitizeCatalogData(key);
-                
+
                 if (typeof value === 'string') {
                     sanitized[sanitizedKey] = this.sanitizeCatalogData(value);
                 } else if (typeof value === 'object' && value !== null) {
@@ -545,7 +546,7 @@ sap.ui.define([
             }
 
             const sanitized = {};
-            
+
             for (const [key, value] of Object.entries(data)) {
                 if (typeof value === 'string') {
                     sanitized[key] = this.sanitizeCatalogData(value);
@@ -579,7 +580,7 @@ sap.ui.define([
                 'ValidateCatalogEntries': ['catalog:write'],
                 'PublishCatalogEntries': ['catalog:admin']
             };
-            
+
             return permissionMap[operation] || ['catalog:read'];
         },
 
@@ -589,14 +590,14 @@ sap.ui.define([
 
         _isProduction: function () {
             // Detect production environment
-            return window.location.hostname !== 'localhost' && 
+            return window.location.hostname !== 'localhost' &&
                    window.location.hostname !== '127.0.0.1' &&
                    !window.location.hostname.startsWith('192.168.');
         },
 
         _sendToAuditService: function (logEntry) {
             // In production, implement actual audit service integration
-            console.log("AUDIT:", logEntry);
+            // console.log("AUDIT:", logEntry);
         }
     };
 });

@@ -295,17 +295,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateAnalyticsData(data, oDialog);
                     } catch (error) {
-                        // console.error("Error parsing analytics data:", error);
+                        // // console.error("Error parsing analytics data:", error);
                     }
                 }.bind(this);
 
                 this._analyticsEventSource.onerror = function(error) {
-                    // console.warn("Analytics stream error, falling back to polling:", error);
+                    // // console.warn("Analytics stream error, falling back to polling:", error);
                     this._startAnalyticsPolling(sTaskId, oDialog);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("EventSource not available, using polling fallback");
+                // // console.warn("EventSource not available, using polling fallback");
                 this._startAnalyticsPolling(sTaskId, oDialog);
             }
         },
@@ -357,7 +357,7 @@ sap.ui.define([
                     this._updateAnalyticsData(data, oDialog);
                 }.bind(this),
                 error(error) {
-                    // console.error("Failed to fetch analytics data:", error);
+                    // // console.error("Failed to fetch analytics data:", error);
                 }
             });
         },
@@ -502,12 +502,12 @@ sap.ui.define([
                 });
 
                 this._performanceWs.onclose = function() {
-                    // console.info("Performance WebSocket closed, will reconnect...");
+                    // // console.info("Performance WebSocket closed, will reconnect...");
                     setTimeout(() => this._initializePerformanceWebSocket(), 5000);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("Performance WebSocket not available");
+                // // console.warn("Performance WebSocket not available");
             }
         },
 
@@ -624,7 +624,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
+                    // // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

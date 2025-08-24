@@ -343,7 +343,7 @@ class FinalSecurityScanner {
     }
 
     generateReport() {
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         console.log('📊 FINAL SECURITY SCAN REPORT');
         console.log('='.repeat(60));
 
@@ -366,7 +366,7 @@ class FinalSecurityScanner {
             );
         }
 
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${  '='.repeat(60)}`);
         
         if (percentage >= 95) {
             console.log('🎉 ENTERPRISE DEPLOYMENT READY');

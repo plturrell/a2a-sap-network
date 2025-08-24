@@ -1,28 +1,28 @@
-var common = require('../common');
-var assert = common.assert;
-var fake = common.fake.create();
-var retry = require(common.dir.lib + '/retry');
+const common = require('../common');
+const assert = common.assert;
+const fake = common.fake.create();
+const retry = require(`${common.dir.lib  }/retry`);
 
 (function testReset() {
-  var error = new Error('some error');
-  var operation = retry.operation([1, 2, 3]);
-  var attempts = 0;
+  const error = new Error('some error');
+  const operation = retry.operation([1, 2, 3]);
+  let attempts = 0;
 
-  var finalCallback = fake.callback('finalCallback');
+  const finalCallback = fake.callback('finalCallback');
   fake.expectAnytime(finalCallback);
 
-  var expectedFinishes = 1;
-  var finishes         = 0;
+  let expectedFinishes = 1;
+  let finishes         = 0;
 
-  var fn = function() {
-    operation.attempt(function(currentAttempt) {
+  const fn = function() {
+    operation.attempt((currentAttempt) => {
       attempts++;
       assert.equal(currentAttempt, attempts);
       if (operation.retry(error)) {
         return;
       }
 
-      finishes++
+      finishes++;
       assert.equal(expectedFinishes, finishes);
       assert.strictEqual(attempts, 4);
       assert.strictEqual(operation.attempts(), attempts);
@@ -32,7 +32,7 @@ var retry = require(common.dir.lib + '/retry');
         attempts = 0;
         expectedFinishes++;
         operation.reset();
-        fn()
+        fn();
       } else {
         finalCallback();
       }
@@ -43,10 +43,10 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testErrors() {
-  var operation = retry.operation();
+  const operation = retry.operation();
 
-  var error = new Error('some error');
-  var error2 = new Error('some other error');
+  const error = new Error('some error');
+  const error2 = new Error('some other error');
   operation._errors.push(error);
   operation._errors.push(error2);
 
@@ -54,9 +54,9 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testMainErrorReturnsMostFrequentError() {
-  var operation = retry.operation();
-  var error = new Error('some error');
-  var error2 = new Error('some other error');
+  const operation = retry.operation();
+  const error = new Error('some error');
+  const error2 = new Error('some other error');
 
   operation._errors.push(error);
   operation._errors.push(error2);
@@ -66,9 +66,9 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testMainErrorReturnsLastErrorOnEqualCount() {
-  var operation = retry.operation();
-  var error = new Error('some error');
-  var error2 = new Error('some other error');
+  const operation = retry.operation();
+  const error = new Error('some error');
+  const error2 = new Error('some other error');
 
   operation._errors.push(error);
   operation._errors.push(error2);
@@ -77,10 +77,10 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testAttempt() {
-  var operation = retry.operation();
-  var fn = new Function();
+  const operation = retry.operation();
+  const fn = new Function();
 
-  var timeoutOpts = {
+  const timeoutOpts = {
     timeout: 1,
     cb: function() {}
   };
@@ -92,15 +92,15 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testRetry() {
-  var error = new Error('some error');
-  var operation = retry.operation([1, 2, 3]);
-  var attempts = 0;
+  const error = new Error('some error');
+  const operation = retry.operation([1, 2, 3]);
+  let attempts = 0;
 
-  var finalCallback = fake.callback('finalCallback');
+  const finalCallback = fake.callback('finalCallback');
   fake.expectAnytime(finalCallback);
 
-  var fn = function() {
-    operation.attempt(function(currentAttempt) {
+  const fn = function() {
+    operation.attempt((currentAttempt) => {
       attempts++;
       assert.equal(currentAttempt, attempts);
       if (operation.retry(error)) {
@@ -118,15 +118,15 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testRetryForever() {
-  var error = new Error('some error');
-  var operation = retry.operation({ retries: 3, forever: true });
-  var attempts = 0;
+  const error = new Error('some error');
+  const operation = retry.operation({ retries: 3, forever: true });
+  let attempts = 0;
 
-  var finalCallback = fake.callback('finalCallback');
+  const finalCallback = fake.callback('finalCallback');
   fake.expectAnytime(finalCallback);
 
-  var fn = function() {
-    operation.attempt(function(currentAttempt) {
+  const fn = function() {
+    operation.attempt((currentAttempt) => {
       attempts++;
       assert.equal(currentAttempt, attempts);
       if (attempts !== 6 && operation.retry(error)) {
@@ -144,34 +144,34 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testRetryForeverNoRetries() {
-  var error = new Error('some error');
-  var delay = 50
-  var operation = retry.operation({
+  const error = new Error('some error');
+  const delay = 50;
+  const operation = retry.operation({
     retries: null,
     forever: true,
     minTimeout: delay,
     maxTimeout: delay
   });
 
-  var attempts = 0;
-  var startTime = new Date().getTime();
+  let attempts = 0;
+  const startTime = new Date().getTime();
 
-  var finalCallback = fake.callback('finalCallback');
+  const finalCallback = fake.callback('finalCallback');
   fake.expectAnytime(finalCallback);
 
-  var fn = function() {
-    operation.attempt(function(currentAttempt) {
+  const fn = function() {
+    operation.attempt((currentAttempt) => {
       attempts++;
       assert.equal(currentAttempt, attempts);
       if (attempts !== 4 && operation.retry(error)) {
         return;
       }
 
-      var endTime = new Date().getTime();
-      var minTime = startTime + (delay * 3);
-      var maxTime = minTime + 20 // add a little headroom for code execution time
-      assert(endTime >= minTime)
-      assert(endTime < maxTime)
+      const endTime = new Date().getTime();
+      const minTime = startTime + (delay * 3);
+      const maxTime = minTime + 20; // add a little headroom for code execution time
+      assert(endTime >= minTime);
+      assert(endTime < maxTime);
       assert.strictEqual(attempts, 4);
       assert.strictEqual(operation.attempts(), attempts);
       assert.strictEqual(operation.mainError(), error);
@@ -183,15 +183,15 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testStop() {
-  var error = new Error('some error');
-  var operation = retry.operation([1, 2, 3]);
-  var attempts = 0;
+  const error = new Error('some error');
+  const operation = retry.operation([1, 2, 3]);
+  let attempts = 0;
 
-  var finalCallback = fake.callback('finalCallback');
+  const finalCallback = fake.callback('finalCallback');
   fake.expectAnytime(finalCallback);
 
-  var fn = function() {
-    operation.attempt(function(currentAttempt) {
+  const fn = function() {
+    operation.attempt((currentAttempt) => {
       attempts++;
       assert.equal(currentAttempt, attempts);
 
@@ -214,24 +214,24 @@ var retry = require(common.dir.lib + '/retry');
 })();
 
 (function testMaxRetryTime() {
-  var error = new Error('some error');
-  var maxRetryTime = 30;
-  var operation = retry.operation({
+  const error = new Error('some error');
+  const maxRetryTime = 30;
+  const operation = retry.operation({
       minTimeout: 1,
       maxRetryTime: maxRetryTime
   });
-  var attempts = 0;
+  let attempts = 0;
 
-  var finalCallback = fake.callback('finalCallback');
+  const finalCallback = fake.callback('finalCallback');
   fake.expectAnytime(finalCallback);
 
-  var longAsyncFunction = function (wait, callback){
+  const longAsyncFunction = function (wait, callback){
     setTimeout(callback, wait);
   };
 
-  var fn = function() {
-    var startTime = new Date().getTime();
-    operation.attempt(function(currentAttempt) {
+  const fn = function() {
+    const startTime = new Date().getTime();
+    operation.attempt((currentAttempt) => {
       attempts++;
       assert.equal(currentAttempt, attempts);
 
@@ -240,8 +240,8 @@ var retry = require(common.dir.lib + '/retry');
             return;
         }
       } else {
-        var curTime = new Date().getTime();
-        longAsyncFunction(maxRetryTime - (curTime - startTime - 1), function(){
+        const curTime = new Date().getTime();
+        longAsyncFunction(maxRetryTime - (curTime - startTime - 1), () =>{
           if (operation.retry(error)) {
             assert.fail('timeout should be occurred');
             return;

@@ -201,7 +201,7 @@ sap.ui.define([
                 };
 
                 // In production, this should go to a secure logging service
-                console.info("[AUDIT]", logEntry);
+                // console.info("[AUDIT]", logEntry);
             } catch (e) {
                 // Fail silently to avoid breaking application
             }

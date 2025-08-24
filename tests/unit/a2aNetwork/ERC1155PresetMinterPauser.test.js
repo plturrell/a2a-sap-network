@@ -6,7 +6,7 @@ const { expect } = require('chai');
 
 const ERC1155PresetMinterPauser = artifacts.require('ERC1155PresetMinterPauser');
 
-contract('ERC1155PresetMinterPauser', function (accounts) {
+contract('ERC1155PresetMinterPauser', (accounts) => {
   const [deployer, other] = accounts;
 
   const firstTokenId = new BN('845');
@@ -47,7 +47,7 @@ contract('ERC1155PresetMinterPauser', function (accounts) {
     expect(await this.token.getRoleAdmin(PAUSER_ROLE)).to.equal(DEFAULT_ADMIN_ROLE);
   });
 
-  describe('minting', function () {
+  describe('minting', () => {
     it('deployer can mint tokens', async function () {
       const receipt = await this.token.mint(other, firstTokenId, firstTokenIdAmount, '0x', { from: deployer });
       expectEvent(receipt, 'TransferSingle', {
@@ -69,7 +69,7 @@ contract('ERC1155PresetMinterPauser', function (accounts) {
     });
   });
 
-  describe('batched minting', function () {
+  describe('batched minting', () => {
     it('deployer can batch mint tokens', async function () {
       const receipt = await this.token.mintBatch(
         other,
@@ -94,7 +94,7 @@ contract('ERC1155PresetMinterPauser', function (accounts) {
     });
   });
 
-  describe('pausing', function () {
+  describe('pausing', () => {
     it('deployer can pause', async function () {
       const receipt = await this.token.pause({ from: deployer });
       expectEvent(receipt, 'Paused', { account: deployer });
@@ -137,7 +137,7 @@ contract('ERC1155PresetMinterPauser', function (accounts) {
     });
   });
 
-  describe('burning', function () {
+  describe('burning', () => {
     it('holders can burn their tokens', async function () {
       await this.token.mint(other, firstTokenId, firstTokenIdAmount, '0x', { from: deployer });
 

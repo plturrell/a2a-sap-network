@@ -334,7 +334,7 @@ sap.ui.define([
                 success: function(data) {
                     const oLogModel = oDialog.getModel("logs");
                     if (oLogModel) {
-                        var oCurrentData = oLogModel.getData();
+                        const oCurrentData = oLogModel.getData();
                         oCurrentData.logs = data.logs || [];
                         oCurrentData.filteredLogs = data.logs || [];
                         oCurrentData.totalLines = data.totalLines || 0;
@@ -453,12 +453,12 @@ sap.ui.define([
                 });
 
                 this._deploymentWs.onclose = function() {
-                    console.info("Deployment WebSocket closed, will reconnect...");
+                    // console.info("Deployment WebSocket closed, will reconnect...");
                     setTimeout(() => this._initializeDeploymentWebSocket(), 5000);
                 }.bind(this);
 
             } catch (error) {
-                console.warn("Deployment WebSocket not available");
+                // console.warn("Deployment WebSocket not available");
             }
         },
 
@@ -645,7 +645,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

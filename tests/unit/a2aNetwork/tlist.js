@@ -20,14 +20,14 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
 
-var thriftrw = require('../index');
-var TStruct = thriftrw.TStruct;
-var TListRW = thriftrw.TListRW;
-var TList = thriftrw.TList;
-var TField = thriftrw.TField;
+const thriftrw = require('../index');
+const TStruct = thriftrw.TStruct;
+const TListRW = thriftrw.TListRW;
+const TList = thriftrw.TList;
+const TField = thriftrw.TField;
 
 test('TListRW', testRW.cases(TListRW, [
 

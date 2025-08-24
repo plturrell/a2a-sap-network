@@ -333,7 +333,7 @@ sap.ui.define([
                 }
                 break;
             case "reportType":
-                var aValidTypes = ["SUMMARY", "DETAILED", "PERFORMANCE", "ERRORS"];
+                const aValidTypes = ["SUMMARY", "DETAILED", "PERFORMANCE", "ERRORS"];
                 if (!aValidTypes.includes(sSanitized)) {
                     return { isValid: false, message: "Invalid report type" };
                 }
@@ -401,7 +401,7 @@ sap.ui.define([
                 async: true,
                 success() {
                     // Audit success logging
-                    console.log("Audit trail recorded:", sEventType);
+                    // console.log("Audit trail recorded:", sEventType);
                 },
                 error() {
                     // Fallback audit logging to local storage

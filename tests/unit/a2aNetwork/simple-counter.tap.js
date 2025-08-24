@@ -1,11 +1,11 @@
-var test = require('tap').test;
+const test = require('tap').test;
 
-test("asyncListeners work as expected with process.nextTick", function (t) {
+test('asyncListeners work as expected with process.nextTick', (t) => {
   t.plan(4);
 
   if (!process.addAsyncListener) require('../index.js');
 
-  var active
+  let active
     , cntr   = 0
     ;
 
@@ -17,13 +17,13 @@ test("asyncListeners work as expected with process.nextTick", function (t) {
     }
   );
 
-  process.nextTick(function () {
+  process.nextTick(() => {
     t.equal(active, 1);
-    process.nextTick(function () { t.equal(active, 3); });
+    process.nextTick(() => { t.equal(active, 3); });
   });
 
-  process.nextTick(function () {
+  process.nextTick(() => {
     t.equal(active, 2);
-    process.nextTick(function () { t.equal(active, 4); });
+    process.nextTick(() => { t.equal(active, 4); });
   });
 });

@@ -10,33 +10,33 @@ module.exports = {
         jest: true
     },
     globals: {
-        before: "readonly",
-        after: "readonly",
-        beforeEach: "readonly",
-        afterEach: "readonly",
-        describe: "readonly",
-        it: "readonly",
-        expect: "readonly",
-        assert: "readonly",
-        sinon: "readonly"
+        before: 'readonly',
+        after: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        assert: 'readonly',
+        sinon: 'readonly'
     },
     rules: {
         // Test files often have unused variables for setup
-        "no-unused-vars": "off",
+        'no-unused-vars': 'off',
         
         // Test globals are defined by test framework
-        "no-undef": "off",
+        'no-undef': 'off',
         
         // Test files may have inner function declarations
-        "no-inner-declarations": "off",
+        'no-inner-declarations': 'off',
         
         // Allow prototype builtins in tests
-        "no-prototype-builtins": "off",
+        'no-prototype-builtins': 'off',
         
         // Test assertions might look like constant conditions
-        "no-constant-condition": "off",
+        'no-constant-condition': 'off',
         
         // Allow shadow variables in tests
-        "no-shadow": "off"
+        'no-shadow': 'off'
     }
 };

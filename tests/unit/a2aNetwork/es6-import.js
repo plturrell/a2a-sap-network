@@ -1,3 +1,3 @@
 import {BigInteger} from '../';
 
-console.log(typeof BigInteger)
+console.log(typeof BigInteger);

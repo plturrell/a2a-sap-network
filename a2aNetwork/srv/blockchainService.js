@@ -390,7 +390,7 @@ module.exports = cds.service.impl(async function () {
             
             const result = await blockchainService.deployWorkflow(workflowDefinition);
             
-            return `Workflow deployed successfully`;
+            return 'Workflow deployed successfully';
             
         } catch (error) {
             cds.log('blockchain').error('Failed to deploy workflow:', error);
@@ -602,7 +602,7 @@ module.exports = cds.service.impl(async function () {
     this.hashContext = function(context) {
         const crypto = require('crypto');
         return crypto.createHash('sha256').update(JSON.stringify(context)).digest('hex');
-    }
+    };
     
     // SECURITY FIX: Ethereum address validation helper
     this.isValidEthereumAddress = function(address) {
@@ -611,7 +611,7 @@ module.exports = cds.service.impl(async function () {
         }
         // Check if it matches Ethereum address format (0x followed by 40 hex characters)
         return /^0x[a-fA-F0-9]{40}$/.test(address);
-    }
+    };
 
     // READ handlers for entities
     this.on('READ', 'BlockchainStats', async (req) => {

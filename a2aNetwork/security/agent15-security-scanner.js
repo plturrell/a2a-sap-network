@@ -436,11 +436,11 @@ class Agent15SecurityScanner {
         const lowCount = this.vulnerabilities.filter(isLow).length;
         const warningCount = this.vulnerabilities.filter(isWarning).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 15 ORCHESTRATOR SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
         console.log(`   Critical Issues: ${criticalCount}`);
@@ -456,20 +456,20 @@ class Agent15SecurityScanner {
         
         console.log(`\n🎯 ORCHESTRATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
-            console.log(`   Status: ✅ EXCELLENT - Well secured`);
+            console.log('   Status: ✅ EXCELLENT - Well secured');
         } else if (score >= 70) {
-            console.log(`   Status: ⚠️  GOOD - Minor issues to address`);
+            console.log('   Status: ⚠️  GOOD - Minor issues to address');
         } else if (score >= 50) {
-            console.log(`   Status: ⚠️  FAIR - Several issues need attention`);
+            console.log('   Status: ⚠️  FAIR - Several issues need attention');
         } else {
-            console.log(`   Status: ❌ POOR - Significant security improvements needed`);
+            console.log('   Status: ❌ POOR - Significant security improvements needed');
         }
         
         // Orchestrator-specific findings
         const isOrchestratorIssue = (v) => v.type.startsWith('ORCHESTRATION_');
         const orchestratorIssues = this.vulnerabilities.filter(isOrchestratorIssue);
         if (orchestratorIssues.length > 0) {
-            console.log(`\n🤖 ORCHESTRATOR-SPECIFIC SECURITY FINDINGS:`);
+            console.log('\n🤖 ORCHESTRATOR-SPECIFIC SECURITY FINDINGS:');
             const issueCounts = {};
             const countIssueTypes = (issue) => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
@@ -484,7 +484,7 @@ class Agent15SecurityScanner {
         
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:\n`);
+            console.log('\n🚨 VULNERABILITIES FOUND:\n');
             
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
@@ -509,28 +509,28 @@ class Agent15SecurityScanner {
         }
         
         // Orchestrator security recommendations
-        console.log(`💡 AGENT 15 ORCHESTRATOR SECURITY RECOMMENDATIONS:\n`);
-        console.log(`1. 🔐 Implement workflow validation`);
-        console.log(`   - Validate all workflow configurations before execution`);
-        console.log(`   - Use predefined workflow templates where possible`);
-        console.log(`   - Implement workflow signing for integrity`);
+        console.log('💡 AGENT 15 ORCHESTRATOR SECURITY RECOMMENDATIONS:\n');
+        console.log('1. 🔐 Implement workflow validation');
+        console.log('   - Validate all workflow configurations before execution');
+        console.log('   - Use predefined workflow templates where possible');
+        console.log('   - Implement workflow signing for integrity');
         
-        console.log(`\n2. 🛡️  Secure agent coordination`);
-        console.log(`   - Authenticate all agent-to-agent communications`);
-        console.log(`   - Implement agent capability verification`);
-        console.log(`   - Use secure channels for task distribution`);
+        console.log('\n2. 🛡️  Secure agent coordination');
+        console.log('   - Authenticate all agent-to-agent communications');
+        console.log('   - Implement agent capability verification');
+        console.log('   - Use secure channels for task distribution');
         
-        console.log(`\n3. 🔒 Protect execution pipelines`);
-        console.log(`   - Validate pipeline steps before execution`);
-        console.log(`   - Implement step isolation and sandboxing`);
-        console.log(`   - Monitor pipeline execution for anomalies`);
+        console.log('\n3. 🔒 Protect execution pipelines');
+        console.log('   - Validate pipeline steps before execution');
+        console.log('   - Implement step isolation and sandboxing');
+        console.log('   - Monitor pipeline execution for anomalies');
         
-        console.log(`\n4. ⚡ Implement resilience patterns`);
-        console.log(`   - Enforce circuit breakers at system level`);
-        console.log(`   - Implement proper retry and backoff strategies`);
-        console.log(`   - Monitor consensus mechanisms for manipulation`);
+        console.log('\n4. ⚡ Implement resilience patterns');
+        console.log('   - Enforce circuit breakers at system level');
+        console.log('   - Implement proper retry and backoff strategies');
+        console.log('   - Monitor consensus mechanisms for manipulation');
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('='.repeat(80));
     }

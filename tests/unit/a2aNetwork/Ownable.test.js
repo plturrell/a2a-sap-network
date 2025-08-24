@@ -5,7 +5,7 @@ const { expect } = require('chai');
 
 const Ownable = artifacts.require('$Ownable');
 
-contract('Ownable', function (accounts) {
+contract('Ownable', (accounts) => {
   const [owner, other] = accounts;
 
   beforeEach(async function () {
@@ -16,7 +16,7 @@ contract('Ownable', function (accounts) {
     expect(await this.ownable.owner()).to.equal(owner);
   });
 
-  describe('transfer ownership', function () {
+  describe('transfer ownership', () => {
     it('changes owner after transfer', async function () {
       const receipt = await this.ownable.transferOwnership(other, { from: owner });
       expectEvent(receipt, 'OwnershipTransferred');
@@ -36,7 +36,7 @@ contract('Ownable', function (accounts) {
     });
   });
 
-  describe('renounce ownership', function () {
+  describe('renounce ownership', () => {
     it('loses ownership after renouncement', async function () {
       const receipt = await this.ownable.renounceOwnership({ from: owner });
       expectEvent(receipt, 'OwnershipTransferred');

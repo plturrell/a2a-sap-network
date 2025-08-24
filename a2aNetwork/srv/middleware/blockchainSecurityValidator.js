@@ -252,8 +252,8 @@ class BlockchainSecurityValidator {
                     throw new BlockchainSecurityError('INVALID_SIGNATURE_LENGTH', 'Signature must be 130 characters (65 bytes)');
                 }
                 
-                const r = '0x' + signature.slice(0, 64);
-                const s = '0x' + signature.slice(64, 128);
+                const r = `0x${  signature.slice(0, 64)}`;
+                const s = `0x${  signature.slice(64, 128)}`;
                 const v = parseInt(signature.slice(128, 130), 16);
                 
                 // Create transaction hash for signature verification
@@ -723,7 +723,7 @@ class BlockchainSecurityValidator {
         const metrics = {
             ...this.validationMetrics,
             successRate: this.validationMetrics.totalValidations > 0 
-                ? (this.validationMetrics.successfulValidations / this.validationMetrics.totalValidations * 100).toFixed(2) + '%'
+                ? `${(this.validationMetrics.successfulValidations / this.validationMetrics.totalValidations * 100).toFixed(2)  }%`
                 : '0%',
             suspiciousAddressCount: this.suspiciousAddresses.size,
             cachedTransactions: this.transactionCache.size

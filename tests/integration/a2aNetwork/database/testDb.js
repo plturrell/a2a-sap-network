@@ -36,7 +36,7 @@ async function testDatabase() {
         
         // Check if our table exists
         const tables = await new Promise((resolve, reject) => {
-            connection.exec("SELECT TABLE_NAME FROM TABLES WHERE SCHEMA_NAME = 'A2A_DEV' AND TABLE_NAME LIKE 'A2A_NETWORK%'", (err, result) => {
+            connection.exec('SELECT TABLE_NAME FROM TABLES WHERE SCHEMA_NAME = \'A2A_DEV\' AND TABLE_NAME LIKE \'A2A_NETWORK%\'', (err, result) => {
                 if (err) reject(err);
                 else resolve(result);
             });

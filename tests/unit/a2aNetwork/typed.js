@@ -1,16 +1,16 @@
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var TypedError = require('../typed.js');
+const TypedError = require('../typed.js');
 
-test('a server error', function t(assert) {
-    var ServerError = TypedError({
+test('a server error', (assert) => {
+    const ServerError = TypedError({
         type: 'server.5xx.error',
         message: '{title} server error, status={statusCode}'
     });
 
-    var error = ServerError({
+    const error = ServerError({
         title: 'some title',
         statusCode: 500
     });
@@ -25,13 +25,13 @@ test('a server error', function t(assert) {
     assert.end();
 });
 
-test('a client error', function t(assert) {
-    var ClientError = TypedError({
+test('a client error', (assert) => {
+    const ClientError = TypedError({
         type: 'client.4xx.error',
         message: '{title} client error, status={statusCode}'
     });
 
-    var error2 = ClientError({
+    const error2 = ClientError({
         title: 'some title',
         statusCode: 404
     });

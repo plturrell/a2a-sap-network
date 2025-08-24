@@ -1242,11 +1242,11 @@ sap.ui.define([
 
                 if (data.type === "agent_status_change") {
                     this._throttledDashboardUpdate();
-                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
                     const sStatusMsg = oBundle.getText("msg.agentStatusChanged") || "Agent status changed";
                     MessageToast.show(sStatusMsg.replace("{0}", data.agentName).replace("{1}", data.status));
                 } else if (data.type === "performance_alert") {
-                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
                     const sAlertMsg = oBundle.getText("msg.performanceAlert") || "Performance Alert";
                     MessageToast.show(`${sAlertMsg }: ${ data.message}`);
                 }

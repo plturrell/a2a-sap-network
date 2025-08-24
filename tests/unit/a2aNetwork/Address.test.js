@@ -5,14 +5,14 @@ const Address = artifacts.require('$Address');
 const EtherReceiver = artifacts.require('EtherReceiverMock');
 const CallReceiverMock = artifacts.require('CallReceiverMock');
 
-contract('Address', function (accounts) {
+contract('Address', (accounts) => {
   const [recipient, other] = accounts;
 
   beforeEach(async function () {
     this.mock = await Address.new();
   });
 
-  describe('isContract', function () {
+  describe('isContract', () => {
     it('returns false for account address', async function () {
       expect(await this.mock.$isContract(other)).to.equal(false);
     });
@@ -22,12 +22,12 @@ contract('Address', function (accounts) {
     });
   });
 
-  describe('sendValue', function () {
+  describe('sendValue', () => {
     beforeEach(async function () {
       this.recipientTracker = await balance.tracker(recipient);
     });
 
-    context('when sender contract has no funds', function () {
+    context('when sender contract has no funds', () => {
       it('sends 0 wei', async function () {
         await this.mock.$sendValue(other, 0);
 
@@ -39,7 +39,7 @@ contract('Address', function (accounts) {
       });
     });
 
-    context('when sender contract has funds', function () {
+    context('when sender contract has funds', () => {
       const funds = ether('1');
       beforeEach(async function () {
         await send.ether(other, this.mock.address, funds);
@@ -65,7 +65,7 @@ contract('Address', function (accounts) {
         await expectRevert(this.mock.$sendValue(recipient, funds.addn(1)), 'Address: insufficient balance');
       });
 
-      context('with contract recipient', function () {
+      context('with contract recipient', () => {
         beforeEach(async function () {
           this.target = await EtherReceiver.new();
         });
@@ -90,12 +90,12 @@ contract('Address', function (accounts) {
     });
   });
 
-  describe('functionCall', function () {
+  describe('functionCall', () => {
     beforeEach(async function () {
       this.target = await CallReceiverMock.new();
     });
 
-    context('with valid contract receiver', function () {
+    context('with valid contract receiver', () => {
       it('calls the requested function', async function () {
         const abiEncodedCall = this.target.contract.methods.mockFunction().encodeABI();
 
@@ -167,7 +167,7 @@ contract('Address', function (accounts) {
       });
     });
 
-    context('with non-contract receiver', function () {
+    context('with non-contract receiver', () => {
       it('reverts when address is not a contract', async function () {
         const [recipient] = accounts;
         const abiEncodedCall = this.target.contract.methods.mockFunction().encodeABI();
@@ -177,12 +177,12 @@ contract('Address', function (accounts) {
     });
   });
 
-  describe('functionCallWithValue', function () {
+  describe('functionCallWithValue', () => {
     beforeEach(async function () {
       this.target = await CallReceiverMock.new();
     });
 
-    context('with zero value', function () {
+    context('with zero value', () => {
       it('calls the requested function', async function () {
         const abiEncodedCall = this.target.contract.methods.mockFunction().encodeABI();
 
@@ -194,7 +194,7 @@ contract('Address', function (accounts) {
       });
     });
 
-    context('with non-zero value', function () {
+    context('with non-zero value', () => {
       const amount = ether('1.2');
 
       it('reverts if insufficient sender balance', async function () {
@@ -258,7 +258,7 @@ contract('Address', function (accounts) {
     });
   });
 
-  describe('functionStaticCall', function () {
+  describe('functionStaticCall', () => {
     beforeEach(async function () {
       this.target = await CallReceiverMock.new();
     });
@@ -302,7 +302,7 @@ contract('Address', function (accounts) {
     });
   });
 
-  describe('functionDelegateCall', function () {
+  describe('functionDelegateCall', () => {
     beforeEach(async function () {
       this.target = await CallReceiverMock.new();
     });
@@ -347,7 +347,7 @@ contract('Address', function (accounts) {
     });
   });
 
-  describe('verifyCallResult', function () {
+  describe('verifyCallResult', () => {
     it('returns returndata on success', async function () {
       const returndata = '0x123abc';
       expect(await this.mock.$verifyCallResult(true, returndata, '')).to.equal(returndata);

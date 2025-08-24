@@ -8,7 +8,7 @@ const { mapValues } = require('../../helpers/map-values');
 const EIP712Verifier = artifacts.require('$EIP712Verifier');
 const Clones = artifacts.require('$Clones');
 
-contract('EIP712', function (accounts) {
+contract('EIP712', (accounts) => {
   const [mailTo] = accounts;
 
   const shortName = 'A Name';
@@ -23,7 +23,7 @@ contract('EIP712', function (accounts) {
   ];
 
   for (const [shortOrLong, name, version] of cases) {
-    describe(`with ${shortOrLong} name and version`, function () {
+    describe(`with ${shortOrLong} name and version`, () => {
       beforeEach('deploying', async function () {
         this.eip712 = await EIP712Verifier.new(name, version);
 
@@ -36,14 +36,14 @@ contract('EIP712', function (accounts) {
         this.domainType = domainType(this.domain);
       });
 
-      describe('domain separator', function () {
+      describe('domain separator', () => {
         it('is internally available', async function () {
           const expected = await domainSeparator(this.domain);
 
           expect(await this.eip712.$_domainSeparatorV4()).to.equal(expected);
         });
 
-        it("can be rebuilt using EIP-5267's eip712Domain", async function () {
+        it('can be rebuilt using EIP-5267\'s eip712Domain', async function () {
           const rebuildDomain = await getDomain(this.eip712);
           expect(mapValues(rebuildDomain, String)).to.be.deep.equal(mapValues(this.domain, String));
         });

@@ -201,7 +201,7 @@ class ConfigValidator {
      */
     reportResults() {
         console.log('📊 Configuration Validation Results:');
-        console.log('=' + '='.repeat(50));
+        console.log(`=${  '='.repeat(50)}`);
         
         if (this.errors.length === 0 && this.warnings.length === 0) {
             console.log('✅ All configuration checks passed!\n');
@@ -218,7 +218,7 @@ class ConfigValidator {
             this.warnings.forEach(warning => console.log(`  • ${warning}`));
         }
         
-        console.log('\n' + '='.repeat(51));
+        console.log(`\n${  '='.repeat(51)}`);
         
         if (this.errors.length > 0) {
             console.log('❌ Configuration validation FAILED');
@@ -236,11 +236,11 @@ class ConfigValidator {
         const crypto = require('crypto');
         
         console.log('🔐 Generated Secure Configuration Values:');
-        console.log('=' + '='.repeat(40));
+        console.log(`=${  '='.repeat(40)}`);
         console.log(`JWT_SECRET=${crypto.randomBytes(32).toString('base64')}`);
         console.log(`SESSION_SECRET=${crypto.randomBytes(32).toString('base64')}`);
         console.log(`REQUEST_SIGNING_SECRET=${crypto.randomBytes(32).toString('base64')}`);
-        console.log('=' + '='.repeat(41));
+        console.log(`=${  '='.repeat(41)}`);
         console.log('⚠️  Store these securely and never commit to version control!\n');
     }
 }

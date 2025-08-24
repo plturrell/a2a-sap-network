@@ -20,23 +20,23 @@
 
 'use strict';
 
-var test = require('tape');
-var fs = require('fs');
-var path = require('path');
-var Buffer = require('buffer').Buffer;
+const test = require('tape');
+const fs = require('fs');
+const path = require('path');
+const Buffer = require('buffer').Buffer;
 
-var Thrift = require('../thrift').Thrift;
-var ThriftUnrecognizedException = require('../unrecognized-exception')
+const Thrift = require('../thrift').Thrift;
+const ThriftUnrecognizedException = require('../unrecognized-exception')
     .ThriftUnrecognizedException;
 
-var sourceV1 = fs.readFileSync(path.join(__dirname, 'unrecognized-exception-v1.thrift'), 'ascii');
-var sourceV2 = fs.readFileSync(path.join(__dirname, 'unrecognized-exception-v2.thrift'), 'ascii');
-var thriftV1 = new Thrift({source: sourceV1});
-var thriftV2 = new Thrift({source: sourceV2});
+const sourceV1 = fs.readFileSync(path.join(__dirname, 'unrecognized-exception-v1.thrift'), 'ascii');
+const sourceV2 = fs.readFileSync(path.join(__dirname, 'unrecognized-exception-v2.thrift'), 'ascii');
+const thriftV1 = new Thrift({source: sourceV1});
+const thriftV2 = new Thrift({source: sourceV2});
 
-test('Exception RW', function t(assert) {
+test('Exception RW', (assert) => {
 
-    var err = new Error('Bogus Error: Voldemort');
+    const err = new Error('Bogus Error: Voldemort');
     err.string = 'ThriftException';
     err.bool = true;
     err.byte = 0x00;
@@ -55,13 +55,13 @@ test('Exception RW', function t(assert) {
         boollist: [true, true, false]
     };
 
-    var v2Result = new thriftV2.BogusService.bogus.result.Constructor({
+    const v2Result = new thriftV2.BogusService.bogus.result.Constructor({
         bogusErr: err
     });
 
-    var v2Buf = thriftV2.BogusService.bogus.result.toBuffer(v2Result);
+    const v2Buf = thriftV2.BogusService.bogus.result.toBuffer(v2Result);
 
-    var v1Result = thriftV1.BogusService.bogus.result.fromBuffer(v2Buf);
+    const v1Result = thriftV1.BogusService.bogus.result.fromBuffer(v2Buf);
 
     assert.deepEqual(v1Result, {
         success: null,

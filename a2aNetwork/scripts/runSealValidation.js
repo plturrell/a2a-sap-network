@@ -16,7 +16,7 @@ console.log('Environment Configuration:');
 console.log(`  NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`  XAI_MODEL: ${process.env.XAI_MODEL}`);
 console.log(`  XAI_BASE_URL: ${process.env.XAI_BASE_URL}`);
-console.log(`  API_KEY: ${process.env.XAI_API_KEY ? '***' + process.env.XAI_API_KEY.slice(-4) : 'NOT SET'}`);
+console.log(`  API_KEY: ${process.env.XAI_API_KEY ? `***${  process.env.XAI_API_KEY.slice(-4)}` : 'NOT SET'}`);
 console.log('');
 
 // Function to run tests

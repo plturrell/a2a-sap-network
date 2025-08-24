@@ -1,10 +1,10 @@
-var test = require('tape');
-var v = require('es-value-fixtures');
-var forEach = require('for-each');
+const test = require('tape');
+const v = require('es-value-fixtures');
+const forEach = require('for-each');
 
-var inspect = require('../');
+const inspect = require('../');
 
-test('negative zero', function (t) {
+test('negative zero', (t) => {
     t.equal(inspect(0), '0', 'inspect(0) === "0"');
     t.equal(inspect(Object(0)), 'Object(0)', 'inspect(Object(0)) === "Object(0)"');
 
@@ -14,22 +14,22 @@ test('negative zero', function (t) {
     t.end();
 });
 
-test('numericSeparator', function (t) {
-    forEach(v.nonBooleans, function (nonBoolean) {
+test('numericSeparator', (t) => {
+    forEach(v.nonBooleans, (nonBoolean) => {
         t['throws'](
-            function () { inspect(true, { numericSeparator: nonBoolean }); },
+            () => { inspect(true, { numericSeparator: nonBoolean }); },
             TypeError,
-            inspect(nonBoolean) + ' is not a boolean'
+            `${inspect(nonBoolean)  } is not a boolean`
         );
     });
 
-    t.test('3 digit numbers', function (st) {
-        var failed = false;
-        for (var i = -999; i < 1000; i += 1) {
-            var actual = inspect(i);
-            var actualSepNo = inspect(i, { numericSeparator: false });
-            var actualSepYes = inspect(i, { numericSeparator: true });
-            var expected = String(i);
+    t.test('3 digit numbers', (st) => {
+        let failed = false;
+        for (let i = -999; i < 1000; i += 1) {
+            const actual = inspect(i);
+            const actualSepNo = inspect(i, { numericSeparator: false });
+            const actualSepYes = inspect(i, { numericSeparator: true });
+            const expected = String(i);
             if (actual !== expected || actualSepNo !== expected || actualSepYes !== expected) {
                 failed = true;
                 t.equal(actual, expected);

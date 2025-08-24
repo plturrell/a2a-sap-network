@@ -20,12 +20,12 @@ module.exports = function shouldBehaveLikeClone(createClone) {
     });
   };
 
-  describe('initialization without parameters', function () {
-    describe('non payable', function () {
+  describe('initialization without parameters', () => {
+    describe('non payable', () => {
       const expectedInitializedValue = 10;
       const initializeData = new DummyImplementation('').contract.methods['initializeNonPayable()']().encodeABI();
 
-      describe('when not sending balance', function () {
+      describe('when not sending balance', () => {
         beforeEach('creating proxy', async function () {
           this.proxy = (await createClone(this.implementation, initializeData)).address;
         });
@@ -36,7 +36,7 @@ module.exports = function shouldBehaveLikeClone(createClone) {
         });
       });
 
-      describe('when sending some balance', function () {
+      describe('when sending some balance', () => {
         const value = 10e5;
 
         it('reverts', async function () {
@@ -45,11 +45,11 @@ module.exports = function shouldBehaveLikeClone(createClone) {
       });
     });
 
-    describe('payable', function () {
+    describe('payable', () => {
       const expectedInitializedValue = 100;
       const initializeData = new DummyImplementation('').contract.methods['initializePayable()']().encodeABI();
 
-      describe('when not sending balance', function () {
+      describe('when not sending balance', () => {
         beforeEach('creating proxy', async function () {
           this.proxy = (await createClone(this.implementation, initializeData)).address;
         });
@@ -60,7 +60,7 @@ module.exports = function shouldBehaveLikeClone(createClone) {
         });
       });
 
-      describe('when sending some balance', function () {
+      describe('when sending some balance', () => {
         const value = 10e5;
 
         beforeEach('creating proxy', async function () {
@@ -75,14 +75,14 @@ module.exports = function shouldBehaveLikeClone(createClone) {
     });
   });
 
-  describe('initialization with parameters', function () {
-    describe('non payable', function () {
+  describe('initialization with parameters', () => {
+    describe('non payable', () => {
       const expectedInitializedValue = 10;
       const initializeData = new DummyImplementation('').contract.methods
         .initializeNonPayableWithValue(expectedInitializedValue)
         .encodeABI();
 
-      describe('when not sending balance', function () {
+      describe('when not sending balance', () => {
         beforeEach('creating proxy', async function () {
           this.proxy = (await createClone(this.implementation, initializeData)).address;
         });
@@ -93,7 +93,7 @@ module.exports = function shouldBehaveLikeClone(createClone) {
         });
       });
 
-      describe('when sending some balance', function () {
+      describe('when sending some balance', () => {
         const value = 10e5;
 
         it('reverts', async function () {
@@ -102,13 +102,13 @@ module.exports = function shouldBehaveLikeClone(createClone) {
       });
     });
 
-    describe('payable', function () {
+    describe('payable', () => {
       const expectedInitializedValue = 42;
       const initializeData = new DummyImplementation('').contract.methods
         .initializePayableWithValue(expectedInitializedValue)
         .encodeABI();
 
-      describe('when not sending balance', function () {
+      describe('when not sending balance', () => {
         beforeEach('creating proxy', async function () {
           this.proxy = (await createClone(this.implementation, initializeData)).address;
         });
@@ -119,7 +119,7 @@ module.exports = function shouldBehaveLikeClone(createClone) {
         });
       });
 
-      describe('when sending some balance', function () {
+      describe('when sending some balance', () => {
         const value = 10e5;
 
         beforeEach('creating proxy', async function () {

@@ -1,13 +1,13 @@
-"use strict";
+'use strict';
 
 const lua = require('../src/lua.js');
 const lauxlib = require('../src/lauxlib.js');
 const lualib = require('../src/lualib.js');
-const {to_luastring} = require("../src/fengaricore.js");
+const {to_luastring} = require('../src/fengaricore.js');
 
 const inttable2array = function(t) {
-    let a = [];
-    t.strong.forEach(function (v, k) {
+    const a = [];
+    t.strong.forEach((v, k) => {
         if (v.key.ttisnumber())
             a[k - 1] = v.value;
     });
@@ -15,10 +15,10 @@ const inttable2array = function(t) {
 };
 
 test('table.concat', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return table.concat({1, 2, 3, 4, 5, 6, 7}, ",", 3, 5)
     `;
     {
@@ -27,15 +27,15 @@ test('table.concat', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("3,4,5");
+    expect(lua.lua_tojsstring(L, -1)).toBe('3,4,5');
 });
 
 
 test('table.pack', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return table.pack(1, 2, 3)
     `;
     {
@@ -52,10 +52,10 @@ test('table.pack', () => {
 
 
 test('table.unpack', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return table.unpack({1, 2, 3, 4, 5}, 2, 4)
     `;
     {
@@ -71,10 +71,10 @@ test('table.unpack', () => {
 
 
 test('table.insert', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {1, 3, 4}
         table.insert(t, 5)
         table.insert(t, 2, 2)
@@ -95,10 +95,10 @@ test('table.insert', () => {
 
 
 test('table.remove', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {1, 2, 3, 3, 4, 4}
         table.remove(t)
         table.remove(t, 3)
@@ -119,10 +119,10 @@ test('table.remove', () => {
 
 
 test('table.move', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t1 = {3, 4, 5}
         local t2 = {1, 2, nil, nil, nil, 6}
         return table.move(t1, 1, #t1, 3, t2)
@@ -142,10 +142,10 @@ test('table.move', () => {
 
 
 test('table.sort (<)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {3, 1, 5, ['just'] = 'tofuckitup', 2, 4}
         table.sort(t)
         return t
@@ -162,10 +162,10 @@ test('table.sort (<)', () => {
 
 
 test('table.sort with cmp function', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {3, 1, 5, ['just'] = 'tofuckitup', 2, 4}
         table.sort(t, function (a, b)
             return a > b

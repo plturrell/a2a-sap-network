@@ -1,13 +1,13 @@
-var inspect = require('../');
-var test = require('tape');
+const inspect = require('../');
+const test = require('tape');
 
-test('circular', function (t) {
+test('circular', (t) => {
     t.plan(2);
-    var obj = { a: 1, b: [3, 4] };
+    const obj = { a: 1, b: [3, 4] };
     obj.c = obj;
     t.equal(inspect(obj), '{ a: 1, b: [ 3, 4 ], c: [Circular] }');
 
-    var double = {};
+    const double = {};
     double.a = [double];
     double.b = {};
     double.b.inner = double.b;

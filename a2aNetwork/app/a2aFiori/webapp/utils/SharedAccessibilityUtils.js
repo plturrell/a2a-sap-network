@@ -312,9 +312,9 @@ sap.ui.define([
 
             // Create accessible error message
             const $errorMessage = $(`
-                <div id="${errorId}" 
-                     class="a2a-error-message" 
-                     role="alert" 
+                <div id="${errorId}"
+                     class="a2a-error-message"
+                     role="alert"
                      aria-live="assertive"
                      tabindex="0">
                     <span class="a2a-error-icon" aria-hidden="true">⚠️</span>

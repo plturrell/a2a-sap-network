@@ -33,7 +33,7 @@ const TEST_CONFIG = {
 describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
     this.timeout(30000);
 
-    before(async function() {
+    before(async () => {
         // Set test environment variables
         Object.assign(process.env, TEST_CONFIG);
         
@@ -58,7 +58,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         await new Promise(resolve => setTimeout(resolve, 2000));
     });
 
-    after(async function() {
+    after(async () => {
         // Cleanup
         if (server) {
             server.close();
@@ -80,8 +80,8 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         }
     });
 
-    describe('1. Core Launchpad Functionality', function() {
-        it('should serve the main launchpad page', async function() {
+    describe('1. Core Launchpad Functionality', () => {
+        it('should serve the main launchpad page', async () => {
             const response = await request(app)
                 .get('/')
                 .expect(200);
@@ -91,7 +91,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.text).to.include('A2A Network Management Platform');
         });
 
-        it('should load launchpad with proper SAP UI5 configuration', async function() {
+        it('should load launchpad with proper SAP UI5 configuration', async () => {
             const response = await request(app)
                 .get('/')
                 .expect(200);
@@ -103,7 +103,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.text).to.include('enableSearch: true');
         });
 
-        it('should include all required tile groups', async function() {
+        it('should include all required tile groups', async () => {
             const response = await request(app)
                 .get('/api/launchpad/config')
                 .expect(200);
@@ -118,8 +118,8 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('2. Authentication & Security', function() {
-        it('should handle development authentication', async function() {
+    describe('2. Authentication & Security', () => {
+        it('should handle development authentication', async () => {
             const response = await request(app)
                 .post('/auth/login')
                 .send({
@@ -133,7 +133,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body.user.email).to.equal('test@a2a.network');
         });
 
-        it('should reject invalid authentication', async function() {
+        it('should reject invalid authentication', async () => {
             await request(app)
                 .post('/auth/login')
                 .send({
@@ -143,7 +143,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
                 .expect(401);
         });
 
-        it('should validate JWT tokens', async function() {
+        it('should validate JWT tokens', async () => {
             // First login to get token
             const loginResponse = await request(app)
                 .post('/auth/login')
@@ -162,10 +162,10 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('3. Tile Data API', function() {
+    describe('3. Tile Data API', () => {
         let authToken;
 
-        before(async function() {
+        before(async () => {
             const loginResponse = await request(app)
                 .post('/auth/login')
                 .send({
@@ -175,7 +175,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             authToken = loginResponse.body.token;
         });
 
-        it('should return tile data for all tiles', async function() {
+        it('should return tile data for all tiles', async () => {
             const response = await request(app)
                 .get('/api/tiles/data')
                 .set('Authorization', `Bearer ${authToken}`)
@@ -187,7 +187,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body).to.have.property('blockchain_tile');
         });
 
-        it('should return specific tile data', async function() {
+        it('should return specific tile data', async () => {
             const response = await request(app)
                 .get('/api/tiles/overview_tile/data')
                 .set('Authorization', `Bearer ${authToken}`)
@@ -198,7 +198,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body).to.have.property('info');
         });
 
-        it('should handle caching headers correctly', async function() {
+        it('should handle caching headers correctly', async () => {
             const response = await request(app)
                 .get('/api/tiles/agents_tile/data')
                 .set('Authorization', `Bearer ${authToken}`)
@@ -217,11 +217,11 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('4. Personalization Service', function() {
+    describe('4. Personalization Service', () => {
         let authToken;
         const userId = 'test-user-123';
 
-        before(async function() {
+        before(async () => {
             const loginResponse = await request(app)
                 .post('/auth/login')
                 .send({
@@ -231,7 +231,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             authToken = loginResponse.body.token;
         });
 
-        it('should save user tile configuration', async function() {
+        it('should save user tile configuration', async () => {
             const tileConfig = {
                 position: 5,
                 isVisible: true,
@@ -253,7 +253,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body).to.have.property('success', true);
         });
 
-        it('should retrieve user tile configuration', async function() {
+        it('should retrieve user tile configuration', async () => {
             const response = await request(app)
                 .get(`/api/personalization/tiles?userId=${userId}`)
                 .set('Authorization', `Bearer ${authToken}`)
@@ -266,7 +266,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(overviewTile.size).to.equal('2x2');
         });
 
-        it('should save user preferences', async function() {
+        it('should save user preferences', async () => {
             const preferences = {
                 theme: 'sap_horizon_dark',
                 layoutMode: 'grid',
@@ -287,7 +287,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body).to.have.property('success', true);
         });
 
-        it('should export user configuration', async function() {
+        it('should export user configuration', async () => {
             const response = await request(app)
                 .get(`/api/personalization/export?userId=${userId}`)
                 .set('Authorization', `Bearer ${authToken}`)
@@ -299,10 +299,10 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('5. Caching System', function() {
+    describe('5. Caching System', () => {
         let authToken;
 
-        before(async function() {
+        before(async () => {
             const loginResponse = await request(app)
                 .post('/auth/login')
                 .send({
@@ -312,7 +312,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             authToken = loginResponse.body.token;
         });
 
-        it('should cache API responses', async function() {
+        it('should cache API responses', async () => {
             // Clear cache first
             await request(app)
                 .delete('/api/cache/clear')
@@ -336,7 +336,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response2.headers['x-cache']).to.equal('HIT');
         });
 
-        it('should return cache statistics', async function() {
+        it('should return cache statistics', async () => {
             const response = await request(app)
                 .get('/api/cache/stats')
                 .set('Authorization', `Bearer ${authToken}`)
@@ -349,8 +349,8 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('6. Health & Monitoring', function() {
-        it('should return comprehensive health status', async function() {
+    describe('6. Health & Monitoring', () => {
+        it('should return comprehensive health status', async () => {
             const response = await request(app)
                 .get('/health')
                 .expect(200);
@@ -366,7 +366,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body.services).to.have.property('telemetry');
         });
 
-        it('should return metrics endpoint', async function() {
+        it('should return metrics endpoint', async () => {
             const response = await request(app)
                 .get('/metrics')
                 .expect(200);
@@ -375,7 +375,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.text || response.body).to.exist;
         });
 
-        it('should handle graceful shutdown', async function() {
+        it('should handle graceful shutdown', async () => {
             // Test that the server can handle shutdown signals properly
             // This is more of a structural test
             expect(process.listeners('SIGTERM').length).to.be.greaterThan(0);
@@ -383,21 +383,21 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('7. Error Handling & Resilience', function() {
-        it('should handle database connection failures gracefully', async function() {
+    describe('7. Error Handling & Resilience', () => {
+        it('should handle database connection failures gracefully', async () => {
             // Test error handling when database is unavailable
             const response = await request(app)
                 .get('/api/tiles/data')
                 .expect(200); // Should still work with fallback
         });
 
-        it('should handle invalid tile requests', async function() {
+        it('should handle invalid tile requests', async () => {
             await request(app)
                 .get('/api/tiles/nonexistent_tile/data')
                 .expect(404);
         });
 
-        it('should validate request parameters', async function() {
+        it('should validate request parameters', async () => {
             await request(app)
                 .post('/api/personalization/tiles/overview_tile')
                 .send({
@@ -408,8 +408,8 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('8. Performance & Load', function() {
-        it('should handle concurrent requests efficiently', async function() {
+    describe('8. Performance & Load', () => {
+        it('should handle concurrent requests efficiently', async () => {
             const requests = [];
             const concurrentUsers = 10;
             
@@ -429,7 +429,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             });
         });
 
-        it('should respond within acceptable time limits', async function() {
+        it('should respond within acceptable time limits', async () => {
             const start = Date.now();
             
             await request(app)
@@ -441,8 +441,8 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('9. Security Features', function() {
-        it('should include security headers', async function() {
+    describe('9. Security Features', () => {
+        it('should include security headers', async () => {
             const response = await request(app)
                 .get('/')
                 .expect(200);
@@ -452,7 +452,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.headers).to.have.property('x-xss-protection');
         });
 
-        it('should sanitize user inputs', async function() {
+        it('should sanitize user inputs', async () => {
             const maliciousInput = '<script>alert("xss")</script>';
             
             const response = await request(app)
@@ -468,8 +468,8 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
         });
     });
 
-    describe('10. SAP Standards Compliance', function() {
-        it('should follow SAP Fiori design guidelines', async function() {
+    describe('10. SAP Standards Compliance', () => {
+        it('should follow SAP Fiori design guidelines', async () => {
             const response = await request(app)
                 .get('/')
                 .expect(200);
@@ -480,7 +480,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.text).to.include('sap.ushell');
         });
 
-        it('should support proper internationalization', async function() {
+        it('should support proper internationalization', async () => {
             const response = await request(app)
                 .get('/api/i18n/en.json')
                 .expect(200);
@@ -489,7 +489,7 @@ describe('A2A Network Launchpad - Comprehensive Integration Tests', function() {
             expect(response.body).to.have.property('LAUNCHPAD_TITLE');
         });
 
-        it('should provide accessibility features', async function() {
+        it('should provide accessibility features', async () => {
             const response = await request(app)
                 .get('/')
                 .expect(200);

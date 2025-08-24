@@ -1,9 +1,9 @@
 sap.ui.define([
-	"sap/ui/test/Opa5"
-], function (Opa5) {
-	"use strict";
+	'sap/ui/test/Opa5'
+], (Opa5) => {
+	'use strict';
 
-	return Opa5.extend("com.sap.a2a.portal.test.integration.arrangements.Startup", {
+	return Opa5.extend('com.sap.a2a.portal.test.integration.arrangements.Startup', {
 		
 		iStartMyApp: function (oOptions) {
 			oOptions = oOptions || {};
@@ -11,7 +11,7 @@ sap.ui.define([
 			// Start the app with a minimal delay for better test stability
 			this.iStartMyUIComponent({
 				componentConfig: {
-					name: "com.sap.a2a.portal",
+					name: 'com.sap.a2a.portal',
 					async: true,
 					manifest: true
 				},
@@ -33,7 +33,7 @@ sap.ui.define([
 			// Configure for mobile viewport
 			this.iStartMyUIComponent({
 				componentConfig: {
-					name: "com.sap.a2a.portal",
+					name: 'com.sap.a2a.portal',
 					async: true,
 					manifest: true
 				},
@@ -51,7 +51,7 @@ sap.ui.define([
 			// Configure for tablet viewport
 			this.iStartMyUIComponent({
 				componentConfig: {
-					name: "com.sap.a2a.portal",
+					name: 'com.sap.a2a.portal',
 					async: true,
 					manifest: true
 				},

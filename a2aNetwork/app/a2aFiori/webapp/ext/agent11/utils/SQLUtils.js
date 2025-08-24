@@ -15,14 +15,14 @@ sap.ui.define([
          */
         validateSQL: function (sql, dialect, options) {
             options = options || {};
-            
+
             // Use SecurityUtils for comprehensive security validation
             const securityValidation = SecurityUtils.validateSQL(sql, options.parameters, {
                 allowLiterals: options.allowLiterals || false,
                 allowedOperations: options.allowedOperations,
                 minSecurityScore: options.minSecurityScore || 70
             });
-            
+
             if (!securityValidation.isValid) {
                 return {
                     isValid: false,
@@ -91,7 +91,7 @@ sap.ui.define([
          */
         sanitizeSQL: function (sql) {
             if (!sql) return "";
-            
+
             // Use SecurityUtils for comprehensive sanitization
             const validation = SecurityUtils.validateSQL(sql);
             return validation.sanitized || "";
@@ -151,13 +151,13 @@ sap.ui.define([
             }
 
             // Check for SELECT without FROM (except for certain cases)
-            if (lowerSQL.includes('select') && !lowerSQL.includes('from') && 
+            if (lowerSQL.includes('select') && !lowerSQL.includes('from') &&
                 !lowerSQL.includes('dual') && dialect !== 'HANA') {
                 warnings.push("SELECT statement without FROM clause");
             }
 
             // Check for missing WHERE clause in UPDATE/DELETE
-            if ((lowerSQL.includes('update') || lowerSQL.includes('delete')) && 
+            if ((lowerSQL.includes('update') || lowerSQL.includes('delete')) &&
                 !lowerSQL.includes('where')) {
                 warnings.push("UPDATE/DELETE without WHERE clause - this affects all rows");
             }
@@ -450,45 +450,45 @@ sap.ui.define([
                 values: pattern.values ? SecurityUtils.sanitizeSQLParameter(pattern.values) : '',
                 setClause: pattern.setClause ? SecurityUtils.sanitizeSQLParameter(pattern.setClause) : ''
             };
-            
+
             let generatedSQL = "";
-            
+
             switch (sanitizedPattern.type) {
                 case 'SELECT_ALL':
                     generatedSQL = "SELECT * FROM ?";
                     break;
-                    
+
                 case 'SELECT_WHERE':
                     generatedSQL = "SELECT ? FROM ? WHERE ?";
                     break;
-                    
+
                 case 'COUNT':
                     generatedSQL = "SELECT COUNT(*) FROM ?";
                     break;
-                    
+
                 case 'INSERT':
                     generatedSQL = "INSERT INTO ? (?) VALUES (?)";
                     break;
-                    
+
                 case 'UPDATE':
                     generatedSQL = "UPDATE ? SET ? WHERE ?";
                     break;
-                    
+
                 case 'DELETE':
                     generatedSQL = "DELETE FROM ? WHERE ?";
                     break;
-                    
+
                 default:
                     return "";
             }
-            
+
             // Validate the generated SQL
             const validation = SecurityUtils.validateSQL(generatedSQL);
             if (!validation.isValid) {
                 Log.error("Generated SQL failed validation", validation.errors);
                 return "";
             }
-            
+
             return validation.sanitized;
         },
 
@@ -686,11 +686,11 @@ sap.ui.define([
             // Normalize SQL for fingerprinting
             const normalized = sql
                 .replace(/\s+/g, ' ')
-                .replace(/'/[^']*'/g, "'?'")
+                .replace(/'[^']*'/g, "'?'")
                 .replace(/\d+/g, '?')
                 .toLowerCase()
                 .trim();
-            
+
             // Simple hash function
             let hash = 0;
             for (let i = 0; i < normalized.length; i++) {
@@ -708,13 +708,13 @@ sap.ui.define([
         _extractEnhancedEntities: function(query, context) {
             const entities = [];
             const lowerQuery = query.toLowerCase();
-            
+
             // Enhanced table pattern recognition
             const tablePatterns = [
                 /(?:from|in|on|table)\s+([a-z_][a-z0-9_]*)/gi,
                 /(?:users?|customers?|orders?|products?|employees?|sales?|invoices?|payments?)/gi
             ];
-            
+
             const processTablePattern = (pattern) => {
                 let match;
                 while ((match = pattern.exec(query)) !== null) {
@@ -781,7 +781,7 @@ sap.ui.define([
             const extractValue = (e) => e.value;
             const tables = entities.filter(isTableEntity).map(extractValue);
             const columns = entities.filter(isColumnEntity).map(extractValue);
-            
+
             if (!tables.length) {
                 return templates;
             }
@@ -796,7 +796,7 @@ sap.ui.define([
                         parameters: {},
                         description: 'Basic SELECT query'
                     });
-                    
+
                     if (columns.length > 0) {
                         templates.push({
                             sql: "SELECT " + columns[0] + " FROM " + primaryTable + " WHERE " + columns[0] + " = ?",
@@ -814,7 +814,7 @@ sap.ui.define([
                         parameters: {},
                         description: 'Count all records'
                     });
-                    
+
                     if (columns.length > 0) {
                         templates.push({
                             sql: "SELECT COUNT(*) FROM " + primaryTable + " WHERE " + columns[0] + " = ?",
@@ -889,7 +889,7 @@ sap.ui.define([
          */
         _sanitizePattern: function(pattern) {
             const errors = [];
-            
+
             if (!pattern || typeof pattern !== 'object') {
                 return {
                     isValid: false,
@@ -933,7 +933,7 @@ sap.ui.define([
                 },
                 'SELECT_WHERE': {
                     template: 'SELECT :columns FROM :table WHERE :condition',
-                    parameters: { 
+                    parameters: {
                         columns: pattern.columns || '*',
                         table: pattern.table,
                         condition: pattern.condition || '1=1'

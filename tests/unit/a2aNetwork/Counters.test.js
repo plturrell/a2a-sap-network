@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const Counters = artifacts.require('$Counters');
 
-contract('Counters', function () {
+contract('Counters', () => {
   beforeEach(async function () {
     this.counter = await Counters.new();
   });
@@ -13,8 +13,8 @@ contract('Counters', function () {
     expect(await this.counter.$current(0)).to.be.bignumber.equal('0');
   });
 
-  describe('increment', function () {
-    context('starting from 0', function () {
+  describe('increment', () => {
+    context('starting from 0', () => {
       it('increments the current value by one', async function () {
         await this.counter.$increment(0);
         expect(await this.counter.$current(0)).to.be.bignumber.equal('1');
@@ -30,12 +30,12 @@ contract('Counters', function () {
     });
   });
 
-  describe('decrement', function () {
+  describe('decrement', () => {
     beforeEach(async function () {
       await this.counter.$increment(0);
       expect(await this.counter.$current(0)).to.be.bignumber.equal('1');
     });
-    context('starting from 1', function () {
+    context('starting from 1', () => {
       it('decrements the current value by one', async function () {
         await this.counter.$decrement(0);
         expect(await this.counter.$current(0)).to.be.bignumber.equal('0');
@@ -46,7 +46,7 @@ contract('Counters', function () {
         await expectRevert(this.counter.$decrement(0), 'Counter: decrement overflow');
       });
     });
-    context('after incremented to 3', function () {
+    context('after incremented to 3', () => {
       it('can be called multiple times', async function () {
         await this.counter.$increment(0);
         await this.counter.$increment(0);
@@ -62,15 +62,15 @@ contract('Counters', function () {
     });
   });
 
-  describe('reset', function () {
-    context('null counter', function () {
+  describe('reset', () => {
+    context('null counter', () => {
       it('does not throw', async function () {
         await this.counter.$reset(0);
         expect(await this.counter.$current(0)).to.be.bignumber.equal('0');
       });
     });
 
-    context('non null counter', function () {
+    context('non null counter', () => {
       beforeEach(async function () {
         await this.counter.$increment(0);
         expect(await this.counter.$current(0)).to.be.bignumber.equal('1');

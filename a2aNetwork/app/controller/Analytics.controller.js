@@ -1,11 +1,11 @@
 /* global sap, window */
 sap.ui.define([
-    "sap/ui/core/mvc/Controller",
-    "sap/ui/core/routing/History"
-], function (Controller, History) {
-    "use strict";
+    'sap/ui/core/mvc/Controller',
+    'sap/ui/core/routing/History'
+], (Controller, History) => {
+    'use strict';
 
-    return Controller.extend("a2a.network.launchpad.controller.Analytics", {
+    return Controller.extend('a2a.network.launchpad.controller.Analytics', {
 
         onNavBack: function () {
             const oHistory = History.getInstance();
@@ -15,7 +15,7 @@ sap.ui.define([
                 window.history.go(-1);
             } else {
                 const oRouter = this.getOwnerComponent().getRouter();
-                oRouter.navTo("Launchpad", {}, true);
+                oRouter.navTo('Launchpad', {}, true);
             }
         }
 

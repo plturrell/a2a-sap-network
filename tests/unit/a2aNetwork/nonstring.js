@@ -1,9 +1,9 @@
-var test = require('tape');
-var resolve = require('../');
+const test = require('tape');
+const resolve = require('../');
 
-test('nonstring', function (t) {
+test('nonstring', (t) => {
     t.plan(1);
-    resolve(555, function (err, res, pkg) {
+    resolve(555, (err, res, pkg) => {
         t.ok(err);
     });
 });

@@ -9,13 +9,13 @@ exports.deepStack = function deepStack(curr, top, callback) {
 };
 
 exports.real = function produceError(level) {
-  var stack;
-  var limit = Error.stackTraceLimit;
+  let stack;
+  const limit = Error.stackTraceLimit;
 
-  exports.deepStack(0, level, function () {
+  exports.deepStack(0, level, () => {
     Error.stackTraceLimit = level;
 
-    var error = new Error('trace');
+    const error = new Error('trace');
         error.test = true;
     stack = error.stack;
 
@@ -26,9 +26,9 @@ exports.real = function produceError(level) {
 };
 
 exports.fake = function(input) {
-  var output = [];
+  const output = [];
 
-  for (var i = 0, l = input.length; i < l; i++) {
+  for (let i = 0, l = input.length; i < l; i++) {
     output.push(input[i].replace('{where}', module.filename));
   }
 
@@ -36,9 +36,9 @@ exports.fake = function(input) {
 };
 
 exports.convert = function (callSites) {
-  var lines = [];
-  for (var i = 0; i < callSites.length; i++) {
-    lines.push("    at " + callSites[i].toString());
+  const lines = [];
+  for (let i = 0; i < callSites.length; i++) {
+    lines.push(`    at ${  callSites[i].toString()}`);
   }
   return lines.join('\n');
 };

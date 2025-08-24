@@ -20,22 +20,22 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
-var invalidArgumentTestCase = require('./helpers').invalidArgumentTestCase;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
+const invalidArgumentTestCase = require('./helpers').invalidArgumentTestCase;
 
-var thriftrw = require('../index');
-var BooleanRW = thriftrw.BooleanRW;
-var ThriftBoolean = thriftrw.ThriftBoolean;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const BooleanRW = thriftrw.BooleanRW;
+const ThriftBoolean = thriftrw.ThriftBoolean;
+const TYPE = require('../TYPE');
 
-var validTestCases = [
+const validTestCases = [
     [false, [0x00]],
     [true, [0x01]]
 ];
 
-var invalidArgumentTestCases = [
+const invalidArgumentTestCases = [
     null,
     undefined,
     1,
@@ -46,7 +46,7 @@ var invalidArgumentTestCases = [
     {}
 ].map(invalidArgumentTestCase('boolean'));
 
-var testCases = [].concat(
+const testCases = [].concat(
     validTestCases,
     invalidArgumentTestCases
 );

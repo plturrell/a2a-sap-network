@@ -1,6 +1,6 @@
-var TypedError = require('error/typed');
+const TypedError = require('error/typed');
 
-var MoreDataThanExpectedError = TypedError({
+const MoreDataThanExpectedError = TypedError({
     type: 'more-data-than-expected',
     message: 'got more data than expected',
     numGot: null,
@@ -8,7 +8,7 @@ var MoreDataThanExpectedError = TypedError({
     data: null
 });
 
-var LessDataThanExpectedError = TypedError({
+const LessDataThanExpectedError = TypedError({
     type: 'less-data-than-expected',
     message: 'got less data than expected',
     numGot: null,
@@ -16,10 +16,10 @@ var LessDataThanExpectedError = TypedError({
 });
 
 function expectReadableStream(stream, expectedData, done) {
-    var finished = false;
-    var expectedI = 0;
-    var numGot = 0;
-    var unexpected = [];
+    let finished = false;
+    let expectedI = 0;
+    let numGot = 0;
+    const unexpected = [];
     stream.on('data', onData);
     stream.on('error', finish);
     stream.on('end', finish);
@@ -28,7 +28,7 @@ function expectReadableStream(stream, expectedData, done) {
         if (expectedI >= expectedData.length) {
             unexpected.push(data);
         } else {
-            var expected = expectedData[expectedI++];
+            const expected = expectedData[expectedI++];
             expected(data);
         }
     }

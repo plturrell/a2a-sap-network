@@ -1,12 +1,12 @@
 'use strict';
 
-var inspect = require('../');
-var test = require('tape');
-var mockProperty = require('mock-property');
+const inspect = require('../');
+const test = require('tape');
+const mockProperty = require('mock-property');
 
-test('when Object#hasOwnProperty is deleted', function (t) {
+test('when Object#hasOwnProperty is deleted', (t) => {
     t.plan(1);
-    var arr = [1, , 3]; // eslint-disable-line no-sparse-arrays
+    const arr = [1, , 3]; // eslint-disable-line no-sparse-arrays
 
     t.teardown(mockProperty(Array.prototype, 1, { value: 2 })); // this is needed to account for "in" vs "hasOwnProperty"
     t.teardown(mockProperty(Object.prototype, 'hasOwnProperty', { 'delete': true }));

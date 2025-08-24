@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const ERC1155Pausable = artifacts.require('$ERC1155Pausable');
 
-contract('ERC1155Pausable', function (accounts) {
+contract('ERC1155Pausable', (accounts) => {
   const [holder, operator, receiver, other] = accounts;
 
   const uri = 'https://token.com';
@@ -13,7 +13,7 @@ contract('ERC1155Pausable', function (accounts) {
     this.token = await ERC1155Pausable.new(uri);
   });
 
-  context('when token is paused', function () {
+  context('when token is paused', () => {
     const firstTokenId = new BN('37');
     const firstTokenAmount = new BN('42');
 
@@ -85,21 +85,21 @@ contract('ERC1155Pausable', function (accounts) {
       );
     });
 
-    describe('setApprovalForAll', function () {
+    describe('setApprovalForAll', () => {
       it('approves an operator', async function () {
         await this.token.setApprovalForAll(other, true, { from: holder });
         expect(await this.token.isApprovedForAll(holder, other)).to.equal(true);
       });
     });
 
-    describe('balanceOf', function () {
+    describe('balanceOf', () => {
       it('returns the amount of tokens owned by the given address', async function () {
         const balance = await this.token.balanceOf(holder, firstTokenId);
         expect(balance).to.be.bignumber.equal(firstTokenAmount);
       });
     });
 
-    describe('isApprovedForAll', function () {
+    describe('isApprovedForAll', () => {
       it('returns the approval of the operator', async function () {
         expect(await this.token.isApprovedForAll(holder, operator)).to.equal(true);
       });

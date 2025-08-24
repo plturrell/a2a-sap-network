@@ -9,7 +9,8 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "sap/base/Log",
     "../utils/SecurityUtils"
-], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel,
+    encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent4.ext.controller.ListReportExt", {
@@ -125,7 +126,7 @@ sap.ui.define([
                     return { isValid: false, message: "Formula expression too long" };
                 }
                 // Check for dangerous formula patterns
-                var aDangerousPatterns = [/eval\s*\(/, /exec\s*\(/, /system\s*\(/, /import\s+/i];
+                const aDangerousPatterns = [/eval\s*\(/, /exec\s*\(/, /system\s*\(/, /import\s+/i];
                 for (let j = 0; j < aDangerousPatterns.length; j++) {
                     if (aDangerousPatterns[j].test(sSanitized)) {
                         return { isValid: false, message: "Potentially dangerous formula pattern" };
@@ -157,7 +158,7 @@ sap.ui.define([
                         resolve(data.token);
                     },
                     error() {
-                        reject("Failed to retrieve CSRF token");
+                        reject(new Error("Failed to retrieve CSRF token"));
                     }
                 });
             });
@@ -396,7 +397,7 @@ sap.ui.define([
                 async: true,
                 success() {
                     // Optionally log to browser console for debugging
-                    console.log("Audit event logged:", sEventType);
+                    // console.log("Audit event logged:", sEventType);
                 },
                 error() {
                     // Fallback logging to local storage for offline audit
@@ -1049,8 +1050,8 @@ sap.ui.define([
             }
 
             try {
-                var oParsedTestData = JSON.parse(oTestDataValidation.sanitized);
-                var nExpectedResult = parseFloat(oData.expectedResult);
+                const oParsedTestData = JSON.parse(oTestDataValidation.sanitized);
+                const nExpectedResult = parseFloat(oData.expectedResult);
 
                 if (!isFinite(nExpectedResult)) {
                     MessageBox.error(this.getResourceBundle().getText("error.validation.invalidExpectedResult"));

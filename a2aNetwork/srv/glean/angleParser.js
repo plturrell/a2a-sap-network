@@ -153,7 +153,7 @@ class AngleParser {
             }
 
             // String literals
-            if (char === '"' || char === "'") {
+            if (char === '"' || char === '\'') {
                 const quote = char;
                 let value = '';
                 i++; // Skip opening quote
@@ -163,7 +163,7 @@ class AngleParser {
                         i++; // Skip escape character
                         const escaped = {
                             'n': '\n', 't': '\t', 'r': '\r',
-                            '\\': '\\', '"': '"', "'": "'"
+                            '\\': '\\', '"': '"', '\'': '\''
                         }[source[i]] || source[i];
                         value += escaped;
                     } else {
@@ -578,7 +578,7 @@ class AngleParser {
             while (this.check('DOT')) {
                 this.advance(); // consume '.'
                 const nextPart = this.consume('IDENTIFIER').value;
-                name += '.' + nextPart;
+                name += `.${  nextPart}`;
             }
             
             // Function call or predicate reference
@@ -678,7 +678,7 @@ class AngleParser {
         while (this.check('DOT')) {
             this.advance(); // consume '.'
             const nextPart = this.consume('IDENTIFIER').value;
-            field += '.' + nextPart;
+            field += `.${  nextPart}`;
         }
         
         if (this.check('EQUALS')) {

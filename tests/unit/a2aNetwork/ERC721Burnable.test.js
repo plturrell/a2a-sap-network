@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const ERC721Burnable = artifacts.require('$ERC721Burnable');
 
-contract('ERC721Burnable', function (accounts) {
+contract('ERC721Burnable', (accounts) => {
   const [owner, approved] = accounts;
 
   const firstTokenId = new BN(1);
@@ -18,17 +18,17 @@ contract('ERC721Burnable', function (accounts) {
     this.token = await ERC721Burnable.new(name, symbol);
   });
 
-  describe('like a burnable ERC721', function () {
+  describe('like a burnable ERC721', () => {
     beforeEach(async function () {
       await this.token.$_mint(owner, firstTokenId);
       await this.token.$_mint(owner, secondTokenId);
     });
 
-    describe('burn', function () {
+    describe('burn', () => {
       const tokenId = firstTokenId;
       let receipt = null;
 
-      describe('when successful', function () {
+      describe('when successful', () => {
         beforeEach(async function () {
           receipt = await this.token.burn(tokenId, { from: owner });
         });
@@ -38,7 +38,7 @@ contract('ERC721Burnable', function (accounts) {
           expect(await this.token.balanceOf(owner)).to.be.bignumber.equal('1');
         });
 
-        it('emits a burn event', async function () {
+        it('emits a burn event', async () => {
           expectEvent(receipt, 'Transfer', {
             from: owner,
             to: constants.ZERO_ADDRESS,
@@ -47,20 +47,20 @@ contract('ERC721Burnable', function (accounts) {
         });
       });
 
-      describe('when there is a previous approval burned', function () {
+      describe('when there is a previous approval burned', () => {
         beforeEach(async function () {
           await this.token.approve(approved, tokenId, { from: owner });
           receipt = await this.token.burn(tokenId, { from: owner });
         });
 
-        context('getApproved', function () {
+        context('getApproved', () => {
           it('reverts', async function () {
             await expectRevert(this.token.getApproved(tokenId), 'ERC721: invalid token ID');
           });
         });
       });
 
-      describe('when the given token ID was not tracked by this contract', function () {
+      describe('when the given token ID was not tracked by this contract', () => {
         it('reverts', async function () {
           await expectRevert(this.token.burn(unknownTokenId, { from: owner }), 'ERC721: invalid token ID');
         });

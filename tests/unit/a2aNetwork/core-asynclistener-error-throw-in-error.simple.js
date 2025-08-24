@@ -23,8 +23,8 @@
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert  = require('assert');
-var cluster = require('cluster');
+const assert  = require('assert');
+const cluster = require('cluster');
 
 function onAsync0() {}
 
@@ -33,7 +33,7 @@ if (cluster.isMaster) {
     silent : true
   });
   cluster.fork();
-  cluster.on('exit', function (worker, code) {
+  cluster.on('exit', (worker, code) => {
     if (process._fatalException) {
       // verify child exited because of throw from 'error'
       assert.equal(code, 7);
@@ -46,9 +46,9 @@ if (cluster.isMaster) {
     console.log('ok');
   });
 } else {
-  var once = 0;
+  let once = 0;
 
-  var handlers = {
+  const handlers = {
     error : function () {
       // the error handler should not be called again
       if (once++ !== 0) process.exit(5);
@@ -57,14 +57,14 @@ if (cluster.isMaster) {
     }
   };
 
-  var key = process.addAsyncListener(onAsync0, handlers);
+  const key = process.addAsyncListener(onAsync0, handlers);
 
-  process.on('unhandledException', function () {
+  process.on('unhandledException', () => {
     // throwing in 'error' should bypass unhandledException
     process.exit(1);
   });
 
-  setImmediate(function () {
+  setImmediate(() => {
     throw new Error('setImmediate');
   });
 

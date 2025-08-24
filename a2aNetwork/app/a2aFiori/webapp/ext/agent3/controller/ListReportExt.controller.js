@@ -252,7 +252,7 @@ sap.ui.define([
             let lastRenderTime = 0;
             const renderThrottle = 16; // ~60fps
 
-            var render = function(currentTime) {
+            const render = function(currentTime) {
                 if (currentTime - lastRenderTime > renderThrottle) {
                     // Render 3D scene here
                     lastRenderTime = currentTime;

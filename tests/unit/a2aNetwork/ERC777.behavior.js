@@ -21,8 +21,8 @@ function shouldBehaveLikeERC777UnauthorizedOperatorSendBurn(holder, recipient, o
 }
 
 function shouldBehaveLikeERC777DirectSend(holder, recipient, data) {
-  describe('direct send', function () {
-    context('when the sender has tokens', function () {
+  describe('direct send', () => {
+    context('when the sender has tokens', () => {
       shouldDirectSendTokens(holder, recipient, new BN('0'), data);
       shouldDirectSendTokens(holder, recipient, new BN('1'), data);
 
@@ -36,7 +36,7 @@ function shouldBehaveLikeERC777DirectSend(holder, recipient, data) {
       });
     });
 
-    context('when the sender has no tokens', function () {
+    context('when the sender has no tokens', () => {
       removeBalance(holder);
 
       shouldDirectSendTokens(holder, recipient, new BN('0'), data);
@@ -49,8 +49,8 @@ function shouldBehaveLikeERC777DirectSend(holder, recipient, data) {
 }
 
 function shouldBehaveLikeERC777OperatorSend(holder, recipient, operator, data, operatorData) {
-  describe('operator send', function () {
-    context('when the sender has tokens', async function () {
+  describe('operator send', () => {
+    context('when the sender has tokens', async () => {
       shouldOperatorSendTokens(holder, operator, recipient, new BN('0'), data, operatorData);
       shouldOperatorSendTokens(holder, operator, recipient, new BN('1'), data, operatorData);
 
@@ -68,7 +68,7 @@ function shouldBehaveLikeERC777OperatorSend(holder, recipient, operator, data, o
       });
     });
 
-    context('when the sender has no tokens', function () {
+    context('when the sender has no tokens', () => {
       removeBalance(holder);
 
       shouldOperatorSendTokens(holder, operator, recipient, new BN('0'), data, operatorData);
@@ -90,7 +90,7 @@ function shouldBehaveLikeERC777OperatorSend(holder, recipient, operator, data, o
 }
 
 function shouldBehaveLikeERC777UnauthorizedOperatorSend(holder, recipient, operator, data, operatorData) {
-  describe('operator send', function () {
+  describe('operator send', () => {
     it('reverts', async function () {
       await expectRevert.unspecified(this.token.operatorSend(holder, recipient, new BN('0'), data, operatorData));
     });
@@ -98,8 +98,8 @@ function shouldBehaveLikeERC777UnauthorizedOperatorSend(holder, recipient, opera
 }
 
 function shouldBehaveLikeERC777DirectBurn(holder, data) {
-  describe('direct burn', function () {
-    context('when the sender has tokens', function () {
+  describe('direct burn', () => {
+    context('when the sender has tokens', () => {
       shouldDirectBurnTokens(holder, new BN('0'), data);
       shouldDirectBurnTokens(holder, new BN('1'), data);
 
@@ -109,7 +109,7 @@ function shouldBehaveLikeERC777DirectBurn(holder, data) {
       });
     });
 
-    context('when the sender has no tokens', function () {
+    context('when the sender has no tokens', () => {
       removeBalance(holder);
 
       shouldDirectBurnTokens(holder, new BN('0'), data);
@@ -122,8 +122,8 @@ function shouldBehaveLikeERC777DirectBurn(holder, data) {
 }
 
 function shouldBehaveLikeERC777OperatorBurn(holder, operator, data, operatorData) {
-  describe('operator burn', function () {
-    context('when the sender has tokens', async function () {
+  describe('operator burn', () => {
+    context('when the sender has tokens', async () => {
       shouldOperatorBurnTokens(holder, operator, new BN('0'), data, operatorData);
       shouldOperatorBurnTokens(holder, operator, new BN('1'), data, operatorData);
 
@@ -135,7 +135,7 @@ function shouldBehaveLikeERC777OperatorBurn(holder, operator, data, operatorData
       });
     });
 
-    context('when the sender has no tokens', function () {
+    context('when the sender has no tokens', () => {
       removeBalance(holder);
 
       shouldOperatorBurnTokens(holder, operator, new BN('0'), data, operatorData);
@@ -157,7 +157,7 @@ function shouldBehaveLikeERC777OperatorBurn(holder, operator, data, operatorData
 }
 
 function shouldBehaveLikeERC777UnauthorizedOperatorBurn(holder, operator, data, operatorData) {
-  describe('operator burn', function () {
+  describe('operator burn', () => {
     it('reverts', async function () {
       await expectRevert.unspecified(this.token.operatorBurn(holder, new BN('0'), data, operatorData));
     });
@@ -310,7 +310,7 @@ function shouldInternalMintTokens(operator, to, amount, data, operatorData) {
 }
 
 function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook(operator, amount, data, operatorData) {
-  context('when TokensRecipient reverts', function () {
+  context('when TokensRecipient reverts', () => {
     beforeEach(async function () {
       await this.tokensRecipientImplementer.setShouldRevertReceive(true);
     });
@@ -332,7 +332,7 @@ function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook(operator, amo
     });
   });
 
-  context('when TokensRecipient does not revert', function () {
+  context('when TokensRecipient does not revert', () => {
     beforeEach(async function () {
       await this.tokensRecipientImplementer.setShouldRevertSend(false);
     });
@@ -401,7 +401,7 @@ function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook(operator, amo
 }
 
 function shouldBehaveLikeERC777SendBurnWithSendHook(operator, amount, data, operatorData) {
-  context('when TokensSender reverts', function () {
+  context('when TokensSender reverts', () => {
     beforeEach(async function () {
       await this.tokensSenderImplementer.setShouldRevertSend(true);
     });
@@ -427,7 +427,7 @@ function shouldBehaveLikeERC777SendBurnWithSendHook(operator, amount, data, oper
     });
   });
 
-  context('when TokensSender does not revert', function () {
+  context('when TokensSender does not revert', () => {
     beforeEach(async function () {
       await this.tokensSenderImplementer.setShouldRevertSend(false);
     });

@@ -22,14 +22,14 @@ async function debugAngleParser() {
         console.log('🔧 Parsing schema...');
         const parsedSchema = angleParser.parseSchema(schemaContent);
         
-        console.log(`✅ Parsed schema:`, JSON.stringify(parsedSchema, null, 2));
+        console.log('✅ Parsed schema:', JSON.stringify(parsedSchema, null, 2));
         
         // Check predicates
-        console.log(`\n📊 Schema analysis:`);
+        console.log('\n📊 Schema analysis:');
         console.log(`   Name: ${parsedSchema.name}`);
         console.log(`   Version: ${parsedSchema.version}`);
         console.log(`   Predicates count: ${Object.keys(parsedSchema.predicates).length}`);
-        console.log(`   Predicates:`, Object.keys(parsedSchema.predicates));
+        console.log('   Predicates:', Object.keys(parsedSchema.predicates));
         
         // Validate each predicate
         Object.entries(parsedSchema.predicates).forEach(([name, predicate]) => {

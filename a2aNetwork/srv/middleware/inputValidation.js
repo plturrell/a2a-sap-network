@@ -363,7 +363,7 @@ function validateInput(schemaKey) {
         
         // Get schema based on method and path or direct key
         const routeKey = `${req.method}:${req.path}`;
-        let schema = validationSchemas[routeKey] || validationSchemas[schemaKey];
+        const schema = validationSchemas[routeKey] || validationSchemas[schemaKey];
         
         // Debug logging for diagnostic endpoints
         if (req.path.includes('/api/v1/Services') || req.path.includes('/api/v1/Notifications')) {
@@ -422,7 +422,7 @@ function validateInput(schemaKey) {
                 code: 'VALIDATION_ERROR',
                 details: error.details.map(detail => ({
                     field: detail.path.join('.'),
-                    message: detail.message.replace(/"/g, "'"),
+                    message: detail.message.replace(/"/g, '\''),
                     value: detail.context?.value
                 }))
             });
@@ -546,7 +546,7 @@ function validateEntity(entityType, operation) {
                 message: 'Invalid entity data',
                 details: error.details.map(detail => ({
                     field: detail.path.join('.'),
-                    message: detail.message.replace(/"/g, "'")
+                    message: detail.message.replace(/"/g, '\'')
                 }))
             });
         }

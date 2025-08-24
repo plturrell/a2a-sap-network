@@ -4,7 +4,7 @@ const { expect } = require('chai');
 
 const ERC777PresetFixedSupply = artifacts.require('ERC777PresetFixedSupply');
 
-contract('ERC777PresetFixedSupply', function (accounts) {
+contract('ERC777PresetFixedSupply', (accounts) => {
   const [registryFunder, owner, defaultOperatorA, defaultOperatorB, anyone] = accounts;
 
   const initialSupply = new BN('10000');
@@ -13,7 +13,7 @@ contract('ERC777PresetFixedSupply', function (accounts) {
 
   const defaultOperators = [defaultOperatorA, defaultOperatorB];
 
-  before(async function () {
+  before(async () => {
     await singletons.ERC1820Registry(registryFunder);
   });
 

@@ -18,8 +18,8 @@
 
 const PROJECT_DIR = process.env.PROJECT_DIR;
 
-let fs = require('fs');
-let { publishTask, rmRf, mkdirP } = require(`${PROJECT_DIR}/lib/jake`);
+const fs = require('fs');
+const { publishTask, rmRf, mkdirP } = require(`${PROJECT_DIR}/lib/jake`);
 
 fs.writeFileSync('package.json', '{"version": "0.0.1"}');
 mkdirP('tmp_publish');
@@ -42,7 +42,7 @@ publishTask('zerb', function () {
 
 jake.setTaskTimeout(5000);
 
-jake.Task['publish'].on('complete', function () {
+jake.Task['publish'].on('complete', () => {
   rmRf('tmp_publish', {silent: true});
   rmRf('package.json', {silent: true});
 });

@@ -204,11 +204,11 @@ class AuditLogger extends EventEmitter {
         try {
             // Initialize with genesis hash
             this.blockchainHash = crypto.createHash('sha256')
-                .update('AUDIT_LOG_GENESIS_' + new Date().toISOString())
+                .update(`AUDIT_LOG_GENESIS_${  new Date().toISOString()}`)
                 .digest('hex');
                 
             this.log.info('Blockchain tamper-proof logging initialized', {
-                genesisHash: this.blockchainHash.substring(0, 16) + '...'
+                genesisHash: `${this.blockchainHash.substring(0, 16)  }...`
             });
         } catch (error) {
             this.log.warn('Failed to initialize blockchain logging:', error);
@@ -808,7 +808,7 @@ class AuditLogger extends EventEmitter {
                 this.encryptEvent(event) : event;
 
             // Format for writing
-            const logLine = JSON.stringify(eventData) + '\n';
+            const logLine = `${JSON.stringify(eventData)  }\n`;
             
             // Write to file
             await fs.appendFile(this.currentLogFile, logLine);
@@ -996,7 +996,7 @@ class AuditLogger extends EventEmitter {
      */
     sanitizeValue(value) {
         if (typeof value === 'string' && value.length > 50) {
-            return value.substring(0, 50) + '...[truncated]';
+            return `${value.substring(0, 50)  }...[truncated]`;
         }
         return value;
     }
@@ -1308,7 +1308,7 @@ class AuditLogger extends EventEmitter {
             totalEvents: report.metrics.totalEvents,
             alertsTriggered: report.metrics.alertsTriggered,
             complianceViolations: report.compliance.violations,
-            encryptionRate: report.compliance.encryptionRate.toFixed(2) + '%'
+            encryptionRate: `${report.compliance.encryptionRate.toFixed(2)  }%`
         });
         
         return report;

@@ -3,14 +3,14 @@ const { shouldBehaveLikeEscrow } = require('./Escrow.behavior');
 
 const ConditionalEscrowMock = artifacts.require('ConditionalEscrowMock');
 
-contract('ConditionalEscrow', function (accounts) {
+contract('ConditionalEscrow', (accounts) => {
   const [owner, payee, ...otherAccounts] = accounts;
 
   beforeEach(async function () {
     this.escrow = await ConditionalEscrowMock.new({ from: owner });
   });
 
-  context('when withdrawal is allowed', function () {
+  context('when withdrawal is allowed', () => {
     beforeEach(async function () {
       await Promise.all(otherAccounts.map(payee => this.escrow.setAllowed(payee, true)));
     });
@@ -18,7 +18,7 @@ contract('ConditionalEscrow', function (accounts) {
     shouldBehaveLikeEscrow(owner, otherAccounts);
   });
 
-  context('when withdrawal is disallowed', function () {
+  context('when withdrawal is disallowed', () => {
     const amount = ether('23');
 
     beforeEach(async function () {

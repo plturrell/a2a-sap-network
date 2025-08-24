@@ -1,8 +1,8 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+'use strict';
+const __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+    let desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
       desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
@@ -10,145 +10,145 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
+const __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, 'default', { enumerable: true, value: v });
 }) : function(o, v) {
-    o["default"] = v;
+    o['default'] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
+const __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    const result = {};
+    if (mod != null) for (const k in mod) if (k !== 'default' && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+const __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { 'default': mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const chai_1 = require("chai");
-const sinon_1 = __importDefault(require("sinon"));
-const proxyquire_1 = __importDefault(require("proxyquire"));
-const devspaceUtils = __importStar(require("../../src/utils/devspace-utils"));
-const devspace_utils_1 = require("../../src/utils/devspace-utils");
-const axios_mock_adapter_1 = __importDefault(require("axios-mock-adapter"));
-const axios_1 = __importDefault(require("axios"));
-describe("Test for flattenDevspaceInfo()", () => {
-    it("should return devspace info API results", () => {
+Object.defineProperty(exports, '__esModule', { value: true });
+const chai_1 = require('chai');
+const sinon_1 = __importDefault(require('sinon'));
+const proxyquire_1 = __importDefault(require('proxyquire'));
+const devspaceUtils = __importStar(require('../../src/utils/devspace-utils'));
+const devspace_utils_1 = require('../../src/utils/devspace-utils');
+const axios_mock_adapter_1 = __importDefault(require('axios-mock-adapter'));
+const axios_1 = __importDefault(require('axios'));
+describe('Test for flattenDevspaceInfo()', () => {
+    it('should return devspace info API results', () => {
         // Mock setup
         const mockApiResults = {
             config: {
                 annotations: {
-                    pack: "PACK",
-                    packTagline: "PACK_TAG_LINE",
-                    optionalExtensions: "[]",
-                    technicalExtensions: "['one/one','two/two','and-three/and-three']",
+                    pack: 'PACK',
+                    packTagline: 'PACK_TAG_LINE',
+                    optionalExtensions: '[]',
+                    technicalExtensions: '[\'one/one\',\'two/two\',\'and-three/and-three\']',
                 },
-                labels: { "ws-manager.devx.sap.com/displayname": "DISPLAY_NAME" },
-                id: "ws-anyw",
-                username: "mail@me.net",
+                labels: { 'ws-manager.devx.sap.com/displayname': 'DISPLAY_NAME' },
+                id: 'ws-anyw',
+                username: 'mail@me.net',
             },
             runtime: {
                 status: devspaceUtils.DevSpaceStatus.RUNNING,
-                baseUrl: "https://any.host/",
-                statusLastUpdateTime: "2022-09-02T17:33:01Z",
+                baseUrl: 'https://any.host/',
+                statusLastUpdateTime: '2022-09-02T17:33:01Z',
                 statusLastUpdateGeneration: 12,
                 backendReadiness: [
-                    { name: "brOne", readiness: false },
-                    { name: "brTwo", readiness: true },
+                    { name: 'brOne', readiness: false },
+                    { name: 'brTwo', readiness: true },
                 ],
             },
-            devSpaceOriginLabel: "ORIGIN_LABEL",
+            devSpaceOriginLabel: 'ORIGIN_LABEL',
         };
         // Test execution
         const flattenResult = (0, devspace_utils_1.flattenDevspaceInfo)(mockApiResults);
         // Results check
         (0, chai_1.expect)(flattenResult).to.deep.equal({
-            devspaceDisplayName: "DISPLAY_NAME",
-            devspaceOrigin: "ORIGIN_LABEL",
-            pack: "PACK",
-            packDisplayName: "PACK_TAG_LINE",
-            id: "ws-anyw",
-            optionalExtensions: "[]",
+            devspaceDisplayName: 'DISPLAY_NAME',
+            devspaceOrigin: 'ORIGIN_LABEL',
+            pack: 'PACK',
+            packDisplayName: 'PACK_TAG_LINE',
+            id: 'ws-anyw',
+            optionalExtensions: '[]',
             sshEnabled: false,
             status: devspaceUtils.DevSpaceStatus.RUNNING,
-            technicalExtensions: "['one/one','two/two','and-three/and-three']",
-            url: "https://any.host/",
+            technicalExtensions: '[\'one/one\',\'two/two\',\'and-three/and-three\']',
+            url: 'https://any.host/',
         });
     });
-    it("should return devspace info even for empty API results", () => {
+    it('should return devspace info even for empty API results', () => {
         // Mock setup
         const mockApiResults = {};
         // Test execution
         const flattenResult = (0, devspace_utils_1.flattenDevspaceInfo)(mockApiResults);
         // Test execution
         (0, chai_1.expect)(flattenResult).to.deep.equal({
-            devspaceDisplayName: "",
-            devspaceOrigin: "",
-            pack: "",
-            packDisplayName: "",
-            id: "",
-            optionalExtensions: "",
+            devspaceDisplayName: '',
+            devspaceOrigin: '',
+            pack: '',
+            packDisplayName: '',
+            id: '',
+            optionalExtensions: '',
             sshEnabled: false,
-            status: "",
-            technicalExtensions: "",
-            url: "",
+            status: '',
+            technicalExtensions: '',
+            url: '',
         });
     });
-    it("should return devspace info even for null API results", () => {
+    it('should return devspace info even for null API results', () => {
         // Mock setup
         const mockApiResults = null;
         // Test execution
         const flattenResult = (0, devspace_utils_1.flattenDevspaceInfo)(mockApiResults);
         // Test execution
         (0, chai_1.expect)(flattenResult).to.deep.equal({
-            devspaceDisplayName: "",
-            devspaceOrigin: "",
-            pack: "",
-            packDisplayName: "",
-            id: "",
-            optionalExtensions: "",
+            devspaceDisplayName: '',
+            devspaceOrigin: '',
+            pack: '',
+            packDisplayName: '',
+            id: '',
+            optionalExtensions: '',
             sshEnabled: false,
-            status: "",
-            technicalExtensions: "",
-            url: "",
+            status: '',
+            technicalExtensions: '',
+            url: '',
         });
     });
-    describe("readExtensionsInstallationCompletionFile()", () => {
+    describe('readExtensionsInstallationCompletionFile()', () => {
         beforeEach(() => {
             sinon_1.default.createSandbox();
         });
         afterEach(() => {
             sinon_1.default.restore();
         });
-        it("Return true when extensionsInstallationCompletion JSON file is found and read properly", async () => {
-            const devspaceUtilsProxy = (0, proxyquire_1.default)("../../src/utils/devspace-utils", {
-                "fs-extra": {
+        it('Return true when extensionsInstallationCompletion JSON file is found and read properly', async () => {
+            const devspaceUtilsProxy = (0, proxyquire_1.default)('../../src/utils/devspace-utils', {
+                'fs-extra': {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- test
                     readJson: async (path) => {
                         return { InstallationCompleted: true };
                     },
-                    "@noCallThru": true,
+                    '@noCallThru': true,
                 },
-                "@noCallThru": true,
+                '@noCallThru': true,
             });
             (0, chai_1.expect)(await devspaceUtilsProxy.readExtensionsInstallationCompletionFile()).deep.equals({ InstallationCompleted: true });
         });
-        it("Return false when extensionsInstallationCompletion JSON file is empty", async () => {
-            const devspaceUtilsProxy = (0, proxyquire_1.default)("../../src/utils/devspace-utils", {
-                "fs-extra": {
+        it('Return false when extensionsInstallationCompletion JSON file is empty', async () => {
+            const devspaceUtilsProxy = (0, proxyquire_1.default)('../../src/utils/devspace-utils', {
+                'fs-extra': {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- test
                     readJson: async (path) => {
                         return undefined;
                     },
-                    "@noCallThru": true,
+                    '@noCallThru': true,
                 },
-                "@noCallThru": true,
+                '@noCallThru': true,
             });
             (0, chai_1.expect)(await devspaceUtilsProxy.readExtensionsInstallationCompletionFile()).deep.equals({ InstallationCompleted: false });
         });
-        it("Throw when extensionsInstallationCompletion JSON file is NOT found", async () => {
-            const filePath = "/extbin/extensionsInstallationCompletion/extensionsInstallationCompletion.json";
+        it('Throw when extensionsInstallationCompletion JSON file is NOT found', async () => {
+            const filePath = '/extbin/extensionsInstallationCompletion/extensionsInstallationCompletion.json';
             try {
                 await devspaceUtils.readExtensionsInstallationCompletionFile();
             }
@@ -160,48 +160,48 @@ describe("Test for flattenDevspaceInfo()", () => {
         });
     });
 });
-describe("Test for getKey", () => {
-    const wsid = "23232";
+describe('Test for getKey', () => {
+    const wsid = '23232';
     let mockAxios;
     const startupServerUrl = `https://startup-test-${wsid}.dummy.cloud.sap`;
     const getMockResponse = () => ({
-        devSpaceOriginLabel: "dev_space_origin_label",
+        devSpaceOriginLabel: 'dev_space_origin_label',
         config: {
             id: wsid,
-            username: "mail@me.net",
+            username: 'mail@me.net',
             labels: {
-                controllerID: "workspace-controller-1-23456789-987654",
-                "workspace.devx.sap.com/persistence-pvc": "true",
-                "ws-manager.devx.sap.com/deleted": "false",
-                "ws-manager.devx.sap.com/displayname": "dev_space_name",
-                "ws-manager.devx.sap.com/origin": "0a1b2c3d4e5f6a7b8c9d0e1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e ",
-                "ws-manager.devx.sap.com/providerTenantId": "0a1b2c3d-1a2b-9876-a1b2-9f8e7d6c5b4a",
-                "ws-manager.devx.sap.com/username": "a1b2c3d4e5f6a7b8c9d0e1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8",
-                "ws-manager.devx.sap.com/zoneid": "98765432-abcd-1234-fedc-01234567890a",
-                "ws-manager.devx.sap.com/LCAP": "LCAP",
+                controllerID: 'workspace-controller-1-23456789-987654',
+                'workspace.devx.sap.com/persistence-pvc': 'true',
+                'ws-manager.devx.sap.com/deleted': 'false',
+                'ws-manager.devx.sap.com/displayname': 'dev_space_name',
+                'ws-manager.devx.sap.com/origin': '0a1b2c3d4e5f6a7b8c9d0e1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e ',
+                'ws-manager.devx.sap.com/providerTenantId': '0a1b2c3d-1a2b-9876-a1b2-9f8e7d6c5b4a',
+                'ws-manager.devx.sap.com/username': 'a1b2c3d4e5f6a7b8c9d0e1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8',
+                'ws-manager.devx.sap.com/zoneid': '98765432-abcd-1234-fedc-01234567890a',
+                'ws-manager.devx.sap.com/LCAP': 'LCAP',
             },
             annotations: {
-                optionalExtensions: "[]",
+                optionalExtensions: '[]',
                 pack: devspaceUtils.PackName.BASIC,
-                packTagline: "Basic Tag Line",
-                technicalExtensions: "['one/one','two/two','and-three/and-three']",
-                "workspace.devx.sap.com/lastOnlineTime": "2022-09-02T17:03:20Z",
-                "workspace.devx.sap.com/ownerFullName": "First Last",
-                "workspace.devx.sap.com/plan": "standard-edition",
-                "workspace.devx.sap.com/ws-controller-processed-gen": "22",
-                "ws-manager.devx.sap.com/startedAt": "2022-09-02T17:02:34Z",
+                packTagline: 'Basic Tag Line',
+                technicalExtensions: '[\'one/one\',\'two/two\',\'and-three/and-three\']',
+                'workspace.devx.sap.com/lastOnlineTime': '2022-09-02T17:03:20Z',
+                'workspace.devx.sap.com/ownerFullName': 'First Last',
+                'workspace.devx.sap.com/plan': 'standard-edition',
+                'workspace.devx.sap.com/ws-controller-processed-gen': '22',
+                'ws-manager.devx.sap.com/startedAt': '2022-09-02T17:02:34Z',
             },
-            creationtimestamp: "2022-09-02T17:02:34Z",
+            creationtimestamp: '2022-09-02T17:02:34Z',
             encrypted: true,
         },
         runtime: {
             status: devspaceUtils.DevSpaceStatus.RUNNING,
-            baseUrl: "https://any.host/",
-            statusLastUpdateTime: "2022-09-02T17:33:01Z",
+            baseUrl: 'https://any.host/',
+            statusLastUpdateTime: '2022-09-02T17:33:01Z',
             statusLastUpdateGeneration: 12,
             backendReadiness: [
-                { name: "brOne", readiness: false },
-                { name: "brTwo", readiness: true },
+                { name: 'brOne', readiness: false },
+                { name: 'brTwo', readiness: true },
             ],
             url: {
                 startup: startupServerUrl,
@@ -213,7 +213,7 @@ describe("Test for getKey", () => {
             free: 2222222,
             iused: 33333,
             ifree: 444444,
-            timestamp: "2022-09-02T17:33:00.993856769Z",
+            timestamp: '2022-09-02T17:33:00.993856769Z',
         },
     });
     before(() => {
@@ -222,23 +222,23 @@ describe("Test for getKey", () => {
     after(() => {
         mockAxios.restore();
     });
-    it("Should return key from startup server", async () => {
-        var _a, _b;
-        const jwt = "jwt1989";
+    it('Should return key from startup server', async () => {
+        let _a, _b;
+        const jwt = 'jwt1989';
         mockAxios
             .onGet(`http://any.host.net/ws-manager/api/v1/workspace/${wsid}`)
             .reply(200, getMockResponse());
-        mockAxios.onGet(`${startupServerUrl}/key`).reply(200, "keystartup");
-        const key = await (0, devspace_utils_1.getKey)("http://any.host.net/", jwt, wsid);
-        (0, chai_1.expect)(key).to.equal("keystartup");
+        mockAxios.onGet(`${startupServerUrl}/key`).reply(200, 'keystartup');
+        const key = await (0, devspace_utils_1.getKey)('http://any.host.net/', jwt, wsid);
+        (0, chai_1.expect)(key).to.equal('keystartup');
         // Verify headers
         const request = mockAxios.history.get.find((req) => req.url === `${startupServerUrl}/key`);
         (0, chai_1.expect)(request).to.not.be.undefined;
         (0, chai_1.expect)((_a = request === null || request === void 0 ? void 0 : request.headers) === null || _a === void 0 ? void 0 : _a.Authorization).to.equal(`bearer ${jwt}`);
-        (0, chai_1.expect)((_b = request === null || request === void 0 ? void 0 : request.headers) === null || _b === void 0 ? void 0 : _b["x-approuter-authorization"]).to.equal(`bearer ${jwt}`);
+        (0, chai_1.expect)((_b = request === null || request === void 0 ? void 0 : request.headers) === null || _b === void 0 ? void 0 : _b['x-approuter-authorization']).to.equal(`bearer ${jwt}`);
     });
 });
-describe("getTenantMetadata", () => {
+describe('getTenantMetadata', () => {
     let sendRequestStub;
     beforeEach(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test
@@ -248,16 +248,16 @@ describe("getTenantMetadata", () => {
         sinon_1.default.restore();
         sendRequestStub.reset();
     });
-    it("should call sendRequest with the correct parameters", async () => {
+    it('should call sendRequest with the correct parameters', async () => {
         const opts = {
-            landscape: "testLandscape",
-            jwt: "testJwt",
+            landscape: 'testLandscape',
+            jwt: 'testJwt',
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test
         const expectedResponse = {
-            data: { key: "value" },
+            data: { key: 'value' },
             status: 200,
-            statusText: "OK",
+            statusText: 'OK',
             headers: {},
         };
         sendRequestStub.resolves(expectedResponse);
@@ -265,30 +265,30 @@ describe("getTenantMetadata", () => {
         (0, chai_1.expect)(sendRequestStub.calledOnce).to.be.true;
         (0, chai_1.expect)(sendRequestStub.calledWith({
             jwt: opts.jwt,
-            method: "GET",
+            method: 'GET',
             url: {
                 domain: opts.landscape,
-                path: `ws-manager/api/v1/metadata`,
+                path: 'ws-manager/api/v1/metadata',
             },
         })).to.be.true;
         (0, chai_1.expect)(result).to.equal(expectedResponse);
     });
-    it("should handle errors thrown by sendRequest", async () => {
+    it('should handle errors thrown by sendRequest', async () => {
         const opts = {
-            landscape: "testLandscape",
-            jwt: "testJwt",
+            landscape: 'testLandscape',
+            jwt: 'testJwt',
         };
         try {
             await devspaceUtils.getTenantMetadata(opts);
             // If the function does not throw, fail the test
-            chai_1.expect.fail("Expected error to be thrown");
+            chai_1.expect.fail('Expected error to be thrown');
         }
         catch (error) {
-            (0, chai_1.expect)(error.toString()).to.contain("Invalid URL");
+            (0, chai_1.expect)(error.toString()).to.contain('Invalid URL');
         }
     });
 });
-describe("verifyDefaultLandscape scope", () => {
+describe('verifyDefaultLandscape scope', () => {
     let verifyDefaultLandscapeLocal;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is a vscode type
     let vscodeMock;
@@ -301,27 +301,27 @@ describe("verifyDefaultLandscape scope", () => {
                 getSession: sinon_1.default.stub(),
             },
         };
-        const { verifyDefaultLandscape: verifyDefaultLandscapeFunc } = (0, proxyquire_1.default)("../../src/utils/devspace-utils", {
-            vscode: Object.assign({ "@noCallThru": true }, vscodeMock),
+        const { verifyDefaultLandscape: verifyDefaultLandscapeFunc } = (0, proxyquire_1.default)('../../src/utils/devspace-utils', {
+            vscode: Object.assign({ '@noCallThru': true }, vscodeMock),
         });
         verifyDefaultLandscapeLocal = verifyDefaultLandscapeFunc;
     });
     afterEach(() => {
         sinon_1.default.restore();
     });
-    describe("vscode extension context", () => {
-        it("should successfully select a landscape, not logged in", async () => {
+    describe('vscode extension context', () => {
+        it('should successfully select a landscape, not logged in', async () => {
             // Setup
-            const mockLandscape = "test-landscape";
-            const dummyNoExpToken = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImlhdCI6MTcyODY3NTM1NX0.6plE3Za2OY6AaRVrci-jxhrzERNvgXUWfGB5pPp0-tU";
+            const mockLandscape = 'test-landscape';
+            const dummyNoExpToken = 'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImlhdCI6MTcyODY3NTM1NX0.6plE3Za2OY6AaRVrci-jxhrzERNvgXUWfGB5pPp0-tU';
             vscodeMock.commands.executeCommand
-                .withArgs("app-studio-toolkit.devspace-manager.get-default-landscape")
+                .withArgs('app-studio-toolkit.devspace-manager.get-default-landscape')
                 .resolves(mockLandscape);
             vscodeMock.authentication.getSession
-                .withArgs("BASLandscapePAT", [mockLandscape])
+                .withArgs('BASLandscapePAT', [mockLandscape])
                 .resolves({ accessToken: dummyNoExpToken });
             vscodeMock.authentication.getSession
-                .withArgs("BASLandscapePAT", [mockLandscape], { forceNewSession: true })
+                .withArgs('BASLandscapePAT', [mockLandscape], { forceNewSession: true })
                 .resolves({ accessToken: dummyNoExpToken });
             (0, chai_1.expect)(await verifyDefaultLandscapeLocal()).to.deep.equal({
                 jwt: dummyNoExpToken,
@@ -330,16 +330,16 @@ describe("verifyDefaultLandscape scope", () => {
             (0, chai_1.expect)(vscodeMock.commands.executeCommand.calledOnce).to.be.true;
             (0, chai_1.expect)(vscodeMock.authentication.getSession.calledTwice).to.be.true;
         });
-        it("should successfully select a landscape, logged in", async () => {
+        it('should successfully select a landscape, logged in', async () => {
             // Setup
-            const mockLandscape = "test-landscape";
+            const mockLandscape = 'test-landscape';
             const dummyToken = // jwt with very long expiration date
-             "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MzMyODU4NDM1NzJ9.XmtxOCPVL5_k6XenRb1bWB5_GAG-Ol8m2GlQ75b28vE";
+             'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MzMyODU4NDM1NzJ9.XmtxOCPVL5_k6XenRb1bWB5_GAG-Ol8m2GlQ75b28vE';
             vscodeMock.commands.executeCommand
-                .withArgs("app-studio-toolkit.devspace-manager.get-default-landscape")
+                .withArgs('app-studio-toolkit.devspace-manager.get-default-landscape')
                 .resolves(mockLandscape);
             vscodeMock.authentication.getSession
-                .withArgs("BASLandscapePAT", [mockLandscape])
+                .withArgs('BASLandscapePAT', [mockLandscape])
                 .resolves({ accessToken: dummyToken });
             (0, chai_1.expect)(await verifyDefaultLandscapeLocal()).to.deep.equal({
                 jwt: dummyToken,
@@ -348,20 +348,20 @@ describe("verifyDefaultLandscape scope", () => {
             (0, chai_1.expect)(vscodeMock.commands.executeCommand.calledOnce).to.be.true;
             (0, chai_1.expect)(vscodeMock.authentication.getSession.calledOnce).to.be.true;
         });
-        it("should throw an error if no default landscape is set", async () => {
+        it('should throw an error if no default landscape is set', async () => {
             vscodeMock.commands.executeCommand
-                .withArgs("app-studio-toolkit.devspace-manager.get-default-landscape")
+                .withArgs('app-studio-toolkit.devspace-manager.get-default-landscape')
                 .resolves(null);
             vscodeMock.commands.executeCommand
-                .withArgs("app-studio-toolkit.devspace-manager.landscape.default-on")
+                .withArgs('app-studio-toolkit.devspace-manager.landscape.default-on')
                 .resolves();
-            await (0, chai_1.expect)(verifyDefaultLandscapeLocal()).to.be.rejectedWith("There is no default landscape set");
+            await (0, chai_1.expect)(verifyDefaultLandscapeLocal()).to.be.rejectedWith('There is no default landscape set');
         });
-        it("should throw an error if not in VSCode extension context", async () => {
-            await (0, chai_1.expect)(devspaceUtils.verifyDefaultLandscape()).to.be.rejectedWith("This functionanlity can only be used from within the vscode extension context");
+        it('should throw an error if not in VSCode extension context', async () => {
+            await (0, chai_1.expect)(devspaceUtils.verifyDefaultLandscape()).to.be.rejectedWith('This functionanlity can only be used from within the vscode extension context');
         });
     });
-    describe("sendRequest scope", () => {
+    describe('sendRequest scope', () => {
         let mockAxios;
         beforeEach(() => {
             mockAxios = new axios_mock_adapter_1.default(axios_1.default);
@@ -369,42 +369,42 @@ describe("verifyDefaultLandscape scope", () => {
         afterEach(() => {
             mockAxios.restore();
         });
-        it("should call axios with the correct parameters - POST", async () => {
+        it('should call axios with the correct parameters - POST', async () => {
             const request = {
                 url: {
-                    domain: "http://any.host.net",
-                    path: "/testPath",
+                    domain: 'http://any.host.net',
+                    path: '/testPath',
                 },
-                method: "POST",
-                jwt: "testJwt",
+                method: 'POST',
+                jwt: 'testJwt',
                 config: {
-                    data: { key: "value" },
-                    headers: { "Custom-Header": "Value", "AI-Resource-Group": "default" },
+                    data: { key: 'value' },
+                    headers: { 'Custom-Header': 'Value', 'AI-Resource-Group': 'default' },
                 },
             };
             const response = { status: 200 };
             mockAxios
-                .onPost(`http://any.host.net/testPath`, request.config.data)
+                .onPost('http://any.host.net/testPath', request.config.data)
                 .reply(200, response);
             await devspaceUtils.sendRequest(request);
             (0, chai_1.expect)(mockAxios.history.post.length).to.equal(1);
-            (0, chai_1.expect)(mockAxios.history.post[0].headers).to.deep.include(Object.assign(Object.assign({}, request.config.headers), { "x-approuter-authorization": `bearer ${request.jwt}` }));
+            (0, chai_1.expect)(mockAxios.history.post[0].headers).to.deep.include(Object.assign(Object.assign({}, request.config.headers), { 'x-approuter-authorization': `bearer ${request.jwt}` }));
         });
-        it("should call axios with the correct parameters - GET", async () => {
+        it('should call axios with the correct parameters - GET', async () => {
             const request = {
                 url: {
-                    domain: "http://any.host.net",
-                    path: "/testPath",
+                    domain: 'http://any.host.net',
+                    path: '/testPath',
                 },
-                method: "GET",
-                jwt: "testJwt",
+                method: 'GET',
+                jwt: 'testJwt',
             };
             const response = { status: 200 };
-            mockAxios.onGet(`http://any.host.net/testPath`).reply(200, response);
+            mockAxios.onGet('http://any.host.net/testPath').reply(200, response);
             await devspaceUtils.sendRequest(request);
             (0, chai_1.expect)(mockAxios.history.get.length).to.equal(1);
             (0, chai_1.expect)(mockAxios.history.get[0].headers).to.deep.include({
-                "x-approuter-authorization": `bearer ${request.jwt}`,
+                'x-approuter-authorization': `bearer ${request.jwt}`,
             });
         });
     });

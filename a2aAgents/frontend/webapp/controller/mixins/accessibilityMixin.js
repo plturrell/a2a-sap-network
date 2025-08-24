@@ -4,17 +4,17 @@
  */
 
 sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/ui/core/library"
-], function(
+    'sap/ui/base/Object',
+    'sap/ui/core/library'
+], (
     BaseObject,
     CoreLibrary
-) {
-    "use strict";
+) => {
+    'use strict';
 
     // Shortcuts
-    var AccessibleRole = CoreLibrary.AccessibleRole;
-    var AccessibleLandmarkRole = CoreLibrary.AccessibleLandmarkRole;
+    const AccessibleRole = CoreLibrary.AccessibleRole;
+    const AccessibleLandmarkRole = CoreLibrary.AccessibleLandmarkRole;
 
     /**
      * Accessibility Mixin
@@ -69,13 +69,13 @@ sap.ui.define([
          */
         _detectHighContrast: function() {
             // Create test element to detect high contrast
-            var testElement = document.createElement('div');
+            const testElement = document.createElement('div');
             testElement.style.border = '1px solid';
             testElement.style.borderColor = 'red green';
             document.body.appendChild(testElement);
             
-            var computedStyle = window.getComputedStyle(testElement);
-            var isHighContrast = computedStyle.borderTopColor === computedStyle.borderRightColor;
+            const computedStyle = window.getComputedStyle(testElement);
+            const isHighContrast = computedStyle.borderTopColor === computedStyle.borderRightColor;
             
             document.body.removeChild(testElement);
             return isHighContrast;
@@ -95,7 +95,7 @@ sap.ui.define([
          * @private
          */
         _setupKeyboardNavigation: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             // Add keyboard event handler to view
@@ -114,8 +114,8 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Keyboard event
          */
         _handleKeyDown: function(oEvent) {
-            var oSource = oEvent.getSource();
-            var iKeyCode = oEvent.which || oEvent.keyCode;
+            const oSource = oEvent.getSource();
+            const iKeyCode = oEvent.which || oEvent.keyCode;
 
             // Handle escape key for dialogs and popups
             if (iKeyCode === 27) { // Escape
@@ -154,16 +154,16 @@ sap.ui.define([
          */
         _handleEscapeKey: function(oEvent) {
             // Close any open dialogs, popovers, or menus
-            var aDialogs = sap.ui.getCore().byFieldGroupId("dialog");
-            aDialogs.forEach(function(oDialog) {
+            const aDialogs = sap.ui.getCore().byFieldGroupId('dialog');
+            aDialogs.forEach((oDialog) => {
                 if (oDialog.isOpen && oDialog.isOpen()) {
                     oDialog.close();
                 }
             });
 
             // Close any open popovers
-            var aPopovers = sap.ui.getCore().byFieldGroupId("popover");
-            aPopovers.forEach(function(oPopover) {
+            const aPopovers = sap.ui.getCore().byFieldGroupId('popover');
+            aPopovers.forEach((oPopover) => {
                 if (oPopover.isOpen && oPopover.isOpen()) {
                     oPopover.close();
                 }
@@ -194,15 +194,15 @@ sap.ui.define([
         _handleArrowNavigation: function(oEvent, oSource, iKeyCode) {
             // Implement arrow key navigation for custom widgets
             if (oSource && oSource.getParent) {
-                var oParent = oSource.getParent();
+                const oParent = oSource.getParent();
                 
                 // Handle table navigation
-                if (oParent && oParent.getMetadata().getName() === "sap.ui.table.Table") {
+                if (oParent && oParent.getMetadata().getName() === 'sap.ui.table.Table') {
                     this._handleTableNavigation(oEvent, oParent, iKeyCode);
                 }
                 
                 // Handle list navigation
-                if (oParent && oParent.getMetadata().getName() === "sap.m.List") {
+                if (oParent && oParent.getMetadata().getName() === 'sap.m.List') {
                     this._handleListNavigation(oEvent, oParent, iKeyCode);
                 }
             }
@@ -216,9 +216,9 @@ sap.ui.define([
          * @param {number} iKeyCode Key code
          */
         _handleTableNavigation: function(oEvent, oTable, iKeyCode) {
-            var iCurrentRow = oTable.getSelectedIndex();
-            var iRowCount = oTable.getVisibleRowCount();
-            var iNewRow = iCurrentRow;
+            const iCurrentRow = oTable.getSelectedIndex();
+            const iRowCount = oTable.getVisibleRowCount();
+            let iNewRow = iCurrentRow;
 
             switch (iKeyCode) {
                 case 38: // Up arrow
@@ -238,7 +238,7 @@ sap.ui.define([
             if (iNewRow !== iCurrentRow) {
                 oEvent.preventDefault();
                 oTable.setSelectedIndex(iNewRow);
-                this._announceToScreenReader("Row " + (iNewRow + 1) + " of " + iRowCount + " selected");
+                this._announceToScreenReader(`Row ${  iNewRow + 1  } of ${  iRowCount  } selected`);
             }
         },
 
@@ -247,18 +247,18 @@ sap.ui.define([
          * @private
          */
         _setupSkipLinks: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             // Create skip link container
-            var oSkipLinkContainer = new sap.m.HBox({
-                class: "sapUiSkipLinks",
+            const oSkipLinkContainer = new sap.m.HBox({
+                class: 'sapUiSkipLinks',
                 visible: false
             });
 
             // Add common skip links
-            this._addSkipLink(oSkipLinkContainer, "skipToMainContent", "{i18n>accessibility.skipToContent}");
-            this._addSkipLink(oSkipLinkContainer, "skipToNavigation", "{i18n>accessibility.skipToNavigation}");
+            this._addSkipLink(oSkipLinkContainer, 'skipToMainContent', '{i18n>accessibility.skipToContent}');
+            this._addSkipLink(oSkipLinkContainer, 'skipToNavigation', '{i18n>accessibility.skipToNavigation}');
             
             // Insert skip links at the beginning of the view
             if (oView.getContent && oView.getContent().length > 0) {
@@ -276,11 +276,11 @@ sap.ui.define([
          * @param {string} sText Skip link text
          */
         _addSkipLink: function(oContainer, sId, sText) {
-            var oSkipLink = new sap.m.Link({
-                id: this.getView().getId() + "--" + sId,
+            const oSkipLink = new sap.m.Link({
+                id: `${this.getView().getId()  }--${  sId}`,
                 text: sText,
                 press: this._handleSkipLink.bind(this, sId),
-                class: "sapUiSkipLink"
+                class: 'sapUiSkipLink'
             });
 
             // Show skip link on focus
@@ -289,8 +289,8 @@ sap.ui.define([
                     oContainer.setVisible(true);
                 },
                 onfocusout: function() {
-                    setTimeout(function() {
-                        if (!oContainer.$().find(":focus").length) {
+                    setTimeout(() => {
+                        if (!oContainer.$().find(':focus').length) {
                             oContainer.setVisible(false);
                         }
                     }, 100);
@@ -310,16 +310,16 @@ sap.ui.define([
          * @param {string} sSkipId Skip link ID
          */
         _handleSkipLink: function(sSkipId) {
-            var oTargetElement;
+            let oTargetElement;
 
             switch (sSkipId) {
-                case "skipToMainContent":
-                    oTargetElement = this.getView().byId("mainContent") || 
-                                   this.getView().$().find("[role='main']").first();
+                case 'skipToMainContent':
+                    oTargetElement = this.getView().byId('mainContent') || 
+                                   this.getView().$().find('[role=\'main\']').first();
                     break;
-                case "skipToNavigation":
-                    oTargetElement = this.getView().byId("navigation") ||
-                                   this.getView().$().find("[role='navigation']").first();
+                case 'skipToNavigation':
+                    oTargetElement = this.getView().byId('navigation') ||
+                                   this.getView().$().find('[role=\'navigation\']').first();
                     break;
             }
 
@@ -352,11 +352,11 @@ sap.ui.define([
          * @private
          */
         _createLiveRegion: function() {
-            var oLiveRegion = document.createElement("div");
-            oLiveRegion.id = "a2a-live-region";
-            oLiveRegion.setAttribute("aria-live", "polite");
-            oLiveRegion.setAttribute("aria-atomic", "true");
-            oLiveRegion.className = "sapUiInvisibleText";
+            const oLiveRegion = document.createElement('div');
+            oLiveRegion.id = 'a2a-live-region';
+            oLiveRegion.setAttribute('aria-live', 'polite');
+            oLiveRegion.setAttribute('aria-atomic', 'true');
+            oLiveRegion.className = 'sapUiInvisibleText';
             document.body.appendChild(oLiveRegion);
             
             this._liveRegion = oLiveRegion;
@@ -367,13 +367,13 @@ sap.ui.define([
          * @private
          */
         _setupAriaLabels: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             // Add aria-label to main view
             oView.addCustomData(new sap.ui.core.CustomData({
-                key: "aria-label",
-                value: "{i18n>app.title}",
+                key: 'aria-label',
+                value: '{i18n>app.title}',
                 writeToDom: true
             }));
 
@@ -389,23 +389,23 @@ sap.ui.define([
          * @private
          */
         _setupFormLabels: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             // Find all input controls and ensure they have labels
-            var aInputs = oView.findAggregatedObjects(true, function(oControl) {
-                return oControl.isA("sap.m.InputBase");
+            const aInputs = oView.findAggregatedObjects(true, (oControl) => {
+                return oControl.isA('sap.m.InputBase');
             });
 
-            aInputs.forEach(function(oInput) {
+            aInputs.forEach((oInput) => {
                 if (!oInput.getAriaLabelledBy().length && !oInput.getAriaLabel()) {
                     // Try to find associated label
-                    var oLabel = this._findAssociatedLabel(oInput);
+                    const oLabel = this._findAssociatedLabel(oInput);
                     if (oLabel) {
                         oInput.addAriaLabelledBy(oLabel);
                     }
                 }
-            }.bind(this));
+            });
         },
 
         /**
@@ -415,16 +415,16 @@ sap.ui.define([
          * @returns {sap.m.Label} Associated label
          */
         _findAssociatedLabel: function(oInput) {
-            var oParent = oInput.getParent();
+            let oParent = oInput.getParent();
             
             while (oParent) {
-                if (oParent.isA("sap.ui.layout.form.FormElement")) {
+                if (oParent.isA('sap.ui.layout.form.FormElement')) {
                     return oParent.getLabel();
                 }
-                if (oParent.isA("sap.m.VBox") || oParent.isA("sap.m.HBox")) {
-                    var aItems = oParent.getItems();
-                    var iInputIndex = aItems.indexOf(oInput);
-                    if (iInputIndex > 0 && aItems[iInputIndex - 1].isA("sap.m.Label")) {
+                if (oParent.isA('sap.m.VBox') || oParent.isA('sap.m.HBox')) {
+                    const aItems = oParent.getItems();
+                    const iInputIndex = aItems.indexOf(oInput);
+                    if (iInputIndex > 0 && aItems[iInputIndex - 1].isA('sap.m.Label')) {
                         return aItems[iInputIndex - 1];
                     }
                 }
@@ -439,16 +439,16 @@ sap.ui.define([
          * @private
          */
         _setupTableHeaders: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
-            var aTables = oView.findAggregatedObjects(true, function(oControl) {
-                return oControl.isA("sap.ui.table.Table") || oControl.isA("sap.m.Table");
+            const aTables = oView.findAggregatedObjects(true, (oControl) => {
+                return oControl.isA('sap.ui.table.Table') || oControl.isA('sap.m.Table');
             });
 
-            aTables.forEach(function(oTable) {
+            aTables.forEach((oTable) => {
                 this._enhanceTableAccessibility(oTable);
-            }.bind(this));
+            });
         },
 
         /**
@@ -459,11 +459,11 @@ sap.ui.define([
         _enhanceTableAccessibility: function(oTable) {
             // Add table caption if not present
             if (!oTable.getAriaLabelledBy().length) {
-                var sTableTitle = oTable.getTitle && oTable.getTitle() ? 
-                                 oTable.getTitle() : "Data Table";
+                const sTableTitle = oTable.getTitle && oTable.getTitle() ? 
+                                 oTable.getTitle() : 'Data Table';
                 
-                var oInvisibleText = new sap.ui.core.InvisibleText({
-                    text: sTableTitle + ". Use arrow keys to navigate."
+                const oInvisibleText = new sap.ui.core.InvisibleText({
+                    text: `${sTableTitle  }. Use arrow keys to navigate.`
                 });
                 
                 oTable.addAriaLabelledBy(oInvisibleText);
@@ -471,8 +471,8 @@ sap.ui.define([
 
             // Set appropriate ARIA role
             oTable.addCustomData(new sap.ui.core.CustomData({
-                key: "role",
-                value: "grid",
+                key: 'role',
+                value: 'grid',
                 writeToDom: true
             }));
         },
@@ -482,25 +482,25 @@ sap.ui.define([
          * @private
          */
         _setupLandmarkRoles: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             // Set main landmark
-            var oMainContent = oView.byId("mainContent");
+            const oMainContent = oView.byId('mainContent');
             if (oMainContent) {
                 oMainContent.addCustomData(new sap.ui.core.CustomData({
-                    key: "role",
-                    value: "main",
+                    key: 'role',
+                    value: 'main',
                     writeToDom: true
                 }));
             }
 
             // Set navigation landmarks
-            var oNavigation = oView.byId("navigation");
+            const oNavigation = oView.byId('navigation');
             if (oNavigation) {
                 oNavigation.addCustomData(new sap.ui.core.CustomData({
-                    key: "role",
-                    value: "navigation",
+                    key: 'role',
+                    value: 'navigation',
                     writeToDom: true
                 }));
             }
@@ -514,23 +514,23 @@ sap.ui.define([
          * @private
          */
         _setupHeaderFooterLandmarks: function() {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
-            var oHeader = oView.byId("pageHeader");
+            const oHeader = oView.byId('pageHeader');
             if (oHeader) {
                 oHeader.addCustomData(new sap.ui.core.CustomData({
-                    key: "role",
-                    value: "banner",
+                    key: 'role',
+                    value: 'banner',
                     writeToDom: true
                 }));
             }
 
-            var oFooter = oView.byId("pageFooter");
+            const oFooter = oView.byId('pageFooter');
             if (oFooter) {
                 oFooter.addCustomData(new sap.ui.core.CustomData({
-                    key: "role",
-                    value: "contentinfo",
+                    key: 'role',
+                    value: 'contentinfo',
                     writeToDom: true
                 }));
             }
@@ -559,7 +559,7 @@ sap.ui.define([
             this._focusStack = [];
             
             // Listen for dialog open/close events
-            sap.ui.getCore().getEventBus().subscribe("sap.m", "Dialog", this._handleDialogOpen.bind(this));
+            sap.ui.getCore().getEventBus().subscribe('sap.m', 'Dialog', this._handleDialogOpen.bind(this));
         },
 
         /**
@@ -571,18 +571,18 @@ sap.ui.define([
          */
         _handleDialogOpen: function(sChannelId, sEventId, mParameters) {
             if (mParameters && mParameters.dialog) {
-                var oDialog = mParameters.dialog;
+                const oDialog = mParameters.dialog;
                 
                 // Store current focus
                 this._focusStack.push(document.activeElement);
                 
                 // Set focus to first focusable element in dialog
-                setTimeout(function() {
-                    var oFirstFocusable = this._findFirstFocusableElement(oDialog);
+                setTimeout(() => {
+                    const oFirstFocusable = this._findFirstFocusableElement(oDialog);
                     if (oFirstFocusable) {
                         oFirstFocusable.focus();
                     }
-                }.bind(this), 100);
+                }, 100);
                 
                 // Set up focus trap
                 this._trapFocusInDialog(oDialog);
@@ -596,8 +596,8 @@ sap.ui.define([
          * @returns {Element} First focusable element
          */
         _findFirstFocusableElement: function(oContainer) {
-            var sFocusableSelector = 'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
-            var $focusable = oContainer.$().find(sFocusableSelector);
+            const sFocusableSelector = 'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+            const $focusable = oContainer.$().find(sFocusableSelector);
             return $focusable.length > 0 ? $focusable[0] : null;
         },
 
@@ -611,13 +611,13 @@ sap.ui.define([
                 this._createLiveRegion();
             }
             
-            this._liveRegion.setAttribute("aria-live", sPriority || "polite");
+            this._liveRegion.setAttribute('aria-live', sPriority || 'polite');
             this._liveRegion.textContent = sText;
             
             // Clear after announcement
-            setTimeout(function() {
-                this._liveRegion.textContent = "";
-            }.bind(this), 1000);
+            setTimeout(() => {
+                this._liveRegion.textContent = '';
+            }, 1000);
         },
 
         /**
@@ -648,13 +648,13 @@ sap.ui.define([
          */
         _handleAccessibilityChange: function(sSetting, vValue) {
             switch (sSetting) {
-                case "reducedMotion":
+                case 'reducedMotion':
                     this._handleReducedMotionChange(vValue);
                     break;
-                case "highContrast":
+                case 'highContrast':
                     this._handleHighContrastChange(vValue);
                     break;
-                case "screenReaderEnabled":
+                case 'screenReaderEnabled':
                     this._handleScreenReaderChange(vValue);
                     break;
             }
@@ -666,13 +666,13 @@ sap.ui.define([
          * @param {boolean} bEnabled Whether reduced motion is enabled
          */
         _handleReducedMotionChange: function(bEnabled) {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             if (bEnabled) {
-                oView.addStyleClass("sapUiReducedMotion");
+                oView.addStyleClass('sapUiReducedMotion');
             } else {
-                oView.removeStyleClass("sapUiReducedMotion");
+                oView.removeStyleClass('sapUiReducedMotion');
             }
         },
 
@@ -682,13 +682,13 @@ sap.ui.define([
          * @param {boolean} bEnabled Whether high contrast is enabled
          */
         _handleHighContrastChange: function(bEnabled) {
-            var oView = this.getView();
+            const oView = this.getView();
             if (!oView) return;
 
             if (bEnabled) {
-                oView.addStyleClass("sapUiHighContrast");
+                oView.addStyleClass('sapUiHighContrast');
             } else {
-                oView.removeStyleClass("sapUiHighContrast");
+                oView.removeStyleClass('sapUiHighContrast');
             }
         },
 
@@ -699,10 +699,10 @@ sap.ui.define([
         _attachAccessibilityListeners: function() {
             // Listen for media query changes
             if (window.matchMedia) {
-                var oReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-                oReducedMotionQuery.addListener(function(oQuery) {
-                    this.updateAccessibilitySetting("reducedMotion", oQuery.matches);
-                }.bind(this));
+                const oReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+                oReducedMotionQuery.addListener((oQuery) => {
+                    this.updateAccessibilitySetting('reducedMotion', oQuery.matches);
+                });
             }
         }
     };

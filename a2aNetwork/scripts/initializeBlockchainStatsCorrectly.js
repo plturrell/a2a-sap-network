@@ -44,7 +44,7 @@ db.run(`
     blockchainStats.totalTransactions,
     blockchainStats.averageBlockTime,
     blockchainStats.timestamp
-], function(err) {
+], (err) => {
     if (err) {
         console.error('Error inserting blockchain stats:', err);
     } else {

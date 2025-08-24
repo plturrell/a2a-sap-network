@@ -11,7 +11,7 @@ const ContextMockCaller = artifacts.require('ContextMockCaller');
 
 const { shouldBehaveLikeRegularContext } = require('../utils/Context.behavior');
 
-contract('ERC2771Context', function (accounts) {
+contract('ERC2771Context', (accounts) => {
   beforeEach(async function () {
     this.forwarder = await MinimalForwarder.new();
     this.recipient = await ERC2771ContextMock.new(this.forwarder.address);
@@ -34,7 +34,7 @@ contract('ERC2771Context', function (accounts) {
     expect(await this.recipient.isTrustedForwarder(this.forwarder.address));
   });
 
-  context('when called directly', function () {
+  context('when called directly', () => {
     beforeEach(async function () {
       this.context = this.recipient; // The Context behavior expects the contract in this.context
       this.caller = await ContextMockCaller.new();
@@ -43,7 +43,7 @@ contract('ERC2771Context', function (accounts) {
     shouldBehaveLikeRegularContext(...accounts);
   });
 
-  context('when receiving a relayed call', function () {
+  context('when receiving a relayed call', () => {
     beforeEach(async function () {
       this.wallet = Wallet.generate();
       this.sender = web3.utils.toChecksumAddress(this.wallet.getAddressString());
@@ -54,7 +54,7 @@ contract('ERC2771Context', function (accounts) {
       };
     });
 
-    describe('msgSender', function () {
+    describe('msgSender', () => {
       it('returns the relayed transaction original sender', async function () {
         const data = this.recipient.contract.methods.msgSender().encodeABI();
 
@@ -75,7 +75,7 @@ contract('ERC2771Context', function (accounts) {
       });
     });
 
-    describe('msgData', function () {
+    describe('msgData', () => {
       it('returns the relayed transaction original data', async function () {
         const integerValue = '42';
         const stringValue = 'OpenZeppelin';

@@ -108,7 +108,7 @@ class ErrorHandler {
     classifyError(error, context = {}) {
         let type = ErrorTypes.INTERNAL;
         let severity = ErrorSeverity.MEDIUM;
-        let message = error.message || 'Unknown error';
+        const message = error.message || 'Unknown error';
 
         // Classify by error message patterns
         if (message.includes('nonce') || message.includes('replacement transaction underpriced')) {

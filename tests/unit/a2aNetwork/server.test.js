@@ -199,8 +199,8 @@ describe('TC-BE-NET-069: Server Initialization', () => {
       
       // Log baseline for monitoring (as per TC-BE-NET-069 postconditions)
       console.info('Memory baseline established:', {
-        heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + 'MB',
-        heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB'
+        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)  }MB`,
+        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)  }MB`
       });
     });
   });

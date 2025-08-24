@@ -1,41 +1,41 @@
-var inspect = require('../');
-var test = require('tape');
-var arrow = require('make-arrow-function')();
-var functionsHaveConfigurableNames = require('functions-have-names').functionsHaveConfigurableNames();
+const inspect = require('../');
+const test = require('tape');
+const arrow = require('make-arrow-function')();
+const functionsHaveConfigurableNames = require('functions-have-names').functionsHaveConfigurableNames();
 
-test('function', function (t) {
+test('function', (t) => {
     t.plan(1);
-    var obj = [1, 2, function f(n) { return n; }, 4];
+    const obj = [1, 2, function f(n) { return n; }, 4];
     t.equal(inspect(obj), '[ 1, 2, [Function: f], 4 ]');
 });
 
-test('function name', function (t) {
+test('function name', (t) => {
     t.plan(1);
-    var f = (function () {
+    const f = (function () {
         return function () {};
     }());
     f.toString = function toStr() { return 'function xxx () {}'; };
-    var obj = [1, 2, f, 4];
+    const obj = [1, 2, f, 4];
     t.equal(inspect(obj), '[ 1, 2, [Function (anonymous)] { toString: [Function: toStr] }, 4 ]');
 });
 
-test('anon function', function (t) {
-    var f = (function () {
+test('anon function', (t) => {
+    const f = (function () {
         return function () {};
     }());
-    var obj = [1, 2, f, 4];
+    const obj = [1, 2, f, 4];
     t.equal(inspect(obj), '[ 1, 2, [Function (anonymous)], 4 ]');
 
     t.end();
 });
 
-test('arrow function', { skip: !arrow }, function (t) {
+test('arrow function', { skip: !arrow }, (t) => {
     t.equal(inspect(arrow), '[Function (anonymous)]');
 
     t.end();
 });
 
-test('truly nameless function', { skip: !arrow || !functionsHaveConfigurableNames }, function (t) {
+test('truly nameless function', { skip: !arrow || !functionsHaveConfigurableNames }, (t) => {
     function f() {}
     Object.defineProperty(f, 'name', { value: false });
     t.equal(f.name, false);
@@ -54,7 +54,7 @@ test('truly nameless function', { skip: !arrow || !functionsHaveConfigurableName
         'named function with truthy `.name` hides its original name'
     );
 
-    var anon = function () {}; // eslint-disable-line func-style
+    const anon = function () {}; // eslint-disable-line func-style
     Object.defineProperty(anon, 'name', { value: null });
     t.equal(anon.name, null);
     t.equal(
@@ -63,7 +63,7 @@ test('truly nameless function', { skip: !arrow || !functionsHaveConfigurableName
         'anon function with falsy `.name` does not hide its anonymity'
     );
 
-    var anon2 = function () {}; // eslint-disable-line func-style
+    const anon2 = function () {}; // eslint-disable-line func-style
     Object.defineProperty(anon2, 'name', { value: 1 });
     t.equal(anon2.name, 1);
     t.equal(

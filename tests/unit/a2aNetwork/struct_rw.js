@@ -20,21 +20,21 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var bufrw = require('../');
-var LengthResult = require('../base').LengthResult;
-var ReadResult = require('../base').ReadResult;
-var WriteResult = require('../base').WriteResult;
-var UInt8 = require('../atoms').UInt8;
-var UInt16BE = require('../atoms').UInt16BE;
-var DoubleBE = require('../atoms').DoubleBE;
-var StringRW = require('../string_rw');
-var StructRW = require('../struct');
-var str1 = StringRW(UInt8);
+const bufrw = require('../');
+const LengthResult = require('../base').LengthResult;
+const ReadResult = require('../base').ReadResult;
+const WriteResult = require('../base').WriteResult;
+const UInt8 = require('../atoms').UInt8;
+const UInt16BE = require('../atoms').UInt16BE;
+const DoubleBE = require('../atoms').DoubleBE;
+const StringRW = require('../string_rw');
+const StructRW = require('../struct');
+const str1 = StringRW(UInt8);
 
-var anonLoc = StructRW({
+const anonLoc = StructRW({
     lat: DoubleBE,
     lng: DoubleBE
 });
@@ -49,12 +49,12 @@ function Loc(lat, lng) {
     if (!(this instanceof Loc)) {
         return new Loc(lat, lng);
     }
-    var self = this;
+    const self = this;
     self.lat = lat || 0;
     self.lng = lng || 0;
 }
 
-var consLoc = StructRW(Loc, {
+const consLoc = StructRW(Loc, {
     lat: DoubleBE,
     lng: DoubleBE
 });
@@ -70,16 +70,16 @@ function Frame(mess) {
     if (!(this instanceof Frame)) {
         return new Frame(mess);
     }
-    var self = this;
+    const self = this;
     self.size = 0;
     self.mess = mess || '';
 }
 
-var lengthRes = new LengthResult();
+const lengthRes = new LengthResult();
 Frame.rw = StructRW(Frame, [
     {call: {
         poolByteLength: function(destResult, frame) {
-            var res = str1.poolByteLength(destResult, frame.mess);
+            const res = str1.poolByteLength(destResult, frame.mess);
             if (res.err) return res;
             frame.size = res.length + UInt16BE.width;
             if (frame.size > 10) {
@@ -89,7 +89,7 @@ Frame.rw = StructRW(Frame, [
             }
         },
         poolWriteInto: function(destResult, frame, buffer, offset) {
-            var res = str1.poolByteLength(lengthRes, frame.mess);
+            const res = str1.poolByteLength(lengthRes, frame.mess);
             if (res.err) return res;
             frame.size = res.length + UInt16BE.width;
             if (buffer.length - offset < frame.size) {
@@ -142,7 +142,7 @@ test('StructRW: frame', testRW.cases(Frame.rw, [
 
 function Thing(foo, bar) {
     if (!(this instanceof Thing)) return new Thing(foo, bar);
-    var self = this;
+    const self = this;
     self.foo = foo;
     self.bar = bar;
 }
@@ -187,7 +187,7 @@ function NonPoolFrame(mess) {
 NonPoolFrame.rw = StructRW(NonPoolFrame, [
     {call: {
         byteLength: function(frame) {
-            var res = str1.byteLength(frame.mess);
+            const res = str1.byteLength(frame.mess);
             if (res.err) return res;
             frame.size = res.length + UInt16BE.width;
             if (frame.size > 10) {
@@ -197,7 +197,7 @@ NonPoolFrame.rw = StructRW(NonPoolFrame, [
             }
         },
         writeInto: function(frame, buffer, offset) {
-            var res = str1.byteLength(frame.mess);
+            const res = str1.byteLength(frame.mess);
             if (res.err) return res;
             frame.size = res.length + UInt16BE.width;
             if (buffer.length - offset < frame.size) {
@@ -247,18 +247,18 @@ test('StructRW: non pooled frame', testRW.cases(NonPoolFrame.rw, [
     }
 ]));
 
-test('structrw poolreadfrom correctly allocates new obj', function t(assert) {
-    var buf = Buffer.from([0x00, 0x06, 0x03, 0x63, 0x61, 0x74]);
-    var destResult = new ReadResult(null, 0, {a: 'b'});
+test('structrw poolreadfrom correctly allocates new obj', (assert) => {
+    const buf = Buffer.from([0x00, 0x06, 0x03, 0x63, 0x61, 0x74]);
+    const destResult = new ReadResult(null, 0, {a: 'b'});
     NonPoolFrame.rw.poolReadFrom(destResult, buf, 0);
     assert.equal(destResult.value.constructor, NonPoolFrame);
     assert.end();
 });
 
-test('structrw poolreadfrom correctly reuses obj', function t(assert) {
-    var buf = Buffer.from([0x00, 0x06, 0x03, 0x63, 0x61, 0x74]);
-    var obj = new NonPoolFrame();
-    var destResult = new ReadResult(null, 0, obj);
+test('structrw poolreadfrom correctly reuses obj', (assert) => {
+    const buf = Buffer.from([0x00, 0x06, 0x03, 0x63, 0x61, 0x74]);
+    const obj = new NonPoolFrame();
+    const destResult = new ReadResult(null, 0, obj);
     NonPoolFrame.rw.poolReadFrom(destResult, buf, 0);
     assert.equal(destResult.value, obj);
     assert.end();

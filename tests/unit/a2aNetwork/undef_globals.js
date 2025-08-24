@@ -1,16 +1,16 @@
-var test = require('tape');
-var vm = require('vm');
-var fs = require('fs');
-var src = fs.readFileSync(__dirname + '/../../index.js', 'utf8');
+const test = require('tape');
+const vm = require('vm');
+const fs = require('fs');
+const src = fs.readFileSync(`${__dirname  }/../../index.js`, 'utf8');
 
-test('u8a without globals', function (t) {
-    var c = {
+test('u8a without globals', (t) => {
+    const c = {
         module: { exports: {} },
     };
     c.exports = c.module.exports;
     vm.runInNewContext(src, c);
-    var TA = c.module.exports;
-    var ua = new(TA.Uint8Array)(5);
+    const TA = c.module.exports;
+    const ua = new(TA.Uint8Array)(5);
     
     t.equal(ua.length, 5);
     ua[1] = 256 + 55;

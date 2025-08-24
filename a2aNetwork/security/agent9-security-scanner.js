@@ -91,7 +91,7 @@ class Agent9SecurityScanner {
         
         domManipulationPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 issues.push({
                     type: 'XSS_DOM_MANIPULATION',
                     description: 'Potential XSS vulnerability in DOM manipulation',
@@ -113,7 +113,7 @@ class Agent9SecurityScanner {
         
         messagePatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 issues.push({
                     type: 'XSS_MESSAGE_DISPLAY',
                     description: 'Potential XSS in message display - user data not properly encoded',
@@ -142,7 +142,7 @@ class Agent9SecurityScanner {
 
         dynamicRulePatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 issues.push({
                     type: 'XSS_DYNAMIC_CODE_EXECUTION',
                     description: 'Dynamic code execution in reasoning logic - potential XSS vulnerability',
@@ -170,7 +170,7 @@ class Agent9SecurityScanner {
         
         sqlPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('critical', 'SQL_INJECTION', 
                     'Potential SQL injection vulnerability in dynamic query construction',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -183,7 +183,7 @@ class Agent9SecurityScanner {
         const ajaxPattern = /jQuery\.ajax\s*\({[^}]*}/gs;
         const matches = content.matchAll(ajaxPattern);
         
-        for (let match of matches) {
+        for (const match of matches) {
             const ajaxCall = match[0];
             
             // Check if it's a state-changing operation
@@ -213,7 +213,7 @@ class Agent9SecurityScanner {
         
         inputPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 // Skip if it's followed by validation within reasonable proximity
                 const afterMatch = content.slice(match.index, match.index + 200);
                 if (!afterMatch.includes('validate') && !afterMatch.includes('sanitize')) {
@@ -228,7 +228,7 @@ class Agent9SecurityScanner {
         const formSubmitPattern = /onConfirm|onExecute|onCreate|onStartReasoning|onMakeDecision/g;
         const matches = content.matchAll(formSubmitPattern);
         
-        for (let match of matches) {
+        for (const match of matches) {
             const functionStart = match.index;
             const functionEnd = this.findFunctionEnd(content, functionStart);
             const functionBody = content.slice(functionStart, functionEnd);
@@ -263,7 +263,7 @@ class Agent9SecurityScanner {
         
         outputPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('medium', 'OUTPUT_ENCODING_MISSING', 
                     'Output data not properly encoded before display',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -282,7 +282,7 @@ class Agent9SecurityScanner {
         
         credentialPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('critical', 'HARDCODED_CREDENTIALS', 
                     'Potential hardcoded credentials detected',
                     filePath, this.getLineNumber(content, match.index));
@@ -304,7 +304,7 @@ class Agent9SecurityScanner {
             const storagePattern = /(sessionStorage|localStorage)\.setItem.*token/gi;
             const matches = content.matchAll(storagePattern);
             
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('high', 'SESSION_TOKEN_STORAGE', 
                     'Potential session token stored in browser storage',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -316,7 +316,7 @@ class Agent9SecurityScanner {
             const eventSourcePattern = /new\s+EventSource\([^)]+\)/g;
             const matches = content.matchAll(eventSourcePattern);
             
-            for (let match of matches) {
+            for (const match of matches) {
                 if (!match[0].includes('withCredentials')) {
                     this.addIssue('medium', 'EVENTSOURCE_NO_AUTH',
                         'EventSource connection may lack proper authentication',
@@ -337,7 +337,7 @@ class Agent9SecurityScanner {
         
         errorPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('medium', 'ERROR_INFO_DISCLOSURE', 
                     'Error handling may expose sensitive information',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -348,7 +348,7 @@ class Agent9SecurityScanner {
         const ajaxPattern = /jQuery\.ajax\s*\({[^}]*}/gs;
         const matches = content.matchAll(ajaxPattern);
         
-        for (let match of matches) {
+        for (const match of matches) {
             const ajaxCall = match[0];
             if (!ajaxCall.includes('error:')) {
                 this.addIssue('low', 'MISSING_ERROR_HANDLING', 
@@ -371,7 +371,7 @@ class Agent9SecurityScanner {
         
         logPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('high', 'SENSITIVE_DATA_LOGGING', 
                     'Potential sensitive data in console logging',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -389,7 +389,7 @@ class Agent9SecurityScanner {
         
         debugPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
-            for (let match of matches) {
+            for (const match of matches) {
                 this.addIssue('low', 'DATA_EXPOSURE_DEBUG', 
                     'Potential data exposure through debugging code',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -402,11 +402,11 @@ class Agent9SecurityScanner {
         const apiUrlPattern = /url:\s*["'][^"']*\/a2a\/agent9\/[^"']*["']/g;
         const matches = content.matchAll(apiUrlPattern);
         
-        for (let match of matches) {
+        for (const match of matches) {
             const url = match[0];
             
             // Check for parameter injection vulnerabilities
-            if (url.includes('" + ') || url.includes("' + ")) {
+            if (url.includes('" + ') || url.includes('\' + ')) {
                 this.addIssue('high', 'API_PARAMETER_INJECTION', 
                     'API URL constructed with string concatenation - potential injection vulnerability',
                     filePath, this.getLineNumber(content, match.index), match[0]);
@@ -417,7 +417,7 @@ class Agent9SecurityScanner {
         const postPattern = /type:\s*["']POST["']/g;
         const postMatches = content.matchAll(postPattern);
         
-        for (let match of postMatches) {
+        for (const match of postMatches) {
             const ajaxStart = content.lastIndexOf('jQuery.ajax', match.index);
             const ajaxEnd = content.indexOf('})', match.index) + 2;
             const ajaxBlock = content.slice(ajaxStart, ajaxEnd);
@@ -437,7 +437,7 @@ class Agent9SecurityScanner {
         const fragmentPattern = /Fragment\.load\(/g;
         const fragmentMatches = content.matchAll(fragmentPattern);
         
-        for (let match of fragmentMatches) {
+        for (const match of fragmentMatches) {
             const fragmentCall = this.extractFragmentCall(content, match.index);
             if (!fragmentCall.includes('controller:')) {
                 this.addIssue('medium', 'SAP_FRAGMENT_CONTROLLER_MISSING', 
@@ -521,7 +521,7 @@ class Agent9SecurityScanner {
             const depthPattern = /maxInferenceDepth:\s*(\d+)/g;
             const matches = content.matchAll(depthPattern);
             
-            for (let match of matches) {
+            for (const match of matches) {
                 const depth = parseInt(match[1]);
                 if (depth > 100) {
                     this.addIssue('medium', 'REASONING_DEPTH_UNBOUNDED',
@@ -536,7 +536,7 @@ class Agent9SecurityScanner {
             const thresholdPattern = /confidenceThreshold:\s*([0-9.]+)/g;
             const matches = content.matchAll(thresholdPattern);
             
-            for (let match of matches) {
+            for (const match of matches) {
                 const threshold = parseFloat(match[1]);
                 if (threshold < 0 || threshold > 1) {
                     this.addIssue('medium', 'CONFIDENCE_THRESHOLD_INVALID',
@@ -685,7 +685,7 @@ class Agent9SecurityScanner {
         const mediumPenalty = 5;
         const lowPenalty = 1;
         
-        let deductions = 
+        const deductions = 
             (this.results.summary.criticalCount * criticalPenalty) +
             (this.results.summary.highCount * highPenalty) +
             (this.results.summary.mediumCount * mediumPenalty) +

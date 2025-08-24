@@ -1,16 +1,16 @@
-"use strict";
+'use strict';
 
-const lua = require("../src/lua.js");
-const lauxlib = require("../src/lauxlib.js");
-const lstring = require("../src/lstring.js");
-const {to_luastring} = require("../src/fengaricore.js");
+const lua = require('../src/lua.js');
+const lauxlib = require('../src/lauxlib.js');
+const lstring = require('../src/lstring.js');
+const {to_luastring} = require('../src/fengaricore.js');
 
 
 test('LOADK, RETURN', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = "hello world"
         return a
     `;
@@ -19,15 +19,15 @@ test('LOADK, RETURN', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello world");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello world');
 });
 
 
 test('MOVE', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = "hello world"
         local b = a
         return b
@@ -37,14 +37,14 @@ test('MOVE', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello world");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello world');
 });
 
 test('Binary op', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = 5
         local b = 10
         return a + b, a - b, a * b, a / b, a % b, a^b, a // b, a & b, a | b, a ~ b, a << b, a >> b
@@ -60,10 +60,10 @@ test('Binary op', () => {
 
 
 test('Unary op, LOADBOOL', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = 5
         local b = false
         return -a, not b, ~a
@@ -79,10 +79,10 @@ test('Unary op, LOADBOOL', () => {
 
 
 test('NEWTABLE', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = {}
         return a
     `;
@@ -96,10 +96,10 @@ test('NEWTABLE', () => {
 
 
 test('CALL', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = function (a, b)
             return a + b
         end
@@ -118,10 +118,10 @@ test('CALL', () => {
 
 
 test('Multiple return', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = function (a, b)
             return a + b, a - b, a * b
         end
@@ -145,10 +145,10 @@ test('Multiple return', () => {
 
 
 test('TAILCALL', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = function (a, b)
             return a + b
         end
@@ -165,10 +165,10 @@ test('TAILCALL', () => {
 
 
 test('VARARG', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local f = function (...)
             return ...
         end
@@ -186,10 +186,10 @@ test('VARARG', () => {
 
 
 test('LE, JMP', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a, b = 1, 1
 
         return a >= b
@@ -204,10 +204,10 @@ test('LE, JMP', () => {
 
 
 test('LT', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a, b = 1, 1
 
         return a > b
@@ -222,10 +222,10 @@ test('LT', () => {
 
 
 test('EQ', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a, b = 1, 1
 
         return a == b
@@ -240,10 +240,10 @@ test('EQ', () => {
 
 
 test('TESTSET (and)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = true
         local b = "hello"
 
@@ -254,15 +254,15 @@ test('TESTSET (and)', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('TESTSET (or)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = false
         local b = "hello"
 
@@ -273,15 +273,15 @@ test('TESTSET (or)', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('TEST (true)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = true
         local b = "hello"
 
@@ -296,15 +296,15 @@ test('TEST (true)', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('TEST (false)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = false
         local b = "hello"
 
@@ -319,15 +319,15 @@ test('TEST (false)', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("goodbye");
+    expect(lua.lua_tojsstring(L, -1)).toBe('goodbye');
 });
 
 
 test('FORPREP, FORLOOP (int)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local total = 0
 
         for i = 0, 10 do
@@ -346,10 +346,10 @@ test('FORPREP, FORLOOP (int)', () => {
 
 
 test('FORPREP, FORLOOP (float)', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local total = 0
 
         for i = 0.5, 10.5 do
@@ -368,10 +368,10 @@ test('FORPREP, FORLOOP (float)', () => {
 
 
 test('SETTABLE, GETTABLE', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {}
 
         t[1] = "hello"
@@ -385,17 +385,17 @@ test('SETTABLE, GETTABLE', () => {
     }
 
     expect(lua.lua_topointer(L, -1).strong.get(1).value.jsstring())
-        .toBe("hello");
-    expect(lua.lua_topointer(L, -1).strong.get(lstring.luaS_hash(to_luastring("two"))).value.jsstring())
-        .toBe("world");
+        .toBe('hello');
+    expect(lua.lua_topointer(L, -1).strong.get(lstring.luaS_hash(to_luastring('two'))).value.jsstring())
+        .toBe('world');
 });
 
 
 test('SETUPVAL, GETUPVAL', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local up = "hello"
 
         local f = function ()
@@ -411,15 +411,15 @@ test('SETUPVAL, GETUPVAL', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("world");
+    expect(lua.lua_tojsstring(L, -1)).toBe('world');
 });
 
 
 test('SETTABUP, GETTABUP', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         t = {}
 
         t[1] = "hello"
@@ -433,17 +433,17 @@ test('SETTABUP, GETTABUP', () => {
     }
 
     expect(lua.lua_topointer(L, -1).strong.get(1).value.jsstring())
-        .toBe("hello");
-    expect(lua.lua_topointer(L, -1).strong.get(lstring.luaS_hash(to_luastring("two"))).value.jsstring())
-        .toBe("world");
+        .toBe('hello');
+    expect(lua.lua_topointer(L, -1).strong.get(lstring.luaS_hash(to_luastring('two'))).value.jsstring())
+        .toBe('world');
 });
 
 
 test('SELF', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {}
 
         t.value = "hello"
@@ -458,15 +458,15 @@ test('SELF', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello');
 });
 
 
 test('SETLIST', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
         return t
@@ -482,10 +482,10 @@ test('SETLIST', () => {
 
 
 test('Variable SETLIST', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local a = function ()
             return 6, 7, 8, 9
         end
@@ -505,10 +505,10 @@ test('Variable SETLIST', () => {
 
 
 test('Long SETLIST', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5}
 
         return t
@@ -548,10 +548,10 @@ test('Long SETLIST', () => {
 
 
 test('TFORCALL, TFORLOOP', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local iterator = function (t, i)
             i = i + 1
             local v = t[i]
@@ -582,10 +582,10 @@ test('TFORCALL, TFORLOOP', () => {
 
 
 test('LEN', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         local t = {[10000] = "foo"}
         local t2 = {1, 2, 3}
         local s = "hello"
@@ -604,10 +604,10 @@ test('LEN', () => {
 
 
 test('CONCAT', () => {
-    let L = lauxlib.luaL_newstate();
-    if (!L) throw Error("failed to create lua state");
+    const L = lauxlib.luaL_newstate();
+    if (!L) throw Error('failed to create lua state');
 
-    let luaCode = `
+    const luaCode = `
         return "hello " .. 2 .. " you"
     `;
     {
@@ -615,5 +615,5 @@ test('CONCAT', () => {
         lua.lua_call(L, 0, -1);
     }
 
-    expect(lua.lua_tojsstring(L, -1)).toBe("hello 2 you");
+    expect(lua.lua_tojsstring(L, -1)).toBe('hello 2 you');
 });

@@ -6,14 +6,14 @@ const {
 
 const AccessControlDefaultAdminRules = artifacts.require('$AccessControlDefaultAdminRules');
 
-contract('AccessControlDefaultAdminRules', function (accounts) {
+contract('AccessControlDefaultAdminRules', (accounts) => {
   const delay = web3.utils.toBN(time.duration.hours(10));
 
   beforeEach(async function () {
     this.accessControl = await AccessControlDefaultAdminRules.new(delay, accounts[0], { from: accounts[0] });
   });
 
-  it('initial admin not zero', async function () {
+  it('initial admin not zero', async () => {
     await expectRevert(
       AccessControlDefaultAdminRules.new(delay, constants.ZERO_ADDRESS),
       'AccessControl: 0 default admin',

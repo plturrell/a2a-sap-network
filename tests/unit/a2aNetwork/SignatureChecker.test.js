@@ -9,7 +9,7 @@ const ERC1271MaliciousMock = artifacts.require('ERC1271MaliciousMock');
 const TEST_MESSAGE = web3.utils.sha3('OpenZeppelin');
 const WRONG_MESSAGE = web3.utils.sha3('Nope');
 
-contract('SignatureChecker (ERC1271)', function (accounts) {
+contract('SignatureChecker (ERC1271)', (accounts) => {
   const [signer, other] = accounts;
 
   before('deploying', async function () {
@@ -19,7 +19,7 @@ contract('SignatureChecker (ERC1271)', function (accounts) {
     this.signature = await web3.eth.sign(TEST_MESSAGE, signer);
   });
 
-  context('EOA account', function () {
+  context('EOA account', () => {
     it('with matching signer and signature', async function () {
       expect(
         await this.signaturechecker.$isValidSignatureNow(signer, toEthSignedMessageHash(TEST_MESSAGE), this.signature),
@@ -39,9 +39,9 @@ contract('SignatureChecker (ERC1271)', function (accounts) {
     });
   });
 
-  context('ERC1271 wallet', function () {
+  context('ERC1271 wallet', () => {
     for (const signature of ['isValidERC1271SignatureNow', 'isValidSignatureNow']) {
-      context(signature, function () {
+      context(signature, () => {
         it('with matching signer and signature', async function () {
           expect(
             await this.signaturechecker[`$${signature}`](

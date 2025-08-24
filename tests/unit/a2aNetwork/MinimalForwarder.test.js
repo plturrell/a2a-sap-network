@@ -8,7 +8,7 @@ const { expect } = require('chai');
 const MinimalForwarder = artifacts.require('MinimalForwarder');
 const CallReceiverMock = artifacts.require('CallReceiverMock');
 
-contract('MinimalForwarder', function (accounts) {
+contract('MinimalForwarder', (accounts) => {
   beforeEach(async function () {
     this.forwarder = await MinimalForwarder.new();
 
@@ -26,7 +26,7 @@ contract('MinimalForwarder', function (accounts) {
     };
   });
 
-  context('with message', function () {
+  context('with message', () => {
     beforeEach(async function () {
       this.wallet = Wallet.generate();
       this.sender = web3.utils.toChecksumAddress(this.wallet.getAddressString());
@@ -49,8 +49,8 @@ contract('MinimalForwarder', function (accounts) {
         });
     });
 
-    context('verify', function () {
-      context('valid signature', function () {
+    context('verify', () => {
+      context('valid signature', () => {
         beforeEach(async function () {
           expect(await this.forwarder.getNonce(this.req.from)).to.be.bignumber.equal(web3.utils.toBN(this.req.nonce));
         });
@@ -64,7 +64,7 @@ contract('MinimalForwarder', function (accounts) {
         });
       });
 
-      context('invalid signature', function () {
+      context('invalid signature', () => {
         it('tampered from', async function () {
           expect(await this.forwarder.verify({ ...this.req, from: accounts[0] }, this.sign())).to.be.equal(false);
         });
@@ -92,8 +92,8 @@ contract('MinimalForwarder', function (accounts) {
       });
     });
 
-    context('execute', function () {
-      context('valid signature', function () {
+    context('execute', () => {
+      context('valid signature', () => {
         beforeEach(async function () {
           expect(await this.forwarder.getNonce(this.req.from)).to.be.bignumber.equal(web3.utils.toBN(this.req.nonce));
         });
@@ -109,7 +109,7 @@ contract('MinimalForwarder', function (accounts) {
         });
       });
 
-      context('invalid signature', function () {
+      context('invalid signature', () => {
         it('tampered from', async function () {
           await expectRevert(
             this.forwarder.execute({ ...this.req, from: accounts[0] }, this.sign()),

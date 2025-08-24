@@ -42,7 +42,7 @@ FROM python:3.11-slim as production
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app \
+    PYTHONPATH=/app/a2aAgents/backend \
     A2A_ENVIRONMENT=production \
     A2A_SERVICE_URL=http://localhost:4004 \
     A2A_SERVICE_HOST=localhost \
@@ -99,7 +99,7 @@ COPY --chown=a2auser:a2auser <<'EOF' /app/entrypoint.sh
 set -e
 
 # Set up environment for container
-export PYTHONPATH=/app:/app/a2aAgents/backend
+export PYTHONPATH=/app/a2aAgents/backend:/app
 export NODE_PATH=/app/node_modules
 export PATH=/app/node_modules/.bin:$PATH
 

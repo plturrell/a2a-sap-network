@@ -8,22 +8,22 @@ const LOG = cds.log('launchpad-helpers');
 
 // Agent metadata configuration
 const AGENT_METADATA = {
-    0: { name: "Data Product Agent", port: 8000, type: "Core Processing", icon: "product" },
-    1: { name: "Data Standardization", port: 8001, type: "Core Processing", icon: "synchronize" },
-    2: { name: "AI Preparation", port: 8002, type: "Core Processing", icon: "artificial-intelligence" },
-    3: { name: "Vector Processing", port: 8003, type: "Core Processing", icon: "scatter-chart" },
-    4: { name: "Calc Validation", port: 8004, type: "Core Processing", icon: "validate" },
-    5: { name: "QA Validation", port: 8005, type: "Core Processing", icon: "quality-issue" },
-    6: { name: "Quality Control Manager", port: 8006, type: "Management", icon: "process" },
-    7: { name: "Agent Manager", port: 8007, type: "Management", icon: "org-chart" },
-    8: { name: "Data Manager", port: 8008, type: "Management", icon: "database" },
-    9: { name: "Reasoning Agent", port: 8009, type: "Management", icon: "decision" },
-    10: { name: "Calculation Agent", port: 8010, type: "Specialized", icon: "sum" },
-    11: { name: "SQL Agent", port: 8011, type: "Specialized", icon: "table-view" },
-    12: { name: "Catalog Manager", port: 8012, type: "Specialized", icon: "course-book" },
-    13: { name: "Agent Builder", port: 8013, type: "Specialized", icon: "build" },
-    14: { name: "Embedding Fine-Tuner", port: 8014, type: "Specialized", icon: "machine-learning" },
-    15: { name: "Orchestrator Agent", port: 8015, type: "Specialized", icon: "workflow-tasks" }
+    0: { name: 'Data Product Agent', port: 8000, type: 'Core Processing', icon: 'product' },
+    1: { name: 'Data Standardization', port: 8001, type: 'Core Processing', icon: 'synchronize' },
+    2: { name: 'AI Preparation', port: 8002, type: 'Core Processing', icon: 'artificial-intelligence' },
+    3: { name: 'Vector Processing', port: 8003, type: 'Core Processing', icon: 'scatter-chart' },
+    4: { name: 'Calc Validation', port: 8004, type: 'Core Processing', icon: 'validate' },
+    5: { name: 'QA Validation', port: 8005, type: 'Core Processing', icon: 'quality-issue' },
+    6: { name: 'Quality Control Manager', port: 8006, type: 'Management', icon: 'process' },
+    7: { name: 'Agent Manager', port: 8007, type: 'Management', icon: 'org-chart' },
+    8: { name: 'Data Manager', port: 8008, type: 'Management', icon: 'database' },
+    9: { name: 'Reasoning Agent', port: 8009, type: 'Management', icon: 'decision' },
+    10: { name: 'Calculation Agent', port: 8010, type: 'Specialized', icon: 'sum' },
+    11: { name: 'SQL Agent', port: 8011, type: 'Specialized', icon: 'table-view' },
+    12: { name: 'Catalog Manager', port: 8012, type: 'Specialized', icon: 'course-book' },
+    13: { name: 'Agent Builder', port: 8013, type: 'Specialized', icon: 'build' },
+    14: { name: 'Embedding Fine-Tuner', port: 8014, type: 'Specialized', icon: 'machine-learning' },
+    15: { name: 'Orchestrator Agent', port: 8015, type: 'Specialized', icon: 'workflow-tasks' }
 };
 
 // Helper function to check agent health via real HTTP endpoints

@@ -61,7 +61,7 @@ Promise
     catchHandlerCalledD = true;
   });
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.deepStrictEqual(thenHandlersCalledA, [true, false]);
   assert.equal(fulfilledArgA, 'a');
   assert.deepStrictEqual(thenHandlersCalledB, [false, true]);

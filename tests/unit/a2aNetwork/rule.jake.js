@@ -18,37 +18,37 @@
 
 const PROJECT_DIR = process.env.PROJECT_DIR;
 
-let exec = require('child_process').execSync;
-let fs = require('fs');
-let util = require('util');
-let { rule, rmRf } = require(`${PROJECT_DIR}/lib/jake`);
+const exec = require('child_process').execSync;
+const fs = require('fs');
+const util = require('util');
+const { rule, rmRf } = require(`${PROJECT_DIR}/lib/jake`);
 
 directory('tmpsrc');
 directory('tmpbin');
 
 ////////////////////////////////////////////////////////////
 // Simple Suffix Rule
-file('tmp', ['tmp_init', 'tmp_dep1.o', 'tmp_dep2.o'], function (params) {
+file('tmp', ['tmp_init', 'tmp_dep1.o', 'tmp_dep2.o'], (params) => {
   console.log('tmp task');
-  let data1 = fs.readFileSync('tmp_dep1.o');
-  let data2 = fs.readFileSync('tmp_dep2.o');
+  const data1 = fs.readFileSync('tmp_dep1.o');
+  const data2 = fs.readFileSync('tmp_dep2.o');
   fs.writeFileSync('tmp', data1 + data2);
 });
 
 rule('.o', '.c', function () {
-  let cmd = util.format('cp %s %s', this.source, this.name);
-  console.log(cmd + ' task');
+  const cmd = util.format('cp %s %s', this.source, this.name);
+  console.log(`${cmd  } task`);
   exec(cmd);
 });
 
-file('tmp_dep1.c', function () {
+file('tmp_dep1.c', () => {
   fs.writeFileSync('tmp_dep1.c', 'src_1');
   console.log('tmp_dep1.c task');
 });
 
 // note that tmp_dep2.o depends on tmp_dep2.c, which is a
 // static file.
-task('tmp_init', function () {
+task('tmp_init', () => {
   fs.writeFileSync('tmp_dep2.c', 'src_2');
   console.log('tmp_dep2.c task');
 });
@@ -56,16 +56,16 @@ task('tmp_init', function () {
 
 ////////////////////////////////////////////////////////////
 // Pattern Rule
-file('tmp_p', ['tmp_init', 'tmp_dep1.oo', 'tmp_dep2.oo'], function (params) {
+file('tmp_p', ['tmp_init', 'tmp_dep1.oo', 'tmp_dep2.oo'], (params) => {
   console.log('tmp pattern task');
-  let data1 = fs.readFileSync('tmp_dep1.oo');
-  let data2 = fs.readFileSync('tmp_dep2.oo');
-  fs.writeFileSync('tmp_p', data1 + data2 + ' pattern');
+  const data1 = fs.readFileSync('tmp_dep1.oo');
+  const data2 = fs.readFileSync('tmp_dep2.oo');
+  fs.writeFileSync('tmp_p', `${data1 + data2  } pattern`);
 });
 
 rule('%.oo', '%.c', function () {
-  let cmd = util.format('cp %s %s', this.source, this.name);
-  console.log(cmd + ' task');
+  const cmd = util.format('cp %s %s', this.source, this.name);
+  console.log(`${cmd  } task`);
   exec(cmd);
 });
 ////////////////////////////////////////////////////////////
@@ -77,26 +77,26 @@ file('tmp_pf', [
   'tmp_src_init'
   , 'tmpbin'
   , 'tmpbin/tmp_dep1.oo'
-  , 'tmpbin/tmp_dep2.oo' ], function (params) {
+  , 'tmpbin/tmp_dep2.oo' ], (params) => {
   console.log('tmp pattern folder task');
-  let data1 = fs.readFileSync('tmpbin/tmp_dep1.oo');
-  let data2 = fs.readFileSync('tmpbin/tmp_dep2.oo');
-  fs.writeFileSync('tmp_pf', data1 + data2 + ' pattern folder');
+  const data1 = fs.readFileSync('tmpbin/tmp_dep1.oo');
+  const data2 = fs.readFileSync('tmpbin/tmp_dep2.oo');
+  fs.writeFileSync('tmp_pf', `${data1 + data2  } pattern folder`);
 });
 
 rule('tmpbin/%.oo', 'tmpsrc/%.c', function () {
-  let cmd = util.format('cp %s %s', this.source, this.name);
-  console.log(cmd + ' task');
+  const cmd = util.format('cp %s %s', this.source, this.name);
+  console.log(`${cmd  } task`);
   exec(cmd);
 });
 
-file('tmpsrc/tmp_dep2.c',['tmpsrc'], function () {
+file('tmpsrc/tmp_dep2.c',['tmpsrc'], () => {
   fs.writeFileSync('tmpsrc/tmp_dep2.c', 'src/src_2');
   console.log('tmpsrc/tmp_dep2.c task');
 });
 
 // Create static files in folder tmpsrc.
-task('tmp_src_init', ['tmpsrc'], function () {
+task('tmp_src_init', ['tmpsrc'], () => {
   fs.writeFileSync('tmpsrc/tmp_dep1.c', 'src/src_1');
   console.log('tmpsrc/tmp_dep1.c task');
 });
@@ -113,28 +113,28 @@ task('tmp_ns', [
   , 'rule:init'
   , 'tmpbin/tmp_dep2.oo'    // *** This relies on a rule defined before.
   , 'rule:tmpbin/dep1.oo'
-  , 'rule:tmpbin/file2.oo' ], function () {
+  , 'rule:tmpbin/file2.oo' ], () => {
   console.log('tmp pattern folder namespace task');
-  let data1 = fs.readFileSync('tmpbin/dep1.oo');
-  let data2 = fs.readFileSync('tmpbin/tmp_dep2.oo');
-  let data3 = fs.readFileSync('tmpbin/file2.oo');
-  fs.writeFileSync('tmp_ns', data1 + data2 + data3 + ' pattern folder namespace');
+  const data1 = fs.readFileSync('tmpbin/dep1.oo');
+  const data2 = fs.readFileSync('tmpbin/tmp_dep2.oo');
+  const data3 = fs.readFileSync('tmpbin/file2.oo');
+  fs.writeFileSync('tmp_ns', `${data1 + data2 + data3  } pattern folder namespace`);
 });
 
-namespace('rule', function () {
-  task('init', ['tmpsrc'], function () {
+namespace('rule', () => {
+  task('init', ['tmpsrc'], () => {
     fs.writeFileSync('tmpsrc/file2.c', 'src/src_3');
     console.log('tmpsrc/file2.c init task');
   });
 
-  file('tmpsrc/dep1.c',['tmpsrc'], function () {
+  file('tmpsrc/dep1.c',['tmpsrc'], () => {
     fs.writeFileSync('tmpsrc/dep1.c', 'src/src_1');
     console.log('tmpsrc/dep1.c task');
   }, {async: true});
 
   rule('tmpbin/%.oo', 'tmpsrc/%.c', function () {
-    let cmd = util.format('cp %s %s', this.source, this.name);
-    console.log(cmd + ' ns task');
+    const cmd = util.format('cp %s %s', this.source, this.name);
+    console.log(`${cmd  } ns task`);
     exec(cmd);
   });
 });
@@ -147,76 +147,76 @@ namespace('rule', function () {
 task('tmp_cr', [
   'chainrule:init'
   , 'chainrule:tmpbin/file1.pdf'
-  , 'chainrule:tmpbin/file2.pdf' ], function () {
+  , 'chainrule:tmpbin/file2.pdf' ], () => {
   console.log('tmp chainrule namespace task');
-  let data1 = fs.readFileSync('tmpbin/file1.pdf');
-  let data2 = fs.readFileSync('tmpbin/file2.pdf');
-  fs.writeFileSync('tmp_cr', data1 + data2 + ' chainrule namespace');
+  const data1 = fs.readFileSync('tmpbin/file1.pdf');
+  const data2 = fs.readFileSync('tmpbin/file2.pdf');
+  fs.writeFileSync('tmp_cr', `${data1 + data2  } chainrule namespace`);
 });
 
-namespace('chainrule', function () {
-  task('init', ['tmpsrc', 'tmpbin'], function () {
+namespace('chainrule', () => {
+  task('init', ['tmpsrc', 'tmpbin'], () => {
     fs.writeFileSync('tmpsrc/file1.tex', 'tex1 ');
     fs.writeFileSync('tmpsrc/file2.tex', 'tex2 ');
     console.log('chainrule init task');
   });
 
   rule('tmpbin/%.pdf', 'tmpbin/%.dvi', function () {
-    let cmd = util.format('cp %s %s', this.source, this.name);
-    console.log(cmd + ' dvi->pdf task');
+    const cmd = util.format('cp %s %s', this.source, this.name);
+    console.log(`${cmd  } dvi->pdf task`);
     exec(cmd);
   });
 
   rule('tmpbin/%.dvi', 'tmpsrc/%.tex', ['tmpbin'], function () {
-    let cmd = util.format('cp %s %s', this.source, this.name);
-    console.log(cmd + ' tex->dvi task');
+    const cmd = util.format('cp %s %s', this.source, this.name);
+    console.log(`${cmd  } tex->dvi task`);
     exec(cmd);
   });
 });
 ////////////////////////////////////////////////////////////
-namespace('precedence', function () {
-  task('test', ['foo.html'], function () {
+namespace('precedence', () => {
+  task('test', ['foo.html'], () => {
     console.log('ran test');
   });
 
   rule('.html', '.txt', function () {
     console.log('created html');
-    let data = fs.readFileSync(this.source);
+    const data = fs.readFileSync(this.source);
     fs.writeFileSync(this.name, data.toString());
   });
 });
 
-namespace('regexPattern', function () {
-  task('test', ['foo.html'], function () {
+namespace('regexPattern', () => {
+  task('test', ['foo.html'], () => {
     console.log('ran test');
   });
 
   rule(/\.html$/, '.txt', function () {
     console.log('created html');
-    let data = fs.readFileSync(this.source);
+    const data = fs.readFileSync(this.source);
     fs.writeFileSync(this.name, data.toString());
   });
 });
 
-namespace('sourceFunction', function () {
+namespace('sourceFunction', () => {
 
-  let srcFunc = function (taskName) {
+  const srcFunc = function (taskName) {
     return taskName.replace(/\.[^.]+$/, '.txt');
   };
 
-  task('test', ['foo.html'], function () {
+  task('test', ['foo.html'], () => {
     console.log('ran test');
   });
 
   rule('.html', srcFunc, function () {
     console.log('created html');
-    let data = fs.readFileSync(this.source);
+    const data = fs.readFileSync(this.source);
     fs.writeFileSync(this.name, data.toString());
   });
 });
 
 ////////////////////////////////////////////////////////////
-task('clean', function () {
+task('clean', () => {
   rmRf('./foo');
   rmRf('./tmp');
 });

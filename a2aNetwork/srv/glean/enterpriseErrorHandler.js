@@ -391,7 +391,7 @@ class EnterpriseErrorHandler {
         const logFile = path.join(this.logDir, `error-${timestamp.split('T')[0]}.log`);
         
         try {
-            await fs.appendFile(logFile, JSON.stringify(logEntry) + '\n');
+            await fs.appendFile(logFile, `${JSON.stringify(logEntry)  }\n`);
         } catch (logError) {
             console.error(`Failed to write error log: ${logError.message}`);
         }
@@ -416,7 +416,7 @@ class EnterpriseErrorHandler {
         const logFile = path.join(this.logDir, `recovery-${timestamp.split('T')[0]}.log`);
         
         try {
-            await fs.appendFile(logFile, JSON.stringify(logEntry) + '\n');
+            await fs.appendFile(logFile, `${JSON.stringify(logEntry)  }\n`);
         } catch (logError) {
             console.error(`Failed to write recovery log: ${logError.message}`);
         }
@@ -526,7 +526,7 @@ class EnterpriseErrorHandler {
             ...this.metrics,
             recoverySuccessRate: `${successRate}%`,
             errorRate: this.metrics.totalErrors > 0 
-                ? (this.metrics.criticalErrors / this.metrics.totalErrors * 100).toFixed(2) + '%'
+                ? `${(this.metrics.criticalErrors / this.metrics.totalErrors * 100).toFixed(2)  }%`
                 : '0%'
         };
     }

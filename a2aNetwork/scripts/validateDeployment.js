@@ -10,7 +10,7 @@ const { validateAllKeys } = require('../srv/lib/secureKeyManager');
 
 async function validateProductionReadiness() {
     console.log('🚀 A2A Network Production Readiness Validation\n');
-    console.log('=' + '='.repeat(50));
+    console.log(`=${  '='.repeat(50)}`);
     
     let allValid = true;
     
@@ -129,7 +129,7 @@ async function validateProductionReadiness() {
     }
     
     // Final result
-    console.log('\n' + '='.repeat(51));
+    console.log(`\n${  '='.repeat(51)}`);
     if (allValid) {
         console.log('🎉 PRODUCTION READINESS: PASSED');
         console.log('   A2A Network is ready for production deployment!');

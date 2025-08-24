@@ -1,12 +1,12 @@
 
-var test = require("tap").test;
-var chain = require('../../');
-var produce = require('../produce.js');
+const test = require('tap').test;
+const chain = require('../../');
+const produce = require('../produce.js');
 
 Error.stackTraceLimit = Infinity;
 
-test("stack extend part", function (t) {
-  var modify = function (text) {
+test('stack extend part', (t) => {
+  const modify = function (text) {
     return function (error, frames) {
       if (error.test) {
         frames.push(text);
@@ -16,27 +16,27 @@ test("stack extend part", function (t) {
     };
   };
 
-  t.test("no extend modifier attached", function (t) {
-    var error = new Error();
+  t.test('no extend modifier attached', (t) => {
+    const error = new Error();
         error.test = error;
 
-    var original = error.callSite.original.length;
-    var mutated = error.callSite.mutated.length;
+    const original = error.callSite.original.length;
+    const mutated = error.callSite.mutated.length;
     t.strictEqual(mutated, original);
 
     t.end();
   });
 
-  t.test("attach modifier", function (t) {
-    var error = new Error();
+  t.test('attach modifier', (t) => {
+    const error = new Error();
         error.test = error;
 
-    var wonderLand = modify("wonder land");
+    const wonderLand = modify('wonder land');
 
     chain.extend.attach(wonderLand);
 
-    var original = error.callSite.original.length;
-    var mutated = error.callSite.mutated.length;
+    const original = error.callSite.original.length;
+    const mutated = error.callSite.mutated.length;
     t.strictEqual(mutated, original + 1);
 
     chain.extend.deattach(wonderLand);
@@ -44,15 +44,15 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("setting callSite", function (t) {
-    var error = new Error();
+  t.test('setting callSite', (t) => {
+    const error = new Error();
         error.test = error;
         error.correct = true;
 
-    error.callSite = "custom";
-    t.strictEqual(error.callSite, "custom");
+    error.callSite = 'custom';
+    t.strictEqual(error.callSite, 'custom');
     error.stack;
-    t.strictEqual(error.callSite, "custom");
+    t.strictEqual(error.callSite, 'custom');
 
     t.end();
   });

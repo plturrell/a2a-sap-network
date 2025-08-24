@@ -58,7 +58,7 @@ export { calculateSum, TestClass, dangerousFunction };
                 testFilePath
             );
             
-            console.log(`✅ SCIP parsing completed`);
+            console.log('✅ SCIP parsing completed');
             console.log(`   Symbols: ${scipDoc.scip.symbols.length}`);
             console.log(`   Direct facts: ${scipDoc.glean.length}`);
             
@@ -72,7 +72,7 @@ export { calculateSum, TestClass, dangerousFunction };
             
             const gleanFacts = transformer.transformSCIPToGlean(scipIndex);
             
-            console.log(`✅ Fact transformation completed`);
+            console.log('✅ Fact transformation completed');
             console.log(`   Total fact types: ${Object.keys(gleanFacts).length}`);
             Object.entries(gleanFacts).forEach(([type, facts]) => {
                 console.log(`   ${type}: ${facts.length} facts`);
@@ -80,17 +80,17 @@ export { calculateSum, TestClass, dangerousFunction };
             
             // Check security facts specifically
             const securityFacts = gleanFacts['src.SecurityIssue'] || [];
-            console.log(`\n🔍 Security analysis results:`);
+            console.log('\n🔍 Security analysis results:');
             console.log(`   Security issues found: ${securityFacts.length}`);
             
             if (securityFacts.length > 0) {
-                console.log(`   Security issues:`);
+                console.log('   Security issues:');
                 securityFacts.forEach((fact, index) => {
                     console.log(`      ${index + 1}. ${fact.value.issue_type} at line ${fact.value.line} (${fact.value.severity})`);
                     console.log(`         Description: ${fact.value.description}`);
                 });
             } else {
-                console.log(`   ❌ No security issues detected - checking why...`);
+                console.log('   ❌ No security issues detected - checking why...');
                 
                 // Check if file content is being analyzed
                 if (scipDoc.scip.relative_path) {
@@ -100,7 +100,7 @@ export { calculateSum, TestClass, dangerousFunction };
                 // Check language detection
                 const fileFacts = gleanFacts['src.File'] || [];
                 if (fileFacts.length > 0) {
-                    console.log(`   🔍 File analysis:`);
+                    console.log('   🔍 File analysis:');
                     fileFacts.forEach(fact => {
                         console.log(`      Language: ${fact.value.language}`);
                         console.log(`      File: ${fact.value.file}`);

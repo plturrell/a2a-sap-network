@@ -85,22 +85,22 @@ class A2ARedisCache extends EventEmitter {
             }
             
             // Event handlers
-            this.client.on('connect', function() {
+            this.client.on('connect', () => {
                 this.isConnected = true;
                 this.emit('connected');
                 console.log(`A2A Redis Cache connected to ${this.config.host}:${this.config.port}`);
-            }.bind(this));
+            });
             
-            this.client.on('error', function(error) {
+            this.client.on('error', (error) => {
                 this.metrics.errors++;
                 this.emit('error', error);
                 console.error('A2A Redis Cache error:', error);
-            }.bind(this));
+            });
             
-            this.client.on('end', function() {
+            this.client.on('end', () => {
                 this.isConnected = false;
                 this.emit('disconnected');
-            }.bind(this));
+            });
             
             await this.client.connect();
             
@@ -127,14 +127,14 @@ class A2ARedisCache extends EventEmitter {
         await this.publisher.connect();
         
         // Subscribe to cache invalidation events
-        await this.subscriber.subscribe('a2a:cache:invalidate', function(message) {
+        await this.subscriber.subscribe('a2a:cache:invalidate', (message) => {
             try {
                 const data = JSON.parse(message);
                 this.handleCacheInvalidation(data);
             } catch (error) {
                 console.error('Error handling cache invalidation:', error);
             }
-        }.bind(this));
+        });
         
         // Subscribe to distributed lock events
         await this.subscriber.subscribe('a2a:cache:locks', function(message) {
@@ -297,9 +297,9 @@ class A2ARedisCache extends EventEmitter {
         this.metrics.totalRequests++;
         
         try {
-            const fullKeys = keys.map(function(key) {
+            const fullKeys = keys.map((key) => {
                 return this.buildKey(key);
-            }.bind(this));
+            });
             const results = await this.client.mGet(fullKeys);
             
             const values = {};
@@ -360,9 +360,9 @@ class A2ARedisCache extends EventEmitter {
             
             if (keys.length > 0) {
                 const pipeline = this.client.multi();
-                keys.forEach(function(key) {
+                keys.forEach((key) => {
                     pipeline.del(this.buildKey(key));
-                }.bind(this));
+                });
                 await pipeline.exec();
                 
                 // Clean up tag registry
@@ -421,7 +421,7 @@ class A2ARedisCache extends EventEmitter {
             }
             
             // Wait before retry
-            await new Promise(function(resolve) { 
+            await new Promise((resolve) => { 
                 setTimeout(resolve, 10); 
             });
         }

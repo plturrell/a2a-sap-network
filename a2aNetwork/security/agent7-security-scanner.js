@@ -296,7 +296,7 @@ class Agent7SecurityScanner {
      * Main scan function
      */
     async scan(targetDirectory) {
-        console.log(`🔍 Starting Agent 7 (Agent Manager) Security Scan...`);
+        console.log('🔍 Starting Agent 7 (Agent Manager) Security Scan...');
         console.log(`📂 Target Directory: ${targetDirectory}`);
         console.log(`⏰ Scan Started: ${new Date().toISOString()}\n`);
         
@@ -505,7 +505,7 @@ class Agent7SecurityScanner {
                     message: 'Hardcoded credentials in agent management files',
                     impact: 'Could expose management credentials leading to unauthorized access',
                     pattern: pattern.toString(),
-                    match: matchedText.substring(0, 50) + '...',
+                    match: `${matchedText.substring(0, 50)  }...`,
                     isPositive: false,
                     timestamp: new Date().toISOString()
                 });
@@ -552,11 +552,11 @@ class Agent7SecurityScanner {
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🛡️  AGENT 7 (AGENT MANAGER) SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`📊 SCAN SUMMARY:`);
+        console.log('📊 SCAN SUMMARY:');
         console.log(`   📂 Files Scanned: ${this.filesScanned}`);
         console.log(`   ⏱️  Scan Duration: ${(scanDuration / 1000).toFixed(2)}s`);
         console.log(`   🚨 Total Issues: ${this.vulnerabilities.length}`);
@@ -614,7 +614,7 @@ class Agent7SecurityScanner {
         this.saveReport();
         
         console.log('\n✅ Scan completed successfully!');
-        console.log(`📄 Report saved to: agent7-security-report.json`);
+        console.log('📄 Report saved to: agent7-security-report.json');
         
         if (criticalCount > 0 || highCount > 0) {
             console.log(`\n⚠️  ${criticalCount + highCount} critical/high severity issues found!`);

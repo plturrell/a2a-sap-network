@@ -20,25 +20,25 @@
 
 'use strict';
 
-var test = require('tape');
-var bufrw = require('bufrw');
-var testRW = require('bufrw/test_rw');
+const test = require('tape');
+const bufrw = require('bufrw');
+const testRW = require('bufrw/test_rw');
 
-var thriftrw = require('../index');
-var MapObjectRW = thriftrw.MapObjectRW;
+const thriftrw = require('../index');
+const MapObjectRW = thriftrw.MapObjectRW;
 
-var strType = {
+const strType = {
     name: 'string',
     typeid: 1,
     rw: bufrw.str1
 };
-var i16Type = {
+const i16Type = {
     name: 'i16',
     typeid: 2,
     rw: bufrw.Int16BE
 };
 
-var strI16MapRW = new MapObjectRW(strType, i16Type);
+const strI16MapRW = new MapObjectRW(strType, i16Type);
 test('MapObjectRW: strI16MapRW', testRW.cases(strI16MapRW, [
     [{}, [
         0x01,                  // key_type:1 -- 99
@@ -101,7 +101,7 @@ test('MapObjectRW: strI16MapRW', testRW.cases(strI16MapRW, [
     }
 ]));
 
-var strStrMapRW = new MapObjectRW(strType, strType);
+const strStrMapRW = new MapObjectRW(strType, strType);
 test('MapObjectRW: strStrMapRW', testRW.cases(strStrMapRW, [
     [{
         'abc': 'ABC',

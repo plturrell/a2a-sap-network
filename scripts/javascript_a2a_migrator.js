@@ -71,7 +71,7 @@ class JavaScriptA2AMigrator {
                 }
                 
                 // Create backup
-                const backupPath = filePath + '.backup';
+                const backupPath = `${filePath  }.backup`;
                 await fs.writeFile(backupPath, content);
                 
                 // Write modified content
@@ -113,7 +113,7 @@ class JavaScriptA2AMigrator {
                         results.totalConversions += subResults.totalConversions;
                         results.errors.push(...subResults.errors);
                     }
-                } else if (extensions.some(function(ext) { return item.name.endsWith(ext); })) {
+                } else if (extensions.some((ext) => { return item.name.endsWith(ext); })) {
                     const result = await this.processFile(itemPath);
                     results.filesProcessed++;
                     if (result.modified) {
@@ -299,7 +299,7 @@ async function main() {
     
     if (results.errors.length > 0) {
         console.log('\\nErrors encountered:');
-        results.errors.forEach(function(error) {
+        results.errors.forEach((error) => {
             console.log(`  ❌ ${error.file || error.directory}: ${error.error}`);
         });
     }

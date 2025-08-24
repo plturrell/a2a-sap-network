@@ -1,8 +1,8 @@
 sap.ui.define([
-    "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], function (MessageToast, MessageBox) {
-    "use strict";
+    'sap/m/MessageToast',
+    'sap/m/MessageBox'
+], (MessageToast, MessageBox) => {
+    'use strict';
 
     /**
      * Alert Actions Controller Extension
@@ -20,15 +20,15 @@ sap.ui.define([
             const aSelectedContexts = this._getSelectedContexts(oEvent);
             
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
-                MessageToast.show("Please select at least one alert to acknowledge");
+                MessageToast.show('Please select at least one alert to acknowledge');
                 return;
             }
 
             // Show confirmation dialog
             MessageBox.confirm(
-                "Are you sure you want to acknowledge the selected alert(s)?",
+                'Are you sure you want to acknowledge the selected alert(s)?',
                 {
-                    title: "Acknowledge Security Alert",
+                    title: 'Acknowledge Security Alert',
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
                             that._performBatchAcknowledge(aSelectedContexts, oModel);
@@ -48,22 +48,22 @@ sap.ui.define([
             const aSelectedContexts = this._getSelectedContexts(oEvent);
             
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
-                MessageToast.show("Please select at least one alert to resolve");
+                MessageToast.show('Please select at least one alert to resolve');
                 return;
             }
 
             // Show resolution dialog with input field
             MessageBox.show(
-                "Please provide resolution details for the selected alert(s):",
+                'Please provide resolution details for the selected alert(s):',
                 {
                     icon: MessageBox.Icon.QUESTION,
-                    title: "Resolve Security Alert",
+                    title: 'Resolve Security Alert',
                     actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
                     emphasizedAction: MessageBox.Action.OK,
-                    initialFocus: "OK",
+                    initialFocus: 'OK',
                     onClose: function (sAction, sValue) {
                         if (sAction === MessageBox.Action.OK) {
-                            const sResolution = sValue || "Alert resolved by security team";
+                            const sResolution = sValue || 'Alert resolved by security team';
                             that._performBatchResolve(aSelectedContexts, oModel, sResolution);
                         }
                     }
@@ -81,7 +81,7 @@ sap.ui.define([
             const aSelectedContexts = this._getSelectedContexts(oEvent);
             
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
-                MessageToast.show("Please select at least one alert to escalate");
+                MessageToast.show('Please select at least one alert to escalate');
                 return;
             }
 
@@ -92,21 +92,21 @@ sap.ui.define([
             });
 
             if (!bCanEscalate) {
-                MessageBox.error("Selected alerts cannot be escalated (already at highest priority or resolved)");
+                MessageBox.error('Selected alerts cannot be escalated (already at highest priority or resolved)');
                 return;
             }
 
             // Show escalation reason dialog
             MessageBox.show(
-                "Please provide escalation reason:",
+                'Please provide escalation reason:',
                 {
                     icon: MessageBox.Icon.WARNING,
-                    title: "Escalate Security Alert",
+                    title: 'Escalate Security Alert',
                     actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
                     emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction, sValue) {
                         if (sAction === MessageBox.Action.OK) {
-                            const sEscalationReason = sValue || "Escalated due to severity";
+                            const sEscalationReason = sValue || 'Escalated due to severity';
                             that._performBatchEscalate(aSelectedContexts, oModel, sEscalationReason);
                         }
                     }
@@ -131,7 +131,7 @@ sap.ui.define([
             
             // Fallback to table selection
             if (aContexts.length === 0) {
-                const oTable = this.getView().byId("fe::table::SecurityAlerts::LineItem");
+                const oTable = this.getView().byId('fe::table::SecurityAlerts::LineItem');
                 if (oTable && oTable.getSelectedContexts) {
                     aContexts = oTable.getSelectedContexts();
                 }
@@ -332,11 +332,11 @@ sap.ui.define([
         _getCurrentUser: function () {
             // Try to get from user info service
             try {
-                const oUserInfoService = sap.ushell.Container.getService("UserInfo");
-                return oUserInfoService.getId() || "SYSTEM";
+                const oUserInfoService = sap.ushell.Container.getService('UserInfo');
+                return oUserInfoService.getId() || 'SYSTEM';
             } catch (e) {
                 // Fallback for non-Fiori Launchpad environments
-                return "SECURITY_ADMIN";
+                return 'SECURITY_ADMIN';
             }
         }
     };

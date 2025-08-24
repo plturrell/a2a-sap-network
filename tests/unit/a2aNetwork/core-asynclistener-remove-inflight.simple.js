@@ -23,12 +23,12 @@
 if (!process.addAsyncListener) require('../index.js');
 if (!global.setImmediate) global.setImmediate = setTimeout;
 
-var assert = require('assert');
+const assert = require('assert');
 
 function onAsync0() {}
 
-var set = 0;
-var asyncNoHandleError = {
+let set = 0;
+const asyncNoHandleError = {
   before : function () {
     set++;
   },
@@ -37,14 +37,14 @@ var asyncNoHandleError = {
   }
 };
 
-var key = process.addAsyncListener(onAsync0, asyncNoHandleError);
+const key = process.addAsyncListener(onAsync0, asyncNoHandleError);
 
-setImmediate(function () {
+setImmediate(() => {
   return 1;
 });
 
 process.removeAsyncListener(key);
-process.on('exit', function () {
+process.on('exit', () => {
   // calling removeAsyncListener *after* a callback is scheduled
   // should not affect the handler from responding to the callback
   assert.equal(set, 2);

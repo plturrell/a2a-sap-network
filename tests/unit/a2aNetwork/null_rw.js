@@ -20,10 +20,10 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var NullRW = require('../null');
+const NullRW = require('../null');
 
 test('NullRW: empty <-> null', testRW.cases(NullRW, [
     [null, []]

@@ -1,10 +1,10 @@
 'use strict';
 
-var parse = require('../');
-var test = require('tape');
+const parse = require('../');
+const test = require('tape');
 
-test('stops parsing on the first non-option when stopEarly is set', function (t) {
-	var argv = parse(['--aaa', 'bbb', 'ccc', '--ddd'], {
+test('stops parsing on the first non-option when stopEarly is set', (t) => {
+	const argv = parse(['--aaa', 'bbb', 'ccc', '--ddd'], {
 		stopEarly: true,
 	});
 

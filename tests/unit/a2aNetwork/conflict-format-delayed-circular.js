@@ -1,13 +1,13 @@
 
-var test = require("tap").test;
-var defaultFormater = require('../../format.js');
-var produce = require('../produce.js');
+const test = require('tap').test;
+const defaultFormater = require('../../format.js');
+const produce = require('../produce.js');
 
-var chain = require('../../');
+const chain = require('../../');
 
-test("set Error.prepareStackTrace uses stack-chain formater", function (t) {
+test('set Error.prepareStackTrace uses stack-chain formater', (t) => {
   // Save original formatter
-  var restore = Error.prepareStackTrace;
+  const restore = Error.prepareStackTrace;
 
   // Overwrite formatter
   Error.prepareStackTrace = function (error, frames) {
@@ -22,7 +22,7 @@ test("set Error.prepareStackTrace uses stack-chain formater", function (t) {
   };
 
   // Prope the error using custom prepareStackTrace
-  var testError = new Error();
+  const testError = new Error();
   testError.test = true;
   testError.stack;
   t.equal(testError.__some_secret, 'you can\'t compare pain.');
@@ -40,14 +40,14 @@ test("set Error.prepareStackTrace uses stack-chain formater", function (t) {
   t.end();
 });
 
-test("set Error.prepareStackTrace uses other formater", function (t) {
+test('set Error.prepareStackTrace uses other formater', (t) => {
   // Another module sets up a formater
   Error.prepareStackTrace = function () {
     return 'custom';
   };
 
   // Save original formatter
-  var restore = Error.prepareStackTrace;
+  const restore = Error.prepareStackTrace;
 
   // Overwrite formatter
   Error.prepareStackTrace = function (error, frames) {
@@ -62,7 +62,7 @@ test("set Error.prepareStackTrace uses other formater", function (t) {
   };
 
   // Prope the error using custom prepareStackTrace
-  var testError = new Error();
+  const testError = new Error();
   testError.test = true;
   testError.stack;
   t.equal(testError.__some_secret, 'you can\'t compare pain.');

@@ -1,17 +1,17 @@
-var mkdirp = require('mkdirp');
-var test = require('tap').test;
-var find = require('../');
+const mkdirp = require('mkdirp');
+const test = require('tap').test;
+const find = require('../');
 
-mkdirp.sync(__dirname + '/empty');
+mkdirp.sync(`${__dirname  }/empty`);
 
-test('empty', function (t) {
+test('empty', (t) => {
     t.plan(1);
-    var w = find(__dirname + '/empty');
-    var files = [];
-    w.on('file', function (file) {
+    const w = find(`${__dirname  }/empty`);
+    const files = [];
+    w.on('file', (file) => {
         files.push(file);
     });
-    w.on('end', function () {
+    w.on('end', () => {
         t.deepEqual(files, []);
     });
 });

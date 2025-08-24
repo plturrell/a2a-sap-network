@@ -1332,7 +1332,7 @@ class CircuitBreaker extends EventEmitter {
             bulkhead: {
                 currentCalls: this.currentCalls,
                 maxCalls: this.maxConcurrentCalls,
-                utilization: (this.currentCalls / this.maxConcurrentCalls * 100).toFixed(2) + '%'
+                utilization: `${(this.currentCalls / this.maxConcurrentCalls * 100).toFixed(2)  }%`
             },
             lastStateChange: new Date(this.lastStateChange).toISOString(),
             createdAt: new Date(this.createdAt).toISOString()

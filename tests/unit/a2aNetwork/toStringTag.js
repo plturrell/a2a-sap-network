@@ -1,30 +1,30 @@
 'use strict';
 
-var test = require('tape');
-var hasToStringTag = require('has-tostringtag/shams')();
+const test = require('tape');
+const hasToStringTag = require('has-tostringtag/shams')();
 
-var inspect = require('../');
+const inspect = require('../');
 
-test('Symbol.toStringTag', { skip: !hasToStringTag }, function (t) {
+test('Symbol.toStringTag', { skip: !hasToStringTag }, (t) => {
     t.plan(4);
 
-    var obj = { a: 1 };
+    const obj = { a: 1 };
     t.equal(inspect(obj), '{ a: 1 }', 'object, no Symbol.toStringTag');
 
     obj[Symbol.toStringTag] = 'foo';
     t.equal(inspect(obj), '{ a: 1, [Symbol(Symbol.toStringTag)]: \'foo\' }', 'object with Symbol.toStringTag');
 
-    t.test('null objects', { skip: 'toString' in { __proto__: null } }, function (st) {
+    t.test('null objects', { skip: 'toString' in { __proto__: null } }, (st) => {
         st.plan(2);
 
-        var dict = { __proto__: null, a: 1 };
+        const dict = { __proto__: null, a: 1 };
         st.equal(inspect(dict), '[Object: null prototype] { a: 1 }', 'null object with Symbol.toStringTag');
 
         dict[Symbol.toStringTag] = 'Dict';
         st.equal(inspect(dict), '[Dict: null prototype] { a: 1, [Symbol(Symbol.toStringTag)]: \'Dict\' }', 'null object with Symbol.toStringTag');
     });
 
-    t.test('instances', function (st) {
+    t.test('instances', (st) => {
         st.plan(4);
 
         function C() {

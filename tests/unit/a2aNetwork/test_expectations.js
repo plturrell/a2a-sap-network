@@ -22,10 +22,10 @@
 
 module.exports = testExpectations;
 
-var test = require('tape');
-var TypedError = require('error/typed');
+const test = require('tape');
+const TypedError = require('error/typed');
 
-var TooManyResults = TypedError({
+const TooManyResults = TypedError({
     type: 'test-expectations.too-many-results',
     message: 'got more results than expected; got: {got} expected {expected}',
     got: null,
@@ -34,14 +34,14 @@ var TooManyResults = TypedError({
     extraResult: null
 });
 
-var TooFewResults = TypedError({
+const TooFewResults = TypedError({
     type: 'test-expectations.too-few-results',
     message: 'got less results than expected; got: {got} expected {expected}',
     got: null,
     expected: null
 });
 
-var MismatchedExpectationKind = TypedError({
+const MismatchedExpectationKind = TypedError({
     type: 'test-expectations.mismatched-kind',
     message: 'expectad a {expected} got a {got} instead',
     got: null,
@@ -49,9 +49,9 @@ var MismatchedExpectationKind = TypedError({
 });
 
 function testExpectations(desc, expected, func) {
-    test(desc, function t(assert) {
-        var expectedI = 0;
-        var finished = false;
+    test(desc, (assert) => {
+        let expectedI = 0;
+        let finished = false;
         func(expect, done);
 
         function expect(kind, result) {
@@ -66,9 +66,9 @@ function testExpectations(desc, expected, func) {
                 }));
                 return;
             }
-            var e = expected[expectedI++];
+            const e = expected[expectedI++];
             if (e[kind] === undefined) {
-                var eKind = Object.keys(e)[0];
+                const eKind = Object.keys(e)[0];
                 if (kind === 'error') {
                     done(result);
                 } else {

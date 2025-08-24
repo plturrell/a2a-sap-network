@@ -20,19 +20,19 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var Buffer = require('buffer').Buffer;
-var Thrift = require('../thrift').Thrift;
-var fs = require('fs');
-var path = require('path');
-var source = fs.readFileSync(path.join(__dirname, 'struct.thrift'), 'ascii');
-var thrift = new Thrift({source: source});
+const Buffer = require('buffer').Buffer;
+const Thrift = require('../thrift').Thrift;
+const fs = require('fs');
+const path = require('path');
+const source = fs.readFileSync(path.join(__dirname, 'struct.thrift'), 'ascii');
+const thrift = new Thrift({source: source});
 
-var Health = thrift.$Health;
+const Health = thrift.$Health;
 
-test('skip void', function t(assert) {
-    var result = Health.rw.readFrom(new Buffer([
+test('skip void', (assert) => {
+    const result = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1   -- 2 -- BOOL
         0x00, 0x02,               // id:2     -- 2 -- WHAT EVEN IS!?
         0x00,                     // bool:1
@@ -46,8 +46,8 @@ test('skip void', function t(assert) {
     assert.end();
 });
 
-test('string', function t(assert) {
-    var result = Health.rw.readFrom(new Buffer([
+test('string', (assert) => {
+    const result = Health.rw.readFrom(new Buffer([
         11,                       // typeid:1 -- 11 -- STRING
         0x00, 0x02,               // id:2     -- 2  -- WHAT EVEN IS!?
         0x00, 0x00, 0x00, 0x02,   // len~4
@@ -61,8 +61,8 @@ test('string', function t(assert) {
     assert.end();
 });
 
-test('struct', function t(assert) {
-    var result = Health.rw.readFrom(new Buffer([
+test('struct', (assert) => {
+    const result = Health.rw.readFrom(new Buffer([
         12,                       // typeid:1 -- 12 -- STRUCT
         0x00, 0x02,               // id:2     -- 2  -- ?
         11,                       //   typeid:1 -- 11 -- STRING
@@ -79,8 +79,8 @@ test('struct', function t(assert) {
     assert.end();
 });
 
-test('map', function t(assert) {
-    var result = Health.rw.readFrom(new Buffer([
+test('map', (assert) => {
+    const result = Health.rw.readFrom(new Buffer([
         0x0d,                   // typeid:1           -- 13, map
         0x00, 0x02,             // id:2               -- 2 UNKNOWN
 
@@ -133,8 +133,8 @@ test('map', function t(assert) {
     assert.end();
 });
 
-test('list', function t(assert) {
-    var result = Health.rw.readFrom(new Buffer([
+test('list', (assert) => {
+    const result = Health.rw.readFrom(new Buffer([
         0x02,                     // type:1      -- 2 BOOL
         0x00, 0x02,               // id:2        -- 2 UNKNOWN
         0x0f,                     // typeid:1    -- 15, list

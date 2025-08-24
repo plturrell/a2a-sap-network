@@ -32,24 +32,24 @@ class SecurityHardening {
       // Content Security Policy with nonce support
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", 'https://ui5.sap.com'],
+          defaultSrc: ['\'self\''],
+          styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://ui5.sap.com'],
           scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "'unsafe-eval'",
+            '\'self\'',
+            '\'unsafe-inline\'',
+            '\'unsafe-eval\'',
             (req, res) => `'nonce-${res.locals.nonce}'`,
             'https://ui5.sap.com', 
             'https://*.sap.com',
             'https://sapui5.hana.ondemand.com'
           ],
-          imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'", 'https://*.sap.com'],
-          fontSrc: ["'self'", 'https://ui5.sap.com'],
-          objectSrc: ["'none'"],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'none'"],
-          frameAncestors: ["'self'", '*.sap.com']
+          imgSrc: ['\'self\'', 'data:', 'https:'],
+          connectSrc: ['\'self\'', 'https://*.sap.com'],
+          fontSrc: ['\'self\'', 'https://ui5.sap.com'],
+          objectSrc: ['\'none\''],
+          mediaSrc: ['\'self\''],
+          frameSrc: ['\'none\''],
+          frameAncestors: ['\'self\'', '*.sap.com']
         }
       },
 

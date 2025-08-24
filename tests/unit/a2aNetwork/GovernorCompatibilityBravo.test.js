@@ -25,7 +25,7 @@ const TOKENS = [
   { Token: artifacts.require('$ERC20VotesCompTimestampMock'), mode: 'timestamp' },
 ];
 
-contract('GovernorCompatibilityBravo', function (accounts) {
+contract('GovernorCompatibilityBravo', (accounts) => {
   const [owner, proposer, voter1, voter2, voter3, voter4, other] = accounts;
 
   const name = 'OZ-Governor';
@@ -39,7 +39,7 @@ contract('GovernorCompatibilityBravo', function (accounts) {
   const value = web3.utils.toWei('1');
 
   for (const { mode, Token } of TOKENS) {
-    describe(`using ${Token._json.contractName}`, function () {
+    describe(`using ${Token._json.contractName}`, () => {
       beforeEach(async function () {
         const [deployer] = await web3.eth.getAccounts();
 
@@ -239,8 +239,8 @@ contract('GovernorCompatibilityBravo', function (accounts) {
         await expectRevert(this.helper.propose({ from: proposer }), 'GovernorBravo: invalid signatures length');
       });
 
-      describe('should revert', function () {
-        describe('on propose', function () {
+      describe('should revert', () => {
+        describe('on propose', () => {
           it('if proposal does not meet proposalThreshold', async function () {
             await expectRevert(
               this.helper.propose({ from: other }),
@@ -249,7 +249,7 @@ contract('GovernorCompatibilityBravo', function (accounts) {
           });
         });
 
-        describe('on vote', function () {
+        describe('on vote', () => {
           it('if vote type is invalide', async function () {
             await this.helper.propose({ from: proposer });
             await this.helper.waitForSnapshot();
@@ -261,7 +261,7 @@ contract('GovernorCompatibilityBravo', function (accounts) {
         });
       });
 
-      describe('cancel', function () {
+      describe('cancel', () => {
         it('proposer can cancel', async function () {
           await this.helper.propose({ from: proposer });
           await this.helper.cancel('external', { from: proposer });

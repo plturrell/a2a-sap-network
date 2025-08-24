@@ -30,7 +30,7 @@ function shouldBehaveLikeSet(values, methods, events) {
     await expectMembersMatch(this.set, []);
   });
 
-  describe('add', function () {
+  describe('add', () => {
     it('adds a value', async function () {
       const receipt = await methods.add(this.set, valueA);
       expectEvent(receipt, events.addReturn, { ret0: true });
@@ -56,13 +56,13 @@ function shouldBehaveLikeSet(values, methods, events) {
     });
   });
 
-  describe('at', function () {
+  describe('at', () => {
     it('reverts when retrieving non-existent elements', async function () {
       await expectRevert.unspecified(methods.at(this.set, 0));
     });
   });
 
-  describe('remove', function () {
+  describe('remove', () => {
     it('removes added values', async function () {
       await methods.add(this.set, valueA);
 

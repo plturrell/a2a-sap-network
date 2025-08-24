@@ -6,10 +6,10 @@ const shouldBehaveLikeClone = require('./Clones.behaviour');
 
 const Clones = artifacts.require('$Clones');
 
-contract('Clones', function (accounts) {
+contract('Clones', (accounts) => {
   const [deployer] = accounts;
 
-  describe('clone', function () {
+  describe('clone', () => {
     shouldBehaveLikeClone(async (implementation, initData, opts = {}) => {
       const factory = await Clones.new();
       const receipt = await factory.$clone(implementation);
@@ -19,7 +19,7 @@ contract('Clones', function (accounts) {
     });
   });
 
-  describe('cloneDeterministic', function () {
+  describe('cloneDeterministic', () => {
     shouldBehaveLikeClone(async (implementation, initData, opts = {}) => {
       const salt = web3.utils.randomHex(32);
       const factory = await Clones.new();
@@ -29,7 +29,7 @@ contract('Clones', function (accounts) {
       return { address };
     });
 
-    it('address already used', async function () {
+    it('address already used', async () => {
       const implementation = web3.utils.randomHex(20);
       const salt = web3.utils.randomHex(32);
       const factory = await Clones.new();
@@ -39,7 +39,7 @@ contract('Clones', function (accounts) {
       await expectRevert(factory.$cloneDeterministic(implementation, salt), 'ERC1167: create2 failed');
     });
 
-    it('address prediction', async function () {
+    it('address prediction', async () => {
       const implementation = web3.utils.randomHex(20);
       const salt = web3.utils.randomHex(32);
       const factory = await Clones.new();

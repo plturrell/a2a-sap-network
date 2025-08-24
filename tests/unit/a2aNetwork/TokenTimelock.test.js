@@ -5,7 +5,7 @@ const { expect } = require('chai');
 const ERC20 = artifacts.require('$ERC20');
 const TokenTimelock = artifacts.require('TokenTimelock');
 
-contract('TokenTimelock', function (accounts) {
+contract('TokenTimelock', (accounts) => {
   const [beneficiary] = accounts;
 
   const name = 'My Token';
@@ -13,7 +13,7 @@ contract('TokenTimelock', function (accounts) {
 
   const amount = new BN(100);
 
-  context('with token', function () {
+  context('with token', () => {
     beforeEach(async function () {
       this.token = await ERC20.new(name, symbol);
     });
@@ -26,7 +26,7 @@ contract('TokenTimelock', function (accounts) {
       );
     });
 
-    context('once deployed', function () {
+    context('once deployed', () => {
       beforeEach(async function () {
         this.releaseTime = (await time.latest()).add(time.duration.years(1));
         this.timelock = await TokenTimelock.new(this.token.address, beneficiary, this.releaseTime);

@@ -1,8 +1,8 @@
-var test = require('tape');
-var archy = require('../');
+const test = require('tape');
+const archy = require('../');
 
-test('beep', function (t) {
-    var s = archy({
+test('beep', (t) => {
+    const s = archy({
       label : 'beep',
       nodes : [
         'ity',

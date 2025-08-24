@@ -1,9 +1,9 @@
-var test = require('tape');
+const test = require('tape');
 
-var hex = require('../index');
+const hex = require('../index');
 
-test('colored options', function t(assert) {
-    var buf = Buffer('abc');
+test('colored options', (assert) => {
+    let buf = Buffer('abc');
 
     assert.deepEqual(hex(buf, {
         colored: true

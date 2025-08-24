@@ -6,45 +6,45 @@ const { expect } = require('chai');
 const PaymentSplitter = artifacts.require('PaymentSplitter');
 const ERC20 = artifacts.require('$ERC20');
 
-contract('PaymentSplitter', function (accounts) {
+contract('PaymentSplitter', (accounts) => {
   const [owner, payee1, payee2, payee3, nonpayee1, payer1] = accounts;
 
   const amount = ether('1');
 
-  it('rejects an empty set of payees', async function () {
+  it('rejects an empty set of payees', async () => {
     await expectRevert(PaymentSplitter.new([], []), 'PaymentSplitter: no payees');
   });
 
-  it('rejects more payees than shares', async function () {
+  it('rejects more payees than shares', async () => {
     await expectRevert(
       PaymentSplitter.new([payee1, payee2, payee3], [20, 30]),
       'PaymentSplitter: payees and shares length mismatch',
     );
   });
 
-  it('rejects more shares than payees', async function () {
+  it('rejects more shares than payees', async () => {
     await expectRevert(
       PaymentSplitter.new([payee1, payee2], [20, 30, 40]),
       'PaymentSplitter: payees and shares length mismatch',
     );
   });
 
-  it('rejects null payees', async function () {
+  it('rejects null payees', async () => {
     await expectRevert(
       PaymentSplitter.new([payee1, ZERO_ADDRESS], [20, 30]),
       'PaymentSplitter: account is the zero address',
     );
   });
 
-  it('rejects zero-valued shares', async function () {
+  it('rejects zero-valued shares', async () => {
     await expectRevert(PaymentSplitter.new([payee1, payee2], [20, 0]), 'PaymentSplitter: shares are 0');
   });
 
-  it('rejects repeated payees', async function () {
+  it('rejects repeated payees', async () => {
     await expectRevert(PaymentSplitter.new([payee1, payee1], [20, 30]), 'PaymentSplitter: account already has shares');
   });
 
-  context('once deployed', function () {
+  context('once deployed', () => {
     beforeEach(async function () {
       this.payees = [payee1, payee2, payee3];
       this.shares = [20, 10, 70];
@@ -68,7 +68,7 @@ contract('PaymentSplitter', function (accounts) {
       );
     });
 
-    describe('accepts payments', function () {
+    describe('accepts payments', () => {
       it('Ether', async function () {
         await send.ether(owner, this.contract.address, amount);
 
@@ -82,7 +82,7 @@ contract('PaymentSplitter', function (accounts) {
       });
     });
 
-    describe('shares', function () {
+    describe('shares', () => {
       it('stores shares if address is payee', async function () {
         expect(await this.contract.shares(payee1)).to.be.bignumber.not.equal('0');
       });
@@ -92,8 +92,8 @@ contract('PaymentSplitter', function (accounts) {
       });
     });
 
-    describe('release', function () {
-      describe('Ether', function () {
+    describe('release', () => {
+      describe('Ether', () => {
         it('reverts if no funds to claim', async function () {
           await expectRevert(this.contract.release(payee1), 'PaymentSplitter: account is not due payment');
         });
@@ -103,7 +103,7 @@ contract('PaymentSplitter', function (accounts) {
         });
       });
 
-      describe('Token', function () {
+      describe('Token', () => {
         it('reverts if no funds to claim', async function () {
           await expectRevert(
             this.contract.release(this.token.address, payee1),
@@ -120,7 +120,7 @@ contract('PaymentSplitter', function (accounts) {
       });
     });
 
-    describe('tracks releasable and released', function () {
+    describe('tracks releasable and released', () => {
       it('Ether', async function () {
         await send.ether(payer1, this.contract.address, amount);
         const payment = amount.divn(10);
@@ -140,7 +140,7 @@ contract('PaymentSplitter', function (accounts) {
       });
     });
 
-    describe('distributes funds to payees', function () {
+    describe('distributes funds to payees', () => {
       it('Ether', async function () {
         await send.ether(payer1, this.contract.address, amount);
 

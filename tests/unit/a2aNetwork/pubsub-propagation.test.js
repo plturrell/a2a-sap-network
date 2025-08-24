@@ -1,5 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -15,10 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const pubsub_propagation_1 = require("../src/pubsub-propagation");
-const contrib_test_utils_1 = require("@opentelemetry/contrib-test-utils");
-const api_1 = require("@opentelemetry/api");
-const expect_1 = require("expect");
+const pubsub_propagation_1 = require('../src/pubsub-propagation');
+const contrib_test_utils_1 = require('@opentelemetry/contrib-test-utils');
+const api_1 = require('@opentelemetry/api');
+const expect_1 = require('expect');
 (0, contrib_test_utils_1.registerInstrumentationTestingProvider)();
 const tracer = api_1.trace.getTracer('test');
 afterEach(() => {

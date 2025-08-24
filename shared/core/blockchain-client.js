@@ -61,7 +61,7 @@ class BlockchainClient extends EventEmitter {
     
     convertHttpToA2A(endpoint, options) {
         // Convert HTTP request to A2A message format
-        const url = new URL(endpoint.startsWith('http') ? endpoint : 'http://localhost' + endpoint);
+        const url = new URL(endpoint.startsWith('http') ? endpoint : `http://localhost${  endpoint}`);
         
         return {
             to: this.extractTargetAgent(url.pathname),

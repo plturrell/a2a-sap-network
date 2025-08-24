@@ -4,13 +4,13 @@
  */
 
 sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/ushell/services/CrossApplicationNavigation"
-], function(
+    'sap/ui/base/Object',
+    'sap/ushell/services/CrossApplicationNavigation'
+], (
     BaseObject,
     CrossApplicationNavigation
-) {
-    "use strict";
+) => {
+    'use strict';
 
     /**
      * Semantic Navigation Mixin
@@ -24,8 +24,8 @@ sap.ui.define([
          * Call this in onInit() of your controller
          */
         initSemanticNavigation: function() {
-            this._crossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
-            this._urlParsing = sap.ushell.Container.getService("URLParsing");
+            this._crossAppNavigator = sap.ushell.Container.getService('CrossApplicationNavigation');
+            this._urlParsing = sap.ushell.Container.getService('URLParsing');
             
             // Cache for navigation targets
             this._navigationTargets = new Map();
@@ -41,66 +41,66 @@ sap.ui.define([
         _initializeSupportedIntents: function() {
             this._supportedIntents = {
                 // Project intents
-                "Project-display": {
-                    semanticObject: "Project",
-                    action: "display",
-                    parameters: ["projectId"]
+                'Project-display': {
+                    semanticObject: 'Project',
+                    action: 'display',
+                    parameters: ['projectId']
                 },
-                "Project-manage": {
-                    semanticObject: "Project",
-                    action: "manage",
+                'Project-manage': {
+                    semanticObject: 'Project',
+                    action: 'manage',
                     parameters: []
                 },
-                "Project-create": {
-                    semanticObject: "Project", 
-                    action: "create",
+                'Project-create': {
+                    semanticObject: 'Project', 
+                    action: 'create',
                     parameters: []
                 },
                 
                 // Agent intents
-                "Agent-display": {
-                    semanticObject: "Agent",
-                    action: "display", 
-                    parameters: ["agentId", "agentType"]
+                'Agent-display': {
+                    semanticObject: 'Agent',
+                    action: 'display', 
+                    parameters: ['agentId', 'agentType']
                 },
-                "Agent-manage": {
-                    semanticObject: "Agent",
-                    action: "manage",
+                'Agent-manage': {
+                    semanticObject: 'Agent',
+                    action: 'manage',
                     parameters: []
                 },
                 
                 // Analytics intents
-                "Analytics-display": {
-                    semanticObject: "Analytics",
-                    action: "display",
-                    parameters: ["analyticsType", "timeRange"]
+                'Analytics-display': {
+                    semanticObject: 'Analytics',
+                    action: 'display',
+                    parameters: ['analyticsType', 'timeRange']
                 },
                 
                 // Workflow intents
-                "Workflow-manage": {
-                    semanticObject: "Workflow",
-                    action: "manage",
+                'Workflow-manage': {
+                    semanticObject: 'Workflow',
+                    action: 'manage',
                     parameters: []
                 },
                 
                 // Settings intents
-                "Settings-display": {
-                    semanticObject: "Settings",
-                    action: "display",
+                'Settings-display': {
+                    semanticObject: 'Settings',
+                    action: 'display',
                     parameters: []
                 },
                 
                 // External SAP intents
-                "BusinessPartner-display": {
-                    semanticObject: "BusinessPartner",
-                    action: "display",
-                    parameters: ["businessPartnerId"],
+                'BusinessPartner-display': {
+                    semanticObject: 'BusinessPartner',
+                    action: 'display',
+                    parameters: ['businessPartnerId'],
                     external: true
                 },
-                "Customer-display": {
-                    semanticObject: "Customer",
-                    action: "display",
-                    parameters: ["customerId"],
+                'Customer-display': {
+                    semanticObject: 'Customer',
+                    action: 'display',
+                    parameters: ['customerId'],
                     external: true
                 }
             };
@@ -114,13 +114,13 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToIntent: function(sIntent, mParameters, bNewWindow) {
-            var oIntent = this._supportedIntents[sIntent];
+            const oIntent = this._supportedIntents[sIntent];
             
             if (!oIntent) {
-                return Promise.reject(new Error("Unsupported intent: " + sIntent));
+                return Promise.reject(new Error(`Unsupported intent: ${  sIntent}`));
             }
 
-            var oNavParams = this._buildNavigationParameters(oIntent, mParameters);
+            const oNavParams = this._buildNavigationParameters(oIntent, mParameters);
             
             return this._performNavigation(oIntent.semanticObject, oIntent.action, oNavParams, bNewWindow);
         },
@@ -132,11 +132,11 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToProject: function(sProjectId, mAdditionalParams) {
-            var mParams = Object.assign({
+            const mParams = Object.assign({
                 projectId: sProjectId
             }, mAdditionalParams || {});
             
-            return this.navigateToIntent("Project-display", mParams);
+            return this.navigateToIntent('Project-display', mParams);
         },
 
         /**
@@ -145,7 +145,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise  
          */
         navigateToProjectsList: function(mFilters) {
-            return this.navigateToIntent("Project-manage", mFilters);
+            return this.navigateToIntent('Project-manage', mFilters);
         },
 
         /**
@@ -154,7 +154,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToCreateProject: function(mDefaults) {
-            return this.navigateToIntent("Project-create", mDefaults);
+            return this.navigateToIntent('Project-create', mDefaults);
         },
 
         /**
@@ -164,7 +164,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToAgent: function(sAgentId, sAgentType) {
-            var mParams = {
+            const mParams = {
                 agentId: sAgentId
             };
             
@@ -172,7 +172,7 @@ sap.ui.define([
                 mParams.agentType = sAgentType;
             }
             
-            return this.navigateToIntent("Agent-display", mParams);
+            return this.navigateToIntent('Agent-display', mParams);
         },
 
         /**
@@ -181,7 +181,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToAgentsOverview: function(mFilters) {
-            return this.navigateToIntent("Agent-manage", mFilters);
+            return this.navigateToIntent('Agent-manage', mFilters);
         },
 
         /**
@@ -191,7 +191,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToAnalytics: function(sAnalyticsType, sTimeRange) {
-            var mParams = {};
+            const mParams = {};
             
             if (sAnalyticsType) {
                 mParams.analyticsType = sAnalyticsType;
@@ -201,7 +201,7 @@ sap.ui.define([
                 mParams.timeRange = sTimeRange;
             }
             
-            return this.navigateToIntent("Analytics-display", mParams);
+            return this.navigateToIntent('Analytics-display', mParams);
         },
 
         /**
@@ -210,7 +210,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToSAPBusinessPartner: function(sBusinessPartnerId) {
-            return this.navigateToIntent("BusinessPartner-display", {
+            return this.navigateToIntent('BusinessPartner-display', {
                 businessPartnerId: sBusinessPartnerId
             }, true); // Open in new window for external navigation
         },
@@ -221,7 +221,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToSAPCustomer: function(sCustomerId) {
-            return this.navigateToIntent("Customer-display", {
+            return this.navigateToIntent('Customer-display', {
                 customerId: sCustomerId
             }, true); // Open in new window for external navigation
         },
@@ -232,7 +232,7 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToWorkflowManagement: function(mFilters) {
-            return this.navigateToIntent("Workflow-manage", mFilters);
+            return this.navigateToIntent('Workflow-manage', mFilters);
         },
 
         /**
@@ -241,12 +241,12 @@ sap.ui.define([
          * @returns {Promise} Navigation promise
          */
         navigateToSettings: function(sSettingsTab) {
-            var mParams = {};
+            const mParams = {};
             if (sSettingsTab) {
                 mParams.tab = sSettingsTab;
             }
             
-            return this.navigateToIntent("Settings-display", mParams);
+            return this.navigateToIntent('Settings-display', mParams);
         },
 
         /**
@@ -271,7 +271,7 @@ sap.ui.define([
          * @returns {object} Formatted navigation parameters
          */
         _buildNavigationParameters: function(oIntent, mParameters) {
-            var oNavParams = {};
+            const oNavParams = {};
             
             if (!mParameters) {
                 return oNavParams;
@@ -279,7 +279,7 @@ sap.ui.define([
             
             // Map known parameters
             if (oIntent.parameters) {
-                oIntent.parameters.forEach(function(sParam) {
+                oIntent.parameters.forEach((sParam) => {
                     if (mParameters[sParam] !== undefined) {
                         oNavParams[sParam] = [mParameters[sParam]];
                     }
@@ -287,7 +287,7 @@ sap.ui.define([
             }
             
             // Add additional parameters
-            Object.keys(mParameters).forEach(function(sKey) {
+            Object.keys(mParameters).forEach((sKey) => {
                 if (oIntent.parameters.indexOf(sKey) === -1) {
                     oNavParams[sKey] = [mParameters[sKey]];
                 }
@@ -307,10 +307,10 @@ sap.ui.define([
          */
         _performNavigation: function(sSemanticObject, sAction, mParameters, bNewWindow) {
             if (!this._crossAppNavigator) {
-                return Promise.reject(new Error("Cross application navigation service not available"));
+                return Promise.reject(new Error('Cross application navigation service not available'));
             }
             
-            var sHref = this._crossAppNavigator.hrefForExternal({
+            const sHref = this._crossAppNavigator.hrefForExternal({
                 target: {
                     semanticObject: sSemanticObject,
                     action: sAction
@@ -320,7 +320,7 @@ sap.ui.define([
             
             if (bNewWindow) {
                 // Open in new window/tab
-                window.open(sHref, "_blank");
+                window.open(sHref, '_blank');
                 return Promise.resolve();
             } else {
                 // Navigate in current window
@@ -345,14 +345,14 @@ sap.ui.define([
                 return Promise.resolve(false);
             }
             
-            var aIntents = [{
+            const aIntents = [{
                 semanticObject: sSemanticObject,
                 action: sAction
             }];
             
             return this._crossAppNavigator.isIntentSupported(aIntents)
-                .then(function(mSupported) {
-                    var sIntentKey = sSemanticObject + "-" + sAction;
+                .then((mSupported) => {
+                    const sIntentKey = `${sSemanticObject  }-${  sAction}`;
                     return !!(mSupported && mSupported[sIntentKey] && mSupported[sIntentKey].supported);
                 });
         },
@@ -369,8 +369,8 @@ sap.ui.define([
             
             return this._crossAppNavigator.getLinks({
                 semanticObject: sSemanticObject
-            }).then(function(aLinks) {
-                return aLinks.map(function(oLink) {
+            }).then((aLinks) => {
+                return aLinks.map((oLink) => {
                     return {
                         action: oLink.action,
                         text: oLink.text,
@@ -390,14 +390,14 @@ sap.ui.define([
                 return {};
             }
             
-            var sCurrentHash = window.location.hash;
-            var oParsedShellHash = this._urlParsing.parseShellHash(sCurrentHash);
+            const sCurrentHash = window.location.hash;
+            const oParsedShellHash = this._urlParsing.parseShellHash(sCurrentHash);
             
             if (oParsedShellHash && oParsedShellHash.params) {
-                var mParams = {};
-                Object.keys(oParsedShellHash.params).forEach(function(sKey) {
-                    var aValues = oParsedShellHash.params[sKey];
-                    mParams[sKey] = aValues && aValues.length > 0 ? aValues[0] : "";
+                const mParams = {};
+                Object.keys(oParsedShellHash.params).forEach((sKey) => {
+                    const aValues = oParsedShellHash.params[sKey];
+                    mParams[sKey] = aValues && aValues.length > 0 ? aValues[0] : '';
                 });
                 return mParams;
             }
@@ -412,13 +412,13 @@ sap.ui.define([
          * @returns {string} Generated href
          */
         getHrefForIntent: function(sIntent, mParameters) {
-            var oIntent = this._supportedIntents[sIntent];
+            const oIntent = this._supportedIntents[sIntent];
             
             if (!oIntent || !this._crossAppNavigator) {
-                return "#";
+                return '#';
             }
             
-            var oNavParams = this._buildNavigationParameters(oIntent, mParameters);
+            const oNavParams = this._buildNavigationParameters(oIntent, mParameters);
             
             return this._crossAppNavigator.hrefForExternal({
                 target: {
@@ -435,34 +435,34 @@ sap.ui.define([
          * @returns {Promise<Array>} Promise resolving to menu items
          */
         createRelatedAppsMenu: function(sCurrentSemanticObject) {
-            var aRelatedObjects = this._getRelatedSemanticObjects(sCurrentSemanticObject);
-            var aPromises = [];
+            const aRelatedObjects = this._getRelatedSemanticObjects(sCurrentSemanticObject);
+            const aPromises = [];
             
-            aRelatedObjects.forEach(function(sObject) {
+            aRelatedObjects.forEach((sObject) => {
                 aPromises.push(this.getAvailableActions(sObject));
-            }.bind(this));
+            });
             
-            return Promise.all(aPromises).then(function(aResults) {
-                var aMenuItems = [];
+            return Promise.all(aPromises).then((aResults) => {
+                const aMenuItems = [];
                 
-                aResults.forEach(function(aActions, iIndex) {
-                    var sSemanticObject = aRelatedObjects[iIndex];
+                aResults.forEach((aActions, iIndex) => {
+                    const sSemanticObject = aRelatedObjects[iIndex];
                     
-                    aActions.forEach(function(oAction) {
+                    aActions.forEach((oAction) => {
                         aMenuItems.push({
                             text: oAction.text,
                             icon: oAction.icon,
                             semanticObject: sSemanticObject,
                             action: oAction.action,
                             press: function() {
-                                this.navigateToIntent(sSemanticObject + "-" + oAction.action);
+                                this.navigateToIntent(`${sSemanticObject  }-${  oAction.action}`);
                             }.bind(this)
                         });
-                    }.bind(this));
-                }.bind(this));
+                    });
+                });
                 
                 return aMenuItems;
-            }.bind(this));
+            });
         },
 
         /**
@@ -472,13 +472,13 @@ sap.ui.define([
          * @returns {Array<string>} Array of related semantic objects
          */
         _getRelatedSemanticObjects: function(sCurrentObject) {
-            var mRelations = {
-                "Project": ["Agent", "Analytics", "Workflow"],
-                "Agent": ["Project", "Analytics"],
-                "Analytics": ["Project", "Agent"],
-                "Workflow": ["Project", "Agent"],
-                "BusinessPartner": ["Customer", "Project"],
-                "Customer": ["BusinessPartner", "Project"]
+            const mRelations = {
+                'Project': ['Agent', 'Analytics', 'Workflow'],
+                'Agent': ['Project', 'Analytics'],
+                'Analytics': ['Project', 'Agent'],
+                'Workflow': ['Project', 'Agent'],
+                'BusinessPartner': ['Customer', 'Project'],
+                'Customer': ['BusinessPartner', 'Project']
             };
             
             return mRelations[sCurrentObject] || [];
@@ -505,10 +505,10 @@ sap.ui.define([
             if (mParameters.projectId) {
                 this.navigateToProject(mParameters.projectId[0]);
             } else if (mParameters.agentId) {
-                var sAgentType = mParameters.agentType ? mParameters.agentType[0] : undefined;
+                const sAgentType = mParameters.agentType ? mParameters.agentType[0] : undefined;
                 this.navigateToAgent(mParameters.agentId[0], sAgentType);
             } else if (mParameters.analyticsType) {
-                var sTimeRange = mParameters.timeRange ? mParameters.timeRange[0] : undefined;
+                const sTimeRange = mParameters.timeRange ? mParameters.timeRange[0] : undefined;
                 this.navigateToAnalytics(mParameters.analyticsType[0], sTimeRange);
             }
         }

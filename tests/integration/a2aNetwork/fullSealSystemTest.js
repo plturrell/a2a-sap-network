@@ -17,7 +17,7 @@ const TreeAlgorithms = require('../../srv/algorithms/treeAlgorithms');
  * Comprehensive Full System Test for SEAL Implementation
  * Tests entire codebase integration and CLI functionality
  */
-describe('Full SEAL System Integration Test', function() {
+describe('Full SEAL System Integration Test', () => {
     let sandbox;
     let mockAxios;
     
@@ -39,7 +39,7 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    beforeEach(function() {
+    beforeEach(() => {
         sandbox = sinon.createSandbox();
         
         // Mock axios for xAI API calls
@@ -65,18 +65,18 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    afterEach(function() {
+    afterEach(() => {
         sandbox.restore();
     });
 
-    describe('1. Configuration System Test', function() {
+    describe('1. Configuration System Test', () => {
         let configuration;
 
-        beforeEach(function() {
+        beforeEach(() => {
             configuration = new SealConfiguration();
         });
 
-        it('should load configuration correctly across all environments', function() {
+        it('should load configuration correctly across all environments', () => {
             const config = configuration.getConfiguration();
             
             expect(config).to.be.an('object');
@@ -88,14 +88,14 @@ describe('Full SEAL System Integration Test', function() {
             expect(config.monitoring).to.have.property('enabled');
         });
 
-        it('should validate xAI Grok 4 configuration', function() {
+        it('should validate xAI Grok 4 configuration', () => {
             const validation = configuration.validateConfiguration();
             
             expect(validation.isValid).to.be.true;
             expect(validation.errors).to.be.empty;
         });
 
-        it('should apply correct environment overrides', function() {
+        it('should apply correct environment overrides', () => {
             const config = configuration.getConfiguration();
             
             // Test environment should have specific settings
@@ -104,7 +104,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(config.development.mockExternalServices).to.be.true;
         });
 
-        it('should handle Grok 4 specific features', function() {
+        it('should handle Grok 4 specific features', () => {
             const config = configuration.getConfiguration();
             
             expect(config.grok.features).to.have.property('reasoning');
@@ -114,20 +114,20 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('2. Grok 4 API Integration Test', function() {
+    describe('2. Grok 4 API Integration Test', () => {
         let grokAdapter;
 
-        beforeEach(async function() {
+        beforeEach(async () => {
             grokAdapter = new GrokSealAdapter();
             await grokAdapter.initializeService();
         });
 
-        it('should initialize with correct xAI credentials', function() {
+        it('should initialize with correct xAI credentials', () => {
             expect(grokAdapter.grokApiKey).to.equal(testConfig.XAI_API_KEY);
             expect(grokAdapter.grokBaseUrl).to.equal(testConfig.XAI_BASE_URL);
         });
 
-        it('should make correct API calls to xAI Grok 4', async function() {
+        it('should make correct API calls to xAI Grok 4', async () => {
             const analysisContext = {
                 currentAnalysis: { accuracy: 0.7 },
                 projectContext: { projectId: 'test-proj' },
@@ -154,7 +154,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(headers['Content-Type']).to.equal('application/json');
         });
 
-        it('should handle xAI rate limiting correctly', async function() {
+        it('should handle xAI rate limiting correctly', async () => {
             // Mock rate limit response
             mockAxios.onFirstCall().rejects({
                 response: { status: 429, data: { error: { message: 'Rate limit exceeded' } } }
@@ -176,7 +176,7 @@ describe('Full SEAL System Integration Test', function() {
             }
         });
 
-        it('should perform few-shot learning with Grok 4', async function() {
+        it('should perform few-shot learning with Grok 4', async () => {
             const codeExamples = [
                 { code: 'async function test() {}', metadata: { type: 'async' } }
             ];
@@ -190,22 +190,22 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('3. Reinforcement Learning Engine Test', function() {
+    describe('3. Reinforcement Learning Engine Test', () => {
         let rlEngine;
 
-        beforeEach(async function() {
+        beforeEach(async () => {
             rlEngine = new ReinforcementLearningEngine();
             await rlEngine.initializeService();
         });
 
-        it('should initialize Q-learning properly', function() {
+        it('should initialize Q-learning properly', () => {
             expect(rlEngine.stateSpace).to.be.instanceOf(Map);
             expect(rlEngine.actionSpace).to.be.instanceOf(Map);
             expect(rlEngine.qTable).to.be.instanceOf(Map);
             expect(rlEngine.qTable.size).to.be.greaterThan(0);
         });
 
-        it('should perform Q-learning updates correctly', async function() {
+        it('should perform Q-learning updates correctly', async () => {
             const state = { codebase_complexity: 0.6, analysis_accuracy: 0.7 };
             const action = { type: 'increase_depth', intensity: 1 };
             const reward = 0.3;
@@ -220,7 +220,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.complianceStatus).to.equal('COMPLIANT');
         });
 
-        it('should select actions using epsilon-greedy policy', async function() {
+        it('should select actions using epsilon-greedy policy', async () => {
             const state = { codebase_complexity: 0.5 };
             const actions = [
                 { type: 'action_a', intensity: 1 },
@@ -234,7 +234,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.selectionReason).to.be.oneOf(['EXPLORATION', 'EXPLOITATION']);
         });
 
-        it('should perform multi-armed bandit optimization', async function() {
+        it('should perform multi-armed bandit optimization', async () => {
             const actions = [
                 { type: 'action_1' }, { type: 'action_2' }, { type: 'action_3' }
             ];
@@ -247,15 +247,15 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('4. SAP Compliance and Governance Test', function() {
+    describe('4. SAP Compliance and Governance Test', () => {
         let governance;
 
-        beforeEach(async function() {
+        beforeEach(async () => {
             governance = new SapSealGovernance();
             await governance.initializeService();
         });
 
-        it('should validate operation compliance', async function() {
+        it('should validate operation compliance', async () => {
             const operation = { type: 'self_adaptation', riskLevel: 'MEDIUM' };
             const context = { projectId: 'test', dataClassification: 'INTERNAL' };
 
@@ -287,7 +287,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result).to.have.property('riskLevel');
         });
 
-        it('should manage approval workflows', async function() {
+        it('should manage approval workflows', async () => {
             const operationId = 'test-op-123';
             const approvalRequest = {
                 userId: 'test-user',
@@ -307,7 +307,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.workflowStarted).to.be.true;
         });
 
-        it('should generate audit reports', async function() {
+        it('should generate audit reports', async () => {
             const reportParams = {
                 reportType: 'COMPLIANCE_SUMMARY',
                 timeframe: '24h',
@@ -338,17 +338,17 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('5. Algorithm Integration Test', function() {
+    describe('5. Algorithm Integration Test', () => {
         let graphAlgorithms, treeAlgorithms;
 
-        beforeEach(async function() {
+        beforeEach(async () => {
             graphAlgorithms = new GraphAlgorithms();
             treeAlgorithms = new TreeAlgorithms();
             await graphAlgorithms.initializeService();
             await treeAlgorithms.initializeService();
         });
 
-        it('should integrate graph algorithms with SEAL', function() {
+        it('should integrate graph algorithms with SEAL', () => {
             const graph = graphAlgorithms.createGraph();
             graphAlgorithms.addEdge(graph, 'A', 'B', 1);
             graphAlgorithms.addEdge(graph, 'B', 'C', 2);
@@ -358,7 +358,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.hasPath('C')).to.be.true;
         });
 
-        it('should integrate tree algorithms with SEAL', function() {
+        it('should integrate tree algorithms with SEAL', () => {
             const structure = { a: [1, 2], b: { c: [3, 4] } };
             const flattened = treeAlgorithms.flatten(structure);
             expect(flattened).to.deep.equal([1, 2, 3, 4]);
@@ -369,10 +369,10 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('6. Full SEAL Enhanced Glean Service Test', function() {
+    describe('6. Full SEAL Enhanced Glean Service Test', () => {
         let sealService;
 
-        beforeEach(async function() {
+        beforeEach(async () => {
             sealService = new SealEnhancedGleanService();
             
             // Mock parent class methods
@@ -404,7 +404,7 @@ describe('Full SEAL System Integration Test', function() {
             await sealService.initializeService();
         });
 
-        it('should perform complete self-adapting analysis', async function() {
+        it('should perform complete self-adapting analysis', async () => {
             const result = await sealService.performSelfAdaptingAnalysis(
                 'test-project',
                 'dependency_analysis',
@@ -417,7 +417,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.sealEnhancements.adaptationApplied).to.be.true;
         });
 
-        it('should learn from user feedback', async function() {
+        it('should learn from user feedback', async () => {
             // Mock finding analysis record
             sandbox.stub(sealService, '_findAnalysisRecord').returns({
                 projectId: 'test-project',
@@ -439,7 +439,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.learningApplied).to.be.true;
         });
 
-        it('should adapt to new coding patterns', async function() {
+        it('should adapt to new coding patterns', async () => {
             sandbox.stub(sealService, '_analyzePatternContext').returns({
                 type: 'test_pattern'
             });
@@ -461,7 +461,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.adaptationSuccessful).to.be.true;
         });
 
-        it('should get comprehensive performance metrics', async function() {
+        it('should get comprehensive performance metrics', async () => {
             sandbox.stub(sealService, '_calculateAdaptationMetrics').returns({
                 successRate: 0.85
             });
@@ -483,7 +483,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(result.overallSealScore).to.be.a('number');
         });
 
-        it('should handle failures gracefully', async function() {
+        it('should handle failures gracefully', async () => {
             // Force SEAL adapter to fail
             sealService.sealAdapter.generateSelfEdits.restore();
             sandbox.stub(sealService.sealAdapter, 'generateSelfEdits').rejects(
@@ -503,8 +503,8 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('7. CLI Integration Test', function() {
-        it('should provide CLI-compatible configuration', function() {
+    describe('7. CLI Integration Test', () => {
+        it('should provide CLI-compatible configuration', () => {
             const config = new SealConfiguration();
             const grokConfig = config.getGrokConfig();
             const rlConfig = config.getRLConfig();
@@ -516,7 +516,7 @@ describe('Full SEAL System Integration Test', function() {
             expect(complianceConfig).to.have.property('enabled');
         });
 
-        it('should export all necessary components for CLI usage', function() {
+        it('should export all necessary components for CLI usage', () => {
             // Test that all components can be imported
             expect(SealConfiguration).to.be.a('function');
             expect(GrokSealAdapter).to.be.a('function');
@@ -526,8 +526,8 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('8. Environment and Deployment Test', function() {
-        it('should work across different environments', function() {
+    describe('8. Environment and Deployment Test', () => {
+        it('should work across different environments', () => {
             const environments = ['development', 'staging', 'production', 'test'];
             
             environments.forEach(env => {
@@ -544,7 +544,7 @@ describe('Full SEAL System Integration Test', function() {
             process.env.NODE_ENV = 'test';
         });
 
-        it('should validate production readiness', function() {
+        it('should validate production readiness', () => {
             process.env.NODE_ENV = 'production';
             const config = new SealConfiguration();
             const prodConfig = config.getConfiguration();
@@ -558,8 +558,8 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('9. Performance and Scalability Test', function() {
-        it('should handle concurrent SEAL operations', async function() {
+    describe('9. Performance and Scalability Test', () => {
+        it('should handle concurrent SEAL operations', async () => {
             const sealService = new SealEnhancedGleanService();
             
             // Mock all dependencies
@@ -589,7 +589,7 @@ describe('Full SEAL System Integration Test', function() {
             });
         });
 
-        it('should handle memory management correctly', function() {
+        it('should handle memory management correctly', () => {
             const rlEngine = new ReinforcementLearningEngine();
             
             // Simulate many episodes
@@ -606,8 +606,8 @@ describe('Full SEAL System Integration Test', function() {
         });
     });
 
-    describe('10. Error Handling and Recovery Test', function() {
-        it('should handle xAI API errors gracefully', async function() {
+    describe('10. Error Handling and Recovery Test', () => {
+        it('should handle xAI API errors gracefully', async () => {
             const grokAdapter = new GrokSealAdapter();
             await grokAdapter.initializeService();
 
@@ -626,7 +626,7 @@ describe('Full SEAL System Integration Test', function() {
             }
         });
 
-        it('should provide fallback mechanisms', async function() {
+        it('should provide fallback mechanisms', async () => {
             const sealService = new SealEnhancedGleanService();
             
             // Mock base analysis but fail SEAL

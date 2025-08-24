@@ -20,18 +20,18 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var TypedError = require('error/typed');
-var test = require('tape');
+const testRW = require('../test_rw');
+const TypedError = require('error/typed');
+const test = require('tape');
 
-var BufferRW = require('../base').BufferRW;
+const BufferRW = require('../base').BufferRW;
 
-var BangError = TypedError({
+const BangError = TypedError({
     type: 'bang',
     message: 'bang'
 });
 
-var dummyRW = {
+const dummyRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(null, 0);
     },
@@ -45,7 +45,7 @@ var dummyRW = {
 
 dummyRW.__proto__ = BufferRW.prototype;
 
-var brokenRW = {
+const brokenRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(new Error('boom'));
     },
@@ -59,18 +59,18 @@ var brokenRW = {
 
 brokenRW.__proto__ = BufferRW.prototype;
 
-test('testRW: checks cases', function t(assert) {
-    assert.throws(function badTest() {
+test('testRW: checks cases', (assert) => {
+    assert.throws(() => {
         testRW.cases(dummyRW, ['BAD'])(null, null);
     }, /invalid test case 0/, 'catches invalid test cases');
     assert.end();
 });
 
-test('testRW: unexpected errors', function t(assert) {
-    var rwTest = testRW.cases(brokenRW, [
+test('testRW: unexpected errors', (assert) => {
+    const rwTest = testRW.cases(brokenRW, [
         [null, [0x00]]
     ]);
-    runMockedTest(rwTest, function done(results) {
+    runMockedTest(rwTest, (results) => {
         assert.equal(results[0].name, 'no length error', 'expected "no length error"');
         assert.equal(results[0].actual.message, 'boom', 'expected actual "boom" error');
 
@@ -89,8 +89,8 @@ test('testRW: unexpected errors', function t(assert) {
     });
 });
 
-test('testRW: error expectations', function t(assert) {
-    var rwTest = testRW.cases(dummyRW, [
+test('testRW: error expectations', (assert) => {
+    const rwTest = testRW.cases(dummyRW, [
         {
             lengthTest: {
                 value: null,
@@ -107,7 +107,7 @@ test('testRW: error expectations', function t(assert) {
             }
         }
     ]);
-    runMockedTest(rwTest, function done(results) {
+    runMockedTest(rwTest, (results) => {
         assert.equal(results[0].name, 'expected length error', 'expected "expected length error"');
         assert.equal(results[1].name, 'expected write error', 'expected "expected write error"');
         assert.equal(results[2].name, 'expected read error', 'expected "expected read error"');
@@ -116,8 +116,8 @@ test('testRW: error expectations', function t(assert) {
 });
 
 function runMockedTest(t, callback) {
-    var results = [];
-    var assert = require('tape').Test('(mock)');
+    const results = [];
+    const assert = require('tape').Test('(mock)');
     assert.on('result', onResult);
     assert.once('end', onEnd);
     t(assert);

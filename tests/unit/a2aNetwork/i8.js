@@ -20,21 +20,21 @@
 
 'use strict';
 
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
-var testThrift = require('./thrift-test');
-var invalidArgumentTestCase = require('./helpers').invalidArgumentTestCase;
-var path = require('path');
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
+const testThrift = require('./thrift-test');
+const invalidArgumentTestCase = require('./helpers').invalidArgumentTestCase;
+const path = require('path');
 
-var thriftrw = require('../index');
-var Thrift = thriftrw.Thrift;
-var I8RW = thriftrw.I8RW;
-var ThriftI8 = thriftrw.ThriftI8;
-var TYPE = require('../TYPE');
+const thriftrw = require('../index');
+const Thrift = thriftrw.Thrift;
+const I8RW = thriftrw.I8RW;
+const ThriftI8 = thriftrw.ThriftI8;
+const TYPE = require('../TYPE');
 
-var Buffer = require('buffer').Buffer;
+const Buffer = require('buffer').Buffer;
 
-var validTestCases = [
+const validTestCases = [
     [0x00, [0x00]], // min: 0
     [0x7f, [0x7f]],  // max: 127
     {
@@ -62,7 +62,7 @@ var validTestCases = [
     },
 ];
 
-var invalidArgumentTestCases = [
+const invalidArgumentTestCases = [
     null,
     undefined,
     true,
@@ -76,7 +76,7 @@ var invalidArgumentTestCases = [
     Buffer('string')
 ].map(invalidArgumentTestCase('number'));
 
-var invalidShortBufferTestCases = [{
+const invalidShortBufferTestCases = [{
     writeTest: {
         value: 0,
         error: {
@@ -87,7 +87,7 @@ var invalidShortBufferTestCases = [{
     }
 }];
 
-var outOfRangeTestCases = [{
+const outOfRangeTestCases = [{
     writeTest: {
         value: 0xff,
         bytes: [0xff],
@@ -99,7 +99,7 @@ var outOfRangeTestCases = [{
     }
 }];
 
-var testCases = [].concat(
+const testCases = [].concat(
     validTestCases,
     invalidArgumentTestCases,
     invalidShortBufferTestCases,
@@ -109,8 +109,8 @@ var testCases = [].concat(
 test('I8RW', testRW.cases(ThriftI8.prototype.rw, testCases));
 test('ThriftI8', testThrift(ThriftI8, ThriftI8.prototype.rw, TYPE.I8));
 
-test('Thrift i8 IDL', function t(assert) {
-    var thrift = new Thrift({
+test('Thrift i8 IDL', (assert) => {
+    const thrift = new Thrift({
         entryPoint: path.join(__dirname, 'i8.thrift'),
         allowFilesystemAccess: true
     });

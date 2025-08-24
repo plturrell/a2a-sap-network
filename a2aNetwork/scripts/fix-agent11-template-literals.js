@@ -5,7 +5,7 @@ const path = require('path');
 const filePath = path.join(__dirname, '../app/a2aFiori/webapp/ext/agent11/utils/SecurityUtils.js');
 
 console.log('Reading SecurityUtils.js...');
-let content = fs.readFileSync(filePath, 'utf8');
+const content = fs.readFileSync(filePath, 'utf8');
 
 // Pattern to match template literals with variables
 const templateLiteralPattern = /`([^`]*)\$\{([^}]+)\}([^`]*)`/g;

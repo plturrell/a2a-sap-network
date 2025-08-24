@@ -1,10 +1,10 @@
 
-var test = require("tap").test;
-var chain = require('../../');
-var produce = require('../produce.js');
+const test = require('tap').test;
+const chain = require('../../');
+const produce = require('../produce.js');
 
-test("stack extend part", function (t) {
-  var modify = function (text) {
+test('stack extend part', (t) => {
+  const modify = function (text) {
     return function (error, frames) {
       if (error.test) {
         frames.splice(1, 0, text);
@@ -14,7 +14,7 @@ test("stack extend part", function (t) {
     };
   };
 
-  t.test("no extend modifier attached", function (t) {
+  t.test('no extend modifier attached', (t) => {
     t.equal(produce.real(3), produce.fake([
       'Error: trace',
       '    at {where}:18:17',
@@ -25,8 +25,8 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("attach modifier", function (t) {
-    var wonderLand = modify("wonder land");
+  t.test('attach modifier', (t) => {
+    const wonderLand = modify('wonder land');
 
     chain.extend.attach(wonderLand);
 
@@ -42,8 +42,8 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("deattach modifier", function (t) {
-    var wonderLand = modify("wonder land");
+  t.test('deattach modifier', (t) => {
+    const wonderLand = modify('wonder land');
 
     chain.extend.attach(wonderLand);
     t.equal(chain.extend.deattach(wonderLand), true);
@@ -60,9 +60,9 @@ test("stack extend part", function (t) {
     t.end();
   });
 
-  t.test("execution order", function (t) {
-    var wonderLand = modify("wonder land");
-    var outerSpace = modify("outer space");
+  t.test('execution order', (t) => {
+    const wonderLand = modify('wonder land');
+    const outerSpace = modify('outer space');
 
     chain.extend.attach(wonderLand);
     chain.extend.attach(outerSpace);

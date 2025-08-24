@@ -20,14 +20,14 @@
 
 'use strict';
 
-var testRW = require('../test_rw');
-var test = require('tape');
+const testRW = require('../test_rw');
+const test = require('tape');
 
-var atoms = require('../atoms');
-var SwitchRW = require('../switch');
-var Pair = SwitchRW.Pair;
+const atoms = require('../atoms');
+const SwitchRW = require('../switch');
+const Pair = SwitchRW.Pair;
 
-var brokenRW = {
+const brokenRW = {
     poolByteLength: function(destResult) {
         return destResult.reset(new Error('boom'));
     },
@@ -41,7 +41,7 @@ var brokenRW = {
 
 brokenRW.prototype = require('../base').BufferRW.prototype;
 
-var numbers = SwitchRW(atoms.UInt8, {
+const numbers = SwitchRW(atoms.UInt8, {
     0: atoms.UInt8,
     1: atoms.UInt16BE,
     2: atoms.UInt32BE

@@ -20,20 +20,20 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var Thrift = require('../thrift').Thrift;
-var path = require('path');
+const Thrift = require('../thrift').Thrift;
+const path = require('path');
 
-test('loads a thrift file that imports synchronously', function t(assert) {
-    var mainThrift = new Thrift({
+test('loads a thrift file that imports synchronously', (assert) => {
+    const mainThrift = new Thrift({
         entryPoint: path.join(__dirname, 'include-parent.thrift'),
         allowIncludeAlias: true,
         allowFilesystemAccess: true
     });
-    var importedThrift = mainThrift.modules.common;
+    const importedThrift = mainThrift.modules.common;
 
-    var typeImportedByMainThrift = mainThrift // Thrift
+    const typeImportedByMainThrift = mainThrift // Thrift
         .models
         .BatchGetResponse // ThriftStruct
         .fieldsByName
@@ -41,12 +41,12 @@ test('loads a thrift file that imports synchronously', function t(assert) {
         .valueType // ThriftList
         .valueType; // Item
 
-    var typeFromImportedThrift = importedThrift.models.Item;
+    const typeFromImportedThrift = importedThrift.models.Item;
 
     assert.equal(typeImportedByMainThrift, typeFromImportedThrift,
         'Type imported correctly');
 
-    var keyValueServiceFunctions = Object.keys(mainThrift.KeyValue);
+    const keyValueServiceFunctions = Object.keys(mainThrift.KeyValue);
 
     assert.deepEqual(
         keyValueServiceFunctions,
@@ -79,8 +79,8 @@ test('loads a thrift file that imports synchronously', function t(assert) {
     assert.end();
 });
 
-test('include without explicitly defined namespace', function t(assert) {
-    var thrift = new Thrift({
+test('include without explicitly defined namespace', (assert) => {
+    const thrift = new Thrift({
         entryPoint: path.join(
             __dirname,
             'include-filename-namespace.thrift'
@@ -94,8 +94,8 @@ test('include without explicitly defined namespace', function t(assert) {
     assert.end();
 });
 
-test('cyclic dependencies', function t(assert) {
-    var thriftA = new Thrift({
+test('cyclic dependencies', (assert) => {
+    const thriftA = new Thrift({
         entryPoint: path.join(
             __dirname,
             'include-cyclic-a.thrift'
@@ -104,7 +104,7 @@ test('cyclic dependencies', function t(assert) {
         allowFilesystemAccess: true
     });
 
-    var thriftB = thriftA.B;
+    const thriftB = thriftA.B;
 
     assert.equal(
         thriftA.models.Node.fieldsByName.value.valueType,
@@ -121,7 +121,7 @@ test('cyclic dependencies', function t(assert) {
     assert.end();
 });
 
-test('bad include - absolute paths', function t(assert) {
+test('bad include - absolute paths', (assert) => {
     assert.throws(
         badIncludePaths,
         /Include path string must not be an absolute path/,
@@ -141,7 +141,7 @@ test('bad include - absolute paths', function t(assert) {
     }
 });
 
-test('unknown thrift module name', function t(assert) {
+test('unknown thrift module name', (assert) => {
     assert.throws(
         unknownThriftModule,
         /cannot resolve reference to common.Item/,
@@ -161,7 +161,7 @@ test('unknown thrift module name', function t(assert) {
     }
 });
 
-test('bad thrift module name', function t(assert) {
+test('bad thrift module name', (assert) => {
     assert.throws(
         badThriftModuleName,
         /Thrift include filename is not valid thrift identifier/,
@@ -181,7 +181,7 @@ test('bad thrift module name', function t(assert) {
     }
 });
 
-test('includes from opts.source throws', function t(assert) {
+test('includes from opts.source throws', (assert) => {
     assert.throws(
         includesViaSource,
         /Thrift must be constructed with/,
@@ -197,8 +197,8 @@ test('includes from opts.source throws', function t(assert) {
     }
 });
 
-test('include non-relative filename', function t(assert) {
-    var thrift = new Thrift({
+test('include non-relative filename', (assert) => {
+    const thrift = new Thrift({
         entryPoint: path.join(
             __dirname,
             'include-nonrelative-filename.thrift'
@@ -212,8 +212,8 @@ test('include non-relative filename', function t(assert) {
     assert.end();
 });
 
-test('include non-relative filename with alias', function t(assert) {
-    var thrift = new Thrift({
+test('include non-relative filename with alias', (assert) => {
+    const thrift = new Thrift({
         entryPoint: path.join(
             __dirname,
             'include-nonrelative-alias.thrift'

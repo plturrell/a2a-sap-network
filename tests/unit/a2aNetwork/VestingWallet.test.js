@@ -9,7 +9,7 @@ const { shouldBehaveLikeVesting } = require('./VestingWallet.behavior');
 
 const min = (...args) => args.slice(1).reduce((x, y) => (x.lt(y) ? x : y), args[0]);
 
-contract('VestingWallet', function (accounts) {
+contract('VestingWallet', (accounts) => {
   const [sender, beneficiary] = accounts;
 
   const amount = web3.utils.toBN(web3.utils.toWei('100'));
@@ -33,7 +33,7 @@ contract('VestingWallet', function (accounts) {
     expect(await this.mock.duration()).to.be.bignumber.equal(duration);
   });
 
-  describe('vesting schedule', function () {
+  describe('vesting schedule', () => {
     beforeEach(async function () {
       this.schedule = Array(64)
         .fill()
@@ -41,7 +41,7 @@ contract('VestingWallet', function (accounts) {
       this.vestingFn = timestamp => min(amount, amount.mul(timestamp.sub(this.start)).div(duration));
     });
 
-    describe('Eth vesting', function () {
+    describe('Eth vesting', () => {
       beforeEach(async function () {
         await web3.eth.sendTransaction({ from: sender, to: this.mock.address, value: amount });
         this.getBalance = account => web3.eth.getBalance(account).then(web3.utils.toBN);
@@ -51,7 +51,7 @@ contract('VestingWallet', function (accounts) {
       shouldBehaveLikeVesting(beneficiary);
     });
 
-    describe('ERC20 vesting', function () {
+    describe('ERC20 vesting', () => {
       beforeEach(async function () {
         this.token = await ERC20.new('Name', 'Symbol');
         this.getBalance = account => this.token.balanceOf(account);

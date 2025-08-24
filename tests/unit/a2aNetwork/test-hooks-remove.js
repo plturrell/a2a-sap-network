@@ -32,13 +32,13 @@ asyncHook.removeHooks(hooks);
 
 asyncHook.enable();
 
-fs.access(__filename, function () {
+fs.access(__filename, () => {
   called = true;
 });
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(called, true);
 
   assert.equal(initCalls, 1);

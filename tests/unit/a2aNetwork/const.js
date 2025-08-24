@@ -20,15 +20,15 @@
 
 'use strict';
 
-var test = require('tape');
+const test = require('tape');
 
-var Thrift = require('..').Thrift;
-var fs = require('fs');
-var path = require('path');
-var source = fs.readFileSync(path.join(__dirname, 'const.thrift'), 'ascii');
-var thrift;
+const Thrift = require('..').Thrift;
+const fs = require('fs');
+const path = require('path');
+const source = fs.readFileSync(path.join(__dirname, 'const.thrift'), 'ascii');
+let thrift;
 
-test('consts parse', function t(assert) {
+test('consts parse', (assert) => {
     thrift = new Thrift({source: source});
     assert.equal(thrift.consts.ten, 10, 'ten constant');
     assert.equal(thrift.consts.tenForward, 10, 'forward reference');

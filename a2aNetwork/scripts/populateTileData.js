@@ -14,7 +14,7 @@ async function populateTileData() {
         
         // 1. Populate Agent Performance data
         log.debug('\n📊 Creating agent performance records...');
-        const agents = await db.run(`SELECT ID FROM a2a_network_Agents`);
+        const agents = await db.run('SELECT ID FROM a2a_network_Agents');
         
         // Batch insert agent performance data instead of individual inserts
         const performanceDataBatch = agents.map(agent => ({
@@ -54,7 +54,7 @@ async function populateTileData() {
             timestamp: new Date().toISOString()
         };
         
-        await db.run(`DELETE FROM BlockchainService_BlockchainStats`);
+        await db.run('DELETE FROM BlockchainService_BlockchainStats');
         await db.run(`INSERT INTO BlockchainService_BlockchainStats 
             (ID, blockHeight, gasPrice, networkStatus, totalTransactions, averageBlockTime, timestamp) 
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -87,7 +87,7 @@ async function populateTileData() {
         
         // 4. Link capabilities to agents
         log.debug('\n🔗 Linking capabilities to agents...');
-        const capabilityIds = await db.run(`SELECT ID FROM a2a_network_Capabilities`);
+        const capabilityIds = await db.run('SELECT ID FROM a2a_network_Capabilities');
         let capIndex = 0;
         
         for (const agent of agents.slice(0, 10)) { // First 10 agents get capabilities
@@ -153,7 +153,7 @@ async function populateTileData() {
         
         // 8. Update network stats
         log.debug('\n📈 Updating network statistics...');
-        const stats = await db.run(`SELECT COUNT(*) as count FROM a2a_network_NetworkStats`);
+        const stats = await db.run('SELECT COUNT(*) as count FROM a2a_network_NetworkStats');
         if (stats[0].count === 0) {
             await db.run(`INSERT INTO a2a_network_NetworkStats 
                 (ID, totalAgents, activeAgents, totalServices, totalCapabilities, totalMessages, 
@@ -168,12 +168,12 @@ async function populateTileData() {
         
         // Display summary
         const summary = {
-            agents: await db.run(`SELECT COUNT(*) as count FROM a2a_network_Agents`),
-            performance: await db.run(`SELECT COUNT(*) as count FROM a2a_network_AgentPerformance`),
-            capabilities: await db.run(`SELECT COUNT(*) as count FROM a2a_network_Capabilities`),
-            messages: await db.run(`SELECT COUNT(*) as count FROM a2a_network_Messages`),
-            workflows: await db.run(`SELECT COUNT(*) as count FROM a2a_network_Workflows`),
-            blockchainStats: await db.run(`SELECT COUNT(*) as count FROM BlockchainService_BlockchainStats`)
+            agents: await db.run('SELECT COUNT(*) as count FROM a2a_network_Agents'),
+            performance: await db.run('SELECT COUNT(*) as count FROM a2a_network_AgentPerformance'),
+            capabilities: await db.run('SELECT COUNT(*) as count FROM a2a_network_Capabilities'),
+            messages: await db.run('SELECT COUNT(*) as count FROM a2a_network_Messages'),
+            workflows: await db.run('SELECT COUNT(*) as count FROM a2a_network_Workflows'),
+            blockchainStats: await db.run('SELECT COUNT(*) as count FROM BlockchainService_BlockchainStats')
         };
         
         log.debug('\n📊 Database Summary:');

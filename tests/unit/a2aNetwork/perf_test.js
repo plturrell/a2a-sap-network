@@ -1,27 +1,27 @@
-var fs = require('fs');
+const fs = require('fs');
 
-var loader = require('./loader');
+const loader = require('./loader');
 
-var NUM_TIMES = 10;
-var BASE_DIR = __dirname + '/perf';
-var TREES = ['../test/arrtree', 'rbtree', 'bintree'];
+const NUM_TIMES = 10;
+const BASE_DIR = `${__dirname  }/perf`;
+const TREES = ['../test/arrtree', 'rbtree', 'bintree'];
 
 function mean(arr) {
-    var sum = 0;
-    arr.forEach(function(n) {
+    let sum = 0;
+    arr.forEach((n) => {
         sum += n;
     });
     return sum/arr.length;
 }
 
 function timeit(f) {
-    var diffs = [];
-    for(var i=0; i < NUM_TIMES; i++) {
-        var start = Date.now();
+    const diffs = [];
+    for(let i=0; i < NUM_TIMES; i++) {
+        const start = Date.now();
         f();
-        var end = Date.now();
+        const end = Date.now();
 
-        var diff = (end - start)/1000;
+        const diff = (end - start)/1000;
         diffs.push(diff);
     }
     return diffs;
@@ -32,37 +32,37 @@ function print_times(arr) {
 }
 
 function build(tree_class, test_path) {
-    var tests = loader.load(test_path);
-    var inserts = loader.get_inserts(tests);
+    const tests = loader.load(test_path);
+    const inserts = loader.get_inserts(tests);
 
     console.log('build tree...');
-    print_times(timeit(function(){
+    print_times(timeit(() =>{
         loader.build_tree(tree_class, inserts);
     }));
 }
 
 function build_destroy(tree_class, test_path) {
-    var tests = loader.load(test_path);
-    var inserts = loader.get_inserts(tests);
-    var removes = loader.get_removes(tests);
+    const tests = loader.load(test_path);
+    const inserts = loader.get_inserts(tests);
+    const removes = loader.get_removes(tests);
 
     console.log('build/destroy tree...');
-    print_times(timeit(function() {
-        var tree = loader.build_tree(tree_class, inserts);
-        removes.forEach(function(n) {
+    print_times(timeit(() => {
+        const tree = loader.build_tree(tree_class, inserts);
+        removes.forEach((n) => {
             tree.remove(n);
         });
     }));
 }
 
 function find(tree_class, test_path) {
-    var tests = loader.load(test_path);
-    var inserts = loader.get_inserts(tests);
+    const tests = loader.load(test_path);
+    const inserts = loader.get_inserts(tests);
 
-    var tree = loader.build_tree(tree_class, inserts);
+    const tree = loader.build_tree(tree_class, inserts);
     console.log('find all nodes...');
-    print_times(timeit(function() {
-        inserts.forEach(function(n) {
+    print_times(timeit(() => {
+        inserts.forEach((n) => {
             tree.find(n);
         });
     }));
@@ -70,12 +70,12 @@ function find(tree_class, test_path) {
 
 
 function interleaved(tree_class, test_path) {
-    var tests = loader.load(test_path);
+    const tests = loader.load(test_path);
 
     console.log('interleaved build/destroy...');
-    print_times(timeit(function() {
-        var tree = new tree_class(function(a,b) { return a - b });
-        tests.forEach(function(n) {
+    print_times(timeit(() => {
+        const tree = new tree_class((a,b) => { return a - b; });
+        tests.forEach((n) => {
             if(n > 0)
                 tree.insert(n);
             else
@@ -84,26 +84,26 @@ function interleaved(tree_class, test_path) {
     }));
 }
 
-var tests = fs.readdirSync(BASE_DIR);
+const tests = fs.readdirSync(BASE_DIR);
 
-var test_funcs = {};
-TREES.forEach(function(tree) {
-    var tree_class = require('../lib/' + tree);
-    tests.forEach(function(test) {
-       var test_path = BASE_DIR + "/" + test;
-       test_funcs[tree + "_" + test + "_build"] = function(assert) {
+const test_funcs = {};
+TREES.forEach((tree) => {
+    const tree_class = require(`../lib/${  tree}`);
+    tests.forEach((test) => {
+       const test_path = `${BASE_DIR  }/${  test}`;
+       test_funcs[`${tree  }_${  test  }_build`] = function(assert) {
           build(tree_class, test_path);
           assert.done();
        };
-       test_funcs[tree + "_" + test + "_build_destroy"] = function(assert) {
+       test_funcs[`${tree  }_${  test  }_build_destroy`] = function(assert) {
           build_destroy(tree_class, test_path);
           assert.done();
        };
-       test_funcs[tree + "_" + test + "_find"] = function(assert) {
+       test_funcs[`${tree  }_${  test  }_find`] = function(assert) {
           find(tree_class, test_path);
           assert.done();
        };
-       test_funcs[tree + "_" + test + "_interleaved"] = function(assert) {
+       test_funcs[`${tree  }_${  test  }_interleaved`] = function(assert) {
           interleaved(tree_class, test_path);
           assert.done();
        };

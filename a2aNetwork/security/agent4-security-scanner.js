@@ -724,11 +724,11 @@ class Agent4SecurityScanner {
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('🧮 AGENT 4 CALCULATION VALIDATION SECURITY SCAN REPORT');
         console.log('='.repeat(80));
         
-        console.log(`\n📊 SUMMARY:`);
+        console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
         console.log(`   Critical Issues: ${criticalCount}`);
@@ -744,13 +744,13 @@ class Agent4SecurityScanner {
         
         console.log(`\n🎯 CALCULATION VALIDATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
-            console.log(`   Status: ✅ EXCELLENT - Calculation validation system is well secured`);
+            console.log('   Status: ✅ EXCELLENT - Calculation validation system is well secured');
         } else if (score >= 70) {
-            console.log(`   Status: ⚠️  GOOD - Minor calculation security issues to address`);
+            console.log('   Status: ⚠️  GOOD - Minor calculation security issues to address');
         } else if (score >= 50) {
-            console.log(`   Status: ⚠️  FAIR - Several calculation security issues need attention`);
+            console.log('   Status: ⚠️  FAIR - Several calculation security issues need attention');
         } else {
-            console.log(`   Status: ❌ POOR - Significant calculation validation security improvements needed`);
+            console.log('   Status: ❌ POOR - Significant calculation validation security improvements needed');
         }
         
         // Calculation-specific findings
@@ -760,7 +760,7 @@ class Agent4SecurityScanner {
             v.type.includes('RESULT') || v.type.includes('PRECISION') ||
             v.type.includes('BATCH') || v.type.includes('BENCHMARK'));
         if (calculationIssues.length > 0) {
-            console.log(`\n🧮 CALCULATION VALIDATION-SPECIFIC SECURITY FINDINGS:`);
+            console.log('\n🧮 CALCULATION VALIDATION-SPECIFIC SECURITY FINDINGS:');
             const issueCounts = {};
             calculationIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
@@ -773,7 +773,7 @@ class Agent4SecurityScanner {
         
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
-            console.log(`\n🚨 VULNERABILITIES FOUND:\n`);
+            console.log('\n🚨 VULNERABILITIES FOUND:\n');
             
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
@@ -795,68 +795,68 @@ class Agent4SecurityScanner {
         }
         
         // Calculation validation security recommendations
-        console.log(`💡 AGENT 4 CALCULATION VALIDATION SECURITY RECOMMENDATIONS:\n`);
-        console.log(`1. 🛡️  Secure Formula Processing`);
-        console.log(`   - Implement strict formula input validation and sanitization`);
-        console.log(`   - Use function whitelisting for allowed mathematical operations`);
-        console.log(`   - Validate formula syntax and structure before execution`);
-        console.log(`   - Implement secure expression parsing with bounds checking`);
+        console.log('💡 AGENT 4 CALCULATION VALIDATION SECURITY RECOMMENDATIONS:\n');
+        console.log('1. 🛡️  Secure Formula Processing');
+        console.log('   - Implement strict formula input validation and sanitization');
+        console.log('   - Use function whitelisting for allowed mathematical operations');
+        console.log('   - Validate formula syntax and structure before execution');
+        console.log('   - Implement secure expression parsing with bounds checking');
         
-        console.log(`\n2. 🔒 Expression Injection Prevention`);
-        console.log(`   - Sanitize all mathematical expressions before processing`);
-        console.log(`   - Use parameterized calculation operations where possible`);
-        console.log(`   - Implement expression complexity limits and validation`);
-        console.log(`   - Monitor for suspicious expression patterns and injection attempts`);
+        console.log('\n2. 🔒 Expression Injection Prevention');
+        console.log('   - Sanitize all mathematical expressions before processing');
+        console.log('   - Use parameterized calculation operations where possible');
+        console.log('   - Implement expression complexity limits and validation');
+        console.log('   - Monitor for suspicious expression patterns and injection attempts');
         
-        console.log(`\n3. 🔐 Calculation Integrity Protection`);
-        console.log(`   - Implement calculation result verification and checksums`);
-        console.log(`   - Validate calculation inputs and outputs for consistency`);
-        console.log(`   - Use secure arithmetic operations to prevent overflow/underflow`);
-        console.log(`   - Monitor calculation operations for tampering attempts`);
+        console.log('\n3. 🔐 Calculation Integrity Protection');
+        console.log('   - Implement calculation result verification and checksums');
+        console.log('   - Validate calculation inputs and outputs for consistency');
+        console.log('   - Use secure arithmetic operations to prevent overflow/underflow');
+        console.log('   - Monitor calculation operations for tampering attempts');
         
-        console.log(`\n4. ⚡ Numeric Safety Controls`);
-        console.log(`   - Implement numeric bounds checking for all calculations`);
-        console.log(`   - Use safe arithmetic operations and overflow detection`);
-        console.log(`   - Validate precision parameters and calculation limits`);
-        console.log(`   - Monitor for numeric manipulation and anomalous results`);
+        console.log('\n4. ⚡ Numeric Safety Controls');
+        console.log('   - Implement numeric bounds checking for all calculations');
+        console.log('   - Use safe arithmetic operations and overflow detection');
+        console.log('   - Validate precision parameters and calculation limits');
+        console.log('   - Monitor for numeric manipulation and anomalous results');
         
-        console.log(`\n5. 🔍 Validation Rule Security`);
-        console.log(`   - Protect validation rules from unauthorized modification`);
-        console.log(`   - Implement immutable validation configurations`);
-        console.log(`   - Validate rule integrity and authenticity`);
-        console.log(`   - Monitor validation rule changes and access attempts`);
+        console.log('\n5. 🔍 Validation Rule Security');
+        console.log('   - Protect validation rules from unauthorized modification');
+        console.log('   - Implement immutable validation configurations');
+        console.log('   - Validate rule integrity and authenticity');
+        console.log('   - Monitor validation rule changes and access attempts');
         
-        console.log(`\n6. 📊 Batch Processing Protection`);
-        console.log(`   - Implement proper batch size limits and validation`);
-        console.log(`   - Use rate limiting for batch calculation operations`);
-        console.log(`   - Monitor batch processing for resource abuse`);
-        console.log(`   - Validate batch configurations and processing parameters`);
+        console.log('\n6. 📊 Batch Processing Protection');
+        console.log('   - Implement proper batch size limits and validation');
+        console.log('   - Use rate limiting for batch calculation operations');
+        console.log('   - Monitor batch processing for resource abuse');
+        console.log('   - Validate batch configurations and processing parameters');
         
-        console.log(`\n7. 🎨 Formula Builder Security`);
-        console.log(`   - Implement secure formula building with strict validation`);
-        console.log(`   - Sanitize all formula components and templates`);
-        console.log(`   - Use function whitelisting in formula builder interface`);
-        console.log(`   - Monitor formula construction for malicious patterns`);
+        console.log('\n7. 🎨 Formula Builder Security');
+        console.log('   - Implement secure formula building with strict validation');
+        console.log('   - Sanitize all formula components and templates');
+        console.log('   - Use function whitelisting in formula builder interface');
+        console.log('   - Monitor formula construction for malicious patterns');
         
-        console.log(`\n8. 📈 Benchmark Integrity`);
-        console.log(`   - Validate benchmark configurations and parameters`);
-        console.log(`   - Implement integrity checks for benchmark results`);
-        console.log(`   - Monitor benchmark operations for manipulation attempts`);
-        console.log(`   - Use secure benchmark data storage and processing`);
+        console.log('\n8. 📈 Benchmark Integrity');
+        console.log('   - Validate benchmark configurations and parameters');
+        console.log('   - Implement integrity checks for benchmark results');
+        console.log('   - Monitor benchmark operations for manipulation attempts');
+        console.log('   - Use secure benchmark data storage and processing');
         
-        console.log(`\n9. 📄 Report Generation Security`);
-        console.log(`   - Sanitize all report data and template content`);
-        console.log(`   - Implement secure report generation with output encoding`);
-        console.log(`   - Validate report configurations and access permissions`);
-        console.log(`   - Monitor report generation for injection attempts`);
+        console.log('\n9. 📄 Report Generation Security');
+        console.log('   - Sanitize all report data and template content');
+        console.log('   - Implement secure report generation with output encoding');
+        console.log('   - Validate report configurations and access permissions');
+        console.log('   - Monitor report generation for injection attempts');
         
-        console.log(`\n10. 🔧 Template Processing Safety`);
-        console.log(`    - Sanitize calculation templates and template data`);
-        console.log(`    - Implement secure template processing with validation`);
-        console.log(`    - Use content security policies for template rendering`);
-        console.log(`    - Monitor template operations for injection attempts`);
+        console.log('\n10. 🔧 Template Processing Safety');
+        console.log('    - Sanitize calculation templates and template data');
+        console.log('    - Implement secure template processing with validation');
+        console.log('    - Use content security policies for template rendering');
+        console.log('    - Monitor template operations for injection attempts');
         
-        console.log('\n' + '='.repeat(80));
+        console.log(`\n${  '='.repeat(80)}`);
         console.log('Calculation Validation Security Scan completed. Address critical formula vulnerabilities first.');
         console.log('Focus on formula injection prevention and calculation integrity protection.');
         console.log('='.repeat(80));

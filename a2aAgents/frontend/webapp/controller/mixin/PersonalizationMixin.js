@@ -1,11 +1,11 @@
 sap.ui.define([
-    "sap/ui/core/mvc/Controller",
-    "sap/ui/fl/variants/VariantManagement",
-    "sap/ui/fl/apply/api/ControlVariantApplyAPI",
-    "sap/ui/fl/write/api/ControlPersonalizationWriteAPI",
-    "sap/m/MessageToast"
-], function (Controller, VariantManagement, ControlVariantApplyAPI, ControlPersonalizationWriteAPI, MessageToast) {
-    "use strict";
+    'sap/ui/core/mvc/Controller',
+    'sap/ui/fl/variants/VariantManagement',
+    'sap/ui/fl/apply/api/ControlVariantApplyAPI',
+    'sap/ui/fl/write/api/ControlPersonalizationWriteAPI',
+    'sap/m/MessageToast'
+], (Controller, VariantManagement, ControlVariantApplyAPI, ControlPersonalizationWriteAPI, MessageToast) => {
+    'use strict';
 
     /**
      * PersonalizationMixin - Adds UI adaptation and personalization capabilities
@@ -28,7 +28,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving with personalization data
          */
         _loadPersonalizationData: function () {
-            const sUserId = this.getOwnerComponent().getModel("user").getProperty("/id");
+            const sUserId = this.getOwnerComponent().getModel('user').getProperty('/id');
             const sViewId = this.getView().getId();
 
             return new Promise((resolve, reject) => {
@@ -58,8 +58,8 @@ sap.ui.define([
          */
         _getDefaultPersonalization: function () {
             return {
-                theme: "sap_horizon",
-                density: "cozy",
+                theme: 'sap_horizon',
+                density: 'cozy',
                 language: sap.ui.getCore().getConfiguration().getLanguage(),
                 tableSettings: {
                     visibleColumns: [],
@@ -69,7 +69,7 @@ sap.ui.define([
                 },
                 dashboardLayout: {
                     tiles: [],
-                    layout: "default"
+                    layout: 'default'
                 },
                 preferences: {
                     notifications: true,
@@ -106,7 +106,7 @@ sap.ui.define([
             }
 
             // Store in component model for easy access
-            this.getOwnerComponent().getModel("personalization").setData(oPersonalizationData);
+            this.getOwnerComponent().getModel('personalization').setData(oPersonalizationData);
         },
 
         /**
@@ -115,7 +115,7 @@ sap.ui.define([
          * @param {object} oTableSettings Table personalization settings
          */
         _applyTablePersonalization: function (oTableSettings) {
-            const aTables = this._findControlsByType("sap.m.Table");
+            const aTables = this._findControlsByType('sap.m.Table');
             
             aTables.forEach(oTable => {
                 const sTableId = oTable.getId();
@@ -130,11 +130,11 @@ sap.ui.define([
                     }
 
                     // Apply sort settings
-                    if (oSettings.sortOrder && oTable.getBinding("items")) {
+                    if (oSettings.sortOrder && oTable.getBinding('items')) {
                         const aSorters = oSettings.sortOrder.map(oSort => 
                             new sap.ui.model.Sorter(oSort.path, oSort.descending)
                         );
-                        oTable.getBinding("items").sort(aSorters);
+                        oTable.getBinding('items').sort(aSorters);
                     }
                 }
             });
@@ -146,7 +146,7 @@ sap.ui.define([
          * @param {object} oDashboardLayout Dashboard layout settings
          */
         _applyDashboardPersonalization: function (oDashboardLayout) {
-            const oDashboard = this.byId("dashboard");
+            const oDashboard = this.byId('dashboard');
             if (oDashboard && oDashboard.setLayout) {
                 oDashboard.setLayout(oDashboardLayout.layout);
                 
@@ -166,7 +166,7 @@ sap.ui.define([
             
             // Create variant management control
             this._oVariantManagement = new VariantManagement({
-                standardItemText: "Standard",
+                standardItemText: 'Standard',
                 showExecuteOnSelection: true,
                 showShare: true,
                 showSetAsDefault: true,
@@ -175,7 +175,7 @@ sap.ui.define([
             });
 
             // Add to view
-            const oPage = oView.byId("page");
+            const oPage = oView.byId('page');
             if (oPage && oPage.setCustomHeader) {
                 const oBar = oPage.getCustomHeader() || new sap.m.Bar();
                 oBar.addContentRight(this._oVariantManagement);
@@ -194,7 +194,7 @@ sap.ui.define([
             ControlVariantApplyAPI.loadVariants({
                 control: this.getView(),
                 standardVariant: {}
-            }).then(function (aVariants) {
+            }).then((aVariants) => {
                 // Add variants to variant management control
                 aVariants.forEach(oVariant => {
                     this._oVariantManagement.addVariantItem(new sap.ui.fl.variants.VariantItem({
@@ -204,7 +204,7 @@ sap.ui.define([
                         executeOnSelect: oVariant.executeOnSelect
                     }));
                 });
-            }.bind(this));
+            });
         },
 
         /**
@@ -227,7 +227,7 @@ sap.ui.define([
          * @private
          */
         _enableDashboardDragDrop: function () {
-            const oDashboard = this.byId("dashboard");
+            const oDashboard = this.byId('dashboard');
             if (oDashboard) {
                 oDashboard.addEventDelegate({
                     onAfterRendering: function () {
@@ -243,19 +243,19 @@ sap.ui.define([
          * @param {sap.ui.core.Control} oContainer Container control
          */
         _initializeDragDrop: function (oContainer) {
-            const aDraggables = oContainer.findAggregatedObjects(true, function (oControl) {
-                return oControl.isA("sap.m.GenericTile");
+            const aDraggables = oContainer.findAggregatedObjects(true, (oControl) => {
+                return oControl.isA('sap.m.GenericTile');
             });
 
             aDraggables.forEach(oDraggable => {
                 oDraggable.addDragDropConfig(new sap.ui.core.dnd.DragInfo({
-                    sourceAggregation: "tiles",
+                    sourceAggregation: 'tiles',
                     dragStart: this.onDragStart.bind(this)
                 }));
 
                 oDraggable.addDragDropConfig(new sap.ui.core.dnd.DropInfo({
-                    targetAggregation: "tiles",
-                    dropPosition: "Between",
+                    targetAggregation: 'tiles',
+                    dropPosition: 'Between',
                     drop: this.onDrop.bind(this)
                 }));
             });
@@ -266,33 +266,33 @@ sap.ui.define([
          * @private
          */
         _addPersonalizationToolbar: function () {
-            const oPage = this.byId("page");
+            const oPage = this.byId('page');
             if (!oPage) return;
 
             const oToolbar = new sap.m.Toolbar({
                 visible: false,
                 content: [
                     new sap.m.Button({
-                        icon: "sap-icon://user-settings",
-                        text: "Personalize",
+                        icon: 'sap-icon://user-settings',
+                        text: 'Personalize',
                         press: this.onOpenPersonalizationDialog.bind(this)
                     }),
                     new sap.m.Button({
-                        icon: "sap-icon://reset",
-                        text: "Reset",
+                        icon: 'sap-icon://reset',
+                        text: 'Reset',
                         press: this.onResetPersonalization.bind(this)
                     }),
                     new sap.m.ToolbarSpacer(),
                     new sap.m.SegmentedButton({
-                        selectedKey: "{personalization>/density}",
+                        selectedKey: '{personalization>/density}',
                         items: [
                             new sap.m.SegmentedButtonItem({
-                                key: "Cozy",
-                                text: "Cozy"
+                                key: 'Cozy',
+                                text: 'Cozy'
                             }),
                             new sap.m.SegmentedButtonItem({
-                                key: "Compact",
-                                text: "Compact"
+                                key: 'Compact',
+                                text: 'Compact'
                             })
                         ],
                         selectionChange: this.onDensityChange.bind(this)
@@ -311,19 +311,19 @@ sap.ui.define([
          * @private
          */
         _registerPersonalizationShortcuts: function () {
-            document.addEventListener("keydown", function (oEvent) {
+            document.addEventListener('keydown', (oEvent) => {
                 // Ctrl/Cmd + Shift + P: Open personalization
-                if ((oEvent.ctrlKey || oEvent.metaKey) && oEvent.shiftKey && oEvent.key === "P") {
+                if ((oEvent.ctrlKey || oEvent.metaKey) && oEvent.shiftKey && oEvent.key === 'P') {
                     oEvent.preventDefault();
                     this.onOpenPersonalizationDialog();
                 }
                 
                 // Ctrl/Cmd + Shift + R: Reset personalization
-                if ((oEvent.ctrlKey || oEvent.metaKey) && oEvent.shiftKey && oEvent.key === "R") {
+                if ((oEvent.ctrlKey || oEvent.metaKey) && oEvent.shiftKey && oEvent.key === 'R') {
                     oEvent.preventDefault();
                     this.onResetPersonalization();
                 }
-            }.bind(this));
+            });
         },
 
         /**
@@ -333,15 +333,15 @@ sap.ui.define([
         onOpenPersonalizationDialog: function () {
             if (!this._oPersonalizationDialog) {
                 this._oPersonalizationDialog = sap.ui.xmlfragment(
-                    "com.sap.a2a.fragment.PersonalizationDialog",
+                    'com.sap.a2a.fragment.PersonalizationDialog',
                     this
                 );
                 this.getView().addDependent(this._oPersonalizationDialog);
             }
 
             // Load current settings
-            const oPersonalizationModel = this.getOwnerComponent().getModel("personalization");
-            this._oPersonalizationDialog.setModel(oPersonalizationModel, "settings");
+            const oPersonalizationModel = this.getOwnerComponent().getModel('personalization');
+            this._oPersonalizationDialog.setModel(oPersonalizationModel, 'settings');
 
             this._oPersonalizationDialog.open();
         },
@@ -351,8 +351,8 @@ sap.ui.define([
          * @public
          */
         onSavePersonalization: function () {
-            const oPersonalizationData = this.getOwnerComponent().getModel("personalization").getData();
-            const sUserId = this.getOwnerComponent().getModel("user").getProperty("/id");
+            const oPersonalizationData = this.getOwnerComponent().getModel('personalization').getData();
+            const sUserId = this.getOwnerComponent().getModel('user').getProperty('/id');
             const sViewId = this.getView().getId();
             const sStorageKey = `a2a-personalization-${sUserId}-${sViewId}`;
 
@@ -362,7 +362,7 @@ sap.ui.define([
             // Save to backend
             this._savePersonalizationToBackend(oPersonalizationData);
 
-            MessageToast.show("Personalization saved successfully");
+            MessageToast.show('Personalization saved successfully');
             this._oPersonalizationDialog.close();
         },
 
@@ -373,8 +373,8 @@ sap.ui.define([
          */
         _savePersonalizationToBackend: function (oPersonalizationData) {
             const oModel = this.getOwnerComponent().getModel();
-            oModel.create("/UserPersonalizations", {
-                userId: this.getOwnerComponent().getModel("user").getProperty("/id"),
+            oModel.create('/UserPersonalizations', {
+                userId: this.getOwnerComponent().getModel('user').getProperty('/id'),
                 viewId: this.getView().getId(),
                 settings: JSON.stringify(oPersonalizationData)
             });
@@ -385,7 +385,7 @@ sap.ui.define([
          * @public
          */
         onResetPersonalization: function () {
-            sap.m.MessageBox.confirm("Are you sure you want to reset all personalizations?", {
+            sap.m.MessageBox.confirm('Are you sure you want to reset all personalizations?', {
                 onClose: function (oAction) {
                     if (oAction === sap.m.MessageBox.Action.OK) {
                         const oDefaultPersonalization = this._getDefaultPersonalization();
@@ -402,18 +402,18 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Selection change event
          */
         onDensityChange: function (oEvent) {
-            const sSelectedKey = oEvent.getParameter("item").getKey();
+            const sSelectedKey = oEvent.getParameter('item').getKey();
             const oView = this.getView();
 
             // Remove existing density classes
-            oView.removeStyleClass("sapUiSizeCozy");
-            oView.removeStyleClass("sapUiSizeCompact");
+            oView.removeStyleClass('sapUiSizeCozy');
+            oView.removeStyleClass('sapUiSizeCompact');
 
             // Add new density class
             oView.addStyleClass(`sapUiSize${sSelectedKey}`);
 
             // Update model
-            this.getOwnerComponent().getModel("personalization").setProperty("/density", sSelectedKey);
+            this.getOwnerComponent().getModel('personalization').setProperty('/density', sSelectedKey);
         },
 
         /**
@@ -422,22 +422,22 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Save event
          */
         onSaveVariant: function (oEvent) {
-            const sVariantName = oEvent.getParameter("name");
-            const bDefault = oEvent.getParameter("def");
-            const bPublic = oEvent.getParameter("public");
-            const bExecuteOnSelect = oEvent.getParameter("execute");
+            const sVariantName = oEvent.getParameter('name');
+            const bDefault = oEvent.getParameter('def');
+            const bPublic = oEvent.getParameter('public');
+            const bExecuteOnSelect = oEvent.getParameter('execute');
 
             // Get current personalization state
-            const oPersonalizationData = this.getOwnerComponent().getModel("personalization").getData();
+            const oPersonalizationData = this.getOwnerComponent().getModel('personalization').getData();
 
             // Save variant
             ControlPersonalizationWriteAPI.save({
                 selector: this.getView(),
                 changes: [{
                     fileName: `variant_${Date.now()}`,
-                    fileType: "variant",
-                    changeType: "addFavorite",
-                    layer: "USER",
+                    fileType: 'variant',
+                    changeType: 'addFavorite',
+                    layer: 'USER',
                     content: {
                         title: sVariantName,
                         favorite: true,
@@ -447,10 +447,10 @@ sap.ui.define([
                         content: oPersonalizationData
                     }
                 }]
-            }).then(function () {
+            }).then(() => {
                 MessageToast.show(`Variant "${sVariantName}" saved successfully`);
                 this._loadVariants();
-            }.bind(this));
+            });
         },
 
         /**
@@ -459,17 +459,17 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Selection event
          */
         onSelectVariant: function (oEvent) {
-            const sVariantKey = oEvent.getParameter("key");
+            const sVariantKey = oEvent.getParameter('key');
 
-            if (sVariantKey === "*standard*") {
+            if (sVariantKey === '*standard*') {
                 this.onResetPersonalization();
             } else {
                 // Load and apply variant
                 ControlVariantApplyAPI.activateVariant({
                     element: this.getView(),
                     variantReference: sVariantKey
-                }).then(function () {
-                    MessageToast.show("Variant applied successfully");
+                }).then(() => {
+                    MessageToast.show('Variant applied successfully');
                 });
             }
         },
@@ -480,12 +480,12 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Drag event
          */
         onDragStart: function (oEvent) {
-            const oDraggedControl = oEvent.getParameter("draggedControl");
-            const oDragSession = oEvent.getParameter("dragSession");
+            const oDraggedControl = oEvent.getParameter('draggedControl');
+            const oDragSession = oEvent.getParameter('dragSession');
 
-            oDragSession.setComplexData("draggedControl", {
+            oDragSession.setComplexData('draggedControl', {
                 id: oDraggedControl.getId(),
-                index: oDraggedControl.getParent().indexOfAggregation("tiles", oDraggedControl)
+                index: oDraggedControl.getParent().indexOfAggregation('tiles', oDraggedControl)
             });
         },
 
@@ -495,27 +495,27 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent Drop event
          */
         onDrop: function (oEvent) {
-            const oDragSession = oEvent.getParameter("dragSession");
-            const oDraggedControl = oEvent.getParameter("draggedControl");
-            const oDroppedControl = oEvent.getParameter("droppedControl");
-            const sDropPosition = oEvent.getParameter("dropPosition");
+            const oDragSession = oEvent.getParameter('dragSession');
+            const oDraggedControl = oEvent.getParameter('draggedControl');
+            const oDroppedControl = oEvent.getParameter('droppedControl');
+            const sDropPosition = oEvent.getParameter('dropPosition');
 
             // Reorder tiles
             const oParent = oDraggedControl.getParent();
-            const iDraggedIndex = oParent.indexOfAggregation("tiles", oDraggedControl);
-            const iDroppedIndex = oParent.indexOfAggregation("tiles", oDroppedControl);
+            const iDraggedIndex = oParent.indexOfAggregation('tiles', oDraggedControl);
+            const iDroppedIndex = oParent.indexOfAggregation('tiles', oDroppedControl);
 
-            oParent.removeAggregation("tiles", oDraggedControl);
+            oParent.removeAggregation('tiles', oDraggedControl);
 
             let iNewIndex = iDroppedIndex;
-            if (sDropPosition === "After") {
+            if (sDropPosition === 'After') {
                 iNewIndex = iDroppedIndex + 1;
             }
             if (iDraggedIndex < iDroppedIndex) {
                 iNewIndex--;
             }
 
-            oParent.insertAggregation("tiles", oDraggedControl, iNewIndex);
+            oParent.insertAggregation('tiles', oDraggedControl, iNewIndex);
 
             // Save new order
             this._saveTileOrder();
@@ -526,17 +526,17 @@ sap.ui.define([
          * @private
          */
         _saveTileOrder: function () {
-            const oDashboard = this.byId("dashboard");
+            const oDashboard = this.byId('dashboard');
             if (!oDashboard) return;
 
-            const aTiles = oDashboard.getAggregation("tiles") || [];
+            const aTiles = oDashboard.getAggregation('tiles') || [];
             const aTileOrder = aTiles.map(oTile => oTile.getId());
 
-            const oPersonalizationModel = this.getOwnerComponent().getModel("personalization");
-            oPersonalizationModel.setProperty("/dashboardLayout/tiles", aTileOrder);
+            const oPersonalizationModel = this.getOwnerComponent().getModel('personalization');
+            oPersonalizationModel.setProperty('/dashboardLayout/tiles', aTileOrder);
 
             // Auto-save
-            if (oPersonalizationModel.getProperty("/preferences/autoSave")) {
+            if (oPersonalizationModel.getProperty('/preferences/autoSave')) {
                 this.onSavePersonalization();
             }
         },

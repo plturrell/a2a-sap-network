@@ -43,16 +43,16 @@ async function debugQueryExecution() {
         
         // Debug: Check if facts exist for the predicate
         console.log('\n🔍 Debugging fact lookup:');
-        console.log(`Looking for predicate: "src.File"`);
-        console.log(`Available predicates in factDb:`, Object.keys(factDb));
-        console.log(`Facts for src.File:`, factDb['src.File']);
+        console.log('Looking for predicate: "src.File"');
+        console.log('Available predicates in factDb:', Object.keys(factDb));
+        console.log('Facts for src.File:', factDb['src.File']);
         
         // Debug: Manual fact value checking
         const testFact = factDb['src.File'][0];
         console.log('\n🔍 Testing fact value extraction:');
-        console.log(`Test fact:`, testFact);
-        console.log(`language value (from fact.value.language):`, testFact.value.language);
-        console.log(`language value (from fact.language):`, testFact.language);
+        console.log('Test fact:', testFact);
+        console.log('language value (from fact.value.language):', testFact.value.language);
+        console.log('language value (from fact.language):', testFact.language);
         
         const results = executor.execute(parsedQuery);
         

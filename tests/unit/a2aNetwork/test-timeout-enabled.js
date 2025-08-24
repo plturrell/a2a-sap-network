@@ -46,7 +46,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-setTimeout(function (arg1, arg2) {
+setTimeout((arg1, arg2) => {
   timerCalled = true;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
@@ -54,7 +54,7 @@ setTimeout(function (arg1, arg2) {
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, preUid);
   assert.equal(initUid, postUid);
   assert.equal(initUid, destroyUid);

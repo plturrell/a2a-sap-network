@@ -34,14 +34,14 @@ const CACHEABLE_API_PATTERNS = [
 
 // Install event - cache essential resources
 self.addEventListener("install", event => {
-    // console.log("[SW] Installing service worker");
+    // // console.log("[SW] Installing service worker");
 
     event.waitUntil(
         Promise.all([
             // Cache essential resources
             caches.open(CACHE_NAME)
                 .then(cache => {
-                    // console.log("[SW] Pre-caching offline resources");
+                    // // console.log("[SW] Pre-caching offline resources");
                     return cache.addAll(OFFLINE_FALLBACK_RESOURCES);
                 }),
 
@@ -52,18 +52,18 @@ self.addEventListener("install", event => {
             caches.open(STATIC_CACHE_NAME)
         ])
             .then(() => {
-                // console.log("[SW] Service worker installed successfully");
+                // // console.log("[SW] Service worker installed successfully");
                 return self.skipWaiting();
             })
             .catch(error => {
-                console.error("[SW] Installation failed:", error);
+                // console.error("[SW] Installation failed:", error);
             })
     );
 });
 
 // Activate event - clean up old caches
 self.addEventListener("activate", event => {
-    // console.log("[SW] Activating service worker");
+    // // console.log("[SW] Activating service worker");
 
     event.waitUntil(
         caches.keys()
@@ -73,14 +73,14 @@ self.addEventListener("activate", event => {
                         if (cacheName !== CACHE_NAME &&
                 cacheName !== API_CACHE_NAME &&
                 cacheName !== STATIC_CACHE_NAME) {
-                            // console.log("[SW] Deleting old cache:", cacheName);
+                            // // console.log("[SW] Deleting old cache:", cacheName);
                             return caches.delete(cacheName);
                         }
                     })
                 );
             })
             .then(() => {
-                // console.log("[SW] Service worker activated");
+                // // console.log("[SW] Service worker activated");
                 return self.clients.claim();
             })
     );
@@ -149,7 +149,7 @@ async function handleStaticResource(request) {
 async function handleNavigationRequest(request) {
     try {
     // Try network first
-        const response = await blockchainClient.sendMessage(request);
+        const response = await fetch(request);
 
         if (response.ok) {
             // Cache successful navigation responses
@@ -160,7 +160,7 @@ async function handleNavigationRequest(request) {
         throw new Error("Network response not ok");
 
     } catch (error) {
-        // console.log("[SW] Navigation request failed, serving offline page:", error);
+        // // console.log("[SW] Navigation request failed, serving offline page:", error);
 
         // Try to serve cached version
         const cachedResponse = await caches.match(request);
@@ -193,10 +193,10 @@ async function handleGenericRequest(request) {
  */
 async function handleMutationRequest(request) {
     try {
-        const response = await blockchainClient.sendMessage(request);
+        const response = await fetch(request);
         return response;
     } catch (error) {
-        // console.log("[SW] Mutation request failed, queuing for background sync:", error);
+        // // console.log("[SW] Mutation request failed, queuing for background sync:", error);
 
         // Queue request for background sync
         await queueBackgroundSync(request);
@@ -231,7 +231,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
         }
 
         // Fallback to network
-        const response = await blockchainClient.sendMessage(request);
+        const response = await fetch(request);
 
         if (response.ok) {
             // Cache the response
@@ -241,7 +241,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
 
         return response;
     } catch (error) {
-        console.error("[SW] Cache-first strategy failed:", error);
+        // console.error("[SW] Cache-first strategy failed:", error);
         return new Response("Resource unavailable offline", {
             status: 503,
             statusText: "Service Unavailable"
@@ -258,7 +258,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
 async function handleNetworkFirstStrategy(request, cacheName) {
     try {
     // Try network first
-        const response = await blockchainClient.sendMessage(request);
+        const response = await fetch(request);
 
         if (response.ok) {
             // Update cache with fresh data
@@ -268,7 +268,7 @@ async function handleNetworkFirstStrategy(request, cacheName) {
 
         return response;
     } catch (error) {
-        // console.log("[SW] Network failed, trying cache:", error);
+        // // console.log("[SW] Network failed, trying cache:", error);
 
         // Fallback to cache
         const cachedResponse = await caches.match(request);
@@ -316,9 +316,9 @@ async function queueBackgroundSync(request) {
         const store = transaction.objectStore("sync_queue");
         await store.add(requestData);
 
-        // console.log("[SW] Request queued for background sync:", requestData.url);
+        // // console.log("[SW] Request queued for background sync:", requestData.url);
     } catch (error) {
-        console.error("[SW] Failed to queue request for background sync:", error);
+        // console.error("[SW] Failed to queue request for background sync:", error);
     }
 }
 
@@ -367,19 +367,19 @@ async function processBackgroundSync() {
                     body: requestData.body
                 });
 
-                const response = await blockchainClient.sendMessage(request);
+                const response = await fetch(request);
 
                 if (response.ok) {
                     // Remove successful request from queue
                     await store.delete(requestData.id);
-                    // console.log("[SW] Background sync successful:", requestData.url);
+                    // // console.log("[SW] Background sync successful:", requestData.url);
                 }
             } catch (error) {
-                console.error("[SW] Background sync failed for:", requestData.url, error);
+                // console.error("[SW] Background sync failed for:", requestData.url, error);
             }
         }
     } catch (error) {
-        console.error("[SW] Background sync processing failed:", error);
+        // console.error("[SW] Background sync processing failed:", error);
     }
 }
 
@@ -434,18 +434,18 @@ async function clearAllCaches() {
     try {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
-        // console.log("[SW] All caches cleared");
+        // // console.log("[SW] All caches cleared");
     } catch (error) {
-        console.error("[SW] Failed to clear caches:", error);
+        // console.error("[SW] Failed to clear caches:", error);
     }
 }
 
 // Handle offline/online events
 self.addEventListener("online", () => {
-    // console.log("[SW] Back online, processing background sync");
+    // // console.log("[SW] Back online, processing background sync");
     self.registration.sync.register("background-sync");
 });
 
 self.addEventListener("offline", () => {
-    // console.log("[SW] Gone offline");
+    // // console.log("[SW] Gone offline");
 });

@@ -1,11 +1,11 @@
-sap.ui.define([], function() {
-    "use strict";
+sap.ui.define([], () => {
+    'use strict';
 
     return {
         // Production shell configuration
         getShellConfig: function(environment) {
             const baseConfig = {
-                defaultRenderer: "fiori2",
+                defaultRenderer: 'fiori2',
                 renderers: {
                     fiori2: {
                         componentData: {
@@ -15,7 +15,7 @@ sap.ui.define([], function() {
                                 enableNotifications: true,
                                 enableMeArea: true,
                                 enableBackButton: true,
-                                rootIntent: "Shell-home",
+                                rootIntent: 'Shell-home',
                                 applications: {}
                             }
                         }
@@ -27,27 +27,27 @@ sap.ui.define([], function() {
                             config: {
                                 groups: [
                                     {
-                                        id: "agent_management",
-                                        title: "Agent Management",
+                                        id: 'agent_management',
+                                        title: 'Agent Management',
                                         isPreset: true,
                                         isVisible: true,
                                         isDefaultGroup: true
                                     },
                                     {
-                                        id: "analytics_monitoring",
-                                        title: "Analytics & Monitoring",
+                                        id: 'analytics_monitoring',
+                                        title: 'Analytics & Monitoring',
                                         isPreset: true,
                                         isVisible: true
                                     },
                                     {
-                                        id: "services_workflow",
-                                        title: "Services & Workflows",
+                                        id: 'services_workflow',
+                                        title: 'Services & Workflows',
                                         isPreset: true,
                                         isVisible: true
                                     },
                                     {
-                                        id: "security_compliance",
-                                        title: "Security & Compliance",
+                                        id: 'security_compliance',
+                                        title: 'Security & Compliance',
                                         isPreset: true,
                                         isVisible: true
                                     }
@@ -71,10 +71,10 @@ sap.ui.define([], function() {
                         adapter: {
                             config: {
                                 themes: [
-                                    { id: "sap_horizon", name: "SAP Horizon" },
-                                    { id: "sap_horizon_dark", name: "SAP Horizon Dark" },
-                                    { id: "sap_horizon_hcb", name: "SAP Horizon High Contrast Black" },
-                                    { id: "sap_horizon_hcw", name: "SAP Horizon High Contrast White" }
+                                    { id: 'sap_horizon', name: 'SAP Horizon' },
+                                    { id: 'sap_horizon_dark', name: 'SAP Horizon Dark' },
+                                    { id: 'sap_horizon_hcb', name: 'SAP Horizon High Contrast Black' },
+                                    { id: 'sap_horizon_hcw', name: 'SAP Horizon High Contrast White' }
                                 ]
                             }
                         }
@@ -82,7 +82,7 @@ sap.ui.define([], function() {
                     Container: {
                         adapter: {
                             config: {
-                                appState: "lean",
+                                appState: 'lean',
                                 enableContentDensity: true,
                                 enableHelp: true,
                                 allowShowHideGroups: true,
@@ -92,8 +92,8 @@ sap.ui.define([], function() {
                                 sessionTimeoutTileStopRefreshInMinutes: 15,
                                 enableAutomaticSignout: true,
                                 themes: {
-                                    default: "sap_horizon",
-                                    available: ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]
+                                    default: 'sap_horizon',
+                                    available: ['sap_horizon', 'sap_horizon_dark', 'sap_horizon_hcb', 'sap_horizon_hcw']
                                 }
                             }
                         }
@@ -101,7 +101,7 @@ sap.ui.define([], function() {
                 },
                 bootstrapPlugins: {
                     RuntimeAuthoringPlugin: {
-                        component: "sap.ushell.plugins.rta",
+                        component: 'sap.ushell.plugins.rta',
                         config: {
                             validateAppVersion: true
                         }
@@ -110,7 +110,7 @@ sap.ui.define([], function() {
             };
 
             // Environment-specific configurations
-            if (environment === "production") {
+            if (environment === 'production') {
                 baseConfig.services.Container.adapter.config.enableDevelopmentMode = false;
                 baseConfig.services.Container.adapter.config.enableDebugMode = false;
                 baseConfig.services.Container.adapter.config.disablePersonalization = false;
@@ -121,10 +121,10 @@ sap.ui.define([], function() {
                 
                 // Security settings
                 baseConfig.services.Container.adapter.config.enableXFrameOptions = true;
-                baseConfig.services.Container.adapter.config.xFrameOptions = "SAMEORIGIN";
+                baseConfig.services.Container.adapter.config.xFrameOptions = 'SAMEORIGIN';
                 baseConfig.services.Container.adapter.config.enableCSP = true;
                 
-            } else if (environment === "development") {
+            } else if (environment === 'development') {
                 baseConfig.services.Container.adapter.config.enableDevelopmentMode = true;
                 baseConfig.services.Container.adapter.config.enableDebugMode = true;
             }
@@ -139,7 +139,7 @@ sap.ui.define([], function() {
                     enabled: true,
                     config: {
                         threshold: 3000,
-                        reportingUrl: "/api/v1/performance"
+                        reportingUrl: '/api/v1/performance'
                     }
                 },
                 UserActivityPlugin: {
@@ -154,7 +154,7 @@ sap.ui.define([], function() {
                     enabled: true,
                     config: {
                         captureErrors: true,
-                        reportingUrl: "/api/v1/errors"
+                        reportingUrl: '/api/v1/errors'
                     }
                 }
             };

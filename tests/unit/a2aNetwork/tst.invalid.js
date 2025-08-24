@@ -2,12 +2,12 @@
  * tst.invalid.js: tests invalid invocations
  */
 
-var mod_assert = require('assert');
-var mod_extsprintf = require('../lib/extsprintf');
-var mod_path = require('path');
-var sprintf = mod_extsprintf.sprintf;
+const mod_assert = require('assert');
+const mod_extsprintf = require('../lib/extsprintf');
+const mod_path = require('path');
+const sprintf = mod_extsprintf.sprintf;
 
-var testcases = [ {
+const testcases = [ {
     'name': 'missing all arguments',
     'args': [],
     'errmsg': /first argument must be a format string$/
@@ -52,13 +52,13 @@ var testcases = [ {
 } ];
 
 function main(verbose) {
-	testcases.forEach(function (tc) {
-		var error;
+	testcases.forEach((tc) => {
+		let error;
 		console.error('test case: %s', tc.name);
 		if (verbose) {
 			console.error('    args:   %s', JSON.stringify(tc.args));
 		}
-		mod_assert.throws(function () {
+		mod_assert.throws(() => {
 			try {
 				sprintf.apply(null, tc.args);
 			} catch (ex) {

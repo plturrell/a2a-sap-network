@@ -16,12 +16,12 @@ const DUMMY_UNSUPPORTED_ID = '0xbaddcafe';
 const DUMMY_UNSUPPORTED_ID_2 = '0xbaadcafe';
 const DUMMY_ACCOUNT = '0x1111111111111111111111111111111111111111';
 
-contract('ERC165Checker', function () {
+contract('ERC165Checker', () => {
   beforeEach(async function () {
     this.mock = await ERC165Checker.new();
   });
 
-  context('ERC165 missing return data', function () {
+  context('ERC165 missing return data', () => {
     beforeEach(async function () {
       this.target = await ERC165MissingData.new();
     });
@@ -53,7 +53,7 @@ contract('ERC165Checker', function () {
     });
   });
 
-  context('ERC165 malicious return data', function () {
+  context('ERC165 malicious return data', () => {
     beforeEach(async function () {
       this.target = await ERC165MaliciousData.new();
     });
@@ -85,7 +85,7 @@ contract('ERC165Checker', function () {
     });
   });
 
-  context('ERC165 not supported', function () {
+  context('ERC165 not supported', () => {
     beforeEach(async function () {
       this.target = await ERC165NotSupported.new();
     });
@@ -117,7 +117,7 @@ contract('ERC165Checker', function () {
     });
   });
 
-  context('ERC165 supported', function () {
+  context('ERC165 supported', () => {
     beforeEach(async function () {
       this.target = await ERC165Storage.new();
     });
@@ -149,7 +149,7 @@ contract('ERC165Checker', function () {
     });
   });
 
-  context('ERC165 and single interface supported', function () {
+  context('ERC165 and single interface supported', () => {
     beforeEach(async function () {
       this.target = await ERC165Storage.new();
       await this.target.$_registerInterface(DUMMY_ID);
@@ -182,7 +182,7 @@ contract('ERC165Checker', function () {
     });
   });
 
-  context('ERC165 and many interfaces supported', function () {
+  context('ERC165 and many interfaces supported', () => {
     beforeEach(async function () {
       this.supportedInterfaces = [DUMMY_ID, DUMMY_ID_2, DUMMY_ID_3];
       this.target = await ERC165Storage.new();
@@ -256,7 +256,7 @@ contract('ERC165Checker', function () {
     });
   });
 
-  context('account address does not support ERC165', function () {
+  context('account address does not support ERC165', () => {
     it('does not support ERC165', async function () {
       const supported = await this.mock.$supportsERC165(DUMMY_ACCOUNT);
       expect(supported).to.equal(false);

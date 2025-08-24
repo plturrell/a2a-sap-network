@@ -306,7 +306,7 @@ class EventBusService extends EventEmitter {
         if (pattern === '*') return true;
         if (pattern.endsWith('.*')) {
             const prefix = pattern.slice(0, -2);
-            return eventType.startsWith(prefix + '.');
+            return eventType.startsWith(`${prefix  }.`);
         }
         if (pattern.endsWith('*')) {
             const prefix = pattern.slice(0, -1);

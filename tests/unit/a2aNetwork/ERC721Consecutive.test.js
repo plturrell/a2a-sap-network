@@ -5,7 +5,7 @@ const ERC721ConsecutiveMock = artifacts.require('$ERC721ConsecutiveMock');
 const ERC721ConsecutiveEnumerableMock = artifacts.require('$ERC721ConsecutiveEnumerableMock');
 const ERC721ConsecutiveNoConstructorMintMock = artifacts.require('$ERC721ConsecutiveNoConstructorMintMock');
 
-contract('ERC721Consecutive', function (accounts) {
+contract('ERC721Consecutive', (accounts) => {
   const [user1, user2, user3, receiver] = accounts;
 
   const name = 'Non Fungible Token';
@@ -20,7 +20,7 @@ contract('ERC721Consecutive', function (accounts) {
   ];
   const delegates = [user1, user3];
 
-  describe('with valid batches', function () {
+  describe('with valid batches', () => {
     beforeEach(async function () {
       this.token = await ERC721ConsecutiveMock.new(
         name,
@@ -31,7 +31,7 @@ contract('ERC721Consecutive', function (accounts) {
       );
     });
 
-    describe('minting during construction', function () {
+    describe('minting during construction', () => {
       it('events are emitted at construction', async function () {
         let first = 0;
 
@@ -80,7 +80,7 @@ contract('ERC721Consecutive', function (accounts) {
       });
     });
 
-    describe('minting after construction', function () {
+    describe('minting after construction', () => {
       it('consecutive minting is not possible after construction', async function () {
         await expectRevert(
           this.token.$_mintConsecutive(user1, 10),
@@ -109,7 +109,7 @@ contract('ERC721Consecutive', function (accounts) {
       });
     });
 
-    describe('ERC721 behavior', function () {
+    describe('ERC721 behavior', () => {
       it('core takes over ownership on transfer', async function () {
         await this.token.transferFrom(user1, receiver, 1, { from: user1 });
 
@@ -169,29 +169,29 @@ contract('ERC721Consecutive', function (accounts) {
     });
   });
 
-  describe('invalid use', function () {
-    it('cannot mint a batch larger than 5000', async function () {
+  describe('invalid use', () => {
+    it('cannot mint a batch larger than 5000', async () => {
       await expectRevert(
         ERC721ConsecutiveMock.new(name, symbol, [], [user1], ['5001']),
         'ERC721Consecutive: batch too large',
       );
     });
 
-    it('cannot use single minting during construction', async function () {
+    it('cannot use single minting during construction', async () => {
       await expectRevert(
         ERC721ConsecutiveNoConstructorMintMock.new(name, symbol),
-        "ERC721Consecutive: can't mint during construction",
+        'ERC721Consecutive: can\'t mint during construction',
       );
     });
 
-    it('cannot use single minting during construction', async function () {
+    it('cannot use single minting during construction', async () => {
       await expectRevert(
         ERC721ConsecutiveNoConstructorMintMock.new(name, symbol),
-        "ERC721Consecutive: can't mint during construction",
+        'ERC721Consecutive: can\'t mint during construction',
       );
     });
 
-    it('consecutive mint not compatible with enumerability', async function () {
+    it('consecutive mint not compatible with enumerability', async () => {
       await expectRevert(
         ERC721ConsecutiveEnumerableMock.new(
           name,

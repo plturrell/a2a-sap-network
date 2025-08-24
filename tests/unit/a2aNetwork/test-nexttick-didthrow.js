@@ -25,18 +25,18 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-process.once('uncaughtException', function () {
+process.once('uncaughtException', () => {
   eventOrder.push('exception');
 });
 
-process.nextTick(function () {
+process.nextTick(() => {
   eventOrder.push('callback');
   throw new Error('error');
 });
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.strictEqual(throwFlag, true);
   assert.deepEqual(eventOrder, [
     'init#-1 NextTickWrap', 'pre#-1',

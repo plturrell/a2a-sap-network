@@ -20,16 +20,16 @@
 
 'use strict';
 
-var Buffer = require('buffer').Buffer;
-var test = require('tape');
-var testRW = require('bufrw/test_rw');
+const Buffer = require('buffer').Buffer;
+const test = require('tape');
+const testRW = require('bufrw/test_rw');
 
-var thriftrw = require('../index');
-var TStruct = thriftrw.TStruct;
-var TMap = thriftrw.TMap;
-var TMapRW = thriftrw.TMapRW;
-var TField = thriftrw.TField;
-var TPair = thriftrw.TPair;
+const thriftrw = require('../index');
+const TStruct = thriftrw.TStruct;
+const TMap = thriftrw.TMap;
+const TMapRW = thriftrw.TMapRW;
+const TField = thriftrw.TField;
+const TPair = thriftrw.TPair;
 
 test('TMapRW', testRW.cases(TMapRW, [
 

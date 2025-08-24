@@ -1,17 +1,17 @@
 'use strict';
 
-var inspect = require('../');
-var test = require('tape');
+const inspect = require('../');
+const test = require('tape');
 
-test('quoteStyle option', function (t) {
-    t['throws'](function () { inspect(null, { quoteStyle: false }); }, 'false is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: true }); }, 'true is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: '' }); }, '"" is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: {} }); }, '{} is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: [] }); }, '[] is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: 42 }); }, '42 is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: NaN }); }, 'NaN is not a valid value');
-    t['throws'](function () { inspect(null, { quoteStyle: function () {} }); }, 'a function is not a valid value');
+test('quoteStyle option', (t) => {
+    t['throws'](() => { inspect(null, { quoteStyle: false }); }, 'false is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: true }); }, 'true is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: '' }); }, '"" is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: {} }); }, '{} is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: [] }); }, '[] is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: 42 }); }, '42 is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: NaN }); }, 'NaN is not a valid value');
+    t['throws'](() => { inspect(null, { quoteStyle: function () {} }); }, 'a function is not a valid value');
 
     t.equal(inspect('"', { quoteStyle: 'single' }), '\'"\'', 'double quote, quoteStyle: "single"');
     t.equal(inspect('"', { quoteStyle: 'double' }), '"\\""', 'double quote, quoteStyle: "double"');

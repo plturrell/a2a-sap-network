@@ -11,13 +11,13 @@ function decode(sstr) {
   return web3.utils.toUtf8(sstr).slice(0, length(sstr));
 }
 
-contract('ShortStrings', function () {
+contract('ShortStrings', () => {
   before(async function () {
     this.mock = await ShortStrings.new();
   });
 
   for (const str of [0, 1, 16, 31, 32, 64, 1024].map(length => 'a'.repeat(length))) {
-    describe(`with string length ${str.length}`, function () {
+    describe(`with string length ${str.length}`, () => {
       it('encode / decode', async function () {
         if (str.length < 32) {
           const encoded = await this.mock.$toShortString(str);

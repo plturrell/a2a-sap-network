@@ -145,7 +145,7 @@ Object.entries(checks).forEach(([file, config]) => {
             }
         });
     } catch (e) {
-        console.log(`  ✗ File not found or readable`);
+        console.log('  ✗ File not found or readable');
         failed += config.checks.length;
     }
 });

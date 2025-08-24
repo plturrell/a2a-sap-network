@@ -266,7 +266,7 @@ sap.ui.define([
         setupLazyImageLoading(oContainer) {
             if (!window.IntersectionObserver) {return;}
 
-            var imageObserver = new IntersectionObserver((entries) => {
+            const imageObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
                         const img = entry.target;

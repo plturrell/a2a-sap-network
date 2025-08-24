@@ -249,8 +249,8 @@ class DatabaseSecurityManager {
         
         try {
             // Set session security parameters
-            await connection.run(`SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'`);
-            await connection.run(`SET SESSION max_execution_time = 30000`); // 30 second timeout
+            await connection.run('SET SESSION sql_mode = \'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO\'');
+            await connection.run('SET SESSION max_execution_time = 30000'); // 30 second timeout
             
             // Execute the operation
             const result = await connection.run(operation);
@@ -432,8 +432,8 @@ class DatabaseSecurityManager {
         if (typeof operation === 'string') {
             // Remove potential sensitive data from query string
             return operation
-                .replace(/password\s*=\s*['"][^'"]*['"]/gi, "password='***'")
-                .replace(/token\s*=\s*['"][^'"]*['"]/gi, "token='***'")
+                .replace(/password\s*=\s*['"][^'"]*['"]/gi, 'password=\'***\'')
+                .replace(/token\s*=\s*['"][^'"]*['"]/gi, 'token=\'***\'')
                 .substring(0, 1000); // Limit log size
         }
         return '[NON_STRING_OPERATION]';

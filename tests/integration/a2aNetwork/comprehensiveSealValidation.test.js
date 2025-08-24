@@ -36,7 +36,7 @@ describe('Comprehensive SEAL System Validation', function() {
         errorRecoveries: []
     };
     
-    before(async function() {
+    before(async () => {
         // Setup comprehensive test environment
         process.env.NODE_ENV = 'test';
         process.env.XAI_API_KEY = 'test-api-key-comprehensive';
@@ -47,12 +47,12 @@ describe('Comprehensive SEAL System Validation', function() {
         sandbox = sinon.createSandbox();
     });
     
-    after(async function() {
+    after(async () => {
         // Generate test report
         await generateTestReport(testMetrics);
     });
     
-    beforeEach(async function() {
+    beforeEach(async () => {
         // Initialize fresh instances for each test
         sealService = new SealEnhancedGleanService();
         grokAdapter = new GrokSealAdapter();
@@ -62,12 +62,12 @@ describe('Comprehensive SEAL System Validation', function() {
         axiosStub = sandbox.stub(axios, 'post');
     });
     
-    afterEach(function() {
+    afterEach(() => {
         sandbox.restore();
     });
     
-    describe('1. Core Component Integration Tests', function() {
-        it('should successfully initialize all SEAL components with proper configuration', async function() {
+    describe('1. Core Component Integration Tests', () => {
+        it('should successfully initialize all SEAL components with proper configuration', async () => {
             const config = new SealConfiguration();
             const cfg = config.getConfiguration();
             
@@ -102,7 +102,7 @@ describe('Comprehensive SEAL System Validation', function() {
             });
         });
         
-        it('should properly integrate algorithm services', async function() {
+        it('should properly integrate algorithm services', async () => {
             const graphAlg = new GraphAlgorithms();
             const treeAlg = new TreeAlgorithms();
             
@@ -134,8 +134,8 @@ describe('Comprehensive SEAL System Validation', function() {
         });
     });
     
-    describe('2. Q-Learning Real Adaptation Tests', function() {
-        it('should demonstrate statistically significant Q-value convergence', async function() {
+    describe('2. Q-Learning Real Adaptation Tests', () => {
+        it('should demonstrate statistically significant Q-value convergence', async () => {
             await rlEngine.initializeService();
             
             const state = {
@@ -236,7 +236,7 @@ describe('Comprehensive SEAL System Validation', function() {
             expect(variance).to.be.lessThan(0.01); // Low variance indicates convergence
         });
         
-        it('should adapt to changing reward patterns', async function() {
+        it('should adapt to changing reward patterns', async () => {
             await rlEngine.initializeService();
             
             const state = { complexity: 0.6, accuracy: 0.5 };
@@ -285,8 +285,8 @@ describe('Comprehensive SEAL System Validation', function() {
         });
     });
     
-    describe('3. Grok 4 API Integration Tests', function() {
-        it('should generate contextually relevant self-edits', async function() {
+    describe('3. Grok 4 API Integration Tests', () => {
+        it('should generate contextually relevant self-edits', async () => {
             // Mock Grok response with realistic self-improvements
             axiosStub.resolves({
                 status: 200,
@@ -375,7 +375,7 @@ describe('Comprehensive SEAL System Validation', function() {
             expect(config.headers.Authorization).to.include('Bearer');
         });
         
-        it('should handle Grok API failures gracefully', async function() {
+        it('should handle Grok API failures gracefully', async () => {
             // Simulate API failures
             axiosStub.onFirstCall().rejects({
                 response: { 
@@ -448,8 +448,8 @@ describe('Comprehensive SEAL System Validation', function() {
         });
     });
     
-    describe('4. Full Self-Adaptation Cycle Tests', function() {
-        it('should complete full adaptation cycle with measurable improvements', async function() {
+    describe('4. Full Self-Adaptation Cycle Tests', () => {
+        it('should complete full adaptation cycle with measurable improvements', async () => {
             await sealService.initializeService();
             
             let currentAccuracy = 0.55;
@@ -557,7 +557,7 @@ describe('Comprehensive SEAL System Validation', function() {
             console.log(`   Total improvement: +${totalImprovement.toFixed(2)} (${(totalImprovement/0.55*100).toFixed(0)}%)`);
         });
         
-        it('should adapt to different code pattern types', async function() {
+        it('should adapt to different code pattern types', async () => {
             await sealService.initializeService();
             
             // Mock Grok for pattern-specific adaptations
@@ -650,8 +650,8 @@ describe('Comprehensive SEAL System Validation', function() {
         });
     });
     
-    describe('5. SAP Enterprise Compliance Tests', function() {
-        it('should enforce governance for high-risk adaptations', async function() {
+    describe('5. SAP Enterprise Compliance Tests', () => {
+        it('should enforce governance for high-risk adaptations', async () => {
             await governance.initializeService();
             
             // Test high-risk operation
@@ -718,7 +718,7 @@ describe('Comprehensive SEAL System Validation', function() {
             expect(workflowResult.requiredApprovals).to.have.lengthOf(2);
         });
         
-        it('should generate comprehensive audit reports', async function() {
+        it('should generate comprehensive audit reports', async () => {
             await governance.initializeService();
             
             // Simulate adaptation history
@@ -780,8 +780,8 @@ describe('Comprehensive SEAL System Validation', function() {
         });
     });
     
-    describe('6. Performance and Scalability Tests', function() {
-        it('should handle concurrent adaptation requests efficiently', async function() {
+    describe('6. Performance and Scalability Tests', () => {
+        it('should handle concurrent adaptation requests efficiently', async () => {
             await sealService.initializeService();
             
             // Mock fast responses
@@ -833,7 +833,7 @@ describe('Comprehensive SEAL System Validation', function() {
             expect(duration).to.be.lessThan(5000);
         });
         
-        it('should maintain performance under memory pressure', async function() {
+        it('should maintain performance under memory pressure', async () => {
             await rlEngine.initializeService();
             
             console.log('\n💾 Memory Management Test');

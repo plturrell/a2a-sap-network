@@ -15,7 +15,7 @@ async function seedTestServices() {
         const serviceTableName = 'a2a_network_Services';
         
         // Get some agent IDs to use as providers
-        const agentIds = await db.run(`SELECT ID FROM a2a_network_Agents LIMIT 8`);
+        const agentIds = await db.run('SELECT ID FROM a2a_network_Agents LIMIT 8');
         
         // Create 8 test services
         const services = [];

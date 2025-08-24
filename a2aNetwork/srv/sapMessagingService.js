@@ -228,7 +228,7 @@ module.exports = class MessagingService extends cds.Service {
             // Get real queue metrics from Redis or message queue service
             const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
             if (!redisClient) {
-                throw new Error("Redis client not available for queue metrics");
+                throw new Error('Redis client not available for queue metrics');
             }
             
             // Get real metrics from Redis
@@ -266,7 +266,7 @@ module.exports = class MessagingService extends cds.Service {
             // Get real failed messages from dead letter queue
             const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
             if (!redisClient) {
-                throw new Error("Redis client not available for retry operations");
+                throw new Error('Redis client not available for retry operations');
             }
             
             // Get failed messages from dead letter queue

@@ -21,7 +21,7 @@ const sessionConfig = {
       throw new Error('SESSION_SECRET must be set in production environment');
     }
     cds.log('auth').warn('Using random session secret - set SESSION_SECRET environment variable');
-    return 'DEV-SESSION-SECRET-' + Math.random().toString(36);
+    return `DEV-SESSION-SECRET-${  Math.random().toString(36)}`;
   })(),
   resave: false,
   saveUninitialized: false,

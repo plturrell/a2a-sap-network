@@ -57,7 +57,7 @@ Promise
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid.length, 2);
 
   for (let i = 0; i < 2; ++i) {

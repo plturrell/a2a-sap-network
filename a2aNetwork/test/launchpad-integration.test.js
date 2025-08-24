@@ -14,7 +14,7 @@ describe('Launchpad Integration Tests', function() {
     let page;
     const baseUrl = process.env.TEST_URL || 'http://localhost:4004';
     
-    before(async function() {
+    before(async () => {
         // Wait for server to be ready
         await waitForServer(baseUrl);
         
@@ -36,12 +36,12 @@ describe('Launchpad Integration Tests', function() {
         });
     });
     
-    after(async function() {
+    after(async () => {
         if (browser) await browser.close();
     });
     
-    describe('Launchpad Loading', function() {
-        it('should load launchpad without errors', async function() {
+    describe('Launchpad Loading', () => {
+        it('should load launchpad without errors', async () => {
             const response = await page.goto(`${baseUrl}/launchpad.html`, {
                 waitUntil: 'networkidle2',
                 timeout: 30000
@@ -50,7 +50,7 @@ describe('Launchpad Integration Tests', function() {
             expect(response.status()).to.equal(200);
         });
         
-        it('should initialize SAP UI5 framework', async function() {
+        it('should initialize SAP UI5 framework', async () => {
             const ui5Loaded = await page.waitForFunction(() => {
                 return window.sap && 
                        window.sap.ui && 
@@ -61,7 +61,7 @@ describe('Launchpad Integration Tests', function() {
             expect(ui5Loaded).to.be.ok;
         });
         
-        it('should not display error messages', async function() {
+        it('should not display error messages', async () => {
             const errorMessages = await page.evaluate(() => {
                 // Check for error dialogs
                 const errorDialogs = document.querySelectorAll('.sapMMessageBox');
@@ -88,8 +88,8 @@ describe('Launchpad Integration Tests', function() {
         });
     });
     
-    describe('Tile Rendering', function() {
-        it('should render tile container', async function() {
+    describe('Tile Rendering', () => {
+        it('should render tile container', async () => {
             const tileContainer = await page.waitForSelector('#__xmlview0--tileContainer', {
                 timeout: 10000
             });
@@ -97,7 +97,7 @@ describe('Launchpad Integration Tests', function() {
             expect(tileContainer).to.exist;
         });
         
-        it('should render exactly 6 tiles', async function() {
+        it('should render exactly 6 tiles', async () => {
             await page.waitForTimeout(2000); // Give tiles time to render
             
             const tileCount = await page.evaluate(() => {
@@ -112,7 +112,7 @@ describe('Launchpad Integration Tests', function() {
             expect(tileCount).to.equal(6);
         });
         
-        it('should have no empty tiles', async function() {
+        it('should have no empty tiles', async () => {
             const tileData = await page.evaluate(() => {
                 const tiles = document.querySelectorAll('[class*="sapMGT"]');
                 return Array.from(tiles).map(tile => {
@@ -134,7 +134,7 @@ describe('Launchpad Integration Tests', function() {
             });
         });
         
-        it('should have proper tile structure', async function() {
+        it('should have proper tile structure', async () => {
             const expectedTiles = [
                 'Agent Management',
                 'Service Marketplace',
@@ -158,8 +158,8 @@ describe('Launchpad Integration Tests', function() {
         });
     });
     
-    describe('Data Loading', function() {
-        it('should fetch tile data from API', async function() {
+    describe('Data Loading', () => {
+        it('should fetch tile data from API', async () => {
             // Intercept API calls
             const apiCalls = [];
             page.on('response', response => {
@@ -184,7 +184,7 @@ describe('Launchpad Integration Tests', function() {
             expect(apiCalls[0].status).to.equal(200);
         });
         
-        it('should update tile values', async function() {
+        it('should update tile values', async () => {
             const tileValues = await page.evaluate(() => {
                 const tiles = document.querySelectorAll('[class*="sapMGT"]');
                 return Array.from(tiles).map(tile => {
@@ -202,8 +202,8 @@ describe('Launchpad Integration Tests', function() {
         });
     });
     
-    describe('Visual Consistency', function() {
-        it('should not have blank screen', async function() {
+    describe('Visual Consistency', () => {
+        it('should not have blank screen', async () => {
             const screenshot = await page.screenshot({ fullPage: true });
             
             // Check if page has content
@@ -218,7 +218,7 @@ describe('Launchpad Integration Tests', function() {
             expect(pageContent.hasChildElements).to.be.true;
         });
         
-        it('should have proper SAP theme applied', async function() {
+        it('should have proper SAP theme applied', async () => {
             const theme = await page.evaluate(() => {
                 return sap.ui.getCore().getConfiguration().getTheme();
             });
@@ -233,7 +233,7 @@ async function waitForServer(url, maxRetries = 30) {
     for (let i = 0; i < maxRetries; i++) {
         try {
             await new Promise((resolve, reject) => {
-                http.get(url + '/health', res => {
+                http.get(`${url  }/health`, res => {
                     if (res.statusCode === 200) resolve();
                     else reject(new Error(`Status ${res.statusCode}`));
                 }).on('error', reject);

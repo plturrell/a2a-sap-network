@@ -494,7 +494,7 @@ ${doc.parameters.map(param => `
 ${param.description ? `${param.description}` : ''}
 ${param.type ? `**Type:** ${param.type}` : ''}
 ${param.default ? `**Default:** \`${param.default}\`` : ''}
-${param.required ? `**Required:** Yes` : ''}
+${param.required ? '**Required:** Yes' : ''}
 `).join('\n')}
 
 ${Object.keys(doc.configuration).length > 0 ? `### Configuration Example

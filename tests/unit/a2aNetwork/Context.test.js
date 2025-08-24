@@ -5,7 +5,7 @@ const ContextMockCaller = artifacts.require('ContextMockCaller');
 
 const { shouldBehaveLikeRegularContext } = require('./Context.behavior');
 
-contract('Context', function (accounts) {
+contract('Context', (accounts) => {
   const [sender] = accounts;
 
   beforeEach(async function () {

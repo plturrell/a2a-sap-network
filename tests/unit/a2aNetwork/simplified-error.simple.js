@@ -21,15 +21,15 @@
 
 if (!process.addAsyncListener) require('../index.js');
 
-var assert = require('assert');
-var fs = require('fs');
-var addListener = process.addAsyncListener;
-var removeListener = process.removeAsyncListener;
+const assert = require('assert');
+const fs = require('fs');
+const addListener = process.addAsyncListener;
+const removeListener = process.removeAsyncListener;
 
-var caught = 0;
-var expectCaught = 0;
+let caught = 0;
+let expectCaught = 0;
 
-var callbacksObj = {
+const callbacksObj = {
   error: function(domain, er) {
     caught++;
 
@@ -43,21 +43,21 @@ var callbacksObj = {
   }
 };
 
-process.on('exit', function() {
+process.on('exit', () => {
   console.log('caught:', caught);
   console.log('expected:', expectCaught);
   assert.equal(caught, expectCaught, 'caught all expected errors');
   console.log('ok');
 });
 
-var listener = process.createAsyncListener(callbacksObj);
+const listener = process.createAsyncListener(callbacksObj);
 
 // Nested FS
-process.nextTick(function() {
+process.nextTick(() => {
   addListener(listener);
 
-  setTimeout(function() {
-    fs.stat('does not exist', function() {
+  setTimeout(() => {
+    fs.stat('does not exist', () => {
       throw new Error('fs - nested file does not exist');
     });
     expectCaught++;

@@ -1,28 +1,28 @@
-var test = require('tape');
-var path = require('path');
-var resolve = require('../');
+const test = require('tape');
+const path = require('path');
+const resolve = require('../');
 
-test('faulty basedir must produce error in windows', { skip: process.platform !== 'win32' }, function (t) {
+test('faulty basedir must produce error in windows', { skip: process.platform !== 'win32' }, (t) => {
     t.plan(1);
 
-    var resolverDir = 'C:\\a\\b\\c\\d';
+    const resolverDir = 'C:\\a\\b\\c\\d';
 
-    resolve('tape/lib/test.js', { basedir: resolverDir }, function (err, res, pkg) {
+    resolve('tape/lib/test.js', { basedir: resolverDir }, (err, res, pkg) => {
         t.equal(!!err, true);
     });
 });
 
-test('non-existent basedir should not throw when preserveSymlinks is false', function (t) {
+test('non-existent basedir should not throw when preserveSymlinks is false', (t) => {
     t.plan(2);
 
-    var opts = {
+    const opts = {
         basedir: path.join(path.sep, 'unreal', 'path', 'that', 'does', 'not', 'exist'),
         preserveSymlinks: false
     };
 
-    var module = './dotdot/abc';
+    const module = './dotdot/abc';
 
-    resolve(module, opts, function (err, res) {
+    resolve(module, opts, (err, res) => {
         t.equal(err.code, 'MODULE_NOT_FOUND');
         t.equal(res, undefined);
     });

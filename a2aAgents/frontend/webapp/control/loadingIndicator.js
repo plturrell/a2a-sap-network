@@ -4,34 +4,34 @@
  */
 
 sap.ui.define([
-    "sap/ui/core/Control",
-    "sap/ui/core/HTML",
-    "sap/m/Text",
-    "sap/m/VBox",
-    "sap/ui/core/Icon"
-], function(
+    'sap/ui/core/Control',
+    'sap/ui/core/HTML',
+    'sap/m/Text',
+    'sap/m/VBox',
+    'sap/ui/core/Icon'
+], (
     Control,
     HTML,
     Text,
     VBox,
     Icon
-) {
-    "use strict";
+) => {
+    'use strict';
 
     /**
      * Loading Indicator Control
      * Standardized loading states with SAP Fiori design compliance
      * @namespace com.sap.a2a.portal.control
      */
-    return Control.extend("com.sap.a2a.portal.control.LoadingIndicator", {
+    return Control.extend('com.sap.a2a.portal.control.LoadingIndicator', {
         metadata: {
             properties: {
                 /**
                  * Loading state type
                  */
                 type: {
-                    type: "string",
-                    defaultValue: "spinner",
+                    type: 'string',
+                    defaultValue: 'spinner',
                     bindable: true
                 },
                 
@@ -39,8 +39,8 @@ sap.ui.define([
                  * Loading message text
                  */
                 message: {
-                    type: "string",
-                    defaultValue: "Loading...",
+                    type: 'string',
+                    defaultValue: 'Loading...',
                     bindable: true
                 },
                 
@@ -48,8 +48,8 @@ sap.ui.define([
                  * Size of the loading indicator
                  */
                 size: {
-                    type: "string",
-                    defaultValue: "medium",
+                    type: 'string',
+                    defaultValue: 'medium',
                     bindable: true
                 },
                 
@@ -57,7 +57,7 @@ sap.ui.define([
                  * Show loading text
                  */
                 showText: {
-                    type: "boolean",
+                    type: 'boolean',
                     defaultValue: true,
                     bindable: true
                 },
@@ -66,7 +66,7 @@ sap.ui.define([
                  * Overlay the entire parent container
                  */
                 overlay: {
-                    type: "boolean",
+                    type: 'boolean',
                     defaultValue: false,
                     bindable: true
                 },
@@ -75,7 +75,7 @@ sap.ui.define([
                  * Progress percentage for progress type
                  */
                 progress: {
-                    type: "int",
+                    type: 'int',
                     defaultValue: 0,
                     bindable: true
                 },
@@ -84,8 +84,8 @@ sap.ui.define([
                  * Animation speed
                  */
                 speed: {
-                    type: "string",
-                    defaultValue: "normal",
+                    type: 'string',
+                    defaultValue: 'normal',
                     bindable: true
                 }
             },
@@ -95,9 +95,9 @@ sap.ui.define([
                  * Internal content aggregation
                  */
                 _content: {
-                    type: "sap.ui.core.Control",
+                    type: 'sap.ui.core.Control',
                     multiple: false,
-                    visibility: "hidden"
+                    visibility: 'hidden'
                 }
             },
             
@@ -107,7 +107,7 @@ sap.ui.define([
                  */
                 animationCycle: {
                     parameters: {
-                        cycle: { type: "int" }
+                        cycle: { type: 'int' }
                     }
                 }
             }
@@ -120,13 +120,13 @@ sap.ui.define([
 
         _createContent: function() {
             const oContent = new VBox({
-                alignItems: "Center",
-                justifyContent: "Center",
-                class: "sapUiLoadingIndicator"
+                alignItems: 'Center',
+                justifyContent: 'Center',
+                class: 'sapUiLoadingIndicator'
             });
 
             this._updateContent(oContent);
-            this.setAggregation("_content", oContent);
+            this.setAggregation('_content', oContent);
         },
 
         _updateContent: function(oContent) {
@@ -141,22 +141,22 @@ sap.ui.define([
             let oLoadingElement;
 
             switch (sType) {
-                case "spinner":
+                case 'spinner':
                     oLoadingElement = this._createSpinner(sSize);
                     break;
-                case "dots":
+                case 'dots':
                     oLoadingElement = this._createDots(sSize);
                     break;
-                case "pulse":
+                case 'pulse':
                     oLoadingElement = this._createPulse(sSize);
                     break;
-                case "skeleton":
+                case 'skeleton':
                     oLoadingElement = this._createSkeleton(sSize);
                     break;
-                case "progress":
+                case 'progress':
                     oLoadingElement = this._createProgress(sSize);
                     break;
-                case "shimmer":
+                case 'shimmer':
                     oLoadingElement = this._createShimmer(sSize);
                     break;
                 default:
@@ -169,7 +169,7 @@ sap.ui.define([
             if (bShowText && sMessage) {
                 const oText = new Text({
                     text: sMessage,
-                    class: "sapUiLoadingText sapUiMediumMarginTop"
+                    class: 'sapUiLoadingText sapUiMediumMarginTop'
                 });
                 oContent.addItem(oText);
             }
@@ -275,25 +275,25 @@ sap.ui.define([
 
         _getSizeClass: function(sSize) {
             switch (sSize) {
-                case "small":
-                    return "sapUiLoadingSmall";
-                case "large":
-                    return "sapUiLoadingLarge";
-                case "medium":
+                case 'small':
+                    return 'sapUiLoadingSmall';
+                case 'large':
+                    return 'sapUiLoadingLarge';
+                case 'medium':
                 default:
-                    return "sapUiLoadingMedium";
+                    return 'sapUiLoadingMedium';
             }
         },
 
         _getSpeedClass: function(sSpeed) {
             switch (sSpeed) {
-                case "slow":
-                    return "sapUiLoadingSlow";
-                case "fast":
-                    return "sapUiLoadingFast";
-                case "normal":
+                case 'slow':
+                    return 'sapUiLoadingSlow';
+                case 'fast':
+                    return 'sapUiLoadingFast';
+                case 'normal':
                 default:
-                    return "sapUiLoadingNormal";
+                    return 'sapUiLoadingNormal';
             }
         },
 
@@ -340,64 +340,64 @@ sap.ui.define([
             apiVersion: 2,
             
             render: function(oRm, oControl) {
-                oRm.openStart("div", oControl);
-                oRm.class("sapUiLoadingIndicator");
+                oRm.openStart('div', oControl);
+                oRm.class('sapUiLoadingIndicator');
                 oRm.class(oControl._getSpeedClass(oControl.getSpeed()));
                 
                 if (oControl.getOverlay()) {
-                    oRm.class("sapUiLoadingOverlay");
+                    oRm.class('sapUiLoadingOverlay');
                 }
                 
                 // Accessibility attributes
-                oRm.attr("role", "status");
-                oRm.attr("aria-live", "polite");
-                oRm.attr("aria-label", "Loading content");
+                oRm.attr('role', 'status');
+                oRm.attr('aria-live', 'polite');
+                oRm.attr('aria-label', 'Loading content');
                 
                 // Size and type specific classes
                 oRm.class(oControl._getSizeClass(oControl.getSize()));
                 
                 oRm.openEnd();
                 
-                oRm.renderControl(oControl.getAggregation("_content"));
+                oRm.renderControl(oControl.getAggregation('_content'));
                 
-                oRm.close("div");
+                oRm.close('div');
             }
         },
 
         // Property setters that trigger content update
         setType: function(sValue) {
-            this.setProperty("type", sValue, true);
+            this.setProperty('type', sValue, true);
             this._updateContentIfRendered();
             return this;
         },
 
         setMessage: function(sValue) {
-            this.setProperty("message", sValue, true);
+            this.setProperty('message', sValue, true);
             this._updateContentIfRendered();
             return this;
         },
 
         setSize: function(sValue) {
-            this.setProperty("size", sValue, true);
+            this.setProperty('size', sValue, true);
             this._updateContentIfRendered();
             return this;
         },
 
         setShowText: function(bValue) {
-            this.setProperty("showText", bValue, true);
+            this.setProperty('showText', bValue, true);
             this._updateContentIfRendered();
             return this;
         },
 
         setProgress: function(iValue) {
-            this.setProperty("progress", iValue, true);
+            this.setProperty('progress', iValue, true);
             this._updateProgressIfRendered(iValue);
             return this;
         },
 
         _updateContentIfRendered: function() {
             if (this.getDomRef()) {
-                const oContent = this.getAggregation("_content");
+                const oContent = this.getAggregation('_content');
                 if (oContent) {
                     this._updateContent(oContent);
                 }
@@ -405,15 +405,15 @@ sap.ui.define([
         },
 
         _updateProgressIfRendered: function(iProgress) {
-            if (this.getDomRef() && this.getType() === "progress") {
+            if (this.getDomRef() && this.getType() === 'progress') {
                 const oProgressFill = this.getDomRef().querySelector('.sapUiProgressFill');
                 const oProgressText = this.getDomRef().querySelector('.sapUiProgressText');
                 
                 if (oProgressFill) {
-                    oProgressFill.style.width = iProgress + '%';
+                    oProgressFill.style.width = `${iProgress  }%`;
                 }
                 if (oProgressText) {
-                    oProgressText.textContent = iProgress + '%';
+                    oProgressText.textContent = `${iProgress  }%`;
                 }
             }
         },

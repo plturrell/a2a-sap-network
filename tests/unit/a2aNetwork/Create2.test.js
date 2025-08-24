@@ -6,7 +6,7 @@ const Create2 = artifacts.require('$Create2');
 const VestingWallet = artifacts.require('VestingWallet');
 const ERC1820Implementer = artifacts.require('$ERC1820Implementer');
 
-contract('Create2', function (accounts) {
+contract('Create2', (accounts) => {
   const [deployerAccount, other] = accounts;
 
   const salt = 'salt message';
@@ -19,7 +19,7 @@ contract('Create2', function (accounts) {
   beforeEach(async function () {
     this.factory = await Create2.new();
   });
-  describe('computeAddress', function () {
+  describe('computeAddress', () => {
     it('computes the correct contract address', async function () {
       const onChainComputed = await this.factory.$computeAddress(saltHex, web3.utils.keccak256(constructorByteCode));
       const offChainComputed = computeCreate2Address(saltHex, constructorByteCode, this.factory.address);
@@ -37,7 +37,7 @@ contract('Create2', function (accounts) {
     });
   });
 
-  describe('deploy', function () {
+  describe('deploy', () => {
     it('deploys a ERC1820Implementer from inline assembly code', async function () {
       const offChainComputed = computeCreate2Address(saltHex, ERC1820Implementer.bytecode, this.factory.address);
 

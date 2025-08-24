@@ -48,7 +48,7 @@ asyncHook.addHooks({
 
 asyncHook.enable();
 
-process.nextTick(function (arg1, arg2) {
+process.nextTick((arg1, arg2) => {
   called = true;
   assert.equal(arg1, 'a');
   assert.equal(arg2, 'b');
@@ -56,7 +56,7 @@ process.nextTick(function (arg1, arg2) {
 
 asyncHook.disable();
 
-process.once('exit', function () {
+process.once('exit', () => {
   assert.equal(initUid, preUid);
   assert.equal(initUid, postUid);
   assert.equal(initUid, destroyUid);

@@ -1,19 +1,19 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
-var appendField = require('../')
-var testData = require('testdata-w3c-json-form')
+const assert = require('assert');
+const appendField = require('../');
+const testData = require('testdata-w3c-json-form');
 
-describe('Append Field', function () {
+describe('Append Field', () => {
   for (var test of testData) {
-    it('handles ' + test.name, function () {
-      var store = Object.create(null)
+    it(`handles ${  test.name}`, () => {
+      const store = Object.create(null);
 
-      for (var field of test.fields) {
-        appendField(store, field.key, field.value)
+      for (const field of test.fields) {
+        appendField(store, field.key, field.value);
       }
 
-      assert.deepEqual(store, test.expected)
-    })
+      assert.deepEqual(store, test.expected);
+    });
   }
-})
+});
