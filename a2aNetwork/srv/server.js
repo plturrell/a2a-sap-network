@@ -559,118 +559,14 @@ cds.on('bootstrap', async (app) => {
     // Agent status endpoints for tiles - migrated to CAP service
 
     // Network overview endpoint - migrated to CAP service
-                Promise.all(
-                    Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
-                        const health = await checkAgentHealth(agent.port);
-                        return { 
-                            id: parseInt(id), 
-                            name: health.name || agent.name, 
-                            status: health.status,
-                            active_tasks: health.active_tasks || 0,
-                            total_tasks: health.total_tasks || 0,
-                            skills: health.skills || 0,
-                            mcp_tools: health.mcp_tools || 0
-                        };
-                    })
-                ),
-                checkBlockchainHealth(),
-                checkMcpHealth()
-            ]);
-            
-            const healthyAgents = healthChecks.filter(h => h.status === 'healthy');
-            const totalAgents = healthChecks.length;
-            const activeAgents = healthyAgents.length;
-            const agentHealthScore = Math.round((activeAgents / totalAgents) * 100);
-            
-            const totalActiveTasks = healthyAgents.reduce((sum, agent) => sum + agent.active_tasks, 0);
-            const totalSkills = healthyAgents.reduce((sum, agent) => sum + agent.skills, 0);
-            const totalMcpTools = healthyAgents.reduce((sum, agent) => sum + agent.mcp_tools, 0);
-            
-            const blockchainScore = blockchainHealth.status === 'healthy' ? 100 : 0;
-            const mcpScore = mcpHealth.status === 'healthy' ? 100 : mcpHealth.status === 'offline' ? 0 : 50;
-            const overallSystemHealth = Math.round((agentHealthScore + blockchainScore + mcpScore) / 3);
-            
-            res.json({
-                d: {
-                    title: "Network Overview",
-                    number: activeAgents.toString(),
-                    numberUnit: "active agents",
-                    numberState: overallSystemHealth > 80 ? "Positive" : overallSystemHealth > 50 ? "Critical" : "Error",
-                    subtitle: `${totalAgents} total agents, ${overallSystemHealth}% system health`,
-                    stateArrow: overallSystemHealth > 80 ? "Up" : "Down",
-                    info: `${totalActiveTasks} active tasks, ${totalSkills} skills, ${totalMcpTools} MCP tools`,
-                    real_metrics: {
-                        healthy_agents: activeAgents,
-                        total_agents: totalAgents,
-                        agent_health_score: agentHealthScore,
-                        total_active_tasks: totalActiveTasks,
-                        total_skills: totalSkills,
-                        total_mcp_tools: totalMcpTools,
-                        blockchain_status: blockchainHealth.status,
-                        blockchain_score: blockchainScore,
-                        mcp_status: mcpHealth.status,
-                        mcp_score: mcpScore,
-                        overall_system_health: overallSystemHealth
-                    },
-                    timestamp: new Date().toISOString()
-                }
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
 
-    // Blockchain stats endpoint
-        try {
-            const blockchainHealth = await checkBlockchainHealth();
-            
-            if (blockchainHealth.status === 'healthy') {
-                const registeredAgents = blockchainHealth.total_agents_on_chain || 0;
-                const contractCount = Object.keys(blockchainHealth.contracts || {}).length;
-                
-                res.json({
-                    d: {
-                        title: "Blockchain Monitor",
-                        number: registeredAgents.toString(),
-                        numberUnit: "registered agents",
-                        numberState: blockchainHealth.trust_integration ? "Positive" : "Critical",
-                        subtitle: `${contractCount} contracts deployed`,
-                        stateArrow: blockchainHealth.trust_integration ? "Up" : "None",
-                        info: `Network: ${blockchainHealth.network || 'Unknown'}, Trust: ${blockchainHealth.trust_integration ? 'Enabled' : 'Disabled'}`,
-                        blockchain_metrics: {
-                            network: blockchainHealth.network || 'Unknown',
-                            contracts: blockchainHealth.contracts || {},
-                            registered_agents_count: registeredAgents,
-                            contract_count: contractCount,
-                            trust_integration: blockchainHealth.trust_integration || false,
-                            avg_trust_score: blockchainHealth.avg_trust_score || null
-                        },
-                        timestamp: blockchainHealth.timestamp || new Date().toISOString()
-                    }
-                });
-            } else {
-                res.status(503).json({
-                    d: {
-                        title: "Blockchain Monitor",
-                        number: "0",
-                        numberUnit: "offline",
-                        numberState: "Error",
-                        subtitle: blockchainHealth.message || "Connection failed",
-                        stateArrow: "Down",
-                        info: `Status: ${blockchainHealth.status}`,
-                        error: blockchainHealth.message,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            }
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
+    // Blockchain stats endpoint - migrated to CAP service
 
-    // Services count endpoint
-        try {
-            const healthChecks = await Promise.all(
+    // Services count endpoint - migrated to CAP service
+    
+    // Health summary endpoint - migrated to CAP service
+    
+    // Comprehensive UI Health Check endpoint - migrated to CAP service
                 Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
                     const health = await checkAgentHealth(agent.port);
                     return health.status === 'healthy' ? health : null;

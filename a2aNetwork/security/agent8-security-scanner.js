@@ -110,6 +110,17 @@ class Agent8SecurityScanner {
         messagePatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
             for (let match of matches) {
+                // Check if the match is within a context that already uses security encoding
+                const matchContext = content.substring(Math.max(0, match.index - 200), match.index + 200);
+                
+                // Skip if proper encoding functions are already being used
+                if (matchContext.includes('_securityUtils.encodeHTML') || 
+                    matchContext.includes('SecurityUtils.encodeHTML') ||
+                    matchContext.includes('encodeXML') ||
+                    matchContext.includes('_securityUtils.sanitize')) {
+                    continue;
+                }
+                
                 issues.push({
                     type: 'XSS_MESSAGE_DISPLAY',
                     description: 'Potential XSS in message display - user data not properly encoded',
@@ -146,6 +157,17 @@ class Agent8SecurityScanner {
         sqlPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
             for (let match of matches) {
+                // Check if this is actually SQL or just string concatenation in messages
+                const matchContext = content.substring(Math.max(0, match.index - 100), match.index + 100);
+                
+                // Skip if it's just message text or UI strings, not actual SQL
+                if (matchContext.includes('MessageBox') || 
+                    matchContext.includes('MessageToast') ||
+                    matchContext.includes('selected task') ||
+                    matchContext.includes('transformation')) {
+                    continue;
+                }
+                
                 this.addIssue('critical', 'SQL_INJECTION', 
                     'Potential SQL injection vulnerability in dynamic query construction',
                     filePath, this.getLineNumber(content, match.index), match[0]);

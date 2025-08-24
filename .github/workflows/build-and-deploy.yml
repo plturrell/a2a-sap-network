@@ -32,31 +32,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Check Docker Build Cloud Configuration
-      run: |
-        echo "DOCKER_USER variable: ${{ vars.DOCKER_USER || 'NOT SET' }}"
-        echo "DOCKER_PAT secret: ${{ secrets.DOCKER_PAT && 'CONFIGURED' || 'NOT SET' }}"
-        
-        if [ -z "${{ vars.DOCKER_USER }}" ]; then
-          echo "❌ DOCKER_USER variable not configured in repository settings"
-          echo "Please go to Settings → Security → Secrets and variables → Actions"
-          echo "Create variable DOCKER_USER with value: finsightintelligence"
-          exit 1
-        fi
-        
-        if [ -z "${{ secrets.DOCKER_PAT }}" ]; then
-          echo "❌ DOCKER_PAT secret not configured in repository settings" 
-          echo "Please go to Settings → Security → Secrets and variables → Actions"
-          echo "Create secret DOCKER_PAT with the provided token"
-          exit 1
-        fi
-        
-        echo "✅ Docker Build Cloud credentials configured correctly"
-
     - name: Log in to Docker Hub for Build Cloud
       uses: docker/login-action@v3
       with:
-        username: ${{ vars.DOCKER_USER }}
+        username: finsightintelligence
         password: ${{ secrets.DOCKER_PAT }}
 
     - name: Log in to GitHub Container Registry
