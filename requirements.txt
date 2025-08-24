@@ -14,7 +14,7 @@ aioredis==2.0.1
 
 # SAP BTP Integration
 requests==2.31.0
-httpx==0.25.2
+httpx==0.26.0
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.6
 PyJWT==2.8.0
@@ -92,7 +92,6 @@ asyncio-throttle==1.0.2
 textblob==0.17.1
 vaderSentiment==3.3.2
 transformers==4.36.2
-torch>=2.0.0
 
 # HTTP Client and Rate Limiting
 aiohttp==3.9.1
@@ -102,7 +101,3 @@ backoff==2.2.1
 # News source credibility libraries
 feedparser==6.0.10
 newspaper3k==0.2.8
-
-# Grok AI client libraries (using existing asyncGrokClient.py)
-httpx==0.26.0
-redis==5.0.1
