@@ -63,8 +63,9 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 # Copy application code
 COPY --from=builder --chown=a2auser:a2auser /app .
 
-# Copy verification script and make it executable
+# Copy verification script and start script, make them executable
 COPY --chown=a2auser:a2auser scripts/verify-18-steps.sh /app/scripts/
+COPY --chown=a2auser:a2auser scripts/start.sh /app/
 RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh
 
 # Create directories for data and logs
@@ -103,7 +104,7 @@ case "${1}" in
             exec /app/start.sh complete
         else
             echo "Starting A2A system..."
-            exec /app/start.sh "${@:2}"
+            exec /app/start.sh "$@"
         fi
         ;;
     *)
