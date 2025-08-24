@@ -179,5 +179,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # Core services (8020, 8080, 8090, 8091, 8888, 8889), Dev portal (3001), Nginx (80)
 EXPOSE 80 3000 3001 4004 4006 8000 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015 8016 8017 8020 8080 8090 8091 8100 8101 8102 8103 8104 8105 8106 8107 8108 8109 8888 8889
 
-# Use supervisor to manage all services
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Default command - start backend
+CMD ["backend"]
