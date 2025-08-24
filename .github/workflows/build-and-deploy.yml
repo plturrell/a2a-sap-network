@@ -201,16 +201,16 @@ jobs:
         if [ -n "$MACHINE_IDS" ]; then
           for MACHINE_ID in $MACHINE_IDS; do
             echo "Destroying machine: $MACHINE_ID"
-            flyctl machines stop $MACHINE_ID --app a2a-platform --force || true
-            flyctl machines destroy $MACHINE_ID --app a2a-platform --force || true
+            flyctl machines stop $MACHINE_ID --app a2a-platform --signal SIGKILL --timeout 5 || true
+            flyctl machines destroy $MACHINE_ID --app a2a-platform || true
           done
         fi
         
         # Wait a moment for cleanup
         sleep 10
         
-        # Deploy to Fly.io with longer timeout for A2A platform startup (15 minutes for 18 agents)
-        flyctl deploy --remote-only --wait-timeout 900
+        # Deploy to Fly.io with longer timeout for A2A platform startup (25 minutes for 18 agents)
+        flyctl deploy --remote-only --wait-timeout 1500
         
         # Get the deployed URL
         APP_URL=$(flyctl info --json | jq -r '.Hostname')

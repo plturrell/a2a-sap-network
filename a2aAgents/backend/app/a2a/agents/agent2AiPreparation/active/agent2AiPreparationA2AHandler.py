@@ -32,10 +32,25 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
-            agent_id="agent2AiPreparation",
-            agent_name="Agent 2 - AI Preparation",
-            agent_version="1.0.0",
+            agent_id="ai_preparation_agent",
+            agent_name="AI Preparation Agent",
+            agent_version="2.0.0",
             allowed_operations={
+                # Registry capabilities
+                "ai_data_preparation",
+                "feature_engineering", 
+                "data_preprocessing",
+                "ml_optimization",
+                "embedding_preparation",
+                # Enhanced operations
+                "prepare_ai_data",
+                "engineer_features",
+                "preprocess_data", 
+                "optimize_ml",
+                "prepare_embeddings",
+                "advanced_feature_extraction",
+                "neural_preprocessing",
+                # Base operations
                 "get_agent_card",
                 "json_rpc",
                 "process_message",
@@ -298,6 +313,250 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
                 
             except Exception as e:
                 logger.error(f"Failed to get_capabilities: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("ai_data_preparation")
+        async def handle_ai_data_preparation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle comprehensive AI data preparation"""
+            try:
+                result = await self.agent_sdk.ai_data_preparation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="ai_data_preparation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to ai_data_preparation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("feature_engineering")
+        async def handle_feature_engineering(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle advanced feature engineering operations"""
+            try:
+                result = await self.agent_sdk.feature_engineering(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="feature_engineering",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to feature_engineering: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_preprocessing")
+        async def handle_data_preprocessing(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle comprehensive data preprocessing"""
+            try:
+                result = await self.agent_sdk.data_preprocessing(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_preprocessing",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to data_preprocessing: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("ml_optimization")
+        async def handle_ml_optimization(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle ML model optimization operations"""
+            try:
+                result = await self.agent_sdk.ml_optimization(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="ml_optimization",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to ml_optimization: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("embedding_preparation")
+        async def handle_embedding_preparation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle embedding preparation operations"""
+            try:
+                result = await self.agent_sdk.embedding_preparation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="embedding_preparation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to embedding_preparation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("prepare_ai_data")
+        async def handle_prepare_ai_data(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle AI-specific data preparation"""
+            try:
+                result = await self.agent_sdk.ai_data_preparation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="prepare_ai_data",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to prepare_ai_data: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("engineer_features")
+        async def handle_engineer_features(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle intelligent feature engineering"""
+            try:
+                result = await self.agent_sdk.feature_engineering(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="engineer_features",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to engineer_features: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("preprocess_data")
+        async def handle_preprocess_data(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle advanced data preprocessing"""
+            try:
+                result = await self.agent_sdk.data_preprocessing(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="preprocess_data",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to preprocess_data: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("optimize_ml")
+        async def handle_optimize_ml(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle ML optimization with advanced techniques"""
+            try:
+                result = await self.agent_sdk.ml_optimization(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="optimize_ml",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to optimize_ml: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("prepare_embeddings")
+        async def handle_prepare_embeddings(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle embedding preparation with optimization"""
+            try:
+                result = await self.agent_sdk.embedding_preparation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="prepare_embeddings",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to prepare_embeddings: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("advanced_feature_extraction")
+        async def handle_advanced_feature_extraction(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle advanced feature extraction operations"""
+            try:
+                # Use feature engineering with advanced configuration
+                advanced_config = {**data, "feature_config": {"advanced_mode": True, "extraction_type": "deep"}}
+                result = await self.agent_sdk.feature_engineering(advanced_config)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="advanced_feature_extraction",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to advanced_feature_extraction: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("neural_preprocessing")
+        async def handle_neural_preprocessing(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle neural network-based preprocessing"""
+            try:
+                # Use data preprocessing with neural configuration
+                neural_config = {**data, "preprocessing_config": {"neural_mode": True, "deep_learning": True}}
+                result = await self.agent_sdk.data_preprocessing(neural_config)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="neural_preprocessing",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to neural_preprocessing: {e}")
                 return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:

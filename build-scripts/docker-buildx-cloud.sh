@@ -27,45 +27,27 @@ docker buildx create --driver cloud finsightintelligence/a22 \
 # Build multi-platform images with Docker Build Cloud
 echo "🔨 Building multi-platform images..."
 
-# Build main application image
-echo "Building main A2A platform image..."
+# Build unified A2A SAP Network platform image
+echo "Building unified A2A SAP Network platform image..."
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --builder ${BUILDER_NAME} \
-  --tag ${DOCKER_HUB_NAMESPACE}/a2a:${VERSION} \
-  --tag ${DOCKER_HUB_NAMESPACE}/a2a:latest \
+  --tag ${REGISTRY}/${IMAGE_NAME}:${VERSION} \
+  --tag ${REGISTRY}/${IMAGE_NAME}:latest \
   --label "org.opencontainers.image.created=${BUILD_DATE}" \
   --label "org.opencontainers.image.revision=${GIT_COMMIT}" \
   --label "org.opencontainers.image.version=${VERSION}" \
+  --label "org.opencontainers.image.title=A2A SAP Network Platform" \
+  --label "org.opencontainers.image.description=Complete A2A SAP Network with 16 agents, SAP Fiori UI, and blockchain integration" \
   --push \
   .
-
-# Build CDS/CAP network service
-echo "Building CDS/CAP network service..."
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  --builder ${BUILDER_NAME} \
-  --tag ${DOCKER_HUB_NAMESPACE}/a2a:network-${VERSION} \
-  --tag ${DOCKER_HUB_NAMESPACE}/a2a:network-latest \
-  --push \
-  ./a2aNetwork
-
-# Build frontend
-echo "Building frontend..."
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  --builder ${BUILDER_NAME} \
-  --tag ${DOCKER_HUB_NAMESPACE}/a2a:frontend-${VERSION} \
-  --tag ${DOCKER_HUB_NAMESPACE}/a2a:frontend-latest \
-  --push \
-  ./a2aAgents/frontend
 
 echo "✅ Build complete!"
 echo ""
 echo "📋 Images pushed:"
-echo "  - ${DOCKER_HUB_NAMESPACE}/a2a:${VERSION}"
-echo "  - ${DOCKER_HUB_NAMESPACE}/a2a:latest"
-echo "  - ${DOCKER_HUB_NAMESPACE}/a2a:network-${VERSION}"
-echo "  - ${DOCKER_HUB_NAMESPACE}/a2a:network-latest"
-echo "  - ${DOCKER_HUB_NAMESPACE}/a2a:frontend-${VERSION}"
-echo "  - ${DOCKER_HUB_NAMESPACE}/a2a:frontend-latest"
+echo "  - ${REGISTRY}/${IMAGE_NAME}:${VERSION}"
+echo "  - ${REGISTRY}/${IMAGE_NAME}:latest"
+echo ""
+echo "🚀 Deployment commands:"
+echo "  docker pull ${REGISTRY}/${IMAGE_NAME}:${VERSION}"
+echo "  docker run -d --name a2a-platform -p 3000:3000 -p 4004:4004 -p 8000-8017:8000-8017 ${REGISTRY}/${IMAGE_NAME}:${VERSION}"

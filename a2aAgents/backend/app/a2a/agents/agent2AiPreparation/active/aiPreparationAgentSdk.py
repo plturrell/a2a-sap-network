@@ -22,6 +22,7 @@ import hashlib
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import logging
+import math
 import os
 import struct
 import time

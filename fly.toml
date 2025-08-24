@@ -2,7 +2,7 @@
 app = "a2a-platform"
 primary_region = "ord"
 kill_signal = "SIGINT"
-kill_timeout = "30s"
+kill_timeout = "60s"
 
 [build]
   image = "ghcr.io/plturrell/a2a-sap-network:main"
@@ -39,10 +39,10 @@ kill_timeout = "30s"
     soft_limit = 20
     
   [[services.tcp_checks]]
-    interval = "30s"
-    timeout = "20s"
-    grace_period = "300s"
-    restart_limit = 2
+    interval = "60s"
+    timeout = "30s"
+    grace_period = "900s"
+    restart_limit = 1
 
 [[vm]]
   cpu_kind = "performance"
@@ -50,7 +50,7 @@ kill_timeout = "30s"
   memory_mb = 16384
 
 [processes]
-  app = "complete"
+  app = "/app/start.sh complete"
 
 [deploy]
   strategy = "rolling"

@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .vectorProcessingAgentSdk import VectorProcessingAgentSDK
+from .comprehensiveVectorProcessingSdk import ComprehensiveVectorProcessingSDK
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +28,32 @@ class Agent3VectorprocessingA2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: VectorProcessingAgentSDK):
+    def __init__(self, agent_sdk: ComprehensiveVectorProcessingSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
-            agent_id="agent3VectorProcessing",
-            agent_name="Agent 3 - SAP HANA Vector Engine Ingestion",
-            agent_version="1.0.0",
+            agent_id="vector_processing_agent",
+            agent_name="Vector Processing Agent",
+            agent_version="2.0.0",
             allowed_operations={
+                # Registry capabilities
+                "vector_generation",
+                "embedding_creation",
+                "similarity_search",
+                "vector_optimization",
+                "semantic_analysis",
+                # Enhanced operations
+                "generate_vectors",
+                "create_embeddings",
+                "search_similar",
+                "optimize_vectors",
+                "analyze_semantics",
+                "hybrid_search",
+                "cluster_vectors",
+                "reduce_dimensions",
+                "detect_anomalies",
+                "assess_quality",
+                # Base operations
                 "get_agent_card",
                 "json_rpc",
                 "process_message",
@@ -345,6 +363,308 @@ class Agent3VectorprocessingA2AHandler(SecureA2AAgent):
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
+
+        # Registry capability handlers
+        @self.secure_handler("vector_generation")
+        async def handle_vector_generation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector generation operations"""
+            try:
+                result = await self.agent_sdk.generate_embeddings(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="vector_generation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to vector_generation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("embedding_creation")
+        async def handle_embedding_creation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle embedding creation operations"""
+            try:
+                result = await self.agent_sdk.generate_embeddings(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="embedding_creation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to embedding_creation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("similarity_search")
+        async def handle_similarity_search(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle similarity search operations"""
+            try:
+                result = await self.agent_sdk.search_vectors(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="similarity_search",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to similarity_search: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("vector_optimization")
+        async def handle_vector_optimization(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector optimization operations"""
+            try:
+                result = await self.agent_sdk.vector_dimensionality_reduction(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="vector_optimization",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to vector_optimization: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("semantic_analysis")
+        async def handle_semantic_analysis(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle semantic analysis operations"""
+            try:
+                result = await self.agent_sdk.vector_quality_assessment(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="semantic_analysis",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to semantic_analysis: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        # Enhanced operation handlers
+        @self.secure_handler("generate_vectors")
+        async def handle_generate_vectors(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector generation with advanced options"""
+            try:
+                result = await self.agent_sdk.generate_embeddings(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="generate_vectors",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to generate_vectors: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("create_embeddings")
+        async def handle_create_embeddings(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle embedding creation with ML optimization"""
+            try:
+                result = await self.agent_sdk.generate_embeddings(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="create_embeddings",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to create_embeddings: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("search_similar")
+        async def handle_search_similar(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle similarity search with ML re-ranking"""
+            try:
+                result = await self.agent_sdk.search_vectors(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="search_similar",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to search_similar: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("optimize_vectors")
+        async def handle_optimize_vectors(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector optimization and compression"""
+            try:
+                result = await self.agent_sdk.vector_dimensionality_reduction(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="optimize_vectors",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to optimize_vectors: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("analyze_semantics")
+        async def handle_analyze_semantics(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle semantic analysis and quality assessment"""
+            try:
+                result = await self.agent_sdk.vector_quality_assessment(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="analyze_semantics",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to analyze_semantics: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("hybrid_search")
+        async def handle_hybrid_search(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle hybrid vector search operations"""
+            try:
+                result = await self.agent_sdk.hybrid_vector_search(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="hybrid_search",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to hybrid_search: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("cluster_vectors")
+        async def handle_cluster_vectors(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector clustering operations"""
+            try:
+                result = await self.agent_sdk.vector_clustering(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="cluster_vectors",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to cluster_vectors: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("reduce_dimensions")
+        async def handle_reduce_dimensions(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle dimensionality reduction operations"""
+            try:
+                result = await self.agent_sdk.vector_dimensionality_reduction(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="reduce_dimensions",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to reduce_dimensions: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("detect_anomalies")
+        async def handle_detect_anomalies(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector anomaly detection operations"""
+            try:
+                result = await self.agent_sdk.vector_anomaly_detection(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="detect_anomalies",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to detect_anomalies: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("assess_quality")
+        async def handle_assess_quality(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle vector quality assessment operations"""
+            try:
+                result = await self.agent_sdk.vector_quality_assessment(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="assess_quality",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to assess_quality: {e}")
+                return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
@@ -451,8 +771,8 @@ class Agent3VectorprocessingA2AHandler(SecureA2AAgent):
 
 
 # Factory function to create A2A handler
-def create_agent3VectorProcessing_a2a_handler(agent_sdk: VectorProcessingAgentSDK) -> Agent3VectorprocessingA2AHandler:
-    """Create A2A-compliant handler for Agent 3 - SAP HANA Vector Engine Ingestion"""
+def create_agent3VectorProcessing_a2a_handler(agent_sdk: ComprehensiveVectorProcessingSDK) -> Agent3VectorprocessingA2AHandler:
+    """Create A2A-compliant handler for Agent 3 - Vector Processing Agent"""
     return Agent3VectorprocessingA2AHandler(agent_sdk)
 
 
