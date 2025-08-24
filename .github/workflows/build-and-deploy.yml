@@ -232,12 +232,8 @@ jobs:
         flyctl deploy --remote-only --wait-timeout 1500
         
         # Get the deployed URL
-        APP_URL=$(flyctl info --json | jq -r '.Hostname')
-        if [ "$APP_URL" != "null" ]; then
-          echo "✅ Deployed successfully to: https://$APP_URL"
-        else
-          echo "✅ Deployed successfully to: https://a2a-platform.fly.dev"
-        fi
+        APP_URL=$(flyctl info --json 2>/dev/null | jq -r '.Hostname' 2>/dev/null || echo "a2a-platform.fly.dev")
+        echo "✅ Deployed successfully to: https://$APP_URL"
         
         echo ""
         echo "✅ A2A Platform deployed to Fly.io!"
