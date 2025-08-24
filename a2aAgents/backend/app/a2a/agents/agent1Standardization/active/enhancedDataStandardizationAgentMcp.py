@@ -1338,9 +1338,44 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
         return "high"
     
     async def _write_to_stream(self, item: Dict[str, Any]):
-        """Write item to output stream"""
-        # Placeholder for stream writing
-        pass
+        """Write item to output stream with A2A protocol compliance"""
+        try:
+            # Prepare standardized item for streaming
+            standardized_item = {
+                "id": item.get("id", f"stream_item_{int(time.time() * 1000)}"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "data": item,
+                "standardization_metadata": {
+                    "agent_id": "agent1_standardization",
+                    "processing_version": "1.0",
+                    "quality_score": item.get("quality_score", 0.8),
+                    "validation_status": item.get("validation_status", "validated")
+                }
+            }
+            
+            # Write to output stream (A2A protocol compliant)
+            if hasattr(self, 'output_stream') and self.output_stream:
+                await self.output_stream.write(json.dumps(standardized_item))
+                await self.output_stream.flush()
+            
+            # Also store in processing results for batch access
+            if not hasattr(self, 'stream_buffer'):
+                self.stream_buffer = []
+            
+            self.stream_buffer.append(standardized_item)
+            
+            # Maintain buffer size limit
+            if len(self.stream_buffer) > 1000:
+                self.stream_buffer = self.stream_buffer[-1000:]
+            
+            logger.debug(f"Item written to stream: {standardized_item['id']}")
+            
+        except Exception as e:
+            logger.error(f"Stream writing failed: {e}")
+            # Fallback: store in memory buffer
+            if not hasattr(self, 'failed_stream_items'):
+                self.failed_stream_items = []
+            self.failed_stream_items.append(item)
     
     # ==========================================
     # A2A Protocol Handlers
@@ -1633,7 +1668,19 @@ class EnhancedAccountStandardizer(AccountStandardizer):
                 "referential_integrity", "business_rules"]
     
     def get_custom_validation_rules(self) -> List[str]:
-        return []
+        """Get custom validation rules for data standardization"""
+        return [
+            "data_type_consistency",
+            "format_standardization", 
+            "value_range_validation",
+            "business_rule_compliance",
+            "referential_integrity_check",
+            "duplicate_detection",
+            "completeness_validation",
+            "accuracy_assessment",
+            "timeliness_check",
+            "consistency_validation"
+        ]
     
     def get_config(self) -> Dict[str, Any]:
         """Get configuration for multiprocessing"""

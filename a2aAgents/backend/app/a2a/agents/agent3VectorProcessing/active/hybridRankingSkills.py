@@ -42,7 +42,13 @@ class HybridRankingSkills:
         """
         try:
             if not candidateDocuments:
-                return []
+                # Return empty result with proper structure
+                return {
+                    'ranked_documents': [],
+                    'ranking_scores': {},
+                    'total_candidates': 0,
+                    'processing_time': 0.0
+                }
                 
             logger.info(f"Hybrid ranking {len(candidateDocuments)} documents")
             
@@ -204,7 +210,13 @@ class HybridRankingSkills:
             docIds = [doc.get('docId') for doc in documents if doc.get('docId')]
             
             if not docIds:
-                return {}
+                # Return empty scores with proper structure
+                return {
+                    'scores': {},
+                    'total_documents': 0,
+                    'algorithm': 'pagerank',
+                    'iterations': 0
+                }
             
             # Check cache first
             cachedScores = {}

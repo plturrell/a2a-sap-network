@@ -282,7 +282,14 @@ class HanaSparseVectorSkills:
             
         except Exception as e:
             logger.error(f"Sparse similarity search failed: {e}")
-            return []
+            # Return empty results with proper structure
+            return {
+                'matches': [],
+                'similarity_scores': {},
+                'total_candidates': 0,
+                'processing_time': 0.0,
+                'error': str(e)
+            }
     
     async def batchConvertToSparse(self,
                                  entityType: str,

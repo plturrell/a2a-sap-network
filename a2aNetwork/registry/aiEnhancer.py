@@ -441,11 +441,141 @@ class AIEnhancer:
     
     async def _analyze_domain_trends(self, ord_document: ORDDocument) -> Dict[str, Any]:
         """Analyze domain trends using AI"""
-        return {}
+        try:
+            # Use Grok AI for domain trend analysis if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                trend_prompt = f"""
+                Analyze domain trends for this ORD document:
+                - Package: {ord_document.package}
+                - APIs: {len(ord_document.api_resources)}
+                - Events: {len(ord_document.event_resources)}
+                - Entity Types: {len(ord_document.entity_types)}
+                
+                Identify emerging patterns, usage trends, and domain evolution indicators.
+                """
+                
+                response = await self.grok_client.reason(trend_prompt)
+                if response and response.get('content'):
+                    return {
+                        'trend_analysis': response.get('content'),
+                        'confidence': 0.85,
+                        'analysis_type': 'ai_powered'
+                    }
+            
+            # Fallback trend analysis based on document structure
+            trends = {}
+            
+            # API complexity trend
+            api_complexity = sum(len(api.get('operations', [])) for api in ord_document.api_resources)
+            trends['api_complexity'] = {
+                'score': min(api_complexity / 10, 1.0),
+                'description': 'High' if api_complexity > 20 else 'Medium' if api_complexity > 5 else 'Low'
+            }
+            
+            # Event-driven architecture adoption
+            event_ratio = len(ord_document.event_resources) / max(len(ord_document.api_resources), 1)
+            trends['event_adoption'] = {
+                'score': min(event_ratio, 1.0),
+                'description': 'High event-driven adoption' if event_ratio > 0.5 else 'Moderate' if event_ratio > 0.2 else 'Low'
+            }
+            
+            # Domain maturity indicator
+            entity_coverage = len(ord_document.entity_types) / max(len(ord_document.api_resources), 1)
+            trends['domain_maturity'] = {
+                'score': min(entity_coverage, 1.0),
+                'description': 'Mature domain model' if entity_coverage > 1.0 else 'Developing' if entity_coverage > 0.5 else 'Basic'
+            }
+            
+            return {
+                'trends': trends,
+                'overall_score': sum(t['score'] for t in trends.values()) / len(trends),
+                'analysis_type': 'structural_fallback'
+            }
+            
+        except Exception as e:
+            logger.warning(f"Domain trend analysis failed: {e}")
+            return {
+                'trends': {},
+                'error': str(e),
+                'analysis_type': 'failed'
+            }
     
     async def _predict_usage_patterns(self, ord_document: ORDDocument) -> Dict[str, Any]:
         """Predict usage patterns using AI"""
-        return {}
+        try:
+            # Use Grok AI for usage pattern prediction if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                pattern_prompt = f"""
+                Predict usage patterns for this ORD document:
+                - Package: {ord_document.package}
+                - API Resources: {len(ord_document.api_resources)}
+                - Event Resources: {len(ord_document.event_resources)}
+                - Entity Types: {len(ord_document.entity_types)}
+                
+                Analyze likely usage scenarios, peak load patterns, and integration patterns.
+                """
+                
+                response = await self.grok_client.reason(pattern_prompt)
+                if response and response.get('content'):
+                    return {
+                        'usage_predictions': response.get('content'),
+                        'confidence': 0.80,
+                        'prediction_type': 'ai_powered'
+                    }
+            
+            # Fallback usage pattern prediction based on document characteristics
+            patterns = {}
+            
+            # API usage intensity prediction
+            api_count = len(ord_document.api_resources)
+            patterns['api_usage_intensity'] = {
+                'level': 'high' if api_count > 10 else 'medium' if api_count > 3 else 'low',
+                'predicted_calls_per_hour': api_count * 100,
+                'peak_multiplier': 3.0 if api_count > 10 else 2.0
+            }
+            
+            # Event processing load
+            event_count = len(ord_document.event_resources)
+            patterns['event_processing_load'] = {
+                'level': 'high' if event_count > 5 else 'medium' if event_count > 2 else 'low',
+                'predicted_events_per_minute': event_count * 50,
+                'burst_capacity_needed': event_count > 5
+            }
+            
+            # Integration complexity
+            entity_count = len(ord_document.entity_types)
+            patterns['integration_complexity'] = {
+                'level': 'complex' if entity_count > 15 else 'moderate' if entity_count > 5 else 'simple',
+                'data_volume_prediction': entity_count * 1000,
+                'relationship_depth': min(entity_count / 5, 5)
+            }
+            
+            # Peak usage prediction
+            total_resources = api_count + event_count + entity_count
+            patterns['peak_usage_prediction'] = {
+                'business_hours_multiplier': 2.5 if total_resources > 20 else 1.8,
+                'weekend_reduction_factor': 0.3,
+                'seasonal_variation': 'high' if total_resources > 15 else 'moderate'
+            }
+            
+            return {
+                'patterns': patterns,
+                'overall_complexity_score': min(total_resources / 30, 1.0),
+                'prediction_type': 'heuristic_fallback',
+                'recommendations': [
+                    'Implement caching for high-usage APIs' if api_count > 5 else None,
+                    'Consider event batching for high-volume events' if event_count > 3 else None,
+                    'Plan for horizontal scaling' if total_resources > 20 else None
+                ]
+            }
+            
+        except Exception as e:
+            logger.warning(f"Usage pattern prediction failed: {e}")
+            return {
+                'patterns': {},
+                'error': str(e),
+                'prediction_type': 'failed'
+            }
     
     async def _identify_optimization_opportunities(self, ord_document: ORDDocument) -> List[Dict[str, Any]]:
         """Identify optimization opportunities"""

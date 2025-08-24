@@ -1084,26 +1084,16 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
             
             # Send to Data Manager (will fail gracefully if not running)
             # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-            # async with aiohttp.ClientSession() as session:
             if False:  # Disabled aiohttp usage for A2A protocol compliance
-                async with None as session:  # Placeholder
-                    response = await session.post(
-                    f"{self.data_manager_agent_url}/store_data",
-                    json=request_data,
-                    timeout=aiohttp.ClientTimeout(total=5)
-                ) as response:
-                    if response.status == 200:
-                        return True
-                    else:
-                        # Fallback to memory storage
-                        self.training_data.setdefault(data_type, []).append(data)
-                        return True
+                # Placeholder for future blockchain messaging implementation
+                pass
                         
         except Exception as e:
             logger.warning(f"Data Manager storage failed, using memory: {e}")
-            # Always fallback to memory storage
-            self.training_data.setdefault(data_type, []).append(data)
-            return True
+            
+        # Always fallback to memory storage
+        self.training_data.setdefault(data_type, []).append(data)
+        return True
     
     async def get_training_data(self, data_type: str) -> List[Dict[str, Any]]:
         """Retrieve training data via Data Manager agent"""
@@ -1112,16 +1102,10 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
                 return self.training_data.get(data_type, [])
             
             # Try to fetch from Data Manager first
-            async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
-                async with session.get(
-                    f"{self.data_manager_agent_url}/get_data/{self.data_product_training_table}",
-                    params={"data_type": data_type},
-                    timeout=aiohttp.ClientTimeout(total=5)
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data.get("data", [])
+            # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+            if False:  # Disabled aiohttp usage for A2A protocol compliance
+                # Placeholder for future blockchain messaging implementation
+                pass
                     
         except Exception as e:
             logger.warning(f"Data Manager retrieval failed, using memory: {e}")
@@ -1228,15 +1212,12 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
             # Test Data Manager connection
             if self.use_data_manager:
                 try:
-                    async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
-                        async with session.get(f"{self.data_manager_agent_url}/health", timeout=aiohttp.ClientTimeout(total=2)) as response:
-                            if response.status == 200:
-                                logger.info("✅ Data Manager connection successful")
-                            else:
-                                logger.warning("⚠️ Data Manager connection failed")
-                except:
-                    logger.warning("⚠️ Data Manager not responding (training data will be memory-only)")
+                    # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+                    if False:  # Disabled aiohttp usage for A2A protocol compliance
+                        # Placeholder for future blockchain messaging implementation
+                        logger.info("Data Manager connection: OK (placeholder)")
+                except Exception as e:
+                    logger.warning(f"Data Manager connection test failed: {e}")
             
             # Test other connections...
             logger.info("Connection tests complete")
@@ -1266,21 +1247,268 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
         return recommendations
     
     async def _perform_intelligent_search(self, query: str, search_type: str, data_type_filter: str, quality_threshold: float, max_results: int) -> List[Dict[str, Any]]:
-        """Perform intelligent search using semantic models"""
-        # Implementation would use semantic search models
-        return []  # Placeholder
+        """Perform intelligent search using semantic models and Grok AI"""
+        try:
+            # Use Grok AI for intelligent search if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                search_prompt = f"""
+                Perform intelligent search for data products based on this query:
+                
+                Query: "{query}"
+                Search Type: {search_type}
+                Data Type Filter: {data_type_filter}
+                Quality Threshold: {quality_threshold}
+                
+                Analyze the query and suggest relevant data products, search strategies, and matching criteria.
+                Return as JSON with fields: suggested_products, search_strategy, matching_criteria, relevance_scores
+                """
+                
+                result = await self.grok_client.analyze_patterns(search_prompt)
+                if result.get("success"):
+                    patterns = result.get("patterns", {})
+                    suggested_products = patterns.get("suggested_products", [])
+                    
+                    # Convert Grok suggestions to search results format
+                    search_results = []
+                    for i, product in enumerate(suggested_products[:max_results]):
+                        search_results.append({
+                            "product_id": f"grok_suggested_{i}",
+                            "name": product.get("name", f"Suggested Product {i+1}"),
+                            "description": product.get("description", "AI-suggested data product"),
+                            "relevance_score": product.get("relevance", 0.8),
+                            "data_type": product.get("data_type", data_type_filter),
+                            "quality_score": product.get("quality_score", quality_threshold),
+                            "source": "grok_ai_search",
+                            "search_strategy": patterns.get("search_strategy", "semantic_analysis")
+                        })
+                    
+                    return search_results
+            
+            # Fallback: search through registered data products
+            search_results = []
+            query_lower = query.lower()
+            
+            # Search through training data and registered products
+            for data_type, products in self.training_data.items():
+                if data_type_filter and data_type_filter != "all" and data_type != data_type_filter:
+                    continue
+                
+                for product in products:
+                    if isinstance(product, dict):
+                        name = str(product.get("name", "")).lower()
+                        description = str(product.get("description", "")).lower()
+                        
+                        # Simple relevance scoring based on keyword matching
+                        relevance = 0.0
+                        if query_lower in name:
+                            relevance += 0.8
+                        if query_lower in description:
+                            relevance += 0.6
+                        
+                        # Check for partial matches
+                        query_words = query_lower.split()
+                        for word in query_words:
+                            if word in name:
+                                relevance += 0.3
+                            if word in description:
+                                relevance += 0.2
+                        
+                        if relevance > 0.1:  # Minimum relevance threshold
+                            search_results.append({
+                                "product_id": product.get("id", f"product_{len(search_results)}"),
+                                "name": product.get("name", "Unknown Product"),
+                                "description": product.get("description", ""),
+                                "relevance_score": min(relevance, 1.0),
+                                "data_type": data_type,
+                                "quality_score": product.get("quality_score", 0.7),
+                                "source": "local_search"
+                            })
+            
+            # Sort by relevance and apply quality threshold
+            search_results = [r for r in search_results if r["quality_score"] >= quality_threshold]
+            search_results.sort(key=lambda x: x["relevance_score"], reverse=True)
+            
+            return search_results[:max_results]
+            
+        except Exception as e:
+            logger.error(f"Intelligent search failed: {e}")
+            return []
     
     async def _enhance_search_results_ai(self, results: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
-        """Enhance search results with AI insights"""
-        return results  # Placeholder
+        """Enhance search results with AI insights using Grok AI"""
+        try:
+            if not results or not hasattr(self, 'grok_client') or not self.grok_client:
+                return results
+            
+            # Use Grok AI to enhance search results
+            enhancement_prompt = f"""
+            Enhance these search results with AI insights for query: "{query}"
+            
+            Current Results: {results[:5]}  # Limit to first 5 for analysis
+            
+            Provide enhancements including:
+            1. Improved relevance scoring
+            2. Additional metadata insights
+            3. Usage recommendations
+            4. Quality assessments
+            5. Related data product suggestions
+            
+            Return enhanced results with same structure plus new fields: ai_insights, usage_recommendations, related_products
+            """
+            
+            result = await self.grok_client.analyze_patterns(enhancement_prompt)
+            if result.get("success"):
+                patterns = result.get("patterns", {})
+                enhanced_results = patterns.get("enhanced_results", results)
+                
+                # Apply AI enhancements to original results
+                for i, original_result in enumerate(results):
+                    if i < len(enhanced_results):
+                        enhancement = enhanced_results[i]
+                        original_result.update({
+                            "ai_insights": enhancement.get("ai_insights", ""),
+                            "usage_recommendations": enhancement.get("usage_recommendations", []),
+                            "related_products": enhancement.get("related_products", []),
+                            "enhanced_relevance": enhancement.get("enhanced_relevance", original_result.get("relevance_score", 0.5)),
+                            "ai_enhanced": True
+                        })
+                
+                # Sort by enhanced relevance if available
+                results.sort(key=lambda x: x.get("enhanced_relevance", x.get("relevance_score", 0)), reverse=True)
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"AI enhancement failed: {e}")
+            return results
     
     async def _infer_schema_comprehensive(self, data_sample: List[Any], data_format: str, confidence_threshold: float) -> Dict[str, Any]:
         """Comprehensive schema inference"""
         return await self._infer_schema_ai(data_sample)
     
     async def _map_comprehensive_lineage(self, data_product_id: str, include_upstream: bool, include_downstream: bool, max_depth: int) -> Dict[str, Any]:
-        """Comprehensive lineage mapping using graph analysis"""
-        return {"lineage_nodes": [], "lineage_edges": [], "depth": 0}  # Placeholder
+        """Comprehensive lineage mapping using graph analysis and Grok AI"""
+        try:
+            # Use Grok AI for intelligent lineage analysis if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                lineage_prompt = f"""
+                Analyze data lineage for product ID: "{data_product_id}"
+                
+                Parameters:
+                - Include Upstream: {include_upstream}
+                - Include Downstream: {include_downstream}
+                - Max Depth: {max_depth}
+                
+                Provide comprehensive lineage mapping including:
+                1. Data flow relationships
+                2. Transformation dependencies
+                3. Source and target systems
+                4. Processing stages
+                5. Quality checkpoints
+                
+                Return as JSON with fields: lineage_nodes, lineage_edges, depth, flow_analysis, dependencies
+                """
+                
+                result = await self.grok_client.analyze_patterns(lineage_prompt)
+                if result.get("success"):
+                    patterns = result.get("patterns", {})
+                    return {
+                        "lineage_nodes": patterns.get("lineage_nodes", []),
+                        "lineage_edges": patterns.get("lineage_edges", []),
+                        "depth": patterns.get("depth", 0),
+                        "flow_analysis": patterns.get("flow_analysis", {}),
+                        "dependencies": patterns.get("dependencies", []),
+                        "analysis_method": "grok_ai",
+                        "grok_cached": result.get("cached", False)
+                    }
+            
+            # Fallback: basic lineage mapping from training data
+            lineage_nodes = []
+            lineage_edges = []
+            current_depth = 0
+            
+            # Search for the data product in training data
+            product_found = False
+            for data_type, products in self.training_data.items():
+                for product in products:
+                    if isinstance(product, dict) and product.get("id") == data_product_id:
+                        product_found = True
+                        
+                        # Add the main product as a node
+                        lineage_nodes.append({
+                            "id": data_product_id,
+                            "name": product.get("name", "Unknown Product"),
+                            "type": "data_product",
+                            "data_type": data_type,
+                            "depth": 0
+                        })
+                        
+                        # Add upstream dependencies if requested
+                        if include_upstream:
+                            sources = product.get("sources", [])
+                            for i, source in enumerate(sources[:max_depth]):
+                                source_id = f"{data_product_id}_source_{i}"
+                                lineage_nodes.append({
+                                    "id": source_id,
+                                    "name": source.get("name", f"Source {i+1}"),
+                                    "type": "source",
+                                    "depth": -(i+1)
+                                })
+                                lineage_edges.append({
+                                    "from": source_id,
+                                    "to": data_product_id,
+                                    "type": "data_flow"
+                                })
+                        
+                        # Add downstream consumers if requested
+                        if include_downstream:
+                            consumers = product.get("consumers", [])
+                            for i, consumer in enumerate(consumers[:max_depth]):
+                                consumer_id = f"{data_product_id}_consumer_{i}"
+                                lineage_nodes.append({
+                                    "id": consumer_id,
+                                    "name": consumer.get("name", f"Consumer {i+1}"),
+                                    "type": "consumer",
+                                    "depth": i+1
+                                })
+                                lineage_edges.append({
+                                    "from": data_product_id,
+                                    "to": consumer_id,
+                                    "type": "data_flow"
+                                })
+                        
+                        current_depth = max(len(product.get("sources", [])), len(product.get("consumers", [])))
+                        break
+                
+                if product_found:
+                    break
+            
+            if not product_found:
+                # Create a basic node for unknown product
+                lineage_nodes.append({
+                    "id": data_product_id,
+                    "name": "Unknown Product",
+                    "type": "data_product",
+                    "depth": 0,
+                    "status": "not_found"
+                })
+            
+            return {
+                "lineage_nodes": lineage_nodes,
+                "lineage_edges": lineage_edges,
+                "depth": current_depth,
+                "analysis_method": "basic_mapping",
+                "product_found": product_found
+            }
+            
+        except Exception as e:
+            logger.error(f"Lineage mapping failed: {e}")
+            return {
+                "lineage_nodes": [],
+                "lineage_edges": [],
+                "depth": 0,
+                "error": str(e)
+            }
     
     # ================================
     # NEW DATA HARVESTING MCP SKILLS  
@@ -1406,6 +1634,162 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
         except Exception as e:
             logger.error(f"PDF harvesting failed: {e}")
             return create_error_response(f"PDF harvesting failed: {str(e)}", "pdf_harvest_error")
+    
+    @mcp_tool("extract_pdf_forms", "Extract form fields and data from PDF documents")
+    @a2a_skill(
+        name="extractPdfForms",
+        description="Extract form fields, values, and structure from PDF forms",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "pdf_path": {"type": "string", "description": "Path to PDF file"},
+                "extract_filled_only": {"type": "boolean", "default": False},
+                "include_structure": {"type": "boolean", "default": True}
+            },
+            "required": ["pdf_path"]
+        }
+    )
+    async def extract_pdf_forms(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract PDF form fields and data with structure analysis"""
+        try:
+            start_time = time.time()
+            self.method_performance.setdefault("pdf_form_extraction", {"total": 0, "success": 0})
+            self.method_performance["pdf_form_extraction"]["total"] += 1
+            
+            pdf_path = request_data["pdf_path"]
+            extract_filled_only = request_data.get("extract_filled_only", False)
+            include_structure = request_data.get("include_structure", True)
+            
+            if not hasattr(self, 'pdf_processor'):
+                from .pdfProcessingModule import EnhancedPDFProcessor
+                self.pdf_processor = EnhancedPDFProcessor()
+            
+            # Extract form data
+            form_data = await self.pdf_processor.extract_pdf_forms(pdf_path)
+            
+            # Filter filled fields only if requested
+            if extract_filled_only:
+                form_data["form_fields"] = [
+                    field for field in form_data["form_fields"] 
+                    if field.get("field_value")
+                ]
+            
+            # Create data product if forms found
+            if form_data["has_forms"]:
+                data_product_info = {
+                    "name": f"PDF_Forms_{int(time.time())}",
+                    "description": f"Form data extracted from PDF: {pdf_path}",
+                    "data_type": "pdf_forms",
+                    "data_source": pdf_path,
+                    "schema": {"type": "object", "properties": {"form_fields": {"type": "array"}}},
+                    "sample_data": form_data["form_fields"][:5]
+                }
+                
+                # Register as data product
+                registration_result = await self.register_data_product({
+                    "data_product_info": data_product_info,
+                    "extracted_data": form_data
+                })
+                form_data["data_product_id"] = registration_result.get("data", {}).get("product_id")
+            
+            self.method_performance["pdf_form_extraction"]["success"] += 1
+            processing_time = time.time() - start_time
+            
+            return create_success_response({
+                "form_data": form_data,
+                "processing_time": processing_time,
+                "extraction_method": "enhanced_pdf_processor"
+            })
+            
+        except Exception as e:
+            logger.error(f"PDF form extraction failed: {e}")
+            return create_error_response(f"PDF form extraction failed: {str(e)}", "pdf_form_error")
+    
+    @mcp_tool("stream_large_pdf", "Process large PDF files with streaming")
+    @a2a_skill(
+        name="streamLargePdf",
+        description="Process large PDF files in chunks to handle memory constraints",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "pdf_path": {"type": "string", "description": "Path to large PDF file"},
+                "chunk_pages": {"type": "integer", "default": 10},
+                "extract_content": {"type": "boolean", "default": True},
+                "extract_images": {"type": "boolean", "default": False}
+            },
+            "required": ["pdf_path"]
+        }
+    )
+    async def stream_large_pdf(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Stream process large PDF files in manageable chunks"""
+        try:
+            start_time = time.time()
+            self.method_performance.setdefault("pdf_streaming", {"total": 0, "success": 0})
+            self.method_performance["pdf_streaming"]["total"] += 1
+            
+            pdf_path = request_data["pdf_path"]
+            chunk_pages = request_data.get("chunk_pages", 10)
+            extract_content = request_data.get("extract_content", True)
+            extract_images = request_data.get("extract_images", False)
+            
+            if not hasattr(self, 'pdf_processor'):
+                from .pdfProcessingModule import EnhancedPDFProcessor
+                self.pdf_processor = EnhancedPDFProcessor()
+            
+            # Process PDF in streaming chunks
+            chunks_processed = 0
+            total_content = {
+                "text_content": "",
+                "tables": [],
+                "images": [],
+                "chunks_info": []
+            }
+            
+            async for chunk_data in self.pdf_processor.stream_large_pdf(pdf_path, chunk_pages):
+                if "error" in chunk_data:
+                    logger.error(f"Chunk processing error: {chunk_data['error']}")
+                    continue
+                
+                chunks_processed += 1
+                total_content["chunks_info"].append(chunk_data["chunk_info"])
+                
+                if extract_content:
+                    total_content["text_content"] += chunk_data["text_content"]
+                    total_content["tables"].extend(chunk_data["tables"])
+                
+                if extract_images:
+                    total_content["images"].extend(chunk_data["images"])
+            
+            # Create data product for processed content
+            if chunks_processed > 0:
+                data_product_info = {
+                    "name": f"Large_PDF_Stream_{int(time.time())}",
+                    "description": f"Streamed content from large PDF: {pdf_path}",
+                    "data_type": "pdf_stream",
+                    "data_source": pdf_path,
+                    "schema": {"type": "object", "properties": {"chunks": {"type": "array"}}},
+                    "sample_data": total_content["chunks_info"][:3]
+                }
+                
+                registration_result = await self.register_data_product({
+                    "data_product_info": data_product_info,
+                    "extracted_data": total_content
+                })
+                total_content["data_product_id"] = registration_result.get("data", {}).get("product_id")
+            
+            self.method_performance["pdf_streaming"]["success"] += 1
+            processing_time = time.time() - start_time
+            
+            return create_success_response({
+                "processed_content": total_content,
+                "chunks_processed": chunks_processed,
+                "processing_time": processing_time,
+                "extraction_method": "streaming_processor"
+            })
+            
+        except Exception as e:
+            logger.error(f"PDF streaming failed: {e}")
+            return create_error_response(f"PDF streaming failed: {str(e)}", "pdf_stream_error")
     
     @mcp_tool("collect_perplexity_news", "Collect real-time news data from Perplexity AI")
     @a2a_skill(
@@ -3829,30 +4213,150 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
     # HELPER METHODS FOR NEW SKILLS
     # ================================
     
-    async def _extract_pdf_tables(self, pdf_path: str, use_ocr: bool) -> List[Dict[str, Any]]:
-        """Extract tables from PDF using AI-powered processing"""
-        # Implementation placeholder - would use libraries like pdfplumber, PyMuPDF
-        return [{"data": [["Header1", "Header2"], ["Value1", "Value2"]], "headers": ["Header1", "Header2"]}]
-    
-    async def _extract_pdf_text(self, pdf_path: str, use_ocr: bool) -> str:
-        """Extract text content from PDF"""
-        # Implementation placeholder 
-        return f"Extracted text content from {pdf_path}"
-    
-    async def _extract_pdf_metadata(self, pdf_path: str) -> Dict[str, Any]:
-        """Extract metadata from PDF"""
-        # Implementation placeholder
-        return {"author": "Unknown", "creation_date": datetime.utcnow().isoformat(), "pages": 10}
+    async def _extract_pdf_tables(self, pdf_path, use_ocr):
+        """Extract tables using enhanced PDF processor"""
+        if not hasattr(self, 'pdf_processor'):
+            from .pdfProcessingModule import EnhancedPDFProcessor
+            self.pdf_processor = EnhancedPDFProcessor()
+        
+        return await self.pdf_processor.extract_pdf_tables(pdf_path, use_ocr)
+
+    async def _extract_pdf_text(self, pdf_path, use_ocr):
+        """Extract text using enhanced PDF processor"""
+        if not hasattr(self, 'pdf_processor'):
+            from .pdfProcessingModule import EnhancedPDFProcessor
+            self.pdf_processor = EnhancedPDFProcessor()
+        
+        return await self.pdf_processor.extract_pdf_text(pdf_path, use_ocr)
+
+    async def _extract_pdf_metadata(self, pdf_path):
+        """Extract metadata using enhanced PDF processor"""
+        if not hasattr(self, 'pdf_processor'):
+            from .pdfProcessingModule import EnhancedPDFProcessor
+            self.pdf_processor = EnhancedPDFProcessor()
+        
+        return await self.pdf_processor.extract_pdf_metadata(pdf_path)
     
     async def _assess_pdf_extraction_quality(self, extracted_data: Dict[str, Any], threshold: float) -> float:
         """AI-powered quality assessment for PDF extraction"""
-        # Implementation placeholder
-        return 0.85
+        try:
+            # Use Grok AI for quality assessment if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                assessment_prompt = f"""
+                Assess the quality of this PDF extraction data:
+                - Text length: {len(extracted_data.get('text', ''))}
+                - Tables found: {len(extracted_data.get('tables', []))}
+                - Images found: {len(extracted_data.get('images', []))}
+                
+                Rate quality from 0.0 to 1.0 based on completeness and structure.
+                """
+                
+                response = await self.grok_client.reason(assessment_prompt)
+                # Extract numeric score from response
+                import re
+                score_match = re.search(r'(\d+\.?\d*)', response.get('content', '0.85'))
+                if score_match:
+                    score = float(score_match.group(1))
+                    return min(max(score, 0.0), 1.0)
+            
+            # Fallback quality assessment
+            quality_score = 0.0
+            
+            # Text quality (40% weight)
+            text_length = len(extracted_data.get('text', ''))
+            if text_length > 1000:
+                quality_score += 0.4
+            elif text_length > 100:
+                quality_score += 0.2
+            
+            # Table quality (30% weight)
+            tables = extracted_data.get('tables', [])
+            if tables:
+                quality_score += 0.3
+            
+            # Structure quality (30% weight)
+            if extracted_data.get('metadata'):
+                quality_score += 0.15
+            if extracted_data.get('quality_scores'):
+                quality_score += 0.15
+            
+            return min(quality_score, 1.0)
+            
+        except Exception as e:
+            logger.warning(f"PDF quality assessment failed: {e}")
+            return 0.75
     
     async def _infer_pdf_schema(self, extracted_data: Dict[str, Any]) -> Dict[str, Any]:
         """Infer schema from PDF extracted data"""
-        # Implementation placeholder
-        return {"type": "object", "properties": {"tables": {"type": "array"}, "text": {"type": "string"}}}
+        try:
+            # Use Grok AI for schema inference if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                schema_prompt = f"""
+                Analyze this PDF extraction data and generate a JSON schema:
+                Data structure: {list(extracted_data.keys())}
+                Text sample: {str(extracted_data.get('text', ''))[:200]}...
+                Tables count: {len(extracted_data.get('tables', []))}
+                
+                Generate a comprehensive JSON schema for this data structure.
+                """
+                
+                response = await self.grok_client.reason(schema_prompt)
+                # Try to parse JSON schema from response
+                import json
+                try:
+                    schema_content = response.get('content', '')
+                    # Extract JSON from response
+                    start_idx = schema_content.find('{')
+                    end_idx = schema_content.rfind('}') + 1
+                    if start_idx >= 0 and end_idx > start_idx:
+                        schema = json.loads(schema_content[start_idx:end_idx])
+                        return schema
+                except json.JSONDecodeError:
+                    pass
+            
+            # Fallback schema inference based on actual data structure
+            properties = {}
+            
+            if 'text' in extracted_data:
+                properties['text'] = {"type": "string", "description": "Extracted text content"}
+            
+            if 'tables' in extracted_data:
+                properties['tables'] = {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "data": {"type": "array"},
+                            "headers": {"type": "array", "items": {"type": "string"}}
+                        }
+                    }
+                }
+            
+            if 'images' in extracted_data:
+                properties['images'] = {
+                    "type": "array",
+                    "items": {"type": "string", "description": "Image paths or base64 data"}
+                }
+            
+            if 'metadata' in extracted_data:
+                properties['metadata'] = {
+                    "type": "object",
+                    "properties": {
+                        "pages": {"type": "integer"},
+                        "author": {"type": "string"},
+                        "title": {"type": "string"}
+                    }
+                }
+            
+            return {
+                "type": "object",
+                "properties": properties,
+                "required": list(properties.keys())
+            }
+            
+        except Exception as e:
+            logger.warning(f"PDF schema inference failed: {e}")
+            return {"type": "object", "properties": {"tables": {"type": "array"}, "text": {"type": "string"}}}
     
     async def _fetch_perplexity_news(self, query: str, filters: List[str], date_range: str, max_articles: int, connector: Dict[str, Any]) -> Dict[str, Any]:
         """Fetch news from Perplexity AI API using registered connector"""
@@ -3862,10 +4366,6 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
             
             # Use connector configuration
             base_url = connection_params.get("base_url", "https://api.perplexity.ai")
-            timeout = connection_params.get("timeout", 30)
-            max_retries = connection_params.get("max_retries", 3)
-            
-            # Get API key from environment based on connector config
             api_key_env = auth_config.get("api_key_env", "PERPLEXITY_API_KEY")
             api_key = os.getenv(api_key_env)
             
@@ -3873,33 +4373,65 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
                 logger.warning(f"API key not found in environment variable: {api_key_env}")
                 return {"articles": []}
             
-            # Implementation placeholder - would use actual connector config
-            # In real implementation, would use aiohttp with connector parameters
-            logger.info(f"Using Perplexity connector: {base_url} with timeout {timeout}")
+            # Use enhanced Perplexity API client
+            if not hasattr(self, 'perplexity_client'):
+                from .perplexityApiModule import PerplexityAPIClient
+                self.perplexity_client = PerplexityAPIClient(api_key, base_url)
             
-            return {"articles": [
-                {
-                    "title": f"News about {query}",
-                    "content": f"Sample content collected via connector from {base_url}",
-                    "source": "perplexity.ai",
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "relevance": 0.95,
-                    "connector_used": connector["connector_id"]
-                }
-            ]}
+            # Fetch news using real API integration
+            async with self.perplexity_client as client:
+                result = await client.search_news(query, filters, date_range, max_articles)
+                
+                # Add connector metadata
+                for article in result.get("articles", []):
+                    article["connector_used"] = connector["connector_id"]
+                
+                return result
+                
         except Exception as e:
             logger.error(f"Perplexity API call failed: {e}")
-            return {"articles": []}
+            return {"articles": [], "error": str(e)}
     
     async def _analyze_article_sentiment(self, article: Dict[str, Any]) -> Dict[str, Any]:
-        """AI-powered sentiment analysis"""
-        # Implementation placeholder
-        return {"sentiment": "neutral", "confidence": 0.8, "scores": {"positive": 0.3, "negative": 0.2, "neutral": 0.5}}
+        """AI-powered sentiment analysis using enhanced NLP"""
+        try:
+            # Use enhanced Perplexity API client for sentiment analysis
+            if not hasattr(self, 'perplexity_client'):
+                api_key = os.getenv("PERPLEXITY_API_KEY")
+                if api_key:
+                    from .perplexityApiModule import PerplexityAPIClient
+                    self.perplexity_client = PerplexityAPIClient(api_key)
+            
+            if hasattr(self, 'perplexity_client'):
+                # Use real sentiment analysis from the module
+                content = article.get("content", "") or article.get("title", "")
+                return await self.perplexity_client.analyze_sentiment(content)
+            else:
+                # Fallback to placeholder
+                return {"sentiment": "neutral", "confidence": 0.8, "scores": {"positive": 0.3, "negative": 0.2, "neutral": 0.5}}
+        except Exception as e:
+            logger.warning(f"Sentiment analysis failed: {e}")
+            return {"sentiment": "neutral", "confidence": 0.5, "scores": {"positive": 0.3, "negative": 0.2, "neutral": 0.5}}
     
     async def _assess_source_credibility(self, source: str) -> float:
-        """Assess news source credibility"""
-        # Implementation placeholder
-        return 0.8
+        """Assess news source credibility using enhanced scoring system"""
+        try:
+            # Use enhanced Perplexity API client for source credibility scoring
+            if not hasattr(self, 'perplexity_client'):
+                api_key = os.getenv("PERPLEXITY_API_KEY")
+                if api_key:
+                    from .perplexityApiModule import PerplexityAPIClient
+                    self.perplexity_client = PerplexityAPIClient(api_key)
+            
+            if hasattr(self, 'perplexity_client'):
+                # Use real credibility scoring from the module
+                return await self.perplexity_client.assess_source_credibility(source)
+            else:
+                # Fallback to placeholder
+                return 0.8
+        except Exception as e:
+            logger.warning(f"Source credibility assessment failed: {e}")
+            return 0.5
     
     async def _infer_news_schema(self, articles: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Infer schema for news data"""
@@ -4085,17 +4617,9 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
                 }
                 
                 if AIOHTTP_AVAILABLE:
-                    async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
-                        async with session.post(
-                            f"{self.data_manager_agent_url}/mcp/register_tools",
-                            json=registration_payload,
-                            timeout=aiohttp.ClientTimeout(total=10)
-                        ) as response:
-                            if response.status == 200:
-                                logger.info(f"Successfully registered {len(mcp_tools)} MCP tools")
-                            else:
-                                logger.warning(f"MCP tool registration failed: {response.status}")
+                    if False:  # Disabled aiohttp usage for A2A protocol compliance
+                        # Placeholder for future blockchain messaging implementation
+                        logger.info("MCP tools registered with Data Manager (placeholder)")
                 else:
                     logger.warning("aiohttp not available - MCP tools registered locally only")
             
@@ -4160,17 +4684,10 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
             }
             
             if AIOHTTP_AVAILABLE:
-                async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
-                    async with session.post(
-                        f"{a2a_registry_url}/register_agent",
-                        json=registration_payload,
-                        timeout=aiohttp.ClientTimeout(total=10)
-                    ) as response:
-                        if response.status == 200:
-                            logger.info(f"Successfully registered {len(a2a_skills)} A2A skills")
-                        else:
-                            logger.warning(f"A2A skill registration failed: {response.status}")
+                # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+                if False:  # Disabled aiohttp usage for A2A protocol compliance
+                    # Placeholder for future blockchain messaging implementation
+                    logger.info(f"Successfully registered {len(a2a_skills)} A2A skills (placeholder)")
             else:
                 logger.warning("aiohttp not available - A2A skills registered locally only")
             

@@ -243,7 +243,13 @@ class SparseVectorSkills:
             
         except Exception as e:
             logger.error(f"Sparse vector search failed: {e}")
-            return []
+            # Return empty results with proper structure
+            return {
+                'results': [],
+                'total_matches': 0,
+                'search_time': 0.0,
+                'error': str(e)
+            }
     
     async def _sparseToSparseSearch(self,
                                   queryData: Dict[str, Any],
@@ -524,9 +530,30 @@ class SparseVectorSkills:
         READS SQL DATA AS
         BEGIN
             DECLARE similarity DOUBLE;
-            -- Implementation would decode compressed data and compute similarity
-            -- For now, return placeholder
-            similarity := 0.85;
+            DECLARE i INTEGER;
+            DECLARE val1 DOUBLE;
+            DECLARE val2 DOUBLE;
+            DECLARE dot_product DOUBLE := 0.0;
+            DECLARE norm1 DOUBLE := 0.0;
+            DECLARE norm2 DOUBLE := 0.0;
+            
+            -- Decode compressed sparse vectors and compute cosine similarity
+            -- This is a simplified implementation for demonstration
+            FOR i IN 1..CARDINALITY(vector1) DO
+                val1 := vector1[i];
+                val2 := vector2[i];
+                dot_product := dot_product + (val1 * val2);
+                norm1 := norm1 + (val1 * val1);
+                norm2 := norm2 + (val2 * val2);
+            END FOR;
+            
+            -- Compute cosine similarity
+            IF norm1 > 0 AND norm2 > 0 THEN
+                similarity := dot_product / (SQRT(norm1) * SQRT(norm2));
+            ELSE
+                similarity := 0.0;
+            END IF;
+            
             RETURN similarity;
         END;
         """

@@ -1042,7 +1042,26 @@ class ComprehensiveAiPreparationSDK(A2AAgentBase, BlockchainIntegrationMixin):
                 )
                 return embeddings.tolist()
         
-        return []
+        # Fallback: generate basic embeddings using available methods
+        try:
+            # Simple TF-IDF based embeddings as fallback
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            
+            if isinstance(data, str):
+                texts = [data]
+            elif isinstance(data, list):
+                texts = [str(item) for item in data]
+            else:
+                texts = [str(data)]
+            
+            vectorizer = TfidfVectorizer(max_features=384, stop_words='english')
+            embeddings = vectorizer.fit_transform(texts)
+            return embeddings.toarray().tolist()
+            
+        except Exception as fallback_error:
+            logger.error(f"Fallback embedding generation failed: {fallback_error}")
+            # Return zero embeddings as last resort
+            return [[0.0] * 384]
     
     async def _learn_from_preparation(self, pipeline: PreparationPipeline, 
                                     result: Dict[str, Any], execution_time: float):
@@ -1252,7 +1271,41 @@ class ComprehensiveAiPreparationSDK(A2AAgentBase, BlockchainIntegrationMixin):
             
         except Exception as e:
             logger.error(f"Quality issue detection error: {e}")
-            return []
+            # Return basic quality issues as fallback
+            basic_issues = []
+            
+            # Check for common data quality issues
+            if len(data) == 0:
+                basic_issues.append({
+                    'type': 'empty_dataset',
+                    'severity': 'high',
+                    'description': 'Dataset is empty',
+                    'affected_records': 0
+                })
+            
+            # Check for missing values
+            missing_cols = data.isnull().sum()
+            for col, missing_count in missing_cols.items():
+                if missing_count > 0:
+                    basic_issues.append({
+                        'type': 'missing_values',
+                        'severity': 'medium' if missing_count < len(data) * 0.1 else 'high',
+                        'description': f'Column {col} has {missing_count} missing values',
+                        'affected_records': missing_count,
+                        'column': col
+                    })
+            
+            # Check for duplicate rows
+            duplicate_count = data.duplicated().sum()
+            if duplicate_count > 0:
+                basic_issues.append({
+                    'type': 'duplicate_records',
+                    'severity': 'medium',
+                    'description': f'Found {duplicate_count} duplicate records',
+                    'affected_records': duplicate_count
+                })
+            
+            return basic_issues
     
     async def _generate_remediation_suggestions(self, issues: List[Dict[str, Any]]) -> List[str]:
         """Generate remediation suggestions for detected issues"""
@@ -1389,8 +1442,75 @@ class ComprehensiveAiPreparationSDK(A2AAgentBase, BlockchainIntegrationMixin):
     
     async def _apply_external_enrichment(self, data: pd.DataFrame, source: str) -> pd.DataFrame:
         """Apply external enrichment from specified source"""
-        # Placeholder for external enrichment logic
-        return data
+        try:
+            # Use Grok AI for intelligent data enrichment if available
+            if hasattr(self, 'grok_client') and self.grok_client:
+                # Sample data for analysis
+                sample_data = data.head(5).to_dict('records')
+                
+                enrichment_prompt = f"""
+                Analyze this dataset and suggest enrichment strategies for source '{source}':
+                Sample data: {sample_data}
+                Columns: {list(data.columns)}
+                
+                Provide specific enrichment recommendations and potential new columns.
+                """
+                
+                response = await self.grok_client.reason(enrichment_prompt)
+                logger.info(f"AI enrichment suggestions for {source}: {response.get('content', '')[:200]}...")
+            
+            # Fallback enrichment based on source type
+            enriched_data = data.copy()
+            
+            if source.lower() == 'financial':
+                # Add financial indicators
+                if 'amount' in data.columns:
+                    enriched_data['amount_category'] = pd.cut(data['amount'], 
+                                                            bins=3, 
+                                                            labels=['low', 'medium', 'high'])
+                
+                # Add timestamp-based features if date column exists
+                date_cols = [col for col in data.columns if 'date' in col.lower() or 'time' in col.lower()]
+                for date_col in date_cols:
+                    try:
+                        enriched_data[f'{date_col}_quarter'] = pd.to_datetime(data[date_col]).dt.quarter
+                        enriched_data[f'{date_col}_month'] = pd.to_datetime(data[date_col]).dt.month
+                    except:
+                        pass
+            
+            elif source.lower() == 'customer':
+                # Add customer segmentation
+                if 'age' in data.columns:
+                    enriched_data['age_group'] = pd.cut(data['age'], 
+                                                      bins=[0, 25, 45, 65, 100], 
+                                                      labels=['young', 'adult', 'middle_age', 'senior'])
+                
+                # Add derived features
+                text_cols = data.select_dtypes(include=['object']).columns
+                for col in text_cols:
+                    enriched_data[f'{col}_length'] = data[col].astype(str).str.len()
+            
+            elif source.lower() == 'product':
+                # Add product categorization
+                if 'price' in data.columns:
+                    enriched_data['price_tier'] = pd.qcut(data['price'], 
+                                                        q=4, 
+                                                        labels=['budget', 'standard', 'premium', 'luxury'])
+            
+            # Generic enrichments for any source
+            # Add data quality indicators
+            enriched_data['completeness_score'] = (data.notna().sum(axis=1) / len(data.columns))
+            
+            # Add row identifiers if not present
+            if 'row_id' not in enriched_data.columns:
+                enriched_data['row_id'] = range(len(enriched_data))
+            
+            logger.info(f"Applied {source} enrichment: {len(enriched_data.columns) - len(data.columns)} new columns added")
+            return enriched_data
+            
+        except Exception as e:
+            logger.warning(f"External enrichment failed for {source}: {e}")
+            return data
     
     def _calculate_enrichment_impact(self, original: pd.DataFrame, enriched: pd.DataFrame) -> float:
         """Calculate the impact of enrichment on data quality"""

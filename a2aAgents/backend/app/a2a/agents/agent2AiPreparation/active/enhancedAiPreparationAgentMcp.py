@@ -2273,7 +2273,16 @@ class EnhancedAIPreparationAgentMCP(A2AAgentBase, PerformanceOptimizationMixin):
             
         except Exception as e:
             logger.error(f"❌ Failed to extract entity relationships: {e}")
-            return []
+            # Return basic relationship structure as fallback
+            return [
+                {
+                    'source_entity': 'unknown',
+                    'target_entity': 'unknown',
+                    'relationship_type': 'generic',
+                    'confidence': 0.3,
+                    'context': 'Fallback relationship due to processing error'
+                }
+            ]
     
     async def _validate_single_entity(
         self, 

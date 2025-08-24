@@ -759,8 +759,13 @@ class MCPHybridRankingSkills:
             
             # Filter by relationship types if specified
             if relationship_types:
-                # This is a simplified version - in reality you'd check relationship types
-                pass
+                # Filter links based on relationship types
+                filtered_links = []
+                for link in all_links:
+                    link_type = link.get('relationship_type', 'unknown')
+                    if link_type in relationship_types:
+                        filtered_links.append(link)
+                all_links = filtered_links
             
             link_graph[doc_id] = list(all_links)
         

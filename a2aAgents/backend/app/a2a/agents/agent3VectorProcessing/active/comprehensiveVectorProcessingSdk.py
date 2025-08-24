@@ -992,7 +992,36 @@ class ComprehensiveVectorProcessingSDK(A2AAgentBase, BlockchainIntegrationMixin)
             }
         
         else:
-            return {}
+            # Fallback: create basic in-memory index
+            try:
+                import numpy as np
+                from sklearn.neighbors import NearestNeighbors
+                
+                # Create basic KNN index as fallback
+                nn_model = NearestNeighbors(
+                    n_neighbors=min(10, len(vectors)),
+                    metric='cosine' if metric == 'cosine' else 'euclidean',
+                    algorithm='auto'
+                )
+                nn_model.fit(vectors)
+                
+                return {
+                    'index': nn_model,
+                    'index_type': 'sklearn_knn',
+                    'dimension': dimension,
+                    'metric': metric,
+                    'size': len(vectors)
+                }
+            except Exception as e:
+                logger.error(f"Fallback index creation failed: {e}")
+                return {
+                    'index': None,
+                    'index_type': 'none',
+                    'dimension': dimension,
+                    'metric': metric,
+                    'size': 0,
+                    'error': str(e)
+                }
     
     async def _build_faiss_index(self, vectors: np.ndarray, dimension: int,
                                index_type: str, metric: str, params: Dict[str, Any]) -> Any:

@@ -400,7 +400,8 @@ class EnhancedAIPreparationSkills:
     async def _hanaTextAnalysis(self, text: str) -> Dict[str, List[Dict]]:
         """Use HANA Text Analysis for entity extraction"""
         if not self.hanaClient:
-            return {}
+            # Fallback to basic NLP analysis when HANA client unavailable
+            return await self._fallback_text_analysis(text)
             
         try:
             # Create temporary table for text analysis
@@ -450,7 +451,8 @@ class EnhancedAIPreparationSkills:
             
         except Exception as e:
             logger.error(f"HANA text analysis failed: {e}")
-            return {}
+            # Fallback to basic NLP analysis on error
+            return await self._fallback_text_analysis(text)
             
     async def _extractDomainConcepts(self, text: str, entities: Dict) -> Dict[str, Any]:
         """Extract financial domain-specific concepts"""
@@ -474,19 +476,53 @@ class EnhancedAIPreparationSkills:
             if keyword in textLower:
                 context = self._extractKeywordContext(text, keyword, window=50)
                 domainConcepts['financialInstruments'].append({
-                    'concept': keyword,
+                    'keyword': keyword,
                     'context': context,
-                    'confidence': 0.85
+                    'confidence': 0.8
                 })
-                
-        # Similar extraction for other categories...
+        
+        # Extract risk indicators
+        for keyword in riskKeywords:
+            if keyword in textLower:
+                context = self._extractKeywordContext(text, keyword, window=50)
+                domainConcepts['riskIndicators'].append({
+                    'keyword': keyword,
+                    'context': context,
+                    'confidence': 0.8
+                })
+        
+        # Extract compliance terms
+        for keyword in complianceKeywords:
+            if keyword in textLower:
+                context = self._extractKeywordContext(text, keyword, window=50)
+                domainConcepts['complianceTerms'].append({
+                    'keyword': keyword,
+                    'context': context,
+                    'confidence': 0.8
+                })
         
         return domainConcepts
-    
-    async def _extractTemporalPatterns(self, entityData: Dict) -> Dict[str, Any]:
-        """Extract temporal patterns from entity data"""
-        temporalPatterns = {
-            'periodicity': None,
+
+    def _extractKeywordContext(self, text: str, keyword: str, window: int = 50) -> str:
+        """Extract context around a keyword"""
+        try:
+            text_lower = text.lower()
+            keyword_lower = keyword.lower()
+            
+            start_pos = text_lower.find(keyword_lower)
+            if start_pos == -1:
+                return ""
+            
+            context_start = max(0, start_pos - window)
+            context_end = min(len(text), start_pos + len(keyword) + window)
+            
+            return text[context_start:context_end].strip()
+        except Exception:
+            return ""
+
+    async def _analyzeTemporalPatterns(self, entityData: Dict) -> Dict[str, Any]:
+        """Analyze temporal patterns in entity data"""
+        patterns = {
             'trends': [],
             'seasonality': {},
             'anomalies': []
