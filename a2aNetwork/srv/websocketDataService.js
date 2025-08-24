@@ -103,15 +103,17 @@ class A2AWebSocketDataService extends EventEmitter {
             const serviceData = await new Promise(fetchServiceData);
 
             // Fetch blockchain stats
-            const blockchainData = await new Promise((resolve, reject) => {
+            const fetchBlockchainData = (resolve, reject) => {
+                const handleBlockchainResults = (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row || {});
+                };
                 this.db.get(
                     'SELECT * FROM BlockchainService_BlockchainStats ORDER BY timestamp DESC LIMIT 1',
-                    (err, row) => {
-                        if (err) reject(err);
-                        else resolve(row || {});
-                    }
+                    handleBlockchainResults
                 );
-            });
+            };
+            const blockchainData = await new Promise(fetchBlockchainData);
 
             // For now, use default health metrics since NetworkHealthMetrics table doesn't exist
             const healthMetrics = {
@@ -321,7 +323,7 @@ class A2AWebSocketDataService extends EventEmitter {
     }
 
     broadcastToSubscribers(stream, data) {
-        this.clients.forEach((client, clientId) => {
+        const broadcastToClient = (client, clientId) => {
             if (client.subscriptions.has(stream)) {
                 this.sendToClient(clientId, {
                     action: 'stream_update',
@@ -330,7 +332,8 @@ class A2AWebSocketDataService extends EventEmitter {
                     data
                 });
             }
-        });
+        };
+        this.clients.forEach(broadcastToClient);
     }
 
     startDataStreaming() {
@@ -373,10 +376,11 @@ class A2AWebSocketDataService extends EventEmitter {
     
     stopDataStreaming() {
         // Clear all intervals
-        for (const [name, intervalId] of this.intervals) {
+        const clearNamedInterval = (intervalId, name) => {
             clearInterval(intervalId);
             logger.debug(`Cleared interval: ${name}`);
-        }
+        };
+        this.intervals.forEach(clearNamedInterval);
         this.intervals.clear();
     }
     
@@ -387,9 +391,10 @@ class A2AWebSocketDataService extends EventEmitter {
         this.stopDataStreaming();
         
         // Close all client connections
-        for (const [clientId, ws] of this.clients) {
+        const closeClientConnection = (ws, clientId) => {
             ws.close(1001, 'Server shutting down');
-        }
+        };
+        this.clients.forEach(closeClientConnection);
         this.clients.clear();
         
         // Close WebSocket server
@@ -576,7 +581,7 @@ class A2AWebSocketDataService extends EventEmitter {
 
     performHealthCheck() {
         const now = Date.now();
-        this.clients.forEach((client, clientId) => {
+        const checkClient = (client, clientId) => {
             if (now - client.lastPing > 60000) { // 1 minute timeout
                 logger.info(`📡 Removing inactive client: ${clientId}`);
                 client.ws.terminate();
@@ -584,7 +589,8 @@ class A2AWebSocketDataService extends EventEmitter {
             } else if (client.ws.readyState === WebSocket.OPEN) {
                 client.ws.ping();
             }
-        });
+        };
+        this.clients.forEach(checkClient);
     }
 
     generateClientId() {

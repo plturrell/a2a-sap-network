@@ -1,0 +1,183 @@
+# A2A Platform Alerting Rules
+groups:
+  - name: a2a-platform-critical
+    interval: 30s
+    rules:
+      # Service availability alerts
+      - alert: A2AServiceDown
+        expr: up{job=~"a2a-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "A2A service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.a2a-platform.com/runbooks/service-down"
+
+      # High error rate
+      - alert: A2AHighErrorRate
+        expr: (rate(a2a_errors_total[5m]) / rate(a2a_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate detected in {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}."
+          runbook_url: "https://docs.a2a-platform.com/runbooks/high-error-rate"
+
+      # Critical vulnerabilities found
+      - alert: A2ACriticalVulnerabilities
+        expr: a2a_security_vulnerabilities{severity="critical"} > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Critical security vulnerabilities detected"
+          description: "{{ $value }} critical vulnerabilities found in {{ $labels.directory }}."
+          runbook_url: "https://docs.a2a-platform.com/runbooks/critical-vulnerabilities"
+
+      # Agent processing failures
+      - alert: A2AAgentProcessingFailure
+        expr: rate(a2a_agent_processing_errors_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          agent: "{{ $labels.agent_id }}"
+        annotations:
+          summary: "Agent {{ $labels.agent_id }} processing failures"
+          description: "Agent {{ $labels.agent_id }} has {{ $value }} processing failures per second."
+          runbook_url: "https://docs.a2a-platform.com/runbooks/agent-failures"
+
+  - name: a2a-platform-warning
+    interval: 60s
+    rules:
+      # High response time
+      - alert: A2AHighResponseTime
+        expr: histogram_quantile(0.95, rate(a2a_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High response time for {{ $labels.service }}"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.service }}."
+
+      # High memory usage
+      - alert: A2AHighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          instance: "{{ $labels.instance }}"
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}."
+
+      # High CPU usage
+      - alert: A2AHighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          instance: "{{ $labels.instance }}"
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}."
+
+      # Disk space warning
+      - alert: A2ADiskSpaceWarning
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          instance: "{{ $labels.instance }}"
+          mountpoint: "{{ $labels.mountpoint }}"
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }} at {{ $labels.mountpoint }}."
+
+      # Glean Agent slow operations
+      - alert: A2AGleanAgentSlowOperations
+        expr: histogram_quantile(0.95, rate(a2a_operation_duration_ms_bucket{operation=~".*_analysis"}[10m])) > 5000
+        for: 5m
+        labels:
+          severity: warning
+          operation: "{{ $labels.operation }}"
+        annotations:
+          summary: "Slow Glean Agent operation: {{ $labels.operation }}"
+          description: "95th percentile duration for {{ $labels.operation }} is {{ $value }}ms."
+
+  - name: a2a-database-alerts
+    interval: 60s
+    rules:
+      # Database connection issues
+      - alert: A2ADatabaseConnectionsHigh
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+          database: postgres
+        annotations:
+          summary: "High number of database connections"
+          description: "{{ $value }} active connections to PostgreSQL database."
+
+      # Database slow queries
+      - alert: A2ASlowQueries
+        expr: rate(pg_stat_statements_mean_time_ms[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          database: postgres
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time is {{ $value }}ms."
+
+      # Redis memory usage
+      - alert: A2ARedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}."
+
+  - name: a2a-business-metrics
+    interval: 120s
+    rules:
+      # Code analysis success rate
+      - alert: A2AAnalysisSuccessRateLow
+        expr: (rate(a2a_analysis_successful_total[10m]) / rate(a2a_analysis_total[10m])) < 0.9
+        for: 10m
+        labels:
+          severity: warning
+          component: analysis
+        annotations:
+          summary: "Low code analysis success rate"
+          description: "Code analysis success rate is {{ $value | humanizePercentage }}."
+
+      # Security scan coverage
+      - alert: A2ASecurityScanCoverageLow
+        expr: (a2a_files_scanned_total / a2a_files_total) < 0.8
+        for: 15m
+        labels:
+          severity: info
+          component: security
+        annotations:
+          summary: "Low security scan coverage"
+          description: "Only {{ $value | humanizePercentage }} of files are being scanned for security issues."
+
+      # Agent availability
+      - alert: A2AAgentUnavailable
+        expr: a2a_agent_status{status!="healthy"} == 1
+        for: 2m
+        labels:
+          severity: warning
+          agent: "{{ $labels.agent_id }}"
+        annotations:
+          summary: "Agent {{ $labels.agent_id }} is not healthy"
+          description: "Agent {{ $labels.agent_id }} status is {{ $labels.status }}."

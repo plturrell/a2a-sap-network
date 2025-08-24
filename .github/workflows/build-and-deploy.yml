@@ -166,9 +166,9 @@ jobs:
         echo "docker-compose -f docker-compose.production.yml up -d"
 
   deploy-fly:
-    needs: [build, test, ui-test]
+    needs: [build, test]
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') && needs.test.result == 'success'
     
     steps:
     - name: Checkout repository

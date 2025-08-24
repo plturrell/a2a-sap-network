@@ -35,7 +35,7 @@ sap.ui.define([
          * @returns {Promise} Authentication result
          */
         authenticate: function(username, password, authMethod = 'BasicAuth') {
-            return new Promise((resolve, reject) => {
+            const authenticateUser = (resolve, reject) => {
                 // Validate input parameters
                 const usernameValidation = SecurityUtils.validateInput(username, 'text', {
                     required: true,
@@ -83,7 +83,7 @@ sap.ui.define([
                     contentType: 'application/json',
                     data: JSON.stringify(authRequest),
                     timeout: 10000, // 10 second timeout
-                    success: (response) => {
+                    success: function handleAuthSuccess(response) {
                         if (response.success && response.token) {
                             this._handleSuccessfulAuthentication(response, sanitizedUsername);
                             SecurityUtils.auditLog('AUTHENTICATION_SUCCESS', {
@@ -100,7 +100,7 @@ sap.ui.define([
                             reject(new Error('Authentication failed'));
                         }
                     },
-                    error: (xhr) => {
+                    error: function handleAuthError(xhr) {
                         const errorMsg = SecurityUtils.sanitizeErrorMessage(xhr.responseText);
                         SecurityUtils.auditLog('AUTHENTICATION_ERROR', {
                             error: errorMsg,
@@ -109,7 +109,8 @@ sap.ui.define([
                         reject(new Error('Authentication service unavailable'));
                     }
                 });
-            });
+            };
+            return new Promise(authenticateUser);
         },
 
         /**
@@ -235,7 +236,7 @@ sap.ui.define([
          * @returns {Promise} Token refresh result
          */
         refreshToken: function() {
-            return new Promise((resolve, reject) => {
+            const refreshAuthToken = (resolve, reject) => {
                 if (!this._sessionToken) {
                     reject(new Error('No session token to refresh'));
                     return;
@@ -253,7 +254,7 @@ sap.ui.define([
                         sessionId: this._currentUser.sessionId,
                         refreshToken: this._currentUser.refreshToken
                     }),
-                    success: (response) => {
+                    success: function handleRefreshSuccess(response) {
                         if (response.success && response.token) {
                             this._sessionToken = response.token;
                             this._lastActivity = Date.now();
@@ -266,7 +267,7 @@ sap.ui.define([
                             reject(new Error('Token refresh failed'));
                         }
                     },
-                    error: (xhr) => {
+                    error: function handleRefreshError(xhr) {
                         const errorMsg = SecurityUtils.sanitizeErrorMessage(xhr.responseText);
                         SecurityUtils.auditLog('TOKEN_REFRESH_FAILED', {
                             error: errorMsg,
@@ -275,7 +276,8 @@ sap.ui.define([
                         reject(new Error('Token refresh service unavailable'));
                     }
                 });
-            });
+            };
+            return new Promise(refreshAuthToken);
         },
 
         /**
@@ -306,17 +308,23 @@ sap.ui.define([
 
         _setupSessionMonitoring: function() {
             // Monitor user activity
-            document.addEventListener('click', () => this.recordActivity());
-            document.addEventListener('keypress', () => this.recordActivity());
-            document.addEventListener('scroll', () => this.recordActivity());
-            document.addEventListener('mousemove', () => this.recordActivity());
+            const recordClickActivity = () => this.recordActivity();
+            const recordKeypressActivity = () => this.recordActivity();
+            const recordScrollActivity = () => this.recordActivity();
+            const recordMouseActivity = () => this.recordActivity();
+            
+            document.addEventListener('click', recordClickActivity);
+            document.addEventListener('keypress', recordKeypressActivity);
+            document.addEventListener('scroll', recordScrollActivity);
+            document.addEventListener('mousemove', recordMouseActivity);
 
             // Set up periodic session validation
-            this._authCheckInterval = setInterval(() => {
+            const performAuthCheck = () => {
                 if (this.isAuthenticated()) {
                     this._validateSession();
                 }
-            }, 60000); // Check every minute
+            };
+            this._authCheckInterval = setInterval(performAuthCheck, 60000); // Check every minute
         },
 
         _setupAuthenticationCheck: function() {

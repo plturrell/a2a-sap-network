@@ -245,7 +245,7 @@ entity ReputationRules : cuid, managed {
 
 // Service definition extensions
 // Note: The reputation entities are already exposed in the A2AService
-extend service A2AService with {
-    
-    // Note: Reputation actions, functions and events are already defined in the main A2AService
-}
+// extend service A2AService with {
+//     
+//     // Note: Reputation actions, functions and events are already defined in the main A2AService
+// }

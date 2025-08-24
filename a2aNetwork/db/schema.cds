@@ -4608,7 +4608,7 @@ entity CatalogSearches : cuid, managed {
     @Common.Label: 'Search Type'
     searchType         : String(20) enum {
         KEYWORD; CATEGORY; TAG; METADATA; ADVANCED; SEMANTIC;
- not null;
+    } not null;
     
     @Common.Label: 'Filters Applied'
     @Core.MediaType: 'application/json'

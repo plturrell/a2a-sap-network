@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "a2a/network/agent9/ext/utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
+    "a2a/network/agent9/ext/utils/SecurityUtils",
+    "a2a/network/agent9/ext/utils/AuthHandler"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils, AuthHandler) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent9.ext.controller.ObjectPageExt", {
@@ -14,6 +15,7 @@ sap.ui.define([
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
+                this._authHandler = AuthHandler;
                 
                 // Initialize device model for responsive behavior
                 var oDeviceModel = new JSONModel(sap.ui.Device);
@@ -1363,8 +1365,19 @@ sap.ui.define([
         },
 
         _resolveContradictions: function(contradictions) {
+            if (!this._securityUtils.hasRole("ReasoningManager")) {
+                MessageBox.error("Access denied: Reasoning Manager role required");
+                this._securityUtils.auditLog("RESOLVE_CONTRADICTIONS_ACCESS_DENIED", { action: "resolve_contradictions" });
+                return;
+            }
+
             var oContext = this._extensionAPI.getBindingContext();
             var sTaskId = oContext.getProperty("ID");
+            
+            if (!sTaskId || typeof sTaskId !== "string" || sTaskId.trim() === "") {
+                MessageBox.error("Invalid task ID");
+                return;
+            }
             
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
                 url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/resolve-contradictions",
@@ -1385,10 +1398,12 @@ sap.ui.define([
                         "Consistency improved to: " + safeConsistency + "%"
                     );
                     this._extensionAPI.refresh();
+                    this._securityUtils.auditLog("RESOLVE_CONTRADICTIONS_SUCCESS", { taskId: sTaskId, resolved: safeResolved, remaining: safeRemaining });
                 }.bind(this),
                 error: function(xhr) {
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Failed to resolve contradictions: " + errorMsg);
+                    this._securityUtils.auditLog("RESOLVE_CONTRADICTIONS_FAILED", { taskId: sTaskId, error: xhr.status });
                 }.bind(this)
             });
             
@@ -1396,6 +1411,12 @@ sap.ui.define([
         },
 
         onConfirmDecision: function() {
+            if (!this._securityUtils.hasRole("DecisionMaker")) {
+                MessageBox.error("Access denied: Decision Maker role required");
+                this._securityUtils.auditLog("CONFIRM_DECISION_ACCESS_DENIED", { action: "confirm_decision" });
+                return;
+            }
+
             var oModel = this._oDecisionDialog.getModel("decision");
             var oData = oModel.getData();
             
@@ -1403,13 +1424,17 @@ sap.ui.define([
                 MessageBox.error("Please define decision criteria");
                 return;
             }
+
+            if (!oData.taskId || typeof oData.taskId !== "string" || oData.taskId.trim() === "") {
+                MessageBox.error("Invalid task ID");
+                return;
+            }
             
             this._oDecisionDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + oData.taskId + "/decide",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(oData.taskId) + "/decide",
                 type: "POST",
-                contentType: "application/json",
                 data: JSON.stringify(oData),
                 success: function(data) {
                     this._oDecisionDialog.setBusy(false);
@@ -1426,25 +1451,39 @@ sap.ui.define([
                     );
                     
                     this._extensionAPI.refresh();
+                    this._securityUtils.auditLog("CONFIRM_DECISION_SUCCESS", { taskId: oData.taskId, action: safeAction, confidence: safeConfidence });
                 }.bind(this),
                 error: function(xhr) {
                     this._oDecisionDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Decision making failed: " + errorMsg);
+                    this._securityUtils.auditLog("CONFIRM_DECISION_FAILED", { taskId: oData.taskId, error: xhr.status });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         onConfirmKnowledgeUpdate: function() {
+            if (!this._securityUtils.hasRole("KnowledgeManager")) {
+                MessageBox.error("Access denied: Knowledge Manager role required");
+                this._securityUtils.auditLog("CONFIRM_KNOWLEDGE_UPDATE_ACCESS_DENIED", { action: "confirm_knowledge_update" });
+                return;
+            }
+
             var oModel = this._oKnowledgeUpdateDialog.getModel("update");
             var oData = oModel.getData();
             
+            if (!oData.taskId || typeof oData.taskId !== "string" || oData.taskId.trim() === "") {
+                MessageBox.error("Invalid task ID");
+                return;
+            }
+            
             this._oKnowledgeUpdateDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + oData.taskId + "/update-knowledge",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(oData.taskId) + "/update-knowledge",
                 type: "POST",
-                contentType: "application/json",
                 data: JSON.stringify(oData),
                 success: function(data) {
                     this._oKnowledgeUpdateDialog.setBusy(false);
@@ -1461,13 +1500,17 @@ sap.ui.define([
                     );
                     
                     this._extensionAPI.refresh();
+                    this._securityUtils.auditLog("CONFIRM_KNOWLEDGE_UPDATE_SUCCESS", { taskId: oData.taskId, factsAdded: safeFacts, rulesUpdated: safeRules });
                 }.bind(this),
                 error: function(xhr) {
                     this._oKnowledgeUpdateDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Knowledge update failed: " + errorMsg);
+                    this._securityUtils.auditLog("CONFIRM_KNOWLEDGE_UPDATE_FAILED", { taskId: oData.taskId, error: xhr.status });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         // Placeholder visualization functions for future chart implementations

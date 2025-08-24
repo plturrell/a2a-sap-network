@@ -1,19 +1,19 @@
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent14/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
     "use strict";
 
     /**
      * @class a2a.network.agent14.ext.controller.ListReportExt
      * @extends sap.ui.core.mvc.ControllerExtension
      * @description Controller extension for Agent 14 List Report - Backup Management Agent.
-     * Provides comprehensive backup management capabilities including backup creation, scheduling,
-     * status monitoring, and recovery planning with enterprise-grade security.
+     * Provides comprehensive backup creation, scheduling, and status monitoring
+     * with enterprise-grade security, audit logging, and accessibility features.
      */
     return ControllerExtension.extend("a2a.network.agent14.ext.controller.ListReportExt", {
         
@@ -29,7 +29,7 @@ sap.ui.define([
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
                 this._initializePerformanceOptimizations();
-                this._startRealtimeBackupUpdates();
+                this._startRealtimeUpdates();
                 this._initializeSecurity();
             },
             
@@ -54,88 +54,6 @@ sap.ui.define([
             maxRetries: 3,
             retryDelay: 1000,
             exponentialBackoff: true
-        },
-        
-        /**
-         * @function _initializeDeviceModel
-         * @description Sets up device model for responsive design.
-         * @private
-         */
-        _initializeDeviceModel: function() {
-            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
-            this.base.getView().setModel(oDeviceModel, "device");
-        },
-        
-        /**
-         * @function _initializeDialogCache
-         * @description Initializes dialog cache for performance.
-         * @private
-         */
-        _initializeDialogCache: function() {
-            this._dialogCache = {};
-        },
-        
-        /**
-         * @function _initializePerformanceOptimizations
-         * @description Sets up performance optimization features.
-         * @private
-         */
-        _initializePerformanceOptimizations: function() {
-            // Throttle dashboard updates
-            this._throttledDashboardUpdate = this._throttle(this._loadDashboardData.bind(this), 1000);
-            // Debounce model search operations
-            this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
-        },
-        
-        /**
-         * @function _throttle
-         * @description Creates a throttled function.
-         * @param {Function} fn - Function to throttle
-         * @param {number} limit - Time limit in milliseconds
-         * @returns {Function} Throttled function
-         * @private
-         */
-        _throttle: function(fn, limit) {
-            var inThrottle;
-            return function() {
-                var args = arguments;
-                var context = this;
-                if (!inThrottle) {
-                    fn.apply(context, args);
-                    inThrottle = true;
-                    setTimeout(function() { inThrottle = false; }, limit);
-                }
-            };
-        },
-        
-        /**
-         * @function _debounce
-         * @description Creates a debounced function.
-         * @param {Function} fn - Function to debounce
-         * @param {number} delay - Delay in milliseconds
-         * @returns {Function} Debounced function
-         * @private
-         */
-        _debounce: function(fn, delay) {
-            var timeoutId;
-            return function() {
-                var context = this;
-                var args = arguments;
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(function() {
-                    fn.apply(context, args);
-                }, delay);
-            };
-        },
-        
-        /**
-         * @function _performSearch
-         * @description Performs search operation for backup tasks.
-         * @param {string} sQuery - Search query
-         * @private
-         */
-        _performSearch: function(sQuery) {
-            // Implement search logic for backup tasks
         },
 
         /**
@@ -261,6 +179,428 @@ sap.ui.define([
         },
 
         /**
+         * @function _executeBackupCreation
+         * @description Executes backup creation for selected tasks.
+         * @param {Array} aSelectedContexts - Selected backup task contexts
+         * @private
+         */
+        _executeBackupCreation: function(aSelectedContexts) {
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            // Show progress dialog
+            this._getOrCreateDialog("backupProgress", "a2a.network.agent14.ext.fragment.BackupProgress")
+                .then(function(oProgressDialog) {
+                    var oProgressModel = new JSONModel({
+                        totalTasks: aTaskIds.length,
+                        completedTasks: 0,
+                        currentTask: "",
+                        progress: 0,
+                        status: "Starting backup creation...",
+                        statistics: {
+                            dataSize: 0,
+                            compressedSize: 0,
+                            compressionRatio: 0,
+                            transferRate: 0
+                        },
+                        backupResults: []
+                    });
+                    oProgressDialog.setModel(oProgressModel, "progress");
+                    oProgressDialog.open();
+                    
+                    this._runBackupCreation(aTaskIds, oProgressDialog);
+                }.bind(this));
+        },
+
+        /**
+         * @function _runBackupCreation
+         * @description Runs backup creation with real-time progress updates.
+         * @param {Array} aTaskIds - Array of task IDs to backup
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _runBackupCreation: function(aTaskIds, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/CreateBackups", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(','),
+                    backupType: "FULL",
+                    compressionEnabled: true,
+                    encryptionEnabled: true,
+                    verificationEnabled: true
+                },
+                success: function(data) {
+                    MessageToast.show(this.getResourceBundle().getText("msg.backupStarted"));
+                    this._startBackupMonitoring(data.backupId, oProgressDialog);
+                    this._auditLogger.log("BACKUP_CREATION_STARTED", { 
+                        taskCount: aTaskIds.length, 
+                        backupId: data.backupId,
+                        success: true 
+                    });
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error(this.getResourceBundle().getText("error.backupFailed"));
+                    oProgressDialog.close();
+                    this._auditLogger.log("BACKUP_CREATION_FAILED", { 
+                        taskCount: aTaskIds.length, 
+                        error: error.message 
+                    });
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _startBackupMonitoring
+         * @description Starts real-time monitoring of backup progress.
+         * @param {string} sBackupId - Backup ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startBackupMonitoring: function(sBackupId, oProgressDialog) {
+            if (this._backupEventSource) {
+                this._backupEventSource.close();
+            }
+            
+            try {
+                this._backupEventSource = new EventSource('/api/agent14/backup/stream/' + sBackupId);
+                
+                this._backupEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this._updateBackupProgress(data, oProgressDialog);
+                    } catch (error) {
+                        console.error('Error parsing backup progress data:', error);
+                    }
+                }.bind(this);
+                
+                this._backupEventSource.onerror = function(error) {
+                    console.warn('Backup stream error, falling back to polling:', error);
+                    this._startBackupPolling(sBackupId, oProgressDialog);
+                }.bind(this);
+                
+            } catch (error) {
+                console.warn('EventSource not available, using polling fallback');
+                this._startBackupPolling(sBackupId, oProgressDialog);
+            }
+        },
+
+        /**
+         * @function _loadBackupSchedules
+         * @description Loads backup schedules and configuration.
+         * @param {sap.m.Dialog} oDialog - Schedule dialog
+         * @private
+         */
+        _loadBackupSchedules: function(oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetBackupSchedules", {
+                success: function(data) {
+                    var oScheduleModel = oDialog.getModel("schedule");
+                    if (oScheduleModel) {
+                        var oCurrentData = oScheduleModel.getData();
+                        oCurrentData.schedules = data.schedules || [];
+                        oCurrentData.policies = data.policies || [];
+                        oCurrentData.storageTargets = data.storageTargets || [];
+                        oScheduleModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load backup schedules: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _loadBackupStatus
+         * @description Loads backup status information.
+         * @param {sap.m.Dialog} oDialog - Status dialog
+         * @private
+         */
+        _loadBackupStatus: function(oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetBackupStatus", {
+                success: function(data) {
+                    var oStatusModel = oDialog.getModel("status");
+                    if (oStatusModel) {
+                        var oCurrentData = oStatusModel.getData();
+                        oCurrentData.backups = data.backups || [];
+                        oCurrentData.statistics = data.statistics || {};
+                        oCurrentData.storageUtilization = data.storageUtilization || {};
+                        oCurrentData.trends = data.trends || {};
+                        oStatusModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                    
+                    // Start auto-refresh if enabled
+                    if (oCurrentData.autoRefresh) {
+                        this._startStatusAutoRefresh(oDialog);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load backup status: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _updateBackupProgress
+         * @description Updates backup progress display.
+         * @param {Object} data - Progress data
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _updateBackupProgress: function(data, oProgressDialog) {
+            if (!oProgressDialog || !oProgressDialog.isOpen()) return;
+            
+            var oProgressModel = oProgressDialog.getModel("progress");
+            if (oProgressModel) {
+                var oCurrentData = oProgressModel.getData();
+                oCurrentData.completedTasks = data.completedTasks || oCurrentData.completedTasks;
+                oCurrentData.currentTask = data.currentTask || oCurrentData.currentTask;
+                oCurrentData.progress = Math.round((oCurrentData.completedTasks / oCurrentData.totalTasks) * 100);
+                oCurrentData.status = data.status || oCurrentData.status;
+                
+                if (data.statistics) {
+                    oCurrentData.statistics = data.statistics;
+                }
+                
+                if (data.backupResults && data.backupResults.length > 0) {
+                    oCurrentData.backupResults = oCurrentData.backupResults.concat(data.backupResults);
+                }
+                
+                oProgressModel.setData(oCurrentData);
+                
+                // Check if all tasks are completed
+                if (oCurrentData.completedTasks >= oCurrentData.totalTasks) {
+                    this._completeBackup(oProgressDialog);
+                }
+            }
+        },
+
+        /**
+         * @function _completeBackup
+         * @description Handles completion of backup operation.
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _completeBackup: function(oProgressDialog) {
+            setTimeout(() => {
+                oProgressDialog.close();
+                MessageToast.show(this.getResourceBundle().getText("msg.backupCompleted"));
+                this._refreshBackupData();
+                this._auditLogger.log("BACKUP_COMPLETED", { status: "SUCCESS" });
+            }, 2000);
+            
+            // Clean up event source
+            if (this._backupEventSource) {
+                this._backupEventSource.close();
+                this._backupEventSource = null;
+            }
+        },
+
+        /**
+         * @function _refreshBackupData
+         * @description Refreshes backup task data in the table.
+         * @private
+         */
+        _refreshBackupData: function() {
+            const oBinding = this.base.getView().byId("fe::table::BackupTasks::LineItem").getBinding("rows");
+            if (oBinding) {
+                oBinding.refresh();
+            }
+        },
+
+        /**
+         * @function _startRealtimeUpdates
+         * @description Starts real-time updates for backup events.
+         * @private
+         */
+        _startRealtimeUpdates: function() {
+            this._initializeWebSocket();
+        },
+
+        /**
+         * @function _initializeWebSocket
+         * @description Initializes secure WebSocket connection for real-time backup updates.
+         * @private
+         */
+        _initializeWebSocket: function() {
+            if (this._ws) return;
+
+            // Validate WebSocket URL for security
+            if (!this._securityUtils.validateWebSocketUrl('ws://localhost:8014/backup/updates')) {
+                MessageBox.error("Invalid WebSocket URL");
+                return;
+            }
+
+            try {
+                this._ws = SecurityUtils.createSecureWebSocket('ws://localhost:8014/backup/updates', {
+                    onMessage: function(data) {
+                        this._handleBackupUpdate(data);
+                    }.bind(this)
+                });
+                
+                this._ws.onclose = function() {
+                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
+                    MessageToast.show(sMessage);
+                    setTimeout(() => this._initializeWebSocket(), 5000);
+                }.bind(this);
+
+            } catch (error) {
+                console.warn("WebSocket connection failed, falling back to polling");
+                this._initializePolling();
+            }
+        },
+
+        /**
+         * @function _initializePolling
+         * @description Initializes polling fallback for real-time updates.
+         * @private
+         */
+        _initializePolling: function() {
+            this._pollInterval = setInterval(() => {
+                this._refreshBackupData();
+            }, 5000);
+        },
+
+        /**
+         * @function _handleBackupUpdate
+         * @description Handles real-time backup updates from WebSocket.
+         * @param {Object} data - Update data
+         * @private
+         */
+        _handleBackupUpdate: function(data) {
+            try {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                
+                switch (data.type) {
+                    case 'BACKUP_STARTED':
+                        var sBackupStarted = oBundle.getText("msg.backupStarted") || "Backup started";
+                        MessageToast.show(sBackupStarted);
+                        break;
+                    case 'BACKUP_PROGRESS':
+                        this._updateBackupProgress(data);
+                        break;
+                    case 'BACKUP_COMPLETED':
+                        var sBackupCompleted = oBundle.getText("msg.backupCompleted") || "Backup completed";
+                        MessageToast.show(sBackupCompleted);
+                        this._refreshBackupData();
+                        break;
+                    case 'BACKUP_FAILED':
+                        var sBackupFailed = oBundle.getText("error.backupFailed") || "Backup failed";
+                        MessageBox.error(sBackupFailed + ": " + data.message);
+                        break;
+                    case 'RESTORE_COMPLETED':
+                        var sRestoreCompleted = oBundle.getText("msg.restoreCompleted") || "Restore completed";
+                        MessageToast.show(sRestoreCompleted);
+                        this._refreshBackupData();
+                        break;
+                    case 'STORAGE_WARNING':
+                        var sStorageWarning = oBundle.getText("msg.storageWarning") || "Storage warning";
+                        MessageBox.warning(sStorageWarning + ": " + data.message);
+                        break;
+                    case 'VERIFICATION_FAILED':
+                        var sVerificationFailed = oBundle.getText("msg.verificationFailed") || "Backup verification failed";
+                        MessageBox.error(sVerificationFailed + ": " + data.message);
+                        break;
+                }
+            } catch (error) {
+                console.error("Error processing backup update:", error);
+            }
+        },
+        
+        /**
+         * @function _initializeDeviceModel
+         * @description Sets up device model for responsive design.
+         * @private
+         */
+        _initializeDeviceModel: function() {
+            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+            this.base.getView().setModel(oDeviceModel, "device");
+        },
+        
+        /**
+         * @function _initializeDialogCache
+         * @description Initializes dialog cache for performance.
+         * @private
+         */
+        _initializeDialogCache: function() {
+            this._dialogCache = {};
+        },
+        
+        /**
+         * @function _initializePerformanceOptimizations
+         * @description Sets up performance optimization features.
+         * @private
+         */
+        _initializePerformanceOptimizations: function() {
+            // Throttle backup data updates
+            this._throttledBackupUpdate = this._throttle(this._refreshBackupData.bind(this), 1000);
+            // Debounce search operations
+            this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
+        },
+        
+        /**
+         * @function _performSearch
+         * @description Performs search operation for backup tasks.
+         * @param {string} sQuery - Search query
+         * @private
+         */
+        _performSearch: function(sQuery) {
+            // Implement search logic for backup tasks
+        },
+        
+        /**
+         * @function _throttle
+         * @description Creates a throttled function.
+         * @param {Function} fn - Function to throttle
+         * @param {number} limit - Time limit in milliseconds
+         * @returns {Function} Throttled function
+         * @private
+         */
+        _throttle: function(fn, limit) {
+            var inThrottle;
+            return function() {
+                var args = arguments;
+                var context = this;
+                if (!inThrottle) {
+                    fn.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(function() { inThrottle = false; }, limit);
+                }
+            };
+        },
+        
+        /**
+         * @function _debounce
+         * @description Creates a debounced function.
+         * @param {Function} fn - Function to debounce
+         * @param {number} delay - Delay in milliseconds
+         * @returns {Function} Debounced function
+         * @private
+         */
+        _debounce: function(fn, delay) {
+            var timeoutId;
+            return function() {
+                var context = this;
+                var args = arguments;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    fn.apply(context, args);
+                }, delay);
+            };
+        },
+
+        /**
          * @function _getOrCreateDialog
          * @description Gets cached dialog or creates new one with accessibility and responsive features.
          * @param {string} sDialogId - Dialog identifier
@@ -338,1209 +678,97 @@ sap.ui.define([
                 oDialog.setContentHeight("90%");
             }
         },
-        
+
         /**
-         * @function _withErrorRecovery
-         * @description Wraps operation with error recovery.
-         * @param {Function} fnOperation - Operation to execute
-         * @param {Object} oOptions - Recovery options
-         * @returns {Promise} Promise with error recovery
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
          * @private
          */
-        _withErrorRecovery: function(fnOperation, oOptions) {
-            var that = this;
-            var oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
-            
-            function attempt(retriesLeft, delay) {
-                return fnOperation().catch(function(error) {
-                    if (retriesLeft > 0) {
-                        var oBundle = that.base.getView().getModel("i18n").getResourceBundle();
-                        var sRetryMsg = oBundle.getText("recovery.retrying") || "Network error. Retrying...";
-                        MessageToast.show(sRetryMsg);
-                        
-                        return new Promise(function(resolve) {
-                            setTimeout(resolve, delay);
-                        }).then(function() {
-                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
-                            return attempt(retriesLeft - 1, nextDelay);
-                        });
-                    }
-                    throw error;
-                });
-            }
-            
-            return attempt(oConfig.maxRetries, oConfig.retryDelay);
-        },
-
-        /**
-         * @function onCreateEmbeddingModel
-         * @description Opens dialog to create new embedding model with configuration options.
-         * @public
-         */
-        onCreateEmbeddingModel: function() {
-            this._getOrCreateDialog("createModelDialog", "a2a.network.agent14.ext.fragment.CreateEmbeddingModel")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
-                        modelName: "",
-                        description: "",
-                        modelType: "sentence_bert",
-                        baseModel: "bert_base",
-                        embeddingDimension: 768,
-                        architecture: "transformer",
-                        tokenizer: "wordpiece",
-                        normalization: true,
-                        quantization: false,
-                        mixedPrecision: true,
-                        autoOptimization: true
-                    });
-                    oDialog.setModel(oModel, "create");
-                    oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Create Embedding Model dialog: " + error.message);
-                });
-        },
-
-        /**
-         * @function onStartFineTuning
-         * @description Opens fine-tuning wizard for selected embedding model.
-         * @public
-         */
-        onStartFineTuning: function() {
-            const oBinding = this.base.getView().byId("fe::table::EmbeddingModels::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectModelsFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("fineTuningWizard", "a2a.network.agent14.ext.fragment.FineTuningWizard")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._initializeFineTuningWizard(aSelectedContexts[0], oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Fine-Tuning Wizard: " + error.message);
-                });
-        },
-
-        /**
-         * @function onModelEvaluator
-         * @description Opens model evaluation interface for performance assessment.
-         * @public
-         */
-        onModelEvaluator: function() {
-            const oBinding = this.base.getView().byId("fe::table::EmbeddingModels::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectModelsFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("modelEvaluator", "a2a.network.agent14.ext.fragment.ModelEvaluator")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadEvaluationData(aSelectedContexts, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Model Evaluator: " + error.message);
-                });
-        },
-
-        /**
-         * @function onBenchmarkRunner
-         * @description Opens benchmark runner for model performance testing.
-         * @public
-         */
-        onBenchmarkRunner: function() {
-            const oBinding = this.base.getView().byId("fe::table::EmbeddingModels::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectModelsFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("benchmarkRunner", "a2a.network.agent14.ext.fragment.BenchmarkRunner")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadBenchmarkSuites(aSelectedContexts, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Benchmark Runner: " + error.message);
-                });
-        },
-
-        /**
-         * @function onHyperparameterTuner
-         * @description Opens hyperparameter optimization interface for model tuning.
-         * @public
-         */
-        onHyperparameterTuner: function() {
-            const oBinding = this.base.getView().byId("fe::table::EmbeddingModels::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectModelsFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("hyperparameterTuner", "a2a.network.agent14.ext.fragment.HyperparameterTuner")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._initializeHyperparameterTuner(aSelectedContexts[0], oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Hyperparameter Tuner: " + error.message);
-                });
-        },
-
-        /**
-         * @function onVectorOptimizer
-         * @description Opens vector database optimization interface for embedding storage optimization.
-         * @public
-         */
-        onVectorOptimizer: function() {
-            this._getOrCreateDialog("vectorOptimizer", "a2a.network.agent14.ext.fragment.VectorOptimizer")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadVectorDatabaseData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Vector Optimizer: " + error.message);
-                });
-        },
-
-        /**
-         * @function onPerformanceAnalyzer
-         * @description Opens performance analysis interface for model optimization insights.
-         * @public
-         */
-        onPerformanceAnalyzer: function() {
-            const oBinding = this.base.getView().byId("fe::table::EmbeddingModels::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectModelsFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("performanceAnalyzer", "a2a.network.agent14.ext.fragment.PerformanceAnalyzer")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._analyzePerformance(aSelectedContexts, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Performance Analyzer: " + error.message);
-                });
-        },
-
-        /**
-         * @function _startRealtimeEmbeddingUpdates
-         * @description Starts real-time updates for training and evaluation events.
-         * @private
-         */
-        _startRealtimeEmbeddingUpdates: function() {
-            this._initializeWebSocket();
-        },
-
-        /**
-         * @function _initializeWebSocket
-         * @description Initializes secure WebSocket connection for real-time embedding updates.
-         * @private
-         */
-        _initializeWebSocket: function() {
-            if (this._ws) return;
-
-            // Validate WebSocket URL for security
-            const wsUrl = 'wss://localhost:8014/embedding/updates';
-            if (!this._securityUtils.validateWebSocketUrl(wsUrl)) {
-                MessageBox.error("Invalid WebSocket URL for security reasons");
-                this._securityUtils.logSecureOperation('WEBSOCKET_VALIDATION_FAILED', 'ERROR', { url: wsUrl });
-                return;
-            }
-
-            try {
-                this._ws = SecurityUtils.createSecureWebSocket('wss://localhost:8014/embedding/updates', {
-                    onmessage: function(event) {
-                        try {
-                            const data = JSON.parse(event.data);
-                            this._handleEmbeddingUpdate(data);
-                        } catch (error) {
-                            console.error("Error parsing WebSocket message:", error);
-                        }
-                    }.bind(this),
-                    onerror: function(error) {
-                        console.warn("Secure WebSocket error:", error);
-                        this._initializePolling();
-                    }.bind(this)
-                });
-                
-                if (this._ws) {
-                    this._ws.onclose = function() {
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
-                        MessageToast.show(sMessage);
-                        setTimeout(() => this._initializeWebSocket(), 5000);
-                    }.bind(this);
-                }
-
-            } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
-                this._initializePolling();
-            }
-        },
-
-        /**
-         * @function _initializePolling
-         * @description Initializes polling fallback for real-time updates.
-         * @private
-         */
-        _initializePolling: function() {
-            this._pollInterval = setInterval(() => {
-                this._refreshModelData();
-            }, 10000);
-        },
-
-        /**
-         * @function _handleEmbeddingUpdate
-         * @description Handles real-time embedding updates from WebSocket.
-         * @param {Object} data - Update data
-         * @private
-         */
-        _handleEmbeddingUpdate: function(data) {
-            try {
-                // Sanitize incoming data
-                const sanitizedData = SecurityUtils.sanitizeEmbeddingData(JSON.stringify(data));
-                const parsedData = JSON.parse(sanitizedData);
-                
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                
-                switch (parsedData.type) {
-                    case 'TRAINING_STARTED':
-                        var sTrainingStarted = oBundle.getText("msg.fineTuningStarted") || "Fine-tuning started";
-                        MessageToast.show(sTrainingStarted);
-                        break;
-                    case 'TRAINING_PROGRESS':
-                        this._updateTrainingProgress(parsedData);
-                        break;
-                    case 'TRAINING_COMPLETED':
-                        var sTrainingCompleted = oBundle.getText("msg.fineTuningCompleted") || "Fine-tuning completed";
-                        MessageToast.show(sTrainingCompleted);
-                        this._refreshModelData();
-                        break;
-                    case 'TRAINING_FAILED':
-                        var sTrainingFailed = oBundle.getText("error.fineTuningFailed") || "Fine-tuning failed";
-                        MessageToast.show(sTrainingFailed);
-                        break;
-                    case 'EVALUATION_COMPLETED':
-                        var sEvalCompleted = oBundle.getText("msg.evaluationCompleted") || "Evaluation completed";
-                        MessageToast.show(sEvalCompleted);
-                        this._refreshModelData();
-                        break;
-                    case 'BENCHMARK_UPDATE':
-                        this._updateBenchmarkResults(parsedData);
-                        break;
-                    case 'OPTIMIZATION_UPDATE':
-                        this._refreshModelData();
-                        break;
-                }
-            } catch (error) {
-                console.error("Error processing embedding update:", error);
-            }
-        },
-
-        /**
-         * @function _loadDashboardData
-         * @description Loads fine-tuning dashboard data with statistics and training metrics.
-         * @param {sap.m.Dialog} oDialog - Target dialog (optional)
-         * @private
-         */
-        _loadDashboardData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["fineTuningDashboard"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            // Check authorization before loading statistics
-            if (!SecurityUtils.checkEmbeddingAuth('GetEmbeddingStatistics', {})) {
-                oTargetDialog.setBusy(false);
-                return;
-            }
-
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetEmbeddingStatistics", {
-                        success: function(data) {
-                            // Validate and sanitize response data
-                            if (this._validateStatisticsResponse(data)) {
-                                resolve(data);
-                            } else {
-                                reject(new Error("Invalid statistics response format"));
-                            }
-                        }.bind(this),
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingStatistics") || "Error loading statistics";
-                            SecurityUtils.logSecureOperation('STATISTICS_LOAD_ERROR', 'ERROR', { error: error });
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateDashboardCharts(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _initializeFineTuningWizard
-         * @description Initializes fine-tuning wizard with model configuration.
-         * @param {sap.ui.model.Context} oContext - Selected model context
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _initializeFineTuningWizard: function(oContext, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["fineTuningWizard"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const sModelId = oContext.getObject().modelId;
-            
-            if (!SecurityUtils.checkEmbeddingAuth('GetModelConfiguration', {})) {
-                return;
-            }
-
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetModelConfiguration", {
-                        urlParameters: {
-                            modelId: sModelId
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingModelConfig") || "Error loading model configuration";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._setupFineTuningWizard(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadEvaluationData
-         * @description Loads evaluation metrics for selected models.
-         * @param {Array<sap.ui.model.Context>} aSelectedContexts - Selected model contexts
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadEvaluationData: function(aSelectedContexts, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["modelEvaluator"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const aModelIds = aSelectedContexts.map(ctx => ctx.getObject().modelId);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetEvaluationMetrics", {
-                        urlParameters: {
-                            modelIds: aModelIds.join(',')
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingEvaluationData") || "Error loading evaluation data";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._displayEvaluationResults(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadBenchmarkSuites
-         * @description Loads available benchmark suites for testing.
-         * @param {Array<sap.ui.model.Context>} aSelectedContexts - Selected model contexts
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadBenchmarkSuites: function(aSelectedContexts, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["benchmarkRunner"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetAvailableBenchmarks", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingBenchmarks") || "Error loading benchmarks";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._setupBenchmarkRunner(data, aSelectedContexts, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _initializeHyperparameterTuner
-         * @description Initializes hyperparameter tuner with search space configuration.
-         * @param {sap.ui.model.Context} oContext - Selected model context
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _initializeHyperparameterTuner: function(oContext, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["hyperparameterTuner"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const sModelId = oContext.getObject().modelId;
-            
-            if (!SecurityUtils.checkEmbeddingAuth('GetHyperparameterSpace', {})) {
-                return;
-            }
-
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetHyperparameterSpace", {
-                        urlParameters: {
-                            modelId: sModelId
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingHyperparameters") || "Error loading hyperparameters";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._setupHyperparameterTuner(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadVectorDatabaseData
-         * @description Loads vector database configurations and status.
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadVectorDatabaseData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["vectorOptimizer"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetVectorDatabases", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingVectorDatabases") || "Error loading vector databases";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateVectorDatabaseList(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _analyzePerformance
-         * @description Analyzes performance metrics for selected models.
-         * @param {Array<sap.ui.model.Context>} aSelectedContexts - Selected model contexts
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _analyzePerformance: function(aSelectedContexts, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["performanceAnalyzer"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const aModelIds = aSelectedContexts.map(ctx => ctx.getObject().modelId);
-            
-            if (!SecurityUtils.checkEmbeddingAuth('AnalyzeModelPerformance', {})) {
-                return;
-            }
-
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/AnalyzeModelPerformance", {
-                        urlParameters: {
-                            modelIds: aModelIds.join(',')
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.performanceAnalysisFailed") || "Performance analysis failed";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._displayPerformanceAnalysis(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _refreshModelData
-         * @description Refreshes embedding model data in the list.
-         * @private
-         */
-        _refreshModelData: function() {
-            const oBinding = this.base.getView().byId("fe::table::EmbeddingModels::LineItem").getBinding("rows");
-            if (oBinding) {
-                oBinding.refresh();
-            }
-        },
-
-        /**
-         * @function _updateTrainingProgress
-         * @description Updates training progress indicators in real-time.
-         * @param {Object} data - Training progress data
-         * @private
-         */
-        _updateTrainingProgress: function(data) {
-            // Update progress indicators
-            var oProgressDialog = this._dialogCache["fineTuningWizard"];
-            if (oProgressDialog && oProgressDialog.isOpen()) {
-                var oProgressIndicator = oProgressDialog.byId("trainingProgress");
-                if (oProgressIndicator) {
-                    oProgressIndicator.setPercentValue(data.progress);
-                    oProgressIndicator.setDisplayValue(`${data.progress}% - Epoch ${data.epoch}/${data.totalEpochs}`);
-                }
-                
-                // Update loss chart if available
-                if (data.trainingLoss && data.validationLoss) {
-                    this._updateLossChart(data, oProgressDialog);
-                }
-            }
-        },
-
-        /**
-         * @function _updateBenchmarkResults
-         * @description Updates benchmark results in real-time.
-         * @param {Object} data - Benchmark results data
-         * @private
-         */
-        _updateBenchmarkResults: function(data) {
-            // Update benchmark results in UI
-            var oBenchmarkDialog = this._dialogCache["benchmarkRunner"];
-            if (oBenchmarkDialog && oBenchmarkDialog.isOpen()) {
-                var oBenchmarkModel = oBenchmarkDialog.getModel("benchmark");
-                if (oBenchmarkModel) {
-                    var oData = oBenchmarkModel.getData();
-                    if (!oData.results) oData.results = [];
-                    oData.results.push(data.result);
-                    oBenchmarkModel.setData(oData);
-                }
-            }
-        },
-
-        /**
-         * @function _updateDashboardCharts
-         * @description Updates fine-tuning dashboard charts with embedding statistics.
-         * @param {Object} data - Dashboard data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateDashboardCharts: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["fineTuningDashboard"];
-            if (!oTargetDialog) return;
-            
-            this._createTrainingProgressChart(data.trainingProgress, oTargetDialog);
-            this._createLossConvergenceChart(data.lossConvergence, oTargetDialog);
-            this._createPerformanceMetricsChart(data.performanceMetrics, oTargetDialog);
-            this._createEmbeddingDistributionChart(data.embeddingDistribution, oTargetDialog);
-        },
-
-        /**
-         * @function _setupFineTuningWizard
-         * @description Sets up fine-tuning wizard with model configuration.
-         * @param {Object} data - Model configuration data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _setupFineTuningWizard: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["fineTuningWizard"];
-            if (!oTargetDialog) return;
-            
-            var oWizardModel = new JSONModel({
-                modelConfig: data.configuration,
-                trainingSettings: {
-                    learningRate: data.configuration.learningRate || 0.001,
-                    batchSize: data.configuration.batchSize || 32,
-                    epochs: data.configuration.epochs || 10,
-                    optimizer: data.configuration.optimizer || "adamw",
-                    lossFunction: data.configuration.lossFunction || "cosine",
-                    warmupSteps: data.configuration.warmupSteps || 100,
-                    gradientClipping: data.configuration.gradientClipping || 1.0
-                },
-                datasetOptions: data.datasetOptions,
-                augmentationOptions: data.augmentationOptions
-            });
-            oTargetDialog.setModel(oWizardModel, "wizard");
-        },
-
-        /**
-         * @function _displayEvaluationResults
-         * @description Displays model evaluation results in dialog.
-         * @param {Object} data - Evaluation results data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _displayEvaluationResults: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["modelEvaluator"];
-            if (!oTargetDialog) return;
-            
-            var oEvalModel = new JSONModel({
-                evaluationResults: data.results,
-                comparisonData: data.comparison,
-                metrics: data.metrics,
-                recommendations: data.recommendations
-            });
-            oTargetDialog.setModel(oEvalModel, "evaluation");
-        },
-
-        /**
-         * @function _setupBenchmarkRunner
-         * @description Sets up benchmark runner with available test suites.
-         * @param {Object} data - Benchmark suites data
-         * @param {Array<sap.ui.model.Context>} contexts - Selected model contexts
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _setupBenchmarkRunner: function(data, contexts, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["benchmarkRunner"];
-            if (!oTargetDialog) return;
-            
-            var oBenchmarkModel = new JSONModel({
-                benchmarkSuites: data.suites,
-                selectedModels: contexts.map(ctx => ctx.getObject()),
-                configuration: {
-                    parallel: true,
-                    compareWithBaseline: true,
-                    generateReport: true
-                },
-                results: []
-            });
-            oTargetDialog.setModel(oBenchmarkModel, "benchmark");
-        },
-
-        /**
-         * @function _setupHyperparameterTuner
-         * @description Sets up hyperparameter tuner with search space configuration.
-         * @param {Object} data - Hyperparameter space data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _setupHyperparameterTuner: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["hyperparameterTuner"];
-            if (!oTargetDialog) return;
-            
-            var oHyperModel = new JSONModel({
-                searchSpace: data.searchSpace,
-                optimizationMethods: data.methods,
-                currentConfig: data.currentConfig,
-                searchHistory: data.history,
-                bestConfig: data.bestConfig
-            });
-            oTargetDialog.setModel(oHyperModel, "hyperparameter");
-        },
-
-        /**
-         * @function _updateVectorDatabaseList
-         * @description Updates vector database list and optimization options.
-         * @param {Object} data - Vector database data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateVectorDatabaseList: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["vectorOptimizer"];
-            if (!oTargetDialog) return;
-            
-            var oVectorModel = new JSONModel({
-                databases: data.databases,
-                indexTypes: data.indexTypes,
-                optimizationStrategies: data.strategies,
-                performanceMetrics: data.metrics
-            });
-            oTargetDialog.setModel(oVectorModel, "vector");
-        },
-
-        /**
-         * @function _displayPerformanceAnalysis
-         * @description Displays model performance analysis results.
-         * @param {Object} data - Performance analysis data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _displayPerformanceAnalysis: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["performanceAnalyzer"];
-            if (!oTargetDialog) return;
-            
-            var oPerfModel = new JSONModel({
-                performanceMetrics: data.metrics,
-                resourceUtilization: data.resources,
-                optimizationSuggestions: data.suggestions,
-                benchmarkComparison: data.comparison
-            });
-            oTargetDialog.setModel(oPerfModel, "performance");
-            
-            // Create performance charts
-            this._createResourceUtilizationChart(data.resources, oTargetDialog);
-            this._createInferenceSpeedChart(data.metrics.inferenceSpeed, oTargetDialog);
-        },
-
-        /**
-         * @function _createTrainingProgressChart
-         * @description Creates training progress chart for dashboard.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createTrainingProgressChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("trainingProgressChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.trainingProgress"),
-                    xAxisLabel: this.getResourceBundle().getText("field.epoch"),
-                    yAxisLabel: this.getResourceBundle().getText("field.loss")
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createLossConvergenceChart
-         * @description Creates loss convergence chart for training monitoring.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createLossConvergenceChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("lossConvergenceChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.lossConvergence"),
-                    showLegend: true,
-                    series: ["Training Loss", "Validation Loss"]
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createPerformanceMetricsChart
-         * @description Creates performance metrics chart for model comparison.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createPerformanceMetricsChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("performanceMetricsChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.performanceMetrics"),
-                    showDataLabels: true,
-                    colorPalette: ["#5cbae6", "#b6d7a8", "#ffd93d", "#ff7b7b"]
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createEmbeddingDistributionChart
-         * @description Creates embedding distribution visualization chart.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createEmbeddingDistributionChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("embeddingDistributionChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.embeddingDistribution"),
-                    enableDrillDown: true,
-                    visualizationType: "scatter"
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _updateLossChart
-         * @description Updates loss chart with real-time training data.
-         * @param {Object} data - Loss data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateLossChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("lossChart");
-            if (!oChartContainer) return;
-            
-            var oChartModel = oChartContainer.getModel("chart");
-            if (oChartModel) {
-                var oData = oChartModel.getData();
-                if (!oData.series) {
-                    oData.series = {
-                        training: [],
-                        validation: []
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent14_Backup",
+                        action: action,
+                        details: details || {}
                     };
-                }
-                oData.series.training.push({x: data.epoch, y: data.trainingLoss});
-                oData.series.validation.push({x: data.epoch, y: data.validationLoss});
-                oChartModel.setData(oData);
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
             }
+            // Mock role validation for development/testing
+            const mockRoles = ["BackupAdmin", "BackupUser", "BackupOperator"];
+            return mockRoles.includes(role);
         },
-        
-        /**
-         * @function _createResourceUtilizationChart
-         * @description Creates resource utilization chart for performance analysis.
-         * @param {Object} data - Resource data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createResourceUtilizationChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("resourceUtilizationChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.resourceUtilization"),
-                    type: "gauge",
-                    maxValue: 100
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createInferenceSpeedChart
-         * @description Creates inference speed comparison chart.
-         * @param {Object} data - Speed data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createInferenceSpeedChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("inferenceSpeedChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("field.inferenceSpeed"),
-                    yAxisLabel: this.getResourceBundle().getText("unit.vectorsPerSecond"),
-                    type: "bar"
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
+
         /**
          * @function _cleanupResources
-         * @description Cleans up resources and connections on controller destruction.
+         * @description Cleans up resources to prevent memory leaks.
          * @private
          */
         _cleanupResources: function() {
-            // Close WebSocket connection
+            // Clean up WebSocket connections
             if (this._ws) {
                 this._ws.close();
                 this._ws = null;
             }
             
-            // Clear polling interval
+            // Clean up EventSource connections
+            if (this._backupEventSource) {
+                this._backupEventSource.close();
+                this._backupEventSource = null;
+            }
+            
+            // Clean up polling intervals
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
             }
             
-            // Clear cached dialogs
-            for (var sDialogId in this._dialogCache) {
-                var oDialog = this._dialogCache[sDialogId];
-                if (oDialog && oDialog.destroy) {
-                    oDialog.destroy();
+            // Clean up cached dialogs
+            Object.keys(this._dialogCache).forEach(function(key) {
+                if (this._dialogCache[key]) {
+                    this._dialogCache[key].destroy();
                 }
-            }
+            }.bind(this));
             this._dialogCache = {};
-            
-            // Clear throttled and debounced functions
-            if (this._throttledDashboardUpdate) {
-                this._throttledDashboardUpdate = null;
-            }
-            if (this._debouncedSearch) {
-                this._debouncedSearch = null;
-            }
         },
 
         /**
          * @function getResourceBundle
-         * @description Gets the i18n resource bundle for text translations.
-         * @returns {sap.ui.model.resource.ResourceModel} Resource bundle
+         * @description Gets the i18n resource bundle.
+         * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
         getResourceBundle: function() {
             return this.base.getView().getModel("i18n").getResourceBundle();
-        },
-
-        /**
-         * @function _validateStatisticsResponse
-         * @description Validates statistics response data for security
-         * @param {object} data - Response data to validate
-         * @returns {boolean} True if valid
-         * @private
-         */
-        _validateStatisticsResponse: function(data) {
-            if (!data || typeof data !== 'object') {
-                return false;
-            }
-            
-            // Check for required properties and reasonable values
-            const requiredProps = ['trainingProgress', 'lossConvergence', 'performanceMetrics'];
-            for (const prop of requiredProps) {
-                if (!data[prop]) {
-                    SecurityUtils.logSecureOperation('INVALID_STATISTICS_RESPONSE', 'WARNING', { 
-                        missing: prop 
-                    });
-                    return false;
-                }
-            }
-            
-            // Validate numeric ranges
-            if (data.performanceMetrics && data.performanceMetrics.accuracy) {
-                const accuracy = parseFloat(data.performanceMetrics.accuracy);
-                if (isNaN(accuracy) || accuracy < 0 || accuracy > 1) {
-                    SecurityUtils.logSecureOperation('SUSPICIOUS_ACCURACY_VALUE', 'WARNING', { 
-                        accuracy: accuracy 
-                    });
-                    return false;
-                }
-            }
-            
-            return true;
-        },
-
-        /**
-         * @function _validateModelResponse
-         * @description Validates model response data for security
-         * @param {object} data - Response data to validate
-         * @returns {boolean} True if valid
-         * @private
-         */
-        _validateModelResponse: function(data) {
-            if (!data || typeof data !== 'object') {
-                return false;
-            }
-            
-            // Sanitize model configuration data
-            if (data.configuration) {
-                const validation = SecurityUtils.validateHyperparameters(data.configuration);
-                if (!validation.isValid) {
-                    SecurityUtils.logSecureOperation('INVALID_MODEL_CONFIG', 'ERROR', { 
-                        errors: validation.errors 
-                    });
-                    return false;
-                }
-            }
-            
-            return true;
-        },
-
-        /**
-         * @function _sanitizeTrainingData
-         * @description Sanitizes and validates training data
-         * @param {object} trainingData - Training data to sanitize
-         * @returns {object} Sanitized training data
-         * @private
-         */
-        _sanitizeTrainingData: function(trainingData) {
-            if (!trainingData) return {};
-            
-            const validation = SecurityUtils.validateTrainingData(trainingData);
-            if (!validation.isValid) {
-                SecurityUtils.logSecureOperation('TRAINING_DATA_VALIDATION_FAILED', 'ERROR', {
-                    errors: validation.errors,
-                    riskScore: validation.riskScore
-                });
-                return {};
-            }
-            
-            return validation.sanitized;
-        },
-
-        /**
-         * @function _validateModelPath
-         * @description Validates model path for security before operations
-         * @param {string} modelPath - Model path to validate
-         * @returns {boolean} True if valid
-         * @private
-         */
-        _validateModelPath: function(modelPath) {
-            const validation = SecurityUtils.validateModelPath(modelPath);
-            if (!validation.isValid) {
-                SecurityUtils.logSecureOperation('MODEL_PATH_VALIDATION_FAILED', 'ERROR', {
-                    path: modelPath,
-                    errors: validation.errors,
-                    riskScore: validation.riskScore
-                });
-                return false;
-            }
-            return true;
-        },
-
-        /**
-         * @function _secureModelOperation
-         * @description Wrapper for secure model operations
-         * @param {string} operation - Operation name
-         * @param {object} params - Operation parameters
-         * @param {function} callback - Success callback
-         * @param {function} errorCallback - Error callback
-         * @private
-         */
-        _secureModelOperation: function(operation, params, callback, errorCallback) {
-            // Check authorization
-            if (!SecurityUtils.checkEmbeddingAuth(operation, params)) {
-                if (errorCallback) {
-                    errorCallback(new Error('Insufficient permissions'));
-                }
-                return;
-            }
-            
-            // Validate and sanitize parameters
-            const sanitizedParams = this._sanitizeOperationParams(params);
-            
-            // Log operation attempt
-            SecurityUtils.logSecureOperation('MODEL_OPERATION_ATTEMPT', 'INFO', {
-                operation: operation,
-                params: Object.keys(sanitizedParams)
-            });
-            
-            // Execute with enhanced error handling
-            try {
-                var oModel = this.base.getView().getModel();
-                SecurityUtils.secureCallFunction(oModel, operation, {
-                    urlParameters: sanitizedParams,
-                    success: function(data) {
-                        SecurityUtils.logSecureOperation('MODEL_OPERATION_SUCCESS', 'INFO', {
-                            operation: operation
-                        });
-                        if (callback) callback(data);
-                    },
-                    error: function(error) {
-                        SecurityUtils.logSecureOperation('MODEL_OPERATION_ERROR', 'ERROR', {
-                            operation: operation,
-                            error: error
-                        });
-                        if (errorCallback) errorCallback(error);
-                    }
-                });
-            } catch (error) {
-                SecurityUtils.logSecureOperation('MODEL_OPERATION_EXCEPTION', 'ERROR', {
-                    operation: operation,
-                    error: error
-                });
-                if (errorCallback) errorCallback(error);
-            }
-        },
-
-        /**
-         * @function _sanitizeOperationParams
-         * @description Sanitizes operation parameters for security
-         * @param {object} params - Parameters to sanitize
-         * @returns {object} Sanitized parameters
-         * @private
-         */
-        _sanitizeOperationParams: function(params) {
-            if (!params || typeof params !== 'object') {
-                return {};
-            }
-            
-            const sanitized = {};
-            for (const [key, value] of Object.entries(params)) {
-                const cleanKey = SecurityUtils.sanitizeInput(key);
-                if (cleanKey && typeof value === 'string') {
-                    sanitized[cleanKey] = SecurityUtils.sanitizeInput(value);
-                } else if (cleanKey && typeof value === 'number' && isFinite(value)) {
-                    sanitized[cleanKey] = value;
-                } else if (cleanKey && typeof value === 'boolean') {
-                    sanitized[cleanKey] = value;
-                }
-            }
-            
-            return sanitized;
         }
     });
 });

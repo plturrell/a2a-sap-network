@@ -14,8 +14,7 @@ class SecurityValidator {
         this.projectRoot = path.join(__dirname, '..');
     }
 
-    validate() {
-(async () => {
+    async validate() {
         console.log('🔒 Starting Security Validation for A2A Network...\n');
 
         this.validateEnvironmentVariables();
@@ -127,7 +126,7 @@ class SecurityValidator {
         });
     }
 
-    scanFile(filePath, patterns, issueType, severity) {
+    async scanFile(filePath, patterns, issueType, severity) {
         try {
             const content = await fs.readFile(filePath, 'utf8');
             const lines = content.split('\n');

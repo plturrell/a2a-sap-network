@@ -2,8 +2,8 @@
   "scanMetadata": {
     "agent": "Agent 5 - QA Validation Agent",
     "scanType": "QA Validation Security Scan",
-    "timestamp": "2025-08-23T10:32:14.954Z",
-    "duration": 48,
+    "timestamp": "2025-08-24T02:44:06.840Z",
+    "duration": 49,
     "filesScanned": 14,
     "totalVulnerabilities": 12
   },
@@ -25,7 +25,7 @@
       "pattern": "/X-Frame-Options/gi",
       "match": "X-Frame-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.949Z"
+      "timestamp": "2025-08-24T02:44:06.835Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -37,7 +37,7 @@
       "pattern": "/X-Content-Type-Options/gi",
       "match": "X-Content-Type-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.949Z"
+      "timestamp": "2025-08-24T02:44:06.835Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -49,7 +49,7 @@
       "pattern": "/X-XSS-Protection/gi",
       "match": "X-XSS-Protection",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.949Z"
+      "timestamp": "2025-08-24T02:44:06.835Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -61,7 +61,7 @@
       "pattern": "/Content-Security-Policy/gi",
       "match": "Content-Security-Policy",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.949Z"
+      "timestamp": "2025-08-24T02:44:06.835Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -73,7 +73,7 @@
       "pattern": "/Strict-Transport-Security/gi",
       "match": "Strict-Transport-Security",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.949Z"
+      "timestamp": "2025-08-24T02:44:06.835Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -85,7 +85,7 @@
       "pattern": "/http:\\/\\/(?!localhost|127\\.0\\.0\\.1)/gi",
       "match": "http://",
       "isPositive": false,
-      "timestamp": "2025-08-23T10:32:14.951Z"
+      "timestamp": "2025-08-24T02:44:06.837Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -97,7 +97,7 @@
       "pattern": "/X-Frame-Options/gi",
       "match": "X-Frame-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.951Z"
+      "timestamp": "2025-08-24T02:44:06.837Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -109,7 +109,7 @@
       "pattern": "/X-Content-Type-Options/gi",
       "match": "X-Content-Type-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.951Z"
+      "timestamp": "2025-08-24T02:44:06.837Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -121,7 +121,7 @@
       "pattern": "/X-XSS-Protection/gi",
       "match": "X-XSS-Protection",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.951Z"
+      "timestamp": "2025-08-24T02:44:06.837Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/controller/ObjectPageExt.controller.js",
@@ -133,7 +133,7 @@
       "pattern": "/getText\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\)/gi",
       "match": "getText(\"validation.taskNameRequired\")",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.923Z"
+      "timestamp": "2025-08-24T02:44:06.809Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/controller/ObjectPageExt.controller.js",
@@ -145,7 +145,7 @@
       "pattern": "/this\\._oResourceBundle\\.getText/gi",
       "match": "this._oResourceBundle.getText",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.924Z"
+      "timestamp": "2025-08-24T02:44:06.809Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/fragment/CreateQATask.fragment.xml",
@@ -157,7 +157,7 @@
       "pattern": "/i18n\\s*>\\s*[^{]*\\{/gi",
       "match": "i18n>title.createQATask}\"\n        contentWidth=\"75rem\"\n        contentHeight=\"auto\"\n        resizable=\"true\"\n        draggable=\"true\"\n        stretch=\"{",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:32:14.933Z"
+      "timestamp": "2025-08-24T02:44:06.819Z"
     }
   ],
   "recommendations": [
