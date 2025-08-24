@@ -91,6 +91,7 @@ from app.a2a.core.asyncPatterns import (
 
 # Import network services
 from app.a2a.network import get_network_connector, get_registration_service, get_messaging_service
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -143,7 +144,7 @@ class MetadataPattern:
     compliance_mapping: Dict[str, Any] = field(default_factory=dict)
 
 
-class EnhancedDataProductAgentSDK(A2AAgentBase):
+class EnhancedDataProductAgentSDK(SecureA2AAgent):
     """
     Enhanced Data Product Agent with AI Intelligence Framework Integration
     
@@ -170,6 +171,11 @@ class EnhancedDataProductAgentSDK(A2AAgentBase):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize AI Intelligence Framework
         ai_config = create_enhanced_agent_config(

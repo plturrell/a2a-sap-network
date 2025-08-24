@@ -59,6 +59,7 @@ except ImportError:
 
 # Configure logging
 from app.core.loggingConfig import get_logger
+from app.a2a.core.security_base import SecureA2AAgent
 logger = get_logger(__name__)
 
 
@@ -76,7 +77,12 @@ except ImportError:
     # Fallback configuration
     class Config:
         def __init__(self):
-            self.base_url = os.getenv("A2A_SERVICE_URL")
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                    self.base_url = os.getenv("A2A_SERVICE_URL")
             self.storage_base_path = "/tmp/a2a"
         def get_agent_url(self, agent_type): return self.base_url
         def get_contract_address(self, name):
@@ -88,13 +94,18 @@ except ImportError:
             return contracts.get(name, "0x0000000000000000000000000000000000000000")
     config = Config()
 
-class DataProductRegistrationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
+class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
     """
     Agent 0: Data Product Registration Agent with Dublin Core
     SDK Version - Simplified development with enhanced capabilities
     """
     def __init__(self, base_url: str, ord_registry_url: str):
-        # Define blockchain capabilities for data product agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for data product agent
         blockchain_capabilities = [
             "data_product_registration",
             "dublin_core_metadata",

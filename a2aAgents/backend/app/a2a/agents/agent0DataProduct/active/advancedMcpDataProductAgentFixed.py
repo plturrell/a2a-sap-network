@@ -22,11 +22,12 @@ from ...common.mcpPerformanceTools import MCPPerformanceTools
 from ...common.mcpValidationTools import MCPValidationTools
 from ...common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
 from ..common.mcp_helper_implementations import mcp_helpers
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
 
-class AdvancedMCPDataProductAgentFixed(A2AAgentBase):
+class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
     """
     Advanced Data Product Agent with real MCP tool integration (FIXED)
     Handles data product lifecycle, validation, and cross-agent coordination
@@ -36,6 +37,11 @@ class AdvancedMCPDataProductAgentFixed(A2AAgentBase):
         super().__init__(
             agent_id="advanced_mcp_data_product_agent_fixed",
             name="Advanced MCP Data Product Agent (Fixed)",
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             description="Enhanced data product management with real MCP tool integration",
             version="2.1.0",
             base_url=base_url

@@ -91,6 +91,7 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -108,7 +109,7 @@ if missing_vars:
 logger = logging.getLogger(__name__)
 
 
-class EnhancedVectorProcessingAgent(A2AAgentBase, BlockchainIntegrationMixin, PerformanceOptimizationMixin, PerformanceMonitoringMixin):
+class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, PerformanceOptimizationMixin, PerformanceMonitoringMixin):
     """
     Enhanced Vector Processing Agent with AI Intelligence Framework Integration
     
@@ -126,7 +127,12 @@ class EnhancedVectorProcessingAgent(A2AAgentBase, BlockchainIntegrationMixin, Pe
     """
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        # Define blockchain capabilities for vector processing agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for vector processing agent
         blockchain_capabilities = [
             "vector_processing",
             "similarity_calculation",

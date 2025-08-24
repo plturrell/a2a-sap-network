@@ -5,6 +5,9 @@
  */
 
 const cds = require('@sap/cds');
+
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
+const logger = LoggerFactory.createLogger('agent15-service');
 const { v4: uuidv4 } = require('uuid');
 const Agent15Adapter = require('../adapters/agent15-adapter');
 
@@ -369,7 +372,7 @@ class Agent15Service extends cds.ApplicationService {
 
         // Initialize adapter
         await super.init();
-        console.log('Agent 15 Service (Orchestrator) initialized successfully');
+        logger.info('Agent 15 Service (Orchestrator) initialized successfully');
     }
 
     // ===== HELPER METHODS =====
@@ -386,7 +389,7 @@ class Agent15Service extends cds.ApplicationService {
             
             await INSERT.into('OrchestrationMetrics').entries(metricsData);
         } catch (error) {
-            console.error('Failed to update execution metrics:', error);
+            logger.error('Failed to update execution metrics:', { error: error });
         }
     }
 
@@ -401,7 +404,7 @@ class Agent15Service extends cds.ApplicationService {
                 timestamp: new Date()
             });
         } catch (error) {
-            console.error('Failed to notify stakeholders:', error);
+            logger.error('Failed to notify stakeholders:', { error: error });
         }
     }
 }

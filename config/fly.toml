@@ -13,6 +13,12 @@ kill_timeout = "5s"
   ENABLE_ALL_AGENTS = "true"
   A2A_NETWORK_ENABLED = "true"
   FRONTEND_ENABLED = "true"
+  A2A_SERVICE_URL = "http://localhost:4004"
+  A2A_SERVICE_HOST = "localhost"
+  A2A_BASE_URL = "http://localhost:8000"
+  A2A_AGENT_BASE_URL = "http://localhost:8000"
+  A2A_IN_CONTAINER = "true"
+  SKIP_VENV_CREATION = "true"
 
 [[services]]
   protocol = "tcp"

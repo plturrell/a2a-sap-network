@@ -22,11 +22,12 @@ from ...sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ...common.mcpPerformanceTools import MCPPerformanceTools
 from ...common.mcpValidationTools import MCPValidationTools
 from ...common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
 
-class AdvancedMCPVectorProcessingAgent(A2AAgentBase):
+class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
     """
     Advanced Vector Processing Agent with comprehensive MCP tool integration
     Handles vector operations, embeddings, similarity search, and cross-agent coordination
@@ -40,6 +41,11 @@ class AdvancedMCPVectorProcessingAgent(A2AAgentBase):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()

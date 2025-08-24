@@ -1,0 +1,623 @@
+{
+  "total_files": 219,
+  "files_needing_migration": 56,
+  "files_migrated": 56,
+  "file_results": [
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentRegistryAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/sqlAgent/active/comprehensiveSqlAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/sqlAgent/active/enhancedSqlAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/orchestratorAgent/active/comprehensiveOrchestratorAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/comprehensiveDataStandardizationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/dataStandardizationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/enhancedDataStandardizationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/mcpEnhancedDataStandardizationAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/advancedMcpStandardizationAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/enhancedDataStandardizationAgentMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/dataManager/active/comprehensiveDataManagerSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/dataManager/active/enhancedDataManagerAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent3VectorProcessing/active/advancedMcpVectorProcessingAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent3VectorProcessing/active/enhancedVectorProcessingAgentMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent3VectorProcessing/active/vectorProcessingAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent3VectorProcessing/active/comprehensiveVectorProcessingSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentBuilder/active/enhancedAgentBuilderMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentBuilder/active/testEnhancedAgentBuilderMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentBuilder/active/comprehensiveAgentBuilderSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentBuilder/active/enhancedAgentBuilderAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent4CalcValidation/active/comprehensiveCalcValidationSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent4CalcValidation/active/calcValidationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent5QaValidation/active/enhancedQaValidationAgentMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent5QaValidation/active/qaValidationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent5QaValidation/active/enhancedQaValidationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/calculationAgent/active/calculationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/calculationAgent/active/enhancedCalculationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/calculationAgent/active/comprehensiveCalculationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/enhancedMcpAgentManager.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/agentManagerAgentMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/comprehensiveAgentManagerSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/agentManagerAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/embeddingFineTuner/active/comprehensiveEmbeddingFineTunerSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/catalogManager/active/comprehensiveCatalogManagerSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/catalogManager/active/enhancedCatalogManagerAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/advancedMcpDataProductAgentFixed.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/enhancedDataProductAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/dataProductAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/enhancedDataProductAgentMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/advancedMcpDataProductAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/comprehensiveDataProductAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/gleanAgent/gleanAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/gleanAgent/monitoring_dashboard.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/gleanAgent/enhanced_glean_agent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/gleanAgent/glean_agent_enhanced.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/gleanAgent/security_scanner.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent6QualityControl/active/qualityControlManagerAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent6QualityControl/active/comprehensiveQualityControlSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/serviceDiscoveryAgent/active/comprehensiveServiceDiscoveryAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent2AiPreparation/active/enhancedAiPreparationAgentMcp.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent2AiPreparation/active/aiPreparationAgentSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent2AiPreparation/active/comprehensiveAiPreparationSdk.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/reasoningAgent/enhancedReasoningAgentWithMCP.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/reasoningAgent/enhancedMcpToolIntegration.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/reasoningAgent/reasoningAgent.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    },
+    {
+      "status": "migrated",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/reasoningAgent/reasoningAgentClean.py",
+      "changes": [
+        "Replaced base class with SecureA2AAgent",
+        "Added security imports",
+        "Added security initialization",
+        "Added security methods",
+        "Added input validation and rate limiting"
+      ]
+    }
+  ]
+}

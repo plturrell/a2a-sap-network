@@ -14,11 +14,12 @@ from ..sdk.agentBase import A2AAgentBase, AgentConfig
 from ..sdk import a2a_handler, a2a_skill
 from ..sdk.types import A2AMessage, MessageRole
 from ..core.agentDiscovery import AgentProfile, DiscoveryRequest, DiscoveryResult
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
 
-class AgentRegistryAgent(A2AAgentBase):
+class AgentRegistryAgent(SecureA2AAgent):
     """
     Central Agent Registry for the A2A Network
     Manages agent registration, discovery, and network health monitoring
@@ -26,6 +27,11 @@ class AgentRegistryAgent(A2AAgentBase):
     
     def __init__(self, config: AgentConfig):
         super().__init__(config)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Agent registry storage
         self.registered_agents: Dict[str, AgentProfile] = {}

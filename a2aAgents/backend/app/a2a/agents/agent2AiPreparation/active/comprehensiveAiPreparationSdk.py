@@ -93,6 +93,7 @@ NETWORK_AVAILABLE = True
 
 # Blockchain queue integration
 from app.a2a.sdk.blockchainQueueMixin import BlockchainQueueMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -153,7 +154,7 @@ class ChunkingStrategy:
     custom_boundaries: Optional[List[str]] = None
 
 
-class ComprehensiveAiPreparationSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive AI Preparation Agent with Real AI Intelligence
     
@@ -177,6 +178,11 @@ class ComprehensiveAiPreparationSDK(A2AAgentBase, BlockchainIntegrationMixin):
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain capabilities through mixin
         BlockchainIntegrationMixin.__init__(self)

@@ -10,6 +10,7 @@ from ...sdk import A2AAgentBase, a2a_handler, a2a_skill
 from ...sdk.mcpSkillCoordination import MCPSkillCoordinator
 from .mcpReasoningConfidenceCalculator import mcp_confidence_calculator
 from .mcpSemanticSimilarityCalculator import mcp_similarity_calculator
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -20,7 +21,7 @@ if missing_vars:
 logger = logging.getLogger(__name__)
 
 
-class EnhancedReasoningAgentWithMCP(A2AAgentBase):
+class EnhancedReasoningAgentWithMCP(SecureA2AAgent):
     """
     Enhanced reasoning agent that uses MCP tools for calculations
     Demonstrates integration of MCP tools into existing agent architecture
@@ -34,6 +35,11 @@ class EnhancedReasoningAgentWithMCP(A2AAgentBase):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize MCP skill coordinator
         self.mcp_coordinator = MCPSkillCoordinator(self.agent_id)
@@ -361,6 +367,15 @@ INTEGRATION GUIDE FOR EXISTING AGENTS
 4. Use in handlers and skills:
    @a2a_handler("my_handler")
    async def my_handler(self, message):
+        # Security validation
+        if not self.validate_input(request_data)[0]:
+            return create_error_response("Invalid input data")
+        
+        # Rate limiting check
+        client_id = request_data.get('client_id', 'unknown')
+        if not self.check_rate_limit(client_id):
+            return create_error_response("Rate limit exceeded")
+        
        # Use MCP tools for calculations
        similarity = await self.mcp_similarity_calculator.calculate_text_similarity_mcp(
            text1, text2, method="hybrid"

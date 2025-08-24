@@ -177,7 +177,12 @@ class RealGrokSQLClient:
     """Real Grok AI client for SQL processing"""
     
     def __init__(self):
-        self.api_key = None
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.api_key = None
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
         self.client = None
@@ -388,12 +393,18 @@ Return optimized query and explanation."""
 
 # Import real production Grok client
 from app.clients.grokClient import get_grok_client
+from app.a2a.core.security_base import SecureA2AAgent
 
 class ProductionGrokSQLClient:
     """Production SQL client using real Grok AI"""
     
     def __init__(self):
-        try:
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                try:
             self.grok_client = get_grok_client()
             self.available = True
             logger.info("✅ Production Grok SQL client initialized")
@@ -473,7 +484,7 @@ class SQLQueryResult:
     error_message: Optional[str] = None
 
 
-class ComprehensiveSqlAgentSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
     """
     Comprehensive SQL Agent with Real AI Intelligence
     
@@ -496,6 +507,11 @@ class ComprehensiveSqlAgentSDK(A2AAgentBase, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain queue capabilities
         self.__init_blockchain_queue__(

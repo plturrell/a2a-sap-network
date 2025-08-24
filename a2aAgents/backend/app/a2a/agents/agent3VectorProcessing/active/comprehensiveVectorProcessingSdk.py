@@ -98,6 +98,7 @@ except ImportError:
 
 # Cross-agent communication
 from app.a2a.network.connector import NetworkConnector
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -166,7 +167,7 @@ class VectorIndex:
     vector_count: int = 0
 
 
-class ComprehensiveVectorProcessingSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Vector Processing Agent with Real AI Intelligence
     
@@ -190,6 +191,11 @@ class ComprehensiveVectorProcessingSDK(A2AAgentBase, BlockchainIntegrationMixin)
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain capabilities
         self.blockchain_queue_enabled = False
@@ -992,7 +998,7 @@ class ComprehensiveVectorProcessingSDK(A2AAgentBase, BlockchainIntegrationMixin)
             }
         
         else:
-            # Fallback: create basic in-memory index
+# A2A REMOVED:             # Fallback: create basic in-memory index
             try:
                 import numpy as np
                 from sklearn.neighbors import NearestNeighbors

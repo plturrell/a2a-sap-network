@@ -5,6 +5,9 @@
  */
 
 const cds = require('@sap/cds');
+
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
+const logger = LoggerFactory.createLogger('agent14-service');
 const { v4: uuidv4 } = require('uuid');
 const Agent14Adapter = require('../adapters/agent14-adapter');
 
@@ -387,7 +390,7 @@ class Agent14Service extends cds.ApplicationService {
 
         // Initialize adapter
         await super.init();
-        console.log('Agent 14 Service (Embedding Fine-Tuner) initialized successfully');
+        logger.info('Agent 14 Service (Embedding Fine-Tuner) initialized successfully');
     }
 
     // ===== HELPER METHODS =====
@@ -407,7 +410,7 @@ class Agent14Service extends cds.ApplicationService {
             
             await INSERT.into('TrainingMetrics').entries(metricsData);
         } catch (error) {
-            console.error('Failed to update training metrics:', error);
+            logger.error('Failed to update training metrics:', { error: error });
         }
     }
 
@@ -416,7 +419,7 @@ class Agent14Service extends cds.ApplicationService {
             const model = await SELECT.one.from('EmbeddingModels').where({ ID: modelId });
             return model && model.status === 'COMPLETED';
         } catch (error) {
-            console.error('Failed to check model readiness:', error);
+            logger.error('Failed to check model readiness:', { error: error });
             return false;
         }
     }

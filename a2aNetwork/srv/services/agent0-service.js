@@ -8,11 +8,13 @@ const cds = require('@sap/cds');
 const { v4: uuidv4 } = require('uuid');
 const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const Agent0Adapter = require('../adapters/agent0-adapter');
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
 
 class Agent0Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent0Adapter();
+        this.logger = LoggerFactory.createAgentLogger('0', process.env.NODE_ENV || 'development');
         
         // Entity references
         const {
@@ -54,7 +56,13 @@ class Agent0Service extends cds.ApplicationService {
                             ...dublinCore.metadata
                         });
                     } catch (dcError) {
-                        console.warn(`Failed to auto-generate Dublin Core for product ${product.ID}: ${dcError.message}`);
+                        this.logger.warn('Failed to auto-generate Dublin Core metadata', {
+                            productId: product.ID,
+                            error: dcError.message,
+                            stack: dcError.stack,
+                            operation: 'createDataProduct',
+                            agent: 'agent-0'
+                        });
                     }
                 }
 

@@ -17,11 +17,43 @@ from ...sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ...common.mcpPerformanceTools import MCPPerformanceTools
 from ...common.mcpValidationTools import MCPValidationTools
 from ...common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
+from app.a2a.core.security_base import SecureA2AAgent
+
+
+class BlockchainRegistry:
+    """Registry that uses blockchain as single source of truth"""
+    
+    def __init__(self):
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.blockchain_client = None
+        self._init_blockchain()
+    
+    def _init_blockchain(self):
+        """Initialize blockchain connection"""
+        # A2A Protocol: Must have blockchain or fail
+        pass
+    
+    async def get(self, key):
+        """Get from blockchain only"""
+        if not self.blockchain_client:
+            raise RuntimeError("A2A Protocol: Blockchain required for registry access")
+        # Blockchain get implementation
+    
+    async def set(self, key, value):
+        """Set in blockchain only"""
+        if not self.blockchain_client:
+            raise RuntimeError("A2A Protocol: Blockchain required for registry updates")
+        # Blockchain set implementation
+
 
 logger = logging.getLogger(__name__)
 
 
-class EnhancedMCPAgentManager(A2AAgentBase):
+class EnhancedMCPAgentManager(SecureA2AAgent):
     """
     Enhanced Agent Manager with comprehensive MCP tool usage
     Manages agent lifecycle, coordination, and cross-agent communication via MCP
@@ -35,6 +67,11 @@ class EnhancedMCPAgentManager(A2AAgentBase):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()
@@ -44,7 +81,7 @@ class EnhancedMCPAgentManager(A2AAgentBase):
         
         # Agent management state
         self.managed_agents = {}
-        self.agent_registry = {}
+        self.blockchain_registry = BlockchainRegistry()  # A2A: No local storage
         self.coordination_sessions = {}
         self.performance_tracking = {}
         

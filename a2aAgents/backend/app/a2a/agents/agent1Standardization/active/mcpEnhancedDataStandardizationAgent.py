@@ -31,6 +31,7 @@ from ..reasoningAgent.mcpReasoningConfidenceCalculator import mcp_confidence_cal
 from ..common.standardizers.accountStandardizer import AccountStandardizer
 from ..common.standardizers.locationStandardizer import LocationStandardizer
 from ..common.standardizers.productStandardizer import ProductStandardizer
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -41,7 +42,7 @@ if missing_vars:
 logger = logging.getLogger(__name__)
 
 
-class MCPEnhancedDataStandardizationAgent(A2AAgentBase):
+class MCPEnhancedDataStandardizationAgent(SecureA2AAgent):
     """
     Enhanced Data Standardization Agent with MCP tool integration
     Demonstrates how to use MCP tools for quality assessment, validation, and performance monitoring
@@ -55,6 +56,11 @@ class MCPEnhancedDataStandardizationAgent(A2AAgentBase):
             version="5.0.0",  # MCP-enhanced version
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         self.enable_monitoring = enable_monitoring
         

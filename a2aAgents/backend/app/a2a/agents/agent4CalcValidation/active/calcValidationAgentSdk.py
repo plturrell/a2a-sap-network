@@ -45,6 +45,7 @@ logger = logging.getLogger(__name__)
 
 # Import SDK components from absolute paths
 from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Gracefully handle missing network components
 try:
@@ -74,7 +75,7 @@ class ValidationResult:
     execution_time: float = 0.0
     error_message: Optional[str] = None
 
-class CalcValidationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, BlockchainQueueMixin, PerformanceMonitorMixin):
+class CalcValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, BlockchainQueueMixin, PerformanceMonitorMixin):
     """
     Calculation Validation Agent SDK
     
@@ -87,7 +88,12 @@ class CalcValidationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, Blockchai
     """
     
     def __init__(self, base_url: str):
-        # Define blockchain capabilities for calculation validation
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for calculation validation
         blockchain_capabilities = [
             "calculation_validation",
             "numerical_verification", 

@@ -1,4 +1,7 @@
 const amqp = require('amqplib');
+
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
+const logger = LoggerFactory.createLogger('messageQueueService');
 const EventEmitter = require('events');
 const crypto = require('crypto');
 
@@ -72,18 +75,18 @@ class MessageQueueService extends EventEmitter {
      */
     async connect() {
         try {
-            console.log('🐰 Connecting to RabbitMQ...');
+            logger.info('🐰 Connecting to RabbitMQ...');
             
             this.connection = await amqp.connect(this.config.url);
             
             // Handle connection events
             this.connection.on('error', (err) => {
-                console.error('RabbitMQ connection error:', err);
+                logger.error('RabbitMQ connection error:', { err: err });
                 this.handleConnectionError();
             });
             
             this.connection.on('close', () => {
-                console.log('RabbitMQ connection closed');
+                logger.info('RabbitMQ connection closed');
                 this.handleConnectionClose();
             });
 
@@ -95,11 +98,11 @@ class MessageQueueService extends EventEmitter {
             await this.setupExchanges();
             await this.setupQueues();
 
-            console.log('✅ Connected to RabbitMQ successfully');
+            logger.info('✅ Connected to RabbitMQ successfully');
             this.emit('connected');
 
         } catch (error) {
-            console.error('Failed to connect to RabbitMQ:', error);
+            logger.error('Failed to connect to RabbitMQ:', { error: error });
             this.scheduleReconnect();
         }
     }
@@ -266,7 +269,7 @@ class MessageQueueService extends EventEmitter {
                 this.emit('message:consumed', { queue, messageId: content.id });
 
             } catch (error) {
-                console.error(`Error processing message from ${queue}:`, error);
+                logger.error(`Error processing message from ${queue}:`, { error: error });
                 
                 // Handle retry logic
                 await this.handleMessageError(msg, error, queue);
@@ -290,7 +293,7 @@ class MessageQueueService extends EventEmitter {
             tag: consumerTag.consumerTag
         });
 
-        console.log(`📨 Subscribed to queue: ${queue} (${consumerId})`);
+        logger.info(`📨 Subscribed to queue: ${queue} (${consumerId})`);
         
         return consumerId;
     }
@@ -307,7 +310,7 @@ class MessageQueueService extends EventEmitter {
             // Retry with exponential backoff
             const delay = Math.min(1000 * Math.pow(2, retryCount), 60000);
             
-            console.log(`Retrying message (attempt ${retryCount}/${maxRetries}) after ${delay}ms`);
+            logger.info(`Retrying message (attempt ${retryCount}/${maxRetries}) after ${delay}ms`);
             
             // Update retry count
             headers['x-retry-count'] = retryCount;
@@ -331,7 +334,7 @@ class MessageQueueService extends EventEmitter {
             
         } else {
             // Max retries exceeded - send to DLQ
-            console.error(`Message failed after ${maxRetries} retries, sending to DLQ`);
+            logger.error(`Message failed after ${maxRetries} retries, sending to DLQ`);
             
             this.channel.reject(msg, false);
             this.stats.messagesFailed++;
@@ -353,7 +356,7 @@ class MessageQueueService extends EventEmitter {
         if (consumer && this.channel) {
             await this.channel.cancel(consumer.tag);
             this.consumers.delete(consumerId);
-            console.log(`🔕 Unsubscribed consumer: ${consumerId}`);
+            logger.info(`🔕 Unsubscribed consumer: ${consumerId}`);
         }
     }
 
@@ -378,7 +381,7 @@ class MessageQueueService extends EventEmitter {
      * Schedule reconnection attempt
      */
     scheduleReconnect() {
-        console.log(`Reconnecting in ${this.config.reconnectDelay}ms...`);
+        logger.info(`Reconnecting in ${this.config.reconnectDelay}ms...`);
         
         setTimeout(() => {
             this.connect();
@@ -411,7 +414,7 @@ class MessageQueueService extends EventEmitter {
         }
 
         const result = await this.channel.purgeQueue(queueName);
-        console.log(`🗑️ Purged ${result.messageCount} messages from ${queueName}`);
+        logger.info(`🗑️ Purged ${result.messageCount} messages from ${queueName}`);
         
         return result.messageCount;
     }
@@ -434,7 +437,7 @@ class MessageQueueService extends EventEmitter {
      * Graceful shutdown
      */
     async shutdown() {
-        console.log('📪 Shutting down message queue service...');
+        logger.info('📪 Shutting down message queue service...');
         
         // Cancel all consumers
         for (const [consumerId, consumer] of this.consumers) {
@@ -450,7 +453,7 @@ class MessageQueueService extends EventEmitter {
             await this.connection.close();
         }
 
-        console.log('✅ Message queue service shut down');
+        logger.info('✅ Message queue service shut down');
     }
 }
 

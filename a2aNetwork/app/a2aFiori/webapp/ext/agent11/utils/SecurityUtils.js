@@ -188,14 +188,14 @@ sap.ui.define([
                         const decodedValue = decodeURIComponent(value).toLowerCase();
                         injectionIndicators.forEach(({pattern, message}) => {
                             if (pattern.test(decodedValue)) {
-                                errors.push(`SQL injection in parameter '${key}': ${message}`);
+                                errors.push("SQL injection in parameter '" + key + "': " + message);
                                 securityScore -= 20;
                             }
                         });
                         
                         // Check for excessive parameter length
                         if (value.length > 1000) {
-                            warnings.push(`Parameter '${key}' is unusually long (${value.length} characters)`);
+                            warnings.push("Parameter '" + key + "' is unusually long (" + value.length + " characters)");
                             securityScore -= 10;
                         }
                     }
@@ -228,7 +228,7 @@ sap.ui.define([
             if (options.allowedOperations) {
                 const firstWord = sanitized.trim().split(/\s+/)[0].toUpperCase();
                 if (!options.allowedOperations.includes(firstWord)) {
-                    errors.push(`Operation '${firstWord}' is not allowed in this context`);
+                    errors.push("Operation '" + firstWord + "' is not allowed in this context");
                     securityScore -= 30;
                 }
             }
@@ -334,7 +334,7 @@ sap.ui.define([
             if (typeof value === 'string') {
                 // Check parameter length limits
                 if (value.length > (options.maxParameterLength || 1000)) {
-                    errors.push(`Parameter '${key}' exceeds maximum length`);
+                    errors.push("Parameter '" + key + "' exceeds maximum length");
                 }
                 
                 // Enhanced sanitization
@@ -349,14 +349,14 @@ sap.ui.define([
                 if (key.toLowerCase().includes('id')) {
                     // ID parameters should be numeric or UUID format
                     if (!/^[0-9a-fA-F-]+$/.test(sanitized)) {
-                        errors.push(`Parameter '${key}' should be numeric or UUID format`);
+                        errors.push("Parameter '" + key + "' should be numeric or UUID format");
                     }
                 }
                 
                 if (key.toLowerCase().includes('email')) {
                     // Email validation
                     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitized)) {
-                        errors.push(`Parameter '${key}' should be valid email format`);
+                        errors.push("Parameter '" + key + "' should be valid email format");
                     }
                 }
                 
@@ -370,7 +370,7 @@ sap.ui.define([
             // Handle other parameter types
             if (typeof value === 'number') {
                 if (!Number.isFinite(value)) {
-                    errors.push(`Parameter '${key}' must be a finite number`);
+                    errors.push("Parameter '" + key + "' must be a finite number");
                 }
                 return {
                     isValid: errors.length === 0,
@@ -409,8 +409,8 @@ sap.ui.define([
                 parameterTypes[key] = paramType;
                 
                 // Use different placeholder syntax based on database type
-                const placeholder = options.databaseType === 'postgresql' ? `$${Object.keys(parameterTypes).length}` : '?';
-                processedQuery = processedQuery.replace(new RegExp(`:${key}\\b`, 'g'), placeholder);
+                const placeholder = options.databaseType === 'postgresql' ? "$" + Object.keys(parameterTypes).length : '?';
+                processedQuery = processedQuery.replace(new RegExp(":" + key + "\\b", 'g'), placeholder);
             });
             
             return {
@@ -474,7 +474,7 @@ sap.ui.define([
                 };
                 
                 const limit = rateLimits[operation] || rateLimits.query;
-                const key = `rateLimit_${userId}_${operation}`;
+                const key = "rateLimit_" + userId + "_" + operation;
                 const now = Date.now();
                 
                 // Get existing rate limit data from session storage
@@ -495,7 +495,7 @@ sap.ui.define([
                     sessionStorage.setItem(key, JSON.stringify(rateLimitData));
                     resolve(true);
                 } else {
-                    Log.warning(`Rate limit exceeded for user ${userId} operation ${operation}`);
+                    Log.warning("Rate limit exceeded for user " + userId + " operation " + operation);
                     resolve(false);
                 }
             });
@@ -751,7 +751,7 @@ sap.ui.define([
             const requiredFields = ['host', 'database', 'user'];
             requiredFields.forEach(field => {
                 if (!connection[field]) {
-                    errors.push(`Missing required field: ${field}`);
+                    errors.push("Missing required field: " + field);
                 }
             });
 
@@ -1002,7 +1002,7 @@ sap.ui.define([
             });
 
             if (totalJoins > limits.maxJoins) {
-                issues.push(`Too many joins (${totalJoins}, limit: ${limits.maxJoins})`);
+                issues.push("Too many joins (" + totalJoins + ", limit: " + limits.maxJoins + ")");
             }
             metrics.total_joins = totalJoins;
 
@@ -1023,11 +1023,11 @@ sap.ui.define([
             metrics.max_nesting_depth = maxDepth;
             
             if (subqueryCount > limits.maxSubqueries) {
-                issues.push(`Too many subqueries (${subqueryCount}, limit: ${limits.maxSubqueries})`);
+                issues.push("Too many subqueries (" + subqueryCount + ", limit: " + limits.maxSubqueries + ")");
             }
             
             if (maxDepth > 4) {
-                issues.push(`Query nesting too deep (${maxDepth} levels)`);
+                issues.push("Query nesting too deep (" + maxDepth + " levels)");
                 complexity += 10;
             }
 
@@ -1039,7 +1039,7 @@ sap.ui.define([
             metrics.union_all_count = unionAllCount;
             
             if (unionCount > limits.maxUnions) {
-                issues.push(`Too many UNION operations (${unionCount}, limit: ${limits.maxUnions})`);
+                issues.push("Too many UNION operations (" + unionCount + ", limit: " + limits.maxUnions + ")");
             }
 
             // Analyze table references
@@ -1055,7 +1055,7 @@ sap.ui.define([
             metrics.table_count = tableCount;
             
             if (tableCount > limits.maxTables) {
-                issues.push(`Too many tables referenced (${tableCount}, limit: ${limits.maxTables})`);
+                issues.push("Too many tables referenced (" + tableCount + ", limit: " + limits.maxTables + ")");
             }
 
             // Check for cartesian products

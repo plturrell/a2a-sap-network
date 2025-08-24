@@ -41,6 +41,7 @@ from app.a2a.sdk.mixins import (
 from app.a2a.core.workflowContext import workflowContextManager
 from app.a2a.core.circuitBreaker import EnhancedCircuitBreaker
 from app.a2a.core.trustManager import sign_a2a_message, verify_a2a_message
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +71,8 @@ class ServiceEndpoint:
     """Individual service endpoint information"""
     id: str
     url: str
-    protocol: str = "http"
-    port: int = 8000
+    protocol: str = "a2a"  # A2A blockchain protocol only
+    port: int = 0  # A2A Protocol: No ports - blockchain messaging only
     weight: float = 1.0
     max_connections: int = 100
     current_connections: int = 0
@@ -123,8 +124,7 @@ class HealthCheckResult:
     details: Dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
 
-class ServiceDiscoveryAgentSdk(
-    A2AAgentBase,
+class ServiceDiscoveryAgentSdk(SecureA2AAgent,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -134,12 +134,21 @@ class ServiceDiscoveryAgentSdk(
     """
     
     def __init__(self):
-        super().__init__(
+        # Create agent config
+        from app.a2a.sdk.types import AgentConfig
+        config = AgentConfig(
             agent_id=create_agent_id("service-discovery-agent"),
             name="Service Discovery Agent",
             description="Dynamic service registry and agent discovery system",
             version="1.0.0"
         )
+        
+        super().__init__(config)
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(

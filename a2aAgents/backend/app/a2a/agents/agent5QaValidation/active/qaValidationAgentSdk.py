@@ -52,6 +52,7 @@ from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
 from app.a2a.sdk.types import A2AMessage, MessageRole
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -69,7 +70,12 @@ if False:  # Disabled fallback
         # Create minimal base class if SDK not available
         class A2AAgentBase(ABC, PerformanceMonitoringMixin):
             def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                        self.agent_id = agent_id
                 self.name = name  
                 self.description = description
                 self.version = version
@@ -412,7 +418,12 @@ class RealGrokClient:
     """Real Grok AI client implementation"""
     
     def __init__(self):
-        self.api_key = None
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.api_key = None
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
         self.client = None
@@ -539,7 +550,12 @@ class RealGrokAssistant:
     """Grok AI assistant for specialized tasks"""
     
     def __init__(self, client: RealGrokClient):
-        self.client = client
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.client = client
     
     async def analyze_semantic_similarity(self, text1: str, text2: str) -> float:
         """Analyze semantic similarity using Grok"""
@@ -577,7 +593,7 @@ class QAValidationResult:
     error_message: Optional[str] = None
 
 
-class QaValidationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, BlockchainQueueMixin, PerformanceMonitoringMixin):
+class QaValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, BlockchainQueueMixin, PerformanceMonitoringMixin):
     """
     QA Validation Agent SDK
     
@@ -591,7 +607,12 @@ class QaValidationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, BlockchainQ
     """
     
     def __init__(self, base_url: str):
-        # Define blockchain capabilities for QA validation agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for QA validation agent
         blockchain_capabilities = [
             "qa_validation",
             "quality_assurance",

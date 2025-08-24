@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 const joi = require('joi');
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
 
 /**
  * Production-ready Configuration Management
@@ -12,6 +13,7 @@ class EnvironmentConfig {
         this.env = process.env.NODE_ENV || 'development';
         this.configPath = path.join(__dirname, `${this.env}.env`);
         this.secrets = new Map();
+        this.logger = LoggerFactory.createNetworkLogger(this.env);
         
         // Load environment variables
         this.loadEnvironment();
@@ -44,7 +46,11 @@ class EnvironmentConfig {
             dotenv.config({ path: localEnvPath, override: true });
         }
 
-        console.log(`⚙️ Loaded configuration for environment: ${this.env}`);
+        this.logger.info('Configuration loaded successfully', { 
+            environment: this.env,
+            configPath: this.configPath,
+            operation: 'loadEnvironment'
+        });
     }
 
     /**
@@ -148,9 +154,11 @@ class EnvironmentConfig {
         });
 
         if (error) {
-            console.error('❌ Configuration validation failed:');
-            error.details.forEach(detail => {
-                console.error(`  - ${detail.message}`);
+            const errorDetails = error.details.map(detail => detail.message);
+            this.logger.error('Configuration validation failed', {
+                environment: this.env,
+                errors: errorDetails,
+                operation: 'validateConfig'
             });
             
             if (this.env === 'production') {
@@ -161,7 +169,10 @@ class EnvironmentConfig {
         // Apply validated values back to process.env
         Object.assign(process.env, value);
         
-        console.log('✅ Configuration validated successfully');
+        this.logger.info('Configuration validation completed successfully', {
+            environment: this.env,
+            operation: 'validateConfig'
+        });
     }
 
     /**
@@ -184,9 +195,18 @@ class EnvironmentConfig {
                     blockchain: process.env.BLOCKCHAIN_API_KEY
                 });
 
-                console.log('🔐 Secrets loaded successfully');
+                this.logger.info('Secrets loaded successfully', {
+                    environment: this.env,
+                    secretsCount: this.secrets.size,
+                    operation: 'loadSecrets'
+                });
             } catch (error) {
-                console.error('Failed to load secrets:', error);
+                this.logger.error('Failed to load secrets', {
+                    environment: this.env,
+                    error: error.message,
+                    stack: error.stack,
+                    operation: 'loadSecrets'
+                });
                 if (this.env === 'production') {
                     process.exit(1);
                 }

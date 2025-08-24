@@ -98,8 +98,7 @@ class BuildProject:
     deployment_info: Dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
 
-class AgentBuilderSdk(
-    A2AAgentBase,
+class AgentBuilderSdk(SecureA2AAgent,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -111,6 +110,11 @@ class AgentBuilderSdk(
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("agent-builder"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="Agent Builder",
             description="Advanced agent creation, configuration, and deployment system",
             version="1.0.0"
@@ -355,6 +359,11 @@ class {agent_class_name}(A2AAgentBase):
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("{agent_id}"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="{agent_name}",
             description="{description}",
             version="1.0.0"
@@ -518,6 +527,7 @@ pip install -r requirements.txt
 
 ```python
 from agent import get_{self._to_instance_name(project.configuration.name)}
+from app.a2a.core.security_base import SecureA2AAgent
 
 agent = get_{self._to_instance_name(project.configuration.name)}()
 ```

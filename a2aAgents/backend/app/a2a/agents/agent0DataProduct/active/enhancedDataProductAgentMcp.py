@@ -91,6 +91,7 @@ from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, 
 from app.a2a.core.helpSeeking import AgentHelpSeeker
 from app.a2a.core.circuitBreaker import CircuitBreaker, CircuitBreakerOpenError
 from app.a2a.core.taskTracker import AgentTaskTracker
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Import telemetry if available
 try:
@@ -165,7 +166,7 @@ class StreamingSession:
     last_activity: datetime = field(default_factory=datetime.utcnow)
 
 
-class EnhancedDataProductAgentMCP(A2AAgentBase):
+class EnhancedDataProductAgentMCP(SecureA2AAgent):
     """
     Enhanced Data Product Registration Agent with MCP Integration
     
@@ -190,6 +191,11 @@ class EnhancedDataProductAgentMCP(A2AAgentBase):
         """
         super().__init__(
             agent_id=create_agent_id("data_product_agent"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="Enhanced Data Product Registration Agent MCP",
             description="A2A v0.2.9 compliant agent with MCP, streaming, and advanced features",
             version="4.0.0",

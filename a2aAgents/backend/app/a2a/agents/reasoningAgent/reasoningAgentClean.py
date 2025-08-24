@@ -15,6 +15,7 @@ from app.a2a.sdk import (
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.mixins import (
+from app.a2a.core.security_base import SecureA2AAgent
     PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin
 )
 
@@ -31,7 +32,7 @@ class ReasoningArchitecture(Enum):
     DEBATE = "debate"
 
 
-class ReasoningAgent(A2AAgentBase, PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin):
+class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin):
     """
     Pure A2A agent for reasoning tasks
     Uses MCP protocol to discover and call reasoning skills
@@ -39,6 +40,11 @@ class ReasoningAgent(A2AAgentBase, PerformanceMonitorMixin, SecurityHardenedMixi
     
     def __init__(self, name: str = "ReasoningAgent", **kwargs):
         super().__init__(name=name, **kwargs)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         
         # Available MCP skills (discovered via MCP)

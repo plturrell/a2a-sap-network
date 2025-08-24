@@ -16,8 +16,12 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-# Set API key
-API_KEY = os.getenv('XAI_API_KEY', 'your-xai-api-key-here')
+# Set API key - SECURITY: No hardcoded defaults allowed
+API_KEY = os.getenv('XAI_API_KEY')
+if not API_KEY:
+    print("ERROR: XAI_API_KEY environment variable not set")
+    print("Please set your API key: export XAI_API_KEY='your-actual-api-key'")
+    sys.exit(1)
 os.environ['XAI_API_KEY'] = API_KEY
 
 print("Integration Tests with Real Grok-4 API")

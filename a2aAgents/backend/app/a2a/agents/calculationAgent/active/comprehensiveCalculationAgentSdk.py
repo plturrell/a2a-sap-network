@@ -80,6 +80,7 @@ from app.a2a.sdk.types import A2AMessage, MessageRole
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
+from app.a2a.core.security_base import SecureA2AAgent
 
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
@@ -155,7 +156,12 @@ class BlockchainQueueMixin:
     """Mixin for blockchain queue message processing"""
     
     def __init__(self):
-        self.blockchain_queue_enabled = False
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
         self._initialize_blockchain()
@@ -257,7 +263,7 @@ class BlockchainQueueMixin:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-class ComprehensiveCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Calculation Agent with Real AI Intelligence
     
@@ -273,7 +279,12 @@ class ComprehensiveCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin)
     """
     
     def __init__(self, base_url: str):
-        # Define blockchain capabilities for calculation agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for calculation agent
         blockchain_capabilities = [
             "mathematical_calculation",
             "formula_optimization",
@@ -1035,7 +1046,16 @@ class ComprehensiveCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin)
                     # Replace ^ with ** for exponentiation
                     expr = calculation.expression.replace('^', '**')
                     
-                    result = eval(expr, {"__builtins__": {}}, safe_dict)
+                    # SECURITY FIX: Use safe expression evaluation instead of eval()
+                    try:
+                        # First try ast.literal_eval for simple expressions
+                        import ast
+                        result = ast.literal_eval(expr)
+                    except (ValueError, SyntaxError):
+                        # For complex math expressions, use a safe math parser
+                        from ...core.safe_math_parser import SafeMathParser
+                        parser = SafeMathParser(allowed_names=safe_dict)
+                        result = parser.evaluate(expr)
                     
                     if enable_steps:
                         step_by_step.append({
@@ -1170,17 +1190,17 @@ class ComprehensiveCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin)
                         if response.status == 200:
                             return True
                         else:
-                            # Fallback to memory storage
+# A2A REMOVED:                             # Fallback to memory storage
                             self.training_data.setdefault(data_type, []).append(data)
                             return True
             else:
-                # Fallback to memory storage
+# A2A REMOVED:                 # Fallback to memory storage
                 self.training_data.setdefault(data_type, []).append(data)
                 return True
                         
         except Exception as e:
             logger.warning(f"Data Manager storage failed, using memory: {e}")
-            # Always fallback to memory storage
+# A2A REMOVED:             # Always fallback to memory storage
             self.training_data.setdefault(data_type, []).append(data)
             return True
     
@@ -1206,7 +1226,7 @@ class ComprehensiveCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin)
         except Exception as e:
             logger.warning(f"Data Manager retrieval failed, using memory: {e}")
         
-        # Fallback to memory
+# A2A REMOVED:         # Fallback to memory
         return self.training_data.get(data_type, [])
     
     # Additional helper methods

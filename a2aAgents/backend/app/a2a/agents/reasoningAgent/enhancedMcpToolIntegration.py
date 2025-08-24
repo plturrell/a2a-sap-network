@@ -16,11 +16,12 @@ from ...sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ...common.mcpPerformanceTools import MCPPerformanceTools
 from ...common.mcpValidationTools import MCPValidationTools
 from ...common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
 
-class EnhancedMCPReasoningAgent(A2AAgentBase):
+class EnhancedMCPReasoningAgent(SecureA2AAgent):
     """
     High-priority reasoning agent with comprehensive MCP tool usage
     Demonstrates best practices for MCP tool integration
@@ -34,6 +35,11 @@ class EnhancedMCPReasoningAgent(A2AAgentBase):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()

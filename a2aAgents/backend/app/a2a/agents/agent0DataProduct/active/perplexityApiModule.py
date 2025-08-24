@@ -1,17 +1,22 @@
 """
-Enhanced Perplexity AI API Module for Agent 0
-Implements real API integration with sentiment analysis and credibility scoring
+A2A-Compliant Perplexity AI API Module for Agent 0
+Implements blockchain-based messaging for external API integration
+
+A2A PROTOCOL COMPLIANCE:
+This module has been modified to comply with A2A protocol requirements.
+All external API calls must be routed through the A2A blockchain messaging system
+to maintain protocol compliance and audit trails.
 """
 
 import asyncio
-import aiohttp
+# REMOVED: import aiohttp  # A2A Protocol Violation - direct HTTP not allowed
 import json
 import logging
 import os
 import time
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
-from aiohttp_retry import RetryClient, ExponentialRetry
+# REMOVED: from aiohttp_retry import RetryClient, ExponentialRetry  # A2A Protocol Violation
 import backoff
 
 # NLP libraries for sentiment analysis
@@ -36,12 +41,35 @@ except ImportError as e:
 logger = logging.getLogger(__name__)
 
 class PerplexityAPIClient:
-    """Enhanced Perplexity AI API client with real implementation"""
+    """A2A-Compliant Perplexity AI API client using blockchain messaging"""
     
     def __init__(self, api_key: str, base_url: str = "https://api.perplexity.ai"):
         self.api_key = api_key
         self.base_url = base_url
-        self.session = None
+        # REMOVED: self.session = None  # A2A Protocol Violation - direct HTTP not allowed
+        
+        # A2A Compliance: Initialize blockchain messaging client for external API gateway
+        self.a2a_client = None
+        self._initialize_a2a_client()
+    
+    def _initialize_a2a_client(self):
+        """Initialize A2A blockchain messaging client for protocol compliance"""
+        try:
+            # Import A2A SDK components
+            from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
+            from ....sdk.a2aNetworkClient import A2ANetworkClient
+            
+            # Initialize A2A client for blockchain-based external API routing
+            self.a2a_client = A2ANetworkClient(
+                agent_id="agent0_perplexity_gateway",
+                private_key=os.getenv('A2A_PRIVATE_KEY'),
+                rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
+            )
+            logger.info("A2A blockchain client initialized for Perplexity API gateway")
+        except Exception as e:
+            logger.error(f"Failed to initialize A2A client: {e}")
+            # In compliance mode, we cannot proceed without A2A client
+            raise RuntimeError("A2A Protocol Violation: Cannot operate without blockchain messaging client")
         
         # Initialize Grok client for enhanced analysis
         self.grok_client = None
@@ -81,41 +109,41 @@ class PerplexityAPIClient:
         }
     
     async def __aenter__(self):
-        """Async context manager entry"""
-        retry_options = ExponentialRetry(attempts=3, start_timeout=1, max_timeout=10)
-        timeout = aiohttp.ClientTimeout(total=30, connect=10)
-        
-        self.session = RetryClient(
-            retry_options=retry_options,
-            timeout=timeout,
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "A2A-Agent0-DataProduct/1.0"
-            }
-        )
+        """A2A-Compliant async context manager entry"""
+        # A2A Protocol: No direct HTTP session initialization
+        # All communication goes through blockchain messaging
+        logger.info("A2A Protocol: Blockchain messaging client ready for external API requests")
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit"""
-        if self.session:
-            await self.session.close()
+        """A2A-Compliant async context manager exit"""
+        # A2A Protocol: Clean up A2A client connections if needed
+        if self.a2a_client:
+            try:
+                await self.a2a_client.close()
+            except Exception as e:
+                logger.warning(f"A2A client cleanup warning: {e}")
+        logger.info("A2A Protocol: Blockchain messaging client connections closed")
     
     @backoff.on_exception(
         backoff.expo,
-        (aiohttp.ClientError, asyncio.TimeoutError),
+        (RuntimeError, asyncio.TimeoutError),
         max_tries=3,
         max_time=60
     )
     async def search_news(self, query: str, filters: List[str] = None, 
                          date_range: str = "today", max_articles: int = 10) -> Dict[str, Any]:
-        """Search for news using Perplexity AI API"""
+        """
+        A2A-Compliant news search using blockchain messaging
+        Routes external API requests through A2A protocol for audit and compliance
+        """
         async with self.rate_limiter:
             try:
                 # Construct search prompt
                 search_prompt = self._build_search_prompt(query, filters, date_range, max_articles)
                 
-                payload = {
+                # A2A Protocol: Create blockchain message for external API request
+                api_request_payload = {
                     "model": "llama-3.1-sonar-small-128k-online",
                     "messages": [
                         {
@@ -135,20 +163,43 @@ class PerplexityAPIClient:
                     "return_images": False
                 }
                 
-                async with self.session.post(
-                    f"{self.base_url}/chat/completions",
-                    json=payload
-                ) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        return await self._process_perplexity_response(result, query)
+                # A2A Protocol: Route API request through blockchain messaging
+                try:
+                    # Create A2A message for external API gateway
+                    a2a_message = {
+                        "message_type": "external_api_request",
+                        "target_service": "perplexity_api",
+                        "endpoint": f"{self.base_url}/chat/completions",
+                        "method": "POST",
+                        "headers": {
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Content-Type": "application/json"
+                        },
+                        "payload": api_request_payload,
+                        "requester_agent": "agent0_perplexity_gateway",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    
+                    # Send message through A2A blockchain network to external API gateway
+                    response = await self.a2a_client.send_external_api_request(a2a_message)
+                    
+                    if response.get("status") == "success":
+                        return await self._process_perplexity_response(response.get("data"), query)
                     else:
-                        error_text = await response.text()
-                        logger.error(f"Perplexity API error {response.status}: {error_text}")
-                        return {"articles": [], "error": f"API error: {response.status}"}
+                        error_msg = response.get("error", "Unknown API error")
+                        logger.error(f"A2A External API gateway error: {error_msg}")
+                        return {"articles": [], "error": f"A2A API error: {error_msg}"}
+                        
+                except Exception as a2a_error:
+                    logger.error(f"A2A blockchain messaging failed: {a2a_error}")
+                    # A2A Protocol: No HTTP fallback allowed - must use blockchain messaging
+                    return {
+                        "articles": [], 
+                        "error": f"A2A Protocol Compliance: External API request must route through blockchain. Error: {a2a_error}"
+                    }
                         
             except Exception as e:
-                logger.error(f"Perplexity API request failed: {e}")
+                logger.error(f"A2A-compliant API request failed: {e}")
                 return {"articles": [], "error": str(e)}
     
     def _build_search_prompt(self, query: str, filters: List[str], date_range: str, max_articles: int) -> str:

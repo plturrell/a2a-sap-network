@@ -13,6 +13,7 @@ from threading import Lock
 import asyncio
 
 from .base_agent import BaseAgent, ErrorSeverity
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 @dataclass
@@ -51,11 +52,16 @@ class PerformanceMetric:
         return result
 
 
-class MonitoringDashboard(BaseAgent):
+class MonitoringDashboard(SecureA2AAgent):
     """Comprehensive monitoring dashboard for Glean Agent"""
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__('monitoring-dashboard', config)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Configuration
         self.config = config or {}

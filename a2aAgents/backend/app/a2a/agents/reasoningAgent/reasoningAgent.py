@@ -88,6 +88,7 @@ from .chainOfThoughtArchitecture import create_chain_of_thought_reasoner
 from .swarmIntelligenceArchitecture import create_swarm_intelligence_coordinator
 from .debateArchitecture import create_debate_coordinator
 from .blackboardArchitecture import BlackboardController
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -98,7 +99,7 @@ if missing_vars:
 logger = logging.getLogger(__name__)
 
 
-class EnhancedReasoningAgent(A2AAgentBase, PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin):
+class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin):
     """
     Enhanced Reasoning Agent with AI Intelligence Framework Integration
     
@@ -115,7 +116,12 @@ class EnhancedReasoningAgent(A2AAgentBase, PerformanceMonitorMixin, SecurityHard
     """
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        # Initialize parent classes
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Initialize parent classes
         A2AAgentBase.__init__(
             self,
             agent_id="enhanced_reasoning_agent",
@@ -558,7 +564,12 @@ class GrokSkillMessaging:
     """Grok-4 powered intelligent skill messaging system"""
     
     def __init__(self, reasoning_agent):
-        self.reasoning_agent = reasoning_agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.reasoning_agent = reasoning_agent
         self.grok_client = None
         self.message_context_cache = {}
         self.skill_performance_history = {}
@@ -945,7 +956,7 @@ class ReasoningState:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-class ReasoningAgent(A2AAgentBase, PerformanceMonitorMixin, SecurityHardenedMixin, 
+class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMixin, 
                     TelemetryMixin):
     """
     Advanced multi-agent reasoning system implementing sophisticated architectures
@@ -968,6 +979,11 @@ class ReasoningAgent(A2AAgentBase, PerformanceMonitorMixin, SecurityHardenedMixi
         
         super().__init__(
             agent_id=create_agent_id("reasoning"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="Advanced Reasoning Agent",
             description="Multi-agent reasoning system with hierarchical orchestration and swarm intelligence",
             version="1.0.0",

@@ -39,6 +39,7 @@ from app.a2a.core.ai_intelligence import (
 
 # Import blockchain integration
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Import enhanced calculation skills
 try:
@@ -77,7 +78,7 @@ class CalculationResult:
     explainability: Dict[str, Any] = field(default_factory=dict)
 
 
-class EnhancedCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class EnhancedCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Enhanced Calculation Agent with AI Intelligence Framework Integration and Blockchain
     
@@ -97,7 +98,12 @@ class EnhancedCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
-        # Define blockchain capabilities for mathematical calculations
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for mathematical calculations
         blockchain_capabilities = [
             "mathematical_calculations",
             "statistical_analysis", 

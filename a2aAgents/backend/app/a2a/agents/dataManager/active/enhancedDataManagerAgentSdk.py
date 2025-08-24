@@ -93,6 +93,7 @@ from app.a2a.core.asyncPatterns import (
 
 # Import network services
 from app.a2a.network import get_network_connector, get_registration_service, get_messaging_service
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -153,7 +154,7 @@ class DataResult:
     error_details: Optional[str] = None
 
 
-class EnhancedDataManagerAgent(A2AAgentBase):
+class EnhancedDataManagerAgent(SecureA2AAgent):
     """
     Enhanced Data Manager Agent with AI Intelligence Framework
     
@@ -169,6 +170,11 @@ class EnhancedDataManagerAgent(A2AAgentBase):
             version="6.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize AI Intelligence Framework with enhanced configuration for data management
         ai_config = create_enhanced_agent_config(

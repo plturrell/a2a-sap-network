@@ -126,7 +126,7 @@ sap.ui.define([
             const dangerousFunctions = ['exec', 'execute', 'eval', 'system'];
             const checkDangerousFunction = (func) => {
                 if (lowerSQL.includes(func + '(')) {
-                    issues.push(`Dangerous function '${func}' detected`);
+                    issues.push("Dangerous function '" + func + "' detected");
                 }
             };
             dangerousFunctions.forEach(checkDangerousFunction);
@@ -791,7 +791,7 @@ sap.ui.define([
             switch (intent) {
                 case 'SELECT':
                     templates.push({
-                        sql: `SELECT ${columns.length ? columns.join(', ') : '*'} FROM ${primaryTable}`,
+                        sql: "SELECT " + (columns.length ? columns.join(', ') : '*') + " FROM " + primaryTable,
                         confidence: 80,
                         parameters: {},
                         description: 'Basic SELECT query'
@@ -799,7 +799,7 @@ sap.ui.define([
                     
                     if (columns.length > 0) {
                         templates.push({
-                            sql: `SELECT ${columns[0]} FROM ${primaryTable} WHERE ${columns[0]} = ?`,
+                            sql: "SELECT " + columns[0] + " FROM " + primaryTable + " WHERE " + columns[0] + " = ?",
                             confidence: 75,
                             parameters: { param1: 'value' },
                             description: 'SELECT with WHERE condition'
@@ -809,7 +809,7 @@ sap.ui.define([
 
                 case 'COUNT':
                     templates.push({
-                        sql: `SELECT COUNT(*) FROM ${primaryTable}`,
+                        sql: "SELECT COUNT(*) FROM " + primaryTable,
                         confidence: 90,
                         parameters: {},
                         description: 'Count all records'
@@ -817,7 +817,7 @@ sap.ui.define([
                     
                     if (columns.length > 0) {
                         templates.push({
-                            sql: `SELECT COUNT(*) FROM ${primaryTable} WHERE ${columns[0]} = ?`,
+                            sql: "SELECT COUNT(*) FROM " + primaryTable + " WHERE " + columns[0] + " = ?",
                             confidence: 85,
                             parameters: { param1: 'value' },
                             description: 'Count with condition'
@@ -831,7 +831,7 @@ sap.ui.define([
                         const placeholders = columns.map(createPlaceholder).join(', ');
                         const createParameterEntry = (col, i) => [`param${i+1}`, 'value'];
                         templates.push({
-                            sql: `INSERT INTO ${primaryTable} (${columns.join(', ')}) VALUES (${placeholders})`,
+                            sql: "INSERT INTO " + primaryTable + " (" + columns.join(', ') + ") VALUES (" + placeholders + ")",
                             confidence: 75,
                             parameters: Object.fromEntries(columns.map(createParameterEntry)),
                             description: 'Insert new record'
@@ -841,11 +841,11 @@ sap.ui.define([
 
                 case 'UPDATE':
                     if (columns.length > 1) {
-                        const createSetClause = (col) => `${col} = ?`;
+                        const createSetClause = function(col) { return col + " = ?"; };
                         const setClause = columns.slice(1).map(createSetClause).join(', ');
                         const createUpdateParameterEntry = (col, i) => [`param${i+1}`, 'value'];
                         templates.push({
-                            sql: `UPDATE ${primaryTable} SET ${setClause} WHERE ${columns[0]} = ?`,
+                            sql: "UPDATE " + primaryTable + " SET " + setClause + " WHERE " + columns[0] + " = ?",
                             confidence: 70,
                             parameters: Object.fromEntries(columns.map(createUpdateParameterEntry)),
                             description: 'Update existing record'

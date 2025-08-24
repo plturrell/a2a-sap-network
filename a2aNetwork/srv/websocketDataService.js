@@ -11,17 +11,13 @@ const { portManager } = require('./utils/portManager');
 const websocketMonitor = require('./websocketMonitor');
 
 // Defensive logger initialization
+const { LoggerFactory } = require('../shared/logging/structured-logger');
 let logger;
 try {
     logger = cds.log('realtime');
 } catch (error) {
-    // Fallback to console if CDS logging not available
-    logger = {
-        info: console.log,
-        error: console.error,
-        warn: console.warn,
-        debug: console.debug
-    };
+    // Fallback to structured logger if CDS logging not available
+    logger = LoggerFactory.createLogger('websocketDataService');
 }
 
 class A2AWebSocketDataService extends EventEmitter {

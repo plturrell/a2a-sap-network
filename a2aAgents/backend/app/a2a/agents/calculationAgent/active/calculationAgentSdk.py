@@ -21,9 +21,10 @@ from app.a2a.sdk import (
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
+from app.a2a.core.security_base import SecureA2AAgent
 
 
-class CalculationAgentSDK(A2AAgentBase, PerformanceMonitoringMixin):
+class CalculationAgentSDK(SecureA2AAgent, PerformanceMonitoringMixin):
     """Calculation Agent SDK"""
     
     def __init__(self, base_url: str):
@@ -34,6 +35,11 @@ class CalculationAgentSDK(A2AAgentBase, PerformanceMonitoringMixin):
             version="1.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
     
     @a2a_handler("HEALTH_CHECK")
     async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:

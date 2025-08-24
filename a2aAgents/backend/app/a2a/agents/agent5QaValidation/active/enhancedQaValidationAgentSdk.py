@@ -26,9 +26,10 @@ from app.a2a.core.ai_intelligence import (
 
 # Import blockchain integration
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
-class EnhancedQAValidationAgent(A2AAgentBase, BlockchainIntegrationMixin):
+class EnhancedQAValidationAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Enhanced QA Validation Agent with AI Intelligence Framework Integration and Blockchain
     
@@ -47,7 +48,12 @@ class EnhancedQAValidationAgent(A2AAgentBase, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
-        # Define blockchain capabilities for QA validation
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for QA validation
         blockchain_capabilities = [
             "qa_validation",
             "quality_assurance", 
@@ -1272,6 +1278,11 @@ class QaValidationAgentSDK(EnhancedQAValidationAgent):
     
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
     
     async def validate_qa(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Basic QA validation method for backward compatibility"""

@@ -14,14 +14,20 @@ import time
 from .base_agent import BaseAgent, A2AError, ErrorCode, track_performance
 from .gleanAgentSdk import GleanAgentSDK, AnalysisResult, SecurityScanResult, RefactoringResult
 from .intelligentScanManager import IntelligentScanManager
+from app.a2a.core.security_base import SecureA2AAgent
 
 
-class EnhancedGleanAgent(BaseAgent):
+class EnhancedGleanAgent(SecureA2AAgent):
     """Enhanced Glean Agent with comprehensive error handling and monitoring"""
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         # Initialize base agent
         super().__init__('glean-agent', config)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize original Glean SDK
         self.glean_sdk = GleanAgentSDK()

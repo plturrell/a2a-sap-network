@@ -1,4 +1,7 @@
 const WebSocket = require('ws');
+
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
+const logger = LoggerFactory.createLogger('chatAgentBridge');
 const EventEmitter = require('events');
 
 /**
@@ -47,7 +50,7 @@ class ChatAgentBridge extends EventEmitter {
                 ws.isAlive = true;
             });
 
-            console.log(`🔗 Chat client connected: ${sessionId}`);
+            logger.info(`🔗 Chat client connected: ${sessionId}`);
         });
 
         // Heartbeat interval
@@ -59,7 +62,7 @@ class ChatAgentBridge extends EventEmitter {
             });
         }, 30000);
 
-        console.log('💬 Chat Agent Bridge WebSocket server started on port 8087');
+        logger.info('💬 Chat Agent Bridge WebSocket server started on port 8087');
     }
 
     /**
@@ -77,7 +80,7 @@ class ChatAgentBridge extends EventEmitter {
                     });
                     return await response.json();
                 } catch (error) {
-                    console.error('A2A Router communication error:', error);
+                    logger.error('A2A Router communication error:', { error: error });
                     throw error;
                 }
             }
@@ -114,7 +117,7 @@ class ChatAgentBridge extends EventEmitter {
         });
 
         // Log session start
-        console.log(`🚀 Chat session started for notification: ${notificationContext.notificationId}`);
+        logger.info(`🚀 Chat session started for notification: ${notificationContext.notificationId}`);
 
         return chatSession;
     }
@@ -198,7 +201,7 @@ class ChatAgentBridge extends EventEmitter {
             });
 
         } catch (error) {
-            console.error('Error handling client message:', error);
+            logger.error('Error handling client message:', { error: error });
             this.sendToClient(ws, {
                 type: 'error',
                 message: 'Failed to process message'
@@ -240,7 +243,7 @@ class ChatAgentBridge extends EventEmitter {
             return this.processAIAgentResponse(routingResponse, session);
 
         } catch (error) {
-            console.error('Error routing to AI agent:', error);
+            logger.error('Error routing to AI agent:', { error: error });
             return {
                 response: "I'm experiencing some technical difficulties. Let me try to help you with the basic information I have.",
                 confidence: 0.3,
@@ -342,7 +345,7 @@ class ChatAgentBridge extends EventEmitter {
             this.notificationChatMappings.delete(session.notificationId);
             this.activeChatSessions.delete(ws.sessionId);
             
-            console.log(`📤 Chat session ended: ${ws.sessionId}`);
+            logger.info(`📤 Chat session ended: ${ws.sessionId}`);
         }
     }
 

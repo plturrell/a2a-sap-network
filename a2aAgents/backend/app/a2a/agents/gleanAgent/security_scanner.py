@@ -14,6 +14,7 @@ from enum import Enum
 from dataclasses import dataclass, asdict
 
 from .base_agent import BaseAgent, A2AError, ErrorCode
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 class VulnerabilityType(Enum):
@@ -97,11 +98,16 @@ class SecurityScanResult:
         return breakdown
 
 
-class SecurityScanner(BaseAgent):
+class SecurityScanner(SecureA2AAgent):
     """Advanced security scanner for code analysis"""
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__('security-scanner', config)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Load vulnerability patterns
         self.vulnerability_patterns = self._load_vulnerability_patterns()

@@ -204,7 +204,12 @@ class DynamicTemplateEngine:
     """Advanced dynamic template engine with context awareness"""
     
     def __init__(self):
-        self.template_cache: Dict[str, Template] = {}
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.template_cache: Dict[str, Template] = {}
         self.context_analyzers: Dict[str, Callable] = {}
         self.template_validators: List[Callable] = []
         self.performance_monitor = PerformanceMonitor()
@@ -865,7 +870,12 @@ class AdvancedBPMNProcessor:
     """Advanced BPMN processor with complex workflow support"""
     
     def __init__(self):
-        self.element_handlers: Dict[BPMNElementType, Callable] = {}
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.element_handlers: Dict[BPMNElementType, Callable] = {}
         self.flow_analyzers: List[Callable] = []
         self.optimization_strategies: Dict[str, Callable] = {}
         self._register_element_handlers()
@@ -1127,7 +1137,12 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
     """
     
     def __init__(self):
-        self.workflow_id = "{bpmn_def.id}"
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.workflow_id = "{bpmn_def.id}"
         self.execution_context = {{}}
         self.element_states = {{}}
         self.execution_history = []
@@ -1330,7 +1345,12 @@ class AdvancedTestGenerator:
     """Advanced test generator with multiple strategies"""
     
     def __init__(self):
-        self.test_strategies: Dict[TestGenerationStrategy, Callable] = {
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.test_strategies: Dict[TestGenerationStrategy, Callable] = {
             TestGenerationStrategy.BASIC: self._generate_basic_tests,
             TestGenerationStrategy.PROPERTY_BASED: self._generate_property_based_tests,
             TestGenerationStrategy.MUTATION: self._generate_mutation_tests,
@@ -1646,7 +1666,7 @@ class Test{class_name}:
         return security_tests
 
 
-class EnhancedAgentBuilderMCP(A2AAgentBase, PerformanceOptimizationMixin):
+class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
     """
     Enhanced Agent Builder with MCP Integration
     Generates production-ready A2A agents with advanced features
@@ -1667,6 +1687,11 @@ class EnhancedAgentBuilderMCP(A2AAgentBase, PerformanceOptimizationMixin):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         self.templates_path = Path(templates_path)
         self.enable_monitoring = enable_monitoring
@@ -2473,6 +2498,7 @@ asyncio_mode = auto
 # Workflow Integration for {bpmn_def.name}
 
 from app.a2a.sdk import A2AAgentBase, a2a_task
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -2482,7 +2508,12 @@ class {bpmn_def.name.replace(' ', '')}Integration:
     """Integration class for {bpmn_def.name} workflow"""
     
     def __init__(self, agent: A2AAgentBase):
-        self.agent = agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.agent = agent
         self.workflow = {bpmn_def.name.replace(' ', '')}Workflow()
     
     @a2a_task(
@@ -2633,7 +2664,12 @@ class PerformanceMonitor:
     """Performance monitoring helper"""
     
     def __init__(self):
-        self.metrics = defaultdict(list)
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.metrics = defaultdict(list)
     
     def record_metric(self, metric_name: str, value: float):
         """Record a performance metric"""

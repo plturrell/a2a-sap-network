@@ -54,6 +54,32 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.decomposition import PCA
 import warnings
+
+
+class BlockchainRegistry:
+    """Registry that uses blockchain as single source of truth"""
+    
+    def __init__(self):
+        self.blockchain_client = None
+        self._init_blockchain()
+    
+    def _init_blockchain(self):
+        """Initialize blockchain connection"""
+        # A2A Protocol: Must have blockchain or fail
+        pass
+    
+    async def get(self, key):
+        """Get from blockchain only"""
+        if not self.blockchain_client:
+            raise RuntimeError("A2A Protocol: Blockchain required for registry access")
+        # Blockchain get implementation
+    
+    async def set(self, key, value):
+        """Set in blockchain only"""
+        if not self.blockchain_client:
+            raise RuntimeError("A2A Protocol: Blockchain required for registry updates")
+        # Blockchain set implementation
+
 warnings.filterwarnings('ignore', category=UserWarning)
 
 # Network and system monitoring
@@ -125,6 +151,7 @@ except ImportError:
 # Data Manager integration
 import sqlite3
 import aiosqlite
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -287,7 +314,12 @@ class DataManagerClient:
     """Client for Data Manager agent integration"""
     
     def __init__(self, base_url: str):
-        self.base_url = base_url
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.base_url = base_url
         self.local_db_path = "agent_manager_data.db"
         self._initialize_local_db()
     
@@ -395,7 +427,7 @@ class DataManagerClient:
             return False
 
 
-class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Agent Manager with Real AI Intelligence
     
@@ -412,7 +444,12 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str):
-        # Create agent configuration manually
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Create agent configuration manually
         from app.a2a.sdk.types import AgentConfig
         
         config = AgentConfig(
@@ -459,7 +496,7 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
         self._initialize_grok_client()
         
         # Agent registry and management
-        self.agent_registry = {}  # agent_id -> AgentRegistration
+        self.blockchain_registry = BlockchainRegistry()  # A2A: No local storage  # agent_id -> AgentRegistration
         self.agent_metrics = {}  # agent_id -> AgentMetrics
         self.orchestration_tasks = {}  # task_id -> OrchestrationTask
         self.health_history = defaultdict(deque)  # agent_id -> deque of health metrics

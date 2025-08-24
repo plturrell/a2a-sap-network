@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken');
+
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
+const logger = LoggerFactory.createLogger('authSessionManager');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const Redis = require('ioredis');
@@ -36,7 +39,7 @@ class AuthSessionManager {
         this.userSessionPrefix = 'user:sessions:';
         this.refreshTokenPrefix = 'refresh:';
 
-        console.log('🔒 AuthSessionManager initialized with Redis session store');
+        logger.info('🔒 AuthSessionManager initialized with Redis session store');
     }
 
     /**
@@ -86,7 +89,7 @@ class AuthSessionManager {
             };
 
         } catch (error) {
-            console.error('Authentication error:', error);
+            logger.error('Authentication error:', { error: error });
             return { success: false, error: 'Authentication failed' };
         }
     }
@@ -492,7 +495,7 @@ class AuthSessionManager {
      */
     async cleanupExpiredSessions() {
         // This would run as a periodic job
-        console.log('🧹 Cleaning up expired sessions...');
+        logger.info('🧹 Cleaning up expired sessions...');
         
         // Redis automatically expires keys, but we can do additional cleanup
         // of user session references here if needed

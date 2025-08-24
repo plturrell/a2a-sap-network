@@ -14,9 +14,10 @@ from .enhanced_glean_agent import EnhancedGleanAgent
 from .security_scanner import SecurityScanner, SecurityScanResult
 from .monitoring_dashboard import MonitoringDashboard
 from .base_agent import BaseAgent, A2AError, ErrorCode, ErrorSeverity
+from app.a2a.core.security_base import SecureA2AAgent
 
 
-class GleanAgentEnhanced(BaseAgent):
+class GleanAgentEnhanced(SecureA2AAgent):
     """
     Comprehensive Enhanced Glean Agent with all enterprise capabilities:
     - Structured logging with correlation IDs
@@ -29,6 +30,11 @@ class GleanAgentEnhanced(BaseAgent):
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__('glean-agent-enhanced', config)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize components
         self.glean_agent = EnhancedGleanAgent(config)

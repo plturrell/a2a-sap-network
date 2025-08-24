@@ -40,6 +40,7 @@ from app.a2a.sdk.mixins import (
 
 from app.a2a.core.workflowContext import workflowContextManager
 from app.a2a.core.circuitBreaker import EnhancedCircuitBreaker
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -118,8 +119,7 @@ class TrainingJob:
     error_message: Optional[str] = None
     log_file: Optional[str] = None
 
-class EmbeddingFineTunerAgentSdk(
-    A2AAgentBase,
+class EmbeddingFineTunerAgentSdk(SecureA2AAgent,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -131,6 +131,11 @@ class EmbeddingFineTunerAgentSdk(
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("embedding-fine-tuner-agent"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="Embedding Fine-Tuner Agent",
             description="Advanced embedding model fine-tuning and optimization system",
             version="1.0.0"

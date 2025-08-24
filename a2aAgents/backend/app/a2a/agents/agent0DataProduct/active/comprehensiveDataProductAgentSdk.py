@@ -69,6 +69,7 @@ from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
 from app.a2a.sdk.types import A2AMessage, MessageRole
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -168,7 +169,12 @@ class BlockchainQueueMixin:
     """Mixin for blockchain queue message processing"""
     
     def __init__(self):
-        self.blockchain_queue_enabled = False
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
         self._initialize_blockchain()
@@ -267,7 +273,7 @@ class BlockchainQueueMixin:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
     """
     Comprehensive Data Product Agent with Real AI Intelligence
     
@@ -283,7 +289,12 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
     """
     
     def __init__(self, base_url: str):
-        A2AAgentBase.__init__(
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                A2AAgentBase.__init__(
             self,
             agent_id=create_agent_id(),
             name="Comprehensive Data Product Agent",
@@ -1091,7 +1102,7 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
         except Exception as e:
             logger.warning(f"Data Manager storage failed, using memory: {e}")
             
-        # Always fallback to memory storage
+# A2A REMOVED:         # Always fallback to memory storage
         self.training_data.setdefault(data_type, []).append(data)
         return True
     
@@ -1110,7 +1121,7 @@ class ComprehensiveDataProductAgentSDK(A2AAgentBase, BlockchainQueueMixin):
         except Exception as e:
             logger.warning(f"Data Manager retrieval failed, using memory: {e}")
         
-        # Fallback to memory
+# A2A REMOVED:         # Fallback to memory
         return self.training_data.get(data_type, [])
     
     # Additional helper methods

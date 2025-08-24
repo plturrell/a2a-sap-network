@@ -110,6 +110,7 @@ except ImportError:
 
 # Cross-agent communication
 from app.a2a.network.connector import NetworkConnector
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -182,7 +183,7 @@ class MathematicalPattern:
     accuracy_threshold: float
 
 
-class ComprehensiveCalcValidationSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Calculation Validation Agent with Real AI Intelligence
     
@@ -206,6 +207,11 @@ class ComprehensiveCalcValidationSDK(A2AAgentBase, BlockchainIntegrationMixin):
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain capabilities
         self.blockchain_queue_enabled = False

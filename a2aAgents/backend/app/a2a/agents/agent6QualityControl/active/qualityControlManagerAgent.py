@@ -60,6 +60,7 @@ from app.a2a.sdk.config.contractConfig import ContractConfigManager
 
 # Import Prometheus metrics
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -130,7 +131,7 @@ class LeanSixSigmaAnalysis(BaseModel):
     root_causes: List[str]
 
 
-class QualityControlManagerAgent(A2AAgentBase, PerformanceOptimizationMixin):
+class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
     """
     Agent 6: Quality Control Manager
     Assesses outputs from calculation and QA validation agents
@@ -144,7 +145,12 @@ class QualityControlManagerAgent(A2AAgentBase, PerformanceOptimizationMixin):
         catalog_manager_url: str = None,
         enable_monitoring: bool = True
     ):
-        # Initialize both parent classes
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Initialize both parent classes
         A2AAgentBase.__init__(
             self,
             agent_id="quality_control_manager_6",

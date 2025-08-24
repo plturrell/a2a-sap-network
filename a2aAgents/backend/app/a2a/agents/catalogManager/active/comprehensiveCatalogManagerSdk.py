@@ -98,6 +98,7 @@ from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 
 # Network connector - Use standard A2A network (NO FALLBACKS)
 from ....a2a.network.networkConnector import get_network_connector
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Real Blockchain Integration
 try:
@@ -120,7 +121,12 @@ class RealGrokCatalogClient:
     """Real Grok AI client for catalog intelligence"""
     
     def __init__(self):
-        self.base_url = "https://api.x.ai/v1"
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
         self.api_key = None
         self.client = None
@@ -492,7 +498,7 @@ class RelationshipMapping:
     discovered_by: str = "ai_analysis"
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
-class ComprehensiveCatalogManagerSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveCatalogManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
     """
     Comprehensive Catalog Manager with Real AI Intelligence
     
@@ -515,6 +521,11 @@ class ComprehensiveCatalogManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain queue capabilities
         self.__init_blockchain_queue__(

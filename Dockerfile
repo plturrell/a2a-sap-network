@@ -39,7 +39,11 @@ FROM python:3.11-slim as production
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
-    A2A_ENVIRONMENT=production
+    A2A_ENVIRONMENT=production \
+    A2A_SERVICE_URL=http://localhost:4004 \
+    A2A_SERVICE_HOST=localhost \
+    A2A_BASE_URL=http://localhost:8000 \
+    A2A_AGENT_BASE_URL=http://localhost:8000
 
 # Create non-root user for security
 RUN groupadd -r a2auser && useradd -r -g a2auser a2auser
@@ -78,47 +82,61 @@ COPY --chown=a2auser:a2auser <<'EOF' /app/entrypoint.sh
 set -e
 
 # Set up environment for container
-export PYTHONPATH=/app
+export PYTHONPATH=/app:/app/a2aAgents/backend
 export NODE_PATH=/app/node_modules
 export PATH=/app/node_modules/.bin:$PATH
 
+# Set required A2A environment variables if not already set
+export A2A_SERVICE_URL=${A2A_SERVICE_URL:-http://localhost:4004}
+export A2A_SERVICE_HOST=${A2A_SERVICE_HOST:-localhost}
+export A2A_BASE_URL=${A2A_BASE_URL:-http://localhost:8000}
+export A2A_AGENT_BASE_URL=${A2A_AGENT_BASE_URL:-http://localhost:8000}
+
+# Set container environment flag
+export A2A_IN_CONTAINER=true
+export SKIP_VENV_CREATION=true
+
 # Create required directories
 mkdir -p /app/logs /app/data /app/pids
+
+# Copy start.sh to the right location if needed
+if [ ! -f /app/start.sh ] && [ -f /app/scripts/start.sh ]; then
+    cp /app/scripts/start.sh /app/start.sh
+    chmod +x /app/start.sh
+fi
 
 # Handle different commands
 case "${1}" in
     verify)
         echo "Running 18-step verification..."
         cd /app
-        exec /app/scripts/verify-18-steps.sh
+        exec /app/scripts/start.sh verify
         ;;
     ci-verify)
         echo "Running CI verification mode..."
         cd /app
-        exec /app/start.sh ci-verify
+        exec /app/scripts/start.sh ci-verify
         ;;
     test)
         echo "Running test mode..."
         cd /app
-        exec /app/start.sh test
+        exec /app/scripts/start.sh test
+        ;;
+    complete)
+        echo "Starting complete A2A platform with all services..."
+        cd /app
+        exec /app/scripts/start.sh complete
+        ;;
+    backend)
+        echo "Starting A2A Backend Service..."
+        cd /app
+        exec python a2aAgents/backend/main.py
         ;;
     start)
-        # Handle start with different modes
-        if [ "${2}" = "complete" ]; then
-            echo "Starting complete A2A platform with all services..."
-            export ENABLE_ALL_AGENTS=true
-            export A2A_NETWORK_ENABLED=true
-            export FRONTEND_ENABLED=true
-            export ENABLE_BLOCKCHAIN=true
-            export ENABLE_NETWORK=true
-            export ENABLE_AGENTS=true
-            cd /app
-            exec /app/start.sh complete
-        else
-            echo "Starting A2A system..."
-            cd /app
-            exec /app/start.sh "$@"
-        fi
+        # Default start mode
+        echo "Starting A2A system..."
+        cd /app
+        exec /app/scripts/start.sh "${@:2}"
         ;;
     *)
         # Default: run the command as-is
@@ -143,4 +161,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 EXPOSE 8000 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015
 
 # Default command - can be overridden in docker-compose
-CMD ["python", "-m", "a2aAgents.backend.main", "--agent-id", "0"]
+CMD ["backend"]

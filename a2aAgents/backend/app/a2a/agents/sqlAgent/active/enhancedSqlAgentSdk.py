@@ -59,6 +59,7 @@ from app.a2a.core.ai_intelligence import (
 
 # Import blockchain integration
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Import enhanced SQL skills
 try:
@@ -116,7 +117,7 @@ class QueryPattern:
     optimization_insights: Dict[str, Any] = field(default_factory=dict)
 
 
-class EnhancedSqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Enhanced SQL Agent with AI Intelligence Framework Integration and Blockchain
     
@@ -136,7 +137,12 @@ class EnhancedSqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
-        # Define blockchain capabilities for SQL operations
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for SQL operations
         blockchain_capabilities = [
             "sql_query_execution",
             "database_operations",

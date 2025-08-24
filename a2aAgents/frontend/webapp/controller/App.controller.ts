@@ -9,6 +9,7 @@ import SplitApp from "sap/m/SplitApp";
 import { SearchField$SearchEvent, SearchField$SuggestEvent } from "sap/m/SearchField";
 import { NavigationList$ItemSelectEvent } from "sap/tnt/NavigationList";
 import { ComboBox$SelectionChangeEvent } from "sap/m/ComboBox";
+import Log from "sap/base/Log";
 
 /**
  * @namespace com.sap.a2a.portal.controller
@@ -105,27 +106,207 @@ export default class App extends Controller {
     }
 
     private async _checkAuthentication(): Promise<void> {
+        const authToken = this._getAuthToken();
+        
+        if (!authToken) {
+            Log.warn("No authentication token found, redirecting to login", "com.sap.a2a.portal.controller.App");
+            this._handleAuthenticationFailure("No authentication token");
+            return;
+        }
+
         try {
             const response = await fetch("/api/v1/users/me", {
                 headers: {
-                    "Authorization": `Bearer ${this._getAuthToken()}`
-                }
+                    "Authorization": `Bearer ${authToken}`,
+                    "Content-Type": "application/json"
+                },
+                timeout: 10000 // 10 second timeout
             });
 
             if (response.ok) {
                 const userData = await response.json();
+                this._validateUserData(userData);
                 this.getModel("user").setData(userData);
-            } else if (response.status === 401) {
-                // Redirect to login
-                window.location.href = "/login";
+                Log.info("Authentication check successful", "com.sap.a2a.portal.controller.App");
+            } else {
+                await this._handleAuthenticationError(response);
             }
         } catch (error) {
-            console.error("Authentication check failed:", error);
+            Log.error("Authentication check failed", error.message, "com.sap.a2a.portal.controller.App");
+            this._handleNetworkError(error);
         }
     }
 
+    private _validateUserData(userData: any): void {
+        const requiredFields = ["name", "email", "role"];
+        const missingFields = requiredFields.filter(field => !userData[field]);
+        
+        if (missingFields.length > 0) {
+            Log.warn(`User data missing required fields: ${missingFields.join(", ")}`, "com.sap.a2a.portal.controller.App");
+            // Set default values for missing fields
+            userData.name = userData.name || "Unknown User";
+            userData.email = userData.email || "";
+            userData.role = userData.role || "User";
+        }
+    }
+
+    private async _handleAuthenticationError(response: Response): Promise<void> {
+        let errorMessage = "Authentication failed";
+        
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+        } catch {
+            // Unable to parse error response
+        }
+
+        Log.warn(`Authentication failed with status ${response.status}: ${errorMessage}`, "com.sap.a2a.portal.controller.App");
+
+        switch (response.status) {
+            case 401:
+                this._handleAuthenticationFailure("Invalid or expired token");
+                break;
+            case 403:
+                MessageToast.show("Access denied. Please contact your administrator.");
+                break;
+            case 429:
+                MessageToast.show("Too many requests. Please wait a moment and try again.");
+                break;
+            case 503:
+                MessageToast.show("Authentication service temporarily unavailable. Please try again later.");
+                break;
+            default:
+                MessageToast.show("Authentication failed. Please try logging in again.");
+                this._handleAuthenticationFailure(errorMessage);
+        }
+    }
+
+    private _handleAuthenticationFailure(reason: string): void {
+        Log.warn(`Redirecting to login due to: ${reason}`, "com.sap.a2a.portal.controller.App");
+        
+        // Clear any stored authentication data
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("refreshToken");
+        
+        // Show user-friendly message
+        MessageToast.show("Your session has expired. Redirecting to login...");
+        
+        // Redirect after a short delay to allow user to see the message
+        setTimeout(() => {
+            window.location.href = "/login";
+        }, 2000);
+    }
+
+    private _handleNetworkError(error: Error): void {
+        if (error.name === "TimeoutError" || error.message.includes("timeout")) {
+            MessageToast.show("Request timed out. Please check your connection and try again.");
+        } else if (error.name === "NetworkError" || error.message.includes("fetch")) {
+            MessageToast.show("Unable to connect to the server. Please check your internet connection.");
+        } else {
+            MessageToast.show("An unexpected error occurred. Please try refreshing the page.");
+        }
+        
+        // Set user model to safe defaults
+        this.getModel("user").setData({
+            name: "Offline User",
+            initials: "OU",
+            role: "User",
+            email: ""
+        });
+    }
+
     private _getAuthToken(): string {
-        return localStorage.getItem("authToken") || "";
+        return this._getSecureToken("authToken");
+    }
+
+    private _getSecureToken(key: string): string {
+        try {
+            const token = sessionStorage.getItem(key) || localStorage.getItem(key);
+            
+            if (!token) {
+                return "";
+            }
+
+            // Basic token validation - check format and expiration
+            if (!this._isValidTokenFormat(token)) {
+                Log.warn("Invalid token format detected, clearing token", "com.sap.a2a.portal.controller.App");
+                this._clearAuthTokens();
+                return "";
+            }
+
+            // Check if token is expired
+            if (this._isTokenExpired(token)) {
+                Log.warn("Expired token detected, clearing token", "com.sap.a2a.portal.controller.App");
+                this._clearAuthTokens();
+                return "";
+            }
+
+            return token;
+        } catch (error) {
+            Log.error("Error retrieving secure token", error.message, "com.sap.a2a.portal.controller.App");
+            this._clearAuthTokens();
+            return "";
+        }
+    }
+
+    private _isValidTokenFormat(token: string): boolean {
+        if (!token || typeof token !== "string") {
+            return false;
+        }
+
+        // Basic JWT format validation (header.payload.signature)
+        const parts = token.split(".");
+        if (parts.length !== 3) {
+            return false;
+        }
+
+        // Check that each part is base64 encoded
+        try {
+            parts.forEach(part => {
+                if (!part || part.length === 0) {
+                    throw new Error("Empty token part");
+                }
+                // Basic base64 character validation
+                if (!/^[A-Za-z0-9+/=-]*$/.test(part)) {
+                    throw new Error("Invalid base64 characters");
+                }
+            });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    private _isTokenExpired(token: string): boolean {
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            const expirationTime = payload.exp;
+            
+            if (!expirationTime) {
+                // No expiration time, consider it expired for security
+                return true;
+            }
+
+            const currentTime = Math.floor(Date.now() / 1000);
+            const buffer = 60; // 1 minute buffer before expiration
+            
+            return currentTime >= (expirationTime - buffer);
+        } catch {
+            // If we can't parse the token, consider it expired
+            return true;
+        }
+    }
+
+    private _clearAuthTokens(): void {
+        try {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("refreshToken");
+            sessionStorage.removeItem("authToken");
+            sessionStorage.removeItem("refreshToken");
+            Log.info("Authentication tokens cleared", "com.sap.a2a.portal.controller.App");
+        } catch (error) {
+            Log.error("Error clearing authentication tokens", error.message, "com.sap.a2a.portal.controller.App");
+        }
     }
 
     public onRouteMatched(oEvent: Route$MatchedEvent): void {
@@ -259,7 +440,7 @@ export default class App extends Controller {
             // Redirect to login
             window.location.href = "/login";
         } catch (error) {
-            console.error("Logout failed:", error);
+            Log.error("Logout failed", error.message, "com.sap.a2a.portal.controller.App");
         }
     }
 
@@ -294,7 +475,7 @@ export default class App extends Controller {
                 oSearchField.suggest(sValue, suggestions.map((s: any) => s.text));
             }
         } catch (error) {
-            console.error("Search suggest failed:", error);
+            Log.error("Search suggest failed", error.message, "com.sap.a2a.portal.controller.App");
         }
     }
 
@@ -354,7 +535,7 @@ export default class App extends Controller {
                 
                 // Update relevant models with workspace data
                 // This could include projects, agents, etc.
-                console.log("Workspace data loaded:", workspaceData);
+                Log.info("Workspace data loaded successfully", "com.sap.a2a.portal.controller.App");
                 
                 // Store workspace preference
                 localStorage.setItem("selectedWorkspace", workspaceId);
@@ -362,7 +543,7 @@ export default class App extends Controller {
                 MessageToast.show("Failed to load workspace data");
             }
         } catch (error) {
-            console.error("Error refreshing workspace data:", error);
+            Log.error("Error refreshing workspace data", error.message, "com.sap.a2a.portal.controller.App");
             MessageToast.show("Error loading workspace data");
         } finally {
             this.getModel("app").setProperty("/busy", false);
@@ -377,7 +558,7 @@ export default class App extends Controller {
         localStorage.setItem("userTheme", sTheme);
         
         // Log theme change for debugging
-        console.log(`Theme applied: ${sTheme}`);
+        Log.info(`Theme applied: ${sTheme}`, "com.sap.a2a.portal.controller.App");
     }
 
     public onSaveSettings(): void {
@@ -458,7 +639,7 @@ export default class App extends Controller {
         document.addEventListener("keydown", this._handleKeyboardShortcut.bind(this), true);
         
         // Log keyboard shortcuts initialization
-        console.log("Keyboard shortcuts initialized");
+        Log.info("Keyboard shortcuts initialized", "com.sap.a2a.portal.controller.App");
     }
 
     private _handleKeyboardShortcut(oEvent: KeyboardEvent): void {

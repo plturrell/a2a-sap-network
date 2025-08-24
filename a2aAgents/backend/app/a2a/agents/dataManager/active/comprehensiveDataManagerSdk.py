@@ -101,6 +101,7 @@ from app.a2a.network.connector import NetworkConnector
 
 # Blockchain queue integration
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin as BlockchainQueueMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -151,7 +152,7 @@ class StorageOptimization:
     affected_tables: List[str]
 
 
-class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveDataManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
     """
     Comprehensive Data Manager with Real AI Intelligence
     
@@ -175,6 +176,11 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain capabilities
         self.blockchain_queue_enabled = False
@@ -859,7 +865,7 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             except Exception as e:
                 logger.error(f"Cache check error: {e}")
         
-        # Fallback to memory cache
+# A2A REMOVED:         # Fallback to memory cache
         memory_cache = self.backends.get(StorageBackend.MEMORY, {})
         return memory_cache.get(f"cache:{cache_key}")
     
@@ -1508,7 +1514,7 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
                     json.dumps(result, default=str)
                 )
             else:
-                # Fallback to memory cache
+# A2A REMOVED:                 # Fallback to memory cache
                 memory_cache = self.backends.get(StorageBackend.MEMORY, {})
                 memory_cache[f"cache:{cache_key}"] = result
                 

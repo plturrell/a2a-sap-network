@@ -63,6 +63,7 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 import sys
 sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
 from trustSystem.smartContractTrust import (
+from app.a2a.core.security_base import SecureA2AAgent
     initialize_agent_trust,
     get_trust_contract,
     verify_a2a_message,
@@ -77,11 +78,21 @@ except ImportError:
     # Create stub implementations if not available
     class WorkflowContextManager:
         def __init__(self):
-            pass
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                    pass
     
     class WorkflowMonitor:
         def __init__(self):
-            pass
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                    pass
     
     workflowContextManager = WorkflowContextManager()
     workflowMonitor = WorkflowMonitor()
@@ -166,13 +177,18 @@ class AnalysisResult:
     coverage_data: Optional[Dict[str, Any]] = None
 
 
-class GleanAgent(A2AAgentBase, BlockchainIntegrationMixin):
+class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     A2A Compliant Glean Agent for comprehensive code analysis
     """
     
     def __init__(self, base_url: str = None):
-        # Define blockchain capabilities for glean agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for glean agent
         blockchain_capabilities = [
             "code_analysis",
             "semantic_analysis", 
@@ -1525,8 +1541,26 @@ class GleanAgent(A2AAgentBase, BlockchainIntegrationMixin):
     
     def _check_tool_available(self, tool: str) -> bool:
         """Check if a linting tool is available"""
+        # SECURITY FIX: Whitelist allowed tools to prevent command injection
+        ALLOWED_TOOLS = {
+            'ruff', 'black', 'isort', 'mypy', 'pylint', 'flake8',
+            'bandit', 'safety', 'prospector', 'radon', 'xenon',
+            'pycodestyle', 'pydocstyle', 'pyflakes', 'vulture'
+        }
+        
+        # Validate tool name against whitelist
+        if tool not in ALLOWED_TOOLS:
+            logger.warning(f"Tool '{tool}' not in allowed tools whitelist")
+            return False
+        
+        # Additional validation: ensure no path separators or special characters
+        if any(char in tool for char in ['/', '\\', ';', '&', '|', '$', '`', '\n', '\r']):
+            logger.error(f"Invalid characters in tool name: {tool}")
+            return False
+        
         try:
-            subprocess.run([tool, "--version"], capture_output=True, check=False)
+            # Use absolute path to tool or rely on PATH, but never user input directly
+            subprocess.run([tool, "--version"], capture_output=True, check=False, shell=False)
             return True
         except (subprocess.SubprocessError, FileNotFoundError):
             return False
@@ -1738,7 +1772,12 @@ class GleanAgent(A2AAgentBase, BlockchainIntegrationMixin):
             
             class SemanticVisitor(ast.NodeVisitor):
                 def __init__(self):
-                    self.current_class = None
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                            self.current_class = None
                     self.current_function = None
                 
                 def visit_Import(self, node):
@@ -6041,7 +6080,12 @@ class GleanAgent(A2AAgentBase, BlockchainIntegrationMixin):
         # Visitor class for AST analysis
         class RefactoringVisitor(ast.NodeVisitor):
             def __init__(self):
-                self.suggestions = []
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                        self.suggestions = []
                 self.function_stats = defaultdict(lambda: {'complexity': 1, 'parameters': 0, 'lines': 0})
                 self.duplicated_code = []
                 self.long_parameter_lists = []

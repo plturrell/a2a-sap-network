@@ -20,7 +20,12 @@ readonly NC='\033[0m'
 
 # Configuration
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+# In container, ROOT_DIR is /app, otherwise it's parent of script dir
+if [ "${A2A_IN_CONTAINER:-false}" = "true" ]; then
+    readonly ROOT_DIR="/app"
+else
+    readonly ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+fi
 readonly LOG_DIR="${LOG_DIR:-$ROOT_DIR/logs}"
 readonly PID_DIR="${PID_DIR:-$ROOT_DIR/pids}"
 readonly CONFIG_DIR="${CONFIG_DIR:-$ROOT_DIR/config}"
@@ -749,7 +754,7 @@ EOF
             log_info "Registering agents on blockchain..."
             register_agents_on_blockchain
             
-            cd "$SCRIPT_DIR"
+            cd "$ROOT_DIR"
         fi
     elif command -v ganache &> /dev/null; then
         log_info "Starting Ganache blockchain..."
@@ -768,7 +773,7 @@ EOF
 start_network() {
     log_header "Starting A2A Network Service"
     
-    cd "$SCRIPT_DIR/a2aNetwork"
+    cd "$ROOT_DIR/a2aNetwork"
     
     # Install dependencies
     if [ ! -d "node_modules" ]; then
@@ -830,7 +835,7 @@ start_network() {
     while [ $attempts -lt $STARTUP_TIMEOUT ]; do
         if curl -sf "http://localhost:$NETWORK_PORT/health" > /dev/null 2>&1; then
             log_success "Network Service ready on port $NETWORK_PORT"
-            cd "$SCRIPT_DIR"
+            cd "$ROOT_DIR"
             return 0
         fi
         sleep 1
@@ -838,7 +843,7 @@ start_network() {
     done
     
     log_error "Network Service failed to start"
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
     return 1
 }
 
@@ -846,24 +851,31 @@ start_network() {
 start_agents() {
     log_header "Starting A2A Agents Service"
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    # Use ROOT_DIR for proper path resolution
+    cd "$ROOT_DIR/a2aAgents/backend"
     
-    # Create virtual environment if needed
-    if [ ! -d "venv" ]; then
-        execute_with_trace "Create Python virtual environment" "python3 -m venv venv" "$LOG_DIR/agents-venv.log"
+    # Check if running in container
+    if [ "${A2A_IN_CONTAINER:-false}" = "true" ] || [ "${SKIP_VENV_CREATION:-false}" = "true" ]; then
+        log_info "Running in container mode - skipping virtual environment setup"
+        local PYTHON_CMD="python3"
+    else
+        # Create virtual environment if needed
+        if [ ! -d "venv" ]; then
+            execute_with_trace "Create Python virtual environment" "python3 -m venv venv" "$LOG_DIR/agents-venv.log"
+        fi
+        
+        # Activate virtual environment
+        log_substep "Activating virtual environment"
+        source venv/bin/activate
+        
+        # Install dependencies
+        if [ ! -f "venv/pyvenv.cfg" ] || [ "requirements.txt" -nt "venv/pyvenv.cfg" ]; then
+            execute_with_trace "Install base dependencies" "pip install -r requirements.txt" "$LOG_DIR/agents-install.log"
+        fi
+        
+        # Use the virtual environment's python for all subsequent commands
+        local PYTHON_CMD="$PWD/venv/bin/python3"
     fi
-    
-    # Activate virtual environment
-    log_substep "Activating virtual environment"
-    source venv/bin/activate
-    
-    # Install dependencies
-    if [ ! -f "venv/pyvenv.cfg" ] || [ "requirements.txt" -nt "venv/pyvenv.cfg" ]; then
-        execute_with_trace "Install base dependencies" "pip install -r requirements.txt" "$LOG_DIR/agents-install.log"
-    fi
-    
-    # Use the virtual environment's python for all subsequent commands
-    local PYTHON_CMD="$PWD/venv/bin/python3"
     
     # Export protobuf compatibility for Python 3.11
     export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
@@ -873,35 +885,40 @@ start_agents() {
     log_info "  Blockchain: ${A2A_RPC_URL:-not configured}"
     log_info "  Registry: ${A2A_AGENT_REGISTRY_ADDRESS:-not configured}"
     
-    # Check and install dependencies only if needed
-    log_info "Checking Python dependencies..."
-    
-    # Check if PyTorch is already installed
-    if ! pip3 show torch >/dev/null 2>&1; then
-        log_info "PyTorch not found, installing CPU-only version..."
-        execute_with_trace "Install PyTorch" "pip3 install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu" "$LOG_DIR/torch-install.log" "true"
-    else
-        log_success "PyTorch already installed"
-    fi
-    
-    # Check and install critical dependencies
-    local missing_deps=""
-    for dep in fastapi uvicorn httpx web3 sentence-transformers; do
-        if ! pip3 show "$dep" >/dev/null 2>&1; then
-            missing_deps="$missing_deps $dep"
+    # Skip dependency checks in container (they should be pre-installed)
+    if [ "${A2A_IN_CONTAINER:-false}" != "true" ]; then
+        # Check and install dependencies only if needed
+        log_info "Checking Python dependencies..."
+        
+        # Check if PyTorch is already installed
+        if ! pip3 show torch >/dev/null 2>&1; then
+            log_info "PyTorch not found, installing CPU-only version..."
+            execute_with_trace "Install PyTorch" "pip3 install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu" "$LOG_DIR/torch-install.log" "true"
+        else
+            log_success "PyTorch already installed"
         fi
-    done
-    
-    if [ -n "$missing_deps" ]; then
-        log_info "Installing missing dependencies: $missing_deps"
-        execute_with_trace "Install dependencies" "pip3 install $missing_deps" "$LOG_DIR/agents-deps-install.log" "true"
+        
+        # Check and install critical dependencies
+        local missing_deps=""
+        for dep in fastapi uvicorn httpx web3 sentence-transformers; do
+            if ! pip3 show "$dep" >/dev/null 2>&1; then
+                missing_deps="$missing_deps $dep"
+            fi
+        done
+        
+        if [ -n "$missing_deps" ]; then
+            log_info "Installing missing dependencies: $missing_deps"
+            execute_with_trace "Install dependencies" "pip3 install $missing_deps" "$LOG_DIR/agents-deps-install.log" "true"
+        else
+            log_success "All critical dependencies already installed"
+        fi
+        
+        # Ensure protobuf compatibility
+        if ! pip3 show protobuf | grep -q "4.21.12" 2>/dev/null; then
+            execute_with_trace "Fix protobuf compatibility" "pip3 install 'protobuf==4.21.12'" "$LOG_DIR/protobuf-fix.log" "true"
+        fi
     else
-        log_success "All critical dependencies already installed"
-    fi
-    
-    # Ensure protobuf compatibility
-    if ! pip3 show protobuf | grep -q "4.21.12" 2>/dev/null; then
-        execute_with_trace "Fix protobuf compatibility" "pip3 install 'protobuf==4.21.12'" "$LOG_DIR/protobuf-fix.log" "true"
+        log_info "Running in container - skipping dependency installation (pre-installed in image)"
     fi
     
     # Set required A2A environment variables
@@ -979,7 +996,7 @@ start_agents() {
     while [ $attempts -lt $STARTUP_TIMEOUT ]; do
         if curl -sf "http://localhost:$AGENTS_PORT/health" > /dev/null 2>&1; then
             log_success "Agents Service ready on port $AGENTS_PORT"
-            cd "$SCRIPT_DIR"
+            cd "$ROOT_DIR"
             return 0
         fi
         # Check if process is still running
@@ -989,7 +1006,7 @@ start_agents() {
                 log_error "Agents Service process died. Check logs at $LOG_DIR/agents-service.log"
                 log_error "Last 20 lines of error log:"
                 tail -20 "$LOG_DIR/agents-service.log" 2>/dev/null
-                cd "$SCRIPT_DIR"
+                cd "$ROOT_DIR"
                 return 1
             fi
         fi
@@ -1011,7 +1028,7 @@ start_agents() {
     log_info "- Running agent processes: $(ps aux | grep -c 'unifiedLauncher.py' || echo '0')"
     log_info "- Check agent service log: tail -20 $LOG_DIR/agents-service.log"
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
     return 1
 }
 
@@ -1022,7 +1039,7 @@ start_telemetry() {
     # Telemetry is optional and not required for core functionality
     log_info "Telemetry monitoring is optional - skipping for now"
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
     return 0
 }
 
@@ -1075,14 +1092,14 @@ start_infrastructure() {
         log_warning "Some infrastructure services failed to start"
     fi
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # Start trust systems
 start_trust_systems() {
     log_header "Starting A2A Trust Systems"
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
     
     # Load trust system configuration
     log_info "Loading trust system configuration..."
@@ -1106,7 +1123,7 @@ start_trust_systems() {
     
     # Start trust system service from a2aNetwork directory
     log_info "Starting Trust System service on port 8020..."
-    cd "$SCRIPT_DIR/a2aNetwork"
+    cd "$ROOT_DIR/a2aNetwork"
     
     # Check if the trust system module exists and can be imported
     if ! python3 -c "import trustSystem.service" 2>/dev/null; then
@@ -1115,7 +1132,7 @@ start_trust_systems() {
         python3 -c "import trustSystem.service" > "$LOG_DIR/trust-import-test.log" 2>&1 || true
         tail -10 "$LOG_DIR/trust-import-test.log" 2>/dev/null || true
         log_warning "Trust system will not be started, continuing without it"
-        cd "$SCRIPT_DIR"
+        cd "$ROOT_DIR"
         return 0
     fi
     
@@ -1152,7 +1169,7 @@ start_trust_systems() {
             log_warning "Trust initialization completed with warnings"
     fi
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
     return 0
 }
 
@@ -1160,7 +1177,7 @@ start_trust_systems() {
 start_mcp_servers() {
     log_header "Starting MCP (Model Context Protocol) Servers"
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$ROOT_DIR/a2aAgents/backend"
     
     # Check if MCP servers are already running
     local mcp_already_running=0
@@ -1175,7 +1192,7 @@ start_mcp_servers() {
         # Just check their status
         python3.11 -m app.a2a.mcp.service_manager list
         log_success "Using existing MCP servers"
-        cd "$SCRIPT_DIR"
+        cd "$ROOT_DIR"
         return 0
     fi
     
@@ -1231,14 +1248,14 @@ start_mcp_servers() {
     log_info "• Confidence Calculator: port 8108 (reasoning confidence)"
     log_info "• Semantic Similarity: port 8109 (semantic analysis)"
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # Stop MCP servers
 stop_mcp_servers() {
     log_header "Stopping MCP Servers"
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$ROOT_DIR/a2aAgents/backend"
     
     # Stop standalone MCP servers
     log_info "Stopping standalone MCP agent servers..."
@@ -1255,14 +1272,14 @@ stop_mcp_servers() {
     fi
     
     log_success "All MCP servers stopped"
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # MCP server health check
 check_mcp_health() {
     log_header "MCP Server Health Check"
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$ROOT_DIR/a2aAgents/backend"
     
     log_info "Checking MCP server health..."
     python3.11 -m app.a2a.mcp.service_manager health --verbose
@@ -1270,14 +1287,14 @@ check_mcp_health() {
     log_info "Current MCP server status:"
     python3.11 -m app.a2a.mcp.service_manager list
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # Start core services (registry, auth, etc.)
 start_core_services() {
     log_header "Starting Core A2A Services"
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$ROOT_DIR/a2aAgents/backend"
     
     # Activate virtual environment for all agent services
     if [ -d "venv/bin" ]; then
@@ -1485,7 +1502,7 @@ if __name__ == '__main__':
         log_warning "Some core services failed to start (check logs)"
     fi
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # Start frontend service
@@ -1498,7 +1515,7 @@ start_frontend_service() {
         return 0
     fi
     
-    cd "$SCRIPT_DIR/a2aAgents/frontend"
+    cd "$ROOT_DIR/a2aAgents/frontend"
     
     # Start simple HTTP server for UI5 frontend on port 3000
     log_info "Starting Frontend Service on port 3000..."
@@ -1531,14 +1548,14 @@ start_frontend_service() {
         log_warning "Frontend Service may not be accessible on port 3000"
     fi
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # Start notification system
 start_notification_system() {
     log_header "Starting A2A Notification System"
     
-    cd "$SCRIPT_DIR/a2aNetwork"
+    cd "$ROOT_DIR/a2aNetwork"
     
     # Check if notification services exist
     if [ ! -f "srv/integratedNotificationService.js" ]; then
@@ -1606,7 +1623,7 @@ start_notification_system() {
         return 1
     fi
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
 }
 
 # Verify all agents are running (100% coverage check)
@@ -1676,7 +1693,7 @@ test_blockchain_integration() {
         return 0
     fi
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$ROOT_DIR/a2aAgents/backend"
     
     # Test blockchain connection
     log_info "Testing blockchain connectivity..."
@@ -1711,7 +1728,7 @@ test_blockchain_integration() {
         fi
     fi
     
-    cd "$SCRIPT_DIR"
+    cd "$ROOT_DIR"
     log_success "Blockchain integration testing completed"
 }
 
@@ -1783,7 +1800,7 @@ post_startup_validation() {
     
     # Run integrated A2A system health check
     log_info "Running comprehensive A2A system health check..."
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$ROOT_DIR/a2aAgents/backend"
     if python3 -m app.a2a.sdk.system_health; then
         log_success "A2A system health check completed successfully"
     else
@@ -1913,7 +1930,7 @@ cleanup() {
     
     # Stop MCP servers first
     if [ -x "$SCRIPT_DIR/a2aAgents/backend" ]; then
-        cd "$SCRIPT_DIR/a2aAgents/backend" 2>/dev/null && python3 -m app.a2a.mcp.service_manager stop 2>/dev/null || true
+        cd "$ROOT_DIR/a2aAgents/backend" 2>/dev/null && python3 -m app.a2a.mcp.service_manager stop 2>/dev/null || true
     fi
     
     # Kill services by PID files
@@ -1943,7 +1960,7 @@ cleanup() {
     done
     
     # Stop Docker containers if running
-    cd "$SCRIPT_DIR/a2aAgents/backend" 2>/dev/null && docker-compose -f docker-compose.telemetry.yml down 2>/dev/null || true
+    cd "$ROOT_DIR/a2aAgents/backend" 2>/dev/null && docker-compose -f docker-compose.telemetry.yml down 2>/dev/null || true
     
     log_info "Cleanup completed"
 }

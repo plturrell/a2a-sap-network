@@ -98,6 +98,7 @@ NETWORK_AVAILABLE = True
 
 # Blockchain integration - direct import
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -195,7 +196,7 @@ class QualityTrend:
     forecast: List[Tuple[datetime, float]]
 
 
-class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Quality Control Agent with Real AI Intelligence
     
@@ -219,6 +220,11 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainIntegrationMixin):
             version="3.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize blockchain capabilities
         self.blockchain_queue_enabled = False

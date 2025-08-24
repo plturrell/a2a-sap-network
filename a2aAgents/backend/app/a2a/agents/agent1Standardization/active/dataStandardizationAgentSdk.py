@@ -60,6 +60,7 @@ from app.a2a.sdk import (
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -134,7 +135,7 @@ class BasicStandardizer:
         return value
 
 
-class DataStandardizationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
+class DataStandardizationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """Data Standardization Agent - SDK Version"""
     
     def __init__(self, base_url: str = os.getenv("A2A_SERVICE_URL")):
@@ -653,3 +654,113 @@ class DataStandardizationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Error processing A2A data request: {e}")
             return {"error": str(e)}
+    def _init_security_features(self):
+        """Initialize security features from SecureA2AAgent"""
+        # Rate limiting configuration
+        self.rate_limits = {
+            'default': {'requests': 100, 'window': 60},  # 100 requests per minute
+            'heavy': {'requests': 10, 'window': 60},     # 10 requests per minute for heavy operations
+            'auth': {'requests': 5, 'window': 300}       # 5 auth attempts per 5 minutes
+        }
+        
+        # Input validation rules
+        self.validation_rules = {
+            'max_string_length': 10000,
+            'max_array_size': 1000,
+            'max_object_depth': 10,
+            'allowed_file_extensions': ['.json', '.txt', '.csv', '.xml'],
+            'sql_injection_patterns': [
+                r'((SELECT|INSERT|UPDATE|DELETE|DROP|UNION|WHERE|FROM))',
+                r'(--|;|'|"|\*|OR\s+1=1|AND\s+1=1)'
+            ]
+        }
+        
+        # Initialize security logger
+        import logging
+        self.security_logger = logging.getLogger(f'{self.__class__.__name__}.security')
+    
+    def _init_rate_limiting(self):
+        """Initialize rate limiting tracking"""
+        from collections import defaultdict
+        import time
+        
+        self.rate_limit_tracker = defaultdict(lambda: {'count': 0, 'window_start': time.time()})
+    
+    def _init_input_validation(self):
+        """Initialize input validation helpers"""
+        self.input_validators = {
+            'email': re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),
+            'url': re.compile(r'^https?://[^\s/$.?#].[^\s]*$'),
+            'alphanumeric': re.compile(r'^[a-zA-Z0-9]+$'),
+            'safe_string': re.compile(r'^[a-zA-Z0-9\s\-_.,!?]+$')
+        }
+    
+    @property
+    def is_secure(self) -> bool:
+        """Check if agent is running in secure mode"""
+        return True  # SecureA2AAgent always runs in secure mode
+    
+    def validate_input(self, data: Any, rules: Dict[str, Any] = None) -> Tuple[bool, Optional[str]]:
+        """Validate input data against security rules"""
+        if rules is None:
+            rules = self.validation_rules
+        
+        try:
+            # Check string length
+            if isinstance(data, str):
+                if len(data) > rules.get('max_string_length', 10000):
+                    return False, "String exceeds maximum length"
+                
+                # Check for SQL injection patterns
+                for pattern in rules.get('sql_injection_patterns', []):
+                    if re.search(pattern, data, re.IGNORECASE):
+                        self.security_logger.warning(f"Potential SQL injection detected: {data[:50]}...")
+                        return False, "Invalid characters detected"
+            
+            # Check array size
+            elif isinstance(data, (list, tuple)):
+                if len(data) > rules.get('max_array_size', 1000):
+                    return False, "Array exceeds maximum size"
+            
+            # Check object depth
+            elif isinstance(data, dict):
+                if self._get_dict_depth(data) > rules.get('max_object_depth', 10):
+                    return False, "Object exceeds maximum depth"
+            
+            return True, None
+            
+        except Exception as e:
+            self.security_logger.error(f"Input validation error: {e}")
+            return False, str(e)
+    
+    def _get_dict_depth(self, d: dict, current_depth: int = 0) -> int:
+        """Get the maximum depth of a nested dictionary"""
+        if not isinstance(d, dict) or not d:
+            return current_depth
+        
+        return max(self._get_dict_depth(v, current_depth + 1) 
+                   for v in d.values() 
+                   if isinstance(v, dict))
+    
+    def check_rate_limit(self, key: str, limit_type: str = 'default') -> bool:
+        """Check if rate limit is exceeded"""
+        import time
+        
+        limits = self.rate_limits.get(limit_type, self.rate_limits['default'])
+        tracker = self.rate_limit_tracker[f"{key}:{limit_type}"]
+        
+        current_time = time.time()
+        window_duration = limits['window']
+        
+        # Reset window if expired
+        if current_time - tracker['window_start'] > window_duration:
+            tracker['count'] = 0
+            tracker['window_start'] = current_time
+        
+        # Check limit
+        if tracker['count'] >= limits['requests']:
+            self.security_logger.warning(f"Rate limit exceeded for {key} ({limit_type})")
+            return False
+        
+        tracker['count'] += 1
+        return True

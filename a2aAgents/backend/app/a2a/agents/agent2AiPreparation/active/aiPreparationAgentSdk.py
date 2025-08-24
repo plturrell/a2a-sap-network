@@ -76,6 +76,7 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
+from app.a2a.core.security_base import SecureA2AAgent
     AIIntelligenceFramework, AIIntelligenceConfig,
     create_ai_intelligence_framework, create_enhanced_agent_config
 )
@@ -98,7 +99,7 @@ class VectorRepresentation:
     vector_data: List[float] = field(default_factory=list)
 
 
-class EnhancedAIPreparationAgent(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
+class EnhancedAIPreparationAgent(SecureA2AAgent, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
     """
     Enhanced AI Preparation Agent with AI Intelligence Framework Integration
     
@@ -116,7 +117,12 @@ class EnhancedAIPreparationAgent(A2AAgentBase, BlockchainIntegrationMixin, Perfo
     """
     
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
-        # Define blockchain capabilities for AI preparation agent
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for AI preparation agent
         blockchain_capabilities = [
             "ai_data_preparation",
             "semantic_enrichment",
@@ -909,25 +915,45 @@ class EnhancedAIPreparationAgent(A2AAgentBase, BlockchainIntegrationMixin, Perfo
 # Helper classes for AI enhancements
 class PreparationReasoningEngine:
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
 
 class AdaptivePreparationLearner:
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
     
     async def update_preparation_patterns(self, learning_result: Dict[str, Any], learning_data: Dict[str, Any]) -> Dict[str, Any]:
         return {"patterns_updated": True}
 
 class IntelligentVectorizer:
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
     
     async def vectorize_with_intelligence(self, context: Dict[str, Any], reasoning_result: Dict[str, Any]) -> Dict[str, Any]:
         return {"intelligent_vectorization": "completed"}
 
 class AutonomousPreparationOptimizer:
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
     
     async def optimize_preparation(self, data: Dict[str, Any], intelligence: Dict[str, Any], enhanced: Dict[str, Any]) -> Dict[str, Any]:
         return {"optimization": "completed"}
@@ -939,6 +965,11 @@ class AIPreparationAgentSDK(EnhancedAIPreparationAgent, PerformanceMonitoringMix
     
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
 
     async def initialize(self) -> None:
         """Initialize agent resources"""

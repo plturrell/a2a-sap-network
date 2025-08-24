@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
-    "../../../utils/SharedSecurityUtils"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
+    "../../../utils/SharedSecurityUtils",
+    "../../../utils/SharedAccessibilityUtils"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils, AccessibilityUtils) {
     "use strict";
 
     /**
@@ -26,8 +27,10 @@ sap.ui.define([
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
+                this._accessibilityUtils = AccessibilityUtils;
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
+                this._initializeAccessibility();
                 this._initializePerformanceOptimizations();
                 this._startRealtimeUpdates();
             },
@@ -1499,6 +1502,38 @@ sap.ui.define([
             var oDialog = this._dialogCache["scheduleTransformation"];
             if (oDialog) {
                 oDialog.close();
+            }
+        },
+
+        /**
+         * @function _initializeAccessibility
+         * @description Initializes accessibility features for the controller.
+         * @private
+         */
+        _initializeAccessibility: function() {
+            const $view = this.base.getView().$();
+            
+            // Add skip links for keyboard navigation
+            this._accessibilityUtils.addSkipLinks($view, [
+                { id: "fe::table::DataTasks::LineItem", label: "Skip to data table" },
+                { id: "fe::FilterBar::DataTasks", label: "Skip to filters" }
+            ]);
+            
+            // Add landmark roles
+            this._accessibilityUtils.addLandmarkRoles($view);
+            
+            // Optimize for mobile accessibility
+            this._accessibilityUtils.optimizeForMobile($view);
+            
+            // Add color blind support
+            this._accessibilityUtils.addColorBlindSupport($view);
+            
+            // Enhance table accessibility when it's rendered
+            const oTable = this.base.getView().byId("fe::table::DataTasks::LineItem");
+            if (oTable) {
+                this._accessibilityUtils.enhanceTableAccessibility(oTable, {
+                    ariaLabel: "Data management tasks table"
+                });
             }
         }
     });

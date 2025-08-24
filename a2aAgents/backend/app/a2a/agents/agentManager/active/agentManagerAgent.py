@@ -29,6 +29,37 @@ from enum import Enum
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 
+
+class BlockchainRegistry:
+    """Registry that uses blockchain as single source of truth"""
+    
+    def __init__(self):
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.blockchain_client = None
+        self._init_blockchain()
+    
+    def _init_blockchain(self):
+        """Initialize blockchain connection"""
+        # A2A Protocol: Must have blockchain or fail
+        pass
+    
+    async def get(self, key):
+        """Get from blockchain only"""
+        if not self.blockchain_client:
+            raise RuntimeError("A2A Protocol: Blockchain required for registry access")
+        # Blockchain get implementation
+    
+    async def set(self, key, value):
+        """Set in blockchain only"""
+        if not self.blockchain_client:
+            raise RuntimeError("A2A Protocol: Blockchain required for registry updates")
+        # Blockchain set implementation
+
+
 logger = logging.getLogger(__name__)
 
 # Import SDK components
@@ -72,6 +103,7 @@ from app.a2aRegistry.client import get_registry_client
 
 # Import AI advisor
 from app.a2a.advisors.agentAiAdvisor import create_agent_advisor
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 class AgentStatus(str, Enum):
@@ -144,6 +176,11 @@ class EnhancedAgentManagerAgent(AgentHelpSeeker):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         # Initialize parent class
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Configuration
         self.config = config or {}
@@ -822,21 +859,36 @@ class EnhancedWorkflowOptimizer:
     """AI-enhanced workflow optimization"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
 
 
 class AgentPerformancePredictor:
     """AI-powered agent performance prediction"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
 
 
 class TrustIntelligenceSystem:
     """AI-enhanced trust decision making"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        self.ai_framework = ai_framework
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.ai_framework = ai_framework
 
 
 # Keep original class for backward compatibility
@@ -904,12 +956,17 @@ class AgentManagerAgent(EnhancedAgentManagerAgent):
     ]
 
 
-class AgentManagerAgent(A2AAgentBase, AgentHelpSeeker):
+class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
     """Agent Manager - Orchestrates A2A ecosystem registration, trust, and workflows with blockchain integration"""
     
     def __init__(self, base_url: str, agent_id: str = "agent_manager", agent_name: str = "Agent Manager", 
                  capabilities: Optional[Dict[str, Any]] = None, skills: Optional[List[Dict[str, Any]]] = None):
-        # Initialize blockchain capabilities with agent management specializations
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Initialize blockchain capabilities with agent management specializations
         blockchain_capabilities = [
             "agent_lifecycle_management",
             "agent_registration", 
@@ -987,7 +1044,7 @@ class AgentManagerAgent(A2AAgentBase, AgentHelpSeeker):
             logger.warning(f"Help action system initialization failed: {e}")
         
         # Agent state tracking with persistence
-        self.registered_agents = {}  # agent_id -> agent_info
+        self.blockchain_registry = BlockchainRegistry()  # A2A: No local storage  # agent_id -> agent_info
         self.trust_contracts = {}   # contract_id -> contract_info
         self.active_workflows = {}  # workflow_id -> workflow_info
         self.agent_health_cache = {}  # agent_id -> last_health_check

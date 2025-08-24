@@ -68,6 +68,7 @@ from app.a2a.core.asyncPatterns import (
 
 # Import network services
 from app.a2a.network import get_network_connector, get_registration_service, get_messaging_service
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ class AgentGenerationResult:
     error_details: Optional[str] = None
 
 
-class EnhancedAgentBuilderAgent(A2AAgentBase, BlockchainIntegrationMixin):
+class EnhancedAgentBuilderAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Enhanced Agent Builder Agent with AI Intelligence Framework and Blockchain
     
@@ -108,7 +109,12 @@ class EnhancedAgentBuilderAgent(A2AAgentBase, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str, templates_path: str):
-        # Define blockchain capabilities for agent building
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Define blockchain capabilities for agent building
         blockchain_capabilities = [
             "agent_creation",
             "code_generation",

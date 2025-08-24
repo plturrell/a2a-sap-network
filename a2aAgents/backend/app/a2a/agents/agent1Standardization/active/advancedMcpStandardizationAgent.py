@@ -21,11 +21,12 @@ from a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from a2a.common.mcpPerformanceTools import MCPPerformanceTools
 from a2a.common.mcpValidationTools import MCPValidationTools
 from a2a.common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
 
-class AdvancedMCPStandardizationAgent(A2AAgentBase):
+class AdvancedMCPStandardizationAgent(SecureA2AAgent):
     """
     Advanced Data Standardization Agent with comprehensive MCP tool integration
     Handles intelligent data standardization, validation, and cross-agent coordination
@@ -39,6 +40,11 @@ class AdvancedMCPStandardizationAgent(A2AAgentBase):
             version="2.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()

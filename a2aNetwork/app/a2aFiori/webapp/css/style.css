@@ -1,6 +1,9 @@
 /* SAP Fiori 3.0 Compliant Styles for A2A Network */
 /* Enhanced with Comprehensive Tablet Optimization */
 
+/* Import accessibility styles */
+@import "accessibility.css";
+
 /* 
  * SAP Fiori Design Guidelines:
  * - Use semantic colors from theme

@@ -48,6 +48,7 @@ from app.a2a.core.circuitBreaker import CircuitBreaker
 from app.a2a.core.taskTracker import AgentTaskTracker
 from app.a2aRegistry.client import get_registry_client
 from app.a2a.advisors.agentAiAdvisor import create_agent_advisor
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Define types and enums (avoiding circular import)
 class AgentStatus(str, Enum):
@@ -91,7 +92,7 @@ class AgentHealthMetrics:
     load_score: float = 0.0  # 0.0 (idle) to 1.0 (overloaded)
 
 
-class AgentManagerAgentMCP(A2AAgentBase):
+class AgentManagerAgentMCP(SecureA2AAgent):
     """
     Enhanced Agent Manager with proper MCP integration
     Orchestrates the A2A ecosystem with advanced capabilities
@@ -100,6 +101,11 @@ class AgentManagerAgentMCP(A2AAgentBase):
     def __init__(self, base_url: str):
         super().__init__(
             agent_id=create_agent_id("agent_manager"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="Agent Manager MCP",
             description="Enhanced A2A Agent Manager with MCP-powered orchestration",
             version="2.0.0",

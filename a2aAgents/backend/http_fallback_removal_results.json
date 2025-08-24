@@ -1,0 +1,73 @@
+{
+  "total_files": 219,
+  "files_with_issues": 11,
+  "total_fixes": 24,
+  "file_results": [
+    {
+      "status": "fixed",
+      "fixes": 1,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent1Standardization/active/enhancedDataStandardizationAgentMcp.py",
+      "issues_found": 1
+    },
+    {
+      "status": "fixed",
+      "fixes": 2,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/dataManager/active/comprehensiveDataManagerSdk.py",
+      "issues_found": 2
+    },
+    {
+      "status": "fixed",
+      "fixes": 5,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent3VectorProcessing/active/enhancedVectorProcessingAgentMcp.py",
+      "issues_found": 5
+    },
+    {
+      "status": "fixed",
+      "fixes": 1,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent3VectorProcessing/active/comprehensiveVectorProcessingSdk.py",
+      "issues_found": 1
+    },
+    {
+      "status": "fixed",
+      "fixes": 4,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/calculationAgent/active/comprehensiveCalculationAgentSdk.py",
+      "issues_found": 4
+    },
+    {
+      "status": "fixed",
+      "fixes": 1,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/enhancedMcpAgentManager.py",
+      "issues_found": 1
+    },
+    {
+      "status": "fixed",
+      "fixes": 1,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/comprehensiveAgentManagerSdk.py",
+      "issues_found": 1
+    },
+    {
+      "status": "fixed",
+      "fixes": 1,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agentManager/active/agentManagerAgent.py",
+      "issues_found": 1
+    },
+    {
+      "status": "fixed",
+      "fixes": 2,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/agent0DataProduct/active/comprehensiveDataProductAgentSdk.py",
+      "issues_found": 2
+    },
+    {
+      "status": "fixed",
+      "fixes": 2,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/serviceDiscoveryAgent/active/comprehensiveServiceDiscoveryAgentSdk.py",
+      "issues_found": 2
+    },
+    {
+      "status": "fixed",
+      "fixes": 4,
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/reasoningAgent/mcpTransportLayer.py",
+      "issues_found": 4
+    }
+  ]
+}

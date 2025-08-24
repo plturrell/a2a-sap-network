@@ -394,17 +394,17 @@ class PushNotificationService {
         return `
 // Service Worker for A2A Notification System
 self.addEventListener('install', function(event) {
-    console.log('Service Worker installing');
+    logger.info('Service Worker installing');
     self.skipWaiting();
 });
 
 self.addEventListener('activate', function(event) {
-    console.log('Service Worker activating');
+    logger.info('Service Worker activating');
     event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('push', function(event) {
-    console.log('Push message received:', event);
+    logger.info('Push message received:', { event: event });
     
     let notificationData = {};
     
@@ -442,7 +442,7 @@ self.addEventListener('push', function(event) {
 });
 
 self.addEventListener('notificationclick', function(event) {
-    console.log('Notification clicked:', event);
+    logger.info('Notification clicked:', { event: event });
     
     event.notification.close();
     
@@ -482,7 +482,7 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 self.addEventListener('notificationclose', function(event) {
-    console.log('Notification closed:', event);
+    logger.info('Notification closed:', { event: event });
     // Handle notification close if needed
 });
 `;

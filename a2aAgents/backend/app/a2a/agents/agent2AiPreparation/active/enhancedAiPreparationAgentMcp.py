@@ -67,6 +67,7 @@ from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, 
 # Import performance monitoring
 from app.a2a.core.performanceOptimizer import PerformanceOptimizationMixin
 from app.a2a.core.performanceMonitor import AlertThresholds, monitor_performance
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Optional dependencies with graceful fallbacks
 try:
@@ -180,7 +181,12 @@ class SophisticatedEmbeddingGenerator:
     """Sophisticated embedding generator with multiple fallback strategies"""
     
     def __init__(self, config: EmbeddingConfig):
-        self.config = config
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.config = config
         self.transformer_model = None
         self.embedding_cache = OrderedDict()
         self.cache_stats = {"hits": 0, "misses": 0}
@@ -579,7 +585,12 @@ class AdvancedConfidenceScorer:
     """Advanced confidence scoring with multiple metrics"""
     
     def __init__(self, config: ConfidenceScoreConfig):
-        self.config = config
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.config = config
         self.historical_scores = []
         self.quality_statistics = defaultdict(list)
     
@@ -821,14 +832,19 @@ def get_trust_contract():
         return None
 
 
-class EnhancedAIPreparationAgentMCP(A2AAgentBase, PerformanceOptimizationMixin):
+class EnhancedAIPreparationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin):
     """
     Enhanced AI Preparation Agent with MCP Integration
     Agent 2: Complete implementation addressing all 12-point deductions
     """
     
     def __init__(self, base_url: str, enable_monitoring: bool = True):
-        # Initialize parent classes
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Initialize parent classes
         A2AAgentBase.__init__(
             self,
             agent_id="ai_preparation_agent_2",

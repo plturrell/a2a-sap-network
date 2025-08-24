@@ -8,6 +8,9 @@
  */
 
 const fs = require('fs').promises;
+
+const { LoggerFactory } = require('../../shared/logging/structured-logger');
+const logger = LoggerFactory.createLogger('apiDocumentationGenerator');
 const path = require('path');
 const { API_CONFIG, BREAKING_CHANGES } = require('../middleware/apiVersioning');
 
@@ -722,11 +725,11 @@ class APIDocumentationGenerator {
                 );
             }
             
-            console.log(`✅ API documentation generated in ${outputDir}`);
+            logger.info(`✅ API documentation generated in ${outputDir}`);
             return outputDir;
             
         } catch (error) {
-            console.error('❌ Failed to save documentation:', error);
+            logger.error('❌ Failed to save documentation:', { error: error });
             throw error;
         }
     }

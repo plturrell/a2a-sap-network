@@ -72,6 +72,7 @@ from app.a2a.skills.catalogStandardizer import CatalogStandardizer
 from app.a2a.skills.locationStandardizer import LocationStandardizer
 from app.a2a.skills.measureStandardizer import MeasureStandardizer
 from app.a2a.skills.productStandardizer import ProductStandardizer
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -135,7 +136,12 @@ class EnhancedCache:
     """Enhanced cache with comprehensive error handling and multiple strategies"""
     
     def __init__(self, strategy: CacheStrategy = CacheStrategy.LRU, max_size: int = 10000):
-        self.strategy = strategy
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.strategy = strategy
         self.max_size = max_size
         self.cache = OrderedDict()
         self.access_counts = defaultdict(int)
@@ -240,7 +246,12 @@ class ConnectionPool:
     """Connection pool for external services"""
     
     def __init__(self, service_url: str, max_connections: int = 10):
-        self.service_url = service_url
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.service_url = service_url
         self.max_connections = max_connections
         self.pool = asyncio.Queue(maxsize=max_connections)
         self.active_connections = 0
@@ -321,7 +332,7 @@ def get_trust_contract():
         return None
 
 
-class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationMixin):
+class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin):
     """
     Enhanced Data Standardization Agent with MCP Integration
     
@@ -344,7 +355,12 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
             base_url: Base URL for the agent's API endpoints
             enable_monitoring: Enable performance monitoring
         """
-        # Initialize base classes
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Initialize base classes
         A2AAgentBase.__init__(
             self,
             agent_id=create_agent_id("data_standardization_agent"),
@@ -1372,7 +1388,7 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
             
         except Exception as e:
             logger.error(f"Stream writing failed: {e}")
-            # Fallback: store in memory buffer
+# A2A REMOVED:             # Fallback: store in memory buffer
             if not hasattr(self, 'failed_stream_items'):
                 self.failed_stream_items = []
             self.failed_stream_items.append(item)
@@ -1537,6 +1553,11 @@ class EnhancedAccountStandardizer(AccountStandardizer):
     
     def __init__(self):
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Entity", "Department", "Account Type", "Account"]
     
@@ -1695,6 +1716,11 @@ class EnhancedLocationStandardizer(LocationStandardizer):
     
     def __init__(self):
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Region", "Country", "State/Province", "City"]
     
@@ -1807,6 +1833,11 @@ class EnhancedProductStandardizer(ProductStandardizer):
     
     def __init__(self):
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Product Line", "Product Family", "Product Type", "Product"]
     
@@ -1950,6 +1981,11 @@ class EnhancedBookStandardizer(BookStandardizer):
     
     def __init__(self):
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Business Line", "Book Type", "Sub-Book", "Book"]
     
@@ -2044,6 +2080,11 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
     
     def __init__(self):
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Measure Category", "Measure Type", "Measure Group", "Measure"]
     
@@ -2168,6 +2209,11 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
     
     def __init__(self):
         super().__init__()
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Domain", "Catalog Type", "Business Area", "Catalog"]
     
@@ -2375,7 +2421,12 @@ class MemoryMonitor:
     """Monitor memory usage and provide optimization recommendations"""
     
     def __init__(self):
-        self.warning_threshold = 0.8  # 80% memory usage
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.warning_threshold = 0.8  # 80% memory usage
         self.critical_threshold = 0.9  # 90% memory usage
     
     def get_current_usage(self) -> float:

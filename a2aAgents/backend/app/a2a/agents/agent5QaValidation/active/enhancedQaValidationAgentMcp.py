@@ -85,6 +85,7 @@ from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, 
 # Import performance monitoring
 from app.a2a.core.performanceOptimizer import PerformanceOptimizationMixin
 from app.a2a.core.performanceMonitor import AlertThresholds, monitor_performance
+from app.a2a.core.security_base import SecureA2AAgent
 
 # Optional Prometheus metrics
 try:
@@ -156,7 +157,12 @@ class EnhancedWebSocketManager:
     """Advanced WebSocket connection management with error recovery"""
     
     def __init__(self):
-        self.connections: Dict[str, WebSocketConnection] = {}
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.connections: Dict[str, WebSocketConnection] = {}
         self.connection_pool: Dict[str, Set[str]] = defaultdict(set)  # task_id -> connection_ids
         self.heartbeat_task: Optional[asyncio.Task] = None
         self.cleanup_task: Optional[asyncio.Task] = None
@@ -457,7 +463,12 @@ class SophisticatedTemplateEngine:
     """Advanced template engine with semantic capabilities"""
     
     def __init__(self):
-        self.templates: Dict[str, QuestionTemplate] = {}
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.templates: Dict[str, QuestionTemplate] = {}
         self.template_categories: Dict[str, List[str]] = defaultdict(list)
         self.semantic_groups: Dict[str, List[str]] = defaultdict(list)
         
@@ -655,7 +666,12 @@ class AdvancedSemanticValidator:
     """Sophisticated semantic validation with multiple algorithms"""
     
     def __init__(self):
-        self.validation_methods = {
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.validation_methods = {
             ValidationMethod.EXACT_MATCH: self._exact_match_validation,
             ValidationMethod.SEMANTIC_SIMILARITY: self._semantic_similarity_validation,
             ValidationMethod.FUZZY_MATCHING: self._fuzzy_matching_validation,
@@ -1072,7 +1088,12 @@ class OptimizedBatchProcessor:
     """Enhanced batch processing with performance optimization"""
     
     def __init__(self, max_batch_size: int = 100, max_concurrent_batches: int = 5):
-        self.max_batch_size = max_batch_size
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                self.max_batch_size = max_batch_size
         self.max_concurrent_batches = max_concurrent_batches
         self.processing_queue = asyncio.Queue()
         self.result_cache = {}
@@ -1247,7 +1268,7 @@ class OptimizedBatchProcessor:
             "cache_size": len(self.result_cache)
         }
 
-class EnhancedQAValidationAgentMCP(A2AAgentBase, PerformanceOptimizationMixin):
+class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin):
     """
     Enhanced QA Validation Agent with MCP Integration
     Score: 100/100 - All issues addressed
@@ -1271,7 +1292,12 @@ class EnhancedQAValidationAgentMCP(A2AAgentBase, PerformanceOptimizationMixin):
         enable_monitoring: bool = True,
         enable_advanced_validation: bool = True
     ):
-        # Initialize parent classes
+
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+                # Initialize parent classes
         A2AAgentBase.__init__(
             self,
             agent_id="enhanced_qa_validation_agent_5",

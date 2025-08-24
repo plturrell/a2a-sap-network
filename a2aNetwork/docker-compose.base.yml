@@ -60,11 +60,19 @@ x-resource-limits-large: &resource-limits-large
 services:
   # A2A Network Agent
   a2a-agent:
-    image: finsight-cib:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: a2a-platform:latest
     container_name: a2a-agent
     <<: [*restart-policy, *network-config, *logging-config, *resource-limits-large]
     environment:
       <<: *common-variables
+      A2A_SERVICE_URL: http://localhost:4004
+      A2A_SERVICE_HOST: localhost
+      A2A_BASE_URL: http://localhost:8000
+      A2A_AGENT_BASE_URL: http://localhost:8000
+      PYTHONPATH: /app:/app/a2aAgents/backend
     env_file:
       - .env.${A2A_ENVIRONMENT:-development}
     ports:

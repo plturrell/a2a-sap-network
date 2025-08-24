@@ -164,6 +164,7 @@ async def test_enhanced_agent_builder():
 import asyncio
 import json
 from app.a2a.sdk import A2AAgentBase, a2a_handler, a2a_skill, a2a_task
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -171,7 +172,7 @@ required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
 missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
 if missing_vars:
     raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
-class SampleAgent(A2AAgentBase):
+class SampleAgent(SecureA2AAgent):
     """Sample agent for testing"""
     
     def __init__(self, base_url: str):
@@ -182,10 +183,24 @@ class SampleAgent(A2AAgentBase):
             version="1.0.0",
             base_url=base_url
         )
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
     
     @a2a_handler("process_data")
     async def handle_process_data(self, message):
         """Process data handler"""
+        # Security validation
+        if not self.validate_input(request_data)[0]:
+            return create_error_response("Invalid input data")
+        
+        # Rate limiting check
+        client_id = request_data.get('client_id', 'unknown')
+        if not self.check_rate_limit(client_id):
+            return create_error_response("Rate limit exceeded")
+        
         # Potential security issue: eval()
         # result = eval(message.data)  # This should be flagged
         
@@ -420,7 +435,7 @@ class SampleAgent(A2AAgentBase):
                 
                 # Verify key components are present
                 required_components = [
-                    "class MultiSkillAgent(A2AAgentBase)",
+                    "class MultiSkillAgent(SecureA2AAgent)",
                     "@a2a_handler",
                     "@a2a_skill",
                     "@a2a_task",

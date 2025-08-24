@@ -37,6 +37,7 @@ from app.a2a.sdk.mixins import (
 from app.a2a.core.workflowContext import workflowContextManager
 from app.a2a.core.circuitBreaker import EnhancedCircuitBreaker
 from app.a2a.core.trustManager import sign_a2a_message, verify_a2a_message
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +97,7 @@ class WorkflowDefinition:
     metadata: Dict[str, Any] = field(default_factory=dict)
     timeout_minutes: int = 60
 
-class OrchestratorAgentSdk(
-    A2AAgentBase,
+class OrchestratorAgentSdk(SecureA2AAgent,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -109,6 +109,11 @@ class OrchestratorAgentSdk(
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("orchestrator-agent"),
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
+        
             name="Orchestrator Agent",
             description="Multi-agent workflow orchestration and coordination system",
             version="1.0.0"
