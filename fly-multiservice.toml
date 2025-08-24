@@ -1,0 +1,404 @@
+# A2A Platform Complete Multi-Service Fly.io Configuration
+app = "a2a-platform"
+primary_region = "ord"
+kill_signal = "SIGINT"
+kill_timeout = "120s"
+
+[build]
+  image = "ghcr.io/plturrell/a2a-sap-network:main"
+
+[env]
+  A2A_ENVIRONMENT = "production"
+  ENABLE_ALL_AGENTS = "true"
+  A2A_NETWORK_ENABLED = "true"
+  FRONTEND_ENABLED = "true"
+  A2A_SERVICE_URL = "http://localhost:4004"
+  A2A_SERVICE_HOST = "localhost"
+  A2A_BASE_URL = "http://localhost:8000"
+  A2A_AGENT_BASE_URL = "http://localhost:8000"
+  A2A_IN_CONTAINER = "true"
+  SKIP_VENV_CREATION = "true"
+  STARTUP_MODE = "complete"
+
+# Need more resources for complete platform
+[[vm]]
+  cpu_kind = "performance"
+  cpus = 16
+  memory_mb = 32768
+
+[processes]
+  app = "/app/start.sh complete"
+
+[deploy]
+  strategy = "immediate"
+  max_unavailable = 1.0
+
+# Expose all required ports using port ranges
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+# Agent Services (8000-8017)
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8000
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8001
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8001
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8002
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8002
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8003
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8003
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8004
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8004
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8005
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8005
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8006
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8006
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8007
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8007
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8008
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8008
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8009
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8009
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8010
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8010
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8011
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8011
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8012
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8012
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8013
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8013
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8014
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8014
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8015
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8015
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8016
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8016
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8017
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8017
+    handlers = ["http"]
+
+# Launch Pad / Frontend UI
+[[services]]
+  protocol = "tcp"
+  internal_port = 3000
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 3000
+    handlers = ["http"]
+
+# A2A Network API
+[[services]]
+  protocol = "tcp"
+  internal_port = 4004
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 4004
+    handlers = ["http"]
+
+# MCP Servers (8100-8109)
+[[services]]
+  protocol = "tcp"
+  internal_port = 8100
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8100
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8101
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8101
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8102
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8102
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8103
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8103
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8104
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8104
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8105
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8105
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8106
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8106
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8107
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8107
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8108
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8108
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8109
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8109
+    handlers = ["http"]
+
+# Core Services
+[[services]]
+  protocol = "tcp"
+  internal_port = 8020
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8020
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8090
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8090
+    handlers = ["http"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8091
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8091
+    handlers = ["http"]
+
+# Main Agents Service
+[[services]]
+  protocol = "tcp"
+  internal_port = 8888
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8888
+    handlers = ["http"]
+
+# Health Dashboard
+[[services]]
+  protocol = "tcp"
+  internal_port = 8889
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8889
+    handlers = ["http"]
+
+# Developer Portal
+[[services]]
+  protocol = "tcp"
+  internal_port = 3001
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 3001
+    handlers = ["http"]
+
+# API Gateway
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 8080
+    handlers = ["http"]
+
+# Notification WebSocket
+[[services]]
+  protocol = "tcp"
+  internal_port = 4006
+  processes = ["app"]
+  
+  [[services.ports]]
+    port = 4006
+    handlers = ["http"]
+
+[metrics]
+  port = 9091
+  path = "/metrics"

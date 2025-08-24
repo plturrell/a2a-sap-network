@@ -318,7 +318,7 @@ sap.ui.define([
             }
         },
 
-        async _stopService(sServiceName) {
+        _stopService(sServiceName) {
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirmStopService", [sServiceName]),
                 {
@@ -513,7 +513,7 @@ Details: ${oOperation.details}
             }
         },
 
-        async _escalateAlert(sAlertId) {
+        _escalateAlert(sAlertId) {
             MessageBox.confirm(
                 this.getResourceBundle().getText("escalateAlertConfirm"),
                 {

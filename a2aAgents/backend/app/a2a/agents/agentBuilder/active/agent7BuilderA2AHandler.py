@@ -37,6 +37,13 @@ class Agent7BuilderA2AHandler(SecureA2AAgent):
             agent_version="1.0.0",
             allowed_operations={
                 "get_agent_card",
+                # Registry capabilities
+                "agent_creation",
+                "code_generation",
+                "template_management",
+                "deployment_automation",
+                "agent_configuration",
+                # Enhanced operations
                 "json_rpc",
                 "process_message",
                 "get_task_status",
@@ -45,12 +52,7 @@ class Agent7BuilderA2AHandler(SecureA2AAgent):
                 "cancel_message",
                 "health_check",
                 "agent_testing",
-                "code_generation",
-                "project_management",
-                "template_management",
-                "agent_creation",
-                "deployment_automation",
-                "agent_configuration"
+                "project_management"
             },
             enable_authentication=True,
             enable_rate_limiting=True,

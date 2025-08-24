@@ -274,17 +274,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateBackupProgress(data, oProgressDialog);
                     } catch (error) {
-                        console.error("Error parsing backup progress data:", error);
+                        // console.error("Error parsing backup progress data:", error);
                     }
                 }.bind(this);
 
                 this._backupEventSource.onerror = function(error) {
-                    console.warn("Backup stream error, falling back to polling:", error);
+                    // console.warn("Backup stream error, falling back to polling:", error);
                     this._startBackupPolling(sBackupId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                console.warn("EventSource not available, using polling fallback");
+                // console.warn("EventSource not available, using polling fallback");
                 this._startBackupPolling(sBackupId, oProgressDialog);
             }
         },
@@ -334,7 +334,7 @@ sap.ui.define([
                 success: function(data) {
                     const oStatusModel = oDialog.getModel("status");
                     if (oStatusModel) {
-                        var oCurrentData = oStatusModel.getData();
+                        const oCurrentData = oStatusModel.getData();
                         oCurrentData.backups = data.backups || [];
                         oCurrentData.statistics = data.statistics || {};
                         oCurrentData.storageUtilization = data.storageUtilization || {};
@@ -461,7 +461,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
+                // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -489,37 +489,37 @@ sap.ui.define([
 
                 switch (data.type) {
                 case "BACKUP_STARTED":
-                    var sBackupStarted = oBundle.getText("msg.backupStarted") || "Backup started";
+                    const sBackupStarted = oBundle.getText("msg.backupStarted") || "Backup started";
                     MessageToast.show(sBackupStarted);
                     break;
                 case "BACKUP_PROGRESS":
                     this._updateBackupProgress(data);
                     break;
                 case "BACKUP_COMPLETED":
-                    var sBackupCompleted = oBundle.getText("msg.backupCompleted") || "Backup completed";
+                    const sBackupCompleted = oBundle.getText("msg.backupCompleted") || "Backup completed";
                     MessageToast.show(sBackupCompleted);
                     this._refreshBackupData();
                     break;
                 case "BACKUP_FAILED":
-                    var sBackupFailed = oBundle.getText("error.backupFailed") || "Backup failed";
+                    const sBackupFailed = oBundle.getText("error.backupFailed") || "Backup failed";
                     MessageBox.error(`${sBackupFailed }: ${ data.message}`);
                     break;
                 case "RESTORE_COMPLETED":
-                    var sRestoreCompleted = oBundle.getText("msg.restoreCompleted") || "Restore completed";
+                    const sRestoreCompleted = oBundle.getText("msg.restoreCompleted") || "Restore completed";
                     MessageToast.show(sRestoreCompleted);
                     this._refreshBackupData();
                     break;
                 case "STORAGE_WARNING":
-                    var sStorageWarning = oBundle.getText("msg.storageWarning") || "Storage warning";
+                    const sStorageWarning = oBundle.getText("msg.storageWarning") || "Storage warning";
                     MessageBox.warning(`${sStorageWarning }: ${ data.message}`);
                     break;
                 case "VERIFICATION_FAILED":
-                    var sVerificationFailed = oBundle.getText("msg.verificationFailed") || "Backup verification failed";
+                    const sVerificationFailed = oBundle.getText("msg.verificationFailed") || "Backup verification failed";
                     MessageBox.error(`${sVerificationFailed }: ${ data.message}`);
                     break;
                 }
             } catch (error) {
-                console.error("Error processing backup update:", error);
+                // console.error("Error processing backup update:", error);
             }
         },
 
@@ -694,14 +694,14 @@ sap.ui.define([
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
-                    const logEntry = {
+                    const _logEntry = {
                         timestamp,
                         user,
                         agent: "Agent14_Backup",
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

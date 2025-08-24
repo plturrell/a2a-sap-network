@@ -366,17 +366,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateScanProgress(data, oProgressDialog);
                     } catch (error) {
-                        console.error("Error parsing scan progress data:", error);
+                        // console.error("Error parsing scan progress data:", error);
                     }
                 }.bind(this);
 
                 this._scanEventSource.onerror = function(error) {
-                    console.warn("Scan stream error, falling back to polling:", error);
+                    // console.warn("Scan stream error, falling back to polling:", error);
                     this._startScanPolling(sScanId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                console.warn("EventSource not available, using polling fallback");
+                // console.warn("EventSource not available, using polling fallback");
                 this._startScanPolling(sScanId, oProgressDialog);
             }
         },
@@ -414,7 +414,7 @@ sap.ui.define([
                     this._updateScanProgress(data, oProgressDialog);
                 }.bind(this),
                 error(error) {
-                    console.warn("Failed to fetch scan progress:", error);
+                    // console.warn("Failed to fetch scan progress:", error);
                 }
             });
         },
@@ -617,7 +617,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
+                // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -645,32 +645,32 @@ sap.ui.define([
 
                 switch (data.type) {
                 case "THREAT_DETECTED":
-                    var sThreatMsg = oBundle.getText("msg.threatDetected") || "Threat detected";
+                    const sThreatMsg = oBundle.getText("msg.threatDetected") || "Threat detected";
                     MessageToast.show(`${sThreatMsg }: ${ data.threatType}`);
                     this._refreshSecurityData();
                     break;
                 case "SCAN_COMPLETED":
-                    var sScanMsg = oBundle.getText("msg.scanCompleted") || "Security scan completed";
+                    const sScanMsg = oBundle.getText("msg.scanCompleted") || "Security scan completed";
                     MessageToast.show(sScanMsg);
                     this._refreshSecurityData();
                     break;
                 case "PATCH_AVAILABLE":
-                    var sPatchMsg = oBundle.getText("msg.patchAvailable") || "New security patch available";
+                    const sPatchMsg = oBundle.getText("msg.patchAvailable") || "New security patch available";
                     MessageToast.show(sPatchMsg);
                     this._refreshSecurityData();
                     break;
                 case "POLICY_VIOLATION":
-                    var sViolationMsg = oBundle.getText("msg.policyViolation") || "Security policy violation";
+                    const sViolationMsg = oBundle.getText("msg.policyViolation") || "Security policy violation";
                     MessageBox.warning(`${sViolationMsg }: ${ data.policyName}`);
                     break;
                 case "SECURITY_ALERT":
-                    var sAlertMsg = oBundle.getText("msg.securityAlert") || "Security alert";
-                    var safeDetails = SecurityUtils.escapeHTML(data.details || "");
+                    const sAlertMsg = oBundle.getText("msg.securityAlert") || "Security alert";
+                    const safeDetails = SecurityUtils.escapeHTML(data.details || "");
                     MessageBox.error(`${sAlertMsg }: ${ safeDetails}`);
                     break;
                 }
             } catch (error) {
-                console.error("Error processing security update:", error);
+                // console.error("Error processing security update:", error);
             }
         },
 
@@ -763,14 +763,14 @@ sap.ui.define([
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
-                    const logEntry = {
+                    const _logEntry = {
                         timestamp,
                         user,
                         agent: "Agent13_Security",
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

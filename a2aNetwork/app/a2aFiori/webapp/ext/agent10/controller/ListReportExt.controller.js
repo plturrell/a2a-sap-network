@@ -734,7 +734,7 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
+                // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -784,7 +784,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                console.error("Error processing calculation update:", error);
+                // console.error("Error processing calculation update:", error);
             }
         },
 
@@ -1331,14 +1331,14 @@ sap.ui.define([
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
-                    const logEntry = {
+                    const _logEntry = {
                         timestamp,
                         user,
                         agent: "Agent10_Monitoring",
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

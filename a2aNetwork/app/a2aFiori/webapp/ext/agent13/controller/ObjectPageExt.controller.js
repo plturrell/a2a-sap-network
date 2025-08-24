@@ -286,7 +286,7 @@ sap.ui.define([
                 success: function(data) {
                     const oVulnModel = oDialog.getModel("vuln");
                     if (oVulnModel) {
-                        var oCurrentData = oVulnModel.getData();
+                        const oCurrentData = oVulnModel.getData();
                         oCurrentData.vulnerabilities = data.vulnerabilities || [];
                         oCurrentData.statistics = data.statistics || {};
                         oCurrentData.trends = data.trends || {};
@@ -396,12 +396,12 @@ sap.ui.define([
                 });
 
                 this._securityWs.onclose = function() {
-                    console.info("Security WebSocket closed, will reconnect...");
+                    // console.info("Security WebSocket closed, will reconnect...");
                     setTimeout(() => this._initializeSecurityWebSocket(), 5000);
                 }.bind(this);
 
             } catch (error) {
-                console.warn("Security WebSocket not available");
+                // console.warn("Security WebSocket not available");
             }
         },
 
@@ -421,16 +421,16 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._handleThreatIntelligence(data);
                     } catch (error) {
-                        console.error("Error parsing threat intelligence:", error);
+                        // console.error("Error parsing threat intelligence:", error);
                     }
                 }.bind(this);
 
                 this._threatEventSource.onerror = function(error) {
-                    console.warn("Threat intelligence stream error:", error);
+                    // console.warn("Threat intelligence stream error:", error);
                 }.bind(this);
 
             } catch (error) {
-                console.warn("EventSource not available for threat intelligence");
+                // console.warn("EventSource not available for threat intelligence");
             }
         },
 
@@ -604,14 +604,14 @@ sap.ui.define([
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
-                    const logEntry = {
+                    const _logEntry = {
                         timestamp,
                         user,
                         agent: "Agent13_Security",
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

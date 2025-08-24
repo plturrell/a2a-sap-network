@@ -20,7 +20,8 @@ sap.ui.define([
         override: {
             /**
              * @function onInit
-             * @description Initializes the controller extension with security utilities, device model, dialog caching, and real-time updates.
+             * @description Initializes the controller extension with security utilities, device model,
+             * dialog caching, and real-time updates.
              * @override
              */
             onInit() {
@@ -254,7 +255,7 @@ sap.ui.define([
                         this._handleProductUpdate(oData);
                     }.bind(this),
                     onerror: function(error) {
-                        console.warn("Secure WebSocket error:", error);
+                        // console.warn("Secure WebSocket error:", error);
                         this._initializePolling();
                     }.bind(this)
                 });
@@ -266,7 +267,7 @@ sap.ui.define([
                 }
 
             } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
+                // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },

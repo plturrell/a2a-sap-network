@@ -1,8 +1,8 @@
-# A2A Platform Fly.io Configuration
+# A2A Platform Fly.io Configuration - Complete Platform
 app = "a2a-platform"
 primary_region = "ord"
 kill_signal = "SIGINT"
-kill_timeout = "60s"
+kill_timeout = "300s"
 
 [build]
   image = "ghcr.io/plturrell/a2a-sap-network:main"
@@ -18,76 +18,42 @@ kill_timeout = "60s"
   A2A_AGENT_BASE_URL = "http://localhost:8000"
   A2A_IN_CONTAINER = "true"
   SKIP_VENV_CREATION = "true"
+  STARTUP_MODE = "complete"
 
-
+# Maximum resources for complete platform
 [[vm]]
   cpu_kind = "performance"
-  cpus = 8
-  memory_mb = 16384
+  cpus = 16
+  memory_mb = 65536
+  size = "performance-16x"
 
 [processes]
   app = "/app/start.sh complete"
 
 [deploy]
   strategy = "immediate"
-  max_unavailable = 0.5
+  max_unavailable = 1.0
 
-# Main Agent Service (Agent 0)
-[[services]]
-  protocol = "tcp"
-  internal_port = 8000
+# Single service with nginx proxy routing to all internal services
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  max_machines_running = 1
   processes = ["app"]
 
-  [[services.ports]]
-    port = 80
-    handlers = ["http"]
-    
-  [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
-    
-  [services.concurrency]
+  [http_service.concurrency]
     type = "connections"
-    hard_limit = 25
-    soft_limit = 20
-    
-  [[services.tcp_checks]]
+    hard_limit = 1000
+    soft_limit = 800
+
+  [[http_service.checks]]
+    grace_period = "1800s"
     interval = "60s"
     timeout = "30s"
-    grace_period = "900s"
-    restart_limit = 1
-
-# Launch Pad / Frontend UI
-[[services]]
-  protocol = "tcp"
-  internal_port = 3000
-  processes = ["app"]
-  
-  [[services.ports]]
-    port = 3000
-    handlers = ["http"]
-    
-  [[services.http_checks]]
-    interval = "30s"
-    timeout = "10s"
-    grace_period = "120s"
-    path = "/"
-
-# A2A Network API
-[[services]]
-  protocol = "tcp"
-  internal_port = 4004
-  processes = ["app"]
-  
-  [[services.ports]]
-    port = 4004
-    handlers = ["http"]
-    
-  [[services.http_checks]]
-    interval = "30s"
-    timeout = "10s"
-    grace_period = "120s"
-    path = "/api/v1/health"
+    path = "/health"
 
 [metrics]
   port = 9091

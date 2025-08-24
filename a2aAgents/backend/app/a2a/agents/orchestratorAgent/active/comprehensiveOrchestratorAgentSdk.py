@@ -97,7 +97,7 @@ class WorkflowDefinition:
     metadata: Dict[str, Any] = field(default_factory=dict)
     timeout_minutes: int = 60
 
-class OrchestratorAgentSdk(SecureA2AAgent,
+class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -109,11 +109,6 @@ class OrchestratorAgentSdk(SecureA2AAgent,
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("orchestrator-agent"),
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             name="Orchestrator Agent",
             description="Multi-agent workflow orchestration and coordination system",
             version="1.0.0"

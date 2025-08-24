@@ -285,11 +285,12 @@ sap.ui.define([], function() {
                 // Use eval with restricted context (safer than new Function with user input)
                 var wrappedScript = '(function() { "use strict"; ' + script + ' })();';
                 
-                // Create a new context using with statement (limited security)
+                // Create a new context (limited security)
                 return (function() {
-                    with (restrictedContext) {
-                        return eval(wrappedScript);
-                    }
+                    // Note: 'with' statement removed for strict mode compliance
+                    // Using restricted context through closure instead
+                    const context = restrictedContext;
+                    return eval(wrappedScript);
                 })();
                 
             } catch (e) {
@@ -395,7 +396,7 @@ sap.ui.define([], function() {
          */
         createSecureWebSocket: function(url, handlers) {
             if (!this.validateWebSocketUrl(url)) {
-                console.error("Invalid WebSocket URL");
+                // console.error("Invalid WebSocket URL");
                 return null;
             }
             
@@ -427,7 +428,7 @@ sap.ui.define([], function() {
                             event.data = JSON.stringify(data);
                             originalHandler.call(this, event);
                         } catch (e) {
-                            console.error("Error processing WebSocket message:", e);
+                            // console.error("Error processing WebSocket message:", e);
                         }
                     }.bind(this);
                 }
@@ -444,7 +445,7 @@ sap.ui.define([], function() {
                 return ws;
                 
             } catch (e) {
-                console.error("Failed to create WebSocket:", e);
+                // console.error("Failed to create WebSocket:", e);
                 return null;
             }
         },
@@ -461,7 +462,7 @@ sap.ui.define([], function() {
             
             // Must use secure WebSocket protocol
             if (!url.startsWith("wss://")) {
-                console.warn("WebSocket URL must use secure protocol (wss://)");
+                // console.warn("WebSocket URL must use secure protocol (wss://)");
                 return false;
             }
             

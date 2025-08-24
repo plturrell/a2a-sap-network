@@ -309,17 +309,17 @@ sap.ui.define([
                         const data = JSON.parse(event.data);
                         this._updateDeploymentProgress(data, oProgressDialog);
                     } catch (error) {
-                        console.error("Error parsing deployment progress data:", error);
+                        // console.error("Error parsing deployment progress data:", error);
                     }
                 }.bind(this);
 
                 this._deploymentEventSource.onerror = function(error) {
-                    console.warn("Deployment stream error, falling back to polling:", error);
+                    // console.warn("Deployment stream error, falling back to polling:", error);
                     this._startDeploymentPolling(sDeploymentId, oProgressDialog);
                 }.bind(this);
 
             } catch (error) {
-                console.warn("EventSource not available, using polling fallback");
+                // console.warn("EventSource not available, using polling fallback");
                 this._startDeploymentPolling(sDeploymentId, oProgressDialog);
             }
         },

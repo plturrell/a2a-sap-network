@@ -7,13 +7,17 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
+# Install system dependencies including nginx and supervisor
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     git \
     nodejs \
     npm \
+    nginx \
+    supervisor \
+    procps \
+    netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
 
 # Create application directory
@@ -48,11 +52,15 @@ ENV PYTHONUNBUFFERED=1 \
 # Create non-root user for security
 RUN groupadd -r a2auser && useradd -r -g a2auser a2auser
 
-# Install runtime dependencies including Node.js
+# Install runtime dependencies including Node.js, nginx and supervisor
 RUN apt-get update && apt-get install -y \
     curl \
     nodejs \
     npm \
+    nginx \
+    supervisor \
+    procps \
+    netcat-traditional \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -70,7 +78,16 @@ COPY --from=builder --chown=a2auser:a2auser /app .
 # Copy verification script and start script, make them executable
 COPY --chown=a2auser:a2auser scripts/verify-18-steps.sh /app/scripts/
 COPY --chown=a2auser:a2auser scripts/start.sh /app/
-RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh
+COPY --chown=a2auser:a2auser scripts/start-all-agents.sh /app/scripts/
+RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh /app/scripts/start-all-agents.sh
+
+# Copy nginx configuration
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+RUN mkdir -p /var/log/nginx && chown -R a2auser:a2auser /var/log/nginx
+
+# Copy supervisor configuration
+COPY supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN mkdir -p /var/log/supervisor && chown -R a2auser:a2auser /var/log/supervisor
 
 # Create directories for data and logs
 RUN mkdir -p /app/data /app/logs && \
@@ -157,8 +174,10 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Default ports for all agents
-EXPOSE 8000 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015
+# Expose all required ports
+# Agents (8000-8017), Frontend (3000), Network (4004), MCP (8100-8109), 
+# Core services (8020, 8080, 8090, 8091, 8888, 8889), Dev portal (3001), Nginx (80)
+EXPOSE 80 3000 3001 4004 4006 8000 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015 8016 8017 8020 8080 8090 8091 8100 8101 8102 8103 8104 8105 8106 8107 8108 8109 8888 8889
 
-# Default command - can be overridden in docker-compose
-CMD ["backend"]
+# Use supervisor to manage all services
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

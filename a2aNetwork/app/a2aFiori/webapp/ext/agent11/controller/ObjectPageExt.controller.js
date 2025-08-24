@@ -310,7 +310,7 @@ sap.ui.define([
                 success: function(data) {
                     const oViolationsModel = oDialog.getModel("violations");
                     if (oViolationsModel) {
-                        var oCurrentData = oViolationsModel.getData();
+                        const oCurrentData = oViolationsModel.getData();
                         oCurrentData.violations = data.violations || [];
                         oCurrentData.summaryStats = data.summaryStats || {};
                         oCurrentData.riskMatrix = data.riskMatrix || {};
@@ -448,14 +448,14 @@ sap.ui.define([
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
-                    const logEntry = {
+                    const _logEntry = {
                         timestamp,
                         user,
                         agent: "Agent11_Compliance",
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    // console.info(`AUDIT: ${ JSON.stringify(_logEntry)}`);
                 }.bind(this)
             };
         },

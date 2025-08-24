@@ -553,7 +553,8 @@ sap.ui.define([
             };
 
             // Validate export data for security
-            const validation = SecurityUtils.validateExportData ? SecurityUtils.validateExportData(oExportData) : { valid: true, sanitized: oExportData };
+            const validation = SecurityUtils.validateExportData ?
+                SecurityUtils.validateExportData(oExportData) : { valid: true, sanitized: oExportData };
 
             if (!validation.valid) {
                 MessageBox.error(`Export data validation failed: ${ validation.error}`);
@@ -599,7 +600,8 @@ sap.ui.define([
             const oWizardData = oWizardModel.getData();
 
             // Validate wizard data
-            const validation = SecurityUtils.validateWizardData ? SecurityUtils.validateWizardData(oWizardData) : { valid: true, sanitized: oWizardData };
+            const validation = SecurityUtils.validateWizardData ?
+                SecurityUtils.validateWizardData(oWizardData) : { valid: true, sanitized: oWizardData };
 
             if (!validation.valid) {
                 MessageBox.error(`Wizard validation failed: ${ validation.error}`);

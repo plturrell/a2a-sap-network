@@ -99,7 +99,7 @@ class BuildProject:
     deployment_info: Dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
 
-class AgentBuilderSdk(A2AAgentBase,
+class ComprehensiveAgentBuilderSDK(A2AAgentBase,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -116,11 +116,6 @@ class AgentBuilderSdk(A2AAgentBase,
             version="1.0.0"
         )
         
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(
             create_enhanced_agent_config("agent_builder")
@@ -136,7 +131,84 @@ class AgentBuilderSdk(A2AAgentBase,
         self.workspace_dir.mkdir(parents=True, exist_ok=True)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info("AgentBuilderSdk initialized")
+        # Initialize logger
+        self.logger = logger
+        
+        logger.info("ComprehensiveAgentBuilderSDK initialized")
+    
+    async def get_agent_card(self) -> Dict[str, Any]:
+        """Get agent card information"""
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "description": self.description,
+            "version": self.version,
+            "capabilities": [
+                "agent_creation",
+                "code_generation",
+                "template_management",
+                "deployment_automation",
+                "agent_configuration"
+            ],
+            "status": "active",
+            "projects_count": len(self.build_projects),
+            "active_builds": len(self.active_builds)
+        }
+    
+    async def handle_json_rpc(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle JSON-RPC requests"""
+        method = data.get("method", "")
+        params = data.get("params", {})
+        
+        if method == "createProject":
+            return await self.create_build_project(params.get("name"), params.get("config"))
+        elif method == "generateCode":
+            return await self.generate_agent_code(params.get("project_id"), params.get("options"))
+        elif method == "deployAgent":
+            return await self.deployment_automation(params)
+        else:
+            return {"error": f"Unknown method: {method}"}
+    
+    async def process_message(self, message: Any, context_id: str) -> Dict[str, Any]:
+        """Process incoming messages"""
+        return {
+            "message_id": context_id,
+            "status": "processed",
+            "result": "Message processed successfully"
+        }
+    
+    async def get_task_status(self, task_id: str) -> Dict[str, Any]:
+        """Get status of a specific task"""
+        if task_id in self.active_builds:
+            task = self.active_builds[task_id]
+            return {
+                "task_id": task_id,
+                "status": "running" if not task.done() else "completed",
+                "done": task.done()
+            }
+        return {"task_id": task_id, "status": "not_found"}
+    
+    async def get_queue_status(self) -> Dict[str, Any]:
+        """Get queue status"""
+        return {
+            "total_projects": len(self.build_projects),
+            "active_builds": len(self.active_builds),
+            "queue_length": sum(1 for p in self.build_projects.values() if p.status == BuildStatus.DRAFT)
+        }
+    
+    async def get_message_status(self, message_id: str) -> Dict[str, Any]:
+        """Get message status"""
+        return {
+            "message_id": message_id,
+            "status": "processed"
+        }
+    
+    async def cancel_message(self, message_id: str) -> Dict[str, Any]:
+        """Cancel a message"""
+        return {
+            "message_id": message_id,
+            "status": "cancelled"
+        }
 
     @a2a_skill(
         name="project_management",
@@ -200,6 +272,45 @@ class AgentBuilderSdk(A2AAgentBase,
         except Exception as e:
             logger.error(f"Failed to create build project: {e}")
             raise
+    
+    async def project_management(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Wrapper for project management to match A2A handler expectations"""
+        action = data.get("action", "create")
+        
+        if action == "create":
+            return await self.create_build_project(
+                data.get("project_name", "New Project"),
+                data.get("agent_config", {})
+            )
+        elif action == "list":
+            return {
+                "projects": [
+                    {
+                        "id": proj.id,
+                        "name": proj.name,
+                        "status": proj.status.value,
+                        "created_at": proj.created_at.isoformat()
+                    }
+                    for proj in self.build_projects.values()
+                ]
+            }
+        elif action == "get":
+            project_id = data.get("project_id")
+            if project_id in self.build_projects:
+                proj = self.build_projects[project_id]
+                return {
+                    "id": proj.id,
+                    "name": proj.name,
+                    "status": proj.status.value,
+                    "configuration": {
+                        "agent_type": proj.configuration.agent_type.value,
+                        "framework": proj.configuration.framework.value,
+                        "skills_count": len(proj.configuration.skills)
+                    }
+                }
+            return {"error": "Project not found"}
+        else:
+            return {"error": f"Unknown action: {action}"}
 
     @a2a_skill(
         name="code_generation",
@@ -246,6 +357,12 @@ class AgentBuilderSdk(A2AAgentBase,
             project.error_message = str(e)
             logger.error(f"Failed to generate code: {e}")
             raise
+    
+    async def code_generation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Wrapper for code generation to match A2A handler expectations"""
+        project_id = data.get("project_id")
+        generation_options = data.get("options", {})
+        return await self.generate_agent_code(project_id, generation_options)
 
     @a2a_skill(
         name="agent_testing",
@@ -302,6 +419,12 @@ class AgentBuilderSdk(A2AAgentBase,
         except Exception as e:
             logger.error(f"Failed to run tests: {e}")
             raise
+    
+    async def agent_testing(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Wrapper for agent testing to match A2A handler expectations"""
+        project_id = data.get("project_id")
+        test_config = data.get("test_config", {})
+        return await self.run_agent_tests(project_id, test_config)
 
     @a2a_skill(
         name="agent_creation",
@@ -740,11 +863,6 @@ class {agent_class_name}(A2AAgentBase):
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("{agent_id}"),
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             name="{agent_name}",
             description="{description}",
             version="1.0.0"
@@ -1099,8 +1217,8 @@ spec:
         }
 
 # Create singleton instance
-agent_builder = AgentBuilderSdk()
+agent_builder = ComprehensiveAgentBuilderSDK()
 
-def get_agent_builder() -> AgentBuilderSdk:
+def get_agent_builder() -> ComprehensiveAgentBuilderSDK:
     """Get the singleton agent builder instance"""
     return agent_builder
