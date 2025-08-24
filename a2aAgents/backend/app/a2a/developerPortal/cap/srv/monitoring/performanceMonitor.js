@@ -1,3 +1,6 @@
+
+const { BlockchainClient } = require('../../../shared/core/blockchain-client');
+const blockchainClient = new BlockchainClient();
 "use strict";
 
 /**

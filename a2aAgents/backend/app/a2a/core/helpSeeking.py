@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime
 from uuid import uuid4
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from .a2aTypes import A2AMessage, MessagePart, MessageRole
 from .helpActionEngine import AgentHelpActionSystem
 from .skillScopeValidator import get_trust_based_help_validator, HelpRequestType

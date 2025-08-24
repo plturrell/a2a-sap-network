@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 const log = cds.log('agent1-adapter');
 
@@ -217,7 +217,7 @@ class Agent1Adapter {
 
     async startStandardization(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/standardize`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/standardize`, {}, {
                 timeout: 30000
             });
             return {
@@ -233,7 +233,7 @@ class Agent1Adapter {
 
     async pauseStandardization(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/pause`, {}, {
                 timeout: 30000
             });
             return {
@@ -249,7 +249,7 @@ class Agent1Adapter {
 
     async resumeStandardization(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/resume`, {}, {
                 timeout: 30000
             });
             return {
@@ -265,7 +265,7 @@ class Agent1Adapter {
 
     async cancelStandardization(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/cancel`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/cancel`, {}, {
                 timeout: 30000
             });
             return {
@@ -281,7 +281,7 @@ class Agent1Adapter {
 
     async validateFormat(taskId, sampleData, validationRules) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/validate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/validate`, {
                 sample_data: sampleData,
                 validation_rules: validationRules
             }, {
@@ -300,7 +300,7 @@ class Agent1Adapter {
 
     async analyzeDataQuality(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/analyze-quality`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/analyze-quality`, {}, {
                 timeout: 30000
             });
             return {
@@ -316,7 +316,7 @@ class Agent1Adapter {
 
     async exportResults(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/export`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/export`, {
                 format: options.format,
                 include_metadata: options.includeMetadata,
                 compression: options.compression
@@ -336,7 +336,7 @@ class Agent1Adapter {
 
     async previewTransformation(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/preview`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/tasks/${taskId}/preview`, {
                 sample_size: options.sampleSize,
                 rules: options.rules
             }, {
@@ -355,7 +355,7 @@ class Agent1Adapter {
 
     async getFormatStatistics() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent1/v1/format-statistics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/format-statistics`, {
                 timeout: 30000
             });
             return {
@@ -371,7 +371,7 @@ class Agent1Adapter {
 
     async batchStandardize(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/batch-process`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/batch-process`, {
                 task_ids: options.taskIds,
                 parallel: options.parallel,
                 priority: options.priority
@@ -391,7 +391,7 @@ class Agent1Adapter {
 
     async importSchema(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/schema/import`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/schema/import`, {
                 schema_data: options.schemaData,
                 format: options.format,
                 template_name: options.templateName
@@ -411,7 +411,7 @@ class Agent1Adapter {
 
     async validateSchemaTemplate(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/schema/validate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/schema/validate`, {
                 template_id: options.templateId,
                 source_data: options.sourceData
             }, {
@@ -430,7 +430,7 @@ class Agent1Adapter {
 
     async generateStandardizationRules(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent1/v1/rules/generate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/rules/generate`, {
                 source_format: options.sourceFormat,
                 target_format: options.targetFormat,
                 sample_data: options.sampleData
@@ -454,7 +454,7 @@ class Agent1Adapter {
 
     async checkHealth() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent1/v1/health`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent1/v1/health`, {
                 timeout: 5000
             });
             return {

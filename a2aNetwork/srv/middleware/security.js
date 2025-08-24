@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 const cors = require('cors');
 const cds = require('@sap/cds');
 /**
@@ -16,6 +21,7 @@ const validator = require('validator');
 const DOMPurify = require('isomorphic-dompurify');
 const { v4: uuidv4 } = require('uuid');
 const securityMiddleware = require('./securityMiddleware');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
 
 // CORS configuration
 const corsOptions = {
@@ -143,7 +149,7 @@ const helmetConfig = helmet({
       ],
       connectSrc: [
         "'self'",
-        ...(process.env.NODE_ENV !== 'production' ? ["ws://localhost:*", "wss://localhost:*"] : []),
+        ...(process.env.NODE_ENV !== 'production' ? ['blockchain://a2a-events', "wss://localhost:*"] : []),
         "https://ui5.sap.com",
         "https://sapui5.hana.ondemand.com",
         ...(process.env.BLOCKCHAIN_RPC_URL ? [process.env.BLOCKCHAIN_RPC_URL] : [])

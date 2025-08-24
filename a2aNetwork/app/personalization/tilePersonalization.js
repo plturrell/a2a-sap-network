@@ -32,8 +32,8 @@ class TilePersonalizationService {
     }
 
     async initializeSQLiteTables() {
-        const handleInitializeSQLiteTables = (resolve, reject) => {
-            const serializeInitialization = () => {
+        const handleInitializeSQLiteTables = function(resolve, reject) {
+            const serializeInitialization = function() {
                 // User tile configurations table
                 this.db.run(`CREATE TABLE IF NOT EXISTS user_tile_config (
                     id TEXT PRIMARY KEY,
@@ -132,13 +132,13 @@ class TilePersonalizationService {
             { groupId: 'a2a_operations_group', tileId: 'logs_tile', position: 3, size: '1x1' },
         ];
 
-        const insertDefaultConfig = (config) => {
+        const insertDefaultConfig = function(config) {
             const id = `default-${config.groupId}-${config.tileId}`;
             this.db.run(`INSERT OR REPLACE INTO user_tile_config 
                 (id, user_id, tile_id, group_id, position, size) 
                 VALUES (?, 'default', ?, ?, ?, ?)`,
                 [id, config.tileId, config.groupId, config.position, config.size]);
-        };
+        }.bind(this);
         defaultConfigs.forEach(insertDefaultConfig);
     }
 
@@ -146,24 +146,24 @@ class TilePersonalizationService {
     async getUserTileConfig(userId) {
         if (!this.initialized) await this.initialize();
         
-        const handleGetUserTileConfig = (resolve, reject) => {
+        const handleGetUserTileConfig = function(resolve, reject) {
             if (this.isBTP) {
                 // HANA query
-                const handleHanaResults = (results) => resolve(results);
-                const handleHanaError = (error) => reject(error);
+                const handleHanaResults = function(results) { return resolve(results); };
+                const handleHanaError = function(error) { return reject(error); };
                 this.db.run(`SELECT * FROM A2A_USER_TILE_CONFIG WHERE USER_ID = ?`, [userId])
                     .then(handleHanaResults)
                     .catch(handleHanaError);
             } else {
                 // SQLite query
-                const handleSQLiteResults = (err, rows) => {
+                const handleSQLiteResults = function(err, rows) {
                     if (err) reject(err);
                     else resolve(rows || []);
                 };
                 this.db.all(`SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position`, 
                     [userId], handleSQLiteResults);
             }
-        };
+        }.bind(this);
         
         return new Promise(handleGetUserTileConfig);
     }
@@ -263,7 +263,9 @@ class TilePersonalizationService {
                     else resolve({ success: true, changes: this.changes });
                 });
             }
-        });
+        };
+        
+        return new Promise(handleSaveUserGroupConfig);
     }
 
     // Get user preferences

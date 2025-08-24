@@ -1,3 +1,13 @@
+import asyncio
+import json
+import uuid
+import time
+import os
+from datetime import datetime
+from typing import Dict, List, Any, Optional, Tuple
+from pydantic import BaseModel, Field
+import logging
+from app.a2a.core.security_base import SecureA2AAgent
 """
 Calculation Testing Integration Skills
 Provides skills for CalcTesting agent to interact with CalculationAgent and evaluate responses
@@ -16,17 +26,8 @@ To send messages to other agents, use:
 
 
 
-import asyncio
-import json
-import uuid
-import time
-import os
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
-from pydantic import BaseModel, Field
-import logging
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 # Import GrokClient for AI evaluation
 try:
     from app.a2a.core.grokClient import GrokClient
@@ -84,10 +85,20 @@ class Scoreboard(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
-class CalcTestingIntegrationSkills:
-    """Skills for CalcTesting agent to interact with CalculationAgent"""
+class CalcTestingIntegrationSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Skills for CalcTesting agent to interact with CalculationAgent"""
     
     def __init__(self, agent):
+        
+        super().__init__()
         self.agent = agent
         self.grok_client = GrokClient() if GROK_AVAILABLE else None
         self.scoreboard = Scoreboard()

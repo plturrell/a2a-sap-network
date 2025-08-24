@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 #!/usr/bin/env node
 
 /**
@@ -10,7 +14,7 @@ const chalk = require('chalk');
 
 async function checkEndpoint(path, validateFn) {
     return new Promise((resolve) => {
-        http.get(`http://localhost:4004${path}`, { 
+        blockchainClient.sendMessage(`http://localhost:4004${path}`, { 
             headers: { 'Accept': 'application/json' }
         }, (res) => {
             let data = '';
@@ -49,7 +53,7 @@ async function testLaunchpadReady() {
     // Test 2: Launchpad HTML
     console.log('2. Testing launchpad HTML...');
     const html = await new Promise(resolve => {
-        http.get('http://localhost:4004/launchpad.html', res => {
+        blockchainClient.sendMessage('http://localhost:4004/launchpad.html', res => {
             resolve({ success: res.statusCode === 200, status: res.statusCode });
         }).on('error', () => resolve({ success: false }));
     });

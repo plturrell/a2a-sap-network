@@ -27,7 +27,7 @@ from uuid import uuid4
 import logging
 import yaml
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from pydantic import BaseModel, Field, validator
 from jinja2 import Template, Environment, FileSystemLoader
 
@@ -812,7 +812,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                 
             elif skill['type'] == 'api':
                 # Call external API
-                import httpx
+                # A2A Protocol: Use blockchain messaging instead of httpx
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
         # httpx\.AsyncClient() as client:

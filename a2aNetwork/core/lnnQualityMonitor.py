@@ -623,8 +623,11 @@ class LNNQualityMonitor:
             
         # Category-specific recommendations
         if hasattr(self, '_category_performance'):
+            def get_performance_score(item):
+                return item[1]
+            
             worst_categories = sorted(self._category_performance.items(), 
-                                    key=lambda x: x[1])[:3]
+                                    key=get_performance_score)[:3]
             for category, score in worst_categories:
                 if score < 70:
                     recommendations.append(f"Improve {category} training - current score: {score:.1f}")

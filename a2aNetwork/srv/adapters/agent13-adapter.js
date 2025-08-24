@@ -4,7 +4,8 @@
  * code generation, template management, build pipelines, and deployments
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client');
+const blockchainClient = new BlockchainClient();
 const { v4: uuidv4 } = require('uuid');
 
 class Agent13Adapter {
@@ -18,7 +19,7 @@ class Agent13Adapter {
     async getAgentTemplates(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/templates`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates`, {
                 params,
                 timeout: this.timeout
             });
@@ -32,7 +33,7 @@ class Agent13Adapter {
     async createAgentTemplate(data) {
         try {
             const restData = this._convertODataTemplateToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/templates`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates`, restData, {
                 timeout: this.timeout
             });
             
@@ -45,7 +46,7 @@ class Agent13Adapter {
     async updateAgentTemplate(id, data) {
         try {
             const restData = this._convertODataTemplateToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/templates/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -57,7 +58,7 @@ class Agent13Adapter {
 
     async deleteAgentTemplate(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/templates/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -70,7 +71,7 @@ class Agent13Adapter {
     async getAgentBuilds(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/builds`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds`, {
                 params,
                 timeout: this.timeout
             });
@@ -84,7 +85,7 @@ class Agent13Adapter {
     async createAgentBuild(data) {
         try {
             const restData = this._convertODataBuildToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/builds`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds`, restData, {
                 timeout: this.timeout
             });
             
@@ -97,7 +98,7 @@ class Agent13Adapter {
     async updateAgentBuild(id, data) {
         try {
             const restData = this._convertODataBuildToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/builds/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -109,7 +110,7 @@ class Agent13Adapter {
 
     async deleteAgentBuild(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/builds/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -120,7 +121,7 @@ class Agent13Adapter {
 
     async startBuild(buildId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/builds/${buildId}/start`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds/${buildId}/start`, {}, {
                 timeout: this.timeout
             });
             return response.data;
@@ -133,7 +134,7 @@ class Agent13Adapter {
     async getTemplateComponents(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/components`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/components`, {
                 params,
                 timeout: this.timeout
             });
@@ -147,7 +148,7 @@ class Agent13Adapter {
     async createTemplateComponent(data) {
         try {
             const restData = this._convertODataComponentToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/components`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/components`, restData, {
                 timeout: this.timeout
             });
             
@@ -160,7 +161,7 @@ class Agent13Adapter {
     async updateTemplateComponent(id, data) {
         try {
             const restData = this._convertODataComponentToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/components/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/components/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -172,7 +173,7 @@ class Agent13Adapter {
 
     async deleteTemplateComponent(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/components/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/components/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -185,7 +186,7 @@ class Agent13Adapter {
     async getAgentDeployments(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/deployments`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments`, {
                 params,
                 timeout: this.timeout
             });
@@ -199,7 +200,7 @@ class Agent13Adapter {
     async createAgentDeployment(data) {
         try {
             const restData = this._convertODataDeploymentToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/deployments`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments`, restData, {
                 timeout: this.timeout
             });
             
@@ -212,7 +213,7 @@ class Agent13Adapter {
     async updateAgentDeployment(id, data) {
         try {
             const restData = this._convertODataDeploymentToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/deployments/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -224,7 +225,7 @@ class Agent13Adapter {
 
     async deleteAgentDeployment(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/deployments/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -235,7 +236,7 @@ class Agent13Adapter {
 
     async startDeployment(deploymentId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/deployments/${deploymentId}/start`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments/${deploymentId}/start`, {}, {
                 timeout: this.timeout
             });
             return response.data;
@@ -248,7 +249,7 @@ class Agent13Adapter {
     async getBuildPipelines(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/pipelines`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines`, {
                 params,
                 timeout: this.timeout
             });
@@ -262,7 +263,7 @@ class Agent13Adapter {
     async createBuildPipeline(data) {
         try {
             const restData = this._convertODataPipelineToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/pipelines`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines`, restData, {
                 timeout: this.timeout
             });
             
@@ -275,7 +276,7 @@ class Agent13Adapter {
     async updateBuildPipeline(id, data) {
         try {
             const restData = this._convertODataPipelineToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -287,7 +288,7 @@ class Agent13Adapter {
 
     async deleteBuildPipeline(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -299,7 +300,7 @@ class Agent13Adapter {
     // ===== SPECIALIZED OPERATIONS =====
     async validateTemplate(templateId, validationType) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/validate-template`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-template`, {
                 template_id: templateId,
                 validation_type: validationType
             }, {
@@ -320,7 +321,7 @@ class Agent13Adapter {
 
     async testAgent(buildId, testSuite, testConfiguration) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/test-agent`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/test-agent`, {
                 build_id: buildId,
                 test_suite: testSuite,
                 test_configuration: testConfiguration
@@ -342,7 +343,7 @@ class Agent13Adapter {
 
     async triggerPipeline(pipelineId, parameters, priority) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${pipelineId}/trigger`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${pipelineId}/trigger`, {
                 parameters,
                 priority
             }, {
@@ -361,7 +362,7 @@ class Agent13Adapter {
 
     async startBatchBuild(batchId, templateIds) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/batch-build`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/batch-build`, {
                 batch_id: batchId,
                 template_ids: templateIds
             }, {
@@ -377,7 +378,7 @@ class Agent13Adapter {
     // ===== STATISTICS AND INFORMATION =====
     async getBuilderStatistics() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/statistics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/statistics`, {
                 timeout: this.timeout
             });
             
@@ -400,7 +401,7 @@ class Agent13Adapter {
 
     async getTemplateDetails(templateId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/templates/${templateId}/details`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates/${templateId}/details`, {
                 timeout: this.timeout
             });
             
@@ -428,7 +429,7 @@ class Agent13Adapter {
 
     async getDeploymentTargets() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/deployment-targets`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployment-targets`, {
                 timeout: this.timeout
             });
             
@@ -448,7 +449,7 @@ class Agent13Adapter {
 
     async getBuildPipelinesData() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/pipelines/info`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines/info`, {
                 timeout: this.timeout
             });
             

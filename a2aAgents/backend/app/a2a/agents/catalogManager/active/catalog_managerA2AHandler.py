@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .catalogManagerAgentSdk import CatalogManagerAgentSDK
+from .comprehensiveCatalogManagerSdk import ComprehensiveCatalogManagerSDK
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: CatalogManagerAgentSDK):
+    def __init__(self, agent_sdk: ComprehensiveCatalogManagerSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
@@ -100,9 +100,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_json_rpc(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle json_rpc operation"""
             try:
-                # TODO: Implement json_rpc logic
-                # Example: result = await self.agent_sdk.json_rpc_handler(data)
-                result = {"status": "success", "operation": "json_rpc"}
+                # Process JSON-RPC request
+                result = await self.agent_sdk.json_rpc_handler(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -168,9 +167,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_get_queue_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_queue_status operation"""
             try:
-                # TODO: Implement get_queue_status logic
-                # Example: result = await self.agent_sdk.get_queue_status(data)
-                result = {"status": "success", "operation": "get_queue_status"}
+                # Get queue processing status
+                result = await self.agent_sdk.get_queue_status(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -190,9 +188,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_get_message_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_message_status operation"""
             try:
-                # TODO: Implement get_message_status logic
-                # Example: result = await self.agent_sdk.get_message_status(data)
-                result = {"status": "success", "operation": "get_message_status"}
+                # Get message processing status
+                result = await self.agent_sdk.get_message_status(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -262,9 +259,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_register_ord_document(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle register_ord_document operation"""
             try:
-                # TODO: Implement register_ord_document logic
-                # Example: result = await self.agent_sdk.register_ord_document(data)
-                result = {"status": "success", "operation": "register_ord_document"}
+                # Register ORD document in catalog
+                result = await self.agent_sdk.register_ord_document(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -284,9 +280,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_enhance_ord_document(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle enhance_ord_document operation"""
             try:
-                # TODO: Implement enhance_ord_document logic
-                # Example: result = await self.agent_sdk.enhance_ord_document(data)
-                result = {"status": "success", "operation": "enhance_ord_document"}
+                # Enhance ORD document with AI
+                result = await self.agent_sdk.enhance_ord_document(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -306,9 +301,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_search_ord_repository(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle search_ord_repository operation"""
             try:
-                # TODO: Implement search_ord_repository logic
-                # Example: result = await self.agent_sdk.search_ord_repository(data)
-                result = {"status": "success", "operation": "search_ord_repository"}
+                # Search ORD repository
+                result = await self.agent_sdk.search_ord_repository(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -328,9 +322,8 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
         async def handle_assess_ord_quality(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle assess_ord_quality operation"""
             try:
-                # TODO: Implement assess_ord_quality logic
-                # Example: result = await self.agent_sdk.assess_ord_quality(data)
-                result = {"status": "success", "operation": "assess_ord_quality"}
+                # Assess ORD document quality
+                result = await self.agent_sdk.assess_ord_quality(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -451,7 +444,7 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
 
 
 # Factory function to create A2A handler
-def create_catalog_manager_a2a_handler(agent_sdk: CatalogManagerAgentSDK) -> CatalogManagerA2AHandler:
+def create_catalog_manager_a2a_handler(agent_sdk: ComprehensiveCatalogManagerSDK) -> CatalogManagerA2AHandler:
     """Create A2A-compliant handler for Catalog Manager - ORD Repository Management"""
     return CatalogManagerA2AHandler(agent_sdk)
 

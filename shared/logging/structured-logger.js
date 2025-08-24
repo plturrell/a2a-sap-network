@@ -110,15 +110,15 @@ class A2AStructuredLogger {
       logDuration: new Map(),
       logCounts: new Map(),
       
-      recordLogMetric: (level, context) => {
+      recordLogMetric: function(level, context) {
         const key = `${level}:${context.service}:${context.operation || 'unknown'}`;
-        const count = this.metricsCollector.logCounts.get(key) || 0;
-        this.metricsCollector.logCounts.set(key, count + 1);
+        const count = this.logCounts.get(key) || 0;
+        this.logCounts.set(key, count + 1);
       },
       
-      getMetrics: () => {
+      getMetrics: function() {
         const metrics = {
-          logCounts: Object.fromEntries(this.metricsCollector.logCounts),
+          logCounts: Object.fromEntries(this.logCounts),
           timestamp: new Date().toISOString()
         };
         return metrics;
@@ -130,7 +130,7 @@ class A2AStructuredLogger {
    * Enrich log format with context
    */
   enrichLogFormat() {
-    return format((info) => {
+    return format(function(info) {
       // Add service metadata
       info.service = this.config.serviceName;
       info.environment = this.config.environment;
@@ -248,12 +248,12 @@ class A2AStructuredLogger {
     const start = process.hrtime.bigint();
     
     return {
-      end: (context = {}) => {
+      end: function(context = {}) {
         const end = process.hrtime.bigint();
         const duration = Number(end - start) / 1000000; // Convert to milliseconds
         this.logPerformance(operation, Math.round(duration), context);
         return duration;
-      }
+      }.bind(this)
     };
   }
 }
@@ -278,11 +278,11 @@ class CapStructuredLogger extends A2AStructuredLogger {
       const logger = {
         _module: module,
         
-        trace: (msg, ...args) => self.trace(self.formatCapMessage(msg, args), { module }),
-        debug: (msg, ...args) => self.debug(self.formatCapMessage(msg, args), { module }),
-        info: (msg, ...args) => self.info(self.formatCapMessage(msg, args), { module }),
-        warn: (msg, ...args) => self.warn(self.formatCapMessage(msg, args), { module }),
-        error: (msg, ...args) => self.error(self.formatCapMessage(msg, args), { module })
+        trace: function(msg, ...args) { return self.trace(self.formatCapMessage(msg, args), { module }); },
+        debug: function(msg, ...args) { return self.debug(self.formatCapMessage(msg, args), { module }); },
+        info: function(msg, ...args) { return self.info(self.formatCapMessage(msg, args), { module }); },
+        warn: function(msg, ...args) { return self.warn(self.formatCapMessage(msg, args), { module }); },
+        error: function(msg, ...args) { return self.error(self.formatCapMessage(msg, args), { module }); }
       };
       
       return logger;
@@ -298,7 +298,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     }
     
     if (args.length > 0) {
-      return `${msg} ${args.map(arg => JSON.stringify(arg)).join(' ')}`;
+      return `${msg} ${args.map(function(arg) { return JSON.stringify(arg); }).join(' ')}`;
     }
     
     return msg;
@@ -308,7 +308,8 @@ class CapStructuredLogger extends A2AStructuredLogger {
    * Create request logger middleware for CAP
    */
   createRequestLogger() {
-    return (req, res, next) => {
+    const self = this;
+    return function(req, res, next) {
       // Generate or extract correlation ID
       const correlationId = req.headers['x-correlation-id'] || 
                           req.headers['x-request-id'] || 
@@ -321,22 +322,22 @@ class CapStructuredLogger extends A2AStructuredLogger {
       }
       
       // Start timer
-      const timer = this.startTimer('http_request');
+      const timer = self.startTimer('http_request');
       
       // Log request
-      this.info('Request received', {
+      self.info('Request received', {
         correlationId,
         method: req.method,
         path: req.path,
         query: req.query,
         user: req.user?.id,
         tenant: req.tenant,
-        headers: this.sanitizeHeaders(req.headers)
+        headers: self.sanitizeHeaders(req.headers)
       });
       
       // Override res.end to log response
       const originalEnd = res.end;
-      res.end = (...args) => {
+      res.end = function(...args) {
         // Log response
         const duration = timer.end({
           correlationId,
@@ -345,7 +346,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
           path: req.path
         });
         
-        this.info('Request completed', {
+        self.info('Request completed', {
           correlationId,
           method: req.method,
           path: req.path,
@@ -369,7 +370,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     const self = this;
     
     // Before handler for logging
-    srv.before('*', (req) => {
+    srv.before('*', function(req) {
       const timer = self.startTimer(`service_${req.event}`);
       req._.timer = timer;
       
@@ -384,7 +385,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     });
     
     // After handler for success logging
-    srv.after('*', (result, req) => {
+    srv.after('*', function(result, req) {
       const duration = req._.timer ? req._.timer.end() : 0;
       
       self.info('Service operation completed', {
@@ -398,7 +399,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     });
     
     // Error handler
-    srv.on('error', (err, req) => {
+    srv.on('error', function(err, req) {
       const duration = req._.timer ? req._.timer.end() : 0;
       
       self.error('Service operation failed', {
@@ -421,7 +422,7 @@ class CapStructuredLogger extends A2AStructuredLogger {
     const sanitized = { ...headers };
     const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key'];
     
-    sensitiveHeaders.forEach(header => {
+    sensitiveHeaders.forEach(function(header) {
       if (sanitized[header]) {
         sanitized[header] = '[REDACTED]';
       }

@@ -3,7 +3,7 @@
  * Converts between REST API and OData formats for data product management operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent0Adapter {
@@ -17,7 +17,7 @@ class Agent0Adapter {
     async getDataProducts(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/data-products`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products`, {
                 params,
                 timeout: this.timeout
             });
@@ -31,7 +31,7 @@ class Agent0Adapter {
     async createDataProduct(data) {
         try {
             const restData = this._convertODataProductToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products`, restData, {
                 timeout: this.timeout
             });
             
@@ -44,7 +44,7 @@ class Agent0Adapter {
     async updateDataProduct(id, data) {
         try {
             const restData = this._convertODataProductToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -56,7 +56,7 @@ class Agent0Adapter {
 
     async deleteDataProduct(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, {
                 timeout: this.timeout
             });
         } catch (error) {
@@ -67,7 +67,7 @@ class Agent0Adapter {
     // Dublin Core Operations
     async generateDublinCore(productId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/dublin-core/generate`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/dublin-core/generate`, {}, {
                 timeout: this.timeout
             });
             
@@ -84,7 +84,7 @@ class Agent0Adapter {
     async updateDublinCore(productId, dublinCoreData) {
         try {
             const restData = this._convertDublinCoreToREST(dublinCoreData);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/dublin-core`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/dublin-core`, restData, {
                 timeout: this.timeout
             });
             
@@ -97,7 +97,7 @@ class Agent0Adapter {
     // Metadata Operations
     async validateMetadata(productId, validationOptions = {}) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/validate-metadata`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/validate-metadata`, {
                 validation_options: validationOptions
             }, {
                 timeout: this.timeout
@@ -121,7 +121,7 @@ class Agent0Adapter {
 
     async validateSchema(productId, schemaData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/validate-schema`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/validate-schema`, {
                 schema_data: schemaData
             }, {
                 timeout: this.timeout
@@ -145,7 +145,7 @@ class Agent0Adapter {
     // Quality Assessment
     async assessQuality(productId, assessmentCriteria = {}) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/assess-quality`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/assess-quality`, {
                 assessment_criteria: this._convertQualityCriteriaToREST(assessmentCriteria)
             }, {
                 timeout: this.timeout
@@ -179,7 +179,7 @@ class Agent0Adapter {
     // Publishing Operations
     async publishProduct(productId, publishOptions = {}) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/publish`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/publish`, {
                 publish_options: {
                     target_catalog: publishOptions.targetCatalog || 'default',
                     visibility: publishOptions.visibility || 'private',
@@ -204,7 +204,7 @@ class Agent0Adapter {
 
     async archiveProduct(productId, archiveReason) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/archive`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/archive`, {
                 archive_reason: archiveReason
             }, {
                 timeout: this.timeout
@@ -224,7 +224,7 @@ class Agent0Adapter {
     // Data Lineage
     async getDataLineage(productId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/lineage`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/lineage`, {
                 timeout: this.timeout
             });
             
@@ -263,7 +263,7 @@ class Agent0Adapter {
     // Version Management
     async createVersion(productId, versionData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/versions`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/versions`, {
                 version_number: versionData.versionNumber,
                 change_description: versionData.changeDescription,
                 version_type: versionData.versionType || 'minor',
@@ -285,7 +285,7 @@ class Agent0Adapter {
 
     async compareVersions(productId, fromVersion, toVersion) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/versions/compare`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/versions/compare`, {
                 params: {
                     from_version: fromVersion,
                     to_version: toVersion
@@ -313,7 +313,7 @@ class Agent0Adapter {
     // Import/Export Operations
     async importMetadata(importData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/import-metadata`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/import-metadata`, {
                 import_format: importData.format,
                 import_data: importData.data,
                 import_options: {
@@ -340,7 +340,7 @@ class Agent0Adapter {
 
     async exportCatalog(exportFormat = 'json', includePrivate = false) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/export-catalog`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/export-catalog`, {
                 export_format: exportFormat,
                 include_private: includePrivate,
                 export_options: {
@@ -366,7 +366,7 @@ class Agent0Adapter {
     // Bulk Operations
     async bulkUpdateProducts(productIds, updateData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/bulk-update`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/bulk-update`, {
                 product_ids: productIds,
                 update_data: this._convertBulkUpdateToREST(updateData)
             }, {
@@ -387,7 +387,7 @@ class Agent0Adapter {
 
     async batchValidateProducts(productIds, validationType = 'metadata') {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/data-products/batch-validate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/batch-validate`, {
                 product_ids: productIds,
                 validation_type: validationType,
                 validation_options: {
@@ -422,7 +422,7 @@ class Agent0Adapter {
     // Dashboard Data
     async getDashboardMetrics() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/dashboard/metrics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/dashboard/metrics`, {
                 timeout: this.timeout
             });
             
@@ -450,7 +450,7 @@ class Agent0Adapter {
     async getDublinCoreMetadata(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/dublin-core`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/dublin-core`, {
                 params,
                 timeout: this.timeout
             });
@@ -465,7 +465,7 @@ class Agent0Adapter {
     async getIngestionSessions(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/ingestion-sessions`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/ingestion-sessions`, {
                 params,
                 timeout: this.timeout
             });
@@ -480,7 +480,7 @@ class Agent0Adapter {
     async getQualityAssessments(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-assessments`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-assessments`, {
                 params,
                 timeout: this.timeout
             });
@@ -495,7 +495,7 @@ class Agent0Adapter {
     async getProductTransformations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/product-transformations`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/product-transformations`, {
                 params,
                 timeout: this.timeout
             });

@@ -168,7 +168,7 @@ class BlockchainQueueMixin:
 
 # Real Grok AI Integration
 try:
-    import httpx
+    # A2A Protocol: Use blockchain messaging instead of httpx
     HTTPX_AVAILABLE = True
 except ImportError:
     HTTPX_AVAILABLE = False

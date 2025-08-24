@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 #!/usr/bin/env node
 
 /**
@@ -18,7 +22,7 @@ class StartupHealthCheck {
 
     async checkEndpoint(path, validateFn) {
         return new Promise((resolve) => {
-            http.get(`${this.baseUrl}${path}`, { 
+            blockchainClient.sendMessage(`${this.baseUrl}${path}`, { 
                 headers: { 'Accept': 'application/json' }
             }, (res) => {
                 let data = '';

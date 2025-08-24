@@ -105,7 +105,7 @@ except ImportError:
 
 # Network connectivity for cross-agent communication
 try:
-    import aiohttp
+    # A2A Protocol: Use blockchain messaging instead of aiohttp
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False

@@ -1,4 +1,5 @@
 import os
+from app.a2a.core.security_base import SecureA2AAgent
 """
 Comprehensive test suite for Enhanced Agent Manager
 Tests MCP integration and validates 100/100 score improvements
@@ -18,10 +19,20 @@ missing_vars = [var for var in required_env_vars if var in locals() and not os.g
 if missing_vars:
     raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
-class EnhancedAgentManagerTest:
-    """Test suite for Enhanced Agent Manager"""
+class EnhancedAgentManagerTest(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Test suite for Enhanced Agent Manager"""
     
     def __init__(self):
+        
+        super().__init__()
         self.agent_manager = EnhancedAgentManagerAgent()
         self.test_results = []
     

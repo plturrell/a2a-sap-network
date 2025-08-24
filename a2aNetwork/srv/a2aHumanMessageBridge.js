@@ -4,7 +4,7 @@
  * Routes messages based on Python communication configuration
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const WebSocket = require('ws');
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
@@ -68,7 +68,7 @@ class A2AHumanMessageBridge extends EventEmitter {
     
     async loadAgentProfiles() {
         try {
-            const response = await axios.get(`${this.config.agentConfigUrl}/profiles`, {
+            const response = await blockchainClient.sendMessage(`${this.config.agentConfigUrl}/profiles`, {
                 timeout: 5000
             });
             
@@ -88,7 +88,7 @@ class A2AHumanMessageBridge extends EventEmitter {
     
     async testPythonRouterConnection() {
         try {
-            const response = await axios.get(`${this.config.pythonRouterUrl}/health`, {
+            const response = await blockchainClient.sendMessage(`${this.config.pythonRouterUrl}/health`, {
                 timeout: 3000
             });
             
@@ -192,7 +192,7 @@ class A2AHumanMessageBridge extends EventEmitter {
     async routeMessage(message, fromAgent) {
         try {
             // Try to use Python router first
-            const response = await axios.post(this.config.pythonRouterUrl, {
+            const response = await blockchainClient.sendMessage(this.config.pythonRouterUrl, {
                 message,
                 from_agent: fromAgent,
                 context: {
@@ -503,7 +503,7 @@ class A2AHumanMessageBridge extends EventEmitter {
     async sendNotificationToHuman(notification) {
         try {
             // Send to notification service
-            await axios.post(`${this.config.notificationServiceUrl}/send`, {
+            await blockchainClient.sendMessage(`${this.config.notificationServiceUrl}/send`, {
                 notification,
                 source: 'a2a_bridge',
                 timestamp: new Date().toISOString()

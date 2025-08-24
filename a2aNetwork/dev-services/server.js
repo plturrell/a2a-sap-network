@@ -5,7 +5,7 @@ const DevWebSocketService = require('./websocket-service');
 const wsService = new DevWebSocketService();
 
 // CAP server bootstrap
-cds.on('listening', async ({ server }) => {
+cds.on('listening', async function({ server }) {
     // Initialize WebSocket service with the HTTP server
     await wsService.initialize(server);
     

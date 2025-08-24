@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
-"""
-Test Comprehensive AI Preparation Agent Real AI Integration
-"""
-
 import sys
 import asyncio
 import json
 import os
 import pandas as pd
 import numpy as np
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Test Comprehensive AI Preparation Agent Real AI Integration
+"""
 
 # Add paths for imports
 sys.path.append('/Users/apple/projects/a2a')

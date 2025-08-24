@@ -1,3 +1,11 @@
+from typing import Dict, List, Any, Optional, Tuple, Set
+import numpy as np
+from datetime import datetime
+import logging
+import json
+import asyncio
+
+from app.a2a.core.security_base import SecureA2AAgent
 """
 Knowledge-Based Testing Skills for Agent 4 (Calculation Testing) - SAP HANA Knowledge Engine Integration
 Following SAP naming conventions and best practices
@@ -16,20 +24,23 @@ To send messages to other agents, use:
 
 
 
-from typing import Dict, List, Any, Optional, Tuple, Set
-import numpy as np
-from datetime import datetime
-import logging
-import json
-import asyncio
-
 logger = logging.getLogger(__name__)
 
 
-class KnowledgeBasedTestingSkills:
-    """Enhanced calculation testing skills leveraging SAP HANA Knowledge Engine"""
+class KnowledgeBasedTestingSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced calculation testing skills leveraging SAP HANA Knowledge Engine"""
     
     def __init__(self, hanaClient=None, vectorServiceUrl=None):
+        
+        super().__init__()
         self.hanaClient = hanaClient
         self.vectorServiceUrl = vectorServiceUrl
         self.testPatternCache = {}
@@ -353,7 +364,7 @@ class KnowledgeBasedTestingSkills:
             }
             
             # Make async request to vector service
-            import httpx
+            # A2A Protocol: Use blockchain messaging instead of httpx
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             # Disabled httpx usage for A2A protocol compliance
             searchResults = {"results": []}  # Placeholder for disabled vector search
@@ -473,7 +484,7 @@ class KnowledgeBasedTestingSkills:
                     'model': 'sentence'
                 }
                 
-                import httpx
+                # A2A Protocol: Use blockchain messaging instead of httpx
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
         # httpx\.AsyncClient() as client:

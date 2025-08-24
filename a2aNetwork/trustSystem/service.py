@@ -333,9 +333,12 @@ class TrustSystemService:
         """Get trust score leaderboard"""
         
         # Sort agents by trust score
+        def get_trust_rating(agent):
+            return agent.trust_rating
+        
         sorted_agents = sorted(
             self.trust_scores.values(),
-            key=lambda x: x.trust_rating,
+            key=get_trust_rating,
             reverse=True
         )[:limit]
         

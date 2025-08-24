@@ -1,8 +1,3 @@
-"""
-Enhanced Skills for Agent 2 (AI Preparation) - SAP HANA Knowledge Engine Integration
-Following SAP naming conventions and best practices
-"""
-
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
 from datetime import datetime
@@ -12,13 +7,29 @@ from sentence_transformers import SentenceTransformer
 import asyncio
 from .domainSpecificEmbeddingSkills import DomainSpecificEmbeddingSkills
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Enhanced Skills for Agent 2 (AI Preparation) - SAP HANA Knowledge Engine Integration
+Following SAP naming conventions and best practices
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class EnhancedAIPreparationSkills:
-    """Enhanced skills for AI Preparation Agent leveraging SAP HANA Knowledge Engine"""
+class EnhancedAIPreparationSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced skills for AI Preparation Agent leveraging SAP HANA Knowledge Engine"""
     
     def __init__(self, hanaClient=None):
+        
+        super().__init__()
         self.hanaClient = hanaClient
         self.embeddingModels = {}
         self._initializeModels()

@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/m/MessageToast",
@@ -415,7 +419,7 @@ sap.ui.define([
          */
         async _fetchCSRFToken() {
             try {
-                const response = await fetch("/api/v1/csrf-token", {
+                const response = await blockchainClient.sendMessage("/api/v1/csrf-token", {
                     method: "GET",
                     credentials: "same-origin",
                     headers: {
@@ -491,7 +495,7 @@ sap.ui.define([
             }
 
             try {
-                const response = await fetch(sUrl, requestOptions);
+                const response = await blockchainClient.sendMessage(sUrl, requestOptions);
                 return await this._handleSecureResponse(response);
             } catch (error) {
                 return this._handleRequestError(error, sUrl, method);

@@ -1110,7 +1110,7 @@ return "";
             const wsUrl = `${window.location.protocol.replace("http", "ws")  }//${  
                        window.location.host  }/api/projects/${  sProjectId  }/terminal`;
             
-            const oWebSocket = new WebSocket(wsUrl);
+            const oWebSocket = new BlockchainEventClient(wsUrl);
             
             oWebSocket.onopen = function () {
                 this._updateSessionWebSocket(sSessionId, oWebSocket);

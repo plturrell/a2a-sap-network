@@ -15,7 +15,7 @@ Register Agent 0 and Agent 1 in A2A Registry
 """
 
 # Direct HTTP calls not allowed - use A2A protocol
-# import requests  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of requests  # REMOVED: A2A protocol violation
 import json
 from datetime import datetime
 

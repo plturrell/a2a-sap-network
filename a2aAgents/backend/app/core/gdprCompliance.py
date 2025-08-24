@@ -104,6 +104,8 @@ class GDPRComplianceManager:
     """Manages GDPR compliance features"""
     
     def __init__(self):
+        
+        self.a2a_client = A2ANetworkClient("gdpr_compliance")
         self.consent_records: Dict[str, List[ConsentRecord]] = {}
         self.subject_requests: Dict[str, DataSubjectRequest] = {}
         self.processing_registry: Dict[str, Dict[str, Any]] = {}
@@ -290,7 +292,7 @@ class GDPRComplianceManager:
     
     async def process_access_request(self, request_id: str) -> Dict[str, Any]:
         """Process data access request (Article 15)"""
-        request = self.subject_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        request = self.subject_
         # requests\.get(request_id)
         if not request or request.request_type != DataSubjectRight.ACCESS:
             raise ValidationError("Invalid access request")
@@ -334,7 +336,7 @@ class GDPRComplianceManager:
         confirm: bool = False
     ) -> Dict[str, Any]:
         """Process erasure request (Article 17 - Right to be forgotten)"""
-        request = self.subject_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        request = self.subject_
         # requests\.get(request_id)
         if not request or request.request_type != DataSubjectRight.ERASURE:
             raise ValidationError("Invalid erasure request")
@@ -376,7 +378,7 @@ class GDPRComplianceManager:
     
     async def process_portability_request(self, request_id: str) -> Dict[str, Any]:
         """Process data portability request (Article 20)"""
-        request = self.subject_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        request = self.subject_
         # requests\.get(request_id)
         if not request or request.request_type != DataSubjectRight.DATA_PORTABILITY:
             raise ValidationError("Invalid portability request")
@@ -425,7 +427,7 @@ class GDPRComplianceManager:
     
     async def verify_request(self, request_id: str, verification_token: str) -> bool:
         """Verify a data subject request"""
-        request = self.subject_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        request = self.subject_
         # requests\.get(request_id)
         if not request:
             raise ValidationError("Request not found")

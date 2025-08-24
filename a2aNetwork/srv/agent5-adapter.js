@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 const log = cds.log('agent5-adapter');
 

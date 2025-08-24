@@ -983,13 +983,31 @@ class LNNFallbackClient:
         import random
         
         # Simple augmentations
+        def change_punctuation(t):
+            return t.replace('.', '!')
+        
+        def change_commas(t):
+            return t.replace(',', ';')
+        
+        def random_case_change(t):
+            return t.lower() if random.random() > 0.5 else t.upper()
+        
+        def reverse_short_texts(t):
+            return ' '.join(t.split()[::-1]) if len(t.split()) < 10 else t
+        
+        def add_confirmation(t):
+            return t + ' ' + random.choice(['Indeed.', 'Right?', 'Clearly.'])
+        
+        def add_starter_phrase(t):
+            return random.choice(['Well, ', 'So, ', 'Now, ']) + t
+        
         augmentations = [
-            lambda t: t.replace('.', '!'),  # Change punctuation
-            lambda t: t.replace(',', ';'),
-            lambda t: t.lower() if random.random() > 0.5 else t.upper(),
-            lambda t: ' '.join(t.split()[::-1]) if len(t.split()) < 10 else t,  # Reverse short texts
-            lambda t: t + ' ' + random.choice(['Indeed.', 'Right?', 'Clearly.']),
-            lambda t: random.choice(['Well, ', 'So, ', 'Now, ']) + t
+            change_punctuation,
+            change_commas,
+            random_case_change,
+            reverse_short_texts,
+            add_confirmation,
+            add_starter_phrase
         ]
         
         # Apply 1-2 random augmentations

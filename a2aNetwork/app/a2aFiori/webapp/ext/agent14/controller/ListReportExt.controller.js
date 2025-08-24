@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/ui/core/Fragment",
@@ -436,13 +441,13 @@ sap.ui.define([
             if (this._ws) return;
 
             // Validate WebSocket URL for security
-            if (!this._securityUtils.validateWebSocketUrl('ws://localhost:8014/backup/updates')) {
+            if (!this._securityUtils.validateWebSocketUrl('blockchain://a2a-events')) {
                 MessageBox.error("Invalid WebSocket URL");
                 return;
             }
 
             try {
-                this._ws = SecurityUtils.createSecureWebSocket('ws://localhost:8014/backup/updates', {
+                this._ws = SecurityUtils.createSecureWebSocket('blockchain://a2a-events', {
                     onMessage: function(data) {
                         this._handleBackupUpdate(data);
                     }.bind(this)

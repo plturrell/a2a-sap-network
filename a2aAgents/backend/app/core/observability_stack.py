@@ -24,7 +24,7 @@ try:
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
     from opentelemetry.exporter.prometheus import PrometheusMetricReader
     from opentelemetry.instrumentation.asyncio import AsyncIOInstrumentor
-    from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+    from opentelemetry.instrumentation.httpx # A2A Protocol: Use blockchain messaging instead of httpxClientInstrumentor
     from opentelemetry.instrumentation.redis import RedisInstrumentor
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor

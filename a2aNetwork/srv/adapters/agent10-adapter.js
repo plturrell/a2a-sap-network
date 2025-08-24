@@ -4,7 +4,7 @@
  * formula evaluation, self-healing calculations, and error correction operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent10Adapter {
@@ -18,7 +18,7 @@ class Agent10Adapter {
     async getCalculationTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks`, {
                 params,
                 timeout: this.timeout
             });
@@ -32,7 +32,7 @@ class Agent10Adapter {
     async createCalculationTask(data) {
         try {
             const restData = this._convertODataCalculationTaskToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks`, restData, {
                 timeout: this.timeout
             });
             
@@ -45,7 +45,7 @@ class Agent10Adapter {
     async updateCalculationTask(id, data) {
         try {
             const restData = this._convertODataCalculationTaskToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -57,7 +57,7 @@ class Agent10Adapter {
 
     async deleteCalculationTask(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${id}`, {
                 timeout: this.timeout
             });
         } catch (error) {
@@ -68,7 +68,7 @@ class Agent10Adapter {
     // ===== CALCULATION OPERATIONS =====
     async startCalculation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/start`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/start`, {}, {
                 timeout: this.timeout
             });
             
@@ -86,7 +86,7 @@ class Agent10Adapter {
 
     async pauseCalculation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/pause`, {}, {
                 timeout: this.timeout
             });
             
@@ -102,7 +102,7 @@ class Agent10Adapter {
 
     async resumeCalculation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/resume`, {}, {
                 timeout: this.timeout
             });
             
@@ -118,7 +118,7 @@ class Agent10Adapter {
 
     async cancelCalculation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/cancel`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-tasks/${taskId}/cancel`, {}, {
                 timeout: this.timeout
             });
             
@@ -134,7 +134,7 @@ class Agent10Adapter {
 
     async validateFormula(formula) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/validate-formula`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-formula`, {
                 formula
             }, {
                 timeout: this.timeout
@@ -154,7 +154,7 @@ class Agent10Adapter {
 
     async previewCalculation(formula, sampleData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/preview-calculation`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/preview-calculation`, {
                 formula,
                 sample_data: sampleData
             }, {
@@ -174,7 +174,7 @@ class Agent10Adapter {
 
     async exportResults(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/export-results/${taskId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/export-results/${taskId}`, {
                 format: options.format,
                 include_steps: options.includeSteps,
                 include_statistics: options.includeStatistics
@@ -196,7 +196,7 @@ class Agent10Adapter {
     // ===== MAIN CALCULATION METHODS =====
     async performCalculation(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/calculate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculate`, {
                 formula: data.formula,
                 input_data: data.inputData,
                 calculation_type: data.calculationType?.toLowerCase(),
@@ -224,7 +224,7 @@ class Agent10Adapter {
 
     async performStatisticalAnalysis(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/statistical-analysis`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/statistical-analysis`, {
                 data: data.data,
                 analysis_type: data.analysisType?.toLowerCase(),
                 confidence_level: data.confidenceLevel,
@@ -261,7 +261,7 @@ class Agent10Adapter {
 
     async batchCalculate(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/batch-calculate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/batch-calculate`, {
                 calculations: data.calculations,
                 parallel: data.parallel,
                 priority: data.priority?.toLowerCase()
@@ -284,7 +284,7 @@ class Agent10Adapter {
 
     async evaluateCustomFormula(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/evaluate-formula`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/evaluate-formula`, {
                 formula: data.formula,
                 variables: data.variables,
                 verify: data.verify
@@ -306,7 +306,7 @@ class Agent10Adapter {
     // ===== CONFIGURATION METHODS =====
     async getCalculationMethods() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/calculation-methods`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-methods`, {
                 timeout: this.timeout
             });
             
@@ -318,7 +318,7 @@ class Agent10Adapter {
 
     async getStatisticalMethods() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/statistical-methods`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/statistical-methods`, {
                 timeout: this.timeout
             });
             
@@ -330,7 +330,7 @@ class Agent10Adapter {
 
     async getSelfHealingStrategies() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/self-healing-strategies`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/self-healing-strategies`, {
                 timeout: this.timeout
             });
             
@@ -342,7 +342,7 @@ class Agent10Adapter {
 
     async configurePrecision(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/configure-precision`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/configure-precision`, {
                 type: data.type?.toLowerCase(),
                 accuracy: data.accuracy
             }, {
@@ -361,7 +361,7 @@ class Agent10Adapter {
 
     async configureParallelProcessing(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/configure-parallel-processing`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/configure-parallel-processing`, {
                 max_threads: data.maxThreads,
                 chunk_size: data.chunkSize
             }, {
@@ -381,7 +381,7 @@ class Agent10Adapter {
     // ===== HISTORY AND METRICS =====
     async getCalculationHistory(options) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/calculation-history`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/calculation-history`, {
                 params: {
                     limit: options.limit,
                     offset: options.offset,
@@ -403,7 +403,7 @@ class Agent10Adapter {
 
     async getPerformanceMetrics(taskId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/performance-metrics/${taskId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-metrics/${taskId}`, {
                 timeout: this.timeout
             });
             
@@ -415,7 +415,7 @@ class Agent10Adapter {
 
     async clearCache() {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/clear-cache`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/clear-cache`, {}, {
                 timeout: this.timeout
             });
             

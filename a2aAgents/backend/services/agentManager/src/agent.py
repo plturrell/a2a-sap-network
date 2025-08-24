@@ -26,7 +26,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from tenacity import retry, stop_after_attempt, wait_exponential
 import hashlib
 import jwt

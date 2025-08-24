@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
-"""
-Agent 9 (Reasoning Agent) REST API Server
-Provides HTTP endpoints for reasoning and decision-making services
-"""
-
 import os
 import sys
 import logging
 import asyncio
 from datetime import datetime
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Agent 9 (Reasoning Agent) REST API Server
+Provides HTTP endpoints for reasoning and decision-making services
+"""
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../..')))

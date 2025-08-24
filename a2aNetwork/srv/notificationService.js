@@ -27,13 +27,13 @@ class A2ANotificationService extends EventEmitter {
             PERFORMANCE_ALERT: { priority: 'high', category: 'monitoring' },
             SECURITY_ALERT: { priority: 'critical', category: 'security' }
         };
-        this.initializeWebSocketServer().catch(error => {
+        this.initializeBlockchainEventServer().catch(error => {
             logger.error('Failed to initialize WebSocket server:', error);
         });
         this.startPeriodicTasks();
     }
 
-    async initializeWebSocketServer() {
+    async initializeBlockchainEventServer() {
         try {
             // Use port manager to handle port conflicts
             const killConflicts = process.env.NODE_ENV === 'development';
@@ -44,12 +44,9 @@ class A2ANotificationService extends EventEmitter {
                 return;
             }
 
-            this.wsServer = new WebSocket.Server({ 
-                port: this.port,
-                path: '/notifications'
-            });
+            this.wsServer = new BlockchainEventServer($1);
 
-            this.wsServer.on('connection', (ws, req) => {
+            this.wsServer.on('blockchain-connection', (ws, req) => {
                 logger.debug('📱 New notification subscriber connected');
                 this.subscribers.add(ws);
 
@@ -58,12 +55,12 @@ class A2ANotificationService extends EventEmitter {
                     .slice(0, 10)
                     .map(n => ({ ...n, action: 'notification' }));
                 
-                ws.send(JSON.stringify({
+                blockchainClient.publishEvent(JSON.stringify({
                     action: 'initial_load',
                     notifications: recentNotifications
                 }));
 
-                ws.on('message', (message) => {
+                blockchainClient.on('event', (message) => {
                     try {
                         const data = JSON.parse(message);
                         this.handleWebSocketMessage(ws, data);
@@ -158,7 +155,7 @@ class A2ANotificationService extends EventEmitter {
                 if (!ws.subscribedCategories || 
                     ws.subscribedCategories.length === 0 || 
                     ws.subscribedCategories.includes(notification.category)) {
-                    ws.send(message);
+                    blockchainClient.publishEvent(message);
                 }
             }
         });
@@ -181,7 +178,7 @@ class A2ANotificationService extends EventEmitter {
         const message = JSON.stringify({ action, ...data });
         this.subscribers.forEach(ws => {
             if (ws.readyState === WebSocket.OPEN) {
-                ws.send(message);
+                blockchainClient.publishEvent(message);
             }
         });
     }
@@ -266,7 +263,7 @@ class A2ANotificationService extends EventEmitter {
         // Notifications are created only when actual events occur
         try {
             // Subscribe to real system events from event bus
-            const eventBusUrl = process.env.EVENT_BUS_URL || 'ws://localhost:8080/events';
+            const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
             logger.info('System notifications now listening for real events from:', eventBusUrl);
             
             // In production, this would connect to the actual event streaming service

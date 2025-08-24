@@ -280,7 +280,7 @@ class SharedResourceManager extends EventEmitter {
         if (!endpoint) return;
 
         try {
-            await fetch(`${endpoint}/api/config/update`, {
+            await blockchainClient.sendMessage(`${endpoint}/api/config/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -538,7 +538,7 @@ class SharedResourceManager extends EventEmitter {
         if (!endpoint) return;
 
         try {
-            await fetch(`${endpoint}/api/feature-flags/update`, {
+            await blockchainClient.sendMessage(`${endpoint}/api/feature-flags/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -698,7 +698,7 @@ class SharedResourceManager extends EventEmitter {
                 await fs.access(asset.url.replace('file://', ''));
                 return true;
             } else {
-                const response = await fetch(asset.url, { method: 'HEAD' });
+                const response = await blockchainClient.sendMessage(asset.url, { method: 'HEAD' });
                 return response.ok;
             }
         } catch {

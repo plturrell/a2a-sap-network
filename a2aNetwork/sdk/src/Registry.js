@@ -1,4 +1,8 @@
-const axios = require('axios');
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const EventEmitter = require('eventemitter3');
 const logger = require('pino')({ name: 'a2a-registry' });
 

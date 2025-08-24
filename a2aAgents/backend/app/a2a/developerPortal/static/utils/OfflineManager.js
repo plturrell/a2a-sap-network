@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "sap/ui/base/Object",
     "sap/ui/model/json/JSONModel",
@@ -237,7 +241,7 @@ return;
 }
             
             // Ping server to verify connectivity
-            fetch('/health', {
+            blockchainClient.sendMessage('/health', {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -746,7 +750,7 @@ return;
                 const url = this._buildSyncUrl(item);
                 const options = this._buildSyncOptions(item);
                 
-                fetch(url, options)
+                blockchainClient.sendMessage(url, options)
                 .then(response => {
                     if (response.ok) {
                         item.status = 'completed';
@@ -795,7 +799,7 @@ return;
         _downloadEntityData: function (entityType) {
             const url = `/api/v1/${entityType}?$top=1000&$orderby=modifiedAt desc`;
             
-            return fetch(url, {
+            return blockchainClient.sendMessage(url, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Correlation-Id': this._generateId()
@@ -880,7 +884,7 @@ return;
                 // Update server with resolved data
                 const url = `/api/v1/${conflict.entityType}/${conflict.entityId}`;
                 
-                fetch(url, {
+                blockchainClient.sendMessage(url, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

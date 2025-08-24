@@ -28,7 +28,7 @@ from email import encoders
 from pathlib import Path
 
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from pydantic import BaseModel, Field, EmailStr
 
 logger = logging.getLogger(__name__)

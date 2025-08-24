@@ -8,7 +8,7 @@ import json
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta
 from enum import Enum
-import aiohttp
+# A2A Protocol: Use blockchain messaging instead of aiohttp
 from dataclasses import dataclass
 
 from app.core.logger import get_logger

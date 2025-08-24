@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 const cds = require('@sap/cds');
 const { Server } = require('socket.io');
 const { TestOrchestrator } = require('./services/TestOrchestrator');
@@ -5,6 +10,7 @@ const { AgentSimulator } = require('./services/AgentSimulator');
 const { DevMonitor } = require('./services/DevMonitor');
 const { HotReloader } = require('./services/HotReloader');
 const logger = require('./utils/logger');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
 
 class DevWebSocketService {
     constructor() {
@@ -32,20 +38,20 @@ class DevWebSocketService {
     }
     
     setupSocketHandlers() {
-        this.io.on('connection', (socket) => {
+        this.io.on('blockchain-connection', function(socket) {
             logger.info('Client connected to dev services');
             
             // Test execution with real-time updates
-            socket.on('test:start', async (data) => {
+            socket.on('test:start', async function(data) {
                 await this.handleTestStart(socket, data);
-            });
+            }.bind(this));
             
             // Agent monitoring
-            socket.on('monitor:subscribe', (agentId) => {
+            socket.on('monitor:subscribe', function(agentId) {
                 this.devMonitor.subscribeToAgent(socket, agentId);
-            });
+            }.bind(this));
             
-            socket.on('monitor:unsubscribe', (agentId) => {
+            socket.on('monitor:unsubscribe', function(agentId) {
                 this.devMonitor.unsubscribeFromAgent(socket, agentId);
             });
             

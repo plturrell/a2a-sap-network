@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .dataStandardizationAgentSdk import DataStandardizationAgentSDK
+from .enhancedDataStandardizationAgentMcp import EnhancedDataStandardizationAgentMcp
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +28,26 @@ class Agent1StandardizationA2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: DataStandardizationAgentSDK):
+    def __init__(self, agent_sdk: EnhancedDataStandardizationAgentMcp):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
-            agent_id="agent1Standardization",
-            agent_name="Agent 1 - Financial Standardization",
-            agent_version="1.0.0",
+            agent_id="data_standardization_agent",
+            agent_name="Data Standardization Agent",
+            agent_version="2.0.0",
             allowed_operations={
+                "data_standardization",
+                "schema_validation",
+                "format_conversion", 
+                "data_normalization",
+                "quality_improvement",
+                "standardize_data",
+                "validate_schema",
+                "convert_format",
+                "normalize_data",
+                "improve_quality",
+                "cross_domain_standardization",
+                "pattern_learning_standardization",
                 "get_agent_card",
                 "json_rpc",
                 "process_message",
@@ -70,6 +82,246 @@ class Agent1StandardizationA2AHandler(SecureA2AAgent):
     
     def _register_handlers(self):
         """Register A2A message handlers"""
+
+        @self.secure_handler("data_standardization")
+        async def handle_data_standardization(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle comprehensive data standardization"""
+            try:
+                result = await self.agent_sdk.data_standardization(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_standardization",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to data_standardization: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("schema_validation")
+        async def handle_schema_validation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle schema validation operations"""
+            try:
+                result = await self.agent_sdk.schema_validation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="schema_validation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to schema_validation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("format_conversion")
+        async def handle_format_conversion(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle format conversion operations"""
+            try:
+                result = await self.agent_sdk.format_conversion(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="format_conversion",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to format_conversion: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_normalization")
+        async def handle_data_normalization(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data normalization operations"""
+            try:
+                result = await self.agent_sdk.data_normalization(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_normalization",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to data_normalization: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("quality_improvement")
+        async def handle_quality_improvement(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle quality improvement operations"""
+            try:
+                result = await self.agent_sdk.quality_improvement(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="quality_improvement",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to quality_improvement: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("standardize_data")
+        async def handle_standardize_data(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data standardization with ML enhancement"""
+            try:
+                result = await self.agent_sdk.standardize_data(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="standardize_data",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to standardize_data: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("validate_schema")
+        async def handle_validate_schema(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle schema validation with AI analysis"""
+            try:
+                result = await self.agent_sdk.validate_schema(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="validate_schema",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to validate_schema: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("convert_format")
+        async def handle_convert_format(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle format conversion with intelligence"""
+            try:
+                result = await self.agent_sdk.convert_format(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="convert_format",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to convert_format: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("normalize_data")
+        async def handle_normalize_data(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data normalization with AI optimization"""
+            try:
+                result = await self.agent_sdk.normalize_data(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="normalize_data",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to normalize_data: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("improve_quality")
+        async def handle_improve_quality(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle quality improvement with ML recommendations"""
+            try:
+                result = await self.agent_sdk.improve_quality(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="improve_quality",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to improve_quality: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("cross_domain_standardization")
+        async def handle_cross_domain_standardization(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle cross-domain standardization operations"""
+            try:
+                result = await self.agent_sdk.cross_domain_standardization(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="cross_domain_standardization",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to cross_domain_standardization: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("pattern_learning_standardization")
+        async def handle_pattern_learning_standardization(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle pattern learning standardization operations"""
+            try:
+                result = await self.agent_sdk.pattern_learning_standardization(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="pattern_learning_standardization",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to pattern_learning_standardization: {e}")
+                return self.create_secure_response(str(e), status="error")
 
         @self.secure_handler("get_agent_card")
         async def handle_get_agent_card(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:

@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 #!/usr/bin/env node
 
 /**
@@ -226,7 +230,7 @@ class LaunchpadValidator {
     // Helper methods
     async fetchJson(path) {
         return new Promise((resolve, reject) => {
-            http.get(`${this.baseUrl}${path}`, { 
+            blockchainClient.sendMessage(`${this.baseUrl}${path}`, { 
                 headers: { 'Accept': 'application/json' }
             }, (res) => {
                 let data = '';

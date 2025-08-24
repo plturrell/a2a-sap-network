@@ -26,7 +26,7 @@ from collections import defaultdict, deque
 from functools import wraps
 import psutil
 # Direct HTTP calls not allowed - use A2A protocol
-# import aiohttp  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of aiohttp  # REMOVED: A2A protocol violation
 # Core monitoring dependencies
 try:
     from prometheus_client import Counter, Histogram, Gauge, Summary, Info, CollectorRegistry, generate_latest

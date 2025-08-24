@@ -1,6 +1,9 @@
 """
 MCP Transport Layer Implementation
 Provides WebSocket and HTTP transports for MCP communication
+
+NOTE: This file is MCP-compliant and should use MCP protocol standards,
+not A2A protocol. MCP is for agent-to-tools communication only.
 """
 import http
 

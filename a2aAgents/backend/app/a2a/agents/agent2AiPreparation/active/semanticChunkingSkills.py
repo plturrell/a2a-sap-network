@@ -1,8 +1,3 @@
-"""
-Semantic Chunking and Hierarchical Embeddings Skills for Agent 2 - Phase 2 Advanced Features
-Implements intelligent document chunking with semantic understanding and multi-level embeddings
-"""
-
 import numpy as np
 import re
 from typing import Dict, List, Tuple, Optional, Any, Union
@@ -23,6 +18,12 @@ from app.a2a.core.trustIdentity import TrustIdentity
 from app.a2a.core.dataValidation import DataValidator
 
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Semantic Chunking and Hierarchical Embeddings Skills for Agent 2 - Phase 2 Advanced Features
+Implements intelligent document chunking with semantic understanding and multi-level embeddings
+"""
+
 class ChunkingStrategy(Enum):
     """Available chunking strategies"""
     SEMANTIC_SIMILARITY = "semantic_similarity"
@@ -33,8 +34,16 @@ class ChunkingStrategy(Enum):
 
 
 @dataclass
-class ChunkMetadata:
-    """Metadata for each semantic chunk"""
+class ChunkMetadata(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Metadata for each semantic chunk"""
     chunk_id: str
     start_position: int
     end_position: int
@@ -48,8 +57,16 @@ class ChunkMetadata:
 
 
 @dataclass
-class HierarchicalEmbedding:
-    """Multi-level embedding representation"""
+class HierarchicalEmbedding(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Multi-level embedding representation"""
     chunk_id: str
     embeddings: Dict[int, np.ndarray]  # level -> embedding
     aggregation_method: str

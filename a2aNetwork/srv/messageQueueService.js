@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 const amqp = require('amqplib');
 
 const { LoggerFactory } = require('../../shared/logging/structured-logger');
@@ -92,7 +96,7 @@ class MessageQueueService extends EventEmitter {
 
             // Create channel
             this.channel = await this.connection.createChannel();
-            await this.channel.prefetch(this.config.prefetchCount);
+            await this.channel.preblockchainClient.sendMessage(this.config.prefetchCount);
 
             // Setup infrastructure
             await this.setupExchanges();

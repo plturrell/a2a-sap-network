@@ -1,8 +1,3 @@
-"""
-Chain-of-Thought Reasoning Skills for Agent 5 - Phase 2 Advanced Features
-Implements structured reasoning processes for complex QA validation with step-by-step analysis
-"""
-
 import numpy as np
 import json
 import re
@@ -22,6 +17,12 @@ from app.a2a.core.trustIdentity import TrustIdentity
 from app.a2a.core.dataValidation import DataValidator
 
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Chain-of-Thought Reasoning Skills for Agent 5 - Phase 2 Advanced Features
+Implements structured reasoning processes for complex QA validation with step-by-step analysis
+"""
+
 class ReasoningStrategy(Enum):
     """Available reasoning strategies"""
     STEP_BY_STEP = "step_by_step"
@@ -33,8 +34,16 @@ class ReasoningStrategy(Enum):
 
 
 @dataclass
-class ReasoningStep:
-    """Individual step in chain-of-thought reasoning"""
+class ReasoningStep(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Individual step in chain-of-thought reasoning"""
     step_id: int
     step_type: str  # "premise", "inference", "conclusion", "validation", "evidence"
     content: str
@@ -46,8 +55,16 @@ class ReasoningStep:
 
 
 @dataclass
-class ReasoningChain:
-    """Complete chain of reasoning for a question"""
+class ReasoningChain(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Complete chain of reasoning for a question"""
     chain_id: str
     question: str
     strategy: ReasoningStrategy

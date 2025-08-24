@@ -1,8 +1,3 @@
-"""
-Calculation Agent Router
-Provides REST API endpoints for the Calculation Agent
-"""
-
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, List, Optional
@@ -14,6 +9,12 @@ from app.dependencies import get_current_user
 from .enhancedCalculationAgentSdk import EnhancedCalculationAgentSDK
 from app.a2a.sdk import A2AMessage, MessagePart, MessageRole
 
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Calculation Agent Router
+Provides REST API endpoints for the Calculation Agent
+"""
 
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]

@@ -7,6 +7,7 @@ from datetime import datetime
 from .dataProductAgentSdk import DataProductRegistrationAgentSDK as DataProductRegistrationAgent
 from ....core.a2aTypes import A2AMessage
 
+from app.a2a.core.security_base import SecureA2AAgent
 router = APIRouter(prefix="/a2a/agent0/v1", tags=["Agent 0 - Data Product Registration"])
 
 # Initialize Agent 0

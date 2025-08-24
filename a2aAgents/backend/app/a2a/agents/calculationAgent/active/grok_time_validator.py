@@ -1,8 +1,3 @@
-"""
-Grok Real-Time Mathematical Validator
-Provides continuous validation and feedback for mathematical calculations
-"""
-
 import asyncio
 import json
 import logging
@@ -10,6 +5,12 @@ from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime, timedelta
 import threading
 import time
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Grok Real-Time Mathematical Validator
+Provides continuous validation and feedback for mathematical calculations
+"""
 
 try:
     from app.clients.grokMathematicalClient import GrokMathematicalClient
@@ -19,10 +20,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-class GrokRealTimeValidator:
-    """Real-time mathematical calculation validator using Grok AI"""
+class GrokRealTimeValidator(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Real-time mathematical calculation validator using Grok AI"""
     
     def __init__(self, grok_client: Optional[GrokMathematicalClient] = None):
+        
+        super().__init__()
         self.grok_client = grok_client or (GrokMathematicalClient() if GROK_AVAILABLE else None)
         self.validation_queue = asyncio.Queue()
         self.validation_results = {}

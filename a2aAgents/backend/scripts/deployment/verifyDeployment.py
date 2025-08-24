@@ -18,7 +18,7 @@ Verifies that all components are properly deployed and functional
 
 import asyncio
 # Direct HTTP calls not allowed - use A2A protocol
-# import aiohttp  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of aiohttp  # REMOVED: A2A protocol violation
 import json
 import sys
 from typing import Dict, List, Tuple

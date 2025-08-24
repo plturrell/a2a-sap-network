@@ -1373,7 +1373,7 @@ class SCIPIndexer {
 
     async uploadToGlean(gleanFacts, gleanUrl = 'http://localhost:8080') {
         try {
-            const response = await fetch(`${gleanUrl}/api/v1/facts`, {
+            const response = await blockchainClient.sendMessage(`${gleanUrl}/api/v1/facts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

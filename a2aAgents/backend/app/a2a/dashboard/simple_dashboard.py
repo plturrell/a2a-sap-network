@@ -8,7 +8,7 @@ import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 import uvicorn
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 from datetime import datetime
 import json
 
@@ -108,7 +108,7 @@ async def dashboard():
         
         <script>
             async function fetchHealth() {
-                const response = await fetch('/api/health');
+                const response = await blockchainClient.sendMessage('/api/health');
                 const data = await response.json();
                 
                 let html = '';

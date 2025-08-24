@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "./BaseController",
     "sap/m/MessageToast",
@@ -27,7 +31,7 @@ sap.ui.define([
             this.showBusyDialog("Loading logs...");
 
             // Call logs API endpoint
-            fetch("/api/v1/operations/logs?limit=200")
+            blockchainClient.sendMessage("/api/v1/operations/logs?limit=200")
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

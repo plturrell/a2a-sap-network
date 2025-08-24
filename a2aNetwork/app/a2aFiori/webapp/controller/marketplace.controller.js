@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "./BaseController",
     "sap/ui/model/json/JSONModel",
@@ -76,10 +80,10 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
 
             Promise.all([
-                fetch(`${apiBaseUrl}/marketplace/services`),
-                fetch(`${apiBaseUrl}/marketplace/data-products`),
-                fetch(`${apiBaseUrl}/marketplace/categories`),
-                fetch(`${apiBaseUrl}/marketplace/my-listings`)
+                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/services`),
+                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/data-products`),
+                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/categories`),
+                blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/my-listings`)
             ]).then(responses => {
                 return Promise.all(responses.map(r => r.json()));
             }).then(([services, dataProducts, categories, myListings]) => {
@@ -343,7 +347,7 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
             const oCart = this.oMarketplaceModel.getProperty("/cart");
 
-            fetch(`${apiBaseUrl}/marketplace/checkout`, {
+            blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/checkout`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(oCart)
@@ -467,7 +471,7 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
 
             // Launch service trial environment
-            fetch(`${apiBaseUrl}/marketplace/services/${oService.id}/trial`, {
+            blockchainClient.sendMessage(`${apiBaseUrl}/marketplace/services/${oService.id}/trial`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             }).then(response => response.json()).then(data => {

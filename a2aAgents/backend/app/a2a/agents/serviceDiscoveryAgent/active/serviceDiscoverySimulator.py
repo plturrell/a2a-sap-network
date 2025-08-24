@@ -1,8 +1,3 @@
-"""
-Service Discovery Simulation Framework
-Provides comprehensive simulation capabilities for testing service discovery scenarios
-"""
-
 import asyncio
 import random
 import uuid
@@ -15,6 +10,12 @@ import logging
 import statistics
 
 from .comprehensiveServiceDiscoveryAgentSdk import (
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Service Discovery Simulation Framework
+Provides comprehensive simulation capabilities for testing service discovery scenarios
+"""
+
     ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
     ServiceStatus, LoadBalancingStrategy
 )
@@ -32,8 +33,16 @@ class SimulationScenario(Enum):
     HEALTH_CHECK_STORM = "health_check_storm"
 
 @dataclass
-class SimulationAgent:
-    """Simulated agent for testing"""
+class SimulationAgent(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Simulated agent for testing"""
     agent_id: str
     name: str
     service_types: List[str]
@@ -45,8 +54,16 @@ class SimulationAgent:
     services: List[str] = field(default_factory=list)
 
 @dataclass
-class SimulationMetrics:
-    """Metrics collected during simulation"""
+class SimulationMetrics(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Metrics collected during simulation"""
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -58,12 +75,22 @@ class SimulationMetrics:
     response_times: List[float] = field(default_factory=list)
     service_availability: Dict[str, float] = field(default_factory=dict)
 
-class ServiceDiscoverySimulator:
-    """
+class ServiceDiscoverySimulator(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""
     Comprehensive simulation framework for service discovery testing
     """
     
     def __init__(self, discovery_agent: ServiceDiscoveryAgentSdk):
+        
+        super().__init__()
         self.discovery_agent = discovery_agent
         self.simulation_agents: List[SimulationAgent] = []
         self.simulation_metrics = SimulationMetrics()

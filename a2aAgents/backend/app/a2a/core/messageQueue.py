@@ -10,6 +10,11 @@ import logging
 from typing import Dict, List, Optional, Any, Callable, AsyncGenerator
 from datetime import datetime, timedelta
 from uuid import uuid4
+
+
+def _generate_message_id() -> str:
+    """Generate a unique message ID"""
+    return str(uuid4())
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict, field_serializer
 import heapq
@@ -48,7 +53,7 @@ class ProcessingMode(str, Enum):
 class QueuedMessage(BaseModel):
     """Message in the queue with metadata and serialization support"""
 
-    message_id: str = Field(default_factory=lambda: str(uuid4()))
+    message_id: str = Field(default_factory=_generate_message_id)
     a2a_message: Dict[str, Any]  # The actual A2A message
     context_id: str
     priority: MessagePriority = MessagePriority.MEDIUM

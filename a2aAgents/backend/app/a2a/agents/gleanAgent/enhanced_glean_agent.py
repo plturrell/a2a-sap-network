@@ -8,7 +8,7 @@ import json
 import asyncio
 from typing import Dict, Any, Optional, List, Union, Tuple
 from datetime import datetime
-import aiohttp
+# A2A Protocol: Use blockchain messaging instead of aiohttp
 import time
 
 from .base_agent import BaseAgent, A2AError, ErrorCode, track_performance

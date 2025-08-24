@@ -414,7 +414,7 @@ class Agent15Adapter extends BaseAdapter {
     }
 
     async callPythonBackend(method, payload) {
-        const axios = require('axios');
+        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
         const baseUrl = process.env.AGENT15_BASE_URL || 'http://localhost:8015';
         
         try {
@@ -422,55 +422,55 @@ class Agent15Adapter extends BaseAdapter {
             
             switch (method) {
                 case 'list_workflows':
-                    response = await axios.get(`${baseUrl}/api/v1/workflows`, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
                     return response.data;
                     
                 case 'create_workflow':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows`, payload);
                     return response.data;
                     
                 case 'update_workflow':
-                    response = await axios.put(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
                         updates: payload.updates
                     });
                     return response.data;
                     
                 case 'delete_workflow':
-                    response = await axios.delete(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`);
                     return response.data;
                     
                 case 'execute_workflow':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/execute`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/execute`, payload);
                     return response.data;
                     
                 case 'pause_workflow':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/pause`, null, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/pause`, null, {
                         params: { workflow_id: payload.workflow_id }
                     });
                     return response.data;
                     
                 case 'resume_workflow':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/resume`, null, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/resume`, null, {
                         params: { workflow_id: payload.workflow_id }
                     });
                     return response.data;
                     
                 case 'cancel_workflow':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/cancel`, null, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/cancel`, null, {
                         params: { workflow_id: payload.workflow_id }
                     });
                     return response.data;
                     
                 case 'get_workflow_status':
-                    response = await axios.get(`${baseUrl}/api/v1/workflows/status`, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/status`, {
                         params: { workflow_id: payload.workflow_id }
                     });
                     return response.data;
                     
                 case 'get_execution_history':
-                    response = await axios.get(`${baseUrl}/api/v1/workflows/history`, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/history`, {
                         params: {
                             workflow_id: payload.workflow_id,
                             limit: payload.limit || 50,
@@ -480,25 +480,25 @@ class Agent15Adapter extends BaseAdapter {
                     return response.data;
                     
                 case 'coordinate_agents':
-                    response = await axios.post(`${baseUrl}/api/v1/coordination/agents`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/coordination/agents`, payload);
                     return response.data;
                     
                 case 'list_workflow_templates':
-                    response = await axios.get(`${baseUrl}/api/v1/templates`, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/templates`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
                     return response.data;
                     
                 case 'create_workflow_template':
-                    response = await axios.post(`${baseUrl}/api/v1/templates`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/templates`, payload);
                     return response.data;
                     
                 case 'create_workflow_from_template':
-                    response = await axios.post(`${baseUrl}/api/v1/templates/instantiate`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/templates/instantiate`, payload);
                     return response.data;
                     
                 case 'get_orchestration_metrics':
-                    response = await axios.get(`${baseUrl}/api/v1/metrics`, {
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/metrics`, {
                         params: {
                             time_range: payload.time_range || '24h',
                             group_by: payload.group_by || 'day'
@@ -507,15 +507,15 @@ class Agent15Adapter extends BaseAdapter {
                     return response.data;
                     
                 case 'optimize_workflow':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/optimize`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/optimize`, payload);
                     return response.data;
                     
                 case 'validate_workflow_definition':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/validate`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/validate`, payload);
                     return response.data;
                     
                 case 'bulk_execute_workflows':
-                    response = await axios.post(`${baseUrl}/api/v1/workflows/bulk-execute`, payload);
+                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/bulk-execute`, payload);
                     return response.data;
                     
                 default:

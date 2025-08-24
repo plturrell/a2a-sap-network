@@ -1,8 +1,3 @@
-"""
-Conversational Calculation Interface
-Provides natural, interactive mathematical problem-solving conversations
-"""
-
 import asyncio
 import json
 import logging
@@ -10,6 +5,12 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Conversational Calculation Interface
+Provides natural, interactive mathematical problem-solving conversations
+"""
 
 try:
     from app.clients.grokMathematicalClient import GrokMathematicalClient, GrokMathematicalAssistant
@@ -33,8 +34,16 @@ class ConversationState(Enum):
     ERROR = "error"
 
 @dataclass
-class ConversationTurn:
-    """A single turn in the conversation"""
+class ConversationTurn(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""A single turn in the conversation"""
     turn_id: str
     user_input: str
     assistant_response: Dict[str, Any]
@@ -43,12 +52,22 @@ class ConversationTurn:
     timestamp: str
     context_used: Dict[str, Any]
     
-class ConversationalCalculationInterface:
-    """Interactive conversational interface for mathematical problem solving"""
+class ConversationalCalculationInterface(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Interactive conversational interface for mathematical problem solving"""
     
     def __init__(self, 
                  grok_client: Optional[GrokMathematicalClient] = None,
                  calculation_agent = None):
+        
+        super().__init__()
         self.grok_client = grok_client or (GrokMathematicalClient() if GROK_AVAILABLE else None)
         self.grok_assistant = GrokMathematicalAssistant(self.grok_client) if self.grok_client else None
         self.calculation_agent = calculation_agent

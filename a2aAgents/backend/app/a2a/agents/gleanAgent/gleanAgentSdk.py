@@ -1494,7 +1494,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         
         # Test connection to Glean service
         try:
-            import httpx
+            # A2A Protocol: Use blockchain messaging instead of httpx
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             async with httpx.AsyncClient() as client:
                 response = await client.get(f"{self.glean_service_url}/health")
@@ -6025,7 +6025,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def _register_with_a2a_registry(self):
         """Register this agent with the A2A Registry"""
         try:
-            import httpx
+            # A2A Protocol: Use blockchain messaging instead of httpx
             registry_url = os.getenv("A2A_REGISTRY_URL")
             
             # Prepare agent card

@@ -15,12 +15,12 @@ console.log('Starting minimal test server...');
 app.use('/common', express.static(path.join(__dirname, 'app/common')));
 
 // Basic error handling
-app.use((err, req, res, next) => {
+app.use(function(err, req, res, next) {
     console.error('Minimal server error:', err);
     res.status(500).send('Minimal server error: ' + err.message);
 });
 
-app.listen(port, () => {
+app.listen(port, function() {
     console.log(`Minimal test server running on http://localhost:${port}`);
     console.log('Test URL: http://localhost:4005/common/auth/SSOManager.js');
 });

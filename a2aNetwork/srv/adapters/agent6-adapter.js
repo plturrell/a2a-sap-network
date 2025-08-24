@@ -3,7 +3,7 @@
  * Converts between REST API and OData formats for quality assessment and routing operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent6Adapter {
@@ -17,7 +17,7 @@ class Agent6Adapter {
     async getQualityControlTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks`, {
                 params,
                 timeout: this.timeout
             });
@@ -31,7 +31,7 @@ class Agent6Adapter {
     async createQualityControlTask(data) {
         try {
             const restData = this._convertODataTaskToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks`, restData, {
                 timeout: this.timeout
             });
             
@@ -44,7 +44,7 @@ class Agent6Adapter {
     async updateQualityControlTask(id, data) {
         try {
             const restData = this._convertODataTaskToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -56,7 +56,7 @@ class Agent6Adapter {
 
     async deleteQualityControlTask(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${id}`, {
                 timeout: this.timeout
             });
         } catch (error) {
@@ -67,7 +67,7 @@ class Agent6Adapter {
     // Quality Assessment
     async startQualityAssessment(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/assess`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/assess`, {}, {
                 timeout: this.timeout
             });
             
@@ -84,7 +84,7 @@ class Agent6Adapter {
 
     async performQualityAssessment(taskId, criteria) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/assess`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/assess`, {
                 task_id: taskId,
                 criteria: this._convertCriteriaToREST(criteria)
             }, {
@@ -116,7 +116,7 @@ class Agent6Adapter {
     // Routing Operations
     async makeRoutingDecision(taskId, decision) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/route`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/route`, {
                 decision: decision.decision,
                 target_agent: decision.targetAgent,
                 confidence: decision.confidence,
@@ -138,7 +138,7 @@ class Agent6Adapter {
 
     async getRoutingRecommendations(taskId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/routing-recommendations`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/routing-recommendations`, {
                 timeout: this.timeout
             });
             
@@ -158,7 +158,7 @@ class Agent6Adapter {
     // Trust Verification
     async verifyTrust(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/verify-trust`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/verify-trust`, {}, {
                 timeout: this.timeout
             });
             
@@ -185,7 +185,7 @@ class Agent6Adapter {
     // Workflow Optimization
     async optimizeWorkflow(taskId, optimization) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/workflow/optimize`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/workflow/optimize`, {
                 task_id: taskId,
                 optimization_type: optimization.optimizationType,
                 parameters: optimization.parameters
@@ -220,7 +220,7 @@ class Agent6Adapter {
 
     async analyzeWorkflowBottlenecks(workflowId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/workflow/${workflowId}/bottlenecks`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/workflow/${workflowId}/bottlenecks`, {
                 timeout: this.timeout
             });
             
@@ -247,7 +247,7 @@ class Agent6Adapter {
     // Task Escalation
     async escalateTask(taskId, escalation) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/escalate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/escalate`, {
                 escalation_level: escalation.escalationLevel,
                 reason: escalation.reason
             }, {
@@ -269,7 +269,7 @@ class Agent6Adapter {
     async getQualityMetrics(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/metrics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/metrics`, {
                 params,
                 timeout: this.timeout
             });
@@ -284,7 +284,7 @@ class Agent6Adapter {
     async getRoutingRules(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/routing-rules`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/routing-rules`, {
                 params,
                 timeout: this.timeout
             });
@@ -307,7 +307,7 @@ class Agent6Adapter {
                 metadata: data.metadata
             };
             
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/quality-control/routing-rules`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/routing-rules`, restData, {
                 timeout: this.timeout
             });
             
@@ -321,7 +321,7 @@ class Agent6Adapter {
     async getTrustVerifications(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/trust-verifications`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/trust-verifications`, {
                 params,
                 timeout: this.timeout
             });
@@ -336,7 +336,7 @@ class Agent6Adapter {
     async getQualityGates(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/quality-gates`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/quality-gates`, {
                 params,
                 timeout: this.timeout
             });
@@ -351,7 +351,7 @@ class Agent6Adapter {
     async getWorkflowOptimizations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/workflow-optimizations`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/workflow-optimizations`, {
                 params,
                 timeout: this.timeout
             });
@@ -365,7 +365,7 @@ class Agent6Adapter {
     // Streaming support for real-time assessment
     async* streamQualityAssessment(taskId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/assessment-stream`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/quality-control/tasks/${taskId}/assessment-stream`, {
                 responseType: 'stream',
                 timeout: 0
             });

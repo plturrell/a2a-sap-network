@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 const log = cds.log('agent3-adapter');
 
@@ -297,7 +297,7 @@ class Agent3Adapter {
 
     async startProcessing(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/process`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/process`, {}, {
                 timeout: 30000
             });
             return {
@@ -313,7 +313,7 @@ class Agent3Adapter {
 
     async pauseProcessing(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/pause`, {}, {
                 timeout: 30000
             });
             return {
@@ -329,7 +329,7 @@ class Agent3Adapter {
 
     async resumeProcessing(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/resume`, {}, {
                 timeout: 30000
             });
             return {
@@ -345,7 +345,7 @@ class Agent3Adapter {
 
     async cancelProcessing(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/cancel`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/cancel`, {}, {
                 timeout: 30000
             });
             return {
@@ -361,7 +361,7 @@ class Agent3Adapter {
 
     async runSimilaritySearch(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/similarity-search`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/similarity-search`, {
                 query_type: options.queryType,
                 query: options.query,
                 vector_query: options.vectorQuery,
@@ -385,7 +385,7 @@ class Agent3Adapter {
 
     async optimizeIndex(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/optimize-index`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/optimize-index`, {
                 index_type: options.indexType,
                 parameters: options.parameters
             }, {
@@ -404,7 +404,7 @@ class Agent3Adapter {
 
     async exportVectors(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/export`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/export`, {
                 format: options.format,
                 include_metadata: options.includeMetadata,
                 compression: options.compression,
@@ -425,7 +425,7 @@ class Agent3Adapter {
 
     async getVisualizationData(taskId, options) {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/visualization-data`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/visualization-data`, {
                 params: {
                     method: options.method,
                     perplexity: options.perplexity,
@@ -447,7 +447,7 @@ class Agent3Adapter {
 
     async runClusterAnalysis(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/cluster-analysis`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/tasks/${taskId}/cluster-analysis`, {
                 algorithm: options.algorithm,
                 num_clusters: options.numClusters,
                 min_cluster_size: options.minClusterSize
@@ -467,7 +467,7 @@ class Agent3Adapter {
 
     async batchVectorProcessing(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/batch-process`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/batch-process`, {
                 task_ids: options.taskIds,
                 parallel: options.parallel,
                 use_gpu: options.useGPU,
@@ -488,7 +488,7 @@ class Agent3Adapter {
 
     async executeVectorSearch(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/search`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/search`, {
                 query: options.query,
                 collection: options.collection,
                 top_k: options.topK,
@@ -510,7 +510,7 @@ class Agent3Adapter {
 
     async getModelComparison() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent3/v1/model-comparison`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/model-comparison`, {
                 timeout: 30000
             });
             return {
@@ -526,7 +526,7 @@ class Agent3Adapter {
 
     async getCollections() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent3/v1/collections`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/collections`, {
                 timeout: 30000
             });
             return {
@@ -542,7 +542,7 @@ class Agent3Adapter {
 
     async createCollection(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/collections`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/collections`, {
                 name: options.name,
                 description: options.description,
                 vector_database: options.vectorDatabase,
@@ -566,7 +566,7 @@ class Agent3Adapter {
 
     async generateEmbeddings(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent3/v1/embeddings/generate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/embeddings/generate`, {
                 texts: options.texts,
                 model: options.model,
                 normalize: options.normalize
@@ -590,7 +590,7 @@ class Agent3Adapter {
 
     async checkHealth() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent3/v1/health`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent3/v1/health`, {
                 timeout: 5000
             });
             return {

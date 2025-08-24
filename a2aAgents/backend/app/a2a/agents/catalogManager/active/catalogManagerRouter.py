@@ -7,6 +7,7 @@ from datetime import datetime
 from .catalogManagerAgentSdk import CatalogManagerAgentSDK as CatalogManagerAgent
 from app.a2a.core.a2aTypes import A2AMessage, MessagePart
 
+from app.a2a.core.security_base import SecureA2AAgent
 router = APIRouter(prefix="/a2a/catalog_manager/v1", tags=["Catalog Manager - ORD Repository Management"])
 
 # Initialize Catalog Manager Agent

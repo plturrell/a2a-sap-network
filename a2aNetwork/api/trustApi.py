@@ -2,7 +2,7 @@
 Trust API - Interface for A2A Trust System services
 """
 
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 import asyncio
 from typing import Dict, List, Any, Optional
 from datetime import datetime

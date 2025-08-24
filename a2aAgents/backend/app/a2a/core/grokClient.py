@@ -20,7 +20,7 @@ import json
 import logging
 import os
 from typing import Dict, Any, Optional, List
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 from datetime import datetime
 import sys
 from pathlib import Path

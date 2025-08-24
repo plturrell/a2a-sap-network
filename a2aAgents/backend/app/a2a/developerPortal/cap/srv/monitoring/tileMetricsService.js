@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 "use strict";
 
 /**
@@ -236,7 +240,7 @@ class TileMetricsService extends EventEmitter {
     async _getDataQualityMetrics() {
         try {
             // Get from QA validation agent metrics
-            const response = await fetch('http://localhost:8005/metrics/quality', {
+            const response = await blockchainClient.sendMessage('http://localhost:8005/metrics/quality', {
                 method: 'GET',
                 timeout: 2000
             });

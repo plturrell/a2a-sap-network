@@ -638,7 +638,7 @@ sap.ui.define([
             if (bSelected) {
                 aSelected.push(oCapability);
             } else {
-                aSelected = aSelected.filter(item => item.id !== oCapability.id);
+                aSelected = aSelected.filter(function(item) { return item.id !== oCapability.id; });
             }
             
             oModel.setProperty("/selectedCapabilities", aSelected);
@@ -658,7 +658,7 @@ sap.ui.define([
             }
             
             // Convert capabilities to skills format
-            const aNewSkills = aSelected.map(cap => ({
+            const aNewSkills = aSelected.map(function(cap) { return {
                 id: cap.id,
                 name: cap.name,
                 description: cap.description,
@@ -667,14 +667,14 @@ sap.ui.define([
                 dependencies: cap.dependencies,
                 tags: cap.tags,
                 configured: false
-            }));
+            };});
             
             // Add to existing skills
             const aCurrentSkills = oAgentModel.getProperty("/skills") || [];
             
             // Check for duplicates
-            aNewSkills.forEach(newSkill => {
-                const bExists = aCurrentSkills.some(skill => skill.id === newSkill.id);
+            aNewSkills.forEach(function(newSkill) {
+                const bExists = aCurrentSkills.some(function(skill) { return skill.id === newSkill.id; });
                 if (!bExists) {
                     aCurrentSkills.push(newSkill);
                 }
@@ -756,19 +756,19 @@ sap.ui.define([
             const mAllCapabilities = {};
             const aCategories = ["data", "communication", "integration", "ai", "workflow", "monitoring"];
             
-            aCategories.forEach(sCategory => {
+            aCategories.forEach(function(sCategory) {
                 this._oCapabilitiesModel.setProperty("/selectedCategory", sCategory);
                 this._loadAvailableCapabilities();
                 const aCapabilities = this._oCapabilitiesModel.getProperty("/availableCapabilities") || [];
-                aCapabilities.forEach(cap => {
+                aCapabilities.forEach(function(cap) {
                     mAllCapabilities[cap.id] = cap;
                 });
             });
             
             // Add requested capabilities
-            aCapabilityIds.forEach(sId => {
+            aCapabilityIds.forEach(function(sId) {
                 const oCapability = mAllCapabilities[sId];
-                if (oCapability && !aSelected.some(sel => sel.id === sId)) {
+                if (oCapability && !aSelected.some(function(sel) { return sel.id === sId; })) {
                     aSelected.push(oCapability);
                 }
             });
@@ -1158,9 +1158,9 @@ class ${this._toPascalCase(oAgentData.id)}(Agent):
         self.publish_topics = "${oAgentData.publishTopics}".split(",")
         
         # Register skills
-        ${oAgentData.skills.map(skill => 
-            `self.register_skill(Skill("${skill.name}", "${skill.description}"))`
-        ).join('\n        ')}
+        ${oAgentData.skills.map(function(skill) {
+            return `self.register_skill(Skill("${skill.name}", "${skill.description}"))`;
+        }).join('\n        ')}
         
     async def process_message(self, message):
         # Implement message processing logic
@@ -1196,9 +1196,9 @@ class ${this._toPascalCase(oAgentData.id)} extends Agent {
         this.publishTopics = "${oAgentData.publishTopics}".split(",");
         
         // Register skills
-        ${oAgentData.skills.map(skill => 
-            `this.registerSkill(new Skill("${skill.name}", "${skill.description}"));`
-        ).join('\n        ')}
+        ${oAgentData.skills.map(function(skill) {
+            return `this.registerSkill(new Skill("${skill.name}", "${skill.description}"));`;
+        }).join('\n        ')}
     }
     
     async processMessage(message) {

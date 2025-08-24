@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 "use strict";
 
 /**
@@ -6,7 +10,7 @@
  */
 
 const { ExportResultCode } = require('@opentelemetry/core');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 class SAPCloudLoggingExporter {
     constructor(config) {

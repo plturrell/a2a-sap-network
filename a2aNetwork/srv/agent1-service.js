@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 // Import the adapter for REST/OData conversion
 const Agent1Adapter = require('./agent1-adapter');
@@ -30,7 +30,7 @@ module.exports = cds.service.impl(async function() {
             log.info('Reading StandardizationTasks');
             
             // Get data from Python backend
-            const response = await axios.get(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks`, {
+            const response = await blockchainClient.sendMessage(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks`, {
                 timeout: 30000
             });
             
@@ -52,7 +52,7 @@ module.exports = cds.service.impl(async function() {
             const restData = adapter.convertTaskToRest(req.data);
             
             // Send to Python backend
-            const response = await axios.post(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -74,7 +74,7 @@ module.exports = cds.service.impl(async function() {
             const taskId = req.params[0].ID;
             const restData = adapter.convertTaskToRest(req.data);
             
-            const response = await axios.put(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks/${taskId}`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks/${taskId}`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -94,7 +94,7 @@ module.exports = cds.service.impl(async function() {
             
             const taskId = req.params[0].ID;
             
-            await axios.delete(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks/${taskId}`, {
+            await blockchainClient.sendMessage(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks/${taskId}`, {
                 timeout: 30000
             });
             
@@ -401,7 +401,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Reading StandardizationRules');
             
-            const response = await axios.get(`${AGENT1_BASE_URL}/a2a/agent1/v1/rules`, {
+            const response = await blockchainClient.sendMessage(`${AGENT1_BASE_URL}/a2a/agent1/v1/rules`, {
                 timeout: 30000
             });
             

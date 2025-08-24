@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .dataProductAgentSdk import DataProductRegistrationAgentSDK
+from .comprehensiveDataProductAgentSdk import ComprehensiveDataProductAgentSDK
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class Agent0A2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: DataProductRegistrationAgentSDK):
+    def __init__(self, agent_sdk: ComprehensiveDataProductAgentSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
@@ -36,8 +36,19 @@ class Agent0A2AHandler(SecureA2AAgent):
             agent_name="Data Product Registration Agent",
             agent_version="2.0.0",
             allowed_operations={
+                "data_product_creation",
+                "data_ingestion", 
+                "data_transformation",
+                "quality_control",
+                "metadata_management",
                 "register_data_product",
-                "validate_data_product", 
+                "validate_data_product",
+                "extract_metadata",
+                "assess_quality",
+                "create_lineage",
+                "dublin_core_compliance",
+                "data_integrity_check",
+                "cross_agent_validation",
                 "get_agent_card",
                 "get_task_status",
                 "get_queue_status",
@@ -69,6 +80,226 @@ class Agent0A2AHandler(SecureA2AAgent):
     
     def _register_handlers(self):
         """Register A2A message handlers"""
+
+        @self.secure_handler("data_product_creation")
+        async def handle_data_product_creation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Create new data products with comprehensive metadata"""
+            try:
+                result = await self.agent_sdk.data_product_creation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_product_creation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to create data product: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_ingestion")
+        async def handle_data_ingestion(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle data ingestion with quality validation"""
+            try:
+                result = await self.agent_sdk.data_ingestion(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_ingestion",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to ingest data: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_transformation")
+        async def handle_data_transformation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Transform data with lineage tracking"""
+            try:
+                result = await self.agent_sdk.data_transformation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_transformation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to transform data: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("quality_control")
+        async def handle_quality_control(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Perform quality control assessment"""
+            try:
+                result = await self.agent_sdk.quality_control(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="quality_control",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed quality control: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("metadata_management")
+        async def handle_metadata_management(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Manage Dublin Core metadata"""
+            try:
+                result = await self.agent_sdk.metadata_management(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="metadata_management",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed metadata management: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("extract_metadata")
+        async def handle_extract_metadata(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Extract metadata using ML techniques"""
+            try:
+                result = await self.agent_sdk.extract_metadata(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="extract_metadata",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to extract metadata: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("assess_quality")
+        async def handle_assess_quality(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Assess data quality using AI"""
+            try:
+                result = await self.agent_sdk.assess_quality(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="assess_quality",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to assess quality: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("create_lineage")
+        async def handle_create_lineage(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Create data lineage graph"""
+            try:
+                result = await self.agent_sdk.create_lineage(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="create_lineage",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to create lineage: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("dublin_core_compliance")
+        async def handle_dublin_core_compliance(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Verify Dublin Core compliance"""
+            try:
+                result = await self.agent_sdk.dublin_core_compliance(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="dublin_core_compliance",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed Dublin Core compliance check: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("data_integrity_check")
+        async def handle_data_integrity_check(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Check data integrity with blockchain verification"""
+            try:
+                result = await self.agent_sdk.data_integrity_check(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="data_integrity_check",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed data integrity check: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("cross_agent_validation")
+        async def handle_cross_agent_validation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Validate data across multiple agents"""
+            try:
+                result = await self.agent_sdk.cross_agent_validation(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="cross_agent_validation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed cross-agent validation: {e}")
+                return self.create_secure_response(str(e), status="error")
         
         @self.secure_handler("get_agent_card")
         async def handle_get_agent_card(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:

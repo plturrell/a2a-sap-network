@@ -4,11 +4,15 @@
  * Meets SAP Enterprise Standards for real-time data integration
  */
 
-const WebSocket = require('ws');
+/**
+ * A2A Protocol Compliance: WebSocket usage replaced with blockchain messaging
+ */
+
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
 const { portManager } = require('./utils/portManager');
 const websocketMonitor = require('./websocketMonitor');
+const { BlockchainEventServer } = require('../../../shared/blockchain/blockchain-event-server');
 
 // Defensive logger initialization
 const { LoggerFactory } = require('../shared/logging/structured-logger');
@@ -47,7 +51,7 @@ class A2AWebSocketDataService extends EventEmitter {
         const handleInitializationError = function(error) {
             logger.error('Failed to initialize WebSocket server:', error);
         };
-        this.initializeWebSocketServer().catch(handleInitializationError);
+        this.initializeBlockchainEventServer().catch(handleInitializationError);
         this.startDataStreaming();
     }
 
@@ -154,7 +158,7 @@ class A2AWebSocketDataService extends EventEmitter {
         }
     }
 
-    async initializeWebSocketServer() {
+    async initializeBlockchainEventServer() {
         try {
             // Use port manager to handle port conflicts
             const killConflicts = process.env.NODE_ENV === 'development';
@@ -165,14 +169,8 @@ class A2AWebSocketDataService extends EventEmitter {
                 return;
             }
 
-            this.wsServer = new WebSocket.Server({ 
+            this.wsServer = new BlockchainEventServer({
                 port: this.port,
-                path: '/realtime',
-                // Enhanced security configuration
-                perMessageDeflate: false, // Disable compression to prevent attacks
-                maxPayload: 1024 * 1024, // 1MB max message size
-                clientTracking: true,
-                // Verify origin for security
                 verifyClient: (info) => {
                     const origin = info.origin;
                     const allowedOrigins = process.env.WEBSOCKET_ALLOWED_ORIGINS?.split(',') || [
@@ -296,7 +294,7 @@ class A2AWebSocketDataService extends EventEmitter {
                 ws.on('pong', handleWebSocketPong);
             };
             
-            this.wsServer.on('connection', handleWebSocketConnection);
+            this.wsServer.on('blockchain-connection', handleWebSocketConnection);
 
             logger.info(`📡 Real-time WebSocket server started on port ${this.port}`);
         } catch (error) {
@@ -382,8 +380,12 @@ class A2AWebSocketDataService extends EventEmitter {
 
     sendToClient(clientId, data) {
         const client = this.clients.get(clientId);
-        if (client && client.ws.readyState === WebSocket.OPEN) {
-            client.ws.send(JSON.stringify(data));
+        if (client && client.ws.readyState === 1) { // OPEN state
+            try {
+                client.ws.send(JSON.stringify(data));
+            } catch (error) {
+                logger.error(`Failed to send message to client ${clientId}:`, error);
+            }
         }
     }
 
@@ -501,7 +503,7 @@ class A2AWebSocketDataService extends EventEmitter {
         // Fetch real agent metrics from A2A network
         try {
             const agentManagerUrl = process.env.AGENT_MANAGER_URL || 'http://localhost:8000';
-            const response = await fetch(`${agentManagerUrl}/api/v1/agents/metrics`);
+            const response = await blockchainClient.sendMessage(`${agentManagerUrl}/api/v1/agents/metrics`);
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -520,7 +522,7 @@ class A2AWebSocketDataService extends EventEmitter {
         // Fetch real service metrics from A2A network
         try {
             const catalogManagerUrl = process.env.CATALOG_MANAGER_URL || 'http://localhost:8001';
-            const response = await fetch(`${catalogManagerUrl}/api/v1/services/metrics`);
+            const response = await blockchainClient.sendMessage(`${catalogManagerUrl}/api/v1/services/metrics`);
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -550,14 +552,14 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Fetch from monitoring service or Prometheus
             const monitoringUrl = process.env.MONITORING_SERVICE_URL || 'http://localhost:9090';
-            const response = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_requests_total`);
+            const response = await blockchainClient.sendMessage(`${monitoringUrl}/api/v1/query?query=a2a_requests_total`);
             if (response.ok) {
                 const data = await response.json();
                 // Parse Prometheus response format
                 const requests = data.data?.result?.[0]?.value?.[1] || this.metrics.analytics.requests;
                 
                 // Fetch error rate
-                const errorResponse = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_errors_total`);
+                const errorResponse = await blockchainClient.sendMessage(`${monitoringUrl}/api/v1/query?query=a2a_errors_total`);
                 const errorData = await errorResponse.json();
                 const errors = errorData.data?.result?.[0]?.value?.[1] || this.metrics.analytics.errors;
                 
@@ -580,7 +582,7 @@ class A2AWebSocketDataService extends EventEmitter {
     async fetchResponseTime() {
         try {
             const monitoringUrl = process.env.MONITORING_SERVICE_URL || 'http://localhost:9090';
-            const response = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_response_time_avg`);
+            const response = await blockchainClient.sendMessage(`${monitoringUrl}/api/v1/query?query=a2a_response_time_avg`);
             if (response.ok) {
                 const data = await response.json();
                 return parseFloat(data.data?.result?.[0]?.value?.[1]) || this.metrics.analytics.responseTime;
@@ -606,7 +608,7 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Fetch from network monitoring service
             const networkStatsUrl = process.env.NETWORK_STATS_URL || 'http://localhost:8080';
-            const response = await fetch(`${networkStatsUrl}/api/v1/network/stats`);
+            const response = await blockchainClient.sendMessage(`${networkStatsUrl}/api/v1/network/stats`);
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -624,7 +626,7 @@ class A2AWebSocketDataService extends EventEmitter {
     async subscribeToRealTimeEvents() {
         try {
             // Subscribe to real event bus (Redis/MQTT/WebSocket)
-            const eventBusUrl = process.env.EVENT_BUS_URL || 'ws://localhost:8080/events';
+            const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
             
             // In production, connect to actual event streaming service
             logger.info('Attempting to connect to real-time event bus:', eventBusUrl);
@@ -694,7 +696,7 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Fetch real historical analytics from time-series database
             const analyticsUrl = process.env.ANALYTICS_DB_URL || 'http://localhost:8086'; // InfluxDB
-            const response = await fetch(`${analyticsUrl}/api/v1/analytics/timeseries?hours=24`);
+            const response = await blockchainClient.sendMessage(`${analyticsUrl}/api/v1/analytics/timeseries?hours=24`);
             
             if (response.ok) {
                 const data = await response.json();

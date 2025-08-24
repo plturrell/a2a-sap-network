@@ -31,7 +31,7 @@ class EventBusService extends EventEmitter {
     async initialize() {
         try {
             // Initialize WebSocket server for event distribution
-            await this.initializeWebSocketServer();
+            await this.initializeBlockchainEventServer();
             
             // Initialize real system connector (NO MOCKS)
             this.realSystemConnector = new RealSystemEventConnector();
@@ -53,7 +53,7 @@ class EventBusService extends EventEmitter {
         }
     }
 
-    async initializeWebSocketServer() {
+    async initializeBlockchainEventServer() {
         try {
             const killConflicts = process.env.NODE_ENV === 'development';
             this.port = await portManager.allocatePortSafely('event-bus', 8080, killConflicts);
@@ -63,12 +63,9 @@ class EventBusService extends EventEmitter {
                 return;
             }
 
-            this.wsServer = new WebSocket.Server({ 
-                port: this.port,
-                path: '/events'
-            });
+            this.wsServer = new BlockchainEventServer($1);
 
-            this.wsServer.on('connection', this.handleConnection.bind(this));
+            this.wsServer.on('blockchain-connection', this.handleConnection.bind(this));
             this.wsServer.on('error', this.handleServerError.bind(this));
 
             this.logger.info(`📡 Event bus server started on port ${this.port}`);
@@ -104,7 +101,7 @@ class EventBusService extends EventEmitter {
         });
 
         // Set up event handlers
-        ws.on('message', (message) => this.handleMessage(clientInfo, message));
+        blockchainClient.on('event', (message) => this.handleMessage(clientInfo, message));
         ws.on('close', () => this.handleDisconnect(clientInfo));
         ws.on('error', (error) => this.handleClientError(clientInfo, error));
 
@@ -321,7 +318,7 @@ class EventBusService extends EventEmitter {
     sendToClient(clientInfo, data) {
         if (clientInfo.ws.readyState === WebSocket.OPEN) {
             try {
-                clientInfo.ws.send(JSON.stringify(data));
+                clientInfo.blockchainClient.publishEvent(JSON.stringify(data));
             } catch (error) {
                 this.logger.error(`Failed to send to client ${clientInfo.id}:`, error);
             }

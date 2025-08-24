@@ -3,7 +3,7 @@ A2A Network Client - Main interface for a2aAgents to access network services
 """
 
 import asyncio
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 import logging

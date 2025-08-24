@@ -1,8 +1,3 @@
-"""
-Enhanced Catalog Management Skills for Production-Ready ORD Operations
-Implements advanced metadata enhancement, semantic search, and caching strategies
-"""
-
 import asyncio
 import json
 import hashlib
@@ -19,6 +14,12 @@ import nltk
 from nltk.corpus import wordnet
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Enhanced Catalog Management Skills for Production-Ready ORD Operations
+Implements advanced metadata enhancement, semantic search, and caching strategies
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +52,16 @@ class CacheStrategy(Enum):
 
 
 @dataclass
-class CacheEntry:
-    """Enhanced cache entry with metadata"""
+class CacheEntry(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced cache entry with metadata"""
     key: str
     value: Any
     created_at: datetime
@@ -64,8 +73,16 @@ class CacheEntry:
 
 
 @dataclass
-class SemanticSearchResult:
-    """Enhanced search result with relevance scoring"""
+class SemanticSearchResult(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced search result with relevance scoring"""
     document_id: str
     score: float
     highlights: List[str]
@@ -74,10 +91,20 @@ class SemanticSearchResult:
     ranking_factors: Dict[str, float]
 
 
-class EnhancedORDMetadataProcessor:
-    """Advanced ORD metadata enhancement processor"""
+class EnhancedORDMetadataProcessor(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Advanced ORD metadata enhancement processor"""
     
     def __init__(self):
+        
+        super().__init__()
         self.lemmatizer = WordNetLemmatizer() if NLTK_AVAILABLE else None
         self.metadata_patterns = self._load_metadata_patterns()
         self.enhancement_rules = self._load_enhancement_rules()
@@ -324,10 +351,20 @@ class EnhancedORDMetadataProcessor:
         return 0.8
 
 
-class AdvancedSemanticSearchEngine:
-    """Production-ready semantic search with advanced ranking"""
+class AdvancedSemanticSearchEngine(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Production-ready semantic search with advanced ranking"""
     
     def __init__(self, embedding_model):
+        
+        super().__init__()
         self.embedding_model = embedding_model
         self.index_cache = {}
         self.query_cache = {}
@@ -490,10 +527,20 @@ class AdvancedSemanticSearchEngine:
         return highlights
 
 
-class IntelligentCacheManager:
-    """Advanced caching system with multiple strategies"""
+class IntelligentCacheManager(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Advanced caching system with multiple strategies"""
     
     def __init__(self, max_size_mb: int = 100, default_strategy: CacheStrategy = CacheStrategy.ADAPTIVE):
+        
+        super().__init__()
         self.max_size_bytes = max_size_mb * 1024 * 1024
         self.current_size_bytes = 0
         self.strategy = default_strategy

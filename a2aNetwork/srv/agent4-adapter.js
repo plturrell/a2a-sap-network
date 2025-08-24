@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 const log = cds.log('agent4-adapter');
 
@@ -284,7 +284,7 @@ class Agent4Adapter {
 
     async startValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/validate`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/validate`, {}, {
                 timeout: 60000
             });
             return {
@@ -300,7 +300,7 @@ class Agent4Adapter {
 
     async pauseValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/pause`, {}, {
                 timeout: 30000
             });
             return {
@@ -316,7 +316,7 @@ class Agent4Adapter {
 
     async resumeValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/resume`, {}, {
                 timeout: 30000
             });
             return {
@@ -332,7 +332,7 @@ class Agent4Adapter {
 
     async cancelValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/cancel`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/cancel`, {}, {
                 timeout: 30000
             });
             return {
@@ -348,7 +348,7 @@ class Agent4Adapter {
 
     async runSymbolicValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/symbolic`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/symbolic`, {}, {
                 timeout: 120000
             });
             return {
@@ -364,7 +364,7 @@ class Agent4Adapter {
 
     async runNumericalValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/numerical`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/numerical`, {}, {
                 timeout: 60000
             });
             return {
@@ -380,7 +380,7 @@ class Agent4Adapter {
 
     async runStatisticalValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/statistical`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/statistical`, {}, {
                 timeout: 90000
             });
             return {
@@ -396,7 +396,7 @@ class Agent4Adapter {
 
     async runAIValidation(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/ai-validation`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/ai-validation`, {}, {
                 timeout: 180000 // AI validation can take longer
             });
             return {
@@ -412,7 +412,7 @@ class Agent4Adapter {
 
     async runBlockchainConsensus(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/blockchain-consensus`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/blockchain-consensus`, {}, {
                 timeout: 300000 // Blockchain consensus can take much longer
             });
             return {
@@ -428,7 +428,7 @@ class Agent4Adapter {
 
     async exportValidationReport(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/export`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/tasks/${taskId}/export`, {
                 format: options.format,
                 include_steps: options.includeSteps,
                 include_confidence: options.includeConfidence
@@ -448,7 +448,7 @@ class Agent4Adapter {
 
     async validateFromTemplate(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/templates/${options.templateId}/apply`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/templates/${options.templateId}/apply`, {
                 task_id: taskId,
                 variables: JSON.parse(options.variables || '{}')
             }, {
@@ -467,7 +467,7 @@ class Agent4Adapter {
 
     async batchValidateCalculations(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/batch/validate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/batch/validate`, {
                 task_ids: options.taskIds,
                 validation_method: options.validationMethod,
                 parallel: options.parallel,
@@ -488,7 +488,7 @@ class Agent4Adapter {
 
     async validateExpression(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/expression/evaluate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/expression/evaluate`, {
                 expression: options.expression,
                 variables: JSON.parse(options.variables || '{}'),
                 method: options.method,
@@ -509,7 +509,7 @@ class Agent4Adapter {
 
     async getValidationMethods() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent4/v1/methods`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/methods`, {
                 timeout: 30000
             });
             return {
@@ -525,7 +525,7 @@ class Agent4Adapter {
 
     async getCalculationTemplates() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent4/v1/templates`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/templates`, {
                 timeout: 30000
             });
             return {
@@ -541,7 +541,7 @@ class Agent4Adapter {
 
     async createTemplate(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/templates`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/templates`, {
                 name: options.name,
                 category: options.category,
                 expression: options.expression,
@@ -563,7 +563,7 @@ class Agent4Adapter {
 
     async benchmarkMethods(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/methods/benchmark`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/methods/benchmark`, {
                 expression: options.expression,
                 variables: JSON.parse(options.variables || '{}'),
                 iterations: options.iterations
@@ -583,7 +583,7 @@ class Agent4Adapter {
 
     async configureAIModel(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/ai/configure`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/ai/configure`, {
                 model: options.model,
                 parameters: JSON.parse(options.parameters || '{}')
             }, {
@@ -602,7 +602,7 @@ class Agent4Adapter {
 
     async configureBlockchainConsensus(options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/a2a/agent4/v1/blockchain/configure`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/blockchain/configure`, {
                 validators: options.validators,
                 threshold: options.threshold,
                 timeout: options.timeout
@@ -626,7 +626,7 @@ class Agent4Adapter {
 
     async checkHealth() {
         try {
-            const response = await axios.get(`${this.baseUrl}/a2a/agent4/v1/health`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/a2a/agent4/v1/health`, {
                 timeout: 5000
             });
             return {

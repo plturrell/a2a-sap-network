@@ -32,7 +32,7 @@ import kubernetes
 
 from pydantic import BaseModel, Field
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 # Import email service
 from ..services.email_service import create_email_service, EmailMessage
 

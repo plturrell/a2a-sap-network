@@ -83,7 +83,7 @@ except ImportError:
 # Import SDK components - Use standard A2A SDK (NO FALLBACKS)
 from app.a2a.sdk.agentBase import A2AAgentBase
 from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin, monitor_a2a_operation
-from app.a2a.sdk import a2a_ha, a2a_handlerndler, a2a_skill, a2a_task
+from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
 from app.a2a.sdk.types import A2AMessage, MessageRole
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
@@ -108,7 +108,7 @@ except ImportError:
 
 # Network communication
 try:
-    import aiohttp
+    # A2A Protocol: Use blockchain messaging instead of aiohttp
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False
@@ -126,7 +126,7 @@ if missing_vars:
 logger = logging.getLogger(__name__)
 
 
-class ReasoningType(Enum), PerformanceMonitoringMixin:
+class ReasoningType(Enum):
     """Types of reasoning approaches"""
     DEDUCTIVE = "deductive"
     INDUCTIVE = "inductive"
@@ -138,7 +138,7 @@ class ReasoningType(Enum), PerformanceMonitoringMixin:
     SPATIAL = "spatial"
 
 
-class LogicalOperator(Enum), PerformanceMonitoringMixin:
+class LogicalOperator(Enum):
     """Logical operators for reasoning"""
     AND = "and"
     OR = "or"
@@ -148,7 +148,7 @@ class LogicalOperator(Enum), PerformanceMonitoringMixin:
     EXCLUSIVE_OR = "xor"
 
 
-class ConfidenceLevel(Enum), PerformanceMonitoringMixin:
+class ConfidenceLevel(Enum):
     """Confidence levels for reasoning conclusions"""
     VERY_LOW = 0.1
     LOW = 0.3
@@ -158,7 +158,7 @@ class ConfidenceLevel(Enum), PerformanceMonitoringMixin:
     CERTAIN = 1.0
 
 
-class ReasoningDomain(Enum), PerformanceMonitoringMixin:
+class ReasoningDomain(Enum):
     """Domains for specialized reasoning"""
     GENERAL = "general"
     MATHEMATICAL = "mathematical"
@@ -448,7 +448,7 @@ class DataManagerClient:
             return None
 
 
-class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), PerformanceMonitoringMixin:
+class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin, PerformanceMonitoringMixin):
     """
     Comprehensive Reasoning Agent with Real AI Intelligence
     
@@ -537,12 +537,12 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
         
         # Logical operators mapping
         self.logical_operations = {
-            LogicalOperator.AND: lambda x, y: x and y,
-            LogicalOperator.OR: lambda x, y: x or y,
-            LogicalOperator.NOT: lambda x: not x,
-            LogicalOperator.IMPLIES: lambda x, y: (not x) or y,
-            LogicalOperator.EQUIVALENT: lambda x, y: x == y,
-            LogicalOperator.EXCLUSIVE_OR: lambda x, y: x != y
+            LogicalOperator.AND: self._logical_and,
+            LogicalOperator.OR: self._logical_or,
+            LogicalOperator.NOT: self._logical_not,
+            LogicalOperator.IMPLIES: self._logical_implies,
+            LogicalOperator.EQUIVALENT: self._logical_equivalent,
+            LogicalOperator.EXCLUSIVE_OR: self._logical_exclusive_or
         }
         
         # Performance tracking
@@ -558,9 +558,7 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
         }
         
         # Method performance tracking
-        self.method_performance = defaultdict(lambda: {
-            "total": 0, "success": 0, "total_time": 0.0, "avg_confidence": 0.0
-        })
+        self.method_performance = defaultdict(self._create_performance_dict)
         
         # Network and Data Manager integration
         self.network_connector = NetworkConnector()
@@ -643,10 +641,24 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
             logger.error(f"Error during agent shutdown: {e}")
     
     # ================================
-    # MCP-Decorated Skills
+    # A2A-Decorated Skills
     # ================================
     
-    @mcp_tool("logical_reasoning", "Perform logical reasoning with multiple paradigms")
+    @a2a_skill(
+        name="logical_reasoning",
+        description="Perform logical reasoning with multiple paradigms",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "The reasoning query"},
+                "reasoning_type": {"type": "string", "enum": ["deductive", "inductive", "abductive"], "default": "deductive"},
+                "domain": {"type": "string", "enum": ["general", "mathematical", "logical"], "default": "general"},
+                "premises": {"type": "array", "items": {"type": "string"}, "description": "Premises for reasoning"},
+                "context": {"type": "object", "description": "Additional context"}
+            },
+            "required": ["query"]
+        }
+    )
     async def logical_reasoning(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform logical reasoning using specified paradigm"""
         start_time = time.time()
@@ -743,7 +755,19 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
             logger.error(f"Logical reasoning failed: {e}")
             return create_error_response(f"Logical reasoning failed: {str(e)}")
     
-    @mcp_tool("pattern_analysis", "Analyze patterns in data using ML algorithms")
+    @a2a_skill(
+        name="pattern_analysis", 
+        description="Analyze patterns in data using ML algorithms",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "data": {"type": "array", "description": "Data to analyze for patterns"},
+                "pattern_type": {"type": "string", "default": "general"},
+                "analysis_depth": {"type": "string", "enum": ["basic", "comprehensive"], "default": "comprehensive"}
+            },
+            "required": ["data"]
+        }
+    )
     async def pattern_analysis(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze patterns using ML-based pattern recognition"""
         try:
@@ -793,7 +817,20 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
             logger.error(f"Pattern analysis failed: {e}")
             return create_error_response(f"Pattern analysis failed: {str(e)}")
     
-    @mcp_tool("knowledge_synthesis", "Synthesize knowledge from multiple sources")
+    @a2a_skill(
+        name="knowledge_synthesis",
+        description="Synthesize knowledge from multiple sources", 
+        input_schema={
+            "type": "object",
+            "properties": {
+                "sources": {"type": "array", "description": "Knowledge sources to synthesize"},
+                "strategy": {"type": "string", "enum": ["weighted_consensus", "logical_integration", "semantic_merging"], "default": "weighted_consensus"},
+                "domain": {"type": "string", "default": "general"},
+                "confidence_threshold": {"type": "number", "default": 0.5}
+            },
+            "required": ["sources"]
+        }
+    )
     async def knowledge_synthesis(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Synthesize knowledge from multiple reasoning sources"""
         try:
@@ -848,7 +885,20 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
             logger.error(f"Knowledge synthesis failed: {e}")
             return create_error_response(f"Knowledge synthesis failed: {str(e)}")
     
-    @mcp_tool("collaborative_reasoning", "Coordinate reasoning across multiple agents")
+    @a2a_skill(
+        name="collaborative_reasoning",
+        description="Coordinate reasoning across multiple agents",
+        input_schema={
+            "type": "object", 
+            "properties": {
+                "participant_agents": {"type": "array", "items": {"type": "string"}},
+                "query": {"type": "string"},
+                "strategy": {"type": "string", "default": "consensus"},
+                "domain": {"type": "string", "default": "general"}
+            },
+            "required": ["participant_agents", "query"]
+        }
+    )
     async def collaborative_reasoning(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Coordinate collaborative reasoning with other agents"""
         try:
@@ -943,7 +993,19 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
             logger.error(f"Collaborative reasoning failed: {e}")
             return create_error_response(f"Collaborative reasoning failed: {str(e)}")
     
-    @mcp_tool("confidence_assessment", "Assess confidence in reasoning conclusions")
+    @a2a_skill(
+        name="confidence_assessment",
+        description="Assess confidence in reasoning conclusions using ML",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "chain_id": {"type": "string"},
+                "conclusion": {"type": "string"},
+                "evidence": {"type": "array"},
+                "reasoning_type": {"type": "string", "default": "deductive"}
+            }
+        }
+    )
     async def confidence_assessment(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Assess confidence in reasoning conclusions using ML"""
         try:
@@ -1648,6 +1710,40 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), Perfor
             "recommendations": ["Gather more evidence", "Validate logical consistency"]
         }
 
+
+    # Logical Operation Functions (replacing lambda functions)
+    def _logical_and(self, x: bool, y: bool) -> bool:
+        """Logical AND operation"""
+        return x and y
+    
+    def _logical_or(self, x: bool, y: bool) -> bool:
+        """Logical OR operation"""
+        return x or y
+    
+    def _logical_not(self, x: bool) -> bool:
+        """Logical NOT operation"""
+        return not x
+    
+    def _logical_implies(self, x: bool, y: bool) -> bool:
+        """Logical IMPLIES operation"""
+        return (not x) or y
+    
+    def _logical_equivalent(self, x: bool, y: bool) -> bool:
+        """Logical EQUIVALENT operation"""
+        return x == y
+    
+    def _logical_exclusive_or(self, x: bool, y: bool) -> bool:
+        """Logical EXCLUSIVE OR operation"""
+        return x != y
+    
+    def _create_performance_dict(self) -> Dict[str, Union[int, float]]:
+        """Create default performance tracking dictionary"""
+        return {
+            "total": 0, 
+            "success": 0, 
+            "total_time": 0.0, 
+            "avg_confidence": 0.0
+        }
 
     # A2A Protocol Helper Methods
     async def _verify_a2a_connectivity(self):

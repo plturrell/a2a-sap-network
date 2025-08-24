@@ -39,11 +39,11 @@ async function checkAgentHealth(port) {
         
         // Get both health and metrics from agent
         const [healthResponse, metricsResponse] = await Promise.all([
-            fetch(`http://localhost:${port}/health`, { 
+            blockchainClient.sendMessage(`http://localhost:${port}/health`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            fetch(`http://localhost:${port}/metrics`, { 
+            blockchainClient.sendMessage(`http://localhost:${port}/metrics`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
@@ -113,15 +113,15 @@ async function checkBlockchainHealth() {
         
         // Check multiple blockchain endpoints for comprehensive data
         const [statusResponse, trustResponse, agentsResponse] = await Promise.all([
-            fetch('http://localhost:8082/blockchain/status', {
+            blockchainClient.sendMessage('http://localhost:8082/blockchain/status', {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            fetch('http://localhost:8082/trust/scores', {
+            blockchainClient.sendMessage('http://localhost:8082/trust/scores', {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            fetch('http://localhost:8082/agents', {
+            blockchainClient.sendMessage('http://localhost:8082/agents', {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)

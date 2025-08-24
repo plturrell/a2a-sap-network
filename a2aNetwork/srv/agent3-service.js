@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 // Import the adapter for REST/OData conversion
 const Agent3Adapter = require('./agent3-adapter');
@@ -30,7 +30,7 @@ module.exports = cds.service.impl(async function() {
             log.info('Reading VectorProcessingTasks');
             
             // Get data from Python backend
-            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`, {
+            const response = await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`, {
                 timeout: 30000
             });
             
@@ -52,7 +52,7 @@ module.exports = cds.service.impl(async function() {
             const restData = adapter.convertTaskToRest(req.data);
             
             // Send to Python backend
-            const response = await axios.post(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -74,7 +74,7 @@ module.exports = cds.service.impl(async function() {
             const taskId = req.params[0].ID;
             const restData = adapter.convertTaskToRest(req.data);
             
-            const response = await axios.put(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks/${taskId}`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks/${taskId}`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -94,7 +94,7 @@ module.exports = cds.service.impl(async function() {
             
             const taskId = req.params[0].ID;
             
-            await axios.delete(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks/${taskId}`, {
+            await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks/${taskId}`, {
                 timeout: 30000
             });
             
@@ -351,7 +351,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Reading VectorCollections');
             
-            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`, {
+            const response = await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`, {
                 timeout: 30000
             });
             
@@ -370,7 +370,7 @@ module.exports = cds.service.impl(async function() {
             
             const restData = adapter.convertCollectionToRest(req.data);
             
-            const response = await axios.post(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -505,7 +505,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Reading VectorSimilarityResults');
             
-            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/similarity-results`, {
+            const response = await blockchainClient.sendMessage(`${AGENT3_BASE_URL}/a2a/agent3/v1/similarity-results`, {
                 timeout: 30000
             });
             

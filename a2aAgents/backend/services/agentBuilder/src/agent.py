@@ -24,7 +24,7 @@ from datetime import datetime
 import logging
 from dataclasses import dataclass, field, asdict
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import sys
 import os
 current_dir = os.path.dirname(os.path.abspath(__file__))

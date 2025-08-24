@@ -1,8 +1,3 @@
-"""
-Comprehensive Test Suite for Orchestrator Agent
-Tests workflow creation, execution, monitoring, coordination, and simulations
-"""
-
 import pytest
 import asyncio
 import uuid
@@ -10,6 +5,12 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 
 from .comprehensiveOrchestratorAgentSdk import (
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Comprehensive Test Suite for Orchestrator Agent
+Tests workflow creation, execution, monitoring, coordination, and simulations
+"""
+
     OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask,
     WorkflowStatus, TaskStatus, OrchestrationStrategy
 )
@@ -21,8 +22,16 @@ from .orchestratorSimulator import (
     run_normal_orchestration_simulation, run_high_concurrency_simulation
 )
 
-class TestOrchestratorAgent:
-    """Test suite for Orchestrator Agent"""
+class TestOrchestratorAgent(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Test suite for Orchestrator Agent"""
     
     @pytest.fixture
     async def orchestrator_agent(self):
@@ -785,8 +794,16 @@ class TestOrchestratorAgent:
 
 
 # Performance Tests
-class TestOrchestratorPerformance:
-    """Performance tests for orchestrator"""
+class TestOrchestratorPerformance(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Performance tests for orchestrator"""
     
     @pytest.mark.asyncio
     async def test_concurrent_workflow_executions(self, orchestrator_agent):

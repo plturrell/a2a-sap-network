@@ -143,7 +143,7 @@ except ImportError:
 
 # Network communication
 try:
-    import aiohttp
+    # A2A Protocol: Use blockchain messaging instead of aiohttp
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False
@@ -265,7 +265,7 @@ class NetworkConnector:
         """Initialize network connection"""
         if AIOHTTP_AVAILABLE:
             # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-            # self.session = aiohttp.ClientSession()
+            # self.session = A2ANetworkClient()
             self.session = None  # Disabled for A2A protocol compliance
     
     async def send_message(self, agent_url: str, message: Dict[str, Any]) -> Dict[str, Any]:
@@ -314,12 +314,7 @@ class DataManagerClient:
     """Client for Data Manager agent integration"""
     
     def __init__(self, base_url: str):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                self.base_url = base_url
+        self.base_url = base_url
         self.local_db_path = "agent_manager_data.db"
         self._initialize_local_db()
     
@@ -403,7 +398,7 @@ class DataManagerClient:
             # if AIOHTTP_AVAILABLE:
             #     try:
             #         # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-            #         # async with aiohttp.ClientSession() as session:
+            #         # async with A2ANetworkClient() as session:
             #             async with session.post(
             #                 f"{self.base_url}/api/v1/store",
             #                 json={
@@ -444,12 +439,7 @@ class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                # Create agent configuration manually
+        # Create agent configuration manually
         from app.a2a.sdk.types import AgentConfig
         
         config = AgentConfig(
@@ -466,6 +456,11 @@ class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         
         # Initialize A2A agent base
         A2AAgentBase.__init__(self, config)
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Machine Learning Models for Agent Management Intelligence
         self.performance_predictor = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1)

@@ -103,9 +103,8 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_json_rpc(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle json_rpc operation"""
             try:
-                # TODO: Implement json_rpc logic
-                # Example: result = await self.agent_sdk.json_rpc_handler(data)
-                result = {"status": "success", "operation": "json_rpc"}
+                # Process JSON-RPC request through agent SDK
+                result = await self.agent_sdk.handle_json_rpc(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -169,9 +168,19 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_start_reasoning(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle start_reasoning operation"""
             try:
-                # TODO: Implement start_reasoning logic
-                # Example: result = await self.agent_sdk.start_reasoning(data)
-                result = {"status": "success", "operation": "start_reasoning"}
+                # Start reasoning process using logical reasoning skill
+                reasoning_query = data.get("query", "")
+                reasoning_type = data.get("reasoning_type", "deductive") 
+                premises = data.get("premises", [])
+                domain = data.get("domain", "general")
+                
+                result = await self.agent_sdk.logical_reasoning({
+                    "query": reasoning_query,
+                    "reasoning_type": reasoning_type,
+                    "domain": domain,
+                    "premises": premises,
+                    "context": data.get("context", {})
+                })
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -191,9 +200,18 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_validate_conclusion(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle validate_conclusion operation"""
             try:
-                # TODO: Implement validate_conclusion logic
-                # Example: result = await self.agent_sdk.validate_conclusion(data)
-                result = {"status": "success", "operation": "validate_conclusion"}
+                # Validate conclusion using confidence assessment
+                conclusion = data.get("conclusion", "")
+                evidence = data.get("evidence", [])
+                reasoning_type = data.get("reasoning_type", "deductive")
+                chain_id = data.get("chain_id")
+                
+                result = await self.agent_sdk.confidence_assessment({
+                    "chain_id": chain_id,
+                    "conclusion": conclusion,
+                    "evidence": evidence,
+                    "reasoning_type": reasoning_type
+                })
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -279,9 +297,16 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_generate_inferences(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle generate_inferences operation"""
             try:
-                # TODO: Implement generate_inferences logic
-                # Example: result = await self.agent_sdk.generate_inferences(data)
-                result = {"status": "success", "operation": "generate_inferences"}
+                # Generate inferences using pattern analysis
+                inference_data = data.get("data", [])
+                pattern_type = data.get("pattern_type", "logical")
+                analysis_depth = data.get("analysis_depth", "comprehensive")
+                
+                result = await self.agent_sdk.pattern_analysis({
+                    "data": inference_data,
+                    "pattern_type": pattern_type,
+                    "analysis_depth": analysis_depth
+                })
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -323,9 +348,28 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_solve_problem(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle solve_problem operation"""
             try:
-                # TODO: Implement solve_problem logic
-                # Example: result = await self.agent_sdk.solve_problem(data)
-                result = {"status": "success", "operation": "solve_problem"}
+                # Solve problem using collaborative reasoning if needed
+                problem_query = data.get("query", data.get("problem", ""))
+                participants = data.get("participant_agents", [])
+                strategy = data.get("strategy", "consensus")
+                domain = data.get("domain", "general")
+                
+                if participants:
+                    # Use collaborative reasoning for complex problems
+                    result = await self.agent_sdk.collaborative_reasoning({
+                        "participant_agents": participants,
+                        "query": problem_query,
+                        "strategy": strategy,
+                        "domain": domain
+                    })
+                else:
+                    # Use logical reasoning for individual problem solving
+                    result = await self.agent_sdk.logical_reasoning({
+                        "query": problem_query,
+                        "reasoning_type": data.get("reasoning_type", "abductive"),
+                        "domain": domain,
+                        "premises": data.get("premises", [])
+                    })
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(

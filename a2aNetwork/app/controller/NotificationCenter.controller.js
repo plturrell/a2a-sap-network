@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -190,7 +195,7 @@ sap.ui.define([
 
         sendWebSocketMessage: function (message) {
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                this.ws.send(JSON.stringify(message));
+                this.blockchainClient.publishEvent(JSON.stringify(message));
             } else {
                 console.warn("WebSocket not connected, message queued");
                 // TODO: Implement message queuing

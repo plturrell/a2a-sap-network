@@ -1,8 +1,3 @@
-"""
-Comprehensive Test Suite for Service Discovery Agent
-Tests service registration, discovery, load balancing, health monitoring, and simulations
-"""
-
 import pytest
 import asyncio
 import uuid
@@ -10,6 +5,12 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 
 from .comprehensiveServiceDiscoveryAgentSdk import (
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Comprehensive Test Suite for Service Discovery Agent
+Tests service registration, discovery, load balancing, health monitoring, and simulations
+"""
+
     ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
     ServiceStatus, ServiceQuery, HealthCheckResult, LoadBalancingStrategy
 )
@@ -21,8 +22,16 @@ from .serviceDiscoverySimulator import (
     run_normal_operations_simulation, run_high_load_simulation
 )
 
-class TestServiceDiscoveryAgent:
-    """Test suite for Service Discovery Agent"""
+class TestServiceDiscoveryAgent(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Test suite for Service Discovery Agent"""
     
     @pytest.fixture
     async def discovery_agent(self):
@@ -638,8 +647,16 @@ class TestServiceDiscoveryAgent:
 
 
 # Performance Tests
-class TestServiceDiscoveryPerformance:
-    """Performance tests for service discovery"""
+class TestServiceDiscoveryPerformance(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Performance tests for service discovery"""
     
     @pytest.mark.asyncio
     async def test_concurrent_registrations(self, discovery_agent):

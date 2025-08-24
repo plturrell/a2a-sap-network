@@ -3,7 +3,7 @@
  * This script creates agent records in the SAP CAP A2A Network system
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 const A2A_NETWORK_API = process.env.A2A_NETWORK_API_URL || 'http://localhost:4004/api/v1';
 
@@ -186,7 +186,7 @@ async function registerAgents() {
                 address: agent.address
             };
             
-            const response = await axios.post(`${A2A_NETWORK_API}/Agents`, agentData, { headers });
+            const response = await blockchainClient.sendMessage(`${A2A_NETWORK_API}/Agents`, agentData, { headers });
             const createdAgent = response.data;
             
             console.log(`✓ Created agent: ${agent.name} (ID: ${createdAgent.ID})`);

@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 #!/usr/bin/env node
 
 /**
@@ -51,12 +56,12 @@ class RealNotificationSystemStarter {
         
         const requiredVars = {
             'A2A_REGISTRY_URL': process.env.A2A_REGISTRY_URL || 'http://localhost:8000',
-            'A2A_REGISTRY_WS': process.env.A2A_REGISTRY_WS || 'ws://localhost:8000/ws',
+            'A2A_REGISTRY_WS': process.env.A2A_REGISTRY_WS || 'blockchain://a2a-events',
             'BLOCKCHAIN_SERVICE_URL': process.env.BLOCKCHAIN_SERVICE_URL || 'http://localhost:8080/blockchain',
-            'BLOCKCHAIN_WS': process.env.BLOCKCHAIN_WS || 'ws://localhost:8080/blockchain/events',
+            'BLOCKCHAIN_WS': process.env.BLOCKCHAIN_WS || 'blockchain://a2a-events',
             'SECURITY_API_URL': process.env.SECURITY_API_URL || 'http://localhost:8001/security',
             'SECURITY_EVENTS_URL': process.env.SECURITY_EVENTS_URL || 'http://localhost:8001/security/events',
-            'METRICS_WS': process.env.METRICS_WS || 'ws://localhost:3000/ws/metrics'
+            'METRICS_WS': process.env.METRICS_WS || 'blockchain://a2a-events'
         };
 
         // Set environment variables if not already set
@@ -94,8 +99,8 @@ class RealNotificationSystemStarter {
     async verifyServices() {
         this.logger.info('🔍 Verifying real A2A services...');
         
-        const axios = require('axios');
-        const WebSocket = require('ws');
+        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
         
         const serviceChecks = [
             {
@@ -139,7 +144,7 @@ class RealNotificationSystemStarter {
         for (const service of serviceChecks) {
             try {
                 if (service.type === 'http') {
-                    const response = await axios.get(service.url, { 
+                    const response = await blockchainClient.sendMessage(service.url, { 
                         timeout: 5000,
                         validateStatus: status => status < 500 
                     });
@@ -164,7 +169,7 @@ class RealNotificationSystemStarter {
 
     async testWebSocketConnection(url) {
         return new Promise((resolve, reject) => {
-            const ws = new WebSocket(url);
+            const ws = new BlockchainEventClient(url);
             const timeout = setTimeout(() => {
                 ws.terminate();
                 reject(new Error('WebSocket connection timeout'));
@@ -246,8 +251,8 @@ class RealNotificationSystemStarter {
         this.logger.info('=====================================');
         this.logger.info('🎉 Real notification system is running!');
         this.logger.info('📱 WebSocket endpoints:');
-        this.logger.info(`   • Enhanced Notifications: ws://localhost:4006/notifications/v2`);
-        this.logger.info(`   • Event Bus: ws://localhost:8080/events`);
+        this.logger.info(`   • Enhanced Notifications: blockchain://localhost:4006/notifications/v2`);
+        this.logger.info(`   • Event Bus: blockchain://localhost:8080/events`);
         this.logger.info('🌐 REST API endpoints:');
         this.logger.info('   • Notifications: http://localhost:4000/api/notifications');
         this.logger.info('   • Push VAPID Key: http://localhost:4000/api/push/vapid-public-key');

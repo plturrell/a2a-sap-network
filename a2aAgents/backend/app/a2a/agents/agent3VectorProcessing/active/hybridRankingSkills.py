@@ -1,9 +1,3 @@
-"""
-Hybrid Ranking Skills for Agent 3 (Vector Processing)
-Implements advanced ranking combining BM25, vector similarity, and PageRank
-Following SAP naming conventions and best practices
-"""
-
 from typing import Dict, List, Any, Optional, Tuple, Union
 import numpy as np
 from datetime import datetime
@@ -14,13 +8,30 @@ from collections import Counter, defaultdict
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Hybrid Ranking Skills for Agent 3 (Vector Processing)
+Implements advanced ranking combining BM25, vector similarity, and PageRank
+Following SAP naming conventions and best practices
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class HybridRankingSkills:
-    """Advanced hybrid ranking for vector search results"""
+class HybridRankingSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Advanced hybrid ranking for vector search results"""
     
     def __init__(self, hanaConnection=None):
+        
+        super().__init__()
         self.hanaConnection = hanaConnection
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.rankingWeights = {

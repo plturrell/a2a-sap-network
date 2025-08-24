@@ -580,7 +580,7 @@ class UnifiedNavigation {
      */
     async sendMetrics(metric) {
         try {
-            await fetch(this.config.metricsEndpoint, {
+            await blockchainClient.sendMessage(this.config.metricsEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(metric)
@@ -655,7 +655,7 @@ class UnifiedNavigation {
         if (!this.config.contextSyncEndpoint) return;
 
         try {
-            await fetch(this.config.contextSyncEndpoint, {
+            await blockchainClient.sendMessage(this.config.contextSyncEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

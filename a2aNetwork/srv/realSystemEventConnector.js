@@ -3,10 +3,10 @@
  * Connects notification system to ACTUAL A2A services - NO MOCKS OR STUBS
  */
 
-const WebSocket = require('ws');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 class RealSystemEventConnector extends EventEmitter {
     constructor() {
@@ -27,14 +27,14 @@ class RealSystemEventConnector extends EventEmitter {
         this.services = {
             registry: {
                 http: process.env.A2A_REGISTRY_URL || 'http://localhost:8000',
-                ws: process.env.A2A_REGISTRY_WS || 'ws://localhost:8000/ws'
+                ws: process.env.A2A_REGISTRY_WS || 'blockchain://a2a-events'
             },
             blockchain: {
                 http: process.env.BLOCKCHAIN_SERVICE_URL || 'http://localhost:8080/blockchain',
-                ws: process.env.BLOCKCHAIN_WS || 'ws://localhost:8080/blockchain/events'
+                ws: process.env.BLOCKCHAIN_WS || 'blockchain://a2a-events'
             },
             metrics: {
-                ws: process.env.METRICS_WS || 'ws://localhost:3000/ws/metrics'
+                ws: process.env.METRICS_WS || 'blockchain://a2a-events'
             },
             security: {
                 http: process.env.SECURITY_API_URL || 'http://localhost:8001',
@@ -77,7 +77,7 @@ class RealSystemEventConnector extends EventEmitter {
     async connectToAgentRegistry() {
         try {
             // Test HTTP connection first
-            const response = await axios.get(`${this.services.registry.http}/agents`, {
+            const response = await blockchainClient.sendMessage(`${this.services.registry.http}/agents`, {
                 timeout: 5000,
                 headers: { 'Accept': 'application/json' }
             });
@@ -85,7 +85,7 @@ class RealSystemEventConnector extends EventEmitter {
             this.logger.info(`✅ Connected to agent registry HTTP API (${response.data.agents?.length || 0} agents)`);
 
             // Connect to registry WebSocket for real-time agent events
-            const registryWs = new WebSocket(`${this.services.registry.ws}/agents`);
+            const registryWs = new BlockchainEventClient(`${this.services.registry.ws}/agents`);
             
             registryWs.on('open', () => {
                 this.logger.info('✅ Connected to agent registry WebSocket');
@@ -120,14 +120,14 @@ class RealSystemEventConnector extends EventEmitter {
     async connectToBlockchainService() {
         try {
             // Test blockchain service availability
-            const response = await axios.get(`${this.services.blockchain.http}/status`, {
+            const response = await blockchainClient.sendMessage(`${this.services.blockchain.http}/status`, {
                 timeout: 5000
             });
             
             this.logger.info(`✅ Connected to blockchain service (Network: ${response.data.network}, Block: ${response.data.blockNumber})`);
 
             // Connect to blockchain WebSocket for transaction events
-            const blockchainWs = new WebSocket(this.services.blockchain.ws);
+            const blockchainWs = new BlockchainEventClient(this.services.blockchain.ws);
             
             blockchainWs.on('open', () => {
                 this.logger.info('✅ Connected to blockchain events WebSocket');
@@ -168,7 +168,7 @@ class RealSystemEventConnector extends EventEmitter {
     async connectToSecurityMonitoring() {
         try {
             // Test security API availability
-            const response = await axios.get(`${this.services.security.http}/health`, {
+            const response = await blockchainClient.sendMessage(`${this.services.security.http}/health`, {
                 timeout: 5000
             });
             
@@ -186,7 +186,7 @@ class RealSystemEventConnector extends EventEmitter {
     async connectToMetricsService() {
         try {
             // Connect to metrics WebSocket
-            const metricsWs = new WebSocket(this.services.metrics.ws);
+            const metricsWs = new BlockchainEventClient(this.services.metrics.ws);
             
             metricsWs.on('open', () => {
                 this.logger.info('✅ Connected to metrics service WebSocket');
@@ -360,7 +360,7 @@ class RealSystemEventConnector extends EventEmitter {
 
         const poll = async () => {
             try {
-                const response = await axios.get(`${this.services.security.events}/events/recent`, {
+                const response = await blockchainClient.sendMessage(`${this.services.security.events}/events/recent`, {
                     timeout: 5000,
                     params: { since: new Date(Date.now() - pollInterval - 5000).toISOString() }
                 });
@@ -472,7 +472,7 @@ class RealSystemEventConnector extends EventEmitter {
 
     async getAgentStatusesFromMonitoringService() {
         try {
-            const response = await axios.get(`${this.services.monitoring.http}/agents`, {
+            const response = await blockchainClient.sendMessage(`${this.services.monitoring.http}/agents`, {
                 timeout: 10000,
                 headers: { 'Accept': 'application/json' }
             });
@@ -500,7 +500,7 @@ class RealSystemEventConnector extends EventEmitter {
 
     async getAgentStatusesFromSystemHealth() {
         try {
-            const response = await axios.get(`${this.services.monitoring.systemHealth}`, {
+            const response = await blockchainClient.sendMessage(`${this.services.monitoring.systemHealth}`, {
                 timeout: 10000,
                 headers: { 'Accept': 'application/json' }
             });
@@ -711,7 +711,7 @@ class RealSystemEventConnector extends EventEmitter {
 
     async getRealPendingTransactions() {
         try {
-            const response = await axios.get(`${this.services.blockchain.http}/transactions/pending`, {
+            const response = await blockchainClient.sendMessage(`${this.services.blockchain.http}/transactions/pending`, {
                 timeout: 5000
             });
 
@@ -737,7 +737,7 @@ class RealSystemEventConnector extends EventEmitter {
 
     async getRealSecurityEvents() {
         try {
-            const response = await axios.get(`${this.services.security.events}/events/recent`, {
+            const response = await blockchainClient.sendMessage(`${this.services.security.events}/events/recent`, {
                 timeout: 5000,
                 params: { limit: 50 }
             });
@@ -783,7 +783,7 @@ class RealSystemEventConnector extends EventEmitter {
                 // Try HTTP health check
                 let httpHealthy = false;
                 try {
-                    await axios.get(config.http + '/health', { timeout: 2000 });
+                    await blockchainClient.sendMessage(config.http + '/health', { timeout: 2000 });
                     httpHealthy = true;
                 } catch (e) {
                     // HTTP might not be available for all services

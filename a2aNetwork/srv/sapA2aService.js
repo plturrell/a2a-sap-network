@@ -862,7 +862,7 @@ class A2AService extends BaseApplicationService {
         ...tracing.injectTraceHeaders()
       }
       
-      const response = await fetch(agent.endpoint, {
+      const response = await blockchainClient.sendMessage(agent.endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify({

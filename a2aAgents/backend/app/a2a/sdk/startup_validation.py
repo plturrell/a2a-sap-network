@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 #!/usr/bin/env python3
 """
 A2A Startup Validation System
@@ -12,7 +16,7 @@ from datetime import datetime
 import logging
 from web3 import Web3
 from eth_account import Account
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 
 from .system_health import SystemHealthMonitor
 

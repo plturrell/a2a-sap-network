@@ -1,8 +1,3 @@
-"""
-Enhanced SQL Skills for SQL Agent
-Provides advanced NL2SQL and SQL2NL capabilities with explanations
-"""
-
 import re
 import json
 import asyncio
@@ -13,6 +8,12 @@ from typing import Dict, List, Any, Optional, Tuple, Set
 from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Enhanced SQL Skills for SQL Agent
+Provides advanced NL2SQL and SQL2NL capabilities with explanations
+"""
 
 # Advanced NLP processing
 try:
@@ -52,8 +53,16 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class EnhancedSQLSkills:
-    """
+class EnhancedSQLSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""
     Advanced SQL skills for natural language to SQL conversion
     Supports HANA-specific features including graph, vector, ML, and multi-model queries
     Features:
@@ -65,6 +74,8 @@ class EnhancedSQLSkills:
     """
     
     def __init__(self, agent):
+        
+        super().__init__()
         self.agent = agent
         
         # Initialize advanced NLP components

@@ -101,12 +101,12 @@ class PerformanceTracker extends EventEmitter {
     this.activeOperations.set(operationId, operation);
     
     return {
-      checkpoint: (name, data = {}) => {
+      checkpoint: function(name, data = {}) {
         this.addCheckpoint(operationId, name, data);
-      },
-      end: (resultMetadata = {}) => {
+      }.bind(this),
+      end: function(resultMetadata = {}) {
         return this.endOperation(operationId, resultMetadata);
-      }
+      }.bind(this)
     };
   }
 
@@ -232,7 +232,7 @@ class PerformanceTracker extends EventEmitter {
    * Calculate percentiles for a metric
    */
   calculatePercentiles(metric) {
-    const sorted = [...metric.durations].sort((a, b) => a - b);
+    const sorted = [...metric.durations].sort(function(a, b) { return a - b; });
     const len = sorted.length;
     
     metric.p50 = sorted[Math.floor(len * 0.5)];
@@ -337,8 +337,8 @@ class PerformanceTracker extends EventEmitter {
     
     // Find top slowest operations
     const allOperations = Object.entries(metrics)
-      .map(([key, metric]) => ({ operation: key, ...metric }))
-      .sort((a, b) => b.p95 - a.p95)
+      .map(function([key, metric]) { return { operation: key, ...metric }; })
+      .sort(function(a, b) { return b.p95 - a.p95; })
       .slice(0, 10);
     
     report.topSlowest = allOperations;
@@ -375,7 +375,7 @@ class PerformanceTracker extends EventEmitter {
     
     // Check for slow database queries
     const dbOps = report.categories[PerformanceCategory.DATABASE] || [];
-    const slowDbOps = dbOps.filter(op => op.p95 > 500);
+    const slowDbOps = dbOps.filter(function(op) { return op.p95 > 500; });
     if (slowDbOps.length > 0) {
       recommendations.push({
         severity: 'medium',
@@ -386,7 +386,7 @@ class PerformanceTracker extends EventEmitter {
     
     // Check for slow API calls
     const apiOps = report.categories[PerformanceCategory.API] || [];
-    const slowApiOps = apiOps.filter(op => op.p95 > 2000);
+    const slowApiOps = apiOps.filter(function(op) { return op.p95 > 2000; });
     if (slowApiOps.length > 0) {
       recommendations.push({
         severity: 'medium',
@@ -403,14 +403,14 @@ class PerformanceTracker extends EventEmitter {
    */
   startMetricsCollection() {
     // Periodic flush
-    this.flushInterval = setInterval(() => {
+    this.flushInterval = setInterval(function() {
       this.emit('metrics-flush', this.getMetrics());
       this.cleanupOldMetrics();
-    }, this.config.flushInterval);
+    }.bind(this), this.config.flushInterval);
     
     // Handle process termination
-    process.on('SIGINT', () => this.shutdown());
-    process.on('SIGTERM', () => this.shutdown());
+    process.on('SIGINT', function() { this.shutdown(); }.bind(this));
+    process.on('SIGTERM', function() { this.shutdown(); }.bind(this));
   }
 
   /**

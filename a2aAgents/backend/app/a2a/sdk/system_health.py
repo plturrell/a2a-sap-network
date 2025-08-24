@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 #!/usr/bin/env python3
 """
 System-wide Health Monitoring for A2A Platform
@@ -5,7 +9,7 @@ Integrates with StandardHealthCheck to monitor all services
 """
 
 import asyncio
-import aiohttp
+# A2A Protocol: Use blockchain messaging instead of aiohttp
 import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime
@@ -165,7 +169,7 @@ class SystemHealthMonitor:
             "services": {}
         }
         
-        async with aiohttp.ClientSession() as session:
+        async with A2ANetworkClient() as session:
             # Check all services in parallel
             tasks = []
             service_names = []

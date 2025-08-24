@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "./BaseController",
     "sap/m/MessageToast",
@@ -231,14 +235,14 @@ sap.ui.define([
             try {
                 this._updateProgress(40, this.getResourceBundle().getText("loadingNetworkConfig"));
 
-                const networkResponse = await fetch("/api/v1/settings/network", {
+                const networkResponse = await blockchainClient.sendMessage("/api/v1/settings/network", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
 
                 this._updateProgress(60, this.getResourceBundle().getText("loadingSecurityConfig"));
 
-                const securityResponse = await fetch("/api/v1/settings/security", {
+                const securityResponse = await blockchainClient.sendMessage("/api/v1/settings/security", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
@@ -246,7 +250,7 @@ sap.ui.define([
                 this._updateProgress(80, this.getResourceBundle().getText("loadingPerformanceMetrics"));
 
                 // Load performance metrics
-                const metricsResponse = await fetch("/api/v1/metrics/current");
+                const metricsResponse = await blockchainClient.sendMessage("/api/v1/metrics/current");
 
                 this._updateProgress(100, this.getResourceBundle().getText("settingsLoaded"));
 
@@ -332,7 +336,7 @@ sap.ui.define([
         _setupRealTimeMonitoring() {
             this._monitoringInterval = setInterval(async() => {
                 try {
-                    const response = await fetch("/api/v1/metrics/current");
+                    const response = await blockchainClient.sendMessage("/api/v1/metrics/current");
                     if (response.ok) {
                         const metrics = await response.json();
                         this._updatePerformanceMetrics(metrics);
@@ -347,7 +351,7 @@ sap.ui.define([
             try {
                 const oSettings = this.getView().getModel("settings").getData();
 
-                const response = await fetch("/api/v1/settings/autosave", {
+                const response = await blockchainClient.sendMessage("/api/v1/settings/autosave", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -501,7 +505,7 @@ sap.ui.define([
                 // Save in phases with progress updates
                 this._updateProgress(25, this.getResourceBundle().getText("savingNetworkSettings"));
 
-                const networkResponse = await fetch("/api/v1/settings/network", {
+                const networkResponse = await blockchainClient.sendMessage("/api/v1/settings/network", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(oSettings.network)
@@ -509,7 +513,7 @@ sap.ui.define([
 
                 this._updateProgress(50, this.getResourceBundle().getText("savingSecuritySettings"));
 
-                const securityResponse = await fetch("/api/v1/settings/security", {
+                const securityResponse = await blockchainClient.sendMessage("/api/v1/settings/security", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(oSettings.security)
@@ -743,7 +747,7 @@ sap.ui.define([
             });
 
             try {
-                const response = await fetch("/api/v1/test-connection", {
+                const response = await blockchainClient.sendMessage("/api/v1/test-connection", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -776,7 +780,7 @@ sap.ui.define([
 
         async _applyNetworkSettings(oSettings) {
             try {
-                const response = await fetch("/api/v1/reconfigure", {
+                const response = await blockchainClient.sendMessage("/api/v1/reconfigure", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -801,7 +805,7 @@ sap.ui.define([
         // Real-time monitoring refresh handlers
         async _refreshMonitoringData() {
             try {
-                const response = await fetch("/api/v1/monitoring/status");
+                const response = await blockchainClient.sendMessage("/api/v1/monitoring/status");
                 if (response.ok) {
                     const data = await response.json();
                     this._updatePerformanceMetrics(data);
@@ -813,7 +817,7 @@ sap.ui.define([
 
         async _refreshBlockchainStatus() {
             try {
-                const response = await fetch("/api/v1/blockchain/status");
+                const response = await blockchainClient.sendMessage("/api/v1/blockchain/status");
                 if (response.ok) {
                     const status = await response.json();
                     // Update blockchain status in UI
@@ -826,7 +830,7 @@ sap.ui.define([
 
         async _refreshPerformanceMetrics() {
             try {
-                const response = await fetch("/api/v1/metrics/performance");
+                const response = await blockchainClient.sendMessage("/api/v1/metrics/performance");
                 if (response.ok) {
                     const metrics = await response.json();
                     this._updatePerformanceMetrics(metrics);

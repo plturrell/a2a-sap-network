@@ -6,6 +6,7 @@ from datetime import datetime
 
 from .vectorProcessingAgentSdk import VectorProcessingAgentSDK, A2AMessage
 
+from app.a2a.core.security_base import SecureA2AAgent
 router = APIRouter(prefix="/a2a/agent3/v1", tags=["Agent 3 - SAP HANA Vector Engine Ingestion"])
 
 # Initialize Agent 3

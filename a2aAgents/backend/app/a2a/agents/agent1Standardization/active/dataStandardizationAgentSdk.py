@@ -19,7 +19,7 @@ To send messages to other agents, use:
 import asyncio
 import hashlib
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os

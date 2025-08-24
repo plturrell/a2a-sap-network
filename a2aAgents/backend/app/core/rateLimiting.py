@@ -94,7 +94,10 @@ class DDoSDetector:
                  threshold_multiplier: float = 10.0):
         self.window_size = window_size
         self.threshold_multiplier = threshold_multiplier
-        self.request_history: Dict[str, deque] = defaultdict(lambda: deque())
+        def _create_request_deque():
+            return deque()
+        
+        self.request_history: Dict[str, deque] = defaultdict(_create_request_deque)
         self.blocked_ips: Dict[str, float] = {}  # IP -> unblock_time
         self.suspicious_patterns: Set[str] = set()
     
@@ -187,8 +190,14 @@ class RateLimiter:
         
         # In-memory storage for when Redis is not available
         self.token_buckets: Dict[str, TokenBucket] = {}
-        self.request_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        self.window_start_times: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        def _create_int_defaultdict():
+            return defaultdict(int)
+        
+        def _create_float_defaultdict():
+            return defaultdict(float)
+        
+        self.request_counts: Dict[str, Dict[str, int]] = defaultdict(_create_int_defaultdict)
+        self.window_start_times: Dict[str, Dict[str, float]] = defaultdict(_create_float_defaultdict)
         
         # DDoS detector
         self.ddos_detector = DDoSDetector() if enable_ddos_protection else None

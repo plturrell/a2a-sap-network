@@ -1,8 +1,3 @@
-"""
-Mock Orchestrator Agent for Testing
-Provides mock implementations for isolated testing of workflow orchestration
-"""
-
 import asyncio
 import uuid
 import json
@@ -13,6 +8,12 @@ from dataclasses import dataclass, field
 import logging
 
 from .comprehensiveOrchestratorAgentSdk import (
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Mock Orchestrator Agent for Testing
+Provides mock implementations for isolated testing of workflow orchestration
+"""
+
     OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask, WorkflowStatus,
     TaskStatus, OrchestrationStrategy
 )
@@ -20,8 +21,16 @@ from .comprehensiveOrchestratorAgentSdk import (
 logger = logging.getLogger(__name__)
 
 @dataclass
-class MockWorkflowExecution:
-    """Mock workflow execution for testing"""
+class MockWorkflowExecution(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Mock workflow execution for testing"""
     workflow_id: str
     status: WorkflowStatus
     start_time: datetime
@@ -30,12 +39,22 @@ class MockWorkflowExecution:
     tasks_failed: int = 0
     execution_log: List[str] = field(default_factory=list)
 
-class MockOrchestratorAgent:
-    """
+class MockOrchestratorAgent(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""
     Mock implementation of Orchestrator Agent for testing
     """
     
     def __init__(self):
+        
+        super().__init__()
         self.mock_workflows = {}
         self.mock_executions = {}
         self.mock_agents = {}
@@ -567,10 +586,20 @@ class MockOrchestratorAgent:
 
 
 # Test utilities and fixtures
-class OrchestratorTestHelper:
-    """Helper class for orchestrator testing"""
+class OrchestratorTestHelper(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Helper class for orchestrator testing"""
     
     def __init__(self, mock_orchestrator: MockOrchestratorAgent):
+        
+        super().__init__()
         self.mock_orchestrator = mock_orchestrator
     
     async def create_test_workflow(

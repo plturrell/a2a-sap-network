@@ -732,6 +732,393 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             logger.error(f"Complexity analysis error: {e}")
             return create_error_response(f"Complexity analysis failed: {str(e)}")
     
+    @a2a_skill("statistical_validation", "Statistical validation of calculation results")
+    async def statistical_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform statistical validation of calculations using multiple methods"""
+        try:
+            expression = request_data.get('expression')
+            result = request_data.get('result')
+            variables_sets = request_data.get('variables_sets', [])  # Multiple input sets
+            confidence_level = request_data.get('confidence_level', 0.95)
+            monte_carlo_samples = request_data.get('monte_carlo_samples', 1000)
+            
+            if not variables_sets:
+                return create_error_response("No variable sets provided for statistical validation")
+            
+            # Collect results from multiple evaluations
+            calculated_results = []
+            validation_results = []
+            
+            for variables in variables_sets:
+                try:
+                    calc_result = await self._evaluate_expression(expression, variables)
+                    calculated_results.append(calc_result)
+                    
+                    # Individual validation
+                    validation = await self._validate_single_calculation(
+                        expression, calc_result, variables, result
+                    )
+                    validation_results.append(validation)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to validate with variables {variables}: {e}")
+            
+            if not calculated_results:
+                return create_error_response("No successful calculations performed")
+            
+            # Statistical analysis
+            results_array = np.array(calculated_results)
+            
+            # Calculate statistical metrics
+            statistics = {
+                'mean': float(np.mean(results_array)),
+                'std': float(np.std(results_array)),
+                'min': float(np.min(results_array)),
+                'max': float(np.max(results_array)),
+                'median': float(np.median(results_array)),
+                'variance': float(np.var(results_array)),
+                'q25': float(np.percentile(results_array, 25)),
+                'q75': float(np.percentile(results_array, 75))
+            }
+            
+            # Check if expected result falls within statistical bounds
+            confidence_interval = self._calculate_confidence_interval(
+                results_array, confidence_level
+            )
+            
+            is_statistically_valid = (
+                confidence_interval['lower'] <= float(result) <= confidence_interval['upper']
+            )
+            
+            # Monte Carlo validation
+            monte_carlo_results = await self._monte_carlo_validation(
+                expression, variables_sets[0], monte_carlo_samples
+            )
+            
+            # Calculate overall statistical confidence
+            stat_confidence = self._calculate_statistical_confidence(
+                float(result), results_array, confidence_level
+            )
+            
+            return create_success_response({
+                'is_statistically_valid': is_statistically_valid,
+                'statistical_confidence': stat_confidence,
+                'statistics': statistics,
+                'confidence_interval': confidence_interval,
+                'monte_carlo_validation': monte_carlo_results,
+                'samples_analyzed': len(calculated_results),
+                'individual_validations': validation_results[:10]  # Limit response size
+            })
+            
+        except Exception as e:
+            logger.error(f"Statistical validation error: {e}")
+            return create_error_response(f"Statistical validation failed: {str(e)}")
+    
+    @a2a_skill("cross_validation", "Cross-validate calculations using multiple approaches")
+    async def cross_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Cross-validate calculations using multiple computational approaches"""
+        try:
+            expression = request_data.get('expression')
+            result = request_data.get('result')
+            variables = request_data.get('variables', {})
+            validation_methods = request_data.get('validation_methods', [
+                'symbolic', 'numerical', 'approximation', 'alternative_form'
+            ])
+            
+            validation_results = {}
+            consensus_count = 0
+            total_confidence = 0.0
+            
+            # Apply each validation method
+            for method in validation_methods:
+                try:
+                    if method == 'symbolic':
+                        validation = await self._validate_symbolic(expression, result, variables, 1e-10)
+                    elif method == 'numerical':
+                        validation = await self._validate_numerical(expression, result, variables, 1e-10)
+                    elif method == 'approximation':
+                        validation = await self._validate_approximation(expression, result, variables)
+                    elif method == 'alternative_form':
+                        validation = await self._validate_alternative_form(expression, result, variables)
+                    else:
+                        continue
+                    
+                    validation_results[method] = validation
+                    
+                    if validation.get('valid', False):
+                        consensus_count += 1
+                    
+                    total_confidence += validation.get('confidence', 0.0)
+                    
+                except Exception as e:
+                    validation_results[method] = {
+                        'valid': False,
+                        'error': str(e),
+                        'confidence': 0.0
+                    }
+            
+            # Calculate cross-validation metrics
+            if validation_methods:
+                average_confidence = total_confidence / len(validation_methods)
+                consensus_ratio = consensus_count / len(validation_methods)
+            else:
+                average_confidence = 0.0
+                consensus_ratio = 0.0
+            
+            # Determine overall validation
+            is_cross_validated = consensus_ratio >= 0.5 and average_confidence >= 0.7
+            
+            # Identify discrepancies
+            discrepancies = await self._identify_validation_discrepancies(validation_results)
+            
+            return create_success_response({
+                'is_cross_validated': is_cross_validated,
+                'consensus_ratio': consensus_ratio,
+                'average_confidence': average_confidence,
+                'validation_results': validation_results,
+                'methods_used': validation_methods,
+                'discrepancies': discrepancies,
+                'recommendation': await self._generate_cross_validation_recommendation(
+                    consensus_ratio, average_confidence, validation_results
+                )
+            })
+            
+        except Exception as e:
+            logger.error(f"Cross-validation error: {e}")
+            return create_error_response(f"Cross-validation failed: {str(e)}")
+    
+    @a2a_skill("benchmark_calculation", "Benchmark calculation performance and accuracy")
+    async def benchmark_calculation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Benchmark calculation performance and accuracy against known standards"""
+        try:
+            expression = request_data.get('expression')
+            variables = request_data.get('variables', {})
+            benchmark_iterations = request_data.get('iterations', 100)
+            precision_levels = request_data.get('precision_levels', [10, 20, 50])
+            
+            benchmark_results = {}
+            
+            # Performance benchmarking
+            performance_metrics = await self._benchmark_performance(
+                expression, variables, benchmark_iterations
+            )
+            
+            # Accuracy benchmarking at different precision levels
+            accuracy_results = []
+            for precision in precision_levels:
+                accuracy = await self._benchmark_accuracy(
+                    expression, variables, precision
+                )
+                accuracy_results.append({
+                    'precision': precision,
+                    'accuracy': accuracy
+                })
+            
+            # Memory usage benchmarking
+            memory_usage = await self._benchmark_memory_usage(expression, variables)
+            
+            # Stability testing (repeated calculations)
+            stability_results = await self._benchmark_stability(
+                expression, variables, benchmark_iterations
+            )
+            
+            # Comparative analysis with reference implementations
+            comparative_results = await self._benchmark_comparative(expression, variables)
+            
+            # Generate performance score
+            performance_score = self._calculate_performance_score(
+                performance_metrics, accuracy_results, stability_results
+            )
+            
+            return create_success_response({
+                'performance_score': performance_score,
+                'performance_metrics': performance_metrics,
+                'accuracy_by_precision': accuracy_results,
+                'memory_usage': memory_usage,
+                'stability_results': stability_results,
+                'comparative_analysis': comparative_results,
+                'benchmark_summary': {
+                    'iterations_completed': benchmark_iterations,
+                    'precision_levels_tested': len(precision_levels),
+                    'overall_rating': self._rate_benchmark_results(performance_score)
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Benchmark calculation error: {e}")
+            return create_error_response(f"Benchmark calculation failed: {str(e)}")
+    
+    @a2a_skill("domain_specific_validation", "Validate calculations within specific domains")
+    async def domain_specific_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform domain-specific validation with specialized rules and constraints"""
+        try:
+            expression = request_data.get('expression')
+            result = request_data.get('result')
+            variables = request_data.get('variables', {})
+            domain = request_data.get('domain', 'general')
+            domain_constraints = request_data.get('constraints', {})
+            
+            # Get domain-specific validation rules
+            domain_rules = await self._get_domain_rules(domain)
+            
+            validation_results = {}
+            
+            # Apply domain constraints
+            constraint_validation = await self._validate_domain_constraints(
+                expression, result, variables, domain_constraints, domain
+            )
+            validation_results['constraints'] = constraint_validation
+            
+            # Apply domain-specific mathematical rules
+            if domain == 'financial':
+                validation_results['financial'] = await self._validate_financial_calculation(
+                    expression, result, variables
+                )
+            elif domain == 'physics':
+                validation_results['physics'] = await self._validate_physics_calculation(
+                    expression, result, variables
+                )
+            elif domain == 'engineering':
+                validation_results['engineering'] = await self._validate_engineering_calculation(
+                    expression, result, variables
+                )
+            elif domain == 'statistics':
+                validation_results['statistics'] = await self._validate_statistical_calculation(
+                    expression, result, variables
+                )
+            
+            # Check for domain-specific edge cases
+            edge_cases = await self._check_domain_edge_cases(
+                expression, result, variables, domain
+            )
+            validation_results['edge_cases'] = edge_cases
+            
+            # Unit consistency checking for scientific domains
+            if domain in ['physics', 'engineering', 'chemistry']:
+                unit_validation = await self._validate_units(expression, variables, domain)
+                validation_results['units'] = unit_validation
+            
+            # Calculate domain-specific confidence
+            domain_confidence = self._calculate_domain_confidence(
+                validation_results, domain
+            )
+            
+            # Overall domain validation
+            is_domain_valid = all([
+                v.get('valid', True) for v in validation_results.values()
+                if isinstance(v, dict)
+            ]) and domain_confidence >= 0.8
+            
+            return create_success_response({
+                'is_domain_valid': is_domain_valid,
+                'domain': domain,
+                'domain_confidence': domain_confidence,
+                'validation_results': validation_results,
+                'domain_rules_applied': len(domain_rules),
+                'recommendations': await self._generate_domain_recommendations(
+                    validation_results, domain
+                )
+            })
+            
+        except Exception as e:
+            logger.error(f"Domain-specific validation error: {e}")
+            return create_error_response(f"Domain-specific validation failed: {str(e)}")
+    
+    @a2a_skill("regression_testing", "Perform regression testing on calculation modifications")
+    async def regression_testing(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform regression testing when calculations are modified or optimized"""
+        try:
+            original_expression = request_data.get('original_expression')
+            modified_expression = request_data.get('modified_expression')
+            test_cases = request_data.get('test_cases', [])
+            tolerance = request_data.get('tolerance', 1e-12)
+            
+            if not test_cases:
+                # Generate test cases if none provided
+                test_cases = await self._generate_test_cases(original_expression)
+            
+            regression_results = []
+            passed_tests = 0
+            failed_tests = []
+            
+            for i, test_case in enumerate(test_cases):
+                variables = test_case.get('variables', {})
+                expected_result = test_case.get('expected_result')
+                
+                try:
+                    # Calculate result with original expression
+                    if expected_result is None:
+                        expected_result = await self._evaluate_expression(
+                            original_expression, variables
+                        )
+                    
+                    # Calculate result with modified expression
+                    actual_result = await self._evaluate_expression(
+                        modified_expression, variables
+                    )
+                    
+                    # Compare results
+                    difference = abs(float(expected_result) - float(actual_result))
+                    passed = difference <= tolerance
+                    
+                    test_result = {
+                        'test_case_id': i,
+                        'variables': variables,
+                        'expected_result': float(expected_result),
+                        'actual_result': float(actual_result),
+                        'difference': difference,
+                        'passed': passed,
+                        'tolerance_used': tolerance
+                    }
+                    
+                    regression_results.append(test_result)
+                    
+                    if passed:
+                        passed_tests += 1
+                    else:
+                        failed_tests.append(test_result)
+                        
+                except Exception as e:
+                    failed_test = {
+                        'test_case_id': i,
+                        'variables': variables,
+                        'error': str(e),
+                        'passed': False
+                    }
+                    regression_results.append(failed_test)
+                    failed_tests.append(failed_test)
+            
+            # Calculate regression metrics
+            total_tests = len(test_cases)
+            pass_rate = passed_tests / total_tests if total_tests > 0 else 0
+            
+            # Performance comparison
+            performance_comparison = await self._compare_performance(
+                original_expression, modified_expression, test_cases[:10]  # Sample for performance
+            )
+            
+            # Generate regression report
+            regression_passed = pass_rate >= 0.95 and len(failed_tests) == 0
+            
+            return create_success_response({
+                'regression_passed': regression_passed,
+                'pass_rate': pass_rate,
+                'total_tests': total_tests,
+                'passed_tests': passed_tests,
+                'failed_tests_count': len(failed_tests),
+                'failed_tests': failed_tests,
+                'performance_comparison': performance_comparison,
+                'regression_summary': {
+                    'expressions_compared': 2,
+                    'test_coverage': 'comprehensive',
+                    'recommendation': 'approved' if regression_passed else 'needs_review'
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Regression testing error: {e}")
+            return create_error_response(f"Regression testing failed: {str(e)}")
+    
     # Validation method implementations
     async def _validate_symbolic(self, expression: str, result: Any, 
                                 variables: Dict[str, Any], tolerance: float) -> Dict[str, Any]:

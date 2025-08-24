@@ -1,8 +1,3 @@
-"""
-MCP-enabled Vector Similarity Calculator
-Exposes vector similarity operations as MCP tools for cross-agent usage
-"""
-
 import numpy as np
 from typing import List, Dict, Optional, Any, Tuple, Union
 import math
@@ -11,13 +6,29 @@ import logging
 from ....sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ....sdk.mcpSkillCoordination import skill_provides, skill_depends_on
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+MCP-enabled Vector Similarity Calculator
+Exposes vector similarity operations as MCP tools for cross-agent usage
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class MCPVectorSimilarityCalculator:
-    """MCP-enabled vector similarity calculator with multiple distance metrics"""
+class MCPVectorSimilarityCalculator(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""MCP-enabled vector similarity calculator with multiple distance metrics"""
     
     def __init__(self):
+        
+        super().__init__()
         self.supported_metrics = [
             "cosine",
             "euclidean",

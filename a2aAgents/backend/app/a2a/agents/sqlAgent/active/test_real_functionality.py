@@ -1,12 +1,13 @@
-#!/usr/bin/env python3
-"""
-Test SQL Agent Real Functionality - Advanced AI Verification
-"""
-
 import sys
 import asyncio
 import json
 import os
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Test SQL Agent Real Functionality - Advanced AI Verification
+"""
 
 # Add paths for imports
 sys.path.append('/Users/apple/projects/a2a')

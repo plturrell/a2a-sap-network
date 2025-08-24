@@ -1,13 +1,14 @@
-#!/usr/bin/env python3
-"""
-Test Comprehensive Vector Processing Agent Real AI Integration
-"""
-
 import sys
 import asyncio
 import json
 import os
 import numpy as np
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Test Comprehensive Vector Processing Agent Real AI Integration
+"""
 
 # Add paths for imports
 sys.path.append('/Users/apple/projects/a2a')

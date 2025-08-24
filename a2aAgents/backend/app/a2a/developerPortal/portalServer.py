@@ -32,7 +32,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from pydantic import BaseModel
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from ..agents.agent_builder_agent_sdk import AgentBuilderAgentSDK, AgentGenerationRequest, BPMNWorkflow
 
 # SAP BTP Integration imports

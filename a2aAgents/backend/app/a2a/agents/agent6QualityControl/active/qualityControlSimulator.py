@@ -1,8 +1,3 @@
-"""
-Quality Control Simulation Framework
-Provides comprehensive simulation capabilities for testing quality control scenarios
-"""
-
 import asyncio
 import random
 import uuid
@@ -13,6 +8,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 import logging
 import statistics
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Quality Control Simulation Framework
+Provides comprehensive simulation capabilities for testing quality control scenarios
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,16 @@ class QualityScenario(Enum):
     REGRESSION_TESTING = "regression_testing"
 
 @dataclass
-class QualityDataPoint:
-    """Simulated data point for quality testing"""
+class QualityDataPoint(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Simulated data point for quality testing"""
     id: str
     data_type: str
     value: Any
@@ -41,8 +50,16 @@ class QualityDataPoint:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
-class QualityRule:
-    """Quality rule definition for simulation"""
+class QualityRule(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Quality rule definition for simulation"""
     rule_id: str
     name: str
     rule_type: str  # "range", "format", "uniqueness", "completeness", etc.
@@ -51,8 +68,16 @@ class QualityRule:
     failure_probability: float = 0.1
 
 @dataclass
-class SimulationMetrics:
-    """Metrics collected during quality control simulation"""
+class SimulationMetrics(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Metrics collected during quality control simulation"""
     total_checks: int = 0
     passed_checks: int = 0
     failed_checks: int = 0
@@ -63,12 +88,22 @@ class SimulationMetrics:
     rule_performance: Dict[str, Dict[str, int]] = field(default_factory=dict)
     batch_statistics: Dict[str, Any] = field(default_factory=dict)
 
-class QualityControlSimulator:
-    """
+class QualityControlSimulator(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""
     Comprehensive simulation framework for quality control testing
     """
     
     def __init__(self, quality_control_agent):
+        
+        super().__init__()
         self.quality_control_agent = quality_control_agent
         self.simulation_metrics = SimulationMetrics()
         self.simulation_running = False

@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "./BaseController",
     "sap/ui/model/json/JSONModel",
@@ -200,9 +204,9 @@ sap.ui.define([
             const apiBaseUrl = window.A2A_CONFIG?.apiBaseUrl || "/api/v1";
 
             Promise.all([
-                fetch(`${apiBaseUrl}/alerts/active`),
-                fetch(`${apiBaseUrl}/alerts/history`),
-                fetch(`${apiBaseUrl}/alerts/rules`)
+                blockchainClient.sendMessage(`${apiBaseUrl}/alerts/active`),
+                blockchainClient.sendMessage(`${apiBaseUrl}/alerts/history`),
+                blockchainClient.sendMessage(`${apiBaseUrl}/alerts/rules`)
             ]).then(responses => {
                 return Promise.all(responses.map(r => r.json()));
             }).then(([activeAlerts, alertHistory, alertRules]) => {

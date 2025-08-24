@@ -879,7 +879,7 @@ cds.on('listening', async (info) => {
         });
         
         // WebSocket connection handling
-        io.on('connection', (socket) => {
+        io.on('blockchain-connection', (socket) => {
             const log = cds.log('websocket');
             log.info(`WebSocket client connected: ${socket.id}`, {
                 userId: socket.user?.id,
@@ -1025,6 +1025,7 @@ cds.on('listening', async (info) => {
     log.info('🏥 Performing launchpad health check...');
     try {
         const StartupHealthCheck = require('../scripts/startup-health-check');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
         const healthChecker = new StartupHealthCheck(info.port);
         
         // Wait a bit for all endpoints to be ready
@@ -1086,7 +1087,7 @@ cds.on('listening', async (info) => {
     
     // Agent 13 OData Service Proxy - Convert REST to OData format
         try {
-            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/templates`);
+            const response = await blockchainClient.sendMessage(`${AGENT13_BASE_URL}/api/agent13/v1/templates`);
             
             const odataResponse = {
                 "@odata.context": "$metadata#AgentTemplates",
@@ -1125,7 +1126,7 @@ cds.on('listening', async (info) => {
     });
     
         try {
-            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/builds`);
+            const response = await blockchainClient.sendMessage(`${AGENT13_BASE_URL}/api/agent13/v1/builds`);
             
             const odataResponse = {
                 "@odata.context": "$metadata#AgentBuilds",
@@ -1162,7 +1163,7 @@ cds.on('listening', async (info) => {
     });
     
         try {
-            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/deployments`);
+            const response = await blockchainClient.sendMessage(`${AGENT13_BASE_URL}/api/agent13/v1/deployments`);
             
             const odataResponse = {
                 "@odata.context": "$metadata#AgentDeployments", 

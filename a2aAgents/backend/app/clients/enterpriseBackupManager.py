@@ -18,6 +18,31 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from enum import Enum
 import threading
+
+
+def _get_primary_backup_path():
+    """Get primary backup path from environment"""
+    return os.getenv("PRIMARY_BACKUP_PATH", "/backup/primary")
+
+
+def _get_secondary_backup_path():
+    """Get secondary backup path from environment"""
+    return os.getenv("SECONDARY_BACKUP_PATH", "/backup/secondary")
+
+
+def _get_aws_s3_bucket():
+    """Get AWS S3 bucket from environment"""
+    return os.getenv("BACKUP_S3_BUCKET", "")
+
+
+def _get_aws_region():
+    """Get AWS region from environment"""
+    return os.getenv("AWS_REGION", "us-east-1")
+
+
+def _get_backup_encryption_key():
+    """Get backup encryption key from environment"""
+    return os.getenv("BACKUP_ENCRYPTION_KEY")
 import schedule
 import boto3
 from concurrent.futures import ThreadPoolExecutor
@@ -46,13 +71,13 @@ class BackupConfig:
     """Enterprise backup configuration"""
     
     # Storage locations (3-2-1 strategy)
-    primary_backup_path: str = field(default_factory=lambda: os.getenv("PRIMARY_BACKUP_PATH", "/backup/primary"))
-    secondary_backup_path: str = field(default_factory=lambda: os.getenv("SECONDARY_BACKUP_PATH", "/backup/secondary"))
+    primary_backup_path: str = field(default_factory=_get_primary_backup_path)
+    secondary_backup_path: str = field(default_factory=_get_secondary_backup_path)
     offsite_backup_enabled: bool = True
     
     # AWS S3 for offsite backup
-    aws_s3_bucket: str = field(default_factory=lambda: os.getenv("BACKUP_S3_BUCKET", ""))
-    aws_region: str = field(default_factory=lambda: os.getenv("AWS_REGION", "us-east-1"))
+    aws_s3_bucket: str = field(default_factory=_get_aws_s3_bucket)
+    aws_region: str = field(default_factory=_get_aws_region)
     
     # Backup scheduling
     full_backup_schedule: str = "0 2 * * 0"  # Weekly on Sunday at 2 AM
@@ -67,7 +92,7 @@ class BackupConfig:
     # Compression and encryption
     compression_enabled: bool = True
     encryption_enabled: bool = True
-    encryption_key: Optional[str] = field(default_factory=lambda: os.getenv("BACKUP_ENCRYPTION_KEY"))
+    encryption_key: Optional[str] = field(default_factory=_get_backup_encryption_key)
     
     # Verification and validation
     backup_verification_enabled: bool = True
@@ -254,7 +279,10 @@ class BackupVerificationManager:
         def calculate_checksum():
             hash_sha256 = hashlib.sha256()
             with open(file_path, "rb") as f:
-                for chunk in iter(lambda: f.read(4096), b""):
+                def read_chunk():
+                    return f.read(4096)
+                
+                for chunk in iter(read_chunk, b""):
                     hash_sha256.update(chunk)
             return hash_sha256.hexdigest()
         

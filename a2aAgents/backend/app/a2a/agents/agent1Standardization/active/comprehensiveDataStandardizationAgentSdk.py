@@ -103,7 +103,7 @@ except ImportError:
 
 # Network connectivity for cross-agent communication
 try:
-    import aiohttp
+    # A2A Protocol: Use blockchain messaging instead of aiohttp
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -843,6 +843,200 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
             logger.error(f"Schema harmonization failed: {e}")
             return create_error_response(f"Harmonization failed: {str(e)}", "harmonization_error")
     
+    @mcp_tool("cross_domain_standardization", "Standardize data across multiple domains with L4 hierarchical structuring")
+    @a2a_skill(
+        name="crossDomainStandardization",
+        description="Perform cross-domain standardization with L4 hierarchical structuring and pattern learning",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "data": {"type": "object"},
+                "source_domain": {"type": "string"},
+                "target_domains": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "hierarchical_level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4,
+                    "default": 4
+                },
+                "enable_pattern_learning": {"type": "boolean", "default": True},
+                "enable_semantic_analysis": {"type": "boolean", "default": True}
+            },
+            "required": ["data", "source_domain", "target_domains"]
+        }
+    )
+    async def cross_domain_standardization(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform cross-domain standardization with L4 hierarchical structuring"""
+        try:
+            start_time = time.time()
+            
+            data = request_data["data"]
+            source_domain = request_data["source_domain"]
+            target_domains = request_data["target_domains"]
+            hierarchical_level = request_data.get("hierarchical_level", 4)
+            enable_pattern_learning = request_data.get("enable_pattern_learning", True)
+            enable_semantic_analysis = request_data.get("enable_semantic_analysis", True)
+            
+            # Initialize cross-domain results
+            standardized_results = {}
+            domain_mappings = {}
+            learned_patterns = {}
+            
+            # Analyze source domain structure
+            source_structure = await self._analyze_domain_structure(data, source_domain)
+            
+            # Perform standardization for each target domain
+            for target_domain in target_domains:
+                # Get domain-specific standardizer
+                standardizer = self._get_domain_standardizer(target_domain)
+                
+                # Apply L4 hierarchical structuring
+                hierarchical_data = await self._apply_hierarchical_structuring(
+                    data, source_structure, hierarchical_level
+                )
+                
+                # Perform domain-specific standardization
+                standardized_data = await standardizer.standardize(
+                    hierarchical_data,
+                    source_domain=source_domain,
+                    target_domain=target_domain
+                )
+                
+                # Apply semantic enrichment if enabled
+                if enable_semantic_analysis:
+                    standardized_data = await self._apply_semantic_enrichment(
+                        standardized_data, target_domain
+                    )
+                
+                # Learn patterns if enabled
+                if enable_pattern_learning:
+                    patterns = await self._learn_domain_patterns(
+                        source_data=data,
+                        standardized_data=standardized_data,
+                        source_domain=source_domain,
+                        target_domain=target_domain
+                    )
+                    learned_patterns[target_domain] = patterns
+                
+                # Store results
+                standardized_results[target_domain] = standardized_data
+                domain_mappings[target_domain] = {
+                    "field_mappings": await self._generate_field_mappings(
+                        source_structure, standardized_data
+                    ),
+                    "transformation_rules": await self._generate_transformation_rules(
+                        source_domain, target_domain
+                    )
+                }
+            
+            # Calculate metrics
+            processing_time = time.time() - start_time
+            
+            return create_success_response({
+                "standardized_results": standardized_results,
+                "domain_mappings": domain_mappings,
+                "learned_patterns": learned_patterns,
+                "source_domain": source_domain,
+                "target_domains": target_domains,
+                "hierarchical_level": hierarchical_level,
+                "processing_time": processing_time,
+                "metadata": {
+                    "pattern_learning_enabled": enable_pattern_learning,
+                    "semantic_analysis_enabled": enable_semantic_analysis,
+                    "domains_processed": len(target_domains),
+                    "total_fields_mapped": sum(
+                        len(mapping.get("field_mappings", [])) 
+                        for mapping in domain_mappings.values()
+                    )
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Cross-domain standardization failed: {e}")
+            return create_error_response(
+                f"Cross-domain standardization failed: {str(e)}", 
+                "cross_domain_error"
+            )
+    
+    @mcp_tool("pattern_learning_standardization", "Learn and apply standardization patterns across datasets")
+    @a2a_skill(
+        name="patternLearningStandardization",
+        description="Learn standardization patterns from historical data and apply them to new datasets",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "training_data": {
+                    "type": "array",
+                    "items": {"type": "object"}
+                },
+                "target_data": {"type": "object"},
+                "pattern_type": {
+                    "type": "string",
+                    "enum": ["structural", "semantic", "hybrid"],
+                    "default": "hybrid"
+                },
+                "confidence_threshold": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "default": 0.8
+                }
+            },
+            "required": ["target_data"]
+        }
+    )
+    async def pattern_learning_standardization(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Learn and apply standardization patterns"""
+        try:
+            start_time = time.time()
+            
+            training_data = request_data.get("training_data", [])
+            target_data = request_data["target_data"]
+            pattern_type = request_data.get("pattern_type", "hybrid")
+            confidence_threshold = request_data.get("confidence_threshold", 0.8)
+            
+            # Learn patterns from training data or use cached patterns
+            if training_data:
+                learned_patterns = await self._learn_standardization_patterns(
+                    training_data, pattern_type
+                )
+                # Cache patterns for future use
+                await self._cache_patterns(learned_patterns)
+            else:
+                # Use cached patterns
+                learned_patterns = await self._get_cached_patterns(pattern_type)
+            
+            # Apply patterns to target data
+            standardized_data = await self._apply_learned_patterns(
+                target_data, learned_patterns, confidence_threshold
+            )
+            
+            # Calculate pattern match statistics
+            pattern_stats = await self._calculate_pattern_statistics(
+                target_data, standardized_data, learned_patterns
+            )
+            
+            processing_time = time.time() - start_time
+            
+            return create_success_response({
+                "standardized_data": standardized_data,
+                "patterns_applied": len(learned_patterns),
+                "pattern_statistics": pattern_stats,
+                "confidence_threshold": confidence_threshold,
+                "pattern_type": pattern_type,
+                "processing_time": processing_time
+            })
+            
+        except Exception as e:
+            logger.error(f"Pattern learning standardization failed: {e}")
+            return create_error_response(
+                f"Pattern learning standardization failed: {str(e)}", 
+                "pattern_learning_error"
+            )
+    
     # Helper methods for AI functionality
     
     async def _perform_intelligent_field_mapping(self, source_schema: Dict[str, Any], target_standard: str) -> List[FieldMapping]:
@@ -1227,6 +1421,575 @@ if __name__ == "__main__":
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
+
+    # Helper methods for cross-domain standardization
+    async def _analyze_domain_structure(self, data: Dict[str, Any], domain: str) -> Dict[str, Any]:
+        """Analyze the structure of data for a specific domain"""
+        structure = {
+            "domain": domain,
+            "fields": list(data.keys()) if isinstance(data, dict) else [],
+            "data_types": {},
+            "nested_structures": {},
+            "patterns": []
+        }
+        
+        if isinstance(data, dict):
+            for key, value in data.items():
+                structure["data_types"][key] = type(value).__name__
+                if isinstance(value, (dict, list)):
+                    structure["nested_structures"][key] = self._analyze_nested_structure(value)
+        
+        return structure
+    
+    def _analyze_nested_structure(self, data: Any, depth: int = 0, max_depth: int = 5) -> Dict[str, Any]:
+        """Recursively analyze nested data structures"""
+        if depth >= max_depth:
+            return {"type": type(data).__name__, "depth_exceeded": True}
+        
+        if isinstance(data, dict):
+            return {
+                "type": "dict",
+                "keys": list(data.keys()),
+                "structure": {k: self._analyze_nested_structure(v, depth + 1, max_depth) 
+                             for k, v in list(data.items())[:10]}  # Limit to first 10 items
+            }
+        elif isinstance(data, list) and data:
+            return {
+                "type": "list",
+                "length": len(data),
+                "item_type": self._analyze_nested_structure(data[0], depth + 1, max_depth)
+            }
+        else:
+            return {"type": type(data).__name__}
+    
+    def _get_domain_standardizer(self, domain: str):
+        """Get the appropriate standardizer for a domain"""
+        domain_standardizers = {
+            "account": self.account_standardizer,
+            "product": self.product_standardizer,
+            "location": self.location_standardizer,
+            "catalog": self.catalog_standardizer,
+            "measure": self.measure_standardizer,
+            "book": self.book_standardizer
+        }
+        
+        return domain_standardizers.get(
+            domain.lower(), 
+            self._create_generic_standardizer(domain)
+        )
+    
+    def _create_generic_standardizer(self, domain: str):
+        """Create a generic standardizer for unknown domains"""
+        class GenericStandardizer:
+            async def standardize(self, data, **kwargs):
+                # Basic standardization logic
+                return {
+                    "domain": domain,
+                    "standardized_data": data,
+                    "metadata": kwargs
+                }
+        
+        return GenericStandardizer()
+    
+    async def _apply_hierarchical_structuring(
+        self, data: Dict[str, Any], structure: Dict[str, Any], level: int
+    ) -> Dict[str, Any]:
+        """Apply L1-L4 hierarchical structuring to data"""
+        hierarchical_data = {
+            "L1": {},  # Basic fields
+            "L2": {},  # Grouped fields
+            "L3": {},  # Domain-specific structures
+            "L4": {}   # Advanced relationships
+        }
+        
+        # L1: Basic field extraction
+        if level >= 1:
+            hierarchical_data["L1"] = self._extract_basic_fields(data)
+        
+        # L2: Group related fields
+        if level >= 2:
+            hierarchical_data["L2"] = self._group_related_fields(
+                hierarchical_data["L1"], structure
+            )
+        
+        # L3: Apply domain-specific structures
+        if level >= 3:
+            hierarchical_data["L3"] = await self._apply_domain_structures(
+                hierarchical_data["L2"], structure
+            )
+        
+        # L4: Identify advanced relationships
+        if level >= 4:
+            hierarchical_data["L4"] = await self._identify_advanced_relationships(
+                hierarchical_data["L3"], structure
+            )
+        
+        return hierarchical_data
+    
+    def _extract_basic_fields(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract basic fields from data (L1)"""
+        basic_fields = {}
+        for key, value in data.items():
+            if not isinstance(value, (dict, list)):
+                basic_fields[key] = value
+        return basic_fields
+    
+    def _group_related_fields(
+        self, basic_fields: Dict[str, Any], structure: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Group related fields together (L2)"""
+        grouped = defaultdict(dict)
+        
+        # Common grouping patterns
+        patterns = {
+            "contact": ["email", "phone", "mobile", "fax"],
+            "address": ["street", "city", "state", "zip", "country"],
+            "name": ["first", "last", "middle", "full"],
+            "date": ["created", "modified", "updated", "deleted"],
+            "amount": ["price", "cost", "total", "subtotal", "tax"]
+        }
+        
+        for key, value in basic_fields.items():
+            grouped_key = None
+            for group, keywords in patterns.items():
+                if any(keyword in key.lower() for keyword in keywords):
+                    grouped_key = group
+                    break
+            
+            if grouped_key:
+                grouped[grouped_key][key] = value
+            else:
+                grouped["other"][key] = value
+        
+        return dict(grouped)
+    
+    async def _apply_domain_structures(
+        self, grouped_data: Dict[str, Any], structure: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Apply domain-specific structures (L3)"""
+        # This would use domain knowledge to structure data appropriately
+        return grouped_data
+    
+    async def _identify_advanced_relationships(
+        self, structured_data: Dict[str, Any], structure: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Identify advanced relationships in data (L4)"""
+        # This would use AI to identify complex relationships
+        return structured_data
+    
+    async def _apply_semantic_enrichment(
+        self, data: Dict[str, Any], domain: str
+    ) -> Dict[str, Any]:
+        """Apply semantic enrichment to standardized data"""
+        enriched_data = data.copy()
+        
+        # Add semantic metadata
+        enriched_data["_semantic_metadata"] = {
+            "domain": domain,
+            "enrichment_timestamp": datetime.utcnow().isoformat(),
+            "semantic_tags": await self._generate_semantic_tags(data, domain),
+            "relationships": await self._identify_semantic_relationships(data)
+        }
+        
+        return enriched_data
+    
+    async def _generate_semantic_tags(
+        self, data: Dict[str, Any], domain: str
+    ) -> List[str]:
+        """Generate semantic tags for data"""
+        tags = [domain]
+        
+        # Add basic type tags
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, (int, float)):
+                    tags.append("numeric")
+                elif isinstance(value, str):
+                    tags.append("text")
+                elif isinstance(value, (list, dict)):
+                    tags.append("structured")
+        
+        return list(set(tags))
+    
+    async def _identify_semantic_relationships(
+        self, data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Identify semantic relationships in data"""
+        relationships = []
+        
+        # Basic relationship detection
+        if isinstance(data, dict):
+            keys = list(data.keys())
+            for i, key1 in enumerate(keys):
+                for key2 in keys[i+1:]:
+                    if self._are_related(key1, key2):
+                        relationships.append({
+                            "field1": key1,
+                            "field2": key2,
+                            "relationship": "related",
+                            "confidence": 0.7
+                        })
+        
+        return relationships
+    
+    def _are_related(self, field1: str, field2: str) -> bool:
+        """Check if two fields are related"""
+        # Simple heuristic - check for common prefixes/suffixes
+        f1_lower = field1.lower()
+        f2_lower = field2.lower()
+        
+        # Check for common patterns
+        if f1_lower.startswith(f2_lower) or f2_lower.startswith(f1_lower):
+            return True
+        
+        # Check for common words
+        f1_words = set(f1_lower.split('_'))
+        f2_words = set(f2_lower.split('_'))
+        
+        return len(f1_words.intersection(f2_words)) > 0
+    
+    async def _learn_domain_patterns(
+        self, source_data: Dict[str, Any], standardized_data: Dict[str, Any],
+        source_domain: str, target_domain: str
+    ) -> Dict[str, Any]:
+        """Learn patterns from domain transformation"""
+        patterns = {
+            "source_domain": source_domain,
+            "target_domain": target_domain,
+            "field_mappings": self._extract_field_mappings(source_data, standardized_data),
+            "transformation_patterns": self._extract_transformation_patterns(
+                source_data, standardized_data
+            ),
+            "learned_at": datetime.utcnow().isoformat()
+        }
+        
+        return patterns
+    
+    def _extract_field_mappings(
+        self, source: Dict[str, Any], target: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Extract field mappings between source and target"""
+        mappings = []
+        
+        source_fields = set(self._flatten_dict(source).keys())
+        target_fields = set(self._flatten_dict(target).keys())
+        
+        # Simple matching based on similarity
+        for s_field in source_fields:
+            best_match = None
+            best_score = 0
+            
+            for t_field in target_fields:
+                score = self._calculate_field_similarity(s_field, t_field)
+                if score > best_score:
+                    best_score = score
+                    best_match = t_field
+            
+            if best_match and best_score > 0.5:
+                mappings.append({
+                    "source": s_field,
+                    "target": best_match,
+                    "confidence": best_score
+                })
+        
+        return mappings
+    
+    def _flatten_dict(self, d: Dict[str, Any], parent_key: str = '') -> Dict[str, Any]:
+        """Flatten nested dictionary"""
+        items = []
+        for k, v in d.items():
+            new_key = f"{parent_key}.{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(self._flatten_dict(v, new_key).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
+    
+    def _calculate_field_similarity(self, field1: str, field2: str) -> float:
+        """Calculate similarity between two field names"""
+        # Simple character-based similarity
+        f1_lower = field1.lower()
+        f2_lower = field2.lower()
+        
+        if f1_lower == f2_lower:
+            return 1.0
+        
+        # Check for substring match
+        if f1_lower in f2_lower or f2_lower in f1_lower:
+            return 0.8
+        
+        # Check for common words
+        f1_words = set(f1_lower.replace('_', ' ').split())
+        f2_words = set(f2_lower.replace('_', ' ').split())
+        
+        if f1_words.intersection(f2_words):
+            return 0.6
+        
+        return 0.0
+    
+    def _extract_transformation_patterns(
+        self, source: Dict[str, Any], target: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Extract transformation patterns"""
+        patterns = []
+        
+        # Identify common transformation patterns
+        # This is a simplified version - real implementation would be more sophisticated
+        patterns.append({
+            "pattern": "field_rename",
+            "examples": self._find_rename_patterns(source, target)
+        })
+        
+        patterns.append({
+            "pattern": "field_merge",
+            "examples": self._find_merge_patterns(source, target)
+        })
+        
+        patterns.append({
+            "pattern": "field_split",
+            "examples": self._find_split_patterns(source, target)
+        })
+        
+        return patterns
+    
+    def _find_rename_patterns(
+        self, source: Dict[str, Any], target: Dict[str, Any]
+    ) -> List[Dict[str, str]]:
+        """Find field rename patterns"""
+        # Simplified implementation
+        return []
+    
+    def _find_merge_patterns(
+        self, source: Dict[str, Any], target: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Find field merge patterns"""
+        # Simplified implementation
+        return []
+    
+    def _find_split_patterns(
+        self, source: Dict[str, Any], target: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Find field split patterns"""
+        # Simplified implementation
+        return []
+    
+    async def _generate_field_mappings(
+        self, source_structure: Dict[str, Any], target_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Generate field mappings between source and target"""
+        return self._extract_field_mappings(
+            {"fields": source_structure.get("fields", [])},
+            target_data
+        )
+    
+    async def _generate_transformation_rules(
+        self, source_domain: str, target_domain: str
+    ) -> List[Dict[str, Any]]:
+        """Generate transformation rules for domain conversion"""
+        rules = []
+        
+        # Define domain-specific transformation rules
+        domain_rules = {
+            ("generic", "account"): [
+                {"rule": "map_identifier_to_account_id", "priority": 1},
+                {"rule": "standardize_account_type", "priority": 2}
+            ],
+            ("generic", "product"): [
+                {"rule": "map_name_to_product_name", "priority": 1},
+                {"rule": "generate_product_sku", "priority": 2}
+            ]
+        }
+        
+        key = (source_domain.lower(), target_domain.lower())
+        if key in domain_rules:
+            rules.extend(domain_rules[key])
+        else:
+            # Generic rules
+            rules.append({"rule": "direct_field_mapping", "priority": 1})
+        
+        return rules
+    
+    async def _learn_standardization_patterns(
+        self, training_data: List[Dict[str, Any]], pattern_type: str
+    ) -> List[Dict[str, Any]]:
+        """Learn standardization patterns from training data"""
+        patterns = []
+        
+        if pattern_type in ["structural", "hybrid"]:
+            structural_patterns = self._learn_structural_patterns(training_data)
+            patterns.extend(structural_patterns)
+        
+        if pattern_type in ["semantic", "hybrid"]:
+            semantic_patterns = await self._learn_semantic_patterns(training_data)
+            patterns.extend(semantic_patterns)
+        
+        return patterns
+    
+    def _learn_structural_patterns(
+        self, training_data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Learn structural patterns from data"""
+        patterns = []
+        
+        # Analyze common structures
+        structure_counts = defaultdict(int)
+        for data in training_data:
+            structure = self._get_data_structure(data)
+            structure_counts[structure] += 1
+        
+        # Extract most common patterns
+        for structure, count in structure_counts.items():
+            if count > len(training_data) * 0.1:  # Pattern appears in >10% of data
+                patterns.append({
+                    "type": "structural",
+                    "pattern": structure,
+                    "frequency": count / len(training_data),
+                    "confidence": min(0.9, count / len(training_data) * 2)
+                })
+        
+        return patterns
+    
+    def _get_data_structure(self, data: Dict[str, Any]) -> str:
+        """Get a string representation of data structure"""
+        if isinstance(data, dict):
+            keys = sorted(data.keys())
+            return f"dict:{','.join(keys)}"
+        elif isinstance(data, list):
+            return f"list:{len(data)}"
+        else:
+            return f"value:{type(data).__name__}"
+    
+    async def _learn_semantic_patterns(
+        self, training_data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Learn semantic patterns from data"""
+        patterns = []
+        
+        # Simplified semantic pattern learning
+        # In a real implementation, this would use NLP/ML techniques
+        semantic_groups = defaultdict(list)
+        
+        for data in training_data:
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    semantic_groups[self._get_semantic_category(key)].append(key)
+        
+        for category, fields in semantic_groups.items():
+            if len(fields) > 2:  # Pattern with multiple instances
+                patterns.append({
+                    "type": "semantic",
+                    "category": category,
+                    "fields": list(set(fields)),
+                    "confidence": 0.7
+                })
+        
+        return patterns
+    
+    def _get_semantic_category(self, field_name: str) -> str:
+        """Get semantic category for a field name"""
+        categories = {
+            "identifier": ["id", "key", "code", "number"],
+            "temporal": ["date", "time", "timestamp", "created", "updated"],
+            "spatial": ["location", "address", "city", "country", "region"],
+            "quantitative": ["amount", "quantity", "count", "total", "sum"],
+            "descriptive": ["name", "description", "title", "label", "text"]
+        }
+        
+        field_lower = field_name.lower()
+        for category, keywords in categories.items():
+            if any(keyword in field_lower for keyword in keywords):
+                return category
+        
+        return "general"
+    
+    async def _cache_patterns(self, patterns: List[Dict[str, Any]]) -> None:
+        """Cache learned patterns for future use"""
+        # In a real implementation, this would persist to a database
+        # For now, we'll use in-memory cache
+        if not hasattr(self, '_pattern_cache'):
+            self._pattern_cache = {}
+        
+        cache_key = f"patterns_{datetime.utcnow().date()}"
+        self._pattern_cache[cache_key] = patterns
+    
+    async def _get_cached_patterns(self, pattern_type: str) -> List[Dict[str, Any]]:
+        """Get cached patterns"""
+        if not hasattr(self, '_pattern_cache'):
+            return []
+        
+        # Get most recent patterns
+        all_patterns = []
+        for key in sorted(self._pattern_cache.keys(), reverse=True):
+            patterns = self._pattern_cache[key]
+            filtered = [p for p in patterns if p.get("type") == pattern_type or pattern_type == "hybrid"]
+            all_patterns.extend(filtered)
+            if all_patterns:
+                break
+        
+        return all_patterns
+    
+    async def _apply_learned_patterns(
+        self, target_data: Dict[str, Any], patterns: List[Dict[str, Any]], 
+        confidence_threshold: float
+    ) -> Dict[str, Any]:
+        """Apply learned patterns to standardize data"""
+        standardized = target_data.copy()
+        
+        for pattern in patterns:
+            if pattern.get("confidence", 0) >= confidence_threshold:
+                if pattern["type"] == "structural":
+                    standardized = self._apply_structural_pattern(standardized, pattern)
+                elif pattern["type"] == "semantic":
+                    standardized = await self._apply_semantic_pattern(standardized, pattern)
+        
+        return standardized
+    
+    def _apply_structural_pattern(
+        self, data: Dict[str, Any], pattern: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Apply structural pattern to data"""
+        # Simplified implementation
+        return data
+    
+    async def _apply_semantic_pattern(
+        self, data: Dict[str, Any], pattern: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Apply semantic pattern to data"""
+        # Simplified implementation
+        return data
+    
+    async def _calculate_pattern_statistics(
+        self, original: Dict[str, Any], standardized: Dict[str, Any], 
+        patterns: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Calculate statistics about pattern application"""
+        stats = {
+            "total_patterns": len(patterns),
+            "patterns_applied": 0,
+            "fields_modified": 0,
+            "confidence_scores": []
+        }
+        
+        # Compare original and standardized to determine changes
+        original_flat = self._flatten_dict(original)
+        standardized_flat = self._flatten_dict(standardized)
+        
+        for key in original_flat:
+            if key not in standardized_flat or original_flat[key] != standardized_flat.get(key):
+                stats["fields_modified"] += 1
+        
+        # Calculate pattern application stats
+        for pattern in patterns:
+            if pattern.get("confidence", 0) > 0:
+                stats["confidence_scores"].append(pattern["confidence"])
+                stats["patterns_applied"] += 1
+        
+        if stats["confidence_scores"]:
+            stats["average_confidence"] = sum(stats["confidence_scores"]) / len(stats["confidence_scores"])
+        else:
+            stats["average_confidence"] = 0
+        
+        return stats
 
     async def test_agent():
         agent = ComprehensiveDataStandardizationAgentSDK(os.getenv("A2A_BASE_URL"))

@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
-"""
-Agent Manager Launcher - Starts the Agent Manager A2A Agent
-"""
-
 import asyncio
 import uvicorn
 import logging
 import os
 import sys
 from pathlib import Path
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Agent Manager Launcher - Starts the Agent Manager A2A Agent
+"""
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent.parent

@@ -4,7 +4,7 @@
  * query optimization, execution, and database operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent11Adapter {
@@ -18,7 +18,7 @@ class Agent11Adapter {
     async getSQLQueryTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, {
                 params,
                 timeout: this.timeout
             });
@@ -32,7 +32,7 @@ class Agent11Adapter {
     async createSQLQueryTask(data) {
         try {
             const restData = this._convertODataSQLQueryTaskToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, restData, {
                 timeout: this.timeout
             });
             
@@ -45,7 +45,7 @@ class Agent11Adapter {
     async updateSQLQueryTask(id, data) {
         try {
             const restData = this._convertODataSQLQueryTaskToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -57,7 +57,7 @@ class Agent11Adapter {
 
     async deleteSQLQueryTask(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, {
                 timeout: this.timeout
             });
         } catch (error) {
@@ -68,7 +68,7 @@ class Agent11Adapter {
     // ===== SQL QUERY OPERATIONS =====
     async executeQuery(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/execute`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/execute`, {}, {
                 timeout: this.timeout * 2 // Double timeout for execution
             });
             
@@ -94,7 +94,7 @@ class Agent11Adapter {
 
     async validateSQL(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/validate`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/validate`, {}, {
                 timeout: this.timeout
             });
             
@@ -112,7 +112,7 @@ class Agent11Adapter {
 
     async optimizeQuery(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/optimize`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/optimize`, {}, {
                 timeout: this.timeout
             });
             
@@ -139,7 +139,7 @@ class Agent11Adapter {
 
     async generateFromNaturalLanguage(taskId, naturalLanguage) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/generate-from-nl`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/generate-from-nl`, {
                 natural_language: naturalLanguage
             }, {
                 timeout: this.timeout
@@ -168,7 +168,7 @@ class Agent11Adapter {
 
     async explainQuery(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/explain`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/explain`, {}, {
                 timeout: this.timeout
             });
             
@@ -186,7 +186,7 @@ class Agent11Adapter {
 
     async exportResults(taskId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/export-results/${taskId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/export-results/${taskId}`, {
                 format: options.format,
                 include_metadata: options.includeMetadata
             }, {
@@ -208,7 +208,7 @@ class Agent11Adapter {
     // ===== MAIN SQL OPERATIONS =====
     async executeSQL(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/execute-sql`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/execute-sql`, {
                 sql: data.sql,
                 parameters: data.parameters,
                 database: data.database,
@@ -234,7 +234,7 @@ class Agent11Adapter {
 
     async translateNaturalLanguage(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/translate-nl`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/translate-nl`, {
                 natural_language: data.naturalLanguage,
                 context: data.context,
                 database: data.database
@@ -258,7 +258,7 @@ class Agent11Adapter {
 
     async optimizeSQL(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/optimize-sql`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/optimize-sql`, {
                 sql: data.sql,
                 database: data.database,
                 explain: data.explain
@@ -280,7 +280,7 @@ class Agent11Adapter {
 
     async validateSQL(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/validate-sql`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-sql`, {
                 sql: data.sql,
                 dialect: data.dialect
             }, {
@@ -301,7 +301,7 @@ class Agent11Adapter {
 
     async explainExecutionPlan(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/explain-plan`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/explain-plan`, {
                 sql: data.sql,
                 database: data.database
             }, {
@@ -323,7 +323,7 @@ class Agent11Adapter {
     // ===== SCHEMA AND DATABASE OPERATIONS =====
     async getSchemaInfo(data) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/schema-info/${data.database}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/schema-info/${data.database}`, {
                 params: { schema: data.schema },
                 timeout: this.timeout
             });
@@ -336,7 +336,7 @@ class Agent11Adapter {
 
     async getTableInfo(data) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/table-info/${data.database}/${data.table}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/table-info/${data.database}/${data.table}`, {
                 timeout: this.timeout
             });
             
@@ -348,7 +348,7 @@ class Agent11Adapter {
 
     async suggestIndexes(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/suggest-indexes`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/suggest-indexes`, {
                 table: data.table,
                 database: data.database
             }, {
@@ -364,7 +364,7 @@ class Agent11Adapter {
     // ===== ADDITIONAL OPERATIONS =====
     async analyzeQueryPerformance(queryId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${queryId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${queryId}`, {
                 timeout: this.timeout
             });
             
@@ -376,7 +376,7 @@ class Agent11Adapter {
 
     async getQueryHistory(options) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/query-history`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/query-history`, {
                 params: {
                     database: options.database,
                     limit: options.limit,
@@ -393,7 +393,7 @@ class Agent11Adapter {
 
     async createQueryTemplate(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/query-templates`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/query-templates`, {
                 name: data.name,
                 sql: data.sql,
                 parameters: data.parameters
@@ -409,7 +409,7 @@ class Agent11Adapter {
 
     async manageDatabaseConnection(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/connections`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/connections`, {
                 operation: data.operation,
                 connection_config: data.connectionConfig
             }, {
@@ -424,7 +424,7 @@ class Agent11Adapter {
 
     async backupQuery(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/backup-query/${data.queryId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/backup-query/${data.queryId}`, {
                 include_results: data.includeResults
             }, {
                 timeout: this.timeout
@@ -438,7 +438,7 @@ class Agent11Adapter {
 
     async restoreQuery(backupId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/restore-query`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/restore-query`, {
                 backup_id: backupId
             }, {
                 timeout: this.timeout

@@ -1,12 +1,10 @@
 """
-A2A Protocol Compliance Notice:
-This file has been modified to enforce A2A protocol compliance.
-Direct HTTP calls are not allowed - all communication must go through
-the A2A blockchain messaging system.
+MCP Service Registry and Manager
+Manages the lifecycle of all MCP standalone servers
 
-To send messages to other agents, use:
-- A2ANetworkClient for blockchain-based messaging
-- A2A SDK methods that route through the blockchain
+NOTE: This file is MCP-compliant and uses MCP protocol standards.
+MCP services communicate with agents via MCP protocol, not A2A protocol.
+A2A protocol is for agent-to-agent communication only.
 """
 
 #!/usr/bin/env python3
@@ -22,7 +20,7 @@ import signal
 import time
 import logging
 # Direct HTTP calls not allowed - use A2A protocol
-# import requests  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of requests  # REMOVED: A2A protocol violation
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
@@ -300,7 +298,7 @@ class MCPServiceManager:
                     }
                     self.registry.update_service_status(name, "error")
                     
-            except requests.exceptions.ConnectionError:
+            except ConnectionRefusedError:
                 results[name] = {
                     "status": "down",
                     "error": "Connection refused"

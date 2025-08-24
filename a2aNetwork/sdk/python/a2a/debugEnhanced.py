@@ -449,7 +449,10 @@ class PerformanceDashboard:
     
     def __init__(self, update_interval: int = 5):
         self.update_interval = update_interval
-        self.metrics_history = defaultdict(lambda: deque(maxlen=100))
+        def create_metrics_deque():
+            return deque(maxlen=100)
+        
+        self.metrics_history = defaultdict(create_metrics_deque)
         self.dashboard_app = None
         self.dashboard_thread = None
         
@@ -630,12 +633,15 @@ class ComprehensiveDebugSuite:
         
         # Comprehensive method coverage
         self.wrapped_methods = set()
-        self.method_stats = defaultdict(lambda: {
-            'call_count': 0,
-            'total_time': 0,
-            'error_count': 0,
-            'last_called': None
-        })
+        def create_method_stats():
+            return {
+                'call_count': 0,
+                'total_time': 0,
+                'error_count': 0,
+                'last_called': None
+            }
+        
+        self.method_stats = defaultdict(create_method_stats)
     
     def initialize_blockchain_integration(self, web3_client: Web3, contracts: Dict[str, str]):
         """Initialize blockchain integration"""

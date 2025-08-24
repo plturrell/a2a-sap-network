@@ -1,13 +1,14 @@
-#!/usr/bin/env python3
-"""
-Test real MCP integration in Agent Manager
-"""
-
 import asyncio
 import os
 import sys
 import logging
 
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Test real MCP integration in Agent Manager
+"""
 
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]

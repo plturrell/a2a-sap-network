@@ -145,7 +145,7 @@ class ContextAgentDeployment:
         # Check connectivity to agent manager
         if self.config.get("agent_manager_url"):
             try:
-                import aiohttp
+                # A2A Protocol: Use blockchain messaging instead of aiohttp
                 async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
         # aiohttp\.ClientSession() as session:
                     async with session.get(

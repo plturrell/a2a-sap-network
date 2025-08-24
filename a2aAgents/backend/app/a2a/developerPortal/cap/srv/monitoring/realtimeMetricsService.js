@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 "use strict";
 
 /**
@@ -29,7 +33,7 @@ class RealtimeMetricsService extends EventEmitter {
     /**
      * Initialize WebSocket server for real-time metrics
      */
-    initializeWebSocketServer(server) {
+    initializeBlockchainEventServer(server) {
         this.wss = new WebSocket.Server({ 
             server,
             path: '/ws/metrics',
@@ -189,7 +193,7 @@ class RealtimeMetricsService extends EventEmitter {
             try {
                 // Make actual health check request to agent
                 const startTime = performance.now();
-                const response = await fetch(agent.endpoint, {
+                const response = await blockchainClient.sendMessage(agent.endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -289,7 +293,7 @@ class RealtimeMetricsService extends EventEmitter {
     async _collectBlockchainMetrics() {
         try {
             // Query blockchain integration agent for real metrics
-            const response = await fetch('http://localhost:8015/blockchain/metrics', {
+            const response = await blockchainClient.sendMessage('http://localhost:8015/blockchain/metrics', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -468,7 +472,7 @@ class RealtimeMetricsService extends EventEmitter {
     async _collectDataQualityMetrics() {
         try {
             // Query QA validation agent for real data quality metrics
-            const response = await fetch('http://localhost:8005/metrics/quality', {
+            const response = await blockchainClient.sendMessage('http://localhost:8005/metrics/quality', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'

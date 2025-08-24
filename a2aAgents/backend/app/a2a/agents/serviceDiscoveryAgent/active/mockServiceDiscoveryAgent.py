@@ -1,8 +1,3 @@
-"""
-Mock Service Discovery Agent for Testing
-Provides mock implementations for isolated testing
-"""
-
 import asyncio
 import uuid
 import json
@@ -12,18 +7,34 @@ from unittest.mock import Mock, AsyncMock
 import logging
 
 from .comprehensiveServiceDiscoveryAgentSdk import (
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Mock Service Discovery Agent for Testing
+Provides mock implementations for isolated testing
+"""
+
     ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
     ServiceStatus, ServiceQuery, HealthCheckResult, LoadBalancingStrategy
 )
 
 logger = logging.getLogger(__name__)
 
-class MockServiceDiscoveryAgent:
-    """
+class MockServiceDiscoveryAgent(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""
     Mock implementation of Service Discovery Agent for testing
     """
     
     def __init__(self):
+        
+        super().__init__()
         self.mock_services = {}
         self.mock_health_results = {}
         self.mock_load_balancer_calls = []
@@ -445,10 +456,20 @@ class MockServiceDiscoveryAgent:
 
 
 # Test utilities and fixtures
-class ServiceDiscoveryTestHelper:
-    """Helper class for service discovery testing"""
+class ServiceDiscoveryTestHelper(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Helper class for service discovery testing"""
     
     def __init__(self, mock_agent: MockServiceDiscoveryAgent):
+        
+        super().__init__()
         self.mock_agent = mock_agent
     
     async def create_test_service(

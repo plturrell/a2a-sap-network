@@ -1,7 +1,3 @@
-"""
-Agent 9 (Reasoning Agent) FastAPI Router
-Provides HTTP endpoints for reasoning and decision-making operations
-"""
 from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 import json
@@ -12,6 +8,11 @@ from uuid import uuid4
 
 from .comprehensiveReasoningAgentSdk import ComprehensiveReasoningAgentSdk
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Agent 9 (Reasoning Agent) FastAPI Router
+Provides HTTP endpoints for reasoning and decision-making operations
+"""
 # Initialize router with prefix for Agent 9
 router = APIRouter(prefix="/a2a/agent9/v1", tags=["Agent 9 - Reasoning"])
 

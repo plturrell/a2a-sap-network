@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .enhancedCalculationAgentSdk import EnhancedCalculationAgentSDK
+from .comprehensiveCalculationAgentSdk import ComprehensiveCalculationAgentSDK
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: EnhancedCalculationAgentSDK):
+    def __init__(self, agent_sdk: ComprehensiveCalculationAgentSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
@@ -88,9 +88,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_calculation_agent_info(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle calculation_agent_info operation"""
             try:
-                # TODO: Implement calculation_agent_info logic
-                # Example: result = await self.agent_sdk.calculation_agent_info(data)
-                result = {"status": "success", "operation": "calculation_agent_info"}
+                # Get agent information and capabilities
+                result = await self.agent_sdk.get_agent_info(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -110,9 +109,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_perform_calculation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle perform_calculation operation"""
             try:
-                # TODO: Implement perform_calculation logic
-                # Example: result = await self.agent_sdk.perform_calculation(data)
-                result = {"status": "success", "operation": "perform_calculation"}
+                # Perform calculation using comprehensive SDK
+                result = await self.agent_sdk.perform_calculation(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -132,9 +130,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_natural_language_calculation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle natural_language_calculation operation"""
             try:
-                # TODO: Implement natural_language_calculation logic
-                # Example: result = await self.agent_sdk.natural_language_calculation(data)
-                result = {"status": "success", "operation": "natural_language_calculation"}
+                # Process natural language calculation request
+                result = await self.agent_sdk.natural_language_calculation(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -154,9 +151,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_intelligent_dispatch(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle intelligent_dispatch operation"""
             try:
-                # TODO: Implement intelligent_dispatch logic
-                # Example: result = await self.agent_sdk.intelligent_dispatch(data)
-                result = {"status": "success", "operation": "intelligent_dispatch"}
+                # Dispatch calculation request intelligently
+                result = await self.agent_sdk.intelligent_dispatch(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -176,9 +172,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_evaluate_expression(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle evaluate_expression operation"""
             try:
-                # TODO: Implement evaluate_expression logic
-                # Example: result = await self.agent_sdk.evaluate_expression(data)
-                result = {"status": "success", "operation": "evaluate_expression"}
+                # Evaluate mathematical expression
+                result = await self.agent_sdk.evaluate_expression(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -198,9 +193,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_differentiate_expression(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle differentiate_expression operation"""
             try:
-                # TODO: Implement differentiate_expression logic
-                # Example: result = await self.agent_sdk.differentiate_expression(data)
-                result = {"status": "success", "operation": "differentiate_expression"}
+                # Differentiate mathematical expression
+                result = await self.agent_sdk.differentiate_expression(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -220,9 +214,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_integrate_expression(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle integrate_expression operation"""
             try:
-                # TODO: Implement integrate_expression logic
-                # Example: result = await self.agent_sdk.integrate_expression(data)
-                result = {"status": "success", "operation": "integrate_expression"}
+                # Integrate mathematical expression
+                result = await self.agent_sdk.integrate_expression(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -242,9 +235,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_solve_equations(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle solve_equations operation"""
             try:
-                # TODO: Implement solve_equations logic
-                # Example: result = await self.agent_sdk.solve_equations(data)
-                result = {"status": "success", "operation": "solve_equations"}
+                # Solve mathematical equations
+                result = await self.agent_sdk.solve_equations(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -264,9 +256,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_price_bond(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle price_bond operation"""
             try:
-                # TODO: Implement price_bond logic
-                # Example: result = await self.agent_sdk.price_bond(data)
-                result = {"status": "success", "operation": "price_bond"}
+                # Price financial bond
+                result = await self.agent_sdk.price_bond(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -286,9 +277,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_price_option(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle price_option operation"""
             try:
-                # TODO: Implement price_option logic
-                # Example: result = await self.agent_sdk.price_option(data)
-                result = {"status": "success", "operation": "price_option"}
+                # Price financial option
+                result = await self.agent_sdk.price_option(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -308,9 +298,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_analyze_graph(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle analyze_graph operation"""
             try:
-                # TODO: Implement analyze_graph logic
-                # Example: result = await self.agent_sdk.analyze_graph(data)
-                result = {"status": "success", "operation": "analyze_graph"}
+                # Analyze graph structure
+                result = await self.agent_sdk.analyze_graph(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -330,9 +319,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_find_shortest_path(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle find_shortest_path operation"""
             try:
-                # TODO: Implement find_shortest_path logic
-                # Example: result = await self.agent_sdk.find_shortest_path(data)
-                result = {"status": "success", "operation": "find_shortest_path"}
+                # Find shortest path in graph
+                result = await self.agent_sdk.find_shortest_path(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -352,9 +340,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_distributed_calculation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle distributed_calculation operation"""
             try:
-                # TODO: Implement distributed_calculation logic
-                # Example: result = await self.agent_sdk.distributed_calculation(data)
-                result = {"status": "success", "operation": "distributed_calculation"}
+                # Execute distributed calculation
+                result = await self.agent_sdk.distributed_calculation(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -374,9 +361,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_ai_assisted_calculation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle ai_assisted_calculation operation"""
             try:
-                # TODO: Implement ai_assisted_calculation logic
-                # Example: result = await self.agent_sdk.ai_assisted_calculation(data)
-                result = {"status": "success", "operation": "ai_assisted_calculation"}
+                # Perform AI-assisted calculation
+                result = await self.agent_sdk.ai_assisted_calculation(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -396,9 +382,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_intelligent_dispatch(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle intelligent_dispatch operation"""
             try:
-                # TODO: Implement intelligent_dispatch logic
-                # Example: result = await self.agent_sdk.intelligent_dispatch(data)
-                result = {"status": "success", "operation": "intelligent_dispatch"}
+                # Dispatch calculation request intelligently
+                result = await self.agent_sdk.intelligent_dispatch(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -418,9 +403,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_multi_step_calculation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle multi_step_calculation operation"""
             try:
-                # TODO: Implement multi_step_calculation logic
-                # Example: result = await self.agent_sdk.multi_step_calculation(data)
-                result = {"status": "success", "operation": "multi_step_calculation"}
+                # Execute multi-step calculation
+                result = await self.agent_sdk.multi_step_calculation(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -440,9 +424,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_create_workflow(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle create_workflow operation"""
             try:
-                # TODO: Implement create_workflow logic
-                # Example: result = await self.agent_sdk.create_workflow(data)
-                result = {"status": "success", "operation": "create_workflow"}
+                # Create calculation workflow
+                result = await self.agent_sdk.create_workflow(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -462,9 +445,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_execute_workflow(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle execute_workflow operation"""
             try:
-                # TODO: Implement execute_workflow logic
-                # Example: result = await self.agent_sdk.execute_workflow(data)
-                result = {"status": "success", "operation": "execute_workflow"}
+                # Execute calculation workflow
+                result = await self.agent_sdk.execute_workflow(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -484,9 +466,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_get_workflow_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_workflow_status operation"""
             try:
-                # TODO: Implement get_workflow_status logic
-                # Example: result = await self.agent_sdk.get_workflow_status(data)
-                result = {"status": "success", "operation": "get_workflow_status"}
+                # Get workflow execution status
+                result = await self.agent_sdk.get_workflow_status(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -506,9 +487,8 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         async def handle_get_calculation_stats(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_calculation_stats operation"""
             try:
-                # TODO: Implement get_calculation_stats logic
-                # Example: result = await self.agent_sdk.get_calculation_stats(data)
-                result = {"status": "success", "operation": "get_calculation_stats"}
+                # Get calculation statistics
+                result = await self.agent_sdk.get_calculation_stats(data)
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -657,7 +637,7 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
 
 
 # Factory function to create A2A handler
-def create_calculation_agent_a2a_handler(agent_sdk: EnhancedCalculationAgentSDK) -> CalculationAgentA2AHandler:
+def create_calculation_agent_a2a_handler(agent_sdk: ComprehensiveCalculationAgentSDK) -> CalculationAgentA2AHandler:
     """Create A2A-compliant handler for calculation"""
     return CalculationAgentA2AHandler(agent_sdk)
 

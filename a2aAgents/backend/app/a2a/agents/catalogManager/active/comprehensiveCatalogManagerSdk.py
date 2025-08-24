@@ -82,7 +82,7 @@ except ImportError:
 
 # Web scraping for metadata enrichment
 try:
-    import httpx
+    # A2A Protocol: Use blockchain messaging instead of httpx
     from bs4 import BeautifulSoup
     SCRAPING_AVAILABLE = True
 except ImportError:
@@ -112,7 +112,7 @@ except ImportError:
 
 # Real Grok AI Integration
 try:
-    import httpx
+    # A2A Protocol: Use blockchain messaging instead of httpx
     HTTPX_AVAILABLE = True
 except ImportError:
     HTTPX_AVAILABLE = False

@@ -4,7 +4,7 @@
  * service discovery, registry management, and metadata operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent12Adapter {
@@ -18,7 +18,7 @@ class Agent12Adapter {
     async getCatalogEntries(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries`, {
                 params,
                 timeout: this.timeout
             });
@@ -32,7 +32,7 @@ class Agent12Adapter {
     async createCatalogEntry(data) {
         try {
             const restData = this._convertODataCatalogEntryToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries`, restData, {
                 timeout: this.timeout
             });
             
@@ -45,7 +45,7 @@ class Agent12Adapter {
     async updateCatalogEntry(id, data) {
         try {
             const restData = this._convertODataCatalogEntryToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -57,7 +57,7 @@ class Agent12Adapter {
 
     async deleteCatalogEntry(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -69,7 +69,7 @@ class Agent12Adapter {
     // ===== CATALOG ENTRY ACTIONS =====
     async publishEntry(entryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/publish`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/publish`, {}, {
                 timeout: this.timeout
             });
             
@@ -85,7 +85,7 @@ class Agent12Adapter {
 
     async deprecateEntry(entryId, data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/deprecate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/deprecate`, {
                 reason: data.reason
             }, {
                 timeout: this.timeout
@@ -103,7 +103,7 @@ class Agent12Adapter {
 
     async updateEntryMetadata(entryId, data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/metadata`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/metadata`, {
                 metadata: data.metadata
             }, {
                 timeout: this.timeout
@@ -119,7 +119,7 @@ class Agent12Adapter {
 
     async archiveEntry(entryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/archive`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/archive`, {}, {
                 timeout: this.timeout
             });
             
@@ -133,7 +133,7 @@ class Agent12Adapter {
 
     async generateDocumentation(entryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/generate-docs`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/generate-docs`, {}, {
                 timeout: this.timeout * 2 // Longer timeout for documentation generation
             });
             
@@ -148,7 +148,7 @@ class Agent12Adapter {
 
     async validateEntry(entryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/validate`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/validate`, {}, {
                 timeout: this.timeout
             });
             
@@ -164,7 +164,7 @@ class Agent12Adapter {
 
     async duplicateEntry(entryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/duplicate`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/duplicate`, {}, {
                 timeout: this.timeout
             });
             
@@ -176,7 +176,7 @@ class Agent12Adapter {
 
     async exportEntry(entryId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/export`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-entries/${entryId}/export`, {
                 format: options.format
             }, {
                 timeout: this.timeout
@@ -196,7 +196,7 @@ class Agent12Adapter {
     async getCatalogDependencies(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/catalog-dependencies`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-dependencies`, {
                 params,
                 timeout: this.timeout
             });
@@ -210,7 +210,7 @@ class Agent12Adapter {
     async createCatalogDependency(data) {
         try {
             const restData = this._convertODataDependencyToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-dependencies`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-dependencies`, restData, {
                 timeout: this.timeout
             });
             
@@ -222,7 +222,7 @@ class Agent12Adapter {
 
     async deleteCatalogDependency(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/catalog-dependencies/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-dependencies/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -235,7 +235,7 @@ class Agent12Adapter {
     async getCatalogReviews(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews`, {
                 params,
                 timeout: this.timeout
             });
@@ -249,7 +249,7 @@ class Agent12Adapter {
     async createCatalogReview(data) {
         try {
             const restData = this._convertODataReviewToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews`, restData, {
                 timeout: this.timeout
             });
             
@@ -261,7 +261,7 @@ class Agent12Adapter {
 
     async approveReview(reviewId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews/${reviewId}/approve`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews/${reviewId}/approve`, {}, {
                 timeout: this.timeout
             });
             
@@ -275,7 +275,7 @@ class Agent12Adapter {
 
     async rejectReview(reviewId, data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews/${reviewId}/reject`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews/${reviewId}/reject`, {
                 reason: data.reason
             }, {
                 timeout: this.timeout
@@ -291,7 +291,7 @@ class Agent12Adapter {
 
     async flagReview(reviewId, data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews/${reviewId}/flag`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-reviews/${reviewId}/flag`, {
                 reason: data.reason
             }, {
                 timeout: this.timeout
@@ -309,7 +309,7 @@ class Agent12Adapter {
     async getCatalogMetadata(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata`, {
                 params,
                 timeout: this.timeout
             });
@@ -323,7 +323,7 @@ class Agent12Adapter {
     async createCatalogMetadata(data) {
         try {
             const restData = this._convertODataMetadataToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata`, restData, {
                 timeout: this.timeout
             });
             
@@ -336,7 +336,7 @@ class Agent12Adapter {
     async updateCatalogMetadata(id, data) {
         try {
             const restData = this._convertODataMetadataToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -348,7 +348,7 @@ class Agent12Adapter {
 
     async deleteCatalogMetadata(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-metadata/${id}`, {
                 timeout: this.timeout
             });
             return true;
@@ -361,7 +361,7 @@ class Agent12Adapter {
     async getCatalogSearches(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/catalog-searches`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-searches`, {
                 params,
                 timeout: this.timeout
             });
@@ -375,7 +375,7 @@ class Agent12Adapter {
     async createCatalogSearch(data) {
         try {
             const restData = this._convertODataSearchToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/catalog-searches`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/catalog-searches`, restData, {
                 timeout: this.timeout
             });
             
@@ -389,7 +389,7 @@ class Agent12Adapter {
     async getRegistries(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/registries`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries`, {
                 params,
                 timeout: this.timeout
             });
@@ -402,7 +402,7 @@ class Agent12Adapter {
 
     async getRegistry(id) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/registries/${id}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${id}`, {
                 timeout: this.timeout
             });
             
@@ -415,7 +415,7 @@ class Agent12Adapter {
     async createRegistry(data) {
         try {
             const restData = this._convertODataRegistryToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registries`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries`, restData, {
                 timeout: this.timeout
             });
             
@@ -428,7 +428,7 @@ class Agent12Adapter {
     async updateRegistry(id, data) {
         try {
             const restData = this._convertODataRegistryToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/registries/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -440,7 +440,7 @@ class Agent12Adapter {
 
     async syncRegistry(registryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/sync`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/sync`, {}, {
                 timeout: this.timeout * 3 // Longer timeout for sync operations
             });
             
@@ -459,7 +459,7 @@ class Agent12Adapter {
 
     async testRegistryConnection(registryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/test`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/test`, {}, {
                 timeout: this.timeout
             });
             
@@ -475,7 +475,7 @@ class Agent12Adapter {
 
     async resetRegistry(registryId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/reset`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/reset`, {}, {
                 timeout: this.timeout
             });
             
@@ -490,7 +490,7 @@ class Agent12Adapter {
 
     async exportRegistry(registryId, options) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/export`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/export`, {
                 format: options.format
             }, {
                 timeout: this.timeout
@@ -508,7 +508,7 @@ class Agent12Adapter {
 
     async importRegistry(registryId, data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/import`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registries/${registryId}/import`, {
                 data: data.data
             }, {
                 timeout: this.timeout * 2
@@ -526,7 +526,7 @@ class Agent12Adapter {
     // ===== MAIN CATALOG OPERATIONS =====
     async searchCatalog(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/search`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/search`, {
                 query: data.query,
                 category: data.category,
                 tags: data.tags,
@@ -551,7 +551,7 @@ class Agent12Adapter {
 
     async discoverServices(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/discover-services`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/discover-services`, {
                 registry_type: data.registryType,
                 filters: data.filters,
                 auto_register: data.autoRegister
@@ -571,7 +571,7 @@ class Agent12Adapter {
 
     async registerService(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/register-service`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/register-service`, {
                 service_name: data.serviceName,
                 service_url: data.serviceUrl,
                 service_type: data.serviceType,
@@ -592,7 +592,7 @@ class Agent12Adapter {
 
     async updateServiceHealth(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/update-service-health`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/update-service-health`, {
                 service_id: data.serviceId,
                 health_status: data.healthStatus,
                 health_details: data.healthDetails
@@ -612,7 +612,7 @@ class Agent12Adapter {
 
     async analyzeDependencies(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/analyze-dependencies`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/analyze-dependencies`, {
                 entry_id: data.entryId,
                 depth: data.depth,
                 include_indirect: data.includeIndirect
@@ -632,7 +632,7 @@ class Agent12Adapter {
 
     async validateMetadata(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/validate-metadata`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-metadata`, {
                 entry_id: data.entryId,
                 schema_validation: data.schemaValidation,
                 quality_checks: data.qualityChecks
@@ -653,7 +653,7 @@ class Agent12Adapter {
 
     async generateCatalogReport(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/generate-report`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/generate-report`, {
                 format: data.format,
                 include_stats: data.includeStats,
                 include_reviews: data.includeReviews,
@@ -674,7 +674,7 @@ class Agent12Adapter {
 
     async bulkImport(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/bulk-import`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/bulk-import`, {
                 import_format: data.importFormat,
                 data: data.data,
                 validate_before_import: data.validateBeforeImport,
@@ -696,7 +696,7 @@ class Agent12Adapter {
 
     async bulkExport(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/bulk-export`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/bulk-export`, {
                 export_format: data.exportFormat,
                 categories: data.categories,
                 filters: data.filters,
@@ -717,7 +717,7 @@ class Agent12Adapter {
 
     async syncExternalCatalog(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/sync-external-catalog`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sync-external-catalog`, {
                 catalog_url: data.catalogUrl,
                 catalog_type: data.catalogType,
                 sync_mode: data.syncMode,
@@ -738,7 +738,7 @@ class Agent12Adapter {
 
     async optimizeSearchIndex() {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/optimize-search-index`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/optimize-search-index`, {}, {
                 timeout: this.timeout * 2
             });
             
@@ -753,7 +753,7 @@ class Agent12Adapter {
 
     async generateRecommendations(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/recommendations`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/recommendations`, {
                 user_id: data.userId,
                 context: data.context,
                 limit: data.limit
@@ -771,7 +771,7 @@ class Agent12Adapter {
 
     async rebuildCatalog() {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/rebuild-catalog`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/rebuild-catalog`, {}, {
                 timeout: this.timeout * 5
             });
             
@@ -786,7 +786,7 @@ class Agent12Adapter {
 
     async createCategory(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/categories`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/categories`, {
                 category_name: data.categoryName,
                 description: data.description,
                 parent_category: data.parentCategory,
@@ -806,7 +806,7 @@ class Agent12Adapter {
 
     async manageVersioning(data) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/versioning`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/versioning`, {
                 entry_id: data.entryId,
                 operation: data.operation,
                 version: data.version,

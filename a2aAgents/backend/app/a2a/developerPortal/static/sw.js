@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 "use strict";
 /* global URL, self, caches, Request, Response, indexedDB */
 
@@ -160,7 +164,7 @@ function handleStaticResource(request) {
 async function handleNavigationRequest(request) {
   try {
     // Try network first
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     
     if (response.ok) {
       // Cache successful navigation responses
@@ -206,7 +210,7 @@ function handleGenericRequest(request) {
  */
 async function handleMutationRequest(request) {
   try {
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     return response;
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -246,7 +250,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
     }
     
     // Fallback to network
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     
     if (response.ok) {
       // Cache the response
@@ -273,7 +277,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
 async function handleNetworkFirstStrategy(request, cacheName) {
   try {
     // Try network first
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     
     if (response.ok) {
       // Update cache with fresh data
@@ -391,7 +395,7 @@ async function processBackgroundSync() {
           body: requestData.body
         });
         
-        const response = await fetch(request);
+        const response = await blockchainClient.sendMessage(request);
         
         if (response.ok) {
           // Remove successful request from queue

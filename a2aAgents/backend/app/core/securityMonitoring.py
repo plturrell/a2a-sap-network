@@ -170,7 +170,10 @@ class AlertingSystem:
         self.secrets_manager = get_secrets_manager()
         self.alert_channels = []
         self.alert_history = deque(maxlen=1000)
-        self.rate_limits = defaultdict(lambda: deque(maxlen=10))
+        def _create_rate_limit_deque():
+            return deque(maxlen=10)
+        
+        self.rate_limits = defaultdict(_create_rate_limit_deque)
         
         # Initialize alert channels
         self._initialize_channels()
@@ -311,7 +314,7 @@ class AlertingSystem:
     async def _send_slack_alert(self, alert_content: Dict[str, Any]):
         """Send Slack alert"""
         try:
-            import httpx
+            # A2A Protocol: Use blockchain messaging instead of httpx
             
             webhook_url = self.secrets_manager.get_secret("SLACK_WEBHOOK_URL")
             

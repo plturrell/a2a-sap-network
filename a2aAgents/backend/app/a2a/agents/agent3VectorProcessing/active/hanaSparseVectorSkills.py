@@ -1,9 +1,3 @@
-"""
-Sparse Vector Support for SAP HANA Vector Engine
-Implements efficient storage and operations for high-dimensional sparse vectors
-Following SAP naming conventions and best practices
-"""
-
 from typing import Dict, List, Any, Optional, Tuple, Set
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix
@@ -13,13 +7,30 @@ import json
 import struct
 import base64
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Sparse Vector Support for SAP HANA Vector Engine
+Implements efficient storage and operations for high-dimensional sparse vectors
+Following SAP naming conventions and best practices
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class HanaSparseVectorSkills:
-    """Enhanced sparse vector processing capabilities for SAP HANA"""
+class HanaSparseVectorSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced sparse vector processing capabilities for SAP HANA"""
     
     def __init__(self, hanaConnection=None):
+        
+        super().__init__()
         self.hanaConnection = hanaConnection
         self.sparseFormats = {
             'coo': 'coordinate',

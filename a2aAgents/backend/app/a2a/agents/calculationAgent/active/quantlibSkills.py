@@ -1,11 +1,12 @@
-"""
-QuantLib Skills for Advanced Financial Calculations
-"""
-
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, date
 from decimal import Decimal
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+QuantLib Skills for Advanced Financial Calculations
+"""
 
 # Import QuantLib with fallback
 try:
@@ -18,10 +19,20 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class QuantLibSkills:
-    """Advanced financial calculations using QuantLib"""
+class QuantLibSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Advanced financial calculations using QuantLib"""
     
     def __init__(self):
+        
+        super().__init__()
         self.calendar = ql.UnitedStates() if QUANTLIB_AVAILABLE else None
         self.day_count = ql.Actual365Fixed() if QUANTLIB_AVAILABLE else None
         

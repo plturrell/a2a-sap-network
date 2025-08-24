@@ -8,7 +8,7 @@ import asyncio
 import logging
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
-import httpx  # External service client - allowed to make HTTP calls
+# A2A Protocol: Use blockchain messaging instead of httpx  # External service client - allowed to make HTTP calls
 from dotenv import load_dotenv
 
 load_dotenv()

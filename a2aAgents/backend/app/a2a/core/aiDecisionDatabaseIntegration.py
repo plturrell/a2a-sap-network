@@ -491,7 +491,7 @@ class AIDatabaseDecisionIntegrationMixin:
 async def initialize_ai_decision_database_schema(data_manager_url: str) -> bool:
     """Initialize AI decision database schema via Data Manager Agent"""
     try:
-        import httpx
+        # A2A Protocol: Use blockchain messaging instead of httpx
 
         # Read schema file
         schema_path = "/Users/apple/projects/finsight_cib/backend/app/a2a/core/ai_decision_database_schema.sql"

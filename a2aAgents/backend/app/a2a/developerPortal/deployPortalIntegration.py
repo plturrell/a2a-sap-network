@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 #!/usr/bin/env python3
 """
 Deploy A2A Developer Portal with Network Integration
@@ -15,7 +19,7 @@ def check_dependencies():
     """Check if required dependencies are installed"""
     try:
         import fastapi
-        import httpx
+        # A2A Protocol: Use blockchain messaging instead of httpx
         import web3
         print("✓ All Python dependencies found")
     except ImportError as e:

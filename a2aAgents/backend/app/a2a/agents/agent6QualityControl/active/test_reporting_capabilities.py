@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Test script for Quality Control Manager Agent Reporting and Auditing Capabilities
-Demonstrates comprehensive reporting, compliance assessment, and responsible AI auditing
-"""
-
 import asyncio
 import json
 import logging
@@ -12,6 +6,13 @@ from typing import Dict, Any, List
 
 from qualityControlManagerAgent import QualityControlManagerAgent
 
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Test script for Quality Control Manager Agent Reporting and Auditing Capabilities
+Demonstrates comprehensive reporting, compliance assessment, and responsible AI auditing
+"""
 
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]

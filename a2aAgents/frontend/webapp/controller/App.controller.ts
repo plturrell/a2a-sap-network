@@ -139,7 +139,7 @@ export default class App extends Controller {
 
     private _validateUserData(userData: any): void {
         const requiredFields = ["name", "email", "role"];
-        const missingFields = requiredFields.filter(field => !userData[field]);
+        const missingFields = requiredFields.filter(this._isFieldMissing.bind(this, userData));
         
         if (missingFields.length > 0) {
             Log.warn(`User data missing required fields: ${missingFields.join(", ")}`, "com.sap.a2a.portal.controller.App");
@@ -192,9 +192,7 @@ export default class App extends Controller {
         MessageToast.show("Your session has expired. Redirecting to login...");
         
         // Redirect after a short delay to allow user to see the message
-        setTimeout(() => {
-            window.location.href = "/login";
-        }, 2000);
+        setTimeout(this._redirectToLogin, 2000);
     }
 
     private _handleNetworkError(error: Error): void {
@@ -262,15 +260,7 @@ export default class App extends Controller {
 
         // Check that each part is base64 encoded
         try {
-            parts.forEach(part => {
-                if (!part || part.length === 0) {
-                    throw new Error("Empty token part");
-                }
-                // Basic base64 character validation
-                if (!/^[A-Za-z0-9+/=-]*$/.test(part)) {
-                    throw new Error("Invalid base64 characters");
-                }
-            });
+            parts.forEach(this._validateTokenPart);
             return true;
         } catch {
             return false;
@@ -472,7 +462,7 @@ export default class App extends Controller {
                 const oSearchField = oEvent.getSource();
                 
                 // Set suggestions
-                oSearchField.suggest(sValue, suggestions.map((s: any) => s.text));
+                oSearchField.suggest(sValue, suggestions.map(this._extractSuggestionText));
             }
         } catch (error) {
             Log.error("Search suggest failed", error.message, "com.sap.a2a.portal.controller.App");
@@ -501,7 +491,7 @@ export default class App extends Controller {
             
             // Show confirmation message
             const selectedWorkspace = oWorkspaceModel.getProperty("/available")
-                .find((workspace: any) => workspace.id === sSelectedKey);
+                .find(this._findWorkspaceById.bind(this, sSelectedKey));
             
             if (selectedWorkspace) {
                 MessageToast.show(`Switched to ${selectedWorkspace.name}`);
@@ -746,14 +736,14 @@ export default class App extends Controller {
             // Set selection and trigger navigation
             oSideNavigation.setSelectedKey(sectionKey);
             oSideNavigation.fireItemSelect({
-                item: oSideNavigation.getItems().find(item => item.getKey() === sectionKey)
+                item: oSideNavigation.getItems().find(this._findItemByKey.bind(this, sectionKey))
             });
         }
     }
 
     private _openNotifications(): void {
         // Trigger notification press
-        const notificationEvent = { getSource: () => document.querySelector(".sapFShellBarNotifications") };
+        const notificationEvent = { getSource: this._getNotificationSource };
         this.onNotificationPress.call(this);
         MessageToast.show("Notifications opened (Alt+N)");
     }
@@ -776,5 +766,39 @@ export default class App extends Controller {
             duration: 5000,
             width: "auto"
         });
+    }
+
+    private _isFieldMissing(userData: any, field: string): boolean {
+        return !userData[field];
+    }
+
+    private _redirectToLogin(): void {
+        window.location.href = "/login";
+    }
+
+    private _validateTokenPart(part: string): void {
+        if (!part || part.length === 0) {
+            throw new Error("Empty token part");
+        }
+        // Basic base64 character validation
+        if (!/^[A-Za-z0-9+/=-]*$/.test(part)) {
+            throw new Error("Invalid base64 characters");
+        }
+    }
+
+    private _extractSuggestionText(suggestion: any): string {
+        return suggestion.text;
+    }
+
+    private _findWorkspaceById(targetId: string, workspace: any): boolean {
+        return workspace.id === targetId;
+    }
+
+    private _findItemByKey(targetKey: string, item: any): boolean {
+        return item.getKey() === targetKey;
+    }
+
+    private _getNotificationSource(): Element | null {
+        return document.querySelector(".sapFShellBarNotifications");
     }
 }

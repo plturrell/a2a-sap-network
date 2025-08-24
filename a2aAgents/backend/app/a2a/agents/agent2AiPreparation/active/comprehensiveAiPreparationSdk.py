@@ -251,11 +251,11 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         
         # Quality rules
         self.quality_rules = {
-            'completeness': lambda df: (1 - df.isnull().sum().sum() / (df.shape[0] * df.shape[1])) * 100,
-            'uniqueness': lambda df: (df.nunique().sum() / (df.shape[0] * df.shape[1])) * 100,
-            'validity': lambda df: self._check_validity(df),
-            'consistency': lambda df: self._check_consistency(df),
-            'accuracy': lambda df: self._check_accuracy(df)
+            'completeness': self._calculate_completeness,
+            'uniqueness': self._calculate_uniqueness,
+            'validity': self._check_validity,
+            'consistency': self._check_consistency,
+            'accuracy': self._check_accuracy
         }
         
         # Training data storage
@@ -284,12 +284,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         }
         
         # Method performance tracking
-        self.method_performance = defaultdict(lambda: {
-            'total': 0,
-            'success': 0,
-            'total_time': 0.0,
-            'quality_improvement': 0.0
-        })
+        self.method_performance = defaultdict(self._create_performance_dict)
         
         # Preparation cache
         self.preparation_cache = {}
@@ -649,6 +644,264 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Data enrichment error: {e}")
             return create_error_response(f"Enrichment error: {str(e)}")
+    
+    @mcp_tool("domain_specific_embedding", "Generate domain-specific embeddings for specialized AI models")
+    @a2a_skill("domain_specific_embedding", "Create embeddings optimized for specific domains")
+    async def domain_specific_embedding(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate domain-specific embeddings for AI preparation"""
+        try:
+            data_source = request_data.get('data_source')
+            domain = request_data.get('domain', 'general')
+            embedding_strategy = request_data.get('embedding_strategy', 'dense')
+            model_type = request_data.get('model_type', 'sentence-transformer')
+            
+            # Load data
+            data = await self._load_data(data_source, 'auto')
+            
+            # Select appropriate embedding model for domain
+            embedding_model = await self._get_domain_embedding_model(domain, model_type)
+            
+            # Generate embeddings based on strategy
+            embeddings = []
+            if embedding_strategy == 'dense':
+                embeddings = await self._generate_dense_embeddings(data, embedding_model, domain)
+            elif embedding_strategy == 'sparse':
+                embeddings = await self._generate_sparse_embeddings(data, domain)
+            elif embedding_strategy == 'hybrid':
+                dense_emb = await self._generate_dense_embeddings(data, embedding_model, domain)
+                sparse_emb = await self._generate_sparse_embeddings(data, domain)
+                embeddings = await self._combine_embeddings(dense_emb, sparse_emb)
+            
+            # Store embeddings with metadata
+            embedding_metadata = {
+                'domain': domain,
+                'strategy': embedding_strategy,
+                'model_type': model_type,
+                'dimensions': len(embeddings[0]) if embeddings else 0,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+            
+            return create_success_response({
+                'embeddings_generated': len(embeddings),
+                'embedding_metadata': embedding_metadata,
+                'domain_specific_features': await self._extract_domain_features(data, domain),
+                'quality_metrics': await self._evaluate_embedding_quality(embeddings, domain)
+            })
+            
+        except Exception as e:
+            logger.error(f"Domain-specific embedding error: {e}")
+            return create_error_response(f"Embedding error: {str(e)}")
+    
+    @mcp_tool("semantic_chunking", "Intelligently chunk data based on semantic meaning")
+    @a2a_skill("semantic_chunking", "Perform semantic-aware data chunking for optimal AI processing")
+    async def semantic_chunking(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Chunk data based on semantic boundaries for AI processing"""
+        try:
+            data_source = request_data.get('data_source')
+            chunk_strategy = request_data.get('chunk_strategy', 'semantic_boundary')
+            target_chunk_size = request_data.get('target_chunk_size', 512)
+            overlap_ratio = request_data.get('overlap_ratio', 0.1)
+            preserve_context = request_data.get('preserve_context', True)
+            
+            # Load data
+            data = await self._load_data(data_source, 'auto')
+            
+            # Apply chunking strategy
+            chunks = []
+            if chunk_strategy == 'semantic_boundary':
+                chunks = await self._semantic_boundary_chunking(data, target_chunk_size, preserve_context)
+            elif chunk_strategy == 'sliding_window':
+                chunks = await self._sliding_window_chunking(data, target_chunk_size, overlap_ratio)
+            elif chunk_strategy == 'hierarchical':
+                chunks = await self._hierarchical_chunking(data, target_chunk_size)
+            elif chunk_strategy == 'topic_based':
+                chunks = await self._topic_based_chunking(data, target_chunk_size)
+            
+            # Validate and optimize chunks
+            optimized_chunks = await self._optimize_chunks(chunks, target_chunk_size)
+            
+            # Generate chunk metadata
+            chunk_metadata = []
+            for i, chunk in enumerate(optimized_chunks):
+                metadata = {
+                    'chunk_id': f"chunk_{i}",
+                    'size': len(str(chunk)),
+                    'semantic_coherence': await self._calculate_semantic_coherence(chunk),
+                    'context_preserved': preserve_context,
+                    'boundaries': await self._identify_chunk_boundaries(chunk)
+                }
+                chunk_metadata.append(metadata)
+            
+            return create_success_response({
+                'chunks_created': len(optimized_chunks),
+                'average_chunk_size': sum(len(str(c)) for c in optimized_chunks) / len(optimized_chunks) if optimized_chunks else 0,
+                'chunk_strategy': chunk_strategy,
+                'chunk_metadata': chunk_metadata,
+                'quality_metrics': await self._evaluate_chunking_quality(optimized_chunks)
+            })
+            
+        except Exception as e:
+            logger.error(f"Semantic chunking error: {e}")
+            return create_error_response(f"Chunking error: {str(e)}")
+    
+    @mcp_tool("contextual_augmentation", "Augment data with contextual information for AI models")
+    @a2a_skill("contextual_augmentation", "Add contextual information to enhance AI understanding")
+    async def contextual_augmentation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Augment data with contextual information for better AI processing"""
+        try:
+            data_source = request_data.get('data_source')
+            augmentation_types = request_data.get('augmentation_types', ['temporal', 'relational', 'semantic'])
+            context_window = request_data.get('context_window', 5)
+            
+            # Load data
+            data = await self._load_data(data_source, 'auto')
+            
+            augmented_data = data.copy()
+            
+            # Apply different augmentation types
+            if 'temporal' in augmentation_types:
+                augmented_data = await self._add_temporal_context(augmented_data, context_window)
+            
+            if 'relational' in augmentation_types:
+                augmented_data = await self._add_relational_context(augmented_data)
+            
+            if 'semantic' in augmentation_types:
+                augmented_data = await self._add_semantic_context(augmented_data)
+            
+            if 'hierarchical' in augmentation_types:
+                augmented_data = await self._add_hierarchical_context(augmented_data)
+            
+            # Calculate augmentation impact
+            augmentation_metrics = {
+                'original_features': len(data.columns) if hasattr(data, 'columns') else 1,
+                'augmented_features': len(augmented_data.columns) if hasattr(augmented_data, 'columns') else 1,
+                'context_enrichment_ratio': await self._calculate_enrichment_ratio(data, augmented_data),
+                'information_gain': await self._calculate_information_gain(data, augmented_data)
+            }
+            
+            return create_success_response({
+                'records_augmented': len(augmented_data),
+                'augmentation_types_applied': augmentation_types,
+                'augmentation_metrics': augmentation_metrics,
+                'quality_improvement': await self._assess_augmentation_quality(data, augmented_data)
+            })
+            
+        except Exception as e:
+            logger.error(f"Contextual augmentation error: {e}")
+            return create_error_response(f"Augmentation error: {str(e)}")
+    
+    @mcp_tool("feature_engineering_ai", "AI-driven feature engineering for model preparation")
+    @a2a_skill("feature_engineering_ai", "Automatically engineer features using AI techniques")
+    async def feature_engineering_ai(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform AI-driven feature engineering"""
+        try:
+            data_source = request_data.get('data_source')
+            target_column = request_data.get('target_column')
+            feature_types = request_data.get('feature_types', ['polynomial', 'interaction', 'temporal', 'aggregation'])
+            max_features = request_data.get('max_features', 50)
+            
+            # Load data
+            data = await self._load_data(data_source, 'auto')
+            
+            engineered_features = pd.DataFrame()
+            feature_importance = {}
+            
+            # Generate different types of features
+            if 'polynomial' in feature_types:
+                poly_features = await self._generate_polynomial_features(data, max_features)
+                engineered_features = pd.concat([engineered_features, poly_features], axis=1)
+            
+            if 'interaction' in feature_types:
+                interaction_features = await self._generate_interaction_features(data, max_features)
+                engineered_features = pd.concat([engineered_features, interaction_features], axis=1)
+            
+            if 'temporal' in feature_types and self._has_temporal_data(data):
+                temporal_features = await self._generate_temporal_features(data, max_features)
+                engineered_features = pd.concat([engineered_features, temporal_features], axis=1)
+            
+            if 'aggregation' in feature_types:
+                agg_features = await self._generate_aggregation_features(data, max_features)
+                engineered_features = pd.concat([engineered_features, agg_features], axis=1)
+            
+            # Feature selection using ML
+            if target_column and target_column in data.columns:
+                selected_features, importance_scores = await self._select_best_features(
+                    engineered_features, data[target_column], max_features
+                )
+                feature_importance = dict(zip(selected_features.columns, importance_scores))
+            
+            return create_success_response({
+                'features_engineered': len(engineered_features.columns),
+                'feature_types_applied': feature_types,
+                'feature_importance': feature_importance,
+                'dimensionality_reduction': {
+                    'original_features': len(data.columns),
+                    'engineered_features': len(engineered_features.columns),
+                    'selected_features': len(selected_features.columns) if 'selected_features' in locals() else len(engineered_features.columns)
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Feature engineering error: {e}")
+            return create_error_response(f"Feature engineering error: {str(e)}")
+    
+    @mcp_tool("data_synthesis_ai", "Synthesize new data samples using AI techniques")
+    @a2a_skill("data_synthesis_ai", "Generate synthetic data for AI model training")
+    async def data_synthesis_ai(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate synthetic data using AI techniques"""
+        try:
+            data_source = request_data.get('data_source')
+            synthesis_method = request_data.get('synthesis_method', 'gan')
+            num_samples = request_data.get('num_samples', 1000)
+            preserve_privacy = request_data.get('preserve_privacy', True)
+            quality_threshold = request_data.get('quality_threshold', 0.8)
+            
+            # Load original data
+            original_data = await self._load_data(data_source, 'auto')
+            
+            # Generate synthetic data based on method
+            synthetic_data = None
+            synthesis_metadata = {}
+            
+            if synthesis_method == 'gan':
+                synthetic_data, metadata = await self._generate_gan_samples(
+                    original_data, num_samples, preserve_privacy
+                )
+                synthesis_metadata.update(metadata)
+            elif synthesis_method == 'vae':
+                synthetic_data, metadata = await self._generate_vae_samples(
+                    original_data, num_samples
+                )
+                synthesis_metadata.update(metadata)
+            elif synthesis_method == 'statistical':
+                synthetic_data = await self._generate_statistical_samples(
+                    original_data, num_samples
+                )
+            elif synthesis_method == 'smote':
+                synthetic_data = await self._generate_smote_samples(
+                    original_data, num_samples
+                )
+            
+            # Validate synthetic data quality
+            quality_metrics = await self._validate_synthetic_data(
+                original_data, synthetic_data, quality_threshold
+            )
+            
+            # Apply privacy preserving techniques if requested
+            if preserve_privacy:
+                synthetic_data = await self._apply_differential_privacy(synthetic_data)
+            
+            return create_success_response({
+                'samples_generated': len(synthetic_data),
+                'synthesis_method': synthesis_method,
+                'quality_metrics': quality_metrics,
+                'privacy_preserved': preserve_privacy,
+                'synthesis_metadata': synthesis_metadata
+            })
+            
+        except Exception as e:
+            logger.error(f"Data synthesis error: {e}")
+            return create_error_response(f"Synthesis error: {str(e)}")
     
     # Helper methods for ML operations
     async def _generate_data_profile(self, data: pd.DataFrame, source_name: str) -> DataProfile:
@@ -1567,6 +1820,23 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             return chunks
         
         return optimized_chunks
+    
+    def _calculate_completeness(self, df: pd.DataFrame) -> float:
+        """Calculate data completeness percentage"""
+        return (1 - df.isnull().sum().sum() / (df.shape[0] * df.shape[1])) * 100
+    
+    def _calculate_uniqueness(self, df: pd.DataFrame) -> float:
+        """Calculate data uniqueness percentage"""
+        return (df.nunique().sum() / (df.shape[0] * df.shape[1])) * 100
+    
+    def _create_performance_dict(self) -> Dict[str, Any]:
+        """Create default performance metrics dictionary"""
+        return {
+            'total': 0,
+            'success': 0,
+            'total_time': 0.0,
+            'quality_improvement': 0.0
+        }
     
     async def shutdown(self) -> None:
         """Graceful shutdown"""

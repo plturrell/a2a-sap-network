@@ -341,14 +341,14 @@ class BTPServiceConfig:
         status = {}
         
         service_checks = {
-            'HANA Database': lambda: self.get_hana_config(),
-            'XSUAA Authentication': lambda: self.get_xsuaa_config(),
-            'Destination Service': lambda: self.get_destination_config(),
-            'Redis Cache': lambda: self.get_redis_config(),
-            'Service Manager': lambda: self.get_service_manager_config(),
-            'Application Logging': lambda: self.get_logging_config(),
-            'Alert Notification': lambda: self.get_alert_notification_config(),
-            'Connectivity Service': lambda: self.get_connectivity_config()
+            'HANA Database': self.get_hana_config,
+            'XSUAA Authentication': self.get_xsuaa_config,
+            'Destination Service': self.get_destination_config,
+            'Redis Cache': self.get_redis_config,
+            'Service Manager': self.get_service_manager_config,
+            'Application Logging': self.get_logging_config,
+            'Alert Notification': self.get_alert_notification_config,
+            'Connectivity Service': self.get_connectivity_config
         }
         
         for service_name, check_func in service_checks.items():

@@ -72,7 +72,7 @@ sap.ui.define([
             const sUrl = `${sProtocol  }//${  sHost  }/ws/metrics`;
 
             try {
-                this.websocket = new WebSocket(sUrl);
+                this.websocket = new BlockchainEventClient(sUrl);
                 
                 this.websocket.onopen = function () {
                     // eslint-disable-next-line no-console

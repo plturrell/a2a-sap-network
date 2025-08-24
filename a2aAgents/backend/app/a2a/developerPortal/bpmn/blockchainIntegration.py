@@ -30,7 +30,7 @@ from web3.contract import Contract
 from eth_account import Account
 from eth_account.messages import encode_defunct
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
 missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]

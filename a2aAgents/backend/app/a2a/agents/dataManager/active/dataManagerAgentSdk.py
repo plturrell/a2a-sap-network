@@ -1,7 +1,3 @@
-"""
-Data Manager A2A Agent - SDK Version
-The actual link to filesystem and databases - Enhanced with A2A SDK
-"""
 import datetime
 
 
@@ -22,6 +18,11 @@ import pandas as pd
 import shutil
 import time
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Data Manager A2A Agent - SDK Version
+The actual link to filesystem and databases - Enhanced with A2A SDK
+"""
 # Import HANA and SQLite clients
 try:
     from hdbcli import dbapi

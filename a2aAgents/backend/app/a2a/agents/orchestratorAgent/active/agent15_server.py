@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Agent 15 (Orchestrator) REST API Server
-Provides HTTP endpoints for multi-agent workflow orchestration
-"""
-
 import os
 import sys
 import json
@@ -12,6 +6,13 @@ import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from uuid import uuid4
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Agent 15 (Orchestrator) REST API Server
+Provides HTTP endpoints for multi-agent workflow orchestration
+"""
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../..')))

@@ -8,44 +8,52 @@ const crypto = require('crypto');
  */
 const generators = {
   // Generate unique test ID
-  uniqueId: () => crypto.randomBytes(16).toString('hex'),
+  uniqueId: function() { 
+    return crypto.randomBytes(16).toString('hex'); 
+  },
   
   // Generate mock agent data
-  mockAgent: (overrides = {}) => ({
-    id: generators.uniqueId(),
-    name: 'Test Agent',
-    type: 'reasoning',
-    status: 'active',
-    capabilities: ['search', 'analysis'],
-    metadata: {
-      version: '1.0.0',
-      author: 'test-system',
-      created: new Date().toISOString()
-    },
-    ...overrides
-  }),
+  mockAgent: function(overrides = {}) { 
+    return {
+      id: generators.uniqueId(),
+      name: 'Test Agent',
+      type: 'reasoning',
+      status: 'active',
+      capabilities: ['search', 'analysis'],
+      metadata: {
+        version: '1.0.0',
+        author: 'test-system',
+        created: new Date().toISOString()
+      },
+      ...overrides
+    };
+  },
   
   // Generate mock user data  
-  mockUser: (overrides = {}) => ({
-    id: generators.uniqueId(),
-    username: 'testuser',
-    email: 'test@example.com',
-    role: 'user',
-    permissions: ['read'],
-    ...overrides
-  }),
+  mockUser: function(overrides = {}) {
+    return {
+      id: generators.uniqueId(),
+      username: 'testuser',
+      email: 'test@example.com',
+      role: 'user',
+      permissions: ['read'],
+      ...overrides
+    };
+  },
   
   // Generate mock blockchain transaction
-  mockTransaction: (overrides = {}) => ({
-    hash: '0x' + generators.uniqueId(),
-    from: '0x' + generators.uniqueId(),
-    to: '0x' + generators.uniqueId(),
-    value: '1000000000000000000',
-    gasUsed: 21000,
-    status: 'success',
-    timestamp: new Date().toISOString(),
-    ...overrides
-  })
+  mockTransaction: function(overrides = {}) {
+    return {
+      hash: '0x' + generators.uniqueId(),
+      from: '0x' + generators.uniqueId(),
+      to: '0x' + generators.uniqueId(),
+      value: '1000000000000000000',
+      gasUsed: 21000,
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      ...overrides
+    };
+  }
 };
 
 /**
@@ -53,19 +61,19 @@ const generators = {
  */
 const database = {
   // Reset test database to clean state
-  reset: async () => {
+  reset: async function() {
     // Implementation depends on your database setup
     console.log('Resetting test database...');
   },
   
   // Seed test data
-  seed: async (data = {}) => {
+  seed: async function(data = {}) {
     console.log('Seeding test database with:', data);
     // Implementation depends on your database setup
   },
   
   // Clean up test data
-  cleanup: async () => {
+  cleanup: async function() {
     console.log('Cleaning up test database...');
     // Implementation depends on your database setup
   }
@@ -76,24 +84,30 @@ const database = {
  */
 const api = {
   // Mock successful response
-  mockSuccess: (data = {}, status = 200) => ({
-    status,
-    data,
-    headers: { 'content-type': 'application/json' }
-  }),
+  mockSuccess: function(data = {}, status = 200) {
+    return {
+      status,
+      data,
+      headers: { 'content-type': 'application/json' }
+    };
+  },
   
   // Mock error response
-  mockError: (message = 'Test error', status = 500) => ({
-    status,
-    data: { error: message },
-    headers: { 'content-type': 'application/json' }
-  }),
+  mockError: function(message = 'Test error', status = 500) {
+    return {
+      status,
+      data: { error: message },
+      headers: { 'content-type': 'application/json' }
+    };
+  },
   
   // Create authenticated headers
-  authHeaders: (token = 'test-token') => ({
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  })
+  authHeaders: function(token = 'test-token') {
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  }
 };
 
 /**
@@ -101,10 +115,14 @@ const api = {
  */
 const async = {
   // Wait for specified time
-  wait: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+  wait: function(ms) { 
+    return new Promise(function(resolve) { 
+      setTimeout(resolve, ms); 
+    }); 
+  },
   
   // Wait for condition to be true
-  waitFor: async (condition, timeout = 5000, interval = 100) => {
+  waitFor: async function(condition, timeout = 5000, interval = 100) {
     const start = Date.now();
     while (Date.now() - start < timeout) {
       if (await condition()) {
@@ -116,7 +134,7 @@ const async = {
   },
   
   // Retry function with exponential backoff
-  retry: async (fn, maxAttempts = 3, delay = 1000) => {
+  retry: async function(fn, maxAttempts = 3, delay = 1000) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await fn();
@@ -133,21 +151,25 @@ const async = {
  */
 const environment = {
   // Check if running in CI
-  isCI: () => process.env.CI === 'true',
+  isCI: function() { 
+    return process.env.CI === 'true'; 
+  },
   
   // Get test environment
-  getEnv: () => process.env.NODE_ENV || 'test',
+  getEnv: function() { 
+    return process.env.NODE_ENV || 'test'; 
+  },
   
   // Set test environment variables
-  setTestVars: (vars = {}) => {
-    Object.entries(vars).forEach(([key, value]) => {
+  setTestVars: function(vars = {}) {
+    Object.entries(vars).forEach(function([key, value]) {
       process.env[key] = value;
     });
   },
   
   // Restore environment variables
-  restoreVars: (originalEnv = {}) => {
-    Object.entries(originalEnv).forEach(([key, value]) => {
+  restoreVars: function(originalEnv = {}) {
+    Object.entries(originalEnv).forEach(function([key, value]) {
       if (value === undefined) {
         delete process.env[key];
       } else {

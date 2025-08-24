@@ -766,7 +766,7 @@ class SecurityMonitor {
         // Send to SAP Alert Notification Service
         if (process.env.ALERT_WEBHOOK_URL) {
             try {
-                await fetch(process.env.ALERT_WEBHOOK_URL, {
+                await blockchainClient.sendMessage(process.env.ALERT_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(alert)

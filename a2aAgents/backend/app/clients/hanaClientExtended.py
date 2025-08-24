@@ -23,14 +23,42 @@ import weakref
 
 try:
     from hdbcli import dbapi
-
-
-# A2A Protocol Compliance: All imports must be available
-# No fallback implementations allowed - the agent must have all required dependencies
+    # A2A Protocol Compliance: All imports must be available
+    # No fallback implementations allowed - the agent must have all required dependencies
     HANA_AVAILABLE = True
 except ImportError:
     HANA_AVAILABLE = False
     dbapi = None
+
+
+def _get_hana_host() -> str:
+    """Get HANA host from environment"""
+    return os.getenv("HANA_HOST", "localhost")
+
+
+def _get_hana_port() -> int:
+    """Get HANA port from environment"""
+    return int(os.getenv("HANA_PORT", "30015"))
+
+
+def _get_hana_user() -> str:
+    """Get HANA user from environment"""
+    return os.getenv("HANA_USER", "")
+
+
+def _get_hana_password() -> str:
+    """Get HANA password from environment"""
+    return os.getenv("HANA_PASSWORD", "")
+
+
+def _get_hana_database() -> str:
+    """Get HANA database from environment"""
+    return os.getenv("HANA_DATABASE", "")
+
+
+def _get_hana_schema() -> str:
+    """Get HANA schema from environment"""
+    return os.getenv("HANA_SCHEMA", "A2A_VECTORS")
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +68,12 @@ class EnterpriseHanaConfig:
     """Enhanced configuration for enterprise HANA deployment"""
     
     # Connection settings
-    host: str = field(default_factory=lambda: os.getenv("HANA_HOST", "localhost"))
-    port: int = field(default_factory=lambda: int(os.getenv("HANA_PORT", "30015")))
-    username: str = field(default_factory=lambda: os.getenv("HANA_USER", ""))
-    password: str = field(default_factory=lambda: os.getenv("HANA_PASSWORD", ""))
-    database: str = field(default_factory=lambda: os.getenv("HANA_DATABASE", ""))
-    schema: str = field(default_factory=lambda: os.getenv("HANA_SCHEMA", "A2A_VECTORS"))
+    host: str = field(default_factory=_get_hana_host)
+    port: int = field(default_factory=_get_hana_port)
+    username: str = field(default_factory=_get_hana_user)
+    password: str = field(default_factory=_get_hana_password)
+    database: str = field(default_factory=_get_hana_database)
+    schema: str = field(default_factory=_get_hana_schema)
     
     # Enterprise connection pool settings
     pool_size: int = 20

@@ -250,7 +250,10 @@ class PatternDiscoveryEngine:
         discovered_patterns = []
         
         # Analyze co-occurrence of terms
-        term_cooccurrence = defaultdict(lambda: defaultdict(int))
+        def _create_default_int_dict():
+            return defaultdict(int)
+        
+        term_cooccurrence = defaultdict(_create_default_int_dict)
         
         for entity in entity_corpus:
             entity_text = json.dumps(entity, default=str).lower()

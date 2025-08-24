@@ -18,7 +18,7 @@ Starts all services with minimal configuration
 import subprocess
 import time
 # Direct HTTP calls not allowed - use A2A protocol
-# import requests  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of requests  # REMOVED: A2A protocol violation
 import sys
 import os
 

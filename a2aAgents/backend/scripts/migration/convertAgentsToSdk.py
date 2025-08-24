@@ -461,7 +461,7 @@ class DataProductRegistrationAgentSDK(A2AAgentBase):
     async def _register_ord_descriptor(self, ord_descriptor: Dict[str, Any]) -> Dict[str, Any]:
         """Register ORD descriptor with registry"""
         try:
-            import httpx
+            # A2A Protocol: Use blockchain messaging instead of httpx
             
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with None as _unused:

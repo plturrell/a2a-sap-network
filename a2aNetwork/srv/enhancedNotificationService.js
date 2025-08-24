@@ -33,7 +33,7 @@ class EnhancedNotificationService extends EventEmitter {
             await this.persistenceService.init();
             
             // Initialize WebSocket server
-            await this.initializeWebSocketServer();
+            await this.initializeBlockchainEventServer();
             
             // Connect to event bus
             await this.connectToEventBus();
@@ -48,7 +48,7 @@ class EnhancedNotificationService extends EventEmitter {
         }
     }
 
-    async initializeWebSocketServer() {
+    async initializeBlockchainEventServer() {
         try {
             const killConflicts = process.env.NODE_ENV === 'development';
             this.port = await portManager.allocatePortSafely('enhanced-notifications', 4006, killConflicts);
@@ -58,24 +58,9 @@ class EnhancedNotificationService extends EventEmitter {
                 return;
             }
 
-            this.wsServer = new WebSocket.Server({ 
-                port: this.port,
-                path: '/notifications/v2',
-                clientTracking: false, // We'll manage clients ourselves
-                perMessageDeflate: {
-                    zlibDeflateOptions: {
-                        chunkSize: 1024,
-                        memLevel: 7,
-                        level: 3
-                    },
-                    zlibInflateOptions: {
-                        chunkSize: 10 * 1024
-                    },
-                    threshold: 1024
-                }
-            });
+            this.wsServer = new BlockchainEventServer($1);
 
-            this.wsServer.on('connection', this.handleConnection.bind(this));
+            this.wsServer.on('blockchain-connection', this.handleConnection.bind(this));
             this.wsServer.on('error', this.handleServerError.bind(this));
 
             this.logger.info(`🔔 Enhanced WebSocket server started on port ${this.port}`);
@@ -111,7 +96,7 @@ class EnhancedNotificationService extends EventEmitter {
         });
 
         // Set up event handlers
-        ws.on('message', (message) => this.handleMessage(clientInfo, message));
+        blockchainClient.on('event', (message) => this.handleMessage(clientInfo, message));
         ws.on('close', (code, reason) => this.handleDisconnect(clientInfo, code, reason));
         ws.on('error', (error) => this.handleClientError(clientInfo, error));
         ws.on('pong', () => this.handlePong(clientInfo));
@@ -416,7 +401,7 @@ class EnhancedNotificationService extends EventEmitter {
     sendToClient(clientInfo, data) {
         if (clientInfo.ws.readyState === WebSocket.OPEN) {
             try {
-                clientInfo.ws.send(JSON.stringify(data));
+                clientInfo.blockchainClient.publishEvent(JSON.stringify(data));
             } catch (error) {
                 this.logger.error(`Failed to send to client ${clientInfo.id}:`, error);
                 this.queueMessage(clientInfo, data);
@@ -518,9 +503,9 @@ class EnhancedNotificationService extends EventEmitter {
 
     async connectToEventBus() {
         try {
-            const eventBusUrl = process.env.EVENT_BUS_URL || 'ws://localhost:8080/events';
+            const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
             
-            this.eventBusClient = new WebSocket(eventBusUrl, {
+            this.eventBusClient = new BlockchainEventClient(eventBusUrl, {
                 perMessageDeflate: false
             });
 

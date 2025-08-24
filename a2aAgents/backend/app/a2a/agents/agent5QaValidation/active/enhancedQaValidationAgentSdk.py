@@ -371,6 +371,363 @@ class EnhancedQAValidationAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             logger.error(f"Autonomous validation optimization failed: {e}")
             raise
     
+    @a2a_skill("chain_of_thought_validation")
+    async def chain_of_thought_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform chain-of-thought reasoning validation for complex QA scenarios"""
+        try:
+            question = request_data.get("question", "")
+            answer = request_data.get("answer", "")
+            reasoning_steps = request_data.get("reasoning_steps", [])
+            domain = request_data.get("domain", "general")
+            
+            # Validate each step in the reasoning chain
+            step_validations = []
+            overall_coherence = 0.0
+            
+            for i, step in enumerate(reasoning_steps):
+                step_validation = await self._validate_reasoning_step(
+                    step, question, answer, domain, i
+                )
+                step_validations.append(step_validation)
+                overall_coherence += step_validation.get('coherence_score', 0.0)
+            
+            if reasoning_steps:
+                overall_coherence /= len(reasoning_steps)
+            
+            # Check logical flow between steps
+            logical_flow_score = await self._assess_logical_flow(reasoning_steps)
+            
+            # Validate final conclusion
+            conclusion_validation = await self._validate_conclusion(
+                reasoning_steps, answer, question
+            )
+            
+            # Calculate chain-of-thought quality
+            cot_quality = (
+                overall_coherence * 0.4 +
+                logical_flow_score * 0.3 +
+                conclusion_validation['validity'] * 0.3
+            )
+            
+            return create_success_response({
+                'chain_of_thought_valid': cot_quality >= 0.7,
+                'overall_coherence': overall_coherence,
+                'logical_flow_score': logical_flow_score,
+                'conclusion_validation': conclusion_validation,
+                'step_validations': step_validations,
+                'cot_quality_score': cot_quality,
+                'reasoning_completeness': len(reasoning_steps) / max(len(question.split()), 1)
+            })
+            
+        except Exception as e:
+            logger.error(f"Chain-of-thought validation error: {e}")
+            return create_error_response(f"CoT validation failed: {str(e)}")
+    
+    @a2a_skill("multi_perspective_validation")
+    async def multi_perspective_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate QA from multiple perspectives and viewpoints"""
+        try:
+            question = request_data.get("question", "")
+            answer = request_data.get("answer", "")
+            perspectives = request_data.get("perspectives", ["factual", "contextual", "logical"])
+            reference_answers = request_data.get("reference_answers", [])
+            
+            perspective_validations = {}
+            consensus_scores = []
+            
+            # Validate from each perspective
+            for perspective in perspectives:
+                if perspective == "factual":
+                    validation = await self._validate_factual_accuracy(question, answer)
+                elif perspective == "contextual":
+                    validation = await self._validate_contextual_relevance(question, answer)
+                elif perspective == "logical":
+                    validation = await self._validate_logical_consistency(question, answer)
+                elif perspective == "semantic":
+                    validation = await self._validate_semantic_correctness(question, answer)
+                elif perspective == "pragmatic":
+                    validation = await self._validate_pragmatic_appropriateness(question, answer)
+                else:
+                    validation = {'score': 0.5, 'valid': True, 'details': 'Unknown perspective'}
+                
+                perspective_validations[perspective] = validation
+                consensus_scores.append(validation.get('score', 0.5))
+            
+            # Cross-reference with multiple reference answers if available
+            reference_validation = {}
+            if reference_answers:
+                reference_validation = await self._cross_validate_with_references(
+                    answer, reference_answers
+                )
+            
+            # Calculate multi-perspective consensus
+            consensus_score = np.mean(consensus_scores) if consensus_scores else 0.5
+            agreement_threshold = 0.8
+            high_agreement = np.std(consensus_scores) < 0.2 if consensus_scores else False
+            
+            # Identify conflicting perspectives
+            conflicts = await self._identify_perspective_conflicts(perspective_validations)
+            
+            return create_success_response({
+                'multi_perspective_valid': consensus_score >= 0.7 and high_agreement,
+                'consensus_score': consensus_score,
+                'high_agreement': high_agreement,
+                'perspective_validations': perspective_validations,
+                'reference_validation': reference_validation,
+                'conflicts_identified': conflicts,
+                'perspectives_analyzed': len(perspectives)
+            })
+            
+        except Exception as e:
+            logger.error(f"Multi-perspective validation error: {e}")
+            return create_error_response(f"Multi-perspective validation failed: {str(e)}")
+    
+    @a2a_skill("adaptive_threshold_validation")
+    async def adaptive_threshold_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Dynamically adapt validation thresholds based on context and domain"""
+        try:
+            question = request_data.get("question", "")
+            answer = request_data.get("answer", "")
+            domain = request_data.get("domain", "general")
+            difficulty_level = request_data.get("difficulty_level", "medium")
+            historical_performance = request_data.get("historical_performance", {})
+            
+            # Analyze question characteristics
+            question_analysis = await self._analyze_question_characteristics(
+                question, domain, difficulty_level
+            )
+            
+            # Calculate base thresholds for domain
+            base_thresholds = await self._get_domain_thresholds(domain)
+            
+            # Adapt thresholds based on question complexity
+            complexity_factor = question_analysis['complexity_score']
+            adapted_thresholds = {}
+            
+            for metric, base_threshold in base_thresholds.items():
+                if complexity_factor > 0.8:
+                    # Lower thresholds for highly complex questions
+                    adapted_thresholds[metric] = base_threshold * 0.85
+                elif complexity_factor < 0.3:
+                    # Higher thresholds for simple questions
+                    adapted_thresholds[metric] = base_threshold * 1.15
+                else:
+                    adapted_thresholds[metric] = base_threshold
+            
+            # Apply historical performance adjustments
+            if historical_performance:
+                performance_factor = historical_performance.get('accuracy', 0.8)
+                for metric in adapted_thresholds:
+                    adapted_thresholds[metric] *= (0.8 + performance_factor * 0.2)
+            
+            # Validate answer using adapted thresholds
+            validation_result = await self._validate_with_thresholds(
+                question, answer, adapted_thresholds
+            )
+            
+            # Calculate confidence in threshold adaptation
+            adaptation_confidence = await self._calculate_adaptation_confidence(
+                question_analysis, historical_performance, adapted_thresholds, base_thresholds
+            )
+            
+            return create_success_response({
+                'validation_passed': validation_result['passed'],
+                'adapted_thresholds': adapted_thresholds,
+                'base_thresholds': base_thresholds,
+                'question_analysis': question_analysis,
+                'adaptation_confidence': adaptation_confidence,
+                'validation_details': validation_result
+            })
+            
+        except Exception as e:
+            logger.error(f"Adaptive threshold validation error: {e}")
+            return create_error_response(f"Adaptive threshold validation failed: {str(e)}")
+    
+    @a2a_skill("contextual_coherence_validation")
+    async def contextual_coherence_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate contextual coherence and consistency within conversation threads"""
+        try:
+            conversation_history = request_data.get("conversation_history", [])
+            current_qa = request_data.get("current_qa", {})
+            context_window = request_data.get("context_window", 5)
+            
+            question = current_qa.get("question", "")
+            answer = current_qa.get("answer", "")
+            
+            if not conversation_history:
+                return create_success_response({
+                    'coherence_valid': True,
+                    'coherence_score': 1.0,
+                    'context_analyzed': 0,
+                    'note': 'No conversation history to validate against'
+                })
+            
+            # Extract relevant context
+            relevant_context = conversation_history[-context_window:] if context_window > 0 else conversation_history
+            
+            # Check for contradictions with previous answers
+            contradiction_analysis = await self._check_contradictions(
+                current_qa, relevant_context
+            )
+            
+            # Validate topic consistency
+            topic_consistency = await self._validate_topic_consistency(
+                current_qa, relevant_context
+            )
+            
+            # Check for appropriate context usage
+            context_usage = await self._validate_context_usage(
+                question, answer, relevant_context
+            )
+            
+            # Analyze information flow coherence
+            information_flow = await self._analyze_information_flow(
+                relevant_context + [current_qa]
+            )
+            
+            # Calculate overall coherence score
+            coherence_score = (
+                (1 - contradiction_analysis['contradiction_score']) * 0.3 +
+                topic_consistency['consistency_score'] * 0.25 +
+                context_usage['appropriateness_score'] * 0.25 +
+                information_flow['flow_score'] * 0.2
+            )
+            
+            return create_success_response({
+                'coherence_valid': coherence_score >= 0.75,
+                'coherence_score': coherence_score,
+                'contradiction_analysis': contradiction_analysis,
+                'topic_consistency': topic_consistency,
+                'context_usage': context_usage,
+                'information_flow': information_flow,
+                'context_window_used': len(relevant_context)
+            })
+            
+        except Exception as e:
+            logger.error(f"Contextual coherence validation error: {e}")
+            return create_error_response(f"Contextual coherence validation failed: {str(e)}")
+    
+    @a2a_skill("bias_detection_validation")
+    async def bias_detection_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Detect and validate potential biases in QA responses"""
+        try:
+            question = request_data.get("question", "")
+            answer = request_data.get("answer", "")
+            bias_categories = request_data.get("bias_categories", [
+                "gender", "racial", "cultural", "political", "age", "confirmation"
+            ])
+            
+            bias_analysis = {}
+            overall_bias_score = 0.0
+            detected_biases = []
+            
+            # Analyze for different types of bias
+            for bias_type in bias_categories:
+                bias_result = await self._detect_bias_type(question, answer, bias_type)
+                bias_analysis[bias_type] = bias_result
+                
+                if bias_result['bias_detected']:
+                    detected_biases.append({
+                        'type': bias_type,
+                        'severity': bias_result['severity'],
+                        'evidence': bias_result.get('evidence', [])
+                    })
+                
+                overall_bias_score += bias_result['bias_score']
+            
+            # Calculate average bias score
+            if bias_categories:
+                overall_bias_score /= len(bias_categories)
+            
+            # Check for balanced representation
+            balance_analysis = await self._analyze_balanced_representation(question, answer)
+            
+            # Validate neutrality where appropriate
+            neutrality_validation = await self._validate_neutrality(question, answer)
+            
+            # Generate bias mitigation suggestions
+            mitigation_suggestions = await self._generate_bias_mitigation_suggestions(
+                detected_biases, balance_analysis
+            )
+            
+            bias_acceptable = overall_bias_score <= 0.3 and len(detected_biases) == 0
+            
+            return create_success_response({
+                'bias_validation_passed': bias_acceptable,
+                'overall_bias_score': overall_bias_score,
+                'detected_biases': detected_biases,
+                'bias_analysis': bias_analysis,
+                'balance_analysis': balance_analysis,
+                'neutrality_validation': neutrality_validation,
+                'mitigation_suggestions': mitigation_suggestions
+            })
+            
+        except Exception as e:
+            logger.error(f"Bias detection validation error: {e}")
+            return create_error_response(f"Bias detection validation failed: {str(e)}")
+    
+    @a2a_skill("completeness_depth_validation")
+    async def completeness_depth_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate completeness and depth of QA responses"""
+        try:
+            question = request_data.get("question", "")
+            answer = request_data.get("answer", "")
+            expected_depth_level = request_data.get("expected_depth_level", "medium")
+            required_components = request_data.get("required_components", [])
+            
+            # Analyze answer completeness
+            completeness_analysis = await self._analyze_answer_completeness(
+                question, answer, required_components
+            )
+            
+            # Assess depth of response
+            depth_analysis = await self._analyze_answer_depth(
+                question, answer, expected_depth_level
+            )
+            
+            # Check for comprehensive coverage
+            coverage_analysis = await self._analyze_topic_coverage(question, answer)
+            
+            # Validate supporting evidence/examples
+            evidence_validation = await self._validate_supporting_evidence(answer)
+            
+            # Check for appropriate detail level
+            detail_level_analysis = await self._analyze_detail_appropriateness(
+                question, answer, expected_depth_level
+            )
+            
+            # Calculate overall completeness score
+            completeness_score = (
+                completeness_analysis['completeness_score'] * 0.25 +
+                depth_analysis['depth_score'] * 0.25 +
+                coverage_analysis['coverage_score'] * 0.2 +
+                evidence_validation['evidence_score'] * 0.15 +
+                detail_level_analysis['appropriateness_score'] * 0.15
+            )
+            
+            # Identify missing components
+            missing_components = await self._identify_missing_components(
+                question, answer, required_components, expected_depth_level
+            )
+            
+            return create_success_response({
+                'completeness_valid': completeness_score >= 0.75,
+                'completeness_score': completeness_score,
+                'completeness_analysis': completeness_analysis,
+                'depth_analysis': depth_analysis,
+                'coverage_analysis': coverage_analysis,
+                'evidence_validation': evidence_validation,
+                'detail_level_analysis': detail_level_analysis,
+                'missing_components': missing_components,
+                'improvement_suggestions': await self._generate_completeness_suggestions(
+                    missing_components, completeness_score
+                )
+            })
+            
+        except Exception as e:
+            logger.error(f"Completeness depth validation error: {e}")
+            return create_error_response(f"Completeness depth validation failed: {str(e)}")
+    
     async def _apply_traditional_validation(self, validation_data: Dict[str, Any]) -> Dict[str, Any]:
         """Apply traditional QA validation techniques"""
         try:

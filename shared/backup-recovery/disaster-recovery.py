@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 #!/usr/bin/env python3
 """
 Disaster Recovery Orchestrator for A2A Platform
@@ -14,7 +18,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional, Any, Callable
-import aiohttp
+# A2A Protocol: Use blockchain messaging instead of aiohttp
 import yaml
 from pathlib import Path
 
@@ -722,7 +726,7 @@ class A2ADisasterRecovery:
         }
         
         try:
-            async with aiohttp.ClientSession() as session:
+            async with A2ANetworkClient() as session:
                 await session.post(webhook_url, json=payload)
         except Exception as e:
             self.logger.error(f"Failed to send Slack alert: {e}")

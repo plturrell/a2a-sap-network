@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 const Joi = require('joi');
@@ -189,8 +193,8 @@ class TestOrchestrator {
         }
         
         // Call service on the discovered agent
-        const axios = require('axios');
-        const response = await axios.post(`${discoveredAgents[0].endpoint}/api/service/${service}`, {
+        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const response = await blockchainClient.sendMessage(`${discoveredAgents[0].endpoint}/api/service/${service}`, {
           data: input
         });
         actualOutput = response.data;

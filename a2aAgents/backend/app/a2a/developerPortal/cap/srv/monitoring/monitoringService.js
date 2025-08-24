@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 "use strict";
 
 /**
@@ -413,7 +417,7 @@ class MonitoringService {
         async function refreshMetrics() {
             try {
                 // Fetch dashboard metrics
-                const metricsResponse = await fetch('/monitoring/dashboard');
+                const metricsResponse = await blockchainClient.sendMessage('/monitoring/dashboard');
                 const metrics = await metricsResponse.json();
 
                 // Update metric cards
@@ -436,7 +440,7 @@ class MonitoringService {
                 chart.update();
 
                 // Fetch health status
-                const healthResponse = await fetch('/monitoring/health');
+                const healthResponse = await blockchainClient.sendMessage('/monitoring/health');
                 const health = await healthResponse.json();
                 updateHealthStatus(health);
 

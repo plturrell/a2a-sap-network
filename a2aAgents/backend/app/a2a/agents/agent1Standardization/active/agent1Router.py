@@ -6,6 +6,7 @@ from datetime import datetime
 
 from .dataStandardizationAgentSdk import DataStandardizationAgentSDK, A2AMessage
 
+from app.a2a.core.security_base import SecureA2AAgent
 router = APIRouter(prefix="/a2a/agent1/v1", tags=["Agent 1 - Financial Standardization"])
 
 # Initialize Agent 1

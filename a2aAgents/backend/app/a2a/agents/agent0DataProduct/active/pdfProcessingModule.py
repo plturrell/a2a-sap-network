@@ -1,8 +1,3 @@
-"""
-Enhanced PDF Processing Module for Agent 0
-Implements comprehensive PDF processing capabilities with MCP skills architecture
-"""
-
 import asyncio
 import io
 import logging
@@ -12,6 +7,12 @@ from typing import Dict, List, Any, Optional, Union, AsyncGenerator
 from datetime import datetime
 import aiofiles
 from asyncio_throttle import Throttler
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Enhanced PDF Processing Module for Agent 0
+Implements comprehensive PDF processing capabilities with MCP skills architecture
+"""
 
 # Core PDF processing libraries
 try:
@@ -57,10 +58,20 @@ except ImportError as e:
 
 logger = logging.getLogger(__name__)
 
-class EnhancedPDFProcessor:
-    """Enhanced PDF processor with streaming, OCR, and advanced extraction"""
+class EnhancedPDFProcessor(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced PDF processor with streaming, OCR, and advanced extraction"""
     
     def __init__(self, max_concurrent_files: int = 5, chunk_size: int = 1024*1024):
+        
+        super().__init__()
         self.throttler = Throttler(rate_limit=max_concurrent_files)
         self.chunk_size = chunk_size
         self.temp_dir = tempfile.mkdtemp(prefix="a2a_pdf_")

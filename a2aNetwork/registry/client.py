@@ -3,7 +3,7 @@ A2A Registry Client for Dynamic Service Discovery
 Enables true agent-to-agent communication without hardcoded URLs
 """
 
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime

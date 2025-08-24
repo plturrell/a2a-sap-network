@@ -1,6 +1,10 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 const cds = require('@sap/cds');
 const BaseService = require('../utils/BaseService');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 /**
  * Real SEAL Implementation using Grok API
@@ -314,7 +318,7 @@ Format response as structured JSON with clear adaptation steps.
                 delete grokRequestData.stop;
                 delete grokRequestData.reasoning_effort;
                 
-                const response = await axios.post(
+                const response = await blockchainClient.sendMessage(
                     `${this.grokBaseUrl}/chat/completions`,
                     grokRequestData,
                     {

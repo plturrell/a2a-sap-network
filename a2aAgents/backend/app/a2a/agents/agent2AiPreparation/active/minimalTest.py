@@ -1,11 +1,12 @@
+import os
+import sys
+import logging
+
+from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Minimal test for Enhanced AI Preparation Agent with MCP Integration
 """
-
-import os
-import sys
-import logging
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

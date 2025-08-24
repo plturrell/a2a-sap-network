@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 "use strict";
 
 const cds = require('@sap/cds');
@@ -432,7 +436,7 @@ class PortalService extends cds.ApplicationService {
     async _executeRealDeployment(deploymentId, agentId, agent, environment, configuration, user) {
         try {
             // Import deployment pipeline client
-            const axios = require('axios');
+            const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
             const portalUrl = process.env.PORTAL_URL || 'http://localhost:3001';
             
             // Create deployment configuration
@@ -454,7 +458,7 @@ class PortalService extends cds.ApplicationService {
             };
             
             // Call deployment pipeline API
-            const response = await axios.post(
+            const response = await blockchainClient.sendMessage(
                 `${portalUrl}/api/projects/${agent.project_ID}/deploy`,
                 deploymentConfig,
                 {
@@ -496,13 +500,13 @@ class PortalService extends cds.ApplicationService {
     }
     
     _monitorDeploymentStatus(deploymentId, executionId, agentId, environment, portalUrl) {
-        const axios = require('axios');
+        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
         const maxAttempts = 60; // 5 minutes with 5 second intervals
         let attempts = 0;
         
         const checkStatus = async () => {
             try {
-                const response = await axios.get(
+                const response = await blockchainClient.sendMessage(
                     `${portalUrl}/api/deployments/${executionId}`,
                     { timeout: 5000 }
                 );
@@ -581,12 +585,12 @@ class PortalService extends cds.ApplicationService {
             // Check if we have a BPMN workflow definition
             if (workflow.bpmnDefinition) {
                 // Use BPMN workflow designer API
-                const axios = require('axios');
+                const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
                 const portalUrl = process.env.PORTAL_URL || 'http://localhost:3001';
                 
                 try {
                     // Execute BPMN workflow
-                    const response = await axios.post(
+                    const response = await blockchainClient.sendMessage(
                         `${portalUrl}/api/workflows/${workflow.ID}/execute`,
                         {
                             variables: input,
@@ -633,13 +637,13 @@ class PortalService extends cds.ApplicationService {
     }
     
     _monitorWorkflowExecution(executionId, remoteExecutionId, portalUrl) {
-        const axios = require('axios');
+        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
         const maxAttempts = 120; // 10 minutes with 5 second intervals
         let attempts = 0;
         
         const checkStatus = async () => {
             try {
-                const response = await axios.get(
+                const response = await blockchainClient.sendMessage(
                     `${portalUrl}/api/workflow-executions/${remoteExecutionId}`,
                     { timeout: 5000 }
                 );
@@ -776,7 +780,7 @@ class PortalService extends cds.ApplicationService {
     
     async _executeServiceTask(step, input) {
         // Execute service task by calling configured endpoint
-        const axios = require('axios');
+        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
         const config = JSON.parse(step.configuration || '{}');
         
         if (config.endpoint) {

@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 const WebSocket = require('ws');
 
 const { LoggerFactory } = require('../../shared/logging/structured-logger');
@@ -16,27 +21,24 @@ class ChatAgentBridge extends EventEmitter {
         this.notificationChatMappings = new Map();
         this.chatAgentConnections = new Map();
         
-        this.setupWebSocketServer();
+        this.setupBlockchainEventServer();
         this.setupA2AIntegration();
     }
 
     /**
      * Setup WebSocket server for real-time chat
      */
-    setupWebSocketServer() {
-        this.wss = new WebSocket.Server({ 
-            port: 8087,
-            path: '/chat-bridge'
-        });
+    setupBlockchainEventServer() {
+        this.wss = new BlockchainEventServer($1);
 
-        this.wss.on('connection', (ws, request) => {
+        this.wss.on('blockchain-connection', (ws, request) => {
             const sessionId = this.generateSessionId();
             
             ws.sessionId = sessionId;
             ws.isAlive = true;
             
             // Handle incoming messages
-            ws.on('message', (data) => {
+            blockchainClient.on('event', (data) => {
                 this.handleClientMessage(ws, data);
             });
 
@@ -73,7 +75,7 @@ class ChatAgentBridge extends EventEmitter {
         this.a2aRouter = {
             sendMessage: async (message) => {
                 try {
-                    const response = await fetch('http://localhost:8001/route', {
+                    const response = await blockchainClient.sendMessage('http://localhost:8001/route', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(message)
@@ -326,7 +328,7 @@ class ChatAgentBridge extends EventEmitter {
      */
     sendToClient(ws, data) {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(data));
+            blockchainClient.publishEvent(JSON.stringify(data));
         }
     }
 

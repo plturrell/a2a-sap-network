@@ -26,7 +26,7 @@ from uuid import uuid4
 import logging
 from enum import Enum
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import hashlib
 from dataclasses import dataclass, asdict
 from collections import defaultdict

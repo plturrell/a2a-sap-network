@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 sap.ui.define([], function() {
     "use strict";
 
@@ -187,7 +192,7 @@ sap.ui.define([], function() {
                     // Send authentication token if available
                     var token = this._getAuthToken();
                     if (token) {
-                        ws.send(JSON.stringify({
+                        blockchainClient.publishEvent(JSON.stringify({
                             type: 'auth',
                             token: token
                         }));

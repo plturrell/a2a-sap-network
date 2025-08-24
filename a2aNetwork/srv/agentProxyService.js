@@ -1,5 +1,9 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 /**
  * Agent Proxy Service Implementation
@@ -77,7 +81,7 @@ module.exports = cds.service.impl(async function() {
                 throw new Error(`Unknown agent: ${agentId}`);
             }
             
-            const response = await axios.get(`${agentUrl}/health`, {
+            const response = await blockchainClient.sendMessage(`${agentUrl}/health`, {
                 timeout: 5000
             });
             
@@ -140,7 +144,7 @@ module.exports = cds.service.impl(async function() {
         }
         
         // Generate WebSocket URL
-        const wsUrl = agentUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+        const wsUrl = agentUrl.replace('http://', 'blockchain://').replace('https://', 'blockchains://');
         
         // Generate temporary token for WebSocket authentication
         const token = Buffer.from(`${agentId}:${Date.now()}`).toString('base64');

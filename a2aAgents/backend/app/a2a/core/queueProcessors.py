@@ -21,7 +21,7 @@ import logging
 from typing import Dict, Any, Optional, Callable, List
 from datetime import datetime
 # Direct HTTP calls not allowed - use A2A protocol
-# import aiohttp  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of aiohttp  # REMOVED: A2A protocol violation
 from .queueManager import QueueProcessor, QueueMessage, QueuePriority
 
 logger = logging.getLogger(__name__)

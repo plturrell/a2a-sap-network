@@ -119,7 +119,7 @@ sap.ui.define([
                 formattedDate: this._formatDate(entry.modifiedAt),
                 statusBadge: this._getStatusBadge(entry.status),
                 categoryIcon: this._getCategoryIcon(entry.category),
-                tagsArray: entry.tags ? entry.tags.split(',').map(tag => tag.trim()) : []
+                tagsArray: entry.tags ? entry.tags.split(',').map(function(tag) { return tag.trim(); }) : []
             };
         },
 
@@ -137,14 +137,14 @@ sap.ui.define([
             const tags = new Set();
             const entryTypes = new Set();
             
-            entries.forEach(entry => {
+            entries.forEach(function(entry) {
                 if (entry.category) categories.add(entry.category);
                 if (entry.provider) providers.add(entry.provider);
                 if (entry.status) statuses.add(entry.status);
                 if (entry.entryType) entryTypes.add(entry.entryType);
                 
                 if (entry.tags) {
-                    entry.tags.split(',').forEach(tag => {
+                    entry.tags.split(',').forEach(function(tag) {
                         const cleanTag = tag.trim();
                         if (cleanTag) tags.add(cleanTag);
                     });
@@ -187,7 +187,7 @@ sap.ui.define([
             // Tags match
             if (entry.tags) {
                 const tags = entry.tags.toLowerCase().split(',');
-                tags.forEach(tag => {
+                tags.forEach(function(tag) {
                     if (tag.trim().includes(lowerQuery)) {
                         score += 20;
                     }
@@ -300,7 +300,7 @@ sap.ui.define([
                 "required": []
             };
             
-            properties.forEach(prop => {
+            properties.forEach(function(prop) {
                 if (!prop.metadataKey) return;
                 
                 const propertySchema = {

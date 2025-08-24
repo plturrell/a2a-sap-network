@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 from web3 import Web3
 from eth_account import Account
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 # Import A2A Network SDK
 import sys
 from a2a.client import A2AClient

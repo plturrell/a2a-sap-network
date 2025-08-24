@@ -470,7 +470,7 @@ sap.ui.define([
             const wsUrl = this._getWebSocketUrl("/api/notifications/ws");
             
             try {
-                this._notificationWebSocket = new WebSocket(wsUrl);
+                this._notificationWebSocket = new BlockchainEventClient(wsUrl);
                 
                 this._notificationWebSocket.onopen = function() {
                     // eslint-disable-next-line no-console

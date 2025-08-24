@@ -760,7 +760,7 @@ class UnifiedMonitoring extends EventEmitter {
         
         try {
             const prometheusMetric = this.formatPrometheusMetric(metric);
-            await fetch(`${this.config.prometheusEndpoint}/metrics/job/a2a-platform`, {
+            await blockchainClient.sendMessage(`${this.config.prometheusEndpoint}/metrics/job/a2a-platform`, {
                 method: 'POST',
                 body: prometheusMetric,
                 headers: { 'Content-Type': 'text/plain' }
@@ -792,7 +792,7 @@ class UnifiedMonitoring extends EventEmitter {
         if (!this.config.alertmanagerEndpoint) return;
         
         try {
-            await fetch(`${this.config.alertmanagerEndpoint}/api/v1/alerts`, {
+            await blockchainClient.sendMessage(`${this.config.alertmanagerEndpoint}/api/v1/alerts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify([{

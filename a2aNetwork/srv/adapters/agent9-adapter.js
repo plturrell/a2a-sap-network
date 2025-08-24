@@ -4,7 +4,7 @@
  * inference generation, decision making, problem solving, and logical analysis operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent9Adapter {
@@ -18,7 +18,7 @@ class Agent9Adapter {
     async getReasoningTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks`, {
                 params,
                 timeout: this.timeout
             });
@@ -32,7 +32,7 @@ class Agent9Adapter {
     async createReasoningTask(data) {
         try {
             const restData = this._convertODataReasoningTaskToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks`, restData, {
                 timeout: this.timeout
             });
             
@@ -45,7 +45,7 @@ class Agent9Adapter {
     async updateReasoningTask(id, data) {
         try {
             const restData = this._convertODataReasoningTaskToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -57,7 +57,7 @@ class Agent9Adapter {
 
     async deleteReasoningTask(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${id}`, {
                 timeout: this.timeout
             });
         } catch (error) {
@@ -68,7 +68,7 @@ class Agent9Adapter {
     // ===== REASONING OPERATIONS =====
     async startReasoning(taskId, configuration) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/start`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/start`, {
                 configuration
             }, {
                 timeout: this.timeout
@@ -90,7 +90,7 @@ class Agent9Adapter {
 
     async pauseReasoning(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/pause`, {}, {
                 timeout: this.timeout
             });
             
@@ -106,7 +106,7 @@ class Agent9Adapter {
 
     async resumeReasoning(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/resume`, {}, {
                 timeout: this.timeout
             });
             
@@ -122,7 +122,7 @@ class Agent9Adapter {
 
     async cancelReasoning(taskId, reason) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/cancel`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/cancel`, {
                 reason
             }, {
                 timeout: this.timeout
@@ -140,7 +140,7 @@ class Agent9Adapter {
 
     async validateConclusion(taskId, validationMethod) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/validate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/validate`, {
                 validation_method: validationMethod?.toLowerCase()
             }, {
                 timeout: this.timeout
@@ -160,7 +160,7 @@ class Agent9Adapter {
 
     async explainReasoning(taskId, detailLevel) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/explain`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/explain`, {
                 detail_level: parseInt(detailLevel) || 3
             }, {
                 timeout: this.timeout
@@ -182,7 +182,7 @@ class Agent9Adapter {
     async getKnowledgeBaseElements(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base`, {
                 params,
                 timeout: this.timeout
             });
@@ -196,7 +196,7 @@ class Agent9Adapter {
     async createKnowledgeBaseElement(data) {
         try {
             const restData = this._convertODataKnowledgeElementToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base`, restData, {
                 timeout: this.timeout
             });
             
@@ -208,7 +208,7 @@ class Agent9Adapter {
 
     async addKnowledge(elementType, content, domain, confidenceLevel) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/add`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/add`, {
                 element_type: elementType?.toLowerCase(),
                 content,
                 domain: domain?.toLowerCase(),
@@ -230,7 +230,7 @@ class Agent9Adapter {
 
     async updateKnowledge(elementId, content, confidenceLevel) {
         try {
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/${elementId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/${elementId}`, {
                 content,
                 confidence_level: confidenceLevel
             }, {
@@ -250,7 +250,7 @@ class Agent9Adapter {
 
     async validateKnowledgeBase(domain) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/validate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/validate`, {
                 domain: domain?.toLowerCase()
             }, {
                 timeout: this.timeout
@@ -276,7 +276,7 @@ class Agent9Adapter {
     async getLogicalInferences(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/inferences`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/inferences`, {
                 params,
                 timeout: this.timeout
             });
@@ -290,7 +290,7 @@ class Agent9Adapter {
     async createLogicalInference(data) {
         try {
             const restData = this._convertODataInferenceToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/inferences`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/inferences`, restData, {
                 timeout: this.timeout
             });
             
@@ -302,7 +302,7 @@ class Agent9Adapter {
 
     async generateInferences(taskId, inferenceTypes, maxInferences) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/generate-inferences`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/generate-inferences`, {
                 inference_types: inferenceTypes?.map(t => t.toLowerCase()),
                 max_inferences: maxInferences || 10
             }, {
@@ -327,7 +327,7 @@ class Agent9Adapter {
 
     async verifyInference(inferenceId, verificationMethod) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/inferences/${inferenceId}/verify`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/inferences/${inferenceId}/verify`, {
                 verification_method: verificationMethod?.toLowerCase()
             }, {
                 timeout: this.timeout
@@ -348,7 +348,7 @@ class Agent9Adapter {
     async getDecisionRecords(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/decisions`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/decisions`, {
                 params,
                 timeout: this.timeout
             });
@@ -362,7 +362,7 @@ class Agent9Adapter {
     async createDecisionRecord(data) {
         try {
             const restData = this._convertODataDecisionToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/decisions`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/decisions`, restData, {
                 timeout: this.timeout
             });
             
@@ -374,7 +374,7 @@ class Agent9Adapter {
 
     async makeDecision(taskId, decisionCriteria, alternatives) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/make-decision`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/make-decision`, {
                 decision_criteria: decisionCriteria,
                 alternatives: alternatives?.split(',').map(a => a.trim())
             }, {
@@ -399,7 +399,7 @@ class Agent9Adapter {
 
     async evaluateDecision(decisionId, actualOutcome) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/decisions/${decisionId}/evaluate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/decisions/${decisionId}/evaluate`, {
                 actual_outcome: actualOutcome
             }, {
                 timeout: this.timeout
@@ -420,7 +420,7 @@ class Agent9Adapter {
     async getProblemSolvingRecords(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/problems`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/problems`, {
                 params,
                 timeout: this.timeout
             });
@@ -434,7 +434,7 @@ class Agent9Adapter {
     async createProblemSolvingRecord(data) {
         try {
             const restData = this._convertODataProblemToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/problems`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/problems`, restData, {
                 timeout: this.timeout
             });
             
@@ -446,7 +446,7 @@ class Agent9Adapter {
 
     async solveProblem(problemDescription, problemType, solvingStrategy, constraints) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/problems/solve`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/problems/solve`, {
                 problem_description: problemDescription,
                 problem_type: problemType?.toLowerCase(),
                 solving_strategy: solvingStrategy?.toLowerCase(),
@@ -472,7 +472,7 @@ class Agent9Adapter {
 
     async optimizeSolution(problemId, optimizationCriteria) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/problems/${problemId}/optimize`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/problems/${problemId}/optimize`, {
                 optimization_criteria: optimizationCriteria
             }, {
                 timeout: this.timeout
@@ -494,7 +494,7 @@ class Agent9Adapter {
     async getReasoningEngines(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/engines`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/engines`, {
                 params,
                 timeout: this.timeout
             });
@@ -507,7 +507,7 @@ class Agent9Adapter {
 
     async optimizeEngine(engineId, optimizationType, targetMetrics) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/engines/${engineId}/optimize`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/engines/${engineId}/optimize`, {
                 optimization_type: optimizationType?.toLowerCase(),
                 target_metrics: targetMetrics
             }, {
@@ -527,7 +527,7 @@ class Agent9Adapter {
 
     async calibrateEngine(engineId, testDataset) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/engines/${engineId}/calibrate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/engines/${engineId}/calibrate`, {
                 test_dataset: testDataset
             }, {
                 timeout: this.timeout
@@ -547,7 +547,7 @@ class Agent9Adapter {
     // ===== FUNCTION IMPLEMENTATIONS =====
     async getReasoningOptions() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/reasoning-options`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-options`, {
                 timeout: this.timeout
             });
             
@@ -564,7 +564,7 @@ class Agent9Adapter {
 
     async getDashboardData(timeRange) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/dashboard`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/dashboard`, {
                 params: { time_range: timeRange },
                 timeout: this.timeout
             });
@@ -585,7 +585,7 @@ class Agent9Adapter {
 
     async getKnowledgeBaseStats(domain) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/stats`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/stats`, {
                 params: { domain: domain?.toLowerCase() },
                 timeout: this.timeout
             });
@@ -606,7 +606,7 @@ class Agent9Adapter {
 
     async getReasoningChain(taskId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/chain`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/reasoning-tasks/${taskId}/chain`, {
                 timeout: this.timeout
             });
             
@@ -630,7 +630,7 @@ class Agent9Adapter {
 
     async analyzeContradictions(domain) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/analyze/contradictions`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/analyze/contradictions`, {
                 params: { domain: domain?.toLowerCase() },
                 timeout: this.timeout
             });
@@ -654,7 +654,7 @@ class Agent9Adapter {
 
     async getEngineComparison(engineTypes, problemDomain) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/engines/compare`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/engines/compare`, {
                 params: { 
                     engine_types: engineTypes?.join(','),
                     problem_domain: problemDomain?.toLowerCase()
@@ -681,7 +681,7 @@ class Agent9Adapter {
 
     async getDecisionAnalysis(decisionId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/decisions/${decisionId}/analysis`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/decisions/${decisionId}/analysis`, {
                 timeout: this.timeout
             });
             
@@ -701,7 +701,7 @@ class Agent9Adapter {
 
     async getProblemSolvingInsights(problemType, timeRange) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/problems/insights`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/problems/insights`, {
                 params: {
                     problem_type: problemType?.toLowerCase(),
                     time_range: timeRange
@@ -725,7 +725,7 @@ class Agent9Adapter {
 
     async getPerformanceMetrics(engineType, timeRange) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/performance/metrics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance/metrics`, {
                 params: {
                     engine_type: engineType?.toLowerCase(),
                     time_range: timeRange
@@ -749,7 +749,7 @@ class Agent9Adapter {
 
     async optimizeKnowledgeBase(domain, optimizationStrategy) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/optimize`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/knowledge-base/optimize`, {
                 domain: domain?.toLowerCase(),
                 optimization_strategy: optimizationStrategy?.toLowerCase()
             }, {
@@ -772,7 +772,7 @@ class Agent9Adapter {
     async getReasoningPerformanceMetrics(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/performance/reasoning-metrics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance/reasoning-metrics`, {
                 params,
                 timeout: this.timeout
             });

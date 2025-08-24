@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 # Add backend path to import GrokClient
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../backend'))
 try:
@@ -62,7 +62,7 @@ from adaptive_learning import (
 )
 from embeddingFinetuner import Agent2EmbeddingSkill
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 logger = logging.getLogger(__name__)
 
 

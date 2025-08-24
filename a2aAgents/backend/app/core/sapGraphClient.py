@@ -22,7 +22,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from dataclasses import dataclass, asdict
 from enum import Enum
 from app.core.loggingConfig import get_logger, LogCategory

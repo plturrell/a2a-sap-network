@@ -4,7 +4,7 @@
  */
 
 const cds = require('@sap/cds');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 // Import the adapter for REST/OData conversion
 const Agent5Adapter = require('./agent5-adapter');
@@ -30,7 +30,7 @@ module.exports = cds.service.impl(async function() {
             log.info('Reading QaValidationTasks');
             
             // Get data from Python backend
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks`, {
                 timeout: 60000,
                 params: req.query
             });
@@ -53,7 +53,7 @@ module.exports = cds.service.impl(async function() {
             const restData = adapter.convertODataToTask(req.data);
             
             // Create task in Python backend
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks`, restData, {
                 timeout: 60000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -74,7 +74,7 @@ module.exports = cds.service.impl(async function() {
             const restData = adapter.convertODataToTask(req.data);
             
             // Update task in Python backend
-            const response = await axios.put(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}`, restData, {
                 timeout: 60000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -90,7 +90,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Deleting QaValidationTask: ${req.params[0]}`);
             
-            await axios.delete(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}`, {
+            await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}`, {
                 timeout: 30000
             });
             
@@ -109,7 +109,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Validating QaValidationTask: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/validate`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/validate`, req.data, {
                 timeout: 300000, // 5 minutes for validation
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -125,7 +125,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Pausing QaValidationTask: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/pause`, {}, {
                 timeout: 30000
             });
             
@@ -140,7 +140,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Resuming QaValidationTask: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/resume`, {}, {
                 timeout: 30000
             });
             
@@ -155,7 +155,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Cancelling QaValidationTask: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/cancel`, {}, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks/${req.params[0]}/cancel`, {}, {
                 timeout: 30000
             });
             
@@ -174,7 +174,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Reading QaValidationRules');
             
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules`, {
                 timeout: 30000,
                 params: req.query
             });
@@ -193,7 +193,7 @@ module.exports = cds.service.impl(async function() {
             
             const restData = adapter.convertODataToRule(req.data);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -211,7 +211,7 @@ module.exports = cds.service.impl(async function() {
             
             const restData = adapter.convertODataToRule(req.data);
             
-            const response = await axios.put(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules/${req.params[0]}`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules/${req.params[0]}`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -227,7 +227,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Deleting QaValidationRule: ${req.params[0]}`);
             
-            await axios.delete(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules/${req.params[0]}`, {
+            await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules/${req.params[0]}`, {
                 timeout: 30000
             });
             
@@ -246,7 +246,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Testing QaValidationRule: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules/${req.params[0]}/test`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/rules/${req.params[0]}/test`, req.data, {
                 timeout: 60000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -273,7 +273,7 @@ module.exports = cds.service.impl(async function() {
                 return;
             }
             
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/tests/${taskId}/results`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tests/${taskId}/results`, {
                 timeout: 30000,
                 params: req.query
             });
@@ -294,7 +294,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Reading QaApprovalWorkflows');
             
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals`, {
                 timeout: 30000,
                 params: req.query
             });
@@ -313,7 +313,7 @@ module.exports = cds.service.impl(async function() {
             
             const restData = adapter.convertODataToApproval(req.data);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals`, restData, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals`, restData, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -333,7 +333,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Approving QaApprovalWorkflow: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals/${req.params[0]}/approve`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals/${req.params[0]}/approve`, req.data, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -349,7 +349,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Rejecting QaApprovalWorkflow: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals/${req.params[0]}/reject`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals/${req.params[0]}/reject`, req.data, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -365,7 +365,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info(`Escalating QaApprovalWorkflow: ${req.params[0]}`);
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals/${req.params[0]}/escalate`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/approvals/${req.params[0]}/escalate`, req.data, {
                 timeout: 30000,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -385,7 +385,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Generating SimpleQA tests');
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/tests/simpleqa`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/tests/simpleqa`, req.data, {
                 timeout: 180000, // 3 minutes for test generation
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -401,7 +401,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Discovering ORD registry');
             
-            const response = await axios.post(`${AGENT5_BASE_URL}/a2a/agent5/v1/ord/discover`, req.data, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/ord/discover`, req.data, {
                 timeout: 120000, // 2 minutes for discovery
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -417,7 +417,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Getting QA metrics');
             
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/analytics/metrics`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/analytics/metrics`, {
                 timeout: 30000,
                 params: req.query
             });
@@ -433,7 +433,7 @@ module.exports = cds.service.impl(async function() {
         try {
             log.info('Getting QA trends');
             
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/analytics/trends`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/analytics/trends`, {
                 timeout: 30000,
                 params: req.query
             });
@@ -448,7 +448,7 @@ module.exports = cds.service.impl(async function() {
     // Health check endpoint
     this.on('getHealth', async (req) => {
         try {
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/health`, {
+            const response = await blockchainClient.sendMessage(`${AGENT5_BASE_URL}/a2a/agent5/v1/health`, {
                 timeout: 10000
             });
             

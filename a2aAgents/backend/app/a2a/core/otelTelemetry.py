@@ -16,7 +16,7 @@ from opentelemetry.context import attach
 from opentelemetry.exporter.otlp.proto.grpc import trace_exporter as otlp_trace
 from opentelemetry.exporter.otlp.proto.grpc import metric_exporter as otlp_metric
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.httpx # A2A Protocol: Use blockchain messaging instead of httpxClientInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.metrics import MeterProvider

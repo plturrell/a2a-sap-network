@@ -1,9 +1,3 @@
-"""
-Sparse Vector Skills for Agent 3 (Vector Processing) - SAP HANA Sparse Vector Support
-Implements efficient sparse vector storage and operations for high-dimensional data
-Following SAP naming conventions and best practices
-"""
-
 from typing import Dict, List, Any, Optional, Tuple, Set, Union
 import numpy as np
 from datetime import datetime
@@ -13,13 +7,30 @@ import struct
 from scipy.sparse import csr_matrix, coo_matrix
 import hashlib
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Sparse Vector Skills for Agent 3 (Vector Processing) - SAP HANA Sparse Vector Support
+Implements efficient sparse vector storage and operations for high-dimensional data
+Following SAP naming conventions and best practices
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class SparseVectorSkills:
-    """Sparse vector processing capabilities for efficient high-dimensional operations"""
+class SparseVectorSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Sparse vector processing capabilities for efficient high-dimensional operations"""
     
     def __init__(self, hanaConnection=None):
+        
+        super().__init__()
         self.hanaConnection = hanaConnection
         self.compressionThresholds = {
             'density': 0.1,  # Convert to sparse if less than 10% non-zero

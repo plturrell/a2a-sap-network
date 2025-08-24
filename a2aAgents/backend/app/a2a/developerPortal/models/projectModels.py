@@ -31,7 +31,7 @@ from sqlalchemy import create_engine, Column, String, DateTime, Text, JSON, Inte
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()

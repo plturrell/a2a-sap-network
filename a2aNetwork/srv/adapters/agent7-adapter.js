@@ -3,7 +3,7 @@
  * Converts between REST API and OData formats for agent management and coordination operations
  */
 
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent7Adapter {
@@ -17,7 +17,7 @@ class Agent7Adapter {
     async getRegisteredAgents(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, {
                 params,
                 timeout: this.timeout
             });
@@ -31,7 +31,7 @@ class Agent7Adapter {
     async createRegisteredAgent(data) {
         try {
             const restData = this._convertODataAgentToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, restData, {
                 timeout: this.timeout
             });
             
@@ -44,7 +44,7 @@ class Agent7Adapter {
     async updateRegisteredAgent(id, data) {
         try {
             const restData = this._convertODataAgentToREST(data);
-            const response = await axios.put(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, restData, {
                 timeout: this.timeout
             });
             
@@ -56,7 +56,7 @@ class Agent7Adapter {
 
     async deleteRegisteredAgent(id) {
         try {
-            await axios.delete(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, {
+            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, {
                 timeout: this.timeout
             });
         } catch (error) {
@@ -67,7 +67,7 @@ class Agent7Adapter {
     // Agent Registration and Management
     async registerAgent(agentData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/register-agent`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/register-agent`, {
                 agent_name: agentData.agentName,
                 agent_type: agentData.agentType,
                 agent_version: agentData.agentVersion,
@@ -90,7 +90,7 @@ class Agent7Adapter {
 
     async updateAgentStatus(agentId, status, reason) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-status`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-status`, {
                 status: status.toLowerCase(),
                 reason
             }, {
@@ -108,7 +108,7 @@ class Agent7Adapter {
 
     async performHealthCheck(agentId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/health-check`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/health-check`, {}, {
                 timeout: this.timeout
             });
             
@@ -129,7 +129,7 @@ class Agent7Adapter {
 
     async updateAgentConfiguration(agentId, configuration, restartRequired) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-config`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-config`, {
                 configuration,
                 restart_required: restartRequired
             }, {
@@ -147,7 +147,7 @@ class Agent7Adapter {
 
     async deactivateAgent(agentId, reason, gracefulShutdown) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/deactivate`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/deactivate`, {
                 reason,
                 graceful_shutdown: gracefulShutdown
             }, {
@@ -165,7 +165,7 @@ class Agent7Adapter {
 
     async scheduleTask(agentId, taskData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/schedule-task`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/schedule-task`, {
                 task_type: taskData.taskType,
                 parameters: taskData.parameters,
                 scheduled_time: taskData.scheduledTime,
@@ -186,7 +186,7 @@ class Agent7Adapter {
 
     async assignWorkload(agentId, workloadData) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/assign-workload`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/assign-workload`, {
                 workload_type: workloadData.workloadType,
                 parameters: workloadData.parameters,
                 priority: workloadData.priority.toLowerCase(),
@@ -209,7 +209,7 @@ class Agent7Adapter {
     async getManagementTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, {
                 params,
                 timeout: this.timeout
             });
@@ -223,7 +223,7 @@ class Agent7Adapter {
     async createManagementTask(data) {
         try {
             const restData = this._convertODataTaskToREST(data);
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, restData, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, restData, {
                 timeout: this.timeout
             });
             
@@ -235,7 +235,7 @@ class Agent7Adapter {
 
     async executeTask(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/execute`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/execute`, {}, {
                 timeout: this.timeout
             });
             
@@ -250,7 +250,7 @@ class Agent7Adapter {
 
     async pauseTask(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/pause`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/pause`, {}, {
                 timeout: this.timeout
             });
             
@@ -265,7 +265,7 @@ class Agent7Adapter {
 
     async resumeTask(taskId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/resume`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/resume`, {}, {
                 timeout: this.timeout
             });
             
@@ -280,7 +280,7 @@ class Agent7Adapter {
 
     async cancelTask(taskId, reason) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/cancel`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/cancel`, {
                 reason
             }, {
                 timeout: this.timeout
@@ -299,7 +299,7 @@ class Agent7Adapter {
     async getAgentCoordinations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/coordination`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/coordination`, {
                 params,
                 timeout: this.timeout
             });
@@ -312,7 +312,7 @@ class Agent7Adapter {
 
     async activateCoordination(coordinationId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/coordination/${coordinationId}/activate`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/coordination/${coordinationId}/activate`, {}, {
                 timeout: this.timeout
             });
             
@@ -329,7 +329,7 @@ class Agent7Adapter {
     async getBulkOperations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations`, {
                 params,
                 timeout: this.timeout
             });
@@ -342,7 +342,7 @@ class Agent7Adapter {
 
     async executeBulkOperation(operationId) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations/${operationId}/execute`, {}, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations/${operationId}/execute`, {}, {
                 timeout: this.timeout
             });
             
@@ -358,7 +358,7 @@ class Agent7Adapter {
     // Agent Management Functions
     async getAgentTypes() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/agent-types`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/agent-types`, {
                 timeout: this.timeout
             });
             
@@ -375,7 +375,7 @@ class Agent7Adapter {
 
     async getDashboardData() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/dashboard`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/dashboard`, {
                 timeout: this.timeout
             });
             
@@ -396,7 +396,7 @@ class Agent7Adapter {
 
     async getHealthStatus(agentId) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/health-status/${agentId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/health-status/${agentId}`, {
                 timeout: this.timeout
             });
             
@@ -416,7 +416,7 @@ class Agent7Adapter {
 
     async getPerformanceAnalysis(agentId, timeRange) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${agentId}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${agentId}`, {
                 params: { time_range: timeRange },
                 timeout: this.timeout
             });
@@ -439,7 +439,7 @@ class Agent7Adapter {
 
     async getCoordinationStatus() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/coordination-status`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/coordination-status`, {
                 timeout: this.timeout
             });
             
@@ -462,7 +462,7 @@ class Agent7Adapter {
 
     async getAgentCapabilities(agentType) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/agent-capabilities/${agentType}`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/agent-capabilities/${agentType}`, {
                 timeout: this.timeout
             });
             
@@ -480,7 +480,7 @@ class Agent7Adapter {
 
     async validateConfiguration(configuration, agentType) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/${this.apiVersion}/validate-configuration`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-configuration`, {
                 configuration,
                 agent_type: agentType
             }, {
@@ -500,7 +500,7 @@ class Agent7Adapter {
 
     async getLoadBalancingRecommendations() {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/load-balancing-recommendations`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/load-balancing-recommendations`, {
                 timeout: this.timeout
             });
             
@@ -523,7 +523,7 @@ class Agent7Adapter {
     async getAgentHealthChecks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/health-checks`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/health-checks`, {
                 params,
                 timeout: this.timeout
             });
@@ -537,7 +537,7 @@ class Agent7Adapter {
     async getAgentPerformanceMetrics(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await axios.get(`${this.baseUrl}/api/${this.apiVersion}/performance-metrics`, {
+            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-metrics`, {
                 params,
                 timeout: this.timeout
             });

@@ -8,6 +8,16 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 
+def _generate_message_id():
+    """Generate a unique message ID"""
+    return str(__import__('uuid').uuid4())
+
+
+def _generate_timestamp():
+    """Generate current timestamp in ISO format"""
+    return datetime.utcnow().isoformat()
+
+
 class TaskStatus(str, Enum):
     """Task execution status"""
     PENDING = "pending"
@@ -34,12 +44,12 @@ class MessagePart(BaseModel):
 
 class A2AMessage(BaseModel):
     """A2A Protocol message"""
-    messageId: str = Field(default_factory=lambda: str(__import__('uuid').uuid4()))
+    messageId: str = Field(default_factory=_generate_message_id)
     role: MessageRole
     parts: List[MessagePart]
     taskId: Optional[str] = None
     contextId: Optional[str] = None
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=_generate_timestamp)
     signature: Optional[str] = None
 
 

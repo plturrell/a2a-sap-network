@@ -33,11 +33,11 @@ async function checkAgentHealth(port) {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const [healthResponse, metricsResponse] = await Promise.all([
-            fetch(`http://localhost:${port}/health`, { 
+            blockchainClient.sendMessage(`http://localhost:${port}/health`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            fetch(`http://localhost:${port}/metrics`, { 
+            blockchainClient.sendMessage(`http://localhost:${port}/metrics`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
@@ -95,7 +95,7 @@ async function checkBlockchainHealth() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         
-        const statusResponse = await fetch('http://localhost:8082/blockchain/status', {
+        const statusResponse = await blockchainClient.sendMessage('http://localhost:8082/blockchain/status', {
             signal: controller.signal,
             headers: { 'Accept': 'application/json' }
         }).catch(() => null);

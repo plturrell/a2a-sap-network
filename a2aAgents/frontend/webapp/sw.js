@@ -149,7 +149,7 @@ async function handleStaticResource(request) {
 async function handleNavigationRequest(request) {
   try {
     // Try network first
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     
     if (response.ok) {
       // Cache successful navigation responses
@@ -193,7 +193,7 @@ async function handleGenericRequest(request) {
  */
 async function handleMutationRequest(request) {
   try {
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     return response;
   } catch (error) {
     console.log('[SW] Mutation request failed, queuing for background sync:', error);
@@ -231,7 +231,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
     }
     
     // Fallback to network
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     
     if (response.ok) {
       // Cache the response
@@ -258,7 +258,7 @@ async function handleCacheFirstStrategy(request, cacheName) {
 async function handleNetworkFirstStrategy(request, cacheName) {
   try {
     // Try network first
-    const response = await fetch(request);
+    const response = await blockchainClient.sendMessage(request);
     
     if (response.ok) {
       // Update cache with fresh data
@@ -367,7 +367,7 @@ async function processBackgroundSync() {
           body: requestData.body
         });
         
-        const response = await fetch(request);
+        const response = await blockchainClient.sendMessage(request);
         
         if (response.ok) {
           // Remove successful request from queue

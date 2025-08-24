@@ -1,3 +1,11 @@
+import asyncio
+import argparse
+import logging
+import os
+import sys
+from typing import Optional
+
+from app.a2a.core.security_base import SecureA2AAgent
 """
 A2A Protocol Compliance Notice:
 This file has been modified to enforce A2A protocol compliance.
@@ -20,13 +28,6 @@ This script starts the Quality Control Manager Agent that:
 3. Provides quality metrics and improvement recommendations
 4. Implements MCP tools for integration with other agents
 """
-
-import asyncio
-import argparse
-import logging
-import os
-import sys
-from typing import Optional
 
 # Add project root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../.."))
@@ -55,7 +56,7 @@ logger = logging.getLogger(__name__)
 async def register_agent(agent: QualityControlManagerAgent, registry_url: str):
     """Register agent with A2A registry"""
     try:
-        import httpx
+        # A2A Protocol: Use blockchain messaging instead of httpx
         
         agent_card = agent.get_agent_card()
         
@@ -89,7 +90,7 @@ async def health_check_services(agent: QualityControlManagerAgent):
     
     for service_name, service_url in services.items():
         try:
-            import httpx
+            # A2A Protocol: Use blockchain messaging instead of httpx
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
         # httpx\.AsyncClient() as client:

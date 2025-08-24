@@ -127,7 +127,7 @@ module.exports = class OperationsService extends BaseService {
                     query.query.bool.must.push({ term: { correlationId: correlationId } });
                 }
                 
-                const response = await fetch(`${loggingUrl}/logs-*/_search`, {
+                const response = await blockchainClient.sendMessage(`${loggingUrl}/logs-*/_search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(query)
@@ -172,7 +172,7 @@ module.exports = class OperationsService extends BaseService {
                 if (operationName) params.append('operation', operationName);
                 if (minDuration) params.append('minDuration', `${minDuration}ms`);
                 
-                const response = await fetch(`${tracingUrl}/api/traces?${params}`);
+                const response = await blockchainClient.sendMessage(`${tracingUrl}/api/traces?${params}`);
                 
                 if (response.ok) {
                     const result = await response.json();

@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 #!/usr/bin/env python3
 """
 A2A Async/Await Pattern Migration Script
@@ -376,7 +380,7 @@ class AsyncPatternMigrator:
                         elif pattern.pattern_type == "sync_http_in_async":
                             lines[line_index] = original_line.replace('requests.', 'await httpx_client.')
                             # Add import if needed
-                            self._ensure_import(lines, "import httpx")
+                            self._ensure_import(lines, "# A2A Protocol: Use blockchain messaging instead of httpx")
                             modified = True
                         
                         if modified:

@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "./BaseController",
     "sap/m/MessageToast",
@@ -79,21 +83,21 @@ sap.ui.define([
 
             try {
                 // Load system health
-                const healthResponse = await fetch("/health");
+                const healthResponse = await blockchainClient.sendMessage("/health");
                 if (healthResponse.ok) {
                     const healthData = await healthResponse.json();
                     this._updateSystemHealth(healthData);
                 }
 
                 // Load performance metrics
-                const metricsResponse = await fetch("/metrics");
+                const metricsResponse = await blockchainClient.sendMessage("/metrics");
                 if (metricsResponse.ok) {
                     const metricsText = await metricsResponse.text();
                     this._updatePerformanceMetrics(metricsText);
                 }
 
                 // Load operations service data
-                const opsResponse = await fetch("/api/v1/operations/status");
+                const opsResponse = await blockchainClient.sendMessage("/api/v1/operations/status");
                 if (opsResponse.ok) {
                     const opsData = await opsResponse.json();
                     this._updateOperationsData(opsData);
@@ -194,7 +198,7 @@ sap.ui.define([
 
         async _restartSystem() {
             try {
-                const response = await fetch("/api/v1/operations/restart", {
+                const response = await blockchainClient.sendMessage("/api/v1/operations/restart", {
                     method: "POST"
                 });
 
@@ -226,7 +230,7 @@ sap.ui.define([
 
         async _clearLogs() {
             try {
-                const response = await fetch("/api/v1/operations/logs", {
+                const response = await blockchainClient.sendMessage("/api/v1/operations/logs", {
                     method: "DELETE"
                 });
 
@@ -244,7 +248,7 @@ sap.ui.define([
 
         async onDownloadLogs() {
             try {
-                const response = await fetch("/api/v1/operations/logs/download");
+                const response = await blockchainClient.sendMessage("/api/v1/operations/logs/download");
 
                 if (response.ok) {
                     const blob = await response.blob();
@@ -297,7 +301,7 @@ sap.ui.define([
 
         async _restartService(sServiceName) {
             try {
-                const response = await fetch(`/api/v1/operations/services/${sServiceName}/restart`, {
+                const response = await blockchainClient.sendMessage(`/api/v1/operations/services/${sServiceName}/restart`, {
                     method: "POST"
                 });
 
@@ -322,7 +326,7 @@ sap.ui.define([
                     onClose: async(sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             try {
-                                const response = await fetch(`/api/v1/operations/services/${sServiceName}/stop`, {
+                                const response = await blockchainClient.sendMessage(`/api/v1/operations/services/${sServiceName}/stop`, {
                                     method: "POST"
                                 });
 
@@ -379,7 +383,7 @@ sap.ui.define([
 
         async _acknowledgeAlert(sAlertId) {
             try {
-                const response = await fetch(`/api/v1/operations/alerts/${sAlertId}/acknowledge`, {
+                const response = await blockchainClient.sendMessage(`/api/v1/operations/alerts/${sAlertId}/acknowledge`, {
                     method: "POST"
                 });
 
@@ -398,7 +402,7 @@ sap.ui.define([
 
         async _dismissAlert(sAlertId) {
             try {
-                const response = await fetch(`/api/v1/operations/alerts/${sAlertId}`, {
+                const response = await blockchainClient.sendMessage(`/api/v1/operations/alerts/${sAlertId}`, {
                     method: "DELETE"
                 });
 
@@ -487,7 +491,7 @@ Details: ${oOperation.details}
 
         async _resolveAlert(sAlertId) {
             try {
-                const response = await fetch(`/api/v1/operations/alerts/${sAlertId}/resolve`, {
+                const response = await blockchainClient.sendMessage(`/api/v1/operations/alerts/${sAlertId}/resolve`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -517,7 +521,7 @@ Details: ${oOperation.details}
                     onClose: async function(sAction) {
                         if (sAction === MessageBox.Action.OK) {
                             try {
-                                const response = await fetch(`/api/v1/operations/alerts/${sAlertId}/escalate`, {
+                                const response = await blockchainClient.sendMessage(`/api/v1/operations/alerts/${sAlertId}/escalate`, {
                                     method: "POST",
                                     headers: {
                                         "Content-Type": "application/json"

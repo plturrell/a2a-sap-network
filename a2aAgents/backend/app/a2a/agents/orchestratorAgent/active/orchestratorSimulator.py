@@ -1,8 +1,3 @@
-"""
-Orchestrator Simulation Framework
-Provides comprehensive simulation capabilities for testing workflow orchestration scenarios
-"""
-
 import asyncio
 import random
 import uuid
@@ -15,6 +10,12 @@ import logging
 import statistics
 
 from .comprehensiveOrchestratorAgentSdk import (
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Orchestrator Simulation Framework
+Provides comprehensive simulation capabilities for testing workflow orchestration scenarios
+"""
+
     OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask, 
     WorkflowStatus, TaskStatus, OrchestrationStrategy
 )
@@ -34,8 +35,16 @@ class SimulationScenario(Enum):
     COORDINATION_STRESS = "coordination_stress"
 
 @dataclass
-class SimulatedAgent:
-    """Simulated agent for orchestration testing"""
+class SimulatedAgent(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Simulated agent for orchestration testing"""
     agent_id: str
     name: str
     capabilities: List[str]
@@ -48,8 +57,16 @@ class SimulatedAgent:
     load_factor: float = 1.0  # Affects response time
     
 @dataclass
-class WorkflowTemplate:
-    """Template for generating test workflows"""
+class WorkflowTemplate(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Template for generating test workflows"""
     name: str
     task_count: int
     strategy: OrchestrationStrategy
@@ -58,8 +75,16 @@ class WorkflowTemplate:
     agent_types: List[str] = field(default_factory=list)
 
 @dataclass
-class SimulationMetrics:
-    """Metrics collected during orchestration simulation"""
+class SimulationMetrics(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Metrics collected during orchestration simulation"""
     workflows_created: int = 0
     workflows_executed: int = 0
     workflows_completed: int = 0
@@ -76,12 +101,22 @@ class SimulationMetrics:
     workflow_durations: List[float] = field(default_factory=list)
     task_durations: List[float] = field(default_factory=list)
 
-class OrchestratorSimulator:
-    """
+class OrchestratorSimulator(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""
     Comprehensive simulation framework for workflow orchestration testing
     """
     
     def __init__(self, orchestrator_agent: OrchestratorAgentSdk):
+        
+        super().__init__()
         self.orchestrator_agent = orchestrator_agent
         self.simulated_agents: List[SimulatedAgent] = []
         self.simulation_metrics = SimulationMetrics()

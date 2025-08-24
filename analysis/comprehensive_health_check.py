@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 #!/usr/bin/env python3
 """
 Comprehensive A2A System Health Check
@@ -5,7 +9,7 @@ Verifies all services are running and healthy
 """
 
 import asyncio
-import aiohttp
+# A2A Protocol: Use blockchain messaging instead of aiohttp
 import json
 import subprocess
 from datetime import datetime
@@ -25,7 +29,7 @@ class A2AHealthChecker:
     async def check_service_health(self, url: str, service_name: str) -> Dict:
         """Check health of a single service"""
         try:
-            async with aiohttp.ClientSession() as session:
+            async with A2ANetworkClient() as session:
                 async with session.get(f"{url}/health", timeout=5) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -129,7 +133,7 @@ class A2AHealthChecker:
             blockchain_health = await self.check_service_health("http://localhost:8545", "Blockchain")
             
             # Also check with JSON-RPC call
-            async with aiohttp.ClientSession() as session:
+            async with A2ANetworkClient() as session:
                 rpc_payload = {
                     "jsonrpc": "2.0",
                     "method": "eth_blockNumber", 

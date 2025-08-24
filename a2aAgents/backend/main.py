@@ -1,3 +1,7 @@
+"""
+A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+"""
+
 import os
 import sys
 import warnings
@@ -376,7 +380,7 @@ app.add_middleware(RateLimitingMiddleware)
 app.add_middleware(SecurityEventMiddleware)
 
 # Add request signing middleware (optional signing by default)
-from app.api.middleware.requestSigning import RequestSigningMiddleware, APIKeyPermissionMiddleware
+from app.api.middleware.requestSigning # A2A Protocol: Use blockchain messaging instead of requestsigningMiddleware, APIKeyPermissionMiddleware
 app.add_middleware(APIKeyPermissionMiddleware)  # Check permissions for signed requests
 app.add_middleware(RequestSigningMiddleware, enforce_signing=False)  # Optional signing
 

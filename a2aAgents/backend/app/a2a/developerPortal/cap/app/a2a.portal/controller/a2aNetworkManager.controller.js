@@ -103,10 +103,10 @@ sap.ui.define([
 
         _setupWebSocket: function() {
             // Setup real-time updates via WebSocket
-            let wsUrl = window.location.protocol === "https:" ? "wss://" : "ws://";
+            let wsUrl = window.location.protocol === "https:" ? "blockchains://" : "blockchain://";
             wsUrl += `${window.location.host  }/ws`;
             
-            this._ws = new WebSocket(wsUrl);
+            this._ws = new BlockchainEventClient(wsUrl);
             
             this._ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);

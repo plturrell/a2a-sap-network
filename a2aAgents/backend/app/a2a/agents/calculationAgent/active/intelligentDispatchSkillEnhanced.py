@@ -1,14 +1,15 @@
-"""
-Enhanced Intelligent Dispatch Skill with Advanced Natural Language Processing
-Provides sophisticated routing and analysis of calculation requests
-"""
-
 import asyncio
 import json
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 import re
+
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Enhanced Intelligent Dispatch Skill with Advanced Natural Language Processing
+Provides sophisticated routing and analysis of calculation requests
+"""
 
 # Import natural language processor
 try:
@@ -23,10 +24,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-class EnhancedIntelligentDispatchSkill:
-    """Enhanced intelligent dispatch with natural language understanding"""
+class EnhancedIntelligentDispatchSkill(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Enhanced intelligent dispatch with natural language understanding"""
     
     def __init__(self, grok_client=None):
+        
+        super().__init__()
         self.grok_client = grok_client
         self.nl_processor = MathQueryProcessor() if NL_PARSER_AVAILABLE else None
         self.skill_mappings = self._initialize_skill_mappings()

@@ -66,7 +66,10 @@ class DebugMode:
         
     def set_breakpoint(self, method_name: str, condition: Callable = None):
         """Set a breakpoint on a specific method"""
-        self.breakpoints[method_name] = condition or (lambda *args, **kwargs: True)
+        def always_true_condition(*args, **kwargs):
+            return True
+        
+        self.breakpoints[method_name] = condition or always_true_condition
         logger.info(f"Breakpoint set on {method_name}")
         
     def clear_breakpoint(self, method_name: str):

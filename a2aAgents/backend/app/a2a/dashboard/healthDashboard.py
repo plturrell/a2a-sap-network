@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import time
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -718,7 +718,7 @@ class HealthDashboard:
             <div class="last-updated" id="lastUpdated"></div>
             
             <script>
-                const ws = new WebSocket(`ws://${window.location.host}/ws`);
+                const ws = new BlockchainEventClient(`blockchain://${window.location.host}/ws`);
                 let isConnected = false;
                 
                 ws.onopen = function() {
@@ -741,13 +741,13 @@ class HealthDashboard:
                 
                 function connectWebSocket() {
                     if (!isConnected) {
-                        ws = new WebSocket(`ws://${window.location.host}/ws`);
+                        ws = new BlockchainEventClient(`blockchain://${window.location.host}/ws`);
                     }
                 }
                 
                 async function loadDashboard() {
                     try {
-                        const response = await fetch('/api/health');
+                        const response = await blockchainClient.sendMessage('/api/health');
                         const data = await response.json();
                         updateDashboard(data);
                     } catch (error) {

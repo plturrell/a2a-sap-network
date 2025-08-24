@@ -376,8 +376,7 @@ class EnhancedComplianceReporter:
     
     async def get_report_status(self, request_id: str) -> Optional[ReportRequest]:
         """Get report generation status"""
-        return self.report_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
-        # requests\.get(request_id)
+        return self.report_requests.get(request_id)
     
     async def list_reports(
         self,
@@ -404,9 +403,7 @@ class EnhancedComplianceReporter:
     async def delete_report(self, request_id: str, requested_by: str) -> bool:
         """Delete a compliance report"""
         
-        request = self.report_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
-        # requests\.get(request_id)
-        if not request:
+        request = self.report_                if not request:
             return False
         
         # Check permissions (only creator or admin can delete)

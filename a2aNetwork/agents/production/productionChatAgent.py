@@ -622,7 +622,10 @@ class ProductionChatAgent(A2AAgentBase):
             agent_scores["data-processor"] = 1
         
         # Sort by score and select top agents
-        sorted_agents = sorted(agent_scores.items(), key=lambda x: x[1], reverse=True)
+        def get_agent_score(item):
+            return item[1]
+        
+        sorted_agents = sorted(agent_scores.items(), key=get_agent_score, reverse=True)
         
         # Select primary agent and up to 2 secondary agents for complex queries
         target_agents = [sorted_agents[0][0]]
@@ -799,8 +802,8 @@ class ProductionChatAgent(A2AAgentBase):
             }
         
         # In production, this would make actual HTTP requests
-        # import aiohttp
-        # async with aiohttp.ClientSession() as session:
+        # # A2A Protocol: Use blockchain messaging instead of aiohttp
+        # async with A2ANetworkClient() as session:
         #     async with session.post(f"{endpoint}/messages", json={
         #         "message": message.dict(),
         #         "contextId": message.contextId

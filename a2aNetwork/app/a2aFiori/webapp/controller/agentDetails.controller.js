@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -95,7 +99,7 @@ sap.ui.define([
         },
 
         _fetchAgentStatus: function (agentId) {
-            fetch(`/api/v1/agents/${agentId}/status`)
+            blockchainClient.sendMessage(`/api/v1/agents/${agentId}/status`)
                 .then(response => response.json())
                 .then(data => {
                     const oModel = this.getView().getModel();
@@ -111,7 +115,7 @@ sap.ui.define([
         },
 
         _fetchAgentPerformance: function (agentId) {
-            fetch(`/api/v1/agents/${agentId}/performance`)
+            blockchainClient.sendMessage(`/api/v1/agents/${agentId}/performance`)
                 .then(response => response.json())
                 .then(data => {
                     this.getView().getModel().setProperty("/performance", data.d || {

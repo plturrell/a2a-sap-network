@@ -372,7 +372,7 @@ class HealthService {
         for (const service of externalServices) {
             try {
                 const start = Date.now();
-                const response = await fetch(service.url, { timeout: 5000 });
+                const response = await blockchainClient.sendMessage(service.url, { timeout: 5000 });
                 const responseTime = Date.now() - start;
                 
                 services.push({
@@ -406,7 +406,7 @@ class HealthService {
             try {
                 const start = Date.now();
                 const healthEndpoint = `${dest.url}/sap/public/ping`;
-                const response = await fetch(healthEndpoint, {
+                const response = await blockchainClient.sendMessage(healthEndpoint, {
                     timeout: 10000,
                     headers: {
                         'Authorization': dest.auth || '',

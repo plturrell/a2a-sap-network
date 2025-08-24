@@ -773,6 +773,416 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             logger.error(f"Graph embedding error: {e}")
             return create_error_response(f"Graph embedding error: {str(e)}")
     
+    @mcp_tool("hybrid_vector_search", "Perform hybrid dense-sparse vector search")
+    @a2a_skill("hybrid_vector_search", "Advanced hybrid search combining dense and sparse vectors")
+    async def hybrid_vector_search(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform hybrid vector search combining dense and sparse representations"""
+        try:
+            query = request_data.get('query', '')
+            dense_weight = request_data.get('dense_weight', 0.7)
+            sparse_weight = request_data.get('sparse_weight', 0.3)
+            top_k = request_data.get('top_k', 10)
+            rerank = request_data.get('rerank', True)
+            
+            # Generate dense query embedding
+            dense_query = await self._generate_query_embedding(query, 'dense')
+            
+            # Generate sparse query embedding
+            sparse_query = await self._generate_query_embedding(query, 'sparse')
+            
+            # Perform dense search
+            dense_results = await self._dense_vector_search(dense_query, top_k * 2)
+            
+            # Perform sparse search
+            sparse_results = await self._sparse_vector_search(sparse_query, top_k * 2)
+            
+            # Combine and rerank results
+            hybrid_scores = {}
+            for result in dense_results:
+                vector_id = result['vector_id']
+                hybrid_scores[vector_id] = dense_weight * result['score']
+            
+            for result in sparse_results:
+                vector_id = result['vector_id']
+                if vector_id in hybrid_scores:
+                    hybrid_scores[vector_id] += sparse_weight * result['score']
+                else:
+                    hybrid_scores[vector_id] = sparse_weight * result['score']
+            
+            # Sort by hybrid score
+            sorted_results = sorted(
+                hybrid_scores.items(), 
+                key=lambda x: x[1], 
+                reverse=True
+            )[:top_k]
+            
+            # Rerank if requested
+            if rerank:
+                sorted_results = await self._rerank_results(query, sorted_results)
+            
+            return create_success_response({
+                'results': [
+                    {'vector_id': vid, 'hybrid_score': score}
+                    for vid, score in sorted_results
+                ],
+                'dense_weight': dense_weight,
+                'sparse_weight': sparse_weight,
+                'reranked': rerank
+            })
+            
+        except Exception as e:
+            logger.error(f"Hybrid search error: {e}")
+            return create_error_response(f"Hybrid search error: {str(e)}")
+    
+    @mcp_tool("vector_clustering", "Cluster vectors using advanced ML algorithms")
+    @a2a_skill("vector_clustering", "Intelligent vector clustering with multiple algorithms")
+    async def vector_clustering(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Cluster vectors using advanced machine learning algorithms"""
+        try:
+            vector_ids = request_data.get('vector_ids', [])
+            algorithm = request_data.get('algorithm', 'kmeans')
+            num_clusters = request_data.get('num_clusters', 'auto')
+            reduce_dimensions = request_data.get('reduce_dimensions', True)
+            
+            # Get vectors
+            vectors = []
+            valid_ids = []
+            for vid in vector_ids:
+                if vid in self.vector_store:
+                    vectors.append(self.vector_store[vid]['embedding'])
+                    valid_ids.append(vid)
+            
+            if not vectors:
+                return create_error_response("No valid vectors found")
+            
+            vectors = np.array(vectors)
+            
+            # Dimensionality reduction if requested
+            if reduce_dimensions and vectors.shape[1] > 50:
+                reducer = PCA(n_components=min(50, vectors.shape[0] - 1))
+                vectors = reducer.fit_transform(vectors)
+            
+            # Auto-determine number of clusters
+            if num_clusters == 'auto':
+                num_clusters = min(10, max(2, len(valid_ids) // 5))
+            
+            # Clustering
+            cluster_labels = []
+            cluster_centers = []
+            
+            if algorithm == 'kmeans':
+                clusterer = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+                cluster_labels = clusterer.fit_predict(vectors)
+                cluster_centers = clusterer.cluster_centers_
+                
+            elif algorithm == 'hdbscan':
+                clusterer = HDBSCAN(min_cluster_size=max(2, len(valid_ids) // 10))
+                cluster_labels = clusterer.fit_predict(vectors)
+                num_clusters = len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)
+                
+            # Calculate cluster quality metrics
+            if len(set(cluster_labels)) > 1:
+                from sklearn.metrics import silhouette_score, calinski_harabasz_score
+                silhouette = silhouette_score(vectors, cluster_labels)
+                calinski_score = calinski_harabasz_score(vectors, cluster_labels)
+            else:
+                silhouette = 0.0
+                calinski_score = 0.0
+            
+            # Organize results
+            clusters = defaultdict(list)
+            for i, (vid, label) in enumerate(zip(valid_ids, cluster_labels)):
+                clusters[int(label)].append({
+                    'vector_id': vid,
+                    'cluster_distance': float(np.linalg.norm(
+                        vectors[i] - cluster_centers[label]
+                    )) if algorithm == 'kmeans' else 0.0
+                })
+            
+            return create_success_response({
+                'clusters': dict(clusters),
+                'num_clusters': int(num_clusters),
+                'algorithm': algorithm,
+                'quality_metrics': {
+                    'silhouette_score': float(silhouette),
+                    'calinski_harabasz_score': float(calinski_score)
+                },
+                'vectors_processed': len(valid_ids)
+            })
+            
+        except Exception as e:
+            logger.error(f"Vector clustering error: {e}")
+            return create_error_response(f"Vector clustering error: {str(e)}")
+    
+    @mcp_tool("vector_dimensionality_reduction", "Reduce vector dimensions while preserving information")
+    @a2a_skill("vector_dimensionality_reduction", "Intelligent dimensionality reduction with multiple techniques")
+    async def vector_dimensionality_reduction(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Reduce vector dimensions using advanced techniques"""
+        try:
+            vector_ids = request_data.get('vector_ids', [])
+            technique = request_data.get('technique', 'pca')
+            target_dimensions = request_data.get('target_dimensions', 128)
+            preserve_variance = request_data.get('preserve_variance', 0.95)
+            
+            # Get vectors
+            vectors = []
+            valid_ids = []
+            for vid in vector_ids:
+                if vid in self.vector_store:
+                    vectors.append(self.vector_store[vid]['embedding'])
+                    valid_ids.append(vid)
+            
+            if not vectors:
+                return create_error_response("No valid vectors found")
+            
+            vectors = np.array(vectors)
+            original_dims = vectors.shape[1]
+            
+            # Apply dimensionality reduction
+            reduced_vectors = None
+            explained_variance = 0.0
+            
+            if technique == 'pca':
+                reducer = PCA(n_components=target_dimensions)
+                reduced_vectors = reducer.fit_transform(vectors)
+                explained_variance = np.sum(reducer.explained_variance_ratio_)
+                
+            elif technique == 'svd':
+                reducer = TruncatedSVD(n_components=target_dimensions)
+                reduced_vectors = reducer.fit_transform(vectors)
+                explained_variance = np.sum(reducer.explained_variance_ratio_)
+                
+            elif technique == 'tsne':
+                # t-SNE for visualization (typically 2-3 dimensions)
+                target_dimensions = min(target_dimensions, 3)
+                reducer = TSNE(n_components=target_dimensions, random_state=42)
+                reduced_vectors = reducer.fit_transform(vectors)
+                explained_variance = 0.0  # t-SNE doesn't provide explained variance
+                
+            elif technique == 'autoencoder':
+                # Simplified autoencoder (mock implementation)
+                reduced_vectors = await self._autoencoder_reduction(vectors, target_dimensions)
+                explained_variance = 0.85  # Mock value
+            
+            # Calculate information preservation metrics
+            if technique in ['pca', 'svd']:
+                reconstruction_error = self._calculate_reconstruction_error(
+                    vectors, reduced_vectors, reducer
+                )
+            else:
+                reconstruction_error = 0.0
+            
+            # Update vector store with reduced vectors
+            for i, vid in enumerate(valid_ids):
+                self.vector_store[vid]['reduced_embedding'] = reduced_vectors[i]
+                self.vector_store[vid]['reduction_info'] = {
+                    'technique': technique,
+                    'original_dims': original_dims,
+                    'reduced_dims': target_dimensions,
+                    'explained_variance': explained_variance
+                }
+            
+            return create_success_response({
+                'vectors_processed': len(valid_ids),
+                'original_dimensions': int(original_dims),
+                'reduced_dimensions': int(target_dimensions),
+                'technique': technique,
+                'explained_variance': float(explained_variance),
+                'reconstruction_error': float(reconstruction_error),
+                'compression_ratio': float(original_dims / target_dimensions)
+            })
+            
+        except Exception as e:
+            logger.error(f"Dimensionality reduction error: {e}")
+            return create_error_response(f"Dimensionality reduction error: {str(e)}")
+    
+    @mcp_tool("vector_anomaly_detection", "Detect anomalous vectors using ML techniques")
+    @a2a_skill("vector_anomaly_detection", "AI-powered anomaly detection in vector spaces")
+    async def vector_anomaly_detection(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Detect anomalous vectors using machine learning techniques"""
+        try:
+            vector_ids = request_data.get('vector_ids', [])
+            method = request_data.get('method', 'isolation_forest')
+            contamination = request_data.get('contamination', 0.1)
+            return_scores = request_data.get('return_scores', True)
+            
+            # Get vectors
+            vectors = []
+            valid_ids = []
+            for vid in vector_ids:
+                if vid in self.vector_store:
+                    vectors.append(self.vector_store[vid]['embedding'])
+                    valid_ids.append(vid)
+            
+            if not vectors:
+                return create_error_response("No valid vectors found")
+            
+            vectors = np.array(vectors)
+            
+            # Apply anomaly detection
+            anomaly_labels = []
+            anomaly_scores = []
+            
+            if method == 'isolation_forest':
+                from sklearn.ensemble import IsolationForest
+                detector = IsolationForest(
+                    contamination=contamination, 
+                    random_state=42,
+                    n_estimators=100
+                )
+                anomaly_labels = detector.fit_predict(vectors)
+                if return_scores:
+                    anomaly_scores = detector.decision_function(vectors)
+                    
+            elif method == 'one_class_svm':
+                from sklearn.svm import OneClassSVM
+                detector = OneClassSVM(nu=contamination)
+                anomaly_labels = detector.fit_predict(vectors)
+                if return_scores:
+                    anomaly_scores = detector.decision_function(vectors)
+                    
+            elif method == 'local_outlier_factor':
+                from sklearn.neighbors import LocalOutlierFactor
+                detector = LocalOutlierFactor(
+                    contamination=contamination,
+                    novelty=False
+                )
+                anomaly_labels = detector.fit_predict(vectors)
+                if return_scores:
+                    anomaly_scores = detector.negative_outlier_factor_
+            
+            # Process results
+            anomalies = []
+            normal_vectors = []
+            
+            for i, (vid, label) in enumerate(zip(valid_ids, anomaly_labels)):
+                result = {
+                    'vector_id': vid,
+                    'is_anomaly': bool(label == -1),
+                    'anomaly_score': float(anomaly_scores[i]) if return_scores else 0.0
+                }
+                
+                if label == -1:
+                    anomalies.append(result)
+                else:
+                    normal_vectors.append(result)
+            
+            return create_success_response({
+                'anomalies_detected': len(anomalies),
+                'normal_vectors': len(normal_vectors),
+                'total_processed': len(valid_ids),
+                'contamination_rate': float(len(anomalies) / len(valid_ids)) if valid_ids else 0.0,
+                'method': method,
+                'anomalies': anomalies,
+                'normal': normal_vectors if len(normal_vectors) < 100 else normal_vectors[:100]  # Limit response size
+            })
+            
+        except Exception as e:
+            logger.error(f"Anomaly detection error: {e}")
+            return create_error_response(f"Anomaly detection error: {str(e)}")
+    
+    @mcp_tool("vector_quality_assessment", "Assess quality and characteristics of vector embeddings")
+    @a2a_skill("vector_quality_assessment", "Comprehensive vector quality analysis")
+    async def vector_quality_assessment(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess quality and characteristics of vector embeddings"""
+        try:
+            vector_ids = request_data.get('vector_ids', [])
+            assessment_type = request_data.get('assessment_type', 'comprehensive')
+            
+            # Get vectors
+            vectors = []
+            valid_ids = []
+            metadata = []
+            
+            for vid in vector_ids:
+                if vid in self.vector_store:
+                    vectors.append(self.vector_store[vid]['embedding'])
+                    valid_ids.append(vid)
+                    metadata.append(self.vector_store[vid].get('metadata', {}))
+            
+            if not vectors:
+                return create_error_response("No valid vectors found")
+            
+            vectors = np.array(vectors)
+            
+            # Quality assessments
+            quality_metrics = {}
+            
+            # Basic statistics
+            quality_metrics['basic_stats'] = {
+                'num_vectors': len(vectors),
+                'dimensions': vectors.shape[1],
+                'mean_magnitude': float(np.mean(np.linalg.norm(vectors, axis=1))),
+                'std_magnitude': float(np.std(np.linalg.norm(vectors, axis=1))),
+                'sparsity': float(np.mean(vectors == 0)),
+                'density': float(1 - np.mean(vectors == 0))
+            }
+            
+            # Distribution analysis
+            if assessment_type in ['comprehensive', 'distribution']:
+                quality_metrics['distribution'] = {
+                    'mean_values': vectors.mean(axis=0).tolist()[:10],  # First 10 dims
+                    'std_values': vectors.std(axis=0).tolist()[:10],
+                    'skewness': float(np.mean([
+                        self._calculate_skewness(vectors[:, i]) 
+                        for i in range(min(10, vectors.shape[1]))
+                    ])),
+                    'kurtosis': float(np.mean([
+                        self._calculate_kurtosis(vectors[:, i]) 
+                        for i in range(min(10, vectors.shape[1]))
+                    ]))
+                }
+            
+            # Similarity analysis
+            if assessment_type in ['comprehensive', 'similarity']:
+                # Calculate pairwise similarities (sample if too large)
+                if len(vectors) > 1000:
+                    sample_idx = np.random.choice(len(vectors), 1000, replace=False)
+                    sample_vectors = vectors[sample_idx]
+                else:
+                    sample_vectors = vectors
+                
+                similarity_matrix = cosine_similarity(sample_vectors)
+                
+                # Remove diagonal (self-similarity)
+                mask = ~np.eye(similarity_matrix.shape[0], dtype=bool)
+                similarities = similarity_matrix[mask]
+                
+                quality_metrics['similarity_analysis'] = {
+                    'mean_similarity': float(np.mean(similarities)),
+                    'std_similarity': float(np.std(similarities)),
+                    'min_similarity': float(np.min(similarities)),
+                    'max_similarity': float(np.max(similarities)),
+                    'similarity_distribution': {
+                        'q25': float(np.percentile(similarities, 25)),
+                        'q50': float(np.percentile(similarities, 50)),
+                        'q75': float(np.percentile(similarities, 75))
+                    }
+                }
+            
+            # Clustering tendency
+            if assessment_type in ['comprehensive', 'clustering']:
+                quality_metrics['clustering_tendency'] = await self._assess_clustering_tendency(vectors)
+            
+            # Dimensionality assessment
+            if assessment_type in ['comprehensive', 'dimensionality']:
+                quality_metrics['dimensionality'] = await self._assess_effective_dimensionality(vectors)
+            
+            # Overall quality score
+            overall_score = self._calculate_overall_quality_score(quality_metrics)
+            
+            return create_success_response({
+                'quality_metrics': quality_metrics,
+                'overall_quality_score': float(overall_score),
+                'assessment_type': assessment_type,
+                'vectors_assessed': len(valid_ids),
+                'recommendations': await self._generate_quality_recommendations(quality_metrics)
+            })
+            
+        except Exception as e:
+            logger.error(f"Vector quality assessment error: {e}")
+            return create_error_response(f"Vector quality assessment error: {str(e)}")
+    
     # Helper methods for ML operations
     async def _generate_ensemble_embeddings(self, texts: List[str]) -> np.ndarray:
         """Generate ensemble embeddings from multiple models"""

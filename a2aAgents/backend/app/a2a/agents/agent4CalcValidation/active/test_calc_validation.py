@@ -1,15 +1,16 @@
-#!/usr/bin/env python3
-"""
-Test script for Calculation Validation Agent
-Tests mathematical validation capabilities
-"""
-
 import asyncio
 import logging
 import json
 import time
 import sys
 from pathlib import Path
+
+from app.a2a.core.security_base import SecureA2AAgent
+#!/usr/bin/env python3
+"""
+Test script for Calculation Validation Agent
+Tests mathematical validation capabilities
+"""
 
 # Add parent directories to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent))

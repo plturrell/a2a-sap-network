@@ -21,7 +21,7 @@ class GleanDiagnosticModule {
     async initialize() {
         try {
             // Check if Glean service is available
-            const health = await fetch(`${this.gleanUrl}/health`);
+            const health = await blockchainClient.sendMessage(`${this.gleanUrl}/health`);
             this.isAvailable = health.ok;
             
             if (this.isAvailable) {
@@ -471,7 +471,7 @@ class GleanDiagnosticModule {
 
     async getGleanVersion() {
         try {
-            const response = await fetch(`${this.gleanUrl}/api/v1/version`);
+            const response = await blockchainClient.sendMessage(`${this.gleanUrl}/api/v1/version`);
             if (response.ok) {
                 const data = await response.json();
                 return data.version;
@@ -484,7 +484,7 @@ class GleanDiagnosticModule {
 
     async getIndexStatus() {
         try {
-            const response = await fetch(`${this.gleanUrl}/api/v1/index/status`);
+            const response = await blockchainClient.sendMessage(`${this.gleanUrl}/api/v1/index/status`);
             if (response.ok) {
                 return await response.json();
             }

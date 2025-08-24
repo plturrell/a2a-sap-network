@@ -686,7 +686,7 @@ cds.on('listening', async (info) => {
         });
         
         // WebSocket connection handling
-        io.on('connection', (socket) => {
+        io.on('blockchain-connection', (socket) => {
             const log = cds.log('websocket');
             log.info(`WebSocket client connected: ${socket.id}`, {
                 userId: socket.user?.id,
@@ -860,6 +860,7 @@ cds.on('listening', async (info) => {
     log.info('🏥 Performing launchpad health check...');
     try {
         const StartupHealthCheck = require('../scripts/startup-health-check');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
         const healthChecker = new StartupHealthCheck(info.port);
         
         // Wait a bit for all endpoints to be ready

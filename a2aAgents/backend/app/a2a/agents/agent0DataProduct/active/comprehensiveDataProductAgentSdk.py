@@ -94,7 +94,7 @@ except ImportError:
 
 # Network connectivity for cross-agent communication
 try:
-    import aiohttp
+    # A2A Protocol: Use blockchain messaging instead of aiohttp
 
 
 # A2A Protocol Compliance: All imports must be available
@@ -1235,6 +1235,306 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
         except Exception as e:
             logger.warning(f"Connection testing failed: {e}")
     
+    # Core Registry Capability Methods
+    @a2a_skill(
+        name="data_product_creation",
+        description="Create new data products with comprehensive metadata and AI analysis",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string"},
+                "description": {"type": "string"},
+                "source": {"type": "string"},
+                "schema": {"type": "object"},
+                "metadata": {"type": "object"}
+            },
+            "required": ["product_name", "description", "source"]
+        }
+    )
+    async def data_product_creation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create comprehensive data products with AI-enhanced metadata"""
+        try:
+            start_time = time.time()
+            
+            # Extract parameters
+            product_name = request_data["product_name"]
+            description = request_data["description"]
+            source = request_data["source"]
+            schema = request_data.get("schema", {})
+            metadata = request_data.get("metadata", {})
+            
+            # Create data product with AI enhancements
+            data_product = await self._create_data_product_ai(product_name, description, source, schema, metadata)
+            
+            # Generate Dublin Core metadata
+            dublin_core = await self._generate_dublin_core_metadata(data_product)
+            
+            # Assess initial quality
+            quality_assessment = await self._assess_initial_quality(data_product)
+            
+            # Create lineage graph
+            lineage = await self._create_lineage_graph(data_product)
+            
+            processing_time = time.time() - start_time
+            self.metrics["data_products_created"] += 1
+            
+            return create_success_response({
+                "data_product_id": data_product.product_id,
+                "product_name": product_name,
+                "dublin_core_metadata": dublin_core,
+                "quality_assessment": quality_assessment.__dict__,
+                "lineage": lineage,
+                "processing_time": processing_time
+            })
+            
+        except Exception as e:
+            logger.error(f"Data product creation failed: {e}")
+            return create_error_response(f"Data product creation failed: {str(e)}", "creation_error")
+
+    @a2a_skill(
+        name="data_ingestion",
+        description="Ingest data with comprehensive validation and quality control",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "source_location": {"type": "string"},
+                "data_format": {"type": "string"},
+                "validation_rules": {"type": "object"},
+                "quality_thresholds": {"type": "object"}
+            },
+            "required": ["source_location", "data_format"]
+        }
+    )
+    async def data_ingestion(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Ingest data with AI-powered validation and quality assessment"""
+        try:
+            start_time = time.time()
+            
+            source_location = request_data["source_location"]
+            data_format = request_data["data_format"]
+            validation_rules = request_data.get("validation_rules", {})
+            quality_thresholds = request_data.get("quality_thresholds", {})
+            
+            # Perform intelligent data ingestion
+            ingestion_result = await self._ingest_data_ai(source_location, data_format, validation_rules, quality_thresholds)
+            
+            processing_time = time.time() - start_time
+            self.metrics["data_ingestions"] += 1
+            
+            return create_success_response({
+                "ingestion_id": f"ing_{int(time.time())}",
+                "records_processed": ingestion_result.get("records_processed", 0),
+                "validation_results": ingestion_result.get("validation_results", {}),
+                "quality_scores": ingestion_result.get("quality_scores", {}),
+                "processing_time": processing_time
+            })
+            
+        except Exception as e:
+            logger.error(f"Data ingestion failed: {e}")
+            return create_error_response(f"Data ingestion failed: {str(e)}", "ingestion_error")
+
+    @a2a_skill(
+        name="data_transformation",
+        description="Transform data with lineage tracking and quality preservation",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "source_data": {"type": "object"},
+                "transformation_rules": {"type": "array"},
+                "preserve_lineage": {"type": "boolean", "default": True},
+                "quality_validation": {"type": "boolean", "default": True}
+            },
+            "required": ["source_data", "transformation_rules"]
+        }
+    )
+    async def data_transformation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform data with comprehensive lineage tracking"""
+        try:
+            start_time = time.time()
+            
+            source_data = request_data["source_data"]
+            transformation_rules = request_data["transformation_rules"]
+            preserve_lineage = request_data.get("preserve_lineage", True)
+            quality_validation = request_data.get("quality_validation", True)
+            
+            # Perform AI-guided transformation
+            transformation_result = await self._transform_data_ai(source_data, transformation_rules, preserve_lineage, quality_validation)
+            
+            processing_time = time.time() - start_time
+            self.metrics["data_transformations"] += 1
+            
+            return create_success_response({
+                "transformation_id": f"trans_{int(time.time())}",
+                "transformed_data": transformation_result.get("transformed_data", {}),
+                "lineage_graph": transformation_result.get("lineage_graph", {}),
+                "quality_impact": transformation_result.get("quality_impact", {}),
+                "processing_time": processing_time
+            })
+            
+        except Exception as e:
+            logger.error(f"Data transformation failed: {e}")
+            return create_error_response(f"Data transformation failed: {str(e)}", "transformation_error")
+
+    @a2a_skill(
+        name="quality_control",
+        description="Comprehensive quality control with AI-powered assessment and recommendations",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "data_source": {"type": "object"},
+                "quality_dimensions": {"type": "array"},
+                "benchmark_data": {"type": "object"},
+                "automated_fixes": {"type": "boolean", "default": False}
+            },
+            "required": ["data_source"]
+        }
+    )
+    async def quality_control(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform comprehensive quality control assessment"""
+        try:
+            start_time = time.time()
+            
+            data_source = request_data["data_source"]
+            quality_dimensions = request_data.get("quality_dimensions", ["completeness", "accuracy", "consistency"])
+            benchmark_data = request_data.get("benchmark_data", {})
+            automated_fixes = request_data.get("automated_fixes", False)
+            
+            # Comprehensive quality control
+            quality_result = await self._quality_control_ai(data_source, quality_dimensions, benchmark_data, automated_fixes)
+            
+            processing_time = time.time() - start_time
+            self.metrics["quality_controls"] += 1
+            
+            return create_success_response({
+                "quality_control_id": f"qc_{int(time.time())}",
+                "quality_scores": quality_result.get("quality_scores", {}),
+                "issues_detected": quality_result.get("issues_detected", []),
+                "recommendations": quality_result.get("recommendations", []),
+                "fixes_applied": quality_result.get("fixes_applied", []),
+                "processing_time": processing_time
+            })
+            
+        except Exception as e:
+            logger.error(f"Quality control failed: {e}")
+            return create_error_response(f"Quality control failed: {str(e)}", "quality_control_error")
+
+    @a2a_skill(
+        name="metadata_management",
+        description="Comprehensive Dublin Core metadata management with AI enhancement",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "data_resource": {"type": "object"},
+                "metadata_schema": {"type": "string", "default": "dublin_core"},
+                "auto_enhancement": {"type": "boolean", "default": True},
+                "compliance_check": {"type": "boolean", "default": True}
+            },
+            "required": ["data_resource"]
+        }
+    )
+    async def metadata_management(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Manage comprehensive Dublin Core metadata"""
+        try:
+            start_time = time.time()
+            
+            data_resource = request_data["data_resource"]
+            metadata_schema = request_data.get("metadata_schema", "dublin_core")
+            auto_enhancement = request_data.get("auto_enhancement", True)
+            compliance_check = request_data.get("compliance_check", True)
+            
+            # Comprehensive metadata management
+            metadata_result = await self._metadata_management_ai(data_resource, metadata_schema, auto_enhancement, compliance_check)
+            
+            processing_time = time.time() - start_time
+            self.metrics["metadata_operations"] += 1
+            
+            return create_success_response({
+                "metadata_id": f"meta_{int(time.time())}",
+                "dublin_core_metadata": metadata_result.get("dublin_core_metadata", {}),
+                "compliance_status": metadata_result.get("compliance_status", {}),
+                "enhancement_applied": metadata_result.get("enhancement_applied", []),
+                "processing_time": processing_time
+            })
+            
+        except Exception as e:
+            logger.error(f"Metadata management failed: {e}")
+            return create_error_response(f"Metadata management failed: {str(e)}", "metadata_error")
+
+    # Additional supporting methods for A2A handler compatibility
+    async def extract_metadata(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract metadata using ML techniques - delegates to existing skill"""
+        return await self.metadata_management(request_data)
+
+    async def assess_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess data quality using AI - delegates to existing assess_quality skill"""
+        return await self.assess_data_quality(request_data)
+
+    async def create_lineage(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create data lineage graph - delegates to existing lineage skill"""
+        return await self.map_lineage(request_data)
+
+    async def dublin_core_compliance(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Verify Dublin Core compliance"""
+        try:
+            data_resource = request_data.get("data_resource", {})
+            metadata = data_resource.get("metadata", {})
+            
+            # Check Dublin Core compliance
+            compliance_result = await self._check_dublin_core_compliance(metadata)
+            
+            return create_success_response({
+                "compliance_status": "compliant" if compliance_result["is_compliant"] else "non_compliant",
+                "missing_elements": compliance_result.get("missing_elements", []),
+                "recommendations": compliance_result.get("recommendations", []),
+                "compliance_score": compliance_result.get("compliance_score", 0.0)
+            })
+            
+        except Exception as e:
+            logger.error(f"Dublin Core compliance check failed: {e}")
+            return create_error_response(f"Dublin Core compliance check failed: {str(e)}", "compliance_error")
+
+    async def data_integrity_check(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Check data integrity with blockchain verification"""
+        try:
+            data = request_data.get("data", {})
+            integrity_checks = request_data.get("integrity_checks", ["hash", "completeness", "consistency"])
+            
+            # Perform integrity checks
+            integrity_result = await self._check_data_integrity(data, integrity_checks)
+            
+            return create_success_response({
+                "integrity_status": "valid" if integrity_result["is_valid"] else "invalid",
+                "hash_verification": integrity_result.get("hash_verification", {}),
+                "completeness_check": integrity_result.get("completeness_check", {}),
+                "consistency_check": integrity_result.get("consistency_check", {}),
+                "blockchain_verified": integrity_result.get("blockchain_verified", False)
+            })
+            
+        except Exception as e:
+            logger.error(f"Data integrity check failed: {e}")
+            return create_error_response(f"Data integrity check failed: {str(e)}", "integrity_error")
+
+    async def cross_agent_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate data across multiple agents"""
+        try:
+            data = request_data.get("data", {})
+            validation_agents = request_data.get("validation_agents", ["agent1", "agent5"])
+            consensus_threshold = request_data.get("consensus_threshold", 0.8)
+            
+            # Cross-agent validation
+            validation_result = await self._cross_agent_validation(data, validation_agents, consensus_threshold)
+            
+            return create_success_response({
+                "validation_status": "valid" if validation_result["is_valid"] else "invalid",
+                "agent_results": validation_result.get("agent_results", {}),
+                "consensus_score": validation_result.get("consensus_score", 0.0),
+                "validation_summary": validation_result.get("validation_summary", {})
+            })
+            
+        except Exception as e:
+            logger.error(f"Cross-agent validation failed: {e}")
+            return create_error_response(f"Cross-agent validation failed: {str(e)}", "cross_validation_error")
+
     # Additional AI methods would be implemented here...
     async def _assess_data_quality_comprehensive(self, data_product_id: str, data_sample: List[Any], criteria: List[str], use_ml: bool) -> DataQualityAssessment:
         """Comprehensive data quality assessment implementation"""

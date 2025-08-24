@@ -477,7 +477,7 @@ class SecurityLogger {
         // In production, integrate with alerting systems
         if (process.env.SECURITY_WEBHOOK_URL) {
             try {
-                // await fetch(process.env.SECURITY_WEBHOOK_URL, {
+                // await blockchainClient.sendMessage(process.env.SECURITY_WEBHOOK_URL, {
                 //     method: 'POST',
                 //     headers: { 'Content-Type': 'application/json' },
                 //     body: JSON.stringify(alertData)

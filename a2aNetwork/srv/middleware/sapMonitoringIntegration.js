@@ -14,7 +14,7 @@ const cds = require('@sap/cds');
 // const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node'); // Replaced with selective manual instrumentation to avoid HTTP conflicts
 // const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
 const promClient = require('prom-client');
-const axios = require('axios');
+const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 class MonitoringIntegration {
   constructor() {
@@ -282,7 +282,7 @@ class MonitoringIntegration {
         // Check SAP services
         if (process.env.SAP_GRAPH_ENDPOINT) {
           try {
-            await axios.get(process.env.SAP_GRAPH_ENDPOINT + '/health', {
+            await blockchainClient.sendMessage(process.env.SAP_GRAPH_ENDPOINT + '/health', {
               timeout: 5000,
               headers: { 'Authorization': `Bearer ${process.env.SAP_GRAPH_TOKEN}` }
             });
@@ -356,7 +356,7 @@ class MonitoringIntegration {
     }
 
     try {
-      await axios.post(process.env.SAP_CLOUD_ALM_ALERTS_ENDPOINT, {
+      await blockchainClient.sendMessage(process.env.SAP_CLOUD_ALM_ALERTS_ENDPOINT, {
         severity,
         message,
         timestamp: new Date().toISOString(),

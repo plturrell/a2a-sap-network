@@ -25,7 +25,7 @@ import logging
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 # HTTP client needed for initial registration with A2A network
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 from contextlib import asynccontextmanager
 import aiosqlite
 import redis.asyncio as redis

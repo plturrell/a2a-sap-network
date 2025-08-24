@@ -1,0 +1,350 @@
+{
+  "totalFiles": 477,
+  "filesNeedingMigration": 79,
+  "filesMigrated": 27,
+  "fileResults": [
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/Component.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/controller/alerts.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/controller/marketplace.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/controller/ogs.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent0/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent0/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent1/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 2,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent10/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent10/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 2,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent11/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent11/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 2,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent12/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent12/controller/ObjectPageExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent12/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 2,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent13/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent13/controller/ObjectPageExt.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent13/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 2,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent14/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent14/controller/ObjectPageExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent14/utils/SecurityUtils.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 2,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent15/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent15/controller/ObjectPageExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent15/utils/SecurityUtils.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent5/controller/ObjectPageExt.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent6/utils/SecurityUtils.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/utils/SharedSecurityUtils.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/utils/websocket.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/config.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/controller/Launchpad.controller.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/controller/NotificationCenter.controller.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/services/SecurityService.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/config/environment.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/dev-services/server.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/dev-services/websocket-service.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/docs-platform/server.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/scripts/agent2-ui-security-scan.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/scripts/agent5-ui-security-scan.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/scripts/final-security-scan.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/scripts/initializeBlockchainData.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/scripts/populateServicesSafely.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/sdk/javascript/src/client/a2aClient.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/sdk/src/Agent.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/sdk/src/Registry.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent0-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent1-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent10-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent11-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent12-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent13-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent14-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent15-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent2-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent3-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent4-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent5-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/security/agent7-security-scanner.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/a2aHumanMessageBridge.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/agentProxyService.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 4,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/chatAgentBridge.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 5,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/enhancedNotificationService.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 4,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/eventBusService.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/integratedNotificationService.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/middleware/gracefulShutdown.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/middleware/secureWebSocketAuth.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/middleware/security.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/middleware/securityHardening.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/notificationPersistenceService.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 7,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/notificationService.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 3,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/realSystemEventConnector.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/sapMessagingService.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/server.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 1,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/server_clean.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 3,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/startRealNotificationSystem.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/utils/compressionMiddleware.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/utils/portManager.js"
+    },
+    {
+      "status": "migrated",
+      "replacements": 5,
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/websocketDataService.js"
+    },
+    {
+      "status": "no_changes",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/srv/websocketMonitor.js"
+    }
+  ]
+}

@@ -236,7 +236,7 @@ class ErrorHandler {
             
             // Example: Send to webhook
             if (process.env.ALERT_WEBHOOK_URL) {
-                // await fetch(process.env.ALERT_WEBHOOK_URL, {
+                // await blockchainClient.sendMessage(process.env.ALERT_WEBHOOK_URL, {
                 //     method: 'POST',
                 //     headers: { 'Content-Type': 'application/json' },
                 //     body: JSON.stringify(alertData)

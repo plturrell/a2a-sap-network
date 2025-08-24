@@ -1,8 +1,3 @@
-"""
-MCP-enabled Hybrid Ranking Skills
-Exposes BM25, PageRank, and hybrid ranking as MCP tools for cross-agent usage
-"""
-
 from typing import Dict, List, Any, Optional, Tuple, Union
 import numpy as np
 from datetime import datetime
@@ -15,13 +10,29 @@ from concurrent.futures import ThreadPoolExecutor
 from ....sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ....sdk.mcpSkillCoordination import skill_provides, skill_depends_on
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+MCP-enabled Hybrid Ranking Skills
+Exposes BM25, PageRank, and hybrid ranking as MCP tools for cross-agent usage
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class MCPHybridRankingSkills:
-    """MCP-enabled hybrid ranking with exposed tools for cross-agent usage"""
+class MCPHybridRankingSkills(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""MCP-enabled hybrid ranking with exposed tools for cross-agent usage"""
     
     def __init__(self, hanaConnection=None):
+        
+        super().__init__()
         self.hanaConnection = hanaConnection
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.defaultWeights = {

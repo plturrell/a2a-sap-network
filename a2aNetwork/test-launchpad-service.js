@@ -1,3 +1,7 @@
+/**
+ * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
+ */
+
 #!/usr/bin/env node
 
 /**
@@ -24,7 +28,7 @@ async function testLaunchpadService() {
         // Test 1: getNetworkStats via HTTP
         console.log('🧪 Test 1: getNetworkStats');
         try {
-            const response = await fetch(`${url}/odata/v4/launchpad/getNetworkStats`, {
+            const response = await blockchainClient.sendMessage(`${url}/odata/v4/launchpad/getNetworkStats`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -44,7 +48,7 @@ async function testLaunchpadService() {
         // Test 2: getAgentStatus
         console.log('🧪 Test 2: getAgentStatus');
         try {
-            const response = await fetch(`${url}/odata/v4/launchpad/getAgentStatus`, {
+            const response = await blockchainClient.sendMessage(`${url}/odata/v4/launchpad/getAgentStatus`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -64,7 +68,7 @@ async function testLaunchpadService() {
         // Test 3: getBlockchainStats
         console.log('🧪 Test 3: getBlockchainStats');
         try {
-            const response = await fetch(`${url}/odata/v4/launchpad/getBlockchainStats`, {
+            const response = await blockchainClient.sendMessage(`${url}/odata/v4/launchpad/getBlockchainStats`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -84,7 +88,7 @@ async function testLaunchpadService() {
         // Test 4: getServicesCount
         console.log('🧪 Test 4: getServicesCount');
         try {
-            const response = await fetch(`${url}/odata/v4/launchpad/getServicesCount`, {
+            const response = await blockchainClient.sendMessage(`${url}/odata/v4/launchpad/getServicesCount`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -104,7 +108,7 @@ async function testLaunchpadService() {
         // Test 5: getHealthSummary
         console.log('🧪 Test 5: getHealthSummary');
         try {
-            const response = await fetch(`${url}/odata/v4/launchpad/getHealthSummary`, {
+            const response = await blockchainClient.sendMessage(`${url}/odata/v4/launchpad/getHealthSummary`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

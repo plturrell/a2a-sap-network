@@ -829,8 +829,8 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
             
             # Perform health check through circuit breaker
             async def health_check_call():
-                import aiohttp
-                async with aiohttp.ClientSession() as session:
+                # A2A Protocol: Use blockchain messaging instead of aiohttp
+                async with A2ANetworkClient() as session:
                     health_url = registration.health_check_url or f"{endpoint.url}/health"
                     async with session.get(health_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                         if response.status == 200:

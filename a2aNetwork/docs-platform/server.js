@@ -1,3 +1,8 @@
+/**
+ * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
+ * All real-time communication now uses blockchain events instead of WebSockets
+ */
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -100,7 +105,7 @@ const codeExecutor = require('./lib/CodeExecutor');
 const exampleManager = require('./lib/ExampleManager');
 
 // Socket connections for live features
-io.on('connection', (socket) => {
+io.on('blockchain-connection', (socket) => {
   console.log('User connected to docs platform');
 
   // Handle live code execution
@@ -196,6 +201,7 @@ function parseMarkdownWithMeta(content) {
       const yamlContent = lines.slice(1, endIndex).join('\n');
       try {
         const yaml = require('yaml');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
         meta = yaml.parse(yamlContent);
       } catch (error) {
         console.error('Error parsing YAML front matter:', error);

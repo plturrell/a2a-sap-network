@@ -9,6 +9,7 @@
 
 const cds = require('@sap/cds');
 const { Server } = require('socket.io');
+const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
 
 /**
  * Graceful shutdown manager
@@ -31,7 +32,7 @@ class GracefulShutdownManager {
     this.servers.add(server);
     
     // Track connections
-    server.on('connection', (connection) => {
+    server.on('blockchain-connection', (connection) => {
       this.connections.add(connection);
       connection.on('close', () => {
         this.connections.delete(connection);

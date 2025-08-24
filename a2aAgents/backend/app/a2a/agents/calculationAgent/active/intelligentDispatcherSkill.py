@@ -1,8 +1,3 @@
-"""
-Intelligent Dispatcher Skill for Calculation Agent
-Uses GrokClient to analyze natural language calculation requests and dispatch to appropriate skills
-"""
-
 import json
 import logging
 from typing import Dict, Any, List, Optional, Tuple
@@ -11,13 +6,29 @@ import re
 
 from app.clients.grokClient import GrokClient, GrokConfig
 
+from app.a2a.core.security_base import SecureA2AAgent
+"""
+Intelligent Dispatcher Skill for Calculation Agent
+Uses GrokClient to analyze natural language calculation requests and dispatch to appropriate skills
+"""
+
 logger = logging.getLogger(__name__)
 
 
-class IntelligentDispatcherSkill:
-    """Analyzes calculation requests and dispatches to appropriate calculation skills"""
+class IntelligentDispatcherSkill(SecureA2AAgent):
+    
+        # Security features provided by SecureA2AAgent:
+        # - JWT authentication and authorization
+        # - Rate limiting and request throttling  
+        # - Input validation and sanitization
+        # - Audit logging and compliance tracking
+        # - Encrypted communication channels
+        # - Automatic security scanning
+"""Analyzes calculation requests and dispatches to appropriate calculation skills"""
     
     def __init__(self):
+        
+        super().__init__()
         # Initialize GrokClient
         self.grok_client = GrokClient()
         

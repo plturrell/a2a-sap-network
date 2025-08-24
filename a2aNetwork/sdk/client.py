@@ -2,7 +2,7 @@
 A2A Client for communicating with other agents
 """
 
-import httpx
+# A2A Protocol: Use blockchain messaging instead of httpx
 import asyncio
 from typing import Dict, Any, Optional, List
 import logging

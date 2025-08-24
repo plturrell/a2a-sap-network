@@ -85,22 +85,22 @@ class A2ARedisCache extends EventEmitter {
             }
             
             // Event handlers
-            this.client.on('connect', () => {
+            this.client.on('connect', function() {
                 this.isConnected = true;
                 this.emit('connected');
                 console.log(`A2A Redis Cache connected to ${this.config.host}:${this.config.port}`);
-            });
+            }.bind(this));
             
-            this.client.on('error', (error) => {
+            this.client.on('error', function(error) {
                 this.metrics.errors++;
                 this.emit('error', error);
                 console.error('A2A Redis Cache error:', error);
-            });
+            }.bind(this));
             
-            this.client.on('end', () => {
+            this.client.on('end', function() {
                 this.isConnected = false;
                 this.emit('disconnected');
-            });
+            }.bind(this));
             
             await this.client.connect();
             
@@ -127,17 +127,17 @@ class A2ARedisCache extends EventEmitter {
         await this.publisher.connect();
         
         // Subscribe to cache invalidation events
-        await this.subscriber.subscribe('a2a:cache:invalidate', (message) => {
+        await this.subscriber.subscribe('a2a:cache:invalidate', function(message) {
             try {
                 const data = JSON.parse(message);
                 this.handleCacheInvalidation(data);
             } catch (error) {
                 console.error('Error handling cache invalidation:', error);
             }
-        });
+        }.bind(this));
         
         // Subscribe to distributed lock events
-        await this.subscriber.subscribe('a2a:cache:locks', (message) => {
+        await this.subscriber.subscribe('a2a:cache:locks', function(message) {
             try {
                 const data = JSON.parse(message);
                 this.handleLockEvent(data);
@@ -297,7 +297,9 @@ class A2ARedisCache extends EventEmitter {
         this.metrics.totalRequests++;
         
         try {
-            const fullKeys = keys.map(key => this.buildKey(key));
+            const fullKeys = keys.map(function(key) {
+                return this.buildKey(key);
+            }.bind(this));
             const results = await this.client.mGet(fullKeys);
             
             const values = {};
@@ -358,9 +360,9 @@ class A2ARedisCache extends EventEmitter {
             
             if (keys.length > 0) {
                 const pipeline = this.client.multi();
-                keys.forEach(key => {
+                keys.forEach(function(key) {
                     pipeline.del(this.buildKey(key));
-                });
+                }.bind(this));
                 await pipeline.exec();
                 
                 // Clean up tag registry
@@ -419,7 +421,9 @@ class A2ARedisCache extends EventEmitter {
             }
             
             // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise(function(resolve) { 
+                setTimeout(resolve, 10); 
+            });
         }
         
         throw new Error(`Failed to acquire lock: ${lockKey}`);

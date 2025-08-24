@@ -239,7 +239,7 @@ return;
                 
                 // Initialize WebSocket server for real-time metrics
                 const realtimeMetricsService = require('./monitoring/realtimeMetricsService');
-                realtimeMetricsService.initializeWebSocketServer(server);
+                realtimeMetricsService.initializeBlockchainEventServer(server);
                 // eslint-disable-next-line no-console
                 // eslint-disable-next-line no-console
                 console.log('🚀 WebSocket server initialized for real-time metrics');

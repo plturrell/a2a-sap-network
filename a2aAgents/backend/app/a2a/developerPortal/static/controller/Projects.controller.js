@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/core/format/DateFormat"
-], (Controller, JSONModel, MessageToast, MessageBox, DateFormat) => {
+], function (Controller, JSONModel, MessageToast, MessageBox, DateFormat) {
     "use strict";
 /* global localStorage, performance */
 
@@ -63,13 +63,13 @@ sap.ui.define([
             }
             
             // Use event delegation for better performance
-            jQuery(oTable.getDomRef()).on("mouseenter", ".a2a-project-row", (oEvent) => {
+            jQuery(oTable.getDomRef()).on("mouseenter", ".a2a-project-row", function(oEvent) {
                 this._onProjectRowHover(oEvent, true);
-            });
+            }.bind(this));
             
-            jQuery(oTable.getDomRef()).on("mouseleave", ".a2a-project-row", (oEvent) => {
+            jQuery(oTable.getDomRef()).on("mouseleave", ".a2a-project-row", function(oEvent) {
                 this._onProjectRowHover(oEvent, false);
-            });
+            }.bind(this));
         },
         
         _onProjectRowHover: function (oEvent, bHover) {

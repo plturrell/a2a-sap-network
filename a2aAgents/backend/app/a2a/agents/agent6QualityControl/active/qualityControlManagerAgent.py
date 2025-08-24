@@ -28,7 +28,7 @@ from typing import Dict, List, Optional, Any, Tuple, Union, Callable
 import asyncio
 import hashlib
 # Direct HTTP calls not allowed - use A2A protocol
-# import httpx  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import math

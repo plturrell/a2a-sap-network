@@ -26,7 +26,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 # Direct HTTP calls not allowed - use A2A protocol
-# import aiohttp  # REMOVED: A2A protocol violation
+# # A2A Protocol: Use blockchain messaging instead of aiohttp  # REMOVED: A2A protocol violation
 import yaml
 from rich.console import Console
 from rich.table import Table
