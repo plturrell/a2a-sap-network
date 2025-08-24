@@ -482,7 +482,7 @@ sap.ui.define([
                     MessageToast.show(this.getResourceBundle().getText("marketplace.trial.unavailable"));
                 }
             }).catch(error => {
-                console.error("Failed to launch trial:", error);
+                // console.error("Failed to launch trial:", error);
                 MessageToast.show(this.getResourceBundle().getText("marketplace.trial.error"));
             });
         },
@@ -527,7 +527,7 @@ sap.ui.define([
                     const oCart = JSON.parse(sSavedCart);
                     this.oMarketplaceModel.setProperty("/cart", oCart);
                 } catch (e) {
-                    console.error("Failed to restore cart:", e);
+                    // console.error("Failed to restore cart:", e);
                 }
             }
         },
