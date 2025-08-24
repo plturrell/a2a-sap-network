@@ -27,7 +27,7 @@ kill_timeout = "300s"
   memory_mb = 16384
 
 [processes]
-  app = "/app/start.sh backend"
+  app = "backend"
 
 [deploy]
   strategy = "immediate"
@@ -49,10 +49,12 @@ kill_timeout = "300s"
     soft_limit = 20
 
   [[http_service.checks]]
-    grace_period = "300s"
+    grace_period = "600s"
     interval = "60s"
     timeout = "30s"
     path = "/health"
+    method = "GET"
+    type = "http"
 
 [metrics]
   port = 9091

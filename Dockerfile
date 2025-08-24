@@ -147,7 +147,23 @@ case "${1}" in
     backend)
         echo "Starting A2A Backend Service..."
         cd /app
-        exec python a2aAgents/backend/main.py
+        # Add error handling and logging
+        echo "Environment variables:"
+        echo "PYTHONPATH=$PYTHONPATH"
+        echo "A2A_SERVICE_URL=$A2A_SERVICE_URL"
+        echo "A2A_AGENT_BASE_URL=$A2A_AGENT_BASE_URL"
+        echo "Working directory: $(pwd)"
+        echo "Python version: $(python --version)"
+        
+        # Check if main.py exists
+        if [ ! -f "a2aAgents/backend/main.py" ]; then
+            echo "ERROR: main.py not found at a2aAgents/backend/main.py"
+            ls -la a2aAgents/backend/
+            exit 1
+        fi
+        
+        # Start with verbose output for debugging
+        exec python -u a2aAgents/backend/main.py
         ;;
     start)
         # Default start mode
