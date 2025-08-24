@@ -44,9 +44,11 @@ ENV PYTHONUNBUFFERED=1 \
 # Create non-root user for security
 RUN groupadd -r a2auser && useradd -r -g a2auser a2auser
 
-# Install runtime dependencies
+# Install runtime dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     curl \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

@@ -228,8 +228,8 @@ log "🎯 Step 10: Final Validation"
 log "Running comprehensive system test..."
 SYSTEM_OK=true
 
-# Test agent endpoints
-for agent in {1..15}; do
+# Test agent endpoints (excluding quarantined Agent 11)
+for agent in {1..10} {12..15}; do
     if curl -f "http://localhost:4004/a2a/agent${agent}/v1/health" > /dev/null 2>&1; then
         success "Agent ${agent} is operational"
     else
@@ -237,6 +237,10 @@ for agent in {1..15}; do
         SYSTEM_OK=false
     fi
 done
+
+# Agent 11 quarantine check
+warning "Agent 11 (SQL Agent) is quarantined due to critical security vulnerabilities"
+warning "See SECURITY_QUARANTINE.md for details"
 
 # Test authentication
 if [[ -n "${XSUAA_SERVICE_URL}" ]] || [[ -n "${JWT_SECRET}" ]]; then

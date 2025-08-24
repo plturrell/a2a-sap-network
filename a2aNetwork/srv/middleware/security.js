@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const validator = require('validator');
 const DOMPurify = require('isomorphic-dompurify');
 const { v4: uuidv4 } = require('uuid');
+const securityMiddleware = require('./securityMiddleware');
 
 // CORS configuration
 const corsOptions = {
@@ -445,6 +446,15 @@ const applySecurityMiddleware = (app) => {
   // Apply additional security headers
   app.use(additionalSecurityHeaders);
   
+  // Apply comprehensive security monitoring middleware
+  app.use(securityMiddleware.middleware());
+  
+  // Apply authentication failure monitoring
+  app.use(securityMiddleware.authenticationFailure());
+  
+  // Apply input validation middleware
+  app.use('/api/v1/*', securityMiddleware.inputValidation());
+  
   // Apply security audit logging
   app.use(securityAuditLog);
   
@@ -457,7 +467,8 @@ const applySecurityMiddleware = (app) => {
   // Apply CSRF protection to write operations
   app.use('/api/v1/*', (req, res, next) => {
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
-      csrfProtection(req, res, next);
+      // Use integrated CSRF protection that reports to security monitoring
+      securityMiddleware.csrfProtection()(req, res, next);
     } else {
       next();
     }
@@ -481,6 +492,37 @@ const applySecurityMiddleware = (app) => {
   
   // General rate limit for all other routes
   app.use(rateLimiters.api);
+  
+  // Security dashboard endpoints
+  app.get('/api/v1/security/dashboard', (req, res) => {
+    const dashboard = securityMiddleware.getDashboardData();
+    res.json(dashboard || { error: 'Security monitoring not available' });
+  });
+  
+  app.get('/api/v1/security/alerts', (req, res) => {
+    const alerts = securityMiddleware.getActiveAlerts();
+    res.json({ alerts: alerts || [] });
+  });
+  
+  app.post('/api/v1/security/alerts/:alertId/acknowledge', (req, res) => {
+    const alertId = req.params.alertId;
+    const userId = req.user?.id || 'anonymous';
+    const result = securityMiddleware.acknowledgeAlert(alertId, userId);
+    res.json({ success: result });
+  });
+  
+  app.post('/api/v1/security/alerts/:alertId/resolve', (req, res) => {
+    const alertId = req.params.alertId;
+    const userId = req.user?.id || 'anonymous';
+    const resolution = req.body.resolution || 'Resolved via API';
+    const result = securityMiddleware.resolveAlert(alertId, userId, resolution);
+    res.json({ success: result });
+  });
+  
+  app.get('/api/v1/security/metrics', (req, res) => {
+    const metrics = securityMiddleware.getSecurityMetrics();
+    res.json(metrics || { error: 'Security metrics not available' });
+  });
 };
 
 module.exports = {

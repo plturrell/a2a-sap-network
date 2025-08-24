@@ -217,6 +217,12 @@ sap.ui.define([
         createSecureWebSocket: function(url, options) {
             options = options || {};
             
+            // SECURITY: Validate authentication before creating WebSocket
+            if (!this.hasRole("CalculationManager") && !this.hasRole("Admin")) {
+                this.auditLog("WEBSOCKET_ACCESS_DENIED", { url: url, reason: "insufficient_privileges" });
+                throw new Error("Access denied: WebSocket connection requires CalculationManager role");
+            }
+            
             // Force secure protocol
             let secureUrl = url;
             if (url.startsWith('ws://')) {
@@ -224,7 +230,12 @@ sap.ui.define([
                 Log.warning("WebSocket URL upgraded to secure protocol", secureUrl);
             }
 
-            const ws = new WebSocket(secureUrl);
+            // SECURITY: Add authentication token to URL
+            const authToken = this.getAuthToken();
+            const separator = secureUrl.includes('?') ? '&' : '?';
+            const authenticatedUrl = `${secureUrl}${separator}token=${encodeURIComponent(authToken)}`;
+
+            const ws = new WebSocket(authenticatedUrl);
             
             // Add security event handlers
             ws.addEventListener('open', function() {
@@ -259,6 +270,12 @@ sap.ui.define([
         createSecureEventSource: function(url, options) {
             options = options || {};
             
+            // SECURITY: Validate authentication before creating EventSource
+            if (!this.hasRole("CalculationManager") && !this.hasRole("Admin")) {
+                this.auditLog("EVENTSOURCE_ACCESS_DENIED", { url: url, reason: "insufficient_privileges" });
+                throw new Error("Access denied: EventSource connection requires CalculationManager role");
+            }
+            
             // Force HTTPS protocol
             let secureUrl = url;
             if (url.startsWith('http://')) {
@@ -266,7 +283,17 @@ sap.ui.define([
                 Log.warning("EventSource URL upgraded to secure protocol", secureUrl);
             }
 
-            const eventSource = new EventSource(secureUrl);
+            // SECURITY: Add authentication headers
+            const headers = {
+                'Authorization': `Bearer ${this.getAuthToken()}`,
+                'X-CSRF-Token': this.getCSRFToken()
+            };
+
+            // Create EventSource with authentication
+            const eventSource = new EventSource(secureUrl, {
+                headers: headers,
+                withCredentials: true
+            });
             
             // Add validation for incoming events
             const originalAddEventListener = eventSource.addEventListener;

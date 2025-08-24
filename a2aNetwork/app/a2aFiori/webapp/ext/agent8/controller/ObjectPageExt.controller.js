@@ -8,7 +8,7 @@ sap.ui.define([
     "sap/base/security/encodeURL",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
-    "a2a/network/agent8/ext/utils/SecurityUtils",
+    "../../../utils/SharedSecurityUtils",
     "a2a/network/agent8/ext/utils/AuthHandler"
 ], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) {
     "use strict";

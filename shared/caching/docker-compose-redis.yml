@@ -1,0 +1,448 @@
+# Redis Cluster Configuration for A2A Platform
+# High-availability Redis setup with clustering, monitoring, and backup
+
+version: '3.8'
+
+services:
+  # Redis Cluster Nodes
+  redis-cluster-node-1:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-1
+    command: >
+      redis-server 
+      --port 7001
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+    ports:
+      - "7001:7001"
+      - "17001:17001"
+    volumes:
+      - redis-cluster-1-data:/data
+      - ./redis/cluster/node-1.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7001", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis-cluster-node-2:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-2
+    command: >
+      redis-server 
+      --port 7002
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    volumes:
+      - redis-cluster-2-data:/data
+      - ./redis/cluster/node-2.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7002", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis-cluster-node-3:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-3
+    command: >
+      redis-server 
+      --port 7003
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    volumes:
+      - redis-cluster-3-data:/data
+      - ./redis/cluster/node-3.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7003", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis-cluster-node-4:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-4
+    command: >
+      redis-server 
+      --port 7004
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+    ports:
+      - "7004:7004"
+      - "17004:17004"
+    volumes:
+      - redis-cluster-4-data:/data
+      - ./redis/cluster/node-4.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7004", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis-cluster-node-5:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-5
+    command: >
+      redis-server 
+      --port 7005
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+    ports:
+      - "7005:7005"
+      - "17005:17005"
+    volumes:
+      - redis-cluster-5-data:/data
+      - ./redis/cluster/node-5.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7005", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis-cluster-node-6:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-6
+    command: >
+      redis-server 
+      --port 7006
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+    ports:
+      - "7006:7006"
+      - "17006:17006"
+    volumes:
+      - redis-cluster-6-data:/data
+      - ./redis/cluster/node-6.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7006", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Redis Cluster Setup
+  redis-cluster-setup:
+    image: redis:7-alpine
+    container_name: a2a-redis-cluster-setup
+    depends_on:
+      - redis-cluster-node-1
+      - redis-cluster-node-2
+      - redis-cluster-node-3
+      - redis-cluster-node-4
+      - redis-cluster-node-5
+      - redis-cluster-node-6
+    command: >
+      sh -c '
+        sleep 30 &&
+        redis-cli --cluster create 
+        redis-cluster-node-1:7001 
+        redis-cluster-node-2:7002 
+        redis-cluster-node-3:7003 
+        redis-cluster-node-4:7004 
+        redis-cluster-node-5:7005 
+        redis-cluster-node-6:7006 
+        --cluster-replicas 1 --cluster-yes
+      '
+    networks:
+      - a2a-redis-network
+    restart: "no"
+
+  # Single Redis Instance (for development/testing)
+  redis-standalone:
+    image: redis:7-alpine
+    container_name: a2a-redis-standalone
+    command: >
+      redis-server 
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --save 900 1 300 10 60 10000
+      --tcp-keepalive 60
+      --timeout 300
+      --databases 16
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-standalone-data:/data
+      - ./redis/standalone/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    profiles:
+      - standalone
+
+  # Redis Sentinel for High Availability
+  redis-sentinel-1:
+    image: redis:7-alpine
+    container_name: a2a-redis-sentinel-1
+    command: >
+      sh -c '
+        echo "port 26379
+        sentinel monitor a2a-master redis-standalone 6379 2
+        sentinel auth-pass a2a-master ${REDIS_PASSWORD:-}
+        sentinel down-after-milliseconds a2a-master 5000
+        sentinel parallel-syncs a2a-master 1
+        sentinel failover-timeout a2a-master 10000
+        sentinel deny-scripts-reconfig yes" > /tmp/sentinel.conf &&
+        redis-sentinel /tmp/sentinel.conf
+      '
+    ports:
+      - "26379:26379"
+    networks:
+      - a2a-redis-network
+    depends_on:
+      - redis-standalone
+    restart: unless-stopped
+    profiles:
+      - sentinel
+
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: a2a-redis-sentinel-2
+    command: >
+      sh -c '
+        echo "port 26380
+        sentinel monitor a2a-master redis-standalone 6379 2
+        sentinel auth-pass a2a-master ${REDIS_PASSWORD:-}
+        sentinel down-after-milliseconds a2a-master 5000
+        sentinel parallel-syncs a2a-master 1
+        sentinel failover-timeout a2a-master 10000
+        sentinel deny-scripts-reconfig yes" > /tmp/sentinel.conf &&
+        redis-sentinel /tmp/sentinel.conf
+      '
+    ports:
+      - "26380:26380"
+    networks:
+      - a2a-redis-network
+    depends_on:
+      - redis-standalone
+    restart: unless-stopped
+    profiles:
+      - sentinel
+
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: a2a-redis-sentinel-3
+    command: >
+      sh -c '
+        echo "port 26381
+        sentinel monitor a2a-master redis-standalone 6379 2
+        sentinel auth-pass a2a-master ${REDIS_PASSWORD:-}
+        sentinel down-after-milliseconds a2a-master 5000
+        sentinel parallel-syncs a2a-master 1
+        sentinel failover-timeout a2a-master 10000
+        sentinel deny-scripts-reconfig yes" > /tmp/sentinel.conf &&
+        redis-sentinel /tmp/sentinel.conf
+      '
+    ports:
+      - "26381:26381"
+    networks:
+      - a2a-redis-network
+    depends_on:
+      - redis-standalone
+    restart: unless-stopped
+    profiles:
+      - sentinel
+
+  # Redis Commander (Web UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: a2a-redis-commander
+    environment:
+      - REDIS_HOSTS=standalone:redis-standalone:6379,cluster:redis-cluster-node-1:7001
+      - HTTP_USER=admin
+      - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD:-admin123}
+    ports:
+      - "8081:8081"
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    depends_on:
+      - redis-standalone
+    profiles:
+      - tools
+
+  # Redis Exporter for Prometheus
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: a2a-redis-exporter
+    environment:
+      - REDIS_ADDR=redis://redis-standalone:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    ports:
+      - "9121:9121"
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    depends_on:
+      - redis-standalone
+    profiles:
+      - monitoring
+
+  # Redis Backup Service
+  redis-backup:
+    image: alpine:latest
+    container_name: a2a-redis-backup
+    volumes:
+      - redis-backups:/backups
+      - redis-standalone-data:/redis-data:ro
+      - ./redis/scripts:/scripts
+    command: >
+      sh -c '
+        apk add --no-cache redis &&
+        crond -f -d 8
+      '
+    environment:
+      - BACKUP_SCHEDULE=0 2 * * *  # Daily at 2 AM
+      - REDIS_HOST=redis-standalone
+      - REDIS_PORT=6379
+      - BACKUP_RETENTION_DAYS=7
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    depends_on:
+      - redis-standalone
+    profiles:
+      - backup
+
+  # Load Balancer for Redis Cluster
+  redis-proxy:
+    image: haproxy:2.4-alpine
+    container_name: a2a-redis-proxy
+    volumes:
+      - ./redis/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "6380:6380"  # Proxy port for Redis cluster
+      - "8404:8404"  # HAProxy stats
+    networks:
+      - a2a-redis-network
+    restart: unless-stopped
+    depends_on:
+      - redis-cluster-node-1
+      - redis-cluster-node-2
+      - redis-cluster-node-3
+    profiles:
+      - proxy
+
+networks:
+  a2a-redis-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-cluster-1-data:
+    driver: local
+  redis-cluster-2-data:
+    driver: local
+  redis-cluster-3-data:
+    driver: local
+  redis-cluster-4-data:
+    driver: local
+  redis-cluster-5-data:
+    driver: local
+  redis-cluster-6-data:
+    driver: local
+  redis-standalone-data:
+    driver: local
+  redis-backups:
+    driver: local
+
+# Usage:
+# Development (single instance): docker-compose -f docker-compose-redis.yml --profile standalone up -d
+# Cluster mode: docker-compose -f docker-compose-redis.yml up -d
+# With monitoring: docker-compose -f docker-compose-redis.yml --profile monitoring up -d
+# With tools: docker-compose -f docker-compose-redis.yml --profile tools --profile monitoring up -d
+# Full setup: docker-compose -f docker-compose-redis.yml --profile tools --profile monitoring --profile backup up -d

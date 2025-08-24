@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
-    "a2a/network/agent8/ext/utils/SecurityUtils"
+    "../../../utils/SharedSecurityUtils"
 ], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
     "use strict";
 

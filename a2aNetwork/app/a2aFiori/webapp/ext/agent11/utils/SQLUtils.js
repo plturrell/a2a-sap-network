@@ -115,19 +115,21 @@ sap.ui.define([
                 /sp_executesql/i
             ];
 
-            injectionPatterns.forEach(pattern => {
+            const checkInjectionPattern = (pattern) => {
                 if (pattern.test(sql)) {
                     issues.push("Potential SQL injection pattern detected");
                 }
-            });
+            };
+            injectionPatterns.forEach(checkInjectionPattern);
 
             // Check for dangerous functions
             const dangerousFunctions = ['exec', 'execute', 'eval', 'system'];
-            dangerousFunctions.forEach(func => {
+            const checkDangerousFunction = (func) => {
                 if (lowerSQL.includes(func + '(')) {
                     issues.push(`Dangerous function '${func}' detected`);
                 }
-            });
+            };
+            dangerousFunctions.forEach(checkDangerousFunction);
 
             return issues;
         },
@@ -254,23 +256,25 @@ sap.ui.define([
             // Extract FROM clause tables
             const fromMatches = sql.match(/from\s+(\w+)/gi);
             if (fromMatches) {
-                fromMatches.forEach(match => {
+                const processFromMatch = (match) => {
                     const tableName = match.replace(/from\s+/gi, '').trim();
                     if (!tables.includes(tableName)) {
                         tables.push(tableName);
                     }
-                });
+                };
+                fromMatches.forEach(processFromMatch);
             }
 
             // Extract JOIN clause tables
             const joinMatches = sql.match(/join\s+(\w+)/gi);
             if (joinMatches) {
-                joinMatches.forEach(match => {
+                const processJoinMatch = (match) => {
                     const tableName = match.replace(/.*join\s+/gi, '').trim();
                     if (!tables.includes(tableName)) {
                         tables.push(tableName);
                     }
-                });
+                };
+                joinMatches.forEach(processJoinMatch);
             }
 
             return tables;
@@ -311,7 +315,7 @@ sap.ui.define([
 
             // Simple entity extraction with sanitization
             const tableKeywords = ['users', 'orders', 'products', 'customers', 'employees', 'sales'];
-            tableKeywords.forEach(keyword => {
+            const checkTableKeyword = (keyword) => {
                 if (lowerQuery.includes(keyword)) {
                     entities.push({
                         type: 'TABLE',
@@ -319,7 +323,8 @@ sap.ui.define([
                         confidence: 60
                     });
                 }
-            });
+            };
+            tableKeywords.forEach(checkTableKeyword);
 
             return {
                 intent: intent,
@@ -398,7 +403,8 @@ sap.ui.define([
 
             // Check for aggregations
             const aggregations = ['count', 'sum', 'avg', 'min', 'max'];
-            const aggCount = aggregations.filter(agg => lowerSQL.includes(agg)).length;
+            const includesAggregation = (agg) => lowerSQL.includes(agg);
+            const aggCount = aggregations.filter(includesAggregation).length;
             score += aggCount;
             if (aggCount > 0) {
                 factors.push(`${aggCount} aggregation functions`);
@@ -709,11 +715,12 @@ sap.ui.define([
                 /(?:users?|customers?|orders?|products?|employees?|sales?|invoices?|payments?)/gi
             ];
             
-            tablePatterns.forEach(pattern => {
+            const processTablePattern = (pattern) => {
                 let match;
                 while ((match = pattern.exec(query)) !== null) {
                     const tableName = match[1] || match[0];
-                    if (!entities.find(e => e.value === tableName && e.type === 'TABLE')) {
+                    const findTableEntity = (e) => e.value === tableName && e.type === 'TABLE';
+                    if (!entities.find(findTableEntity)) {
                         entities.push({
                             type: 'TABLE',
                             value: SecurityUtils.sanitizeSQLParameter(tableName),
@@ -722,7 +729,8 @@ sap.ui.define([
                         });
                     }
                 }
-            });
+            };
+            tablePatterns.forEach(processTablePattern);
 
             // Column pattern recognition
             const columnPatterns = [
@@ -730,11 +738,12 @@ sap.ui.define([
                 /(?:name|id|date|time|status|amount|price|quantity)/gi
             ];
 
-            columnPatterns.forEach(pattern => {
+            const processColumnPattern = (pattern) => {
                 let match;
                 while ((match = pattern.exec(query)) !== null) {
                     const columnName = match[1] || match[0];
-                    if (!entities.find(e => e.value === columnName && e.type === 'COLUMN')) {
+                    const findColumnEntity = (e) => e.value === columnName && e.type === 'COLUMN';
+                    if (!entities.find(findColumnEntity)) {
                         entities.push({
                             type: 'COLUMN',
                             value: SecurityUtils.sanitizeSQLParameter(columnName),
@@ -743,7 +752,8 @@ sap.ui.define([
                         });
                     }
                 }
-            });
+            };
+            columnPatterns.forEach(processColumnPattern);
 
             // Date/time pattern recognition
             const datePattern = /(?:today|yesterday|last week|this month|this year|\d{4}-\d{2}-\d{2})/gi;
@@ -766,8 +776,11 @@ sap.ui.define([
          */
         _generateSecureSQLTemplates: function(intent, entities, context) {
             const templates = [];
-            const tables = entities.filter(e => e.type === 'TABLE').map(e => e.value);
-            const columns = entities.filter(e => e.type === 'COLUMN').map(e => e.value);
+            const isTableEntity = (e) => e.type === 'TABLE';
+            const isColumnEntity = (e) => e.type === 'COLUMN';
+            const extractValue = (e) => e.value;
+            const tables = entities.filter(isTableEntity).map(extractValue);
+            const columns = entities.filter(isColumnEntity).map(extractValue);
             
             if (!tables.length) {
                 return templates;
@@ -814,11 +827,13 @@ sap.ui.define([
 
                 case 'INSERT':
                     if (columns.length > 0) {
-                        const placeholders = columns.map(() => '?').join(', ');
+                        const createPlaceholder = () => '?';
+                        const placeholders = columns.map(createPlaceholder).join(', ');
+                        const createParameterEntry = (col, i) => [`param${i+1}`, 'value'];
                         templates.push({
                             sql: `INSERT INTO ${primaryTable} (${columns.join(', ')}) VALUES (${placeholders})`,
                             confidence: 75,
-                            parameters: Object.fromEntries(columns.map((col, i) => [`param${i+1}`, 'value'])),
+                            parameters: Object.fromEntries(columns.map(createParameterEntry)),
                             description: 'Insert new record'
                         });
                     }
@@ -826,11 +841,13 @@ sap.ui.define([
 
                 case 'UPDATE':
                     if (columns.length > 1) {
-                        const setClause = columns.slice(1).map(col => `${col} = ?`).join(', ');
+                        const createSetClause = (col) => `${col} = ?`;
+                        const setClause = columns.slice(1).map(createSetClause).join(', ');
+                        const createUpdateParameterEntry = (col, i) => [`param${i+1}`, 'value'];
                         templates.push({
                             sql: `UPDATE ${primaryTable} SET ${setClause} WHERE ${columns[0]} = ?`,
                             confidence: 70,
-                            parameters: Object.fromEntries(columns.map((col, i) => [`param${i+1}`, 'value'])),
+                            parameters: Object.fromEntries(columns.map(createUpdateParameterEntry)),
                             description: 'Update existing record'
                         });
                     }
@@ -855,11 +872,13 @@ sap.ui.define([
             const lowerQuery = query.toLowerCase();
             let maxLevel = 'simple';
 
-            Object.entries(indicators).forEach(([level, words]) => {
-                if (words.some(word => lowerQuery.includes(word))) {
+            const checkLevelIndicators = ([level, words]) => {
+                const includesWord = (word) => lowerQuery.includes(word);
+                if (words.some(includesWord)) {
                     maxLevel = level;
                 }
-            });
+            };
+            Object.entries(indicators).forEach(checkLevelIndicators);
 
             return maxLevel;
         },

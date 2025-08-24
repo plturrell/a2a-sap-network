@@ -979,7 +979,7 @@ sap.ui.define([
 
             // Query length check
             if (sql.length > limits.maxQueryLength) {
-                issues.push(`Query too long (${sql.length} chars, limit: ${limits.maxQueryLength})`);
+                issues.push("Query too long (" + sql.length + " chars, limit: " + limits.maxQueryLength + ")");
                 complexity += 15;
             }
 

@@ -296,7 +296,8 @@ class Agent15SecurityScanner {
         };
         
         if (falsePositivePatterns[vulnType]) {
-            return falsePositivePatterns[vulnType].some(pattern => pattern.test(code));
+            const testPattern = (pattern) => pattern.test(code);
+            return falsePositivePatterns[vulnType].some(testPattern);
         }
         
         // General false positive checks
@@ -388,11 +389,11 @@ class Agent15SecurityScanner {
     
     addVulnerability(vuln) {
         // Avoid duplicates
-        const exists = this.vulnerabilities.some(v => 
+        const isDuplicate = (v) => 
             v.file === vuln.file && 
             v.line === vuln.line && 
-            v.type === vuln.type
-        );
+            v.type === vuln.type;
+        const exists = this.vulnerabilities.some(isDuplicate);
         
         if (!exists) {
             this.vulnerabilities.push(vuln);
@@ -417,7 +418,8 @@ class Agent15SecurityScanner {
     
     shouldScanFile(filename) {
         const extensions = ['.js', '.xml', '.json', '.html'];
-        return extensions.some(ext => filename.endsWith(ext));
+        const matchesExtension = (ext) => filename.endsWith(ext);
+        return extensions.some(matchesExtension);
     }
     
     generateReport() {
@@ -464,7 +466,8 @@ class Agent15SecurityScanner {
         }
         
         // Orchestrator-specific findings
-        const orchestratorIssues = this.vulnerabilities.filter(v => v.type.startsWith('ORCHESTRATION_'));
+        const isOrchestratorIssue = (v) => v.type.startsWith('ORCHESTRATION_');
+        const orchestratorIssues = this.vulnerabilities.filter(isOrchestratorIssue);
         if (orchestratorIssues.length > 0) {
             console.log(`\n🤖 ORCHESTRATOR-SPECIFIC SECURITY FINDINGS:`);
             const issueCounts = {};
@@ -487,7 +490,8 @@ class Agent15SecurityScanner {
             let issueNumber = 1;
             
             const processSeverityLevel = (severity) => {
-                const sevVulns = this.vulnerabilities.filter(v => v.severity === severity);
+                const matchesSeverity = (v) => v.severity === severity;
+                const sevVulns = this.vulnerabilities.filter(matchesSeverity);
                 if (sevVulns.length > 0) {
                     console.log(`${severity} (${sevVulns.length}):\n`);
                     const logVulnerability = (vuln) => {
