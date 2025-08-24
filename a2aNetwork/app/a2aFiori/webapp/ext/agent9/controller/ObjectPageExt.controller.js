@@ -971,24 +971,40 @@ sap.ui.define([
         },
 
         onGenerateInferences: function() {
+            if (!this._securityUtils.hasRole("ReasoningManager")) {
+                MessageBox.error("Access denied: Reasoning Manager role required");
+                this._securityUtils.auditLog("GENERATE_INFERENCES_ACCESS_DENIED", { action: "generate_inferences" });
+                return;
+            }
+            
             var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
+            var sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
             
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + sTaskId + "/infer",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/infer",
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
                     this._showInferenceResults(data);
+                    this._securityUtils.auditLog("INFERENCES_GENERATED", { 
+                        taskId: sTaskId,
+                        inferenceCount: data.inferences ? data.inferences.length : 0
+                    });
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Inference generation failed: " + errorMsg);
+                    this._securityUtils.auditLog("INFERENCE_GENERATION_FAILED", { 
+                        taskId: sTaskId,
+                        error: errorMsg
+                    });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         _showInferenceResults: function(inferenceData) {
@@ -1066,24 +1082,39 @@ sap.ui.define([
         },
 
         onValidateConclusion: function() {
+            if (!this._securityUtils.hasRole("ReasoningValidator")) {
+                MessageBox.error("Access denied: Reasoning Validator role required");
+                this._securityUtils.auditLog("VALIDATE_CONCLUSION_ACCESS_DENIED", { action: "validate_conclusion" });
+                return;
+            }
+
             var oContext = this._extensionAPI.getBindingContext();
             var sTaskId = oContext.getProperty("ID");
             
+            if (!sTaskId || typeof sTaskId !== "string" || sTaskId.trim() === "") {
+                MessageBox.error("Invalid task ID");
+                return;
+            }
+            
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + sTaskId + "/validate",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/validate",
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
                     this._showValidationResults(data);
+                    this._securityUtils.auditLog("VALIDATE_CONCLUSION_SUCCESS", { taskId: sTaskId });
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Validation failed: " + errorMsg);
+                    this._securityUtils.auditLog("VALIDATE_CONCLUSION_FAILED", { taskId: sTaskId, error: xhr.status });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         _showValidationResults: function(validationData) {
@@ -1182,8 +1213,19 @@ sap.ui.define([
         },
 
         _optimizeEngine: function(sTaskId) {
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + sTaskId + "/optimize",
+            if (!this._securityUtils.hasRole("ReasoningAdmin")) {
+                MessageBox.error("Access denied: Reasoning Administrator role required");
+                this._securityUtils.auditLog("OPTIMIZE_ENGINE_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+
+            if (!sTaskId || typeof sTaskId !== "string" || sTaskId.trim() === "") {
+                MessageBox.error("Invalid task ID");
+                return;
+            }
+
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/optimize",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -1202,12 +1244,16 @@ sap.ui.define([
                         "Accuracy maintained: " + safeAccuracy + "%"
                     );
                     this._extensionAPI.refresh();
+                    this._securityUtils.auditLog("OPTIMIZE_ENGINE_SUCCESS", { taskId: sTaskId, performance: safePerformance });
                 }.bind(this),
                 error: function(xhr) {
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Engine optimization failed: " + errorMsg);
+                    this._securityUtils.auditLog("OPTIMIZE_ENGINE_FAILED", { taskId: sTaskId, error: xhr.status });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         onUpdateKnowledge: function() {
@@ -1239,24 +1285,39 @@ sap.ui.define([
         },
 
         onAnalyzeContradictions: function() {
+            if (!this._securityUtils.hasRole("ReasoningAnalyst")) {
+                MessageBox.error("Access denied: Reasoning Analyst role required");
+                this._securityUtils.auditLog("ANALYZE_CONTRADICTIONS_ACCESS_DENIED", { action: "analyze_contradictions" });
+                return;
+            }
+
             var oContext = this._extensionAPI.getBindingContext();
             var sTaskId = oContext.getProperty("ID");
             
+            if (!sTaskId || typeof sTaskId !== "string" || sTaskId.trim() === "") {
+                MessageBox.error("Invalid task ID");
+                return;
+            }
+            
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + sTaskId + "/analyze-contradictions",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/analyze-contradictions",
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
                     this._showContradictionAnalysis(data);
+                    this._securityUtils.auditLog("ANALYZE_CONTRADICTIONS_SUCCESS", { taskId: sTaskId });
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Contradiction analysis failed: " + errorMsg);
+                    this._securityUtils.auditLog("ANALYZE_CONTRADICTIONS_FAILED", { taskId: sTaskId, error: xhr.status });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         _showContradictionAnalysis: function(analysisData) {
@@ -1305,10 +1366,9 @@ sap.ui.define([
             var oContext = this._extensionAPI.getBindingContext();
             var sTaskId = oContext.getProperty("ID");
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + sTaskId + "/resolve-contradictions",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/resolve-contradictions",
                 type: "POST",
-                contentType: "application/json",
                 data: JSON.stringify({
                     contradictions: contradictions,
                     resolutionStrategy: "CONFIDENCE_BASED",
@@ -1331,6 +1391,8 @@ sap.ui.define([
                     MessageBox.error("Failed to resolve contradictions: " + errorMsg);
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         onConfirmDecision: function() {

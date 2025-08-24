@@ -746,7 +746,7 @@ view RecentWorkflows as select from WorkflowExecutions {
     startTime as startedAt,
     endTime as completedAt,
     durationMinutes as gasUsed
-} order by startTime desc;
+} order by WorkflowExecutions.startTime desc;
 
 // Multi-tenancy support
 @multitenancy: {
@@ -915,7 +915,6 @@ entity AIPreparationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority        : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
-        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent : Integer default 0;
@@ -957,7 +956,6 @@ entity AIPreparationFeatures : cuid {
     @Common.Label: 'Feature Type'
     type            : String(20) enum { NUMERICAL; CATEGORICAL; TEXT; DATETIME; BOOLEAN; };
     
-        };
     @Common.Label: 'Data Type'
     dataType        : String(20);
     
@@ -1119,7 +1117,6 @@ entity StandardizationTasks : cuid, managed {
     @Common.Label: 'Processing Mode'
     processingMode     : String(20) enum { FULL; BATCH; } default 'FULL';
     
-        };
     @Common.Label: 'Batch Size'
     batchSize          : Integer default 1000;
     
@@ -1131,7 +1128,6 @@ entity StandardizationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
-        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1286,7 +1282,6 @@ entity VectorProcessingTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
-        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1535,7 +1530,6 @@ entity CalcValidationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
-        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1732,7 +1726,6 @@ entity QaValidationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
-        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -4028,7 +4021,7 @@ entity SQLQueryTasks : cuid, managed {
     @Common.Label: 'Query Type'
     @mandatory
     queryType          : String(20) enum {
-        SELECT; INSERT; UPDATE; DELETE; CREATE; DROP; ALTER;
+        ![SELECT]; INSERT; UPDATE; DELETE; CREATE; DROP; ALTER;
         MERGE; UPSERT; TRUNCATE; CALL; EXECUTE;
     };
     
@@ -4303,7 +4296,7 @@ entity SchemaReferences : cuid, managed {
     
     @Common.Label: 'Usage Context'
     usageContext       : String(20) enum {
-        SELECT; INSERT; UPDATE; DELETE; JOIN; WHERE; GROUP_BY; ORDER_BY;
+        ![SELECT]; ![INSERT]; ![UPDATE]; ![DELETE]; ![JOIN]; ![WHERE]; GROUP_BY; ORDER_BY;
     };
     
     @Common.Label: 'Access Frequency'
@@ -4617,7 +4610,6 @@ entity CatalogSearches : cuid, managed {
         KEYWORD; CATEGORY; TAG; METADATA; ADVANCED; SEMANTIC;
  not null;
     
-        };
     @Common.Label: 'Filters Applied'
     @Core.MediaType: 'application/json'
     filtersApplied     : String(1000);

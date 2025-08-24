@@ -186,8 +186,22 @@ jobs:
         # Update fly.toml with the latest image
         sed -i 's|image = ".*"|image = "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"|' fly.toml
         
+        # Check if app exists, create if not
+        if ! flyctl apps list | grep -q "a2a-platform"; then
+          echo "Creating new Fly.io app: a2a-platform"
+          flyctl apps create a2a-platform --org personal
+        fi
+        
         # Deploy to Fly.io
         flyctl deploy --remote-only --wait-timeout 300
+        
+        # Get the deployed URL
+        APP_URL=$(flyctl info --json | jq -r '.Hostname')
+        if [ "$APP_URL" != "null" ]; then
+          echo "✅ Deployed successfully to: https://$APP_URL"
+        else
+          echo "✅ Deployed successfully to: https://a2a-platform.fly.dev"
+        fi
         
         echo ""
         echo "✅ A2A Platform deployed to Fly.io!"

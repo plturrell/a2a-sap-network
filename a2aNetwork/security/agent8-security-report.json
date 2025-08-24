@@ -1,5 +1,5 @@
 {
-  "scanTimestamp": "2025-08-24T02:30:03.321Z",
+  "scanTimestamp": "2025-08-24T02:36:20.244Z",
   "scanTarget": "Agent 8 - Data Manager UI",
   "filesScanned": [
     "controller/ListReportExt.controller.js",
@@ -8,10 +8,10 @@
     "manifest.json"
   ],
   "summary": {
-    "totalIssues": 192,
+    "totalIssues": 184,
     "criticalCount": 0,
     "highCount": 7,
-    "mediumCount": 175,
+    "mediumCount": 167,
     "lowCount": 10,
     "complianceScore": 0
   },
@@ -31,7 +31,7 @@
         "type": "FORM_VALIDATION_MISSING",
         "description": "Form submission function lacks proper input validation or authorization",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 865,
+        "line": 881,
         "code": ""
       },
       {
@@ -721,7 +721,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1148,
+        "line": 1170,
         "code": "getProperty(\"taskName\")"
       },
       {
@@ -729,7 +729,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1175,
+        "line": 1197,
         "code": "getProperty(\"taskName\")"
       },
       {
@@ -737,7 +737,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1176,
+        "line": 1198,
         "code": "getProperty(\"status\")"
       },
       {
@@ -745,7 +745,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1211,
+        "line": 1233,
         "code": "getProperty(\"ID\")"
       },
       {
@@ -753,7 +753,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1212,
+        "line": 1234,
         "code": "getProperty(\"status\")"
       },
       {
@@ -761,7 +761,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1237,
+        "line": 1259,
         "code": "getProperty(\"ID\")"
       },
       {
@@ -777,7 +777,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 548,
+        "line": 668,
         "code": "getData()"
       },
       {
@@ -785,7 +785,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 594,
+        "line": 703,
         "code": "getData()"
       },
       {
@@ -793,23 +793,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 652,
-        "code": "getData()"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 687,
-        "code": "getData()"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 1695,
+        "line": 1717,
         "code": "getData()"
       },
       {
@@ -825,7 +809,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 553,
+        "line": 673,
         "code": "oData.datasetName"
       },
       {
@@ -833,79 +817,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 573,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 583,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 599,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 609,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 618,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 657,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 692,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 768,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 768,
-        "code": "oData.datasetName"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 772,
+        "line": 708,
         "code": "oData.datasetName"
       },
       {
@@ -914,6 +826,30 @@
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
         "line": 784,
+        "code": "oData.datasetName"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 784,
+        "code": "oData.datasetName"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 788,
+        "code": "oData.datasetName"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 800,
         "code": "oData.compressionType"
       },
       {
@@ -921,7 +857,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 785,
+        "line": 801,
         "code": "oData.encryptionEnabled"
       },
       {
@@ -929,7 +865,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 793,
+        "line": 809,
         "code": "oData.datasetName"
       },
       {
@@ -937,7 +873,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 793,
+        "line": 809,
         "code": "oData.datasetName"
       },
       {
@@ -945,7 +881,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 797,
+        "line": 813,
         "code": "oData.datasetName"
       },
       {
@@ -953,7 +889,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 802,
+        "line": 818,
         "code": "oData.maxRecords"
       },
       {
@@ -961,7 +897,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 802,
+        "line": 818,
         "code": "oData.maxRecords"
       },
       {
@@ -969,7 +905,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 815,
+        "line": 831,
         "code": "oData.filterCriteria"
       },
       {
@@ -977,7 +913,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 822,
+        "line": 838,
         "code": "oData.datasetName"
       },
       {
@@ -985,7 +921,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 822,
+        "line": 838,
         "code": "oData.datasetName"
       },
       {
@@ -993,7 +929,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 826,
+        "line": 842,
         "code": "oData.datasetName"
       },
       {
@@ -1001,7 +937,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 831,
+        "line": 847,
         "code": "oData.retentionDays"
       },
       {
@@ -1009,7 +945,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 831,
+        "line": 847,
         "code": "oData.retentionDays"
       },
       {
@@ -1017,7 +953,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 831,
+        "line": 847,
         "code": "oData.retentionDays"
       },
       {
@@ -1025,7 +961,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 841,
+        "line": 857,
         "code": "oData.backupType"
       },
       {
@@ -1033,7 +969,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 936,
+        "line": 958,
         "code": "oData.partitionStrategy"
       },
       {
@@ -1041,7 +977,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 942,
+        "line": 964,
         "code": "oData.evictionPolicy"
       },
       {
@@ -1049,7 +985,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 943,
+        "line": 965,
         "code": "oData.memoryCacheSize"
       },
       {
@@ -1057,7 +993,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 944,
+        "line": 966,
         "code": "oData.redisCacheSize"
       },
       {
@@ -1065,7 +1001,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 945,
+        "line": 967,
         "code": "oData.versioningEnabled"
       },
       {
@@ -1073,7 +1009,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 948,
+        "line": 970,
         "code": "oData.versionStrategy"
       },
       {
@@ -1081,7 +1017,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 949,
+        "line": 971,
         "code": "oData.retentionDays"
       },
       {
@@ -1089,7 +1025,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 952,
+        "line": 974,
         "code": "oData.checksumAlgorithm"
       },
       {
@@ -1097,7 +1033,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 953,
+        "line": 975,
         "code": "oData.batchSize"
       },
       {
@@ -1105,7 +1041,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 954,
+        "line": 976,
         "code": "oData.parallelProcessing"
       },
       {
@@ -1113,7 +1049,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 955,
+        "line": 977,
         "code": "oData.threadPoolSize"
       },
       {
@@ -1121,7 +1057,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 956,
+        "line": 978,
         "code": "oData.connectionPoolSize"
       },
       {
@@ -1129,7 +1065,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 957,
+        "line": 979,
         "code": "oData.connectionTimeout"
       },
       {
@@ -1137,7 +1073,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 958,
+        "line": 980,
         "code": "oData.autoOptimization"
       },
       {
@@ -1145,7 +1081,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 959,
+        "line": 981,
         "code": "oData.indexOptimization"
       },
       {
@@ -1153,7 +1089,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 960,
+        "line": 982,
         "code": "oData.queryOptimization"
       },
       {
@@ -1161,7 +1097,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 961,
+        "line": 983,
         "code": "oData.memoryOptimization"
       },
       {
@@ -1169,7 +1105,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 962,
+        "line": 984,
         "code": "oData.performanceMonitoring"
       },
       {
@@ -1177,7 +1113,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 963,
+        "line": 985,
         "code": "oData.trackThroughput"
       },
       {
@@ -1185,7 +1121,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 964,
+        "line": 986,
         "code": "oData.trackResponseTimes"
       },
       {
@@ -1193,7 +1129,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 965,
+        "line": 987,
         "code": "oData.trackResourceUsage"
       },
       {
@@ -1201,7 +1137,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1105,
+        "line": 1127,
         "code": "oData.taskName"
       },
       {
@@ -1209,7 +1145,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1111,
+        "line": 1133,
         "code": "oData.datasetName"
       },
       {
@@ -1217,7 +1153,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1117,
+        "line": 1139,
         "code": "oData.operationType"
       },
       {
@@ -1225,7 +1161,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1698,
+        "line": 1720,
         "code": "oData.exportFormat"
       },
       {
@@ -1233,7 +1169,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1707,
+        "line": 1729,
         "code": "oData.exportFormat"
       },
       {
@@ -1241,7 +1177,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1708,
+        "line": 1730,
         "code": "oData.includeMetadata"
       },
       {
@@ -1249,7 +1185,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1713,
+        "line": 1735,
         "code": "oData.filterCriteria"
       },
       {
@@ -1257,7 +1193,7 @@
         "type": "OUTPUT_ENCODING_MISSING",
         "description": "Output data not properly encoded before display",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1325,
+        "line": 1347,
         "code": "MessageBox.success(\n                        \"Transformation started successfully!\\\\n\" +\n            ..."
       },
       {
@@ -1265,7 +1201,7 @@
         "type": "OUTPUT_ENCODING_MISSING",
         "description": "Output data not properly encoded before display",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1724,
+        "line": 1746,
         "code": "MessageBox.success(\n                        \"Export initiated successfully!\\\\n\" +\n                  ..."
       },
       {
@@ -1321,7 +1257,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 578,
+        "line": 586,
         "code": "error: function(xhr) {\n                    this._oStoreDialog.setBusy(false);\n                    co..."
       },
       {
@@ -1329,7 +1265,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 613,
+        "line": 629,
         "code": "error: function(xhr) {\n                    this._oRetrieveDialog.setBusy(false);\n                   ..."
       },
       {
@@ -1337,7 +1273,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 677,
+        "line": 693,
         "code": "error: function(xhr) {\n                    this._oVersionDialog.setBusy(false);\n                    ..."
       },
       {
@@ -1345,7 +1281,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 712,
+        "line": 728,
         "code": "error: function(xhr) {\n                    this._oCompressDialog.setBusy(false);\n                   ..."
       },
       {
@@ -1353,7 +1289,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 755,
+        "line": 771,
         "code": "error: function(xhr) {\n                    this._oBackupDialog.setBusy(false);\n                    c..."
       },
       {
@@ -1361,7 +1297,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 898,
+        "line": 920,
         "code": "error: function(xhr) {\n                    const errorMsg = this._securityUtils.sanitizeErrorMessage..."
       },
       {
@@ -1369,7 +1305,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 980,
+        "line": 1002,
         "code": "error: function(xhr) {\n                    this._oCreateDialog.setBusy(false);\n                    c..."
       },
       {
@@ -1377,7 +1313,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1292,
+        "line": 1314,
         "code": "error: function(xhr) {\n                    this.base.getView().setBusy(false);\n                    c..."
       },
       {
@@ -1385,7 +1321,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1339,
+        "line": 1361,
         "code": "error: function(xhr) {\n                    this.base.getView().setBusy(false);\n                    c..."
       },
       {
@@ -1393,7 +1329,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1381,
+        "line": 1403,
         "code": "error: function(xhr) {\n                    oTargetDialog.setBusy(false);\n                    const e..."
       },
       {
@@ -1401,7 +1337,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1737,
+        "line": 1759,
         "code": "error: function(xhr) {\n                    oDialog.setBusy(false);\n                    const errorMs..."
       },
       {
@@ -1441,7 +1377,7 @@
         "type": "MISSING_CONTENT_TYPE",
         "description": "POST request missing explicit content-type header",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 970,
+        "line": 992,
         "code": ""
       },
       {
@@ -1449,7 +1385,7 @@
         "type": "MISSING_CONTENT_TYPE",
         "description": "POST request missing explicit content-type header",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1281,
+        "line": 1303,
         "code": ""
       },
       {
@@ -1457,7 +1393,7 @@
         "type": "MISSING_CONTENT_TYPE",
         "description": "POST request missing explicit content-type header",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1320,
+        "line": 1342,
         "code": ""
       },
       {
@@ -1465,7 +1401,7 @@
         "type": "MISSING_CONTENT_TYPE",
         "description": "POST request missing explicit content-type header",
         "file": "controller/ObjectPageExt.controller.js",
-        "line": 1718,
+        "line": 1740,
         "code": ""
       },
       {

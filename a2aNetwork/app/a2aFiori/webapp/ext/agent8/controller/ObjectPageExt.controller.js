@@ -578,7 +578,7 @@ sap.ui.define([
                     
                     this._extensionAPI.refresh();
                     this._securityUtils.auditLog("DATA_STORED", { 
-                        dataset: oData.datasetName,
+                        dataset: sanitizedData.datasetName,
                         recordsStored: safeRecordsStored,
                         storageSize: data.storageSize
                     });
@@ -588,7 +588,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Store operation failed: " + errorMsg);
                     this._securityUtils.auditLog("DATA_STORE_FAILED", { 
-                        dataset: oData.datasetName,
+                        dataset: sanitizedData.datasetName,
                         error: errorMsg
                     });
                 }.bind(this)
@@ -601,20 +601,28 @@ sap.ui.define([
             var oModel = this._oRetrieveDialog.getModel("retrieve");
             var oData = oModel.getData();
             
+            // Validate and sanitize input data
+            const sanitizedData = this._sanitizeRetrieveData(oData);
+            const validation = this._validateRetrieveData(sanitizedData);
+            if (!validation.isValid) {
+                MessageBox.error(validation.message);
+                return;
+            }
+            
             this._oRetrieveDialog.setBusy(true);
             
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(oData.datasetName) + "/retrieve",
+                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sanitizedData.datasetName) + "/retrieve",
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify(oData),
+                data: JSON.stringify(sanitizedData),
                 success: function(data) {
                     this._oRetrieveDialog.setBusy(false);
                     this._oRetrieveDialog.close();
                     
                     this._showRetrievedData(data);
                     this._securityUtils.auditLog("DATA_RETRIEVED", { 
-                        dataset: oData.datasetName,
+                        dataset: sanitizedData.datasetName,
                         recordsRetrieved: data.recordCount || 0
                     });
                 }.bind(this),
@@ -623,7 +631,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Retrieve operation failed: " + errorMsg);
                     this._securityUtils.auditLog("DATA_RETRIEVE_FAILED", { 
-                        dataset: oData.datasetName,
+                        dataset: sanitizedData.datasetName,
                         error: errorMsg
                     });
                 }.bind(this)

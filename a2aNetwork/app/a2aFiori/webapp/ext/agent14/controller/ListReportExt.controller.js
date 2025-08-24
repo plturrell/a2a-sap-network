@@ -4,16 +4,16 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "a2a/ext/agent14/utils/SecurityUtils"
+    "a2a/network/agent14/ext/utils/SecurityUtils"
 ], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     /**
      * @class a2a.network.agent14.ext.controller.ListReportExt
      * @extends sap.ui.core.mvc.ControllerExtension
-     * @description Controller extension for Agent 14 List Report - Embedding Fine-Tuner Agent.
-     * Provides comprehensive embedding model fine-tuning capabilities including hyperparameter optimization,
-     * model evaluation, benchmark testing, and vector database optimization with enterprise-grade security.
+     * @description Controller extension for Agent 14 List Report - Backup Management Agent.
+     * Provides comprehensive backup management capabilities including backup creation, scheduling,
+     * status monitoring, and recovery planning with enterprise-grade security.
      */
     return ControllerExtension.extend("a2a.network.agent14.ext.controller.ListReportExt", {
         
@@ -29,7 +29,8 @@ sap.ui.define([
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
                 this._initializePerformanceOptimizations();
-                this._startRealtimeEmbeddingUpdates();
+                this._startRealtimeBackupUpdates();
+                this._initializeSecurity();
             },
             
             /**
@@ -129,27 +130,133 @@ sap.ui.define([
         
         /**
          * @function _performSearch
-         * @description Performs search operation for embedding models.
+         * @description Performs search operation for backup tasks.
          * @param {string} sQuery - Search query
          * @private
          */
         _performSearch: function(sQuery) {
-            // Implement search logic for embedding models
+            // Implement search logic for backup tasks
         },
 
         /**
-         * @function onFineTuningDashboard
-         * @description Opens comprehensive fine-tuning analytics dashboard with training metrics and performance insights.
+         * @function onCreateBackup
+         * @description Creates backup for selected tasks.
          * @public
          */
-        onFineTuningDashboard: function() {
-            this._getOrCreateDialog("fineTuningDashboard", "a2a.network.agent14.ext.fragment.FineTuningDashboard")
+        onCreateBackup: function() {
+            if (!this._hasRole("BackupAdmin")) {
+                MessageBox.error("Access denied. Backup Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "CreateBackup", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::BackupTasks::LineItem").getBinding("rows");
+            const aSelectedContexts = oBinding.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
+                return;
+            }
+
+            this._auditLogger.log("CREATE_BACKUP", { taskCount: aSelectedContexts.length });
+            
+            MessageBox.confirm(
+                this.getResourceBundle().getText("msg.createBackupConfirm", [aSelectedContexts.length]),
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeBackupCreation(aSelectedContexts);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onScheduleBackup
+         * @description Opens backup scheduling interface.
+         * @public
+         */
+        onScheduleBackup: function() {
+            if (!this._hasRole("BackupAdmin")) {
+                MessageBox.error("Access denied. Backup Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ScheduleBackup", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("SCHEDULE_BACKUP", { action: "OpenScheduler" });
+            
+            this._getOrCreateDialog("scheduleBackup", "a2a.network.agent14.ext.fragment.ScheduleBackup")
                 .then(function(oDialog) {
+                    var oScheduleModel = new JSONModel({
+                        schedules: [],
+                        frequency: "DAILY",
+                        startTime: new Date(),
+                        retentionDays: 30,
+                        backupTypes: [
+                            { key: "FULL", text: "Full Backup" },
+                            { key: "INCREMENTAL", text: "Incremental Backup" },
+                            { key: "DIFFERENTIAL", text: "Differential Backup" },
+                            { key: "SNAPSHOT", text: "Snapshot" }
+                        ],
+                        selectedType: "FULL",
+                        compressionEnabled: true,
+                        encryptionEnabled: true,
+                        verificationEnabled: true,
+                        notificationEnabled: true
+                    });
+                    oDialog.setModel(oScheduleModel, "schedule");
                     oDialog.open();
-                    this._loadDashboardData(oDialog);
+                    this._loadBackupSchedules(oDialog);
                 }.bind(this))
                 .catch(function(error) {
-                    MessageBox.error("Failed to open Fine-Tuning Dashboard: " + error.message);
+                    MessageBox.error("Failed to open Schedule Backup: " + error.message);
+                });
+        },
+
+        /**
+         * @function onViewBackupStatus
+         * @description Opens backup status monitoring dashboard.
+         * @public
+         */
+        onViewBackupStatus: function() {
+            if (!this._hasRole("BackupUser")) {
+                MessageBox.error("Access denied. Backup User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewBackupStatus", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("VIEW_BACKUP_STATUS", { action: "OpenStatusDashboard" });
+            
+            this._getOrCreateDialog("viewBackupStatus", "a2a.network.agent14.ext.fragment.ViewBackupStatus")
+                .then(function(oDialog) {
+                    var oStatusModel = new JSONModel({
+                        statusFilter: "ALL",
+                        typeFilter: "ALL",
+                        timeRange: "LAST_24_HOURS",
+                        startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+                        endDate: new Date(),
+                        autoRefresh: true,
+                        refreshInterval: 30000,
+                        backups: [],
+                        statistics: {
+                            running: 0,
+                            completed: 0,
+                            failed: 0,
+                            scheduled: 0
+                        },
+                        storageUtilization: {
+                            used: 0,
+                            available: 0,
+                            growth: 0
+                        }
+                    });
+                    oDialog.setModel(oStatusModel, "status");
+                    oDialog.open();
+                    this._loadBackupStatus(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Backup Status: " + error.message);
                 });
         },
 
