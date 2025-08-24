@@ -6,7 +6,7 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/base/Log"
-], function(BaseController, MessageToast, MessageBox, formatter, Filter, FilterOperator, Log) {
+], (BaseController, MessageToast, MessageBox, formatter, Filter, FilterOperator, Log) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Agents", {
@@ -379,7 +379,7 @@ sap.ui.define([
                 id: this.getView().getId(),
                 name: "a2a.network.fiori.view.fragments.RegisterAgent",
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 this._oRegisterDialog = oDialog;
                 this.getView().addDependent(oDialog);
 
@@ -393,7 +393,7 @@ sap.ui.define([
                 oDialog.setModel(oDialogModel, "register");
 
                 Log.debug("Register dialog created");
-            }.bind(this));
+            });
         },
 
         /**
@@ -433,12 +433,12 @@ sap.ui.define([
                 id: this.getView().getId(),
                 name: "a2a.network.fiori.view.fragments.EndorseAgent",
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 this._oEndorsementDialog = oDialog;
                 this.getView().addDependent(oDialog);
 
                 Log.debug("Endorsement dialog created");
-            }.bind(this));
+            });
         },
 
         /**

@@ -10,7 +10,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent14/ext/utils/SecurityUtils"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) => {
     "use strict";
 
     /**
@@ -21,14 +21,14 @@ sap.ui.define([
      * with enterprise-grade security, audit logging, and accessibility features.
      */
     return ControllerExtension.extend("a2a.network.agent14.ext.controller.ListReportExt", {
-        
+
         override: {
             /**
              * @function onInit
              * @description Initializes the controller extension with security utilities, device model, dialog caching, and real-time updates.
              * @override
              */
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeDeviceModel();
@@ -37,23 +37,23 @@ sap.ui.define([
                 this._startRealtimeUpdates();
                 this._initializeSecurity();
             },
-            
+
             /**
              * @function onExit
              * @description Cleanup resources on controller destruction.
              * @override
              */
-            onExit: function() {
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
                 }
             }
         },
-        
+
         // Dialog caching for performance
         _dialogCache: {},
-        
+
         // Error recovery configuration
         _errorRecoveryConfig: {
             maxRetries: 3,
@@ -66,7 +66,7 @@ sap.ui.define([
          * @description Creates backup for selected tasks.
          * @public
          */
-        onCreateBackup: function() {
+        onCreateBackup() {
             if (!this._hasRole("BackupAdmin")) {
                 MessageBox.error("Access denied. Backup Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "CreateBackup", reason: "Insufficient permissions" });
@@ -75,14 +75,14 @@ sap.ui.define([
 
             const oBinding = this.base.getView().byId("fe::table::BackupTasks::LineItem").getBinding("rows");
             const aSelectedContexts = oBinding.getSelectedContexts();
-            
+
             if (aSelectedContexts.length === 0) {
                 MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
                 return;
             }
 
             this._auditLogger.log("CREATE_BACKUP", { taskCount: aSelectedContexts.length });
-            
+
             MessageBox.confirm(
                 this.getResourceBundle().getText("msg.createBackupConfirm", [aSelectedContexts.length]),
                 {
@@ -100,7 +100,7 @@ sap.ui.define([
          * @description Opens backup scheduling interface.
          * @public
          */
-        onScheduleBackup: function() {
+        onScheduleBackup() {
             if (!this._hasRole("BackupAdmin")) {
                 MessageBox.error("Access denied. Backup Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ScheduleBackup", reason: "Insufficient permissions" });
@@ -108,10 +108,10 @@ sap.ui.define([
             }
 
             this._auditLogger.log("SCHEDULE_BACKUP", { action: "OpenScheduler" });
-            
+
             this._getOrCreateDialog("scheduleBackup", "a2a.network.agent14.ext.fragment.ScheduleBackup")
-                .then(function(oDialog) {
-                    var oScheduleModel = new JSONModel({
+                .then((oDialog) => {
+                    const oScheduleModel = new JSONModel({
                         schedules: [],
                         frequency: "DAILY",
                         startTime: new Date(),
@@ -131,9 +131,9 @@ sap.ui.define([
                     oDialog.setModel(oScheduleModel, "schedule");
                     oDialog.open();
                     this._loadBackupSchedules(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Schedule Backup: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Schedule Backup: ${ error.message}`);
                 });
         },
 
@@ -142,7 +142,7 @@ sap.ui.define([
          * @description Opens backup status monitoring dashboard.
          * @public
          */
-        onViewBackupStatus: function() {
+        onViewBackupStatus() {
             if (!this._hasRole("BackupUser")) {
                 MessageBox.error("Access denied. Backup User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewBackupStatus", reason: "Insufficient permissions" });
@@ -150,10 +150,10 @@ sap.ui.define([
             }
 
             this._auditLogger.log("VIEW_BACKUP_STATUS", { action: "OpenStatusDashboard" });
-            
+
             this._getOrCreateDialog("viewBackupStatus", "a2a.network.agent14.ext.fragment.ViewBackupStatus")
-                .then(function(oDialog) {
-                    var oStatusModel = new JSONModel({
+                .then((oDialog) => {
+                    const oStatusModel = new JSONModel({
                         statusFilter: "ALL",
                         typeFilter: "ALL",
                         timeRange: "LAST_24_HOURS",
@@ -177,9 +177,9 @@ sap.ui.define([
                     oDialog.setModel(oStatusModel, "status");
                     oDialog.open();
                     this._loadBackupStatus(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Backup Status: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Backup Status: ${ error.message}`);
                 });
         },
 
@@ -189,13 +189,13 @@ sap.ui.define([
          * @param {Array} aSelectedContexts - Selected backup task contexts
          * @private
          */
-        _executeBackupCreation: function(aSelectedContexts) {
+        _executeBackupCreation(aSelectedContexts) {
             const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
-            
+
             // Show progress dialog
             this._getOrCreateDialog("backupProgress", "a2a.network.agent14.ext.fragment.BackupProgress")
-                .then(function(oProgressDialog) {
-                    var oProgressModel = new JSONModel({
+                .then((oProgressDialog) => {
+                    const oProgressModel = new JSONModel({
                         totalTasks: aTaskIds.length,
                         completedTasks: 0,
                         currentTask: "",
@@ -211,9 +211,9 @@ sap.ui.define([
                     });
                     oProgressDialog.setModel(oProgressModel, "progress");
                     oProgressDialog.open();
-                    
+
                     this._runBackupCreation(aTaskIds, oProgressDialog);
-                }.bind(this));
+                });
         },
 
         /**
@@ -223,12 +223,12 @@ sap.ui.define([
          * @param {sap.m.Dialog} oProgressDialog - Progress dialog
          * @private
          */
-        _runBackupCreation: function(aTaskIds, oProgressDialog) {
+        _runBackupCreation(aTaskIds, oProgressDialog) {
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/CreateBackups", {
                 urlParameters: {
-                    taskIds: aTaskIds.join(','),
+                    taskIds: aTaskIds.join(","),
                     backupType: "FULL",
                     compressionEnabled: true,
                     encryptionEnabled: true,
@@ -237,18 +237,18 @@ sap.ui.define([
                 success: function(data) {
                     MessageToast.show(this.getResourceBundle().getText("msg.backupStarted"));
                     this._startBackupMonitoring(data.backupId, oProgressDialog);
-                    this._auditLogger.log("BACKUP_CREATION_STARTED", { 
-                        taskCount: aTaskIds.length, 
+                    this._auditLogger.log("BACKUP_CREATION_STARTED", {
+                        taskCount: aTaskIds.length,
                         backupId: data.backupId,
-                        success: true 
+                        success: true
                     });
                 }.bind(this),
                 error: function(error) {
                     MessageBox.error(this.getResourceBundle().getText("error.backupFailed"));
                     oProgressDialog.close();
-                    this._auditLogger.log("BACKUP_CREATION_FAILED", { 
-                        taskCount: aTaskIds.length, 
-                        error: error.message 
+                    this._auditLogger.log("BACKUP_CREATION_FAILED", {
+                        taskCount: aTaskIds.length,
+                        error: error.message
                     });
                 }.bind(this)
             });
@@ -261,30 +261,30 @@ sap.ui.define([
          * @param {sap.m.Dialog} oProgressDialog - Progress dialog
          * @private
          */
-        _startBackupMonitoring: function(sBackupId, oProgressDialog) {
+        _startBackupMonitoring(sBackupId, oProgressDialog) {
             if (this._backupEventSource) {
                 this._backupEventSource.close();
             }
-            
+
             try {
-                this._backupEventSource = new EventSource('/api/agent14/backup/stream/' + sBackupId);
-                
+                this._backupEventSource = new EventSource(`/api/agent14/backup/stream/${ sBackupId}`);
+
                 this._backupEventSource.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
                         this._updateBackupProgress(data, oProgressDialog);
                     } catch (error) {
-                        console.error('Error parsing backup progress data:', error);
+                        console.error("Error parsing backup progress data:", error);
                     }
                 }.bind(this);
-                
+
                 this._backupEventSource.onerror = function(error) {
-                    console.warn('Backup stream error, falling back to polling:', error);
+                    console.warn("Backup stream error, falling back to polling:", error);
                     this._startBackupPolling(sBackupId, oProgressDialog);
                 }.bind(this);
-                
+
             } catch (error) {
-                console.warn('EventSource not available, using polling fallback');
+                console.warn("EventSource not available, using polling fallback");
                 this._startBackupPolling(sBackupId, oProgressDialog);
             }
         },
@@ -295,16 +295,16 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Schedule dialog
          * @private
          */
-        _loadBackupSchedules: function(oDialog) {
+        _loadBackupSchedules(oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetBackupSchedules", {
                 success: function(data) {
-                    var oScheduleModel = oDialog.getModel("schedule");
+                    const oScheduleModel = oDialog.getModel("schedule");
                     if (oScheduleModel) {
-                        var oCurrentData = oScheduleModel.getData();
+                        const oCurrentData = oScheduleModel.getData();
                         oCurrentData.schedules = data.schedules || [];
                         oCurrentData.policies = data.policies || [];
                         oCurrentData.storageTargets = data.storageTargets || [];
@@ -312,9 +312,9 @@ sap.ui.define([
                     }
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load backup schedules: " + error.message);
+                    MessageBox.error(`Failed to load backup schedules: ${ error.message}`);
                 }
             });
         },
@@ -325,14 +325,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Status dialog
          * @private
          */
-        _loadBackupStatus: function(oDialog) {
+        _loadBackupStatus(oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetBackupStatus", {
                 success: function(data) {
-                    var oStatusModel = oDialog.getModel("status");
+                    const oStatusModel = oDialog.getModel("status");
                     if (oStatusModel) {
                         var oCurrentData = oStatusModel.getData();
                         oCurrentData.backups = data.backups || [];
@@ -342,15 +342,15 @@ sap.ui.define([
                         oStatusModel.setData(oCurrentData);
                     }
                     oDialog.setBusy(false);
-                    
+
                     // Start auto-refresh if enabled
                     if (oCurrentData.autoRefresh) {
                         this._startStatusAutoRefresh(oDialog);
                     }
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load backup status: " + error.message);
+                    MessageBox.error(`Failed to load backup status: ${ error.message}`);
                 }
             });
         },
@@ -362,27 +362,27 @@ sap.ui.define([
          * @param {sap.m.Dialog} oProgressDialog - Progress dialog
          * @private
          */
-        _updateBackupProgress: function(data, oProgressDialog) {
-            if (!oProgressDialog || !oProgressDialog.isOpen()) return;
-            
-            var oProgressModel = oProgressDialog.getModel("progress");
+        _updateBackupProgress(data, oProgressDialog) {
+            if (!oProgressDialog || !oProgressDialog.isOpen()) {return;}
+
+            const oProgressModel = oProgressDialog.getModel("progress");
             if (oProgressModel) {
-                var oCurrentData = oProgressModel.getData();
+                const oCurrentData = oProgressModel.getData();
                 oCurrentData.completedTasks = data.completedTasks || oCurrentData.completedTasks;
                 oCurrentData.currentTask = data.currentTask || oCurrentData.currentTask;
                 oCurrentData.progress = Math.round((oCurrentData.completedTasks / oCurrentData.totalTasks) * 100);
                 oCurrentData.status = data.status || oCurrentData.status;
-                
+
                 if (data.statistics) {
                     oCurrentData.statistics = data.statistics;
                 }
-                
+
                 if (data.backupResults && data.backupResults.length > 0) {
                     oCurrentData.backupResults = oCurrentData.backupResults.concat(data.backupResults);
                 }
-                
+
                 oProgressModel.setData(oCurrentData);
-                
+
                 // Check if all tasks are completed
                 if (oCurrentData.completedTasks >= oCurrentData.totalTasks) {
                     this._completeBackup(oProgressDialog);
@@ -396,14 +396,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oProgressDialog - Progress dialog
          * @private
          */
-        _completeBackup: function(oProgressDialog) {
+        _completeBackup(oProgressDialog) {
             setTimeout(() => {
                 oProgressDialog.close();
                 MessageToast.show(this.getResourceBundle().getText("msg.backupCompleted"));
                 this._refreshBackupData();
                 this._auditLogger.log("BACKUP_COMPLETED", { status: "SUCCESS" });
             }, 2000);
-            
+
             // Clean up event source
             if (this._backupEventSource) {
                 this._backupEventSource.close();
@@ -416,7 +416,7 @@ sap.ui.define([
          * @description Refreshes backup task data in the table.
          * @private
          */
-        _refreshBackupData: function() {
+        _refreshBackupData() {
             const oBinding = this.base.getView().byId("fe::table::BackupTasks::LineItem").getBinding("rows");
             if (oBinding) {
                 oBinding.refresh();
@@ -428,7 +428,7 @@ sap.ui.define([
          * @description Starts real-time updates for backup events.
          * @private
          */
-        _startRealtimeUpdates: function() {
+        _startRealtimeUpdates() {
             this._initializeWebSocket();
         },
 
@@ -437,25 +437,25 @@ sap.ui.define([
          * @description Initializes secure WebSocket connection for real-time backup updates.
          * @private
          */
-        _initializeWebSocket: function() {
-            if (this._ws) return;
+        _initializeWebSocket() {
+            if (this._ws) {return;}
 
             // Validate WebSocket URL for security
-            if (!this._securityUtils.validateWebSocketUrl('blockchain://a2a-events')) {
+            if (!this._securityUtils.validateWebSocketUrl("blockchain://a2a-events")) {
                 MessageBox.error("Invalid WebSocket URL");
                 return;
             }
 
             try {
-                this._ws = SecurityUtils.createSecureWebSocket('blockchain://a2a-events', {
+                this._ws = SecurityUtils.createSecureWebSocket("blockchain://a2a-events", {
                     onMessage: function(data) {
                         this._handleBackupUpdate(data);
                     }.bind(this)
                 });
-                
+
                 this._ws.onclose = function() {
-                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                    var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
+                    const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    const sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
                     MessageToast.show(sMessage);
                     setTimeout(() => this._initializeWebSocket(), 5000);
                 }.bind(this);
@@ -471,7 +471,7 @@ sap.ui.define([
          * @description Initializes polling fallback for real-time updates.
          * @private
          */
-        _initializePolling: function() {
+        _initializePolling() {
             this._pollInterval = setInterval(() => {
                 this._refreshBackupData();
             }, 5000);
@@ -483,87 +483,87 @@ sap.ui.define([
          * @param {Object} data - Update data
          * @private
          */
-        _handleBackupUpdate: function(data) {
+        _handleBackupUpdate(data) {
             try {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                
+                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+
                 switch (data.type) {
-                    case 'BACKUP_STARTED':
-                        var sBackupStarted = oBundle.getText("msg.backupStarted") || "Backup started";
-                        MessageToast.show(sBackupStarted);
-                        break;
-                    case 'BACKUP_PROGRESS':
-                        this._updateBackupProgress(data);
-                        break;
-                    case 'BACKUP_COMPLETED':
-                        var sBackupCompleted = oBundle.getText("msg.backupCompleted") || "Backup completed";
-                        MessageToast.show(sBackupCompleted);
-                        this._refreshBackupData();
-                        break;
-                    case 'BACKUP_FAILED':
-                        var sBackupFailed = oBundle.getText("error.backupFailed") || "Backup failed";
-                        MessageBox.error(sBackupFailed + ": " + data.message);
-                        break;
-                    case 'RESTORE_COMPLETED':
-                        var sRestoreCompleted = oBundle.getText("msg.restoreCompleted") || "Restore completed";
-                        MessageToast.show(sRestoreCompleted);
-                        this._refreshBackupData();
-                        break;
-                    case 'STORAGE_WARNING':
-                        var sStorageWarning = oBundle.getText("msg.storageWarning") || "Storage warning";
-                        MessageBox.warning(sStorageWarning + ": " + data.message);
-                        break;
-                    case 'VERIFICATION_FAILED':
-                        var sVerificationFailed = oBundle.getText("msg.verificationFailed") || "Backup verification failed";
-                        MessageBox.error(sVerificationFailed + ": " + data.message);
-                        break;
+                case "BACKUP_STARTED":
+                    var sBackupStarted = oBundle.getText("msg.backupStarted") || "Backup started";
+                    MessageToast.show(sBackupStarted);
+                    break;
+                case "BACKUP_PROGRESS":
+                    this._updateBackupProgress(data);
+                    break;
+                case "BACKUP_COMPLETED":
+                    var sBackupCompleted = oBundle.getText("msg.backupCompleted") || "Backup completed";
+                    MessageToast.show(sBackupCompleted);
+                    this._refreshBackupData();
+                    break;
+                case "BACKUP_FAILED":
+                    var sBackupFailed = oBundle.getText("error.backupFailed") || "Backup failed";
+                    MessageBox.error(`${sBackupFailed }: ${ data.message}`);
+                    break;
+                case "RESTORE_COMPLETED":
+                    var sRestoreCompleted = oBundle.getText("msg.restoreCompleted") || "Restore completed";
+                    MessageToast.show(sRestoreCompleted);
+                    this._refreshBackupData();
+                    break;
+                case "STORAGE_WARNING":
+                    var sStorageWarning = oBundle.getText("msg.storageWarning") || "Storage warning";
+                    MessageBox.warning(`${sStorageWarning }: ${ data.message}`);
+                    break;
+                case "VERIFICATION_FAILED":
+                    var sVerificationFailed = oBundle.getText("msg.verificationFailed") || "Backup verification failed";
+                    MessageBox.error(`${sVerificationFailed }: ${ data.message}`);
+                    break;
                 }
             } catch (error) {
                 console.error("Error processing backup update:", error);
             }
         },
-        
+
         /**
          * @function _initializeDeviceModel
          * @description Sets up device model for responsive design.
          * @private
          */
-        _initializeDeviceModel: function() {
-            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+        _initializeDeviceModel() {
+            const oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
             this.base.getView().setModel(oDeviceModel, "device");
         },
-        
+
         /**
          * @function _initializeDialogCache
          * @description Initializes dialog cache for performance.
          * @private
          */
-        _initializeDialogCache: function() {
+        _initializeDialogCache() {
             this._dialogCache = {};
         },
-        
+
         /**
          * @function _initializePerformanceOptimizations
          * @description Sets up performance optimization features.
          * @private
          */
-        _initializePerformanceOptimizations: function() {
+        _initializePerformanceOptimizations() {
             // Throttle backup data updates
             this._throttledBackupUpdate = this._throttle(this._refreshBackupData.bind(this), 1000);
             // Debounce search operations
             this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
         },
-        
+
         /**
          * @function _performSearch
          * @description Performs search operation for backup tasks.
          * @param {string} sQuery - Search query
          * @private
          */
-        _performSearch: function(sQuery) {
+        _performSearch(sQuery) {
             // Implement search logic for backup tasks
         },
-        
+
         /**
          * @function _throttle
          * @description Creates a throttled function.
@@ -572,19 +572,19 @@ sap.ui.define([
          * @returns {Function} Throttled function
          * @private
          */
-        _throttle: function(fn, limit) {
-            var inThrottle;
+        _throttle(fn, limit) {
+            let inThrottle;
             return function() {
-                var args = arguments;
-                var context = this;
+                const args = arguments;
+                const context = this;
                 if (!inThrottle) {
                     fn.apply(context, args);
                     inThrottle = true;
-                    setTimeout(function() { inThrottle = false; }, limit);
+                    setTimeout(() => { inThrottle = false; }, limit);
                 }
             };
         },
-        
+
         /**
          * @function _debounce
          * @description Creates a debounced function.
@@ -593,13 +593,13 @@ sap.ui.define([
          * @returns {Function} Debounced function
          * @private
          */
-        _debounce: function(fn, delay) {
-            var timeoutId;
+        _debounce(fn, delay) {
+            let timeoutId;
             return function() {
-                var context = this;
-                var args = arguments;
+                const context = this;
+                const args = arguments;
                 clearTimeout(timeoutId);
-                timeoutId = setTimeout(function() {
+                timeoutId = setTimeout(() => {
                     fn.apply(context, args);
                 }, delay);
             };
@@ -613,67 +613,67 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -689,19 +689,19 @@ sap.ui.define([
          * @description Initializes security features and audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
-                    var user = this._getCurrentUser();
-                    var timestamp = new Date().toISOString();
-                    var logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                    const user = this._getCurrentUser();
+                    const timestamp = new Date().toISOString();
+                    const logEntry = {
+                        timestamp,
+                        user,
                         agent: "Agent14_Backup",
-                        action: action,
+                        action,
                         details: details || {}
                     };
-                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -712,7 +712,7 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
@@ -723,7 +723,7 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             if (user && user.hasRole) {
                 return user.hasRole(role);
@@ -738,31 +738,31 @@ sap.ui.define([
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up WebSocket connections
             if (this._ws) {
                 this._ws.close();
                 this._ws = null;
             }
-            
+
             // Clean up EventSource connections
             if (this._backupEventSource) {
                 this._backupEventSource.close();
                 this._backupEventSource = null;
             }
-            
+
             // Clean up polling intervals
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
             }
-            
+
             // Clean up cached dialogs
-            Object.keys(this._dialogCache).forEach(function(key) {
+            Object.keys(this._dialogCache).forEach((key) => {
                 if (this._dialogCache[key]) {
                     this._dialogCache[key].destroy();
                 }
-            }.bind(this));
+            });
             this._dialogCache = {};
         },
 
@@ -772,7 +772,7 @@ sap.ui.define([
          * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });

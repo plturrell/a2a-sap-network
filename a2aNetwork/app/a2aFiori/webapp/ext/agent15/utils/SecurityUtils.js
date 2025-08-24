@@ -1,7 +1,7 @@
 sap.ui.define([
     "sap/base/Log",
     "sap/m/MessageToast"
-], function (Log, MessageToast) {
+], (Log, MessageToast) => {
     "use strict";
 
     return {
@@ -10,7 +10,7 @@ sap.ui.define([
          * @param {object} workflowConfig - Workflow configuration to validate
          * @returns {object} Validation result with security checks
          */
-        validateWorkflowConfig: function (workflowConfig) {
+        validateWorkflowConfig(workflowConfig) {
             const validation = {
                 isValid: true,
                 errors: [],
@@ -18,7 +18,7 @@ sap.ui.define([
                 sanitizedConfig: {}
             };
 
-            if (!workflowConfig || typeof workflowConfig !== 'object') {
+            if (!workflowConfig || typeof workflowConfig !== "object") {
                 validation.isValid = false;
                 validation.errors.push("Workflow configuration is required and must be an object");
                 return validation;
@@ -27,28 +27,28 @@ sap.ui.define([
             // Check for code injection in workflow steps
             if (workflowConfig.steps && Array.isArray(workflowConfig.steps)) {
                 const sanitizedSteps = [];
-                
+
                 workflowConfig.steps.forEach((step, index) => {
                     if (this._containsCodeInjection(JSON.stringify(step))) {
                         validation.isValid = false;
                         validation.errors.push(`Step ${index + 1} contains potentially malicious code`);
                     } else {
                         // Validate step type
-                        const allowedStepTypes = ['agent', 'condition', 'parallel', 'sequential', 'loop', 'transform'];
+                        const allowedStepTypes = ["agent", "condition", "parallel", "sequential", "loop", "transform"];
                         if (!step.type || !allowedStepTypes.includes(step.type)) {
                             validation.warnings.push(`Step ${index + 1} has invalid type: ${step.type}`);
                         }
-                        
+
                         sanitizedSteps.push(this._sanitizeWorkflowStep(step));
                     }
                 });
-                
+
                 validation.sanitizedConfig.steps = sanitizedSteps;
             }
 
             // Validate execution strategy
             if (workflowConfig.executionStrategy) {
-                const allowedStrategies = ['sequential', 'parallel', 'distributed', 'failfast', 'resilient'];
+                const allowedStrategies = ["sequential", "parallel", "distributed", "failfast", "resilient"];
                 if (!allowedStrategies.includes(workflowConfig.executionStrategy)) {
                     validation.warnings.push("Invalid execution strategy");
                 }
@@ -56,7 +56,7 @@ sap.ui.define([
 
             // Validate retry policy
             if (workflowConfig.retryPolicy) {
-                const maxRetries = parseInt(workflowConfig.retryPolicy.maxRetries);
+                const maxRetries = parseInt(workflowConfig.retryPolicy.maxRetries, 10);
                 if (isNaN(maxRetries) || maxRetries < 0 || maxRetries > 10) {
                     validation.warnings.push("Retry count should be between 0 and 10");
                 }
@@ -71,14 +71,14 @@ sap.ui.define([
          * @param {object} capabilities - Required capabilities
          * @returns {object} Validation result
          */
-        validateAgentAssignment: function (agentId, capabilities) {
+        validateAgentAssignment(agentId, capabilities) {
             const validation = {
                 isValid: true,
                 error: "",
                 sanitizedAgentId: ""
             };
 
-            if (!agentId || typeof agentId !== 'string') {
+            if (!agentId || typeof agentId !== "string") {
                 validation.isValid = false;
                 validation.error = "Agent ID is required and must be a string";
                 return validation;
@@ -100,12 +100,12 @@ sap.ui.define([
             }
 
             // Sanitize agent ID
-            validation.sanitizedAgentId = agentId.replace(/[^a-zA-Z0-9_-]/g, '');
+            validation.sanitizedAgentId = agentId.replace(/[^a-zA-Z0-9_-]/g, "");
 
             // Validate capabilities if provided
-            if (capabilities && typeof capabilities === 'object') {
+            if (capabilities && typeof capabilities === "object") {
                 // Check for valid capability requirements
-                const validCapabilities = ['execution', 'analysis', 'transformation', 'validation', 'monitoring'];
+                const validCapabilities = ["execution", "analysis", "transformation", "validation", "monitoring"];
                 Object.keys(capabilities).forEach(cap => {
                     if (!validCapabilities.includes(cap)) {
                         validation.warnings = validation.warnings || [];
@@ -122,7 +122,7 @@ sap.ui.define([
          * @param {object} taskData - Task data to validate
          * @returns {object} Validation result
          */
-        validateTaskData: function (taskData) {
+        validateTaskData(taskData) {
             const validation = {
                 isValid: true,
                 errors: [],
@@ -130,7 +130,7 @@ sap.ui.define([
                 sanitizedData: {}
             };
 
-            if (!taskData || typeof taskData !== 'object') {
+            if (!taskData || typeof taskData !== "object") {
                 validation.isValid = false;
                 validation.errors.push("Task data is required and must be an object");
                 return validation;
@@ -138,7 +138,7 @@ sap.ui.define([
 
             // Validate task type
             if (taskData.type) {
-                const allowedTypes = ['process', 'transform', 'validate', 'aggregate', 'notify'];
+                const allowedTypes = ["process", "transform", "validate", "aggregate", "notify"];
                 if (!allowedTypes.includes(taskData.type)) {
                     validation.errors.push("Invalid task type");
                     validation.isValid = false;
@@ -154,7 +154,7 @@ sap.ui.define([
 
             // Validate priority
             if (taskData.priority) {
-                const priority = parseInt(taskData.priority);
+                const priority = parseInt(taskData.priority, 10);
                 if (isNaN(priority) || priority < 0 || priority > 10) {
                     validation.warnings.push("Priority should be between 0 and 10");
                     taskData.priority = Math.min(Math.max(priority || 5, 0), 10);
@@ -178,7 +178,7 @@ sap.ui.define([
          * @param {object} eventData - Event data to validate
          * @returns {object} Validation result
          */
-        validateEventData: function (eventType, eventData) {
+        validateEventData(eventType, eventData) {
             const validation = {
                 isValid: true,
                 error: "",
@@ -187,16 +187,16 @@ sap.ui.define([
 
             // Validate event type
             const allowedEventTypes = [
-                'workflow.started',
-                'workflow.completed',
-                'workflow.failed',
-                'step.started',
-                'step.completed',
-                'step.failed',
-                'agent.assigned',
-                'agent.completed',
-                'queue.updated',
-                'error.occurred'
+                "workflow.started",
+                "workflow.completed",
+                "workflow.failed",
+                "step.started",
+                "step.completed",
+                "step.failed",
+                "agent.assigned",
+                "agent.completed",
+                "queue.updated",
+                "error.occurred"
             ];
 
             if (!allowedEventTypes.includes(eventType)) {
@@ -226,7 +226,7 @@ sap.ui.define([
          * @param {object} pipelineConfig - Pipeline configuration to validate
          * @returns {object} Validation result
          */
-        validatePipelineConfig: function (pipelineConfig) {
+        validatePipelineConfig(pipelineConfig) {
             const validation = {
                 isValid: true,
                 errors: [],
@@ -234,7 +234,7 @@ sap.ui.define([
                 sanitizedConfig: {}
             };
 
-            if (!pipelineConfig || typeof pipelineConfig !== 'object') {
+            if (!pipelineConfig || typeof pipelineConfig !== "object") {
                 validation.isValid = false;
                 validation.errors.push("Pipeline configuration is required");
                 return validation;
@@ -244,7 +244,7 @@ sap.ui.define([
             if (pipelineConfig.steps && Array.isArray(pipelineConfig.steps)) {
                 pipelineConfig.steps.forEach((step, index) => {
                     // Check for function constructor or eval
-                    if (step.handler && typeof step.handler === 'string') {
+                    if (step.handler && typeof step.handler === "string") {
                         if (this._containsCodeInjection(step.handler)) {
                             validation.isValid = false;
                             validation.errors.push(`Pipeline step ${index + 1} contains unsafe code`);
@@ -255,7 +255,7 @@ sap.ui.define([
 
             // Validate pipeline triggers
             if (pipelineConfig.triggers) {
-                const allowedTriggers = ['manual', 'scheduled', 'event', 'webhook', 'condition'];
+                const allowedTriggers = ["manual", "scheduled", "event", "webhook", "condition"];
                 pipelineConfig.triggers.forEach(trigger => {
                     if (!allowedTriggers.includes(trigger.type)) {
                         validation.warnings.push(`Unknown trigger type: ${trigger.type}`);
@@ -273,29 +273,29 @@ sap.ui.define([
          * @param {object} parameters - Function parameters
          * @returns {Promise} Promise resolving to function result
          */
-        secureCallFunction: function (model, functionName, parameters) {
+        secureCallFunction(model, functionName, parameters) {
             return new Promise((resolve, reject) => {
                 // First, refresh security token
                 model.refreshSecurityToken((tokenData) => {
                     // Add CSRF token to headers if not already present
                     const headers = parameters.headers || {};
-                    if (!headers['X-CSRF-Token'] && tokenData) {
-                        headers['X-CSRF-Token'] = tokenData;
+                    if (!headers["X-CSRF-Token"] && tokenData) {
+                        headers["X-CSRF-Token"] = tokenData;
                     }
 
                     // Enhanced parameters with security
                     const secureParams = {
                         ...parameters,
-                        headers: headers,
+                        headers,
                         success: (data) => {
-                            this.logSecureOperation(functionName, 'SUCCESS');
+                            this.logSecureOperation(functionName, "SUCCESS");
                             if (parameters.success) {
                                 parameters.success(data);
                             }
                             resolve(data);
                         },
                         error: (error) => {
-                            this.logSecureOperation(functionName, 'ERROR', error);
+                            this.logSecureOperation(functionName, "ERROR", error);
                             if (parameters.error) {
                                 parameters.error(error);
                             }
@@ -305,8 +305,8 @@ sap.ui.define([
 
                     model.callFunction(functionName, secureParams);
                 }, (error) => {
-                    this.logSecureOperation(functionName, 'TOKEN_ERROR', error);
-                    reject(new Error('Failed to obtain CSRF token'));
+                    this.logSecureOperation(functionName, "TOKEN_ERROR", error);
+                    reject(new Error("Failed to obtain CSRF token"));
                 });
             });
         },
@@ -317,11 +317,11 @@ sap.ui.define([
          * @param {object} options - Connection options
          * @returns {WebSocket|null} Secure WebSocket connection
          */
-        createSecureWebSocket: function (url, options) {
+        createSecureWebSocket(url, options) {
             try {
                 // Ensure secure protocol
-                const secureUrl = url.replace(/^ws:\/\//, 'wss://').replace(/^http:\/\//, 'https://');
-                
+                const secureUrl = url.replace(/^ws:\/\//, "wss://").replace(/^http:\/\//, "https://");
+
                 // Validate URL
                 if (!this._isValidWebSocketUrl(secureUrl)) {
                     Log.error("Invalid WebSocket URL", secureUrl);
@@ -329,7 +329,7 @@ sap.ui.define([
                 }
 
                 const ws = new WebSocket(secureUrl);
-                
+
                 // Add security event handlers
                 ws.onmessage = (event) => {
                     try {
@@ -348,14 +348,14 @@ sap.ui.define([
                 };
 
                 ws.onerror = (error) => {
-                    this.logSecureOperation('WEBSOCKET_ERROR', 'ERROR', error);
+                    this.logSecureOperation("WEBSOCKET_ERROR", "ERROR", error);
                     if (options.onerror) {
                         options.onerror(error);
                     }
                 };
 
                 return ws;
-                
+
             } catch (error) {
                 Log.error("Failed to create secure WebSocket", error);
                 return null;
@@ -368,11 +368,11 @@ sap.ui.define([
          * @param {object} options - Connection options
          * @returns {EventSource|null} Secure EventSource connection
          */
-        createSecureEventSource: function (url, options) {
+        createSecureEventSource(url, options) {
             try {
                 // Ensure secure protocol
-                const secureUrl = url.replace(/^http:\/\//, 'https://');
-                
+                const secureUrl = url.replace(/^http:\/\//, "https://");
+
                 // Validate URL
                 if (!this._isValidEventSourceUrl(secureUrl)) {
                     Log.error("Invalid EventSource URL", secureUrl);
@@ -380,7 +380,7 @@ sap.ui.define([
                 }
 
                 const eventSource = new EventSource(secureUrl);
-                
+
                 // Add security handlers for different event types
                 const secureEventHandler = (eventType) => {
                     return (event) => {
@@ -400,15 +400,15 @@ sap.ui.define([
                 };
 
                 // Add handlers for common orchestration events
-                ['workflow-update', 'agent-status', 'task-progress', 
-                 'pipeline-status'].forEach(eventType => {
+                ["workflow-update", "agent-status", "task-progress",
+                    "pipeline-status"].forEach(eventType => {
                     if (options[eventType]) {
                         eventSource.addEventListener(eventType, secureEventHandler(eventType));
                     }
                 });
 
                 return eventSource;
-                
+
             } catch (error) {
                 Log.error("Failed to create secure EventSource", error);
                 return null;
@@ -421,7 +421,7 @@ sap.ui.define([
          * @param {object} context - Operation context
          * @returns {boolean} True if authorized
          */
-        checkOrchestrationAuth: function (operation, context) {
+        checkOrchestrationAuth(operation, context) {
             // Check if user has required permissions
             const user = this._getCurrentUser();
             if (!user) {
@@ -431,13 +431,13 @@ sap.ui.define([
 
             // Check operation-specific permissions
             const requiredPermissions = this._getOrchestrationPermissions(operation);
-            const hasPermission = requiredPermissions.every(permission => 
+            const hasPermission = requiredPermissions.every(permission =>
                 this._userHasPermission(user, permission)
             );
 
             if (!hasPermission) {
                 MessageToast.show("Insufficient permissions for this operation");
-                this.logSecureOperation(operation, 'UNAUTHORIZED', { user: user.id });
+                this.logSecureOperation(operation, "UNAUTHORIZED", { user: user.id });
             }
 
             return hasPermission;
@@ -449,12 +449,12 @@ sap.ui.define([
          * @param {string} status - Operation status
          * @param {object} details - Additional details
          */
-        logSecureOperation: function (operation, status, details) {
+        logSecureOperation(operation, status, details) {
             const logEntry = {
                 timestamp: new Date().toISOString(),
-                operation: operation,
-                status: status,
-                user: this._getCurrentUser()?.id || 'anonymous',
+                operation,
+                status,
+                user: this._getCurrentUser()?.id || "anonymous",
                 details: details || {}
             };
 
@@ -468,9 +468,9 @@ sap.ui.define([
         },
 
         // Private helper methods
-        _containsCodeInjection: function (str) {
-            if (!str || typeof str !== 'string') return false;
-            
+        _containsCodeInjection(str) {
+            if (!str || typeof str !== "string") {return false;}
+
             const codePatterns = [
                 /eval\s*\(/gi,
                 /Function\s*\(/gi,
@@ -480,24 +480,24 @@ sap.ui.define([
                 /constructor\s*\[/gi,
                 /import\s*\(/gi,
                 /require\s*\(/gi,
-                /\$\{.*\}/g  // Template literals that might execute code
+                /\$\{.*\}/g // Template literals that might execute code
             ];
-            
+
             return codePatterns.some(pattern => pattern.test(str));
         },
 
-        _containsInjectionPattern: function (str) {
+        _containsInjectionPattern(str) {
             const injectionPatterns = [
                 /[<>'"]/g,
                 /javascript:/gi,
                 /on\w+\s*=/gi,
                 /\.\.\//g
             ];
-            
+
             return injectionPatterns.some(pattern => pattern.test(str));
         },
 
-        _sanitizeWorkflowStep: function (step) {
+        _sanitizeWorkflowStep(step) {
             return {
                 type: step.type,
                 name: this._sanitizeString(step.name),
@@ -506,169 +506,169 @@ sap.ui.define([
             };
         },
 
-        _sanitizePayload: function (payload) {
-            if (!payload) return {};
-            
+        _sanitizePayload(payload) {
+            if (!payload) {return {};}
+
             const sanitized = {};
             Object.keys(payload).forEach(key => {
                 const sanitizedKey = this._sanitizeString(key);
-                if (typeof payload[key] === 'string') {
+                if (typeof payload[key] === "string") {
                     sanitized[sanitizedKey] = this._sanitizeString(payload[key]);
-                } else if (typeof payload[key] === 'object') {
+                } else if (typeof payload[key] === "object") {
                     sanitized[sanitizedKey] = this._sanitizePayload(payload[key]);
                 } else {
                     sanitized[sanitizedKey] = payload[key];
                 }
             });
-            
+
             return sanitized;
         },
 
-        _sanitizeMetadata: function (metadata) {
-            if (!metadata) return {};
-            
+        _sanitizeMetadata(metadata) {
+            if (!metadata) {return {};}
+
             return {
                 createdBy: this._sanitizeString(metadata.createdBy),
                 createdAt: metadata.createdAt,
                 source: this._sanitizeString(metadata.source),
-                tags: Array.isArray(metadata.tags) ? 
+                tags: Array.isArray(metadata.tags) ?
                     metadata.tags.map(tag => this._sanitizeString(tag)) : []
             };
         },
 
-        _sanitizeEventData: function (eventData) {
-            if (!eventData) return {};
-            
+        _sanitizeEventData(eventData) {
+            if (!eventData) {return {};}
+
             const sanitized = {};
             Object.keys(eventData).forEach(key => {
-                if (typeof eventData[key] === 'string') {
+                if (typeof eventData[key] === "string") {
                     sanitized[key] = this._sanitizeString(eventData[key]);
-                } else if (typeof eventData[key] === 'number' || typeof eventData[key] === 'boolean') {
+                } else if (typeof eventData[key] === "number" || typeof eventData[key] === "boolean") {
                     sanitized[key] = eventData[key];
                 }
             });
-            
+
             return sanitized;
         },
 
-        _sanitizeConfig: function (config) {
-            if (!config) return {};
-            
+        _sanitizeConfig(config) {
+            if (!config) {return {};}
+
             const sanitized = {};
             Object.keys(config).forEach(key => {
                 const value = config[key];
-                if (typeof value === 'string') {
+                if (typeof value === "string") {
                     sanitized[key] = this._sanitizeString(value);
-                } else if (typeof value === 'number' || typeof value === 'boolean') {
+                } else if (typeof value === "number" || typeof value === "boolean") {
                     sanitized[key] = value;
                 } else if (Array.isArray(value)) {
-                    sanitized[key] = value.map(item => 
-                        typeof item === 'string' ? this._sanitizeString(item) : item
+                    sanitized[key] = value.map(item =>
+                        typeof item === "string" ? this._sanitizeString(item) : item
                     );
                 }
             });
-            
+
             return sanitized;
         },
 
-        _sanitizeString: function (str) {
-            if (!str || typeof str !== 'string') return '';
-            
+        _sanitizeString(str) {
+            if (!str || typeof str !== "string") {return "";}
+
             return str
-                .replace(/[<>'"]/g, '')
-                .replace(/javascript:/gi, '')
-                .replace(/on\w+\s*=/gi, '')
+                .replace(/[<>'"]/g, "")
+                .replace(/javascript:/gi, "")
+                .replace(/on\w+\s*=/gi, "")
                 .substring(0, 1000); // Limit length
         },
 
-        _isValidWebSocketUrl: function (url) {
+        _isValidWebSocketUrl(url) {
             try {
                 const urlObj = new URL(url);
-                return urlObj.protocol === 'wss:' || 
-                       (urlObj.protocol === 'ws:' && urlObj.hostname === 'localhost');
+                return urlObj.protocol === "wss:" ||
+                       (urlObj.protocol === "ws:" && urlObj.hostname === "localhost");
             } catch (error) {
                 return false;
             }
         },
 
-        _isValidEventSourceUrl: function (url) {
+        _isValidEventSourceUrl(url) {
             try {
                 const urlObj = new URL(url);
-                return urlObj.protocol === 'https:' || 
-                       (urlObj.protocol === 'http:' && urlObj.hostname === 'localhost');
+                return urlObj.protocol === "https:" ||
+                       (urlObj.protocol === "http:" && urlObj.hostname === "localhost");
             } catch (error) {
                 return false;
             }
         },
 
-        _isValidOrchestrationUpdate: function (data) {
-            if (!data || typeof data !== 'object') {
+        _isValidOrchestrationUpdate(data) {
+            if (!data || typeof data !== "object") {
                 return false;
             }
-            
+
             const validTypes = [
-                'WORKFLOW_STARTED', 'WORKFLOW_COMPLETED', 'WORKFLOW_FAILED',
-                'STEP_STARTED', 'STEP_COMPLETED', 'STEP_FAILED',
-                'AGENT_ASSIGNED', 'AGENT_COMPLETED',
-                'QUEUE_UPDATED', 'PIPELINE_STATUS'
+                "WORKFLOW_STARTED", "WORKFLOW_COMPLETED", "WORKFLOW_FAILED",
+                "STEP_STARTED", "STEP_COMPLETED", "STEP_FAILED",
+                "AGENT_ASSIGNED", "AGENT_COMPLETED",
+                "QUEUE_UPDATED", "PIPELINE_STATUS"
             ];
-            
+
             return data.type && validTypes.includes(data.type);
         },
 
-        _isValidOrchestrationEvent: function (eventType, data) {
+        _isValidOrchestrationEvent(eventType, data) {
             const validEventTypes = {
-                'workflow-update': ['id', 'status', 'progress'],
-                'agent-status': ['agentId', 'status', 'capacity'],
-                'task-progress': ['taskId', 'progress', 'status'],
-                'pipeline-status': ['pipelineId', 'stage', 'status']
+                "workflow-update": ["id", "status", "progress"],
+                "agent-status": ["agentId", "status", "capacity"],
+                "task-progress": ["taskId", "progress", "status"],
+                "pipeline-status": ["pipelineId", "stage", "status"]
             };
-            
+
             if (!validEventTypes[eventType]) {
                 return false;
             }
-            
+
             // Check if required fields are present
             const requiredFields = validEventTypes[eventType];
             return requiredFields.every(field => data.hasOwnProperty(field));
         },
 
-        _getCurrentUser: function () {
+        _getCurrentUser() {
             // Mock user detection - implement actual user detection
             return {
-                id: 'current-user',
-                permissions: ['orchestration:read', 'orchestration:write', 
-                            'orchestration:execute', 'orchestration:admin']
+                id: "current-user",
+                permissions: ["orchestration:read", "orchestration:write",
+                    "orchestration:execute", "orchestration:admin"]
             };
         },
 
-        _getOrchestrationPermissions: function (operation) {
+        _getOrchestrationPermissions(operation) {
             const permissionMap = {
-                'CreateWorkflow': ['orchestration:write'],
-                'ExecuteWorkflow': ['orchestration:execute'],
-                'DeleteWorkflow': ['orchestration:admin'],
-                'AssignAgent': ['orchestration:write'],
-                'ModifyPipeline': ['orchestration:admin'],
-                'ViewDashboard': ['orchestration:read'],
-                'ConfigureCircuitBreaker': ['orchestration:admin'],
-                'OverrideConsensus': ['orchestration:admin']
+                "CreateWorkflow": ["orchestration:write"],
+                "ExecuteWorkflow": ["orchestration:execute"],
+                "DeleteWorkflow": ["orchestration:admin"],
+                "AssignAgent": ["orchestration:write"],
+                "ModifyPipeline": ["orchestration:admin"],
+                "ViewDashboard": ["orchestration:read"],
+                "ConfigureCircuitBreaker": ["orchestration:admin"],
+                "OverrideConsensus": ["orchestration:admin"]
             };
-            
-            return permissionMap[operation] || ['orchestration:read'];
+
+            return permissionMap[operation] || ["orchestration:read"];
         },
 
-        _userHasPermission: function (user, permission) {
+        _userHasPermission(user, permission) {
             return user.permissions && user.permissions.includes(permission);
         },
 
-        _isProduction: function () {
+        _isProduction() {
             // Detect production environment
-            return window.location.hostname !== 'localhost' && 
-                   window.location.hostname !== '127.0.0.1' &&
-                   !window.location.hostname.startsWith('192.168.');
+            return window.location.hostname !== "localhost" &&
+                   window.location.hostname !== "127.0.0.1" &&
+                   !window.location.hostname.startsWith("192.168.");
         },
 
-        _sendToAuditService: function (logEntry) {
+        _sendToAuditService(logEntry) {
             // In production, implement actual audit service integration
             console.log("AUDIT:", logEntry);
         }

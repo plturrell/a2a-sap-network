@@ -442,7 +442,7 @@ sap.ui.define([
             const that = this;
 
             // Capture JavaScript errors
-            window.addEventListener("error", function(event) {
+            window.addEventListener("error", (event) => {
                 that._reportClientError({
                     message: event.message,
                     filename: event.filename,
@@ -457,7 +457,7 @@ sap.ui.define([
             });
 
             // Capture unhandled promise rejections
-            window.addEventListener("unhandledrejection", function(event) {
+            window.addEventListener("unhandledrejection", (event) => {
                 that._reportClientError({
                     message: event.reason ? event.reason.message || event.reason : "Unhandled promise rejection",
                     stack: event.reason ? event.reason.stack : "No stack trace available",
@@ -512,7 +512,7 @@ sap.ui.define([
                 performance.mark("app-start");
 
                 // Monitor page load performance
-                window.addEventListener("load", function() {
+                window.addEventListener("load", () => {
                     performance.mark("app-loaded");
 
                     const navigation = performance.getEntriesByType("navigation")[0];
@@ -529,7 +529,7 @@ sap.ui.define([
             }
 
             // Monitor route changes
-            this.getRouter().attachRouteMatched(function(oEvent) {
+            this.getRouter().attachRouteMatched((oEvent) => {
                 const sRouteName = oEvent.getParameter("name");
                 performance.mark(`route-${ sRouteName }-start`);
 
@@ -542,7 +542,7 @@ sap.ui.define([
             });
 
             // Monitor user interactions
-            document.addEventListener("click", function(event) {
+            document.addEventListener("click", (event) => {
                 const sTarget = event.target.tagName + (event.target.id ? `#${ event.target.id}` : "") +
                               (event.target.className ? `.${ event.target.className.replace(/\s+/g, ".")}` : "");
 

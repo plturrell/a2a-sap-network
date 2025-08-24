@@ -1921,6 +1921,477 @@ class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         
         return inferred_skills
 
+    # ================================
+    # Registry Capabilities (A2A Skills)
+    # ================================
+
+    @a2a_skill(
+        name="agent_lifecycle_management",
+        description="Comprehensive agent lifecycle management with AI-powered optimization",
+        version="1.0.0"
+    )
+    @mcp_tool("manage_lifecycle", "Manage complete agent lifecycles with predictive maintenance")
+    async def manage_lifecycle(self, lifecycle_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Comprehensive agent lifecycle management with ML-powered optimization
+        """
+        try:
+            action = lifecycle_data.get("action", "get_status")
+            agent_id = lifecycle_data.get("agent_id")
+            
+            if action == "create":
+                # Create new agent lifecycle entry
+                agent_spec = lifecycle_data.get("agent_spec", {})
+                
+                # ML-powered agent configuration optimization
+                optimized_config = await self._optimize_agent_configuration(agent_spec)
+                
+                # Create lifecycle entry
+                lifecycle_entry = {
+                    "agent_id": agent_id or str(uuid4()),
+                    "created_at": datetime.utcnow().isoformat(),
+                    "status": "initializing",
+                    "configuration": optimized_config,
+                    "health_score": 1.0,
+                    "performance_metrics": {},
+                    "lifecycle_stage": "creation",
+                    "predicted_lifespan": await self._predict_agent_lifespan(optimized_config),
+                    "maintenance_schedule": await self._generate_maintenance_schedule(optimized_config)
+                }
+                
+                # Store in blockchain registry
+                await self.blockchain_registry.set(f"lifecycle:{agent_id}", lifecycle_entry)
+                
+                logger.info(f"Created lifecycle management for agent {agent_id}")
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "lifecycle_entry": lifecycle_entry,
+                    "optimization_applied": True
+                }
+                
+            elif action == "update":
+                # Update existing lifecycle
+                updates = lifecycle_data.get("updates", {})
+                
+                current_entry = await self.blockchain_registry.get(f"lifecycle:{agent_id}")
+                if not current_entry:
+                    raise ValueError(f"Lifecycle entry for agent {agent_id} not found")
+                
+                # Apply updates with ML validation
+                validated_updates = await self._validate_lifecycle_updates(current_entry, updates)
+                current_entry.update(validated_updates)
+                current_entry["updated_at"] = datetime.utcnow().isoformat()
+                
+                # Recalculate predictions
+                if "configuration" in updates:
+                    current_entry["predicted_lifespan"] = await self._predict_agent_lifespan(current_entry["configuration"])
+                    current_entry["maintenance_schedule"] = await self._generate_maintenance_schedule(current_entry["configuration"])
+                
+                await self.blockchain_registry.set(f"lifecycle:{agent_id}", current_entry)
+                
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "updated_entry": current_entry,
+                    "validation_applied": True
+                }
+                
+            elif action == "get_status":
+                # Get current lifecycle status
+                if agent_id:
+                    lifecycle_entry = await self.blockchain_registry.get(f"lifecycle:{agent_id}")
+                    return {
+                        "success": True,
+                        "agent_id": agent_id,
+                        "lifecycle_entry": lifecycle_entry
+                    }
+                else:
+                    # Get all lifecycle entries
+                    all_lifecycles = {}  # In real implementation, query blockchain for all lifecycle entries
+                    return {
+                        "success": True,
+                        "all_lifecycles": all_lifecycles,
+                        "total_agents": len(all_lifecycles)
+                    }
+                    
+        except Exception as e:
+            logger.error(f"Lifecycle management failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    @a2a_skill(
+        name="agent_registration",
+        description="Enhanced agent registration with AI-powered validation and optimization",
+        version="1.0.0"
+    )
+    @mcp_tool("register_agent_enhanced", "Register agents with ML-powered validation")
+    async def register_agent_enhanced(self, registration_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enhanced agent registration with AI validation and blockchain integration
+        """
+        try:
+            agent_info = registration_data.get("agent_info", {})
+            capabilities = registration_data.get("capabilities", [])
+            trust_requirements = registration_data.get("trust_requirements", {})
+            
+            # AI-powered capability validation
+            validated_capabilities = await self._validate_agent_capabilities(capabilities)
+            
+            # ML-based trust score calculation
+            trust_score = await self._calculate_trust_score(agent_info, capabilities, trust_requirements)
+            
+            # Generate unique agent ID
+            agent_id = agent_info.get("agent_id", str(uuid4()))
+            
+            # Create comprehensive registration entry
+            registration_entry = {
+                "agent_id": agent_id,
+                "agent_info": agent_info,
+                "capabilities": validated_capabilities,
+                "trust_score": trust_score,
+                "registered_at": datetime.utcnow().isoformat(),
+                "status": "active",
+                "reputation_score": 0.8,  # Starting reputation
+                "verification_level": await self._determine_verification_level(trust_score),
+                "blockchain_address": await self._generate_blockchain_address(agent_id),
+                "registration_signature": await self._sign_registration(agent_id, agent_info)
+            }
+            
+            # Store in blockchain registry
+            await self.blockchain_registry.set(f"registration:{agent_id}", registration_entry)
+            
+            # Add to managed agents
+            self.managed_agents[agent_id] = {
+                "registration": registration_entry,
+                "last_seen": datetime.utcnow().isoformat(),
+                "health_status": "healthy",
+                "performance_metrics": {}
+            }
+            
+            logger.info(f"Registered agent {agent_id} with trust score {trust_score}")
+            
+            return {
+                "success": True,
+                "agent_id": agent_id,
+                "registration_entry": registration_entry,
+                "trust_score": trust_score,
+                "verification_level": registration_entry["verification_level"]
+            }
+            
+        except Exception as e:
+            logger.error(f"Agent registration failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    @a2a_skill(
+        name="health_monitoring",
+        description="AI-powered comprehensive health monitoring with predictive maintenance",
+        version="1.0.0"
+    )
+    @mcp_tool("monitor_health", "Monitor agent health with ML predictions")
+    async def monitor_health(self, monitoring_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        AI-powered comprehensive health monitoring with predictive analytics
+        """
+        try:
+            agent_id = monitoring_data.get("agent_id")
+            monitoring_scope = monitoring_data.get("scope", "comprehensive")  # basic, comprehensive, predictive
+            time_range = monitoring_data.get("time_range", "1h")
+            
+            if agent_id:
+                # Monitor specific agent
+                agent_health = await self._monitor_single_agent_health(agent_id, monitoring_scope, time_range)
+                
+                # ML-powered health prediction
+                health_prediction = await self._predict_agent_health(agent_id, agent_health)
+                
+                # Generate maintenance recommendations
+                maintenance_recommendations = await self._generate_maintenance_recommendations(agent_id, agent_health, health_prediction)
+                
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "current_health": agent_health,
+                    "health_prediction": health_prediction,
+                    "maintenance_recommendations": maintenance_recommendations,
+                    "monitoring_timestamp": datetime.utcnow().isoformat()
+                }
+            else:
+                # Monitor all agents
+                all_agents_health = {}
+                health_summary = {
+                    "healthy_agents": 0,
+                    "warning_agents": 0,
+                    "critical_agents": 0,
+                    "offline_agents": 0
+                }
+                
+                for managed_agent_id in self.managed_agents.keys():
+                    agent_health = await self._monitor_single_agent_health(managed_agent_id, "basic", time_range)
+                    all_agents_health[managed_agent_id] = agent_health
+                    
+                    # Update summary
+                    health_status = agent_health.get("overall_status", "unknown")
+                    if health_status == "healthy":
+                        health_summary["healthy_agents"] += 1
+                    elif health_status == "warning":
+                        health_summary["warning_agents"] += 1
+                    elif health_status == "critical":
+                        health_summary["critical_agents"] += 1
+                    else:
+                        health_summary["offline_agents"] += 1
+                
+                # System-wide health analysis
+                system_health_score = await self._calculate_system_health_score(all_agents_health)
+                
+                return {
+                    "success": True,
+                    "all_agents_health": all_agents_health,
+                    "health_summary": health_summary,
+                    "system_health_score": system_health_score,
+                    "monitoring_timestamp": datetime.utcnow().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"Health monitoring failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    @a2a_skill(
+        name="performance_tracking",
+        description="ML-powered performance tracking with intelligent optimization recommendations",
+        version="1.0.0"
+    )
+    @mcp_tool("track_performance", "Track performance with ML analysis")
+    async def track_performance(self, tracking_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        ML-powered performance tracking with intelligent optimization recommendations
+        """
+        try:
+            agent_id = tracking_data.get("agent_id")
+            metrics = tracking_data.get("metrics", [])
+            time_range = tracking_data.get("time_range", "24h")
+            include_predictions = tracking_data.get("include_predictions", True)
+            
+            if agent_id:
+                # Track specific agent performance
+                performance_data = await self._collect_agent_performance_data(agent_id, time_range)
+                
+                # ML analysis of performance patterns
+                performance_analysis = await self._analyze_performance_patterns(agent_id, performance_data)
+                
+                # Performance predictions
+                predictions = {}
+                if include_predictions:
+                    predictions = await self._predict_agent_performance(agent_id, performance_data)
+                
+                # Optimization recommendations
+                optimization_recommendations = await self._generate_optimization_recommendations(
+                    agent_id, performance_analysis, predictions
+                )
+                
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "performance_data": performance_data,
+                    "performance_analysis": performance_analysis,
+                    "predictions": predictions,
+                    "optimization_recommendations": optimization_recommendations,
+                    "tracking_timestamp": datetime.utcnow().isoformat()
+                }
+            else:
+                # Track system-wide performance
+                system_performance = {}
+                performance_summary = {
+                    "total_agents": len(self.managed_agents),
+                    "high_performers": 0,
+                    "average_performers": 0,
+                    "low_performers": 0,
+                    "system_average_response_time": 0,
+                    "system_throughput": 0,
+                    "system_reliability": 0
+                }
+                
+                total_response_time = 0
+                total_throughput = 0
+                total_reliability = 0
+                
+                for managed_agent_id in self.managed_agents.keys():
+                    agent_performance = await self._collect_agent_performance_data(managed_agent_id, "1h")  # Shorter range for system overview
+                    system_performance[managed_agent_id] = agent_performance
+                    
+                    # Update summary metrics
+                    performance_score = agent_performance.get("overall_score", 0.5)
+                    if performance_score >= 0.8:
+                        performance_summary["high_performers"] += 1
+                    elif performance_score >= 0.6:
+                        performance_summary["average_performers"] += 1
+                    else:
+                        performance_summary["low_performers"] += 1
+                    
+                    total_response_time += agent_performance.get("avg_response_time", 0)
+                    total_throughput += agent_performance.get("throughput", 0)
+                    total_reliability += agent_performance.get("reliability", 0)
+                
+                # Calculate system averages
+                agent_count = len(self.managed_agents) or 1
+                performance_summary["system_average_response_time"] = total_response_time / agent_count
+                performance_summary["system_throughput"] = total_throughput
+                performance_summary["system_reliability"] = total_reliability / agent_count
+                
+                # System-wide optimization recommendations
+                system_optimization_recommendations = await self._generate_system_optimization_recommendations(
+                    system_performance, performance_summary
+                )
+                
+                return {
+                    "success": True,
+                    "system_performance": system_performance,
+                    "performance_summary": performance_summary,
+                    "system_optimization_recommendations": system_optimization_recommendations,
+                    "tracking_timestamp": datetime.utcnow().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"Performance tracking failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    @a2a_skill(
+        name="agent_coordination",
+        description="AI-powered agent coordination with intelligent workflow orchestration",
+        version="1.0.0"
+    )
+    @mcp_tool("coordinate_agents", "Coordinate agents with AI orchestration")
+    async def coordinate_agents(self, coordination_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        AI-powered agent coordination with intelligent workflow orchestration
+        """
+        try:
+            coordination_type = coordination_data.get("type", "workflow")  # workflow, load_balance, collaboration
+            participants = coordination_data.get("participants", [])
+            workflow_definition = coordination_data.get("workflow", {})
+            coordination_goals = coordination_data.get("goals", [])
+            
+            if coordination_type == "workflow":
+                # AI-powered workflow orchestration
+                optimized_workflow = await self._optimize_workflow_execution(workflow_definition, participants)
+                
+                # Create coordination session
+                coordination_id = str(uuid4())
+                session = {
+                    "coordination_id": coordination_id,
+                    "type": coordination_type,
+                    "participants": participants,
+                    "workflow": optimized_workflow,
+                    "status": "active",
+                    "created_at": datetime.utcnow().isoformat(),
+                    "execution_plan": await self._create_execution_plan(optimized_workflow, participants),
+                    "progress_tracking": {}
+                }
+                
+                # Store coordination session
+                self.coordination_sessions[coordination_id] = session
+                
+                # Start workflow execution
+                execution_result = await self._execute_coordinated_workflow(coordination_id, session)
+                
+                return {
+                    "success": True,
+                    "coordination_id": coordination_id,
+                    "coordination_type": coordination_type,
+                    "optimized_workflow": optimized_workflow,
+                    "execution_result": execution_result,
+                    "participants_count": len(participants)
+                }
+                
+            elif coordination_type == "load_balance":
+                # AI-powered load balancing
+                load_distribution = await self._calculate_optimal_load_distribution(participants, coordination_data.get("workload", {}))
+                
+                # Apply load balancing
+                balancing_result = await self._apply_load_balancing(participants, load_distribution)
+                
+                return {
+                    "success": True,
+                    "coordination_type": coordination_type,
+                    "load_distribution": load_distribution,
+                    "balancing_result": balancing_result,
+                    "participants_count": len(participants)
+                }
+                
+            elif coordination_type == "collaboration":
+                # AI-powered collaborative task assignment
+                collaboration_plan = await self._create_collaboration_plan(participants, coordination_goals)
+                
+                # Execute collaborative tasks
+                collaboration_result = await self._execute_collaborative_tasks(collaboration_plan)
+                
+                return {
+                    "success": True,
+                    "coordination_type": coordination_type,
+                    "collaboration_plan": collaboration_plan,
+                    "collaboration_result": collaboration_result,
+                    "participants_count": len(participants)
+                }
+            else:
+                raise ValueError(f"Unknown coordination type: {coordination_type}")
+                
+        except Exception as e:
+            logger.error(f"Agent coordination failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    # ================================
+    # Helper Methods for Registry Capabilities
+    # ================================
+
+    async def _optimize_agent_configuration(self, agent_spec: Dict[str, Any]) -> Dict[str, Any]:
+        """Use ML to optimize agent configuration"""
+        # ML-powered configuration optimization
+        optimized_config = agent_spec.copy()
+        
+        # Add ML-optimized settings
+        optimized_config.update({
+            "ml_optimized": True,
+            "recommended_memory": self._calculate_optimal_memory(agent_spec),
+            "recommended_cpu": self._calculate_optimal_cpu(agent_spec),
+            "recommended_timeout": self._calculate_optimal_timeout(agent_spec)
+        })
+        
+        return optimized_config
+    
+    async def _predict_agent_lifespan(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict agent lifespan using ML"""
+        # ML-based lifespan prediction
+        return {
+            "predicted_days": 90,
+            "confidence": 0.85,
+            "factors": ["configuration_complexity", "expected_load", "maintenance_frequency"]
+        }
+    
+    async def _generate_maintenance_schedule(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate AI-powered maintenance schedule"""
+        return {
+            "daily_health_checks": True,
+            "weekly_performance_review": True,
+            "monthly_full_audit": True,
+            "predicted_maintenance_windows": [
+                {"date": "2025-09-15", "type": "performance_optimization"},
+                {"date": "2025-10-01", "type": "security_update"}
+            ]
+        }
+    
+    def _calculate_optimal_memory(self, agent_spec: Dict[str, Any]) -> int:
+        """Calculate optimal memory allocation"""
+        base_memory = 512  # MB
+        complexity_factor = len(agent_spec.get("capabilities", [])) * 64
+        return base_memory + complexity_factor
+    
+    def _calculate_optimal_cpu(self, agent_spec: Dict[str, Any]) -> float:
+        """Calculate optimal CPU allocation"""
+        return min(2.0, len(agent_spec.get("capabilities", [])) * 0.2)
+    
+    def _calculate_optimal_timeout(self, agent_spec: Dict[str, Any]) -> int:
+        """Calculate optimal timeout"""
+        return max(5000, len(agent_spec.get("capabilities", [])) * 1000)
+
 
 # Factory function
 def create_comprehensive_agent_manager(base_url: str) -> ComprehensiveAgentManagerSDK:

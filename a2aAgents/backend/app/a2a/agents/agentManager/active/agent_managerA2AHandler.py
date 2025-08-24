@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .agentManagerAgent import AgentManagerAgent
+from .comprehensiveAgentManagerSdk import ComprehensiveAgentManagerSDK
 
 logger = logging.getLogger(__name__)
 
@@ -28,27 +28,30 @@ class AgentManagerA2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: AgentManagerAgent):
+    def __init__(self, agent_sdk: ComprehensiveAgentManagerSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
-            agent_id="agent_manager",
-            agent_name="Agent Manager - A2A Ecosystem Orchestration",
-            agent_version="1.0.0",
+            agent_id="agent_lifecycle_manager",
+            agent_name="Agent Lifecycle Manager",
+            agent_version="2.0.0",
             allowed_operations={
-                "get_agent_card",
-                "json_rpc",
-                "process_message",
-                "get_task_status",
-                "get_queue_status",
-                "get_message_status",
-                "cancel_message",
-                "health_check",
+                # Registry capabilities
+                "agent_lifecycle_management",
+                "agent_registration",
+                "health_monitoring",
+                "performance_tracking",
+                "agent_coordination",
+                # Enhanced operations
                 "register_agent",
                 "deregister_agent",
                 "list_agents",
                 "get_agent_info",
                 "check_agent_health",
+                "monitor_agent_health",
+                "track_performance",
+                "coordinate_agents",
+                "manage_lifecycle",
                 "create_trust_contract",
                 "list_trust_contracts",
                 "get_trust_contract",
@@ -59,7 +62,16 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 "cancel_workflow",
                 "system_health_check",
                 "system_metrics",
-                "all_agents_health"
+                "all_agents_health",
+                # Base operations
+                "get_agent_card",
+                "json_rpc",
+                "process_message",
+                "get_task_status",
+                "get_queue_status",
+                "get_message_status",
+                "cancel_message",
+                "health_check"
             },
             enable_authentication=True,
             enable_rate_limiting=True,
@@ -621,7 +633,106 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             except Exception as e:
                 logger.error(f"Failed to all_agents_health: {e}")
                 return self.create_secure_response(str(e), status="error")
-    
+        # Registry capability handlers
+        @self.secure_handler("agent_lifecycle_management")
+        async def handle_agent_lifecycle_management(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle comprehensive agent lifecycle management"""
+            try:
+                result = await self.agent_sdk.manage_lifecycle(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="agent_lifecycle_management",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to agent_lifecycle_management: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("agent_registration")
+        async def handle_agent_registration_capability(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle agent registration capability"""
+            try:
+                result = await self.agent_sdk.register_agent_enhanced(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="agent_registration",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to agent_registration: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("health_monitoring")
+        async def handle_health_monitoring_capability(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle comprehensive health monitoring capability"""
+            try:
+                result = await self.agent_sdk.monitor_health(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="health_monitoring",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to health_monitoring: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("performance_tracking")
+        async def handle_performance_tracking_capability(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle performance tracking capability"""
+            try:
+                result = await self.agent_sdk.track_performance(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="performance_tracking",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to performance_tracking: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("agent_coordination")
+        async def handle_agent_coordination_capability(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle agent coordination capability"""
+            try:
+                result = await self.agent_sdk.coordinate_agents(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="agent_coordination",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to agent_coordination: {e}")
+                return self.create_secure_response(str(e), status="error")    
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -727,7 +838,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
 
 
 # Factory function to create A2A handler
-def create_agent_manager_a2a_handler(agent_sdk: AgentManagerAgent) -> AgentManagerA2AHandler:
+def create_agent_manager_a2a_handler(agent_sdk: ComprehensiveAgentManagerSDK) -> AgentManagerA2AHandler:
     """Create A2A-compliant handler for Agent Manager - A2A Ecosystem Orchestration"""
     return AgentManagerA2AHandler(agent_sdk)
 

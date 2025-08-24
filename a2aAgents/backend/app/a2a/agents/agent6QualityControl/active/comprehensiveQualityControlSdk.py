@@ -220,10 +220,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
         
         
         # Initialize blockchain capabilities
@@ -479,8 +475,40 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             logger.error(f"Error loading quality history: {e}")
     
     # Quality control skills
-    @a2a_skill("assess_quality", "Multi-dimensional quality assessment")
-    async def assess_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    @a2a_skill(
+        name="quality_assessment",
+        description="Comprehensive multi-dimensional quality assessment using advanced AI and ML techniques",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Target system or component to assess"
+                },
+                "metrics": {
+                    "type": "object",
+                    "description": "Quality metrics data"
+                },
+                "standards": {
+                    "type": "array",
+                    "description": "Quality standards to check against",
+                    "items": {"type": "string"}
+                }
+            },
+            "required": ["target"]
+        },
+        output_schema={
+            "type": "object",
+            "properties": {
+                "overall_score": {"type": "number"},
+                "dimension_scores": {"type": "object"},
+                "issues_found": {"type": "integer"},
+                "compliance_status": {"type": "object"},
+                "recommendations": {"type": "array"}
+            }
+        }
+    )
+    async def quality_assessment(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform comprehensive quality assessment using ML models"""
         start_time = time.time()
         method_name = "assess_quality"
@@ -560,14 +588,14 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 overall_score
             ) / self.metrics['total_assessments']
             
-            critical_issues = len([i for i in issues if i.severity == QualitySeverity.CRITICAL])
+            critical_issues = len([i for i in issues if getattr(i, 'severity', None) == QualitySeverity.CRITICAL])
             self.metrics['critical_issues'] += critical_issues
             
             # Record performance
             self.method_performance[method_name]['total'] += 1
             self.method_performance[method_name]['success'] += 1
             self.method_performance[method_name]['total_time'] += report.execution_time
-            self.method_performance[method_name]['average_accuracy'] = overall_score
+            self.method_performance[method_name]['average_accuracy'] = float(overall_score)
             
             # Learn from assessment
             if self.learning_enabled:
@@ -591,7 +619,254 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Assessment error: {str(e)}")
     
-    @a2a_skill("detect_anomalies", "ML-powered anomaly detection")
+    # Create alias method for assess_quality to maintain compatibility
+    async def assess_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Alias for quality_assessment to maintain backward compatibility"""
+        return await self.quality_assessment(request_data)
+            
+        except Exception as e:
+            logger.error(f"Quality assessment error: {e}")
+            self.method_performance[method_name]['total'] += 1
+            return create_error_response(f"Assessment error: {str(e)}")
+    
+    @a2a_skill(
+        name="routing_decision",
+        description="Intelligent routing decisions based on quality metrics and system health",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "routing_options": {
+                    "type": "array",
+                    "description": "Available routing options with their quality metrics"
+                },
+                "decision_criteria": {
+                    "type": "object",
+                    "description": "Criteria for routing decision"
+                }
+            },
+            "required": ["routing_options"]
+        }
+    )
+    async def routing_decision(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Make intelligent routing decisions based on quality assessment"""
+        try:
+            routing_options = request_data.get("routing_options", [])
+            decision_criteria = request_data.get("decision_criteria", {})
+            
+            best_route = None
+            best_score = 0.0
+            route_assessments = []
+            
+            # Assess each routing option
+            for option in routing_options:
+                assessment_result = await self.quality_assessment({
+                    "target": option.get("target", "route_option"),
+                    "metrics": option.get("metrics", {})
+                })
+                
+                if assessment_result.get("success"):
+                    score = assessment_result["data"]["overall_score"]
+                    route_assessments.append({
+                        "option": option,
+                        "score": score,
+                        "assessment": assessment_result["data"]
+                    })
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_route = option
+            
+            return create_success_response({
+                "selected_route": best_route,
+                "confidence_score": best_score,
+                "route_assessments": route_assessments,
+                "decision_rationale": f"Selected route with highest quality score: {best_score:.3f}"
+            })
+            
+        except Exception as e:
+            logger.error(f"Routing decision error: {e}")
+            return create_error_response(f"Routing decision error: {str(e)}")
+    
+    @a2a_skill(
+        name="improvement_recommendations", 
+        description="AI-driven improvement recommendations using ML analysis and quality insights",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Target for improvement recommendations"
+                },
+                "current_metrics": {
+                    "type": "object",
+                    "description": "Current quality metrics"
+                },
+                "improvement_goals": {
+                    "type": "object",
+                    "description": "Desired improvement targets"
+                }
+            },
+            "required": ["target"]
+        }
+    )
+    async def improvement_recommendations(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate AI-driven improvement recommendations"""
+        return await self.continuous_improvement(request_data)
+    
+    @a2a_skill(
+        name="workflow_control",
+        description="Intelligent workflow control based on quality thresholds and trend analysis",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "workflow": {
+                    "type": "object",
+                    "description": "Workflow configuration and current state"
+                },
+                "quality_thresholds": {
+                    "type": "object",
+                    "description": "Quality thresholds for workflow control"
+                },
+                "control_actions": {
+                    "type": "array",
+                    "description": "Available control actions"
+                }
+            },
+            "required": ["workflow"]
+        }
+    )
+    async def workflow_control(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform intelligent workflow control based on quality metrics"""
+        try:
+            workflow = request_data.get("workflow", {})
+            quality_thresholds = request_data.get("quality_thresholds", {})
+            control_actions = request_data.get("control_actions", ["continue", "pause", "halt"])
+            
+            workflow_id = workflow.get("workflow_id", "unknown")
+            
+            # Monitor workflow quality trends
+            trend_result = await self.monitor_trends({
+                "target": workflow_id,
+                "time_period": "1h"
+            })
+            
+            # Determine control action
+            control_action = "continue"
+            action_reason = "Quality metrics within acceptable range"
+            
+            if trend_result.get("success"):
+                trend_data = trend_result["data"]
+                anomalies = trend_data.get("trend_anomalies", [])
+                
+                critical_anomalies = [a for a in anomalies if a.get("severity") == "critical"]
+                high_anomalies = [a for a in anomalies if a.get("severity") == "high"]
+                
+                if len(critical_anomalies) > 0:
+                    control_action = "halt"
+                    action_reason = f"Critical quality anomalies detected: {len(critical_anomalies)}"
+                elif len(high_anomalies) > 2:
+                    control_action = "pause"
+                    action_reason = f"Multiple high-severity anomalies detected: {len(high_anomalies)}"
+                elif len(anomalies) > 5:
+                    control_action = "investigate"
+                    action_reason = f"Elevated anomaly count detected: {len(anomalies)}"
+            
+            return create_success_response({
+                "workflow_id": workflow_id,
+                "control_action": control_action,
+                "action_reason": action_reason,
+                "quality_analysis": trend_result.get("data", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Workflow control error: {e}")
+            return create_error_response(f"Workflow control error: {str(e)}")
+    
+    @a2a_skill(
+        name="trust_verification",
+        description="Trust verification through comprehensive quality assessment and compliance checking",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent ID to verify trust for"
+                },
+                "trust_metrics": {
+                    "type": "object",
+                    "description": "Trust-related metrics and data"
+                },
+                "verification_level": {
+                    "type": "string",
+                    "description": "Level of trust verification required",
+                    "enum": ["basic", "standard", "high", "critical"]
+                }
+            },
+            "required": ["agent_id"]
+        }
+    )
+    async def trust_verification(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Verify agent trust through quality assessment"""
+        try:
+            agent_id = request_data.get("agent_id")
+            trust_metrics = request_data.get("trust_metrics", {})
+            verification_level = request_data.get("verification_level", "standard")
+            
+            # Define trust thresholds based on verification level
+            thresholds = {
+                "basic": 0.6,
+                "standard": 0.7,
+                "high": 0.85,
+                "critical": 0.95
+            }
+            
+            required_threshold = thresholds.get(verification_level, 0.7)
+            
+            # Assess agent quality/trust
+            trust_assessment = await self.quality_assessment({
+                "target": f"agent_{agent_id}",
+                "metrics": trust_metrics,
+                "standards": ["iso_9001"] if verification_level in ["high", "critical"] else []
+            })
+            
+            trust_verified = False
+            trust_score = 0.0
+            verification_details = {}
+            
+            if trust_assessment.get("success"):
+                trust_score = trust_assessment["data"]["overall_score"]
+                trust_verified = trust_score >= required_threshold
+                verification_details = trust_assessment["data"]
+            
+            # Additional compliance check for high verification levels
+            compliance_result = None
+            if verification_level in ["high", "critical"]:
+                compliance_result = await self.compliance_audit({
+                    "target": f"agent_{agent_id}",
+                    "standards": ["iso_9001", "six_sigma"]
+                })
+                
+                if compliance_result.get("success"):
+                    compliance_score = compliance_result["data"].get("compliance_score", 0.0)
+                    trust_verified = trust_verified and (compliance_score >= 0.8)
+            
+            return create_success_response({
+                "agent_id": agent_id,
+                "trust_verified": trust_verified,
+                "trust_score": trust_score,
+                "verification_level": verification_level,
+                "required_threshold": required_threshold,
+                "verification_details": verification_details,
+                "compliance_result": compliance_result.get("data") if compliance_result else None,
+                "verified_at": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Trust verification error: {e}")
+            return create_error_response(f"Trust verification error: {str(e)}")
+    
+    # Create alias for detect_anomalies to maintain compatibility
     async def detect_anomalies(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Detect quality anomalies using advanced ML techniques"""
         try:
@@ -626,7 +901,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             logger.error(f"Anomaly detection error: {e}")
             return create_error_response(f"Anomaly detection error: {str(e)}")
     
-    @a2a_skill("monitor_trends", "Quality trend monitoring")
     async def monitor_trends(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Monitor quality trends using statistical analysis and ML"""
         try:
@@ -663,7 +937,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             logger.error(f"Trend monitoring error: {e}")
             return create_error_response(f"Trend monitoring error: {str(e)}")
     
-    @a2a_skill("continuous_improvement", "AI-driven improvement suggestions")
     async def continuous_improvement(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate continuous improvement recommendations using AI"""
         try:
@@ -702,7 +975,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             logger.error(f"Continuous improvement error: {e}")
             return create_error_response(f"Continuous improvement error: {str(e)}")
     
-    @a2a_skill("compliance_audit", "Standards compliance verification")
     async def compliance_audit(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform automated compliance audit against quality standards"""
         try:

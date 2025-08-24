@@ -10,7 +10,7 @@
  */
 sap.ui.define([
     "sap/base/Log"
-], function(Log) {
+], (Log) => {
     "use strict";
 
     const BatchService = {
@@ -78,7 +78,7 @@ sap.ui.define([
         submit(request) {
             const that = this;
 
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 const batchRequest = {
                     id: that._generateRequestId(),
                     method: request.method || "GET",
@@ -121,7 +121,7 @@ sap.ui.define([
             const groupId = options.groupId || this._generateGroupId();
             const that = this;
 
-            const groupPromises = requests.map(function(request) {
+            const groupPromises = requests.map((request) => {
                 request.groupId = groupId;
                 return that.submit(request);
             });
@@ -157,7 +157,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         getStatus() {
-            const groupStats = this._batchQueue.reduce(function(stats, request) {
+            const groupStats = this._batchQueue.reduce((stats, request) => {
                 if (!stats[request.groupId]) {
                     stats[request.groupId] = {
                         count: 0,
@@ -201,7 +201,7 @@ sap.ui.define([
             const initialLength = this._batchQueue.length;
 
             if (groupId) {
-                this._batchQueue = this._batchQueue.filter(function(request) {
+                this._batchQueue = this._batchQueue.filter((request) => {
                     if (request.groupId === groupId) {
                         request.reject(new Error("Request cancelled"));
                         return false;
@@ -209,7 +209,7 @@ sap.ui.define([
                     return true;
                 });
             } else {
-                this._batchQueue.forEach(function(request) {
+                this._batchQueue.forEach((request) => {
                     request.reject(new Error("Queue cleared"));
                 });
                 this._batchQueue = [];
@@ -239,7 +239,7 @@ sap.ui.define([
             this._batchQueue.push(request);
 
             // Sort by priority (higher priority first) and timestamp
-            this._batchQueue.sort(function(a, b) {
+            this._batchQueue.sort((a, b) => {
                 if (a.priority !== b.priority) {
                     return b.priority - a.priority;
                 }
@@ -268,7 +268,7 @@ sap.ui.define([
             }
 
             // Schedule flush after timeout
-            this._batchTimer = setTimeout(function() {
+            this._batchTimer = setTimeout(() => {
                 that._flushQueue();
             }, this.BATCH_TIMEOUT);
         },
@@ -293,9 +293,9 @@ sap.ui.define([
             const groups = this._groupRequests();
             const flushPromises = [];
 
-            Object.keys(groups).forEach(function(groupId) {
+            Object.keys(groups).forEach((groupId) => {
                 flushPromises.push(this._processBatchGroup(groupId, groups[groupId]));
-            }.bind(this));
+            });
 
             // Clear the queue
             this._batchQueue = [];
@@ -311,7 +311,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _flushGroup(groupId) {
-            const groupRequests = this._batchQueue.filter(function(request) {
+            const groupRequests = this._batchQueue.filter((request) => {
                 return request.groupId === groupId;
             });
 
@@ -320,7 +320,7 @@ sap.ui.define([
             }
 
             // Remove group requests from queue
-            this._batchQueue = this._batchQueue.filter(function(request) {
+            this._batchQueue = this._batchQueue.filter((request) => {
                 return request.groupId !== groupId;
             });
 
@@ -334,7 +334,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _groupRequests() {
-            return this._batchQueue.reduce(function(groups, request) {
+            return this._batchQueue.reduce((groups, request) => {
                 if (!groups[request.groupId]) {
                     groups[request.groupId] = [];
                 }
@@ -365,10 +365,10 @@ sap.ui.define([
             });
 
             return this._sendBatch(groupId, requests)
-                .then(function(results) {
+                .then((results) => {
                     that._handleBatchSuccess(groupId, requests, results);
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     that._handleBatchError(groupId, requests, error);
                 });
         },
@@ -384,7 +384,7 @@ sap.ui.define([
         _sendBatch(groupId, requests) {
             const that = this;
 
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 // Build batch request
                 const batchData = that._buildBatchRequest(requests);
 
@@ -396,7 +396,7 @@ sap.ui.define([
                     processData: false,
                     timeout: 60000 // 60 seconds timeout
                 })
-                    .done(function(data, status, xhr) {
+                    .done((data, status, xhr) => {
                         try {
                             const results = that._parseBatchResponse(xhr.responseText, requests);
                             resolve(results);
@@ -404,7 +404,7 @@ sap.ui.define([
                             reject(error);
                         }
                     })
-                    .fail(function(xhr, status, error) {
+                    .fail((xhr, status, error) => {
                         reject(new Error(`Batch request failed: ${ error}`));
                     });
             });
@@ -424,22 +424,22 @@ sap.ui.define([
             let _hasChanges = false;
 
             // Separate GET requests from change requests
-            const getRequests = requests.filter(function(r) {
+            const getRequests = requests.filter((r) => {
                 return r.method === "GET";
             });
-            const changeRequests = requests.filter(function(r) {
+            const changeRequests = requests.filter((r) => {
                 return r.method !== "GET";
             });
 
             // Add GET requests
-            getRequests.forEach(function(request) {
+            getRequests.forEach((request) => {
                 content += `--${ boundary }\r\n`;
                 content += "Content-Type: application/http\r\n";
                 content += "Content-Transfer-Encoding: binary\r\n";
                 content += "\r\n";
                 content += `${request.method } ${ request.url } HTTP/1.1\r\n`;
 
-                Object.keys(request.headers).forEach(function(header) {
+                Object.keys(request.headers).forEach((header) => {
                     content += `${header }: ${ request.headers[header] }\r\n`;
                 });
 
@@ -453,14 +453,14 @@ sap.ui.define([
                 content += `Content-Type: multipart/mixed; boundary=${ changeBoundary }\r\n`;
                 content += "\r\n";
 
-                changeRequests.forEach(function(request) {
+                changeRequests.forEach((request) => {
                     content += `--${ changeBoundary }\r\n`;
                     content += "Content-Type: application/http\r\n";
                     content += "Content-Transfer-Encoding: binary\r\n";
                     content += "\r\n";
                     content += `${request.method } ${ request.url } HTTP/1.1\r\n`;
 
-                    Object.keys(request.headers).forEach(function(header) {
+                    Object.keys(request.headers).forEach((header) => {
                         content += `${header }: ${ request.headers[header] }\r\n`;
                     });
 
@@ -543,7 +543,7 @@ sap.ui.define([
                 Log.error("Failed to parse batch response", error);
 
                 // Return error results for all requests
-                return requests.map(function(request) {
+                return requests.map((request) => {
                     return {
                         requestId: request.id,
                         status: 500,
@@ -567,7 +567,7 @@ sap.ui.define([
             let successful = 0;
             let failed = 0;
 
-            results.forEach(function(result, index) {
+            results.forEach((result, index) => {
                 const request = requests[index];
 
                 if (result.status >= 200 && result.status < 300) {
@@ -604,7 +604,7 @@ sap.ui.define([
             const that = this;
 
             // Retry logic
-            const canRetry = requests.every(function(request) {
+            const canRetry = requests.every((request) => {
                 return request.retryCount < that.MAX_RETRIES;
             });
 
@@ -616,16 +616,16 @@ sap.ui.define([
                 });
 
                 // Increment retry count and re-queue
-                requests.forEach(function(request) {
+                requests.forEach((request) => {
                     request.retryCount++;
                 });
 
-                setTimeout(function() {
+                setTimeout(() => {
                     that._processBatchGroup(groupId, requests);
                 }, that.RETRY_DELAY);
             } else {
                 // Max retries reached, reject all requests
-                requests.forEach(function(request) {
+                requests.forEach((request) => {
                     request.reject(error);
                 });
 

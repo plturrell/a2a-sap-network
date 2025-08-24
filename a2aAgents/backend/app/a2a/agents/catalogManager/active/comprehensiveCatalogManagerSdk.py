@@ -121,12 +121,7 @@ class RealGrokCatalogClient:
     """Real Grok AI client for catalog intelligence"""
     
     def __init__(self):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                self.base_url = "https://api.x.ai/v1"
+        self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
         self.api_key = None
         self.client = None
@@ -2335,6 +2330,630 @@ Provide a structured assessment with specific recommendations."""
             
         except Exception as e:
             logging.error(f"Catalog item retrieval error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    # ========== REGISTRY CAPABILITY SKILLS ==========
+    
+    @a2a_skill(
+        name="catalog_management",
+        description="Comprehensive catalog management operations"
+    )
+    async def manage_catalog(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Manage catalog operations with AI enhancement and blockchain validation"""
+        try:
+            operation_type = input_data.get('operation_type', 'list')  # list, bulk_create, bulk_update, export, import
+            
+            if operation_type == 'list':
+                # List all catalog items with filters
+                filters = input_data.get('filters', {})
+                sort_by = input_data.get('sort_by', 'quality_score')
+                limit = input_data.get('limit', 50)
+                
+                filtered_items = []
+                for item_id, item in self.catalog_items.items():
+                    if self._passes_filters(item, filters):
+                        filtered_items.append({
+                            'id': item.id,
+                            'title': item.title,
+                            'description': item.description[:100] + '...' if len(item.description) > 100 else item.description,
+                            'content_type': item.content_type,
+                            'quality_score': item.quality_score,
+                            'relationships_count': len(item.relationships),
+                            'last_updated': item.last_updated
+                        })
+                
+                # Sort items
+                if sort_by == 'quality_score':
+                    filtered_items.sort(key=lambda x: x['quality_score'], reverse=True)
+                elif sort_by == 'last_updated':
+                    filtered_items.sort(key=lambda x: x['last_updated'], reverse=True)
+                elif sort_by == 'title':
+                    filtered_items.sort(key=lambda x: x['title'])
+                
+                return {
+                    'success': True,
+                    'operation': 'list',
+                    'total_items': len(self.catalog_items),
+                    'filtered_items': len(filtered_items),
+                    'items': filtered_items[:limit],
+                    'catalog_stats': {
+                        'average_quality': sum(item.quality_score for item in self.catalog_items.values()) / max(len(self.catalog_items), 1),
+                        'total_relationships': sum(len(item.relationships) for item in self.catalog_items.values()),
+                        'content_types': list(set(item.content_type for item in self.catalog_items.values()))
+                    }
+                }
+                
+            elif operation_type == 'bulk_create':
+                # Bulk create catalog items
+                items_data = input_data.get('items', [])
+                auto_enhance = input_data.get('auto_enhance', True)
+                
+                created_items = []
+                for item_data in items_data:
+                    result = await self._create_catalog_item(item_data, auto_enhance, False)
+                    if result.get('success'):
+                        created_items.append(result.get('item_id'))
+                
+                return {
+                    'success': True,
+                    'operation': 'bulk_create',
+                    'created_count': len(created_items),
+                    'created_items': created_items
+                }
+                
+            elif operation_type == 'bulk_update':
+                # Bulk update catalog items
+                updates = input_data.get('updates', {})  # {item_id: update_data}
+                
+                updated_items = []
+                for item_id, update_data in updates.items():
+                    result = await self._update_catalog_item(item_id, update_data, False, False)
+                    if result.get('success'):
+                        updated_items.append(item_id)
+                
+                return {
+                    'success': True,
+                    'operation': 'bulk_update',
+                    'updated_count': len(updated_items),
+                    'updated_items': updated_items
+                }
+                
+            elif operation_type == 'export':
+                # Export catalog data
+                export_format = input_data.get('format', 'json')  # json, csv
+                include_ai_metadata = input_data.get('include_ai_metadata', True)
+                
+                export_data = []
+                for item_id, item in self.catalog_items.items():
+                    item_export = {
+                        'id': item.id,
+                        'title': item.title,
+                        'description': item.description,
+                        'content_type': item.content_type,
+                        'metadata': item.metadata,
+                        'quality_score': item.quality_score,
+                        'last_updated': item.last_updated
+                    }
+                    
+                    if include_ai_metadata:
+                        item_export['ai_metadata'] = item.ai_metadata
+                    
+                    export_data.append(item_export)
+                
+                return {
+                    'success': True,
+                    'operation': 'export',
+                    'format': export_format,
+                    'items_count': len(export_data),
+                    'export_data': export_data
+                }
+                
+            elif operation_type == 'import':
+                # Import catalog data
+                import_data = input_data.get('import_data', [])
+                auto_enhance = input_data.get('auto_enhance', False)
+                
+                imported_count = 0
+                for item_data in import_data:
+                    result = await self._create_catalog_item(item_data, auto_enhance, False)
+                    if result.get('success'):
+                        imported_count += 1
+                
+                return {
+                    'success': True,
+                    'operation': 'import',
+                    'imported_count': imported_count,
+                    'total_items': len(self.catalog_items)
+                }
+                
+            else:
+                return {'success': False, 'error': f'Unknown operation type: {operation_type}'}
+                
+        except Exception as e:
+            logging.error(f"Catalog management error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    @a2a_skill(
+        name="metadata_indexing",
+        description="Index and organize metadata for efficient retrieval"
+    )
+    async def index_metadata(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Index metadata for fast lookup and analysis"""
+        try:
+            index_type = input_data.get('index_type', 'full')  # full, incremental, specific
+            item_ids = input_data.get('item_ids', [])
+            
+            indexed_count = 0
+            
+            if index_type == 'full':
+                # Rebuild entire metadata index
+                self.metadata_index.clear()
+                
+                for item_id, item in self.catalog_items.items():
+                    # Index by various fields
+                    self._index_item_metadata(item_id, item)
+                    indexed_count += 1
+                    
+            elif index_type == 'incremental':
+                # Index only new or updated items
+                for item_id, item in self.catalog_items.items():
+                    if item_id not in self.metadata_index or item.last_updated > self.metadata_index.get(item_id, {}).get('indexed_at', ''):
+                        self._index_item_metadata(item_id, item)
+                        indexed_count += 1
+                        
+            elif index_type == 'specific':
+                # Index specific items
+                for item_id in item_ids:
+                    if item_id in self.catalog_items:
+                        self._index_item_metadata(item_id, self.catalog_items[item_id])
+                        indexed_count += 1
+            
+            # Create inverted indices for fast lookup
+            tag_index = defaultdict(list)
+            type_index = defaultdict(list)
+            keyword_index = defaultdict(list)
+            
+            for item_id, item in self.catalog_items.items():
+                # Index by tags
+                tags = item.metadata.get('tags', []) + item.ai_metadata.get('semantic_tags', [])
+                for tag in tags:
+                    tag_index[tag.lower()].append(item_id)
+                
+                # Index by content type
+                type_index[item.content_type].append(item_id)
+                
+                # Index by keywords
+                keywords = item.title.lower().split() + item.description.lower().split()[:20]
+                for keyword in keywords:
+                    if len(keyword) > 3:  # Skip short words
+                        keyword_index[keyword].append(item_id)
+            
+            # Store indices
+            self.metadata_index['tag_index'] = dict(tag_index)
+            self.metadata_index['type_index'] = dict(type_index)
+            self.metadata_index['keyword_index'] = dict(keyword_index)
+            self.metadata_index['last_indexed'] = datetime.utcnow().isoformat()
+            
+            return {
+                'success': True,
+                'index_type': index_type,
+                'indexed_count': indexed_count,
+                'total_items': len(self.catalog_items),
+                'index_stats': {
+                    'unique_tags': len(tag_index),
+                    'unique_types': len(type_index),
+                    'unique_keywords': len(keyword_index),
+                    'last_indexed': self.metadata_index['last_indexed']
+                }
+            }
+            
+        except Exception as e:
+            logging.error(f"Metadata indexing error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def _index_item_metadata(self, item_id: str, item: CatalogItem):
+        """Index a single item's metadata"""
+        self.metadata_index[item_id] = {
+            'title': item.title,
+            'content_type': item.content_type,
+            'tags': item.metadata.get('tags', []) + item.ai_metadata.get('semantic_tags', []),
+            'quality_score': item.quality_score,
+            'indexed_at': datetime.utcnow().isoformat()
+        }
+    
+    @a2a_skill(
+        name="service_discovery",
+        description="Discover and catalog available services and APIs"
+    )
+    async def discover_services(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Discover services and APIs for cataloging"""
+        try:
+            discovery_type = input_data.get('discovery_type', 'network')  # network, url, agent
+            target = input_data.get('target')
+            auto_catalog = input_data.get('auto_catalog', True)
+            
+            discovered_services = []
+            
+            if discovery_type == 'network':
+                # Discover services from network agents
+                try:
+                    # Query network for available services
+                    network_agents = await self.discover_agents(
+                        capabilities=['api', 'service', 'endpoint'],
+                        agent_types=['service', 'api', 'data']
+                    )
+                    
+                    for agent in network_agents:
+                        service_info = {
+                            'service_id': agent.get('agent_id'),
+                            'service_name': agent.get('name'),
+                            'service_type': agent.get('agent_type'),
+                            'capabilities': agent.get('capabilities', []),
+                            'endpoint': agent.get('endpoint'),
+                            'discovered_at': datetime.utcnow().isoformat()
+                        }
+                        discovered_services.append(service_info)
+                        
+                except Exception as e:
+                    logging.warning(f"Network discovery failed: {e}")
+                    
+            elif discovery_type == 'url' and target:
+                # Discover service from URL
+                if self.web_scraper:
+                    try:
+                        metadata = await self._extract_web_metadata(target)
+                        service_info = {
+                            'service_id': f"web_{hashlib.sha256(target.encode()).hexdigest()[:8]}",
+                            'service_name': metadata.get('title', 'Unknown Service'),
+                            'service_type': 'web_service',
+                            'url': target,
+                            'metadata': metadata,
+                            'discovered_at': datetime.utcnow().isoformat()
+                        }
+                        discovered_services.append(service_info)
+                    except Exception as e:
+                        logging.warning(f"URL discovery failed: {e}")
+                        
+            elif discovery_type == 'agent':
+                # Discover services from specific agents
+                if target:
+                    agent_services = await self._query_agent_services(target)
+                    discovered_services.extend(agent_services)
+            
+            # Auto-catalog discovered services
+            cataloged_count = 0
+            if auto_catalog and discovered_services:
+                for service in discovered_services:
+                    catalog_data = {
+                        'title': service.get('service_name', 'Unknown Service'),
+                        'description': f"Discovered service: {service.get('service_type', 'unknown')}",
+                        'content_type': 'service_definition',
+                        'metadata': {
+                            'service_info': service,
+                            'discovered_via': discovery_type,
+                            'auto_cataloged': True
+                        }
+                    }
+                    
+                    result = await self._create_catalog_item(catalog_data, True, False)
+                    if result.get('success'):
+                        cataloged_count += 1
+            
+            return {
+                'success': True,
+                'discovery_type': discovery_type,
+                'discovered_count': len(discovered_services),
+                'cataloged_count': cataloged_count,
+                'services': discovered_services
+            }
+            
+        except Exception as e:
+            logging.error(f"Service discovery error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    async def _query_agent_services(self, agent_id: str) -> List[Dict[str, Any]]:
+        """Query a specific agent for its services"""
+        services = []
+        try:
+            # Would query the agent via A2A messaging
+            # For now, return empty list
+            pass
+        except Exception as e:
+            logging.warning(f"Agent service query failed: {e}")
+        return services
+    
+    @a2a_skill(
+        name="catalog_search",
+        description="Advanced search across catalog with multiple strategies"
+    )
+    async def search_catalog_registry(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced catalog search with multiple search strategies for registry capability"""
+        try:
+            # This enhances the existing search_catalog method with registry features
+            query = input_data.get('query', '')
+            search_strategy = input_data.get('search_strategy', 'hybrid')  # keyword, semantic, hybrid, fuzzy, regex
+            
+            # Use the existing search_catalog implementation
+            base_result = await self.search_catalog(input_data)
+            
+            if not base_result.get('success'):
+                return base_result
+            
+            # Add search strategy specific enhancements
+            if search_strategy == 'fuzzy':
+                # Add fuzzy matching results
+                fuzzy_results = self._fuzzy_search(query, input_data.get('fuzzy_threshold', 0.7))
+                base_result['fuzzy_matches'] = fuzzy_results
+                
+            elif search_strategy == 'regex':
+                # Add regex pattern matching
+                pattern = input_data.get('pattern', query)
+                regex_results = self._regex_search(pattern)
+                base_result['regex_matches'] = regex_results
+            
+            # Add search analytics
+            base_result['search_analytics'] = {
+                'strategy_used': search_strategy,
+                'index_utilized': bool(self.metadata_index),
+                'embedding_search': bool(self.embedding_model),
+                'ai_enhanced': self.grok_available
+            }
+            
+            return base_result
+            
+        except Exception as e:
+            logging.error(f"Enhanced catalog search error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def _fuzzy_search(self, query: str, threshold: float) -> List[Dict[str, Any]]:
+        """Perform fuzzy string matching search"""
+        results = []
+        try:
+            from difflib import SequenceMatcher
+            
+            for item_id, item in self.catalog_items.items():
+                # Check title similarity
+                title_ratio = SequenceMatcher(None, query.lower(), item.title.lower()).ratio()
+                if title_ratio >= threshold:
+                    results.append({
+                        'item_id': item_id,
+                        'title': item.title,
+                        'match_type': 'title',
+                        'similarity': title_ratio
+                    })
+                    continue
+                
+                # Check description similarity (first 200 chars)
+                desc_preview = item.description[:200].lower()
+                desc_ratio = SequenceMatcher(None, query.lower(), desc_preview).ratio()
+                if desc_ratio >= threshold:
+                    results.append({
+                        'item_id': item_id,
+                        'title': item.title,
+                        'match_type': 'description',
+                        'similarity': desc_ratio
+                    })
+            
+            results.sort(key=lambda x: x['similarity'], reverse=True)
+            return results[:10]
+            
+        except Exception as e:
+            logging.warning(f"Fuzzy search failed: {e}")
+            return []
+    
+    def _regex_search(self, pattern: str) -> List[Dict[str, Any]]:
+        """Perform regex pattern search"""
+        results = []
+        try:
+            regex = re.compile(pattern, re.IGNORECASE)
+            
+            for item_id, item in self.catalog_items.items():
+                # Search in title
+                if regex.search(item.title):
+                    results.append({
+                        'item_id': item_id,
+                        'title': item.title,
+                        'match_location': 'title',
+                        'pattern': pattern
+                    })
+                    continue
+                
+                # Search in description
+                if regex.search(item.description):
+                    results.append({
+                        'item_id': item_id,
+                        'title': item.title,
+                        'match_location': 'description',
+                        'pattern': pattern
+                    })
+            
+            return results[:20]
+            
+        except Exception as e:
+            logging.warning(f"Regex search failed: {e}")
+            return []
+    
+    @a2a_skill(
+        name="resource_registration",
+        description="Register and manage catalog resources"
+    )
+    async def register_resource(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Register resources in the catalog with validation and enrichment"""
+        try:
+            resource_type = input_data.get('resource_type', 'generic')  # api, data, service, document, schema
+            resource_data = input_data.get('resource_data', {})
+            validation_level = input_data.get('validation_level', 'standard')  # basic, standard, comprehensive
+            
+            # Validate resource data
+            validation_result = self._validate_resource(resource_type, resource_data, validation_level)
+            if not validation_result.get('valid'):
+                return {
+                    'success': False,
+                    'error': 'Resource validation failed',
+                    'validation_errors': validation_result.get('errors', [])
+                }
+            
+            # Prepare catalog entry
+            catalog_entry = {
+                'title': resource_data.get('name', f'Untitled {resource_type}'),
+                'description': resource_data.get('description', ''),
+                'content_type': resource_type,
+                'metadata': {
+                    'resource_type': resource_type,
+                    'resource_id': resource_data.get('id', f"{resource_type}_{int(time.time())}"),
+                    'version': resource_data.get('version', '1.0.0'),
+                    'owner': resource_data.get('owner', 'unknown'),
+                    'registration_date': datetime.utcnow().isoformat(),
+                    'validation_level': validation_level,
+                    'validation_score': validation_result.get('score', 0.0)
+                }
+            }
+            
+            # Add resource-specific metadata
+            if resource_type == 'api':
+                catalog_entry['metadata'].update({
+                    'endpoint': resource_data.get('endpoint'),
+                    'methods': resource_data.get('methods', []),
+                    'authentication': resource_data.get('authentication', 'none')
+                })
+            elif resource_type == 'data':
+                catalog_entry['metadata'].update({
+                    'format': resource_data.get('format', 'json'),
+                    'schema': resource_data.get('schema', {}),
+                    'size': resource_data.get('size', 'unknown')
+                })
+            elif resource_type == 'service':
+                catalog_entry['metadata'].update({
+                    'service_type': resource_data.get('service_type'),
+                    'dependencies': resource_data.get('dependencies', []),
+                    'status': resource_data.get('status', 'active')
+                })
+            
+            # Create catalog item with auto-enhancement
+            create_result = await self._create_catalog_item(catalog_entry, True, validation_level == 'comprehensive')
+            
+            if create_result.get('success'):
+                item_id = create_result.get('item_id')
+                
+                # Additional processing for specific resource types
+                if resource_type == 'api' and self.grok_available:
+                    # Generate API documentation suggestions
+                    api_suggestions = await self._generate_api_documentation(resource_data)
+                    if api_suggestions.get('success'):
+                        self.catalog_items[item_id].ai_metadata['api_documentation'] = api_suggestions.get('documentation')
+                
+                # Store resource registration event
+                registration_event = {
+                    'resource_type': resource_type,
+                    'resource_id': catalog_entry['metadata']['resource_id'],
+                    'catalog_item_id': item_id,
+                    'validation_score': validation_result.get('score', 0.0),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+                await self.store_training_data('resource_registration', registration_event)
+                
+                return {
+                    'success': True,
+                    'catalog_item_id': item_id,
+                    'resource_id': catalog_entry['metadata']['resource_id'],
+                    'resource_type': resource_type,
+                    'validation_score': validation_result.get('score', 0.0),
+                    'quality_score': self.catalog_items[item_id].quality_score,
+                    'auto_enhanced': True
+                }
+            else:
+                return create_result
+                
+        except Exception as e:
+            logging.error(f"Resource registration error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def _validate_resource(self, resource_type: str, resource_data: Dict[str, Any], validation_level: str) -> Dict[str, Any]:
+        """Validate resource data based on type and level"""
+        errors = []
+        score = 1.0
+        
+        # Basic validation (all resources)
+        if not resource_data.get('name'):
+            errors.append('Resource name is required')
+            score -= 0.2
+        
+        if not resource_data.get('description'):
+            errors.append('Resource description is required')
+            score -= 0.1
+        
+        # Type-specific validation
+        if resource_type == 'api':
+            if not resource_data.get('endpoint'):
+                errors.append('API endpoint is required')
+                score -= 0.2
+            if not resource_data.get('methods'):
+                errors.append('API methods should be specified')
+                score -= 0.1
+                
+        elif resource_type == 'data':
+            if not resource_data.get('format'):
+                errors.append('Data format should be specified')
+                score -= 0.1
+            if not resource_data.get('schema') and validation_level in ['standard', 'comprehensive']:
+                errors.append('Data schema is recommended')
+                score -= 0.1
+                
+        elif resource_type == 'service':
+            if not resource_data.get('service_type'):
+                errors.append('Service type should be specified')
+                score -= 0.1
+        
+        # Comprehensive validation
+        if validation_level == 'comprehensive':
+            if not resource_data.get('version'):
+                errors.append('Version information is required for comprehensive validation')
+                score -= 0.1
+            if not resource_data.get('owner'):
+                errors.append('Owner information is required for comprehensive validation')
+                score -= 0.1
+            if resource_type == 'api' and not resource_data.get('authentication'):
+                errors.append('Authentication method should be specified')
+                score -= 0.05
+        
+        return {
+            'valid': len(errors) == 0 or (validation_level == 'basic' and score >= 0.5),
+            'errors': errors,
+            'score': max(score, 0.0)
+        }
+    
+    async def _generate_api_documentation(self, api_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate API documentation suggestions using AI"""
+        if not self.grok_available:
+            return {'success': False, 'message': 'AI documentation generation not available'}
+        
+        try:
+            prompt = f"""Generate comprehensive API documentation for:
+            
+Name: {api_data.get('name')}
+Endpoint: {api_data.get('endpoint')}
+Methods: {api_data.get('methods', [])}
+Description: {api_data.get('description')}
+
+Please provide:
+1. Detailed endpoint documentation
+2. Request/response examples
+3. Authentication details
+4. Error codes and handling
+5. Best practices for usage"""
+
+            # This would use the Grok client to generate documentation
+            # For now, return a placeholder
+            return {
+                'success': True,
+                'documentation': {
+                    'overview': f"API documentation for {api_data.get('name')}",
+                    'generated_at': datetime.utcnow().isoformat()
+                }
+            }
+            
+        except Exception as e:
+            logging.warning(f"API documentation generation failed: {e}")
             return {'success': False, 'error': str(e)}
 
 if __name__ == "__main__":

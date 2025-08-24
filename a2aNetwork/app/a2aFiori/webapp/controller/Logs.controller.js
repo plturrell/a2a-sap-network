@@ -7,7 +7,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/format/DateFormat"
-], function(BaseController, MessageToast, JSONModel, DateFormat) {
+], (BaseController, MessageToast, JSONModel, DateFormat) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Logs", {
@@ -48,7 +48,7 @@ sap.ui.define([
                     MessageToast.show(`Loaded ${data.logs?.length || 0} log entries`);
                 })
                 .catch(error => {
-                    console.error("Failed to load logs:", error);
+                    // console.error("Failed to load logs:", error);
                     MessageToast.show(`Failed to load logs: ${ error.message}`);
 
                     // Fallback to mock data

@@ -4,7 +4,7 @@ sap.ui.define([
     "a2a/network/agent11/ext/utils/SecurityUtils",
     "sap/m/MessageBox",
     "sap/base/Log"
-], function (Controller, SQLSecurityModule, SecurityUtils, MessageBox, Log) {
+], (Controller, SQLSecurityModule, SecurityUtils, MessageBox, Log) => {
     "use strict";
 
     /**
@@ -12,11 +12,11 @@ sap.ui.define([
      * Prevents SQL injection through mandatory parameterized queries
      */
     return Controller.extend("a2a.network.agent11.ext.controller.SecureSQLController", {
-        
+
         /**
          * Initialize the controller
          */
-        onInit: function() {
+        onInit() {
             this._sqlSecurity = SQLSecurityModule;
             this._securityUtils = SecurityUtils;
         },
@@ -26,7 +26,7 @@ sap.ui.define([
          * @param {object} queryOptions - Query options
          * @returns {Promise} Query result
          */
-        executeSelect: function(queryOptions) {
+        executeSelect(queryOptions) {
             return new Promise((resolve, reject) => {
                 try {
                     // Validate user permissions
@@ -44,7 +44,7 @@ sap.ui.define([
 
                     // Build secure parameterized query
                     const parameterizedQuery = this._sqlSecurity.buildSelectQuery(queryOptions);
-                    
+
                     // Log the query for audit
                     this._securityUtils.auditLog("SQL_QUERY", {
                         operation: "SELECT",
@@ -69,7 +69,7 @@ sap.ui.define([
          * @param {object} insertOptions - Insert options
          * @returns {Promise} Insert result
          */
-        executeInsert: function(insertOptions) {
+        executeInsert(insertOptions) {
             return new Promise((resolve, reject) => {
                 try {
                     // Validate user permissions
@@ -87,7 +87,7 @@ sap.ui.define([
 
                     // Build secure parameterized query
                     const parameterizedQuery = this._sqlSecurity.buildInsertQuery(insertOptions);
-                    
+
                     // Log the query for audit
                     this._securityUtils.auditLog("SQL_QUERY", {
                         operation: "INSERT",
@@ -112,7 +112,7 @@ sap.ui.define([
          * @param {object} updateOptions - Update options
          * @returns {Promise} Update result
          */
-        executeUpdate: function(updateOptions) {
+        executeUpdate(updateOptions) {
             return new Promise((resolve, reject) => {
                 try {
                     // Validate user permissions
@@ -130,7 +130,7 @@ sap.ui.define([
 
                     // Build secure parameterized query
                     const parameterizedQuery = this._sqlSecurity.buildUpdateQuery(updateOptions);
-                    
+
                     // Log the query for audit
                     this._securityUtils.auditLog("SQL_QUERY", {
                         operation: "UPDATE",
@@ -155,7 +155,7 @@ sap.ui.define([
          * @param {object} deleteOptions - Delete options
          * @returns {Promise} Delete result
          */
-        executeDelete: function(deleteOptions) {
+        executeDelete(deleteOptions) {
             return new Promise((resolve, reject) => {
                 try {
                     // Validate user permissions
@@ -178,7 +178,7 @@ sap.ui.define([
                             if (action === MessageBox.Action.OK) {
                                 // Build secure parameterized query
                                 const parameterizedQuery = this._sqlSecurity.buildDeleteQuery(deleteOptions);
-                                
+
                                 // Log the query for audit
                                 this._securityUtils.auditLog("SQL_QUERY", {
                                     operation: "DELETE",
@@ -208,7 +208,7 @@ sap.ui.define([
          * @param {string} naturalLanguage - Natural language query
          * @returns {Promise} SQL query options
          */
-        translateToSQL: function(naturalLanguage) {
+        translateToSQL(naturalLanguage) {
             return new Promise((resolve, reject) => {
                 try {
                     // Validate user permissions
@@ -220,10 +220,10 @@ sap.ui.define([
 
                     // Sanitize input
                     const sanitized = this._securityUtils.escapeHTML(naturalLanguage);
-                    
+
                     // Parse natural language (simplified)
                     const parsed = this._parseNaturalLanguage(sanitized);
-                    
+
                     if (!parsed.intent) {
                         reject(new Error("Could not understand the query"));
                         return;
@@ -231,7 +231,7 @@ sap.ui.define([
 
                     // Build query options based on intent
                     const queryOptions = this._buildQueryOptionsFromParsed(parsed);
-                    
+
                     // Log the translation for audit
                     this._securityUtils.auditLog("SQL_TRANSLATE", {
                         input: sanitized.substring(0, 100), // Log first 100 chars only
@@ -251,7 +251,7 @@ sap.ui.define([
          * Execute a secure parameterized query
          * @private
          */
-        _executeSecureQuery: function(parameterizedQuery) {
+        _executeSecureQuery(parameterizedQuery) {
             // In real implementation, this would call the backend
             // For now, we'll use the mock from SQLSecurityModule
             return this._sqlSecurity.executeQuery(parameterizedQuery);
@@ -261,7 +261,7 @@ sap.ui.define([
          * Parse natural language query
          * @private
          */
-        _parseNaturalLanguage: function(text) {
+        _parseNaturalLanguage(text) {
             const lower = text.toLowerCase();
             let intent = null;
             const entities = [];
@@ -294,7 +294,7 @@ sap.ui.define([
          * Build query options from parsed natural language
          * @private
          */
-        _buildQueryOptionsFromParsed: function(parsed) {
+        _buildQueryOptionsFromParsed(parsed) {
             const table = parsed.entities.find(e => e.type === "TABLE");
             if (!table) {
                 throw new Error("No table identified in query");
@@ -306,20 +306,20 @@ sap.ui.define([
 
             // Add intent-specific options
             switch (parsed.intent) {
-                case "SELECT":
-                case "COUNT":
-                    // For SELECT/COUNT, we can add columns and conditions later
-                    break;
-                case "INSERT":
-                    options.data = {}; // User needs to provide data
-                    break;
-                case "UPDATE":
-                    options.data = {}; // User needs to provide data
-                    options.where = {}; // User needs to provide conditions
-                    break;
-                case "DELETE":
-                    options.where = {}; // User needs to provide conditions
-                    break;
+            case "SELECT":
+            case "COUNT":
+                // For SELECT/COUNT, we can add columns and conditions later
+                break;
+            case "INSERT":
+                options.data = {}; // User needs to provide data
+                break;
+            case "UPDATE":
+                options.data = {}; // User needs to provide data
+                options.where = {}; // User needs to provide conditions
+                break;
+            case "DELETE":
+                options.where = {}; // User needs to provide conditions
+                break;
             }
 
             return options;

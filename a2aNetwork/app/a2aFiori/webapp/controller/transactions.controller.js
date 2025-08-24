@@ -14,8 +14,8 @@ sap.ui.define([
     "sap/ui/export/Spreadsheet",
     "sap/ui/core/format/NumberFormat",
     "sap/ui/core/format/DateFormat"
-], function(BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator, Log,
-    VizFrame, FlattenedDataset, ChartFormatter, Format, exportLibrary, Spreadsheet, NumberFormat, DateFormat) {
+], (BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator, Log,
+    VizFrame, FlattenedDataset, ChartFormatter, Format, exportLibrary, Spreadsheet, NumberFormat, DateFormat) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Transactions", {

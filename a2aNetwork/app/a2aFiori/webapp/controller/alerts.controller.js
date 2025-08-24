@@ -12,8 +12,8 @@ sap.ui.define([
     "sap/ui/export/Spreadsheet",
     "sap/ui/export/library",
     "../utils/websocket"
-], function(BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox,
-    Spreadsheet, exportLibrary, WebSocketUtil) {
+], (BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox,
+    Spreadsheet, exportLibrary, WebSocketUtil) => {
     "use strict";
 
     const EdmType = exportLibrary.EdmType;
@@ -97,7 +97,7 @@ sap.ui.define([
                 ]).then((data) => {
                     sap.base.Log.info("Subscribed to alert topics", data, "Alerts");
                 }).catch((error) => {
-                    console.error("Failed to subscribe to alert topics:", error);
+                    // console.error("Failed to subscribe to alert topics:", error);
                 });
 
                 // Listen for real-time alert events
@@ -106,13 +106,13 @@ sap.ui.define([
                 WebSocketUtil.on("system.health.changed", this._handleSystemHealthChange.bind(this));
 
             }).catch((error) => {
-                console.error("Failed to establish WebSocket connection:", error);
+                // console.error("Failed to establish WebSocket connection:", error);
                 // Fallback: retry connection after 5 seconds
                 setTimeout(this._setupRealtimeAlerts.bind(this), 5000);
             });
         },
 
-        async _connectWebSocket() {
+        _connectWebSocket() {
             // Get authentication token from user model
             const userModel = this.getOwnerComponent().getModel("user");
             const token = userModel?.getProperty("/token") || "dev-token";
@@ -182,9 +182,9 @@ sap.ui.define([
             this.oUIModel.setProperty("/realtimeAlertType", sType);
 
             // Auto-hide after 10 seconds
-            setTimeout(function() {
+            setTimeout(() => {
                 this.oUIModel.setProperty("/showRealtimeAlert", false);
-            }.bind(this), 10000);
+            }, 10000);
         },
 
         _playAlertSound() {
@@ -193,7 +193,7 @@ sap.ui.define([
                 const audio = new Audio("/sounds/alert.mp3");
                 audio.play();
             } catch (e) {
-                console.error("Failed to play alert sound:", e);
+                // console.error("Failed to play alert sound:", e);
             }
         },
 
@@ -217,7 +217,7 @@ sap.ui.define([
                 this._updateStatistics();
                 this.hideLoading();
             }).catch(error => {
-                console.error("Failed to load alerts:", error);
+                // console.error("Failed to load alerts:", error);
                 this.hideLoading();
                 this.showErrorMessage(this.getResourceBundle().getText("alerts.loadError"));
             });
@@ -233,7 +233,7 @@ sap.ui.define([
                 total: aActiveAlerts.length
             };
 
-            aActiveAlerts.forEach(function(alert) {
+            aActiveAlerts.forEach((alert) => {
                 oStats[alert.severity]++;
             });
 
@@ -419,7 +419,7 @@ sap.ui.define([
             ];
 
             const oTable = this.byId("alertHistoryTable");
-            const aData = oTable.getBinding("items").getContexts().map(function(oContext) {
+            const aData = oTable.getBinding("items").getContexts().map((oContext) => {
                 return oContext.getObject();
             });
 
@@ -431,9 +431,9 @@ sap.ui.define([
             };
 
             new Spreadsheet(oSettings).build()
-                .then(function() {
+                .then(() => {
                     MessageToast.show(this.getResourceBundle().getText("alerts.export.success"));
-                }.bind(this));
+                });
         },
 
         onHistoryItemPress(oEvent) {
@@ -577,7 +577,7 @@ sap.ui.define([
                     const oSettings = JSON.parse(sSavedSettings);
                     this.oSettingsModel.setData(oSettings);
                 } catch (e) {
-                    console.error("Failed to load notification settings:", e);
+                    // console.error("Failed to load notification settings:", e);
                 }
             }
         },
@@ -657,7 +657,7 @@ sap.ui.define([
                     "agent.events",
                     "service.events"
                 ]).catch((error) => {
-                    console.error("Error unsubscribing from WebSocket topics:", error);
+                    // console.error("Error unsubscribing from WebSocket topics:", error);
                 });
 
                 // Remove event listeners

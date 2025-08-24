@@ -5,7 +5,7 @@ sap.ui.define([
     "../model/formatter",
     "sap/ui/model/json/JSONModel",
     "sap/base/Log"
-], function(BaseController, MessageToast, MessageBox, formatter, JSONModel, Log) {
+], (BaseController, MessageToast, MessageBox, formatter, JSONModel, Log) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.BlockchainDashboard", {
@@ -46,17 +46,17 @@ sap.ui.define([
             this.getRouter().getRoute("blockchain").attachPatternMatched(this._onRouteMatched, this);
 
             // Set up automatic refresh every 10 seconds
-            this._iRefreshInterval = setInterval(function() {
+            this._iRefreshInterval = setInterval(() => {
                 this._refreshBlockchainData();
-            }.bind(this), 10000);
+            }, 10000);
 
             // Register for cleanup
-            this._registerForCleanup(function() {
+            this._registerForCleanup(() => {
                 if (this._iRefreshInterval) {
                     clearInterval(this._iRefreshInterval);
                     this._iRefreshInterval = null;
                 }
-            }.bind(this));
+            });
 
             Log.info("Blockchain Dashboard controller initialized");
         },
@@ -84,10 +84,10 @@ sap.ui.define([
                 "Refreshing transaction pool..."
             ];
 
-            this.executeBlockchainOperation("Blockchain Sync", syncSteps, function() {
+            this.executeBlockchainOperation("Blockchain Sync", syncSteps, () => {
                 MessageToast.show("Sync completed successfully");
                 this._refreshBlockchainData();
-            }.bind(this));
+            });
 
             // Show blockchain address education
             // Load blockchain address from configuration
@@ -362,7 +362,7 @@ sap.ui.define([
                     new sap.ui.model.Filter("address", sap.ui.model.FilterOperator.NE, null)
                 ],
                 success(oData) {
-                    const aAgents = oData.results.map(function(agent) {
+                    const aAgents = oData.results.map((agent) => {
                         return {
                             name: agent.name,
                             address: agent.address,

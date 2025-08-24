@@ -33,10 +33,17 @@ class SqlAgentA2AHandler(SecureA2AAgent):
         # Configure secure agent
         config = SecureAgentConfig(
             agent_id="sql_agent",
-            agent_name="sql",
+            agent_name="SQL Agent",
             agent_version="1.0.0",
             allowed_operations={
                 "sql_agent_info",
+                # Registry capabilities
+                "sql_query_execution",
+                "database_operations",
+                "query_optimization",
+                "data_extraction",
+                "schema_management",
+                # Enhanced operations
                 "execute_sql_query",
                 "natural_language_to_sql",
                 "optimize_query",
@@ -44,10 +51,6 @@ class SqlAgentA2AHandler(SecureA2AAgent):
                 "analyze_schema",
                 "generate_report",
                 "batch_operations",
-                "database_operations",
-                "schema_management",
-                "query_optimization",
-                "data_extraction",
                 "health_check"
             },
             enable_authentication=True,
@@ -354,6 +357,27 @@ class SqlAgentA2AHandler(SecureA2AAgent):
                 
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        # Registry capability handlers
+        @self.secure_handler("sql_query_execution")
+        async def handle_sql_query_execution(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle SQL query execution with enhanced features"""
+            try:
+                result = await self.agent_sdk.execute_sql_queries(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="sql_query_execution",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to sql_query_execution: {e}")
                 return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:

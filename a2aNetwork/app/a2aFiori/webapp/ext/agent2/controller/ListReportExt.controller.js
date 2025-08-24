@@ -7,13 +7,13 @@ sap.ui.define([
     "sap/base/security/encodeXML",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML) {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent2.ext.controller.ListReportExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 // Initialize dialog cache and security settings
                 this._dialogCache = {};
@@ -29,7 +29,7 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onCreateAITask: function() {
+        onCreateAITask() {
             // Initialize create model before opening dialog
             this._initializeCreateModel();
             this._openCachedDialog("createAITask", "a2a.network.agent2.ext.fragment.CreateAIPreparationTask");
@@ -42,20 +42,20 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onOpenDataProfiler: function() {
-            var oView = this.base.getView();
-            
+        onOpenDataProfiler() {
+            const oView = this.base.getView();
+
             if (!this._oDataProfiler) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent2.ext.fragment.DataProfiler",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oDataProfiler = oDialog;
                     oView.addDependent(this._oDataProfiler);
                     this._oDataProfiler.open();
                     this._loadDataProfile();
-                }.bind(this));
+                });
             } else {
                 this._oDataProfiler.open();
                 this._loadDataProfile();
@@ -69,31 +69,31 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        _loadDataProfile: function() {
+        _loadDataProfile() {
             // Show loading
             this._oDataProfiler.setBusy(true);
-            
+
             jQuery.ajax({
                 url: "/a2a/agent2/v1/data-profile",
                 type: "GET",
                 headers: this._getSecureHeaders(),
                 success: function(data) {
                     this._oDataProfiler.setBusy(false);
-                    
+
                     // Create visualization model
-                    var oProfileModel = new JSONModel({
+                    const oProfileModel = new JSONModel({
                         datasets: data.datasets,
                         statistics: data.statistics,
                         dataQuality: data.dataQuality,
                         recommendations: data.recommendations
                     });
-                    
+
                     this._oDataProfiler.setModel(oProfileModel, "profile");
                     this._createDataVisualizations(data);
                 }.bind(this),
                 error: function(xhr) {
                     this._oDataProfiler.setBusy(false);
-                    MessageBox.error("Failed to load data profile: " + xhr.responseText);
+                    MessageBox.error(`Failed to load data profile: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
@@ -106,15 +106,15 @@ sap.ui.define([
          * @param {object} data - Profiling data containing statistics and quality metrics
          * @since 1.0.0
          */
-        _createDataVisualizations: function(data) {
+        _createDataVisualizations(data) {
             // Create charts for data distribution, quality metrics, etc.
-            var oVizFrame = this._oDataProfiler.byId("statisticsChart");
-            if (!oVizFrame) return;
-            
+            const oVizFrame = this._oDataProfiler.byId("statisticsChart");
+            if (!oVizFrame) {return;}
+
             // Prepare data for visualization
-            var aChartData = [];
+            let aChartData = [];
             if (data.statistics && data.statistics.features) {
-                aChartData = data.statistics.features.map(function(feature) {
+                aChartData = data.statistics.features.map((feature) => {
                     return {
                         Feature: feature.name,
                         Missing: feature.missing_percent || 0,
@@ -123,13 +123,13 @@ sap.ui.define([
                     };
                 });
             }
-            
+
             // Create JSON model for chart
-            var oChartModel = new sap.ui.model.json.JSONModel({
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 chartData: aChartData
             });
             oVizFrame.setModel(oChartModel);
-            
+
             // Configure chart
             oVizFrame.setVizProperties({
                 categoryAxis: {
@@ -145,27 +145,27 @@ sap.ui.define([
                     visible: true
                 }
             });
-            
+
             // Set feeds
-            var oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 uid: "valueAxis",
                 type: "Measure",
                 values: ["Missing", "Unique"]
             });
-            var oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 uid: "categoryAxis",
                 type: "Dimension",
                 values: ["Feature"]
             });
-            
+
             oVizFrame.removeAllFeeds();
             oVizFrame.addFeed(oFeedValueAxis);
             oVizFrame.addFeed(oFeedCategoryAxis);
-            
+
             // Create additional distribution charts in the grid
             this._createDistributionCharts(data);
         },
-        
+
         /**
          * Creates distribution charts for individual features with lazy loading support.
          * Limits the number of charts rendered initially for better performance.
@@ -174,53 +174,53 @@ sap.ui.define([
          * @param {object} data - Feature statistics data
          * @since 1.0.0
          */
-        _createDistributionCharts: function(data) {
-            var oGrid = this._oDataProfiler.byId("distributionGrid");
-            if (!oGrid || !data.statistics || !data.statistics.features) return;
-            
+        _createDistributionCharts(data) {
+            const oGrid = this._oDataProfiler.byId("distributionGrid");
+            if (!oGrid || !data.statistics || !data.statistics.features) {return;}
+
             // Clear existing content
             oGrid.removeAllContent();
-            
+
             // Create charts for each feature
-            data.statistics.features.forEach(function(feature, index) {
-                if (index >= 6) return; // Limit to first 6 features for performance
-                
-                var oPanel = new sap.m.Panel({
-                    headerText: feature.name + " Distribution",
+            data.statistics.features.forEach((feature, index) => {
+                if (index >= 6) {return;} // Limit to first 6 features for performance
+
+                const oPanel = new sap.m.Panel({
+                    headerText: `${feature.name } Distribution`,
                     class: "sapUiMediumMargin"
                 });
-                
+
                 // Create simple chart based on feature type
                 if (feature.type === "NUMERICAL") {
-                    var oMicroChart = new sap.suite.ui.microchart.ColumnMicroChart({
+                    const oMicroChart = new sap.suite.ui.microchart.ColumnMicroChart({
                         height: "150px",
                         width: "100%"
                     });
-                    
+
                     // Generate sample distribution data
-                    var aDistributionData = this._generateDistributionData(feature);
-                    aDistributionData.forEach(function(point) {
+                    const aDistributionData = this._generateDistributionData(feature);
+                    aDistributionData.forEach((point) => {
                         oMicroChart.addColumn(new sap.suite.ui.microchart.ColumnMicroChartData({
                             value: point.value,
                             color: point.value > feature.mean ? "Good" : "Neutral"
                         }));
                     });
-                    
+
                     oPanel.addContent(oMicroChart);
                 } else {
                     // For categorical features, show a simple text summary
-                    var oText = new sap.m.Text({
-                        text: "Type: " + feature.type + 
-                              "\nUnique Values: " + (feature.cardinality || "N/A") +
-                              "\nMissing: " + (feature.missing_percent || 0) + "%"
+                    const oText = new sap.m.Text({
+                        text: `Type: ${ feature.type
+                        }\nUnique Values: ${ feature.cardinality || "N/A"
+                        }\nMissing: ${ feature.missing_percent || 0 }%`
                     });
                     oPanel.addContent(oText);
                 }
-                
+
                 oGrid.addContent(oPanel);
-            }.bind(this));
+            });
         },
-        
+
         /**
          * Generates sample distribution data for feature visualization.
          * Creates realistic data points based on feature statistics for chart rendering.
@@ -230,17 +230,17 @@ sap.ui.define([
          * @returns {Array<object>} Array of data points for visualization
          * @since 1.0.0
          */
-        _generateDistributionData: function(feature) {
+        _generateDistributionData(feature) {
             // Generate sample distribution data for visualization
-            var aData = [];
-            var mean = feature.mean || 0;
-            var stdDev = feature.std_dev || 1;
-            
-            for (var i = 0; i < 10; i++) {
-                var value = mean + (Math.random() - 0.5) * stdDev * 4;
+            const aData = [];
+            const mean = feature.mean || 0;
+            const stdDev = feature.std_dev || 1;
+
+            for (let i = 0; i < 10; i++) {
+                const value = mean + (Math.random() - 0.5) * stdDev * 4;
                 aData.push({ value: Math.max(0, value) });
             }
-            
+
             return aData;
         },
 
@@ -255,8 +255,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeCreateModel: function() {
-            var oCreateModel = new JSONModel({
+        _initializeCreateModel() {
+            const oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
                 datasetName: "",
@@ -285,7 +285,7 @@ sap.ui.define([
             this.base.getView().setModel(oCreateModel, "create");
         },
 
-        _initializeCSRFToken: function() {
+        _initializeCSRFToken() {
             jQuery.ajax({
                 url: "/a2a/agent2/v1/csrf-token",
                 type: "GET",
@@ -310,7 +310,7 @@ sap.ui.define([
          * @returns {object} Security headers object
          * @since 1.0.0
          */
-        _getSecureHeaders: function() {
+        _getSecureHeaders() {
             return {
                 "X-CSRF-Token": this._csrfToken || "Fetch",
                 "X-Requested-With": "XMLHttpRequest",
@@ -327,30 +327,30 @@ sap.ui.define([
          * @param {function} [fnCallback] - Optional callback after opening
          * @since 1.0.0
          */
-        _openCachedDialog: function(sDialogKey, sFragmentName, fnCallback) {
-            var oView = this.base.getView();
-            
+        _openCachedDialog(sDialogKey, sFragmentName, fnCallback) {
+            const oView = this.base.getView();
+
             if (!this._dialogCache[sDialogKey]) {
                 // Show loading indicator for complex AI dialogs
                 oView.setBusy(true);
-                
+
                 Fragment.load({
                     id: oView.getId(),
                     name: sFragmentName,
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._dialogCache[sDialogKey] = oDialog;
                     oView.addDependent(oDialog);
                     oView.setBusy(false);
-                    
+
                     // Initialize lazy loading for complex visualizations
                     this._initializeLazyLoading(oDialog, sDialogKey);
-                    
+
                     oDialog.open();
                     if (fnCallback) {
                         fnCallback(oDialog);
                     }
-                }.bind(this));
+                });
             } else {
                 this._dialogCache[sDialogKey].open();
                 if (fnCallback) {
@@ -367,12 +367,12 @@ sap.ui.define([
          * @param {string} sDialogKey - Dialog identifier
          * @since 1.0.0
          */
-        _initializeLazyLoading: function(oDialog, sDialogKey) {
+        _initializeLazyLoading(oDialog, sDialogKey) {
             if (sDialogKey === "dataProfiler") {
                 // Initialize intersection observer for lazy chart loading
-                var oTabBar = oDialog.byId("profilerTabBar");
-                if (oTabBar) {
-                    oTabBar.attachSelect(this._onTabSelect.bind(this));
+                const _oTabBar = oDialog.byId("profilerTabBar");
+                if (_oTabBar) {
+                    _oTabBar.attachSelect(this._onTabSelect.bind(this));
                 }
             } else if (sDialogKey === "featureAnalysis") {
                 // Initialize progressive loading for feature charts
@@ -387,12 +387,12 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent - Tab selection event
          * @since 1.0.0
          */
-        _onTabSelect: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("key");
-            var oTabBar = oEvent.getSource();
-            
+        _onTabSelect(oEvent) {
+            const sSelectedKey = oEvent.getParameter("key");
+            const _oTabBar = oEvent.getSource();
+
             // Load tab content only when selected
-            setTimeout(function() {
+            setTimeout(() => {
                 if (sSelectedKey === "statistics" && !this._statisticsLoaded) {
                     this._loadStatisticsTab();
                     this._statisticsLoaded = true;
@@ -403,7 +403,7 @@ sap.ui.define([
                     this._loadCorrelationsTab();
                     this._correlationsLoaded = true;
                 }
-            }.bind(this), 100);
+            }, 100);
         },
 
         /**
@@ -412,11 +412,11 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        _loadStatisticsTab: function() {
+        _loadStatisticsTab() {
             // Implementation for loading statistics visualizations
-            var oDialog = this._dialogCache.dataProfiler;
+            const oDialog = this._dialogCache.dataProfiler;
             if (oDialog) {
-                var oVizFrame = oDialog.byId("statisticsChart");
+                const oVizFrame = oDialog.byId("statisticsChart");
                 if (oVizFrame && !oVizFrame.getModel()) {
                     // Load chart data only when tab is active
                     this._createStatisticsVisualization(oVizFrame);
@@ -431,14 +431,14 @@ sap.ui.define([
          * @param {sap.viz.ui5.controls.VizFrame} oVizFrame - Visualization frame
          * @since 1.0.0
          */
-        _createStatisticsVisualization: function(oVizFrame) {
+        _createStatisticsVisualization(oVizFrame) {
             // Enhanced visualization creation with caching
-            var aCachedData = this._statisticsData || [];
-            
+            const aCachedData = this._statisticsData || [];
+
             if (aCachedData.length === 0) {
                 // Show loading indicator
                 oVizFrame.setBusy(true);
-                
+
                 jQuery.ajax({
                     url: "/a2a/agent2/v1/statistics",
                     type: "GET",
@@ -448,7 +448,7 @@ sap.ui.define([
                         this._renderStatisticsChart(oVizFrame, data.statistics);
                         oVizFrame.setBusy(false);
                     }.bind(this),
-                    error: function() {
+                    error() {
                         oVizFrame.setBusy(false);
                         MessageBox.error("Failed to load statistics data");
                     }
@@ -466,12 +466,12 @@ sap.ui.define([
          * @param {Array} aStatistics - Statistics data array
          * @since 1.0.0
          */
-        _renderStatisticsChart: function(oVizFrame, aStatistics) {
-            var oChartModel = new sap.ui.model.json.JSONModel({
+        _renderStatisticsChart(oVizFrame, aStatistics) {
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 data: aStatistics.slice(0, 50) // Limit for performance
             });
             oVizFrame.setModel(oChartModel);
-            
+
             // Configure chart with accessibility support
             oVizFrame.setVizProperties({
                 title: {
@@ -503,10 +503,10 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onAutoML: function() {
-            this._openCachedDialog("autoMLWizard", "a2a.network.agent2.ext.fragment.AutoMLWizard", function(oDialog) {
+        onAutoML() {
+            this._openCachedDialog("autoMLWizard", "a2a.network.agent2.ext.fragment.AutoMLWizard", (oDialog) => {
                 this._initializeAutoMLModel(oDialog);
-            }.bind(this));
+            });
         },
 
         /**
@@ -515,10 +515,10 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onFeatureAnalysis: function() {
-            this._openCachedDialog("featureAnalysis", "a2a.network.agent2.ext.fragment.FeatureAnalysis", function(oDialog) {
+        onFeatureAnalysis() {
+            this._openCachedDialog("featureAnalysis", "a2a.network.agent2.ext.fragment.FeatureAnalysis", (oDialog) => {
                 this._loadFeatureAnalysisData(oDialog);
-            }.bind(this));
+            });
         },
 
         /**
@@ -528,8 +528,8 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - AutoML dialog instance
          * @since 1.0.0
          */
-        _initializeAutoMLModel: function(oDialog) {
-            var oAutoMLModel = new JSONModel({
+        _initializeAutoMLModel(oDialog) {
+            const oAutoMLModel = new JSONModel({
                 dataset: "",
                 problemType: "",
                 targetColumn: "",
@@ -553,15 +553,15 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Feature analysis dialog instance
          * @since 1.0.0
          */
-        _loadFeatureAnalysisData: function(oDialog) {
+        _loadFeatureAnalysisData(oDialog) {
             oDialog.setBusy(true);
-            
+
             jQuery.ajax({
                 url: "/a2a/agent2/v1/feature-analysis",
                 type: "GET",
                 headers: this._getSecureHeaders(),
                 success: function(data) {
-                    var oAnalysisModel = new JSONModel({
+                    const oAnalysisModel = new JSONModel({
                         features: data.features || [],
                         correlationMatrix: data.correlationMatrix || [],
                         importanceScores: data.importanceScores || [],
@@ -571,7 +571,7 @@ sap.ui.define([
                     this._createFeatureVisualization(oDialog, data);
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function() {
+                error() {
                     oDialog.setBusy(false);
                     MessageBox.error("Failed to load feature analysis data");
                 }
@@ -586,12 +586,12 @@ sap.ui.define([
          * @param {object} data - Feature analysis data
          * @since 1.0.0
          */
-        _createFeatureVisualization: function(oDialog, data) {
-            var oFeatureChart = oDialog.byId("featureImportanceChart");
-            if (!oFeatureChart || !data.importanceScores) return;
+        _createFeatureVisualization(oDialog, data) {
+            const oFeatureChart = oDialog.byId("featureImportanceChart");
+            if (!oFeatureChart || !data.importanceScores) {return;}
 
             // Create chart model with limited data for performance
-            var aChartData = data.importanceScores.slice(0, 20).map(function(item) {
+            const aChartData = data.importanceScores.slice(0, 20).map((item) => {
                 return {
                     Feature: item.name,
                     Importance: item.score * 100,
@@ -599,7 +599,7 @@ sap.ui.define([
                 };
             });
 
-            var oChartModel = new JSONModel({
+            const oChartModel = new JSONModel({
                 data: aChartData
             });
             oFeatureChart.setModel(oChartModel);
@@ -615,7 +615,7 @@ sap.ui.define([
          * @param {sap.viz.ui5.controls.VizFrame} oChart - Chart control
          * @since 1.0.0
          */
-        _configureFeatureChart: function(oChart) {
+        _configureFeatureChart(oChart) {
             oChart.setVizProperties({
                 title: {
                     text: "Feature Importance Analysis",
@@ -645,12 +645,12 @@ sap.ui.define([
             });
 
             // Set up chart feeds
-            var oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 uid: "valueAxis",
                 type: "Measure",
                 values: ["Importance"]
             });
-            var oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 uid: "categoryAxis",
                 type: "Dimension",
                 values: ["Feature"]
@@ -668,14 +668,14 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onWizardStepActivate: function(oEvent) {
-            var oStep = oEvent.getParameter("step");
-            var sStepTitle = oStep.getTitle();
-            var iStepNumber = oEvent.getParameter("index") + 1;
-            
+        onWizardStepActivate(oEvent) {
+            const oStep = oEvent.getParameter("step");
+            const sStepTitle = oStep.getTitle();
+            const iStepNumber = oEvent.getParameter("index") + 1;
+
             // Announce step change to screen readers
             sap.ui.getCore().announceForAccessibility(
-                "Now on step " + iStepNumber + " of 5: " + sStepTitle
+                `Now on step ${ iStepNumber } of 5: ${ sStepTitle}`
             );
         },
 
@@ -686,12 +686,12 @@ sap.ui.define([
          * @memberof a2a.network.agent2.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onProfilerTabSelect: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedKey");
-            
+        onProfilerTabSelect(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedKey");
+
             // Announce tab change to screen readers
-            sap.ui.getCore().announceForAccessibility("Selected tab: " + sSelectedKey);
-            
+            sap.ui.getCore().announceForAccessibility(`Selected tab: ${ sSelectedKey}`);
+
             // Trigger lazy loading based on tab selection
             this._onTabSelect(oEvent);
         },
@@ -704,17 +704,17 @@ sap.ui.define([
          * @returns {Promise} jQuery AJAX promise
          * @since 1.0.0
          */
-        _makeSecureRequest: function(oOptions) {
-            var oRequestOptions = jQuery.extend({
+        _makeSecureRequest(oOptions) {
+            const oRequestOptions = jQuery.extend({
                 headers: this._getSecureHeaders(),
                 timeout: 30000
             }, oOptions);
 
             return jQuery.ajax(oRequestOptions)
-                .fail(function(xhr, status, error) {
-                    var sErrorMessage = "Request failed";
+                .fail((xhr, status, error) => {
+                    let sErrorMessage = "Request failed";
                     try {
-                        var oErrorData = JSON.parse(xhr.responseText);
+                        const oErrorData = JSON.parse(xhr.responseText);
                         sErrorMessage = oErrorData.message || sErrorMessage;
                     } catch (e) {
                         sErrorMessage = xhr.responseText || error || sErrorMessage;

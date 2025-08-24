@@ -5,25 +5,25 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent10/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
+], (ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent10.ext.controller.ObjectPageExt", {
 
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeCreateModel();
                 this._initializeSecurity();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
@@ -36,7 +36,7 @@ sap.ui.define([
          * @description Opens real-time metrics monitoring dashboard with live data streams.
          * @public
          */
-        onViewRealTimeMetrics: function() {
+        onViewRealTimeMetrics() {
             if (!this._hasRole("MonitoringUser")) {
                 MessageBox.error("Access denied. Monitoring User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewRealTimeMetrics", reason: "Insufficient permissions" });
@@ -46,16 +46,16 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("VIEW_REALTIME_METRICS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("realtimeMetrics", "a2a.network.agent10.ext.fragment.RealtimeMetrics")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._startMetricsMonitoring(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Real-time Metrics: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Real-time Metrics: ${ error.message}`);
                 });
         },
 
@@ -64,7 +64,7 @@ sap.ui.define([
          * @description Exports monitoring metrics and reports in various formats.
          * @public
          */
-        onExportMetrics: function() {
+        onExportMetrics() {
             if (!this._hasRole("MonitoringUser")) {
                 MessageBox.error("Access denied. Monitoring User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ExportMetrics", reason: "Insufficient permissions" });
@@ -74,12 +74,12 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("EXPORT_METRICS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("exportMetrics", "a2a.network.agent10.ext.fragment.ExportMetrics")
-                .then(function(oDialog) {
-                    var oExportModel = new JSONModel({
+                .then((oDialog) => {
+                    const oExportModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         exportFormat: "JSON",
@@ -93,9 +93,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oExportModel, "export");
                     oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Export Metrics: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Export Metrics: ${ error.message}`);
                 });
         },
 
@@ -104,7 +104,7 @@ sap.ui.define([
          * @description Opens alert setup interface for configuring monitoring thresholds.
          * @public
          */
-        onSetupAlerts: function() {
+        onSetupAlerts() {
             if (!this._hasRole("MonitoringAdmin")) {
                 MessageBox.error("Access denied. Monitoring Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "SetupAlerts", reason: "Insufficient permissions" });
@@ -114,16 +114,16 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("SETUP_ALERTS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("setupAlerts", "a2a.network.agent10.ext.fragment.SetupAlerts")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadAlertSetupData(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Setup Alerts: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Setup Alerts: ${ error.message}`);
                 });
         },
 
@@ -132,7 +132,7 @@ sap.ui.define([
          * @description Opens monitoring logs viewer with filtering and search capabilities.
          * @public
          */
-        onViewLogs: function() {
+        onViewLogs() {
             if (!this._hasRole("MonitoringUser")) {
                 MessageBox.error("Access denied. Monitoring User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewLogs", reason: "Insufficient permissions" });
@@ -142,12 +142,12 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("VIEW_LOGS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("viewLogs", "a2a.network.agent10.ext.fragment.ViewLogs")
-                .then(function(oDialog) {
-                    var oLogsModel = new JSONModel({
+                .then((oDialog) => {
+                    const oLogsModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         logLevel: "INFO",
@@ -161,14 +161,14 @@ sap.ui.define([
                     oDialog.setModel(oLogsModel, "logs");
                     oDialog.open();
                     this._loadMonitoringLogs(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open View Logs: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open View Logs: ${ error.message}`);
                 });
         },
 
-        _initializeCreateModel: function() {
-            var oCreateData = {
+        _initializeCreateModel() {
+            const oCreateData = {
                 taskName: "",
                 description: "",
                 calculationType: "",
@@ -195,33 +195,33 @@ sap.ui.define([
                 confidenceInterval: 95,
                 selfHealingEnabled: true
             };
-            var oCreateModel = new JSONModel(oCreateData);
+            const oCreateModel = new JSONModel(oCreateData);
             this.base.getView().setModel(oCreateModel, "create");
         },
 
-        onCreateCalculationTask: function() {
-            var oView = this.getView();
-            
+        onCreateCalculationTask() {
+            const oView = this.getView();
+
             if (!this._oCreateDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent10.ext.fragment.CreateCalculationTask",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oCreateDialog = oDialog;
                     oView.addDependent(this._oCreateDialog);
                     this._oCreateDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oCreateDialog.open();
             }
         },
 
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onTaskNameChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             if (!sValue || sValue.length < 3) {
                 oData.taskNameState = "Error";
                 oData.taskNameStateText = "Task name must be at least 3 characters";
@@ -232,143 +232,143 @@ sap.ui.define([
                 oData.taskNameState = "Success";
                 oData.taskNameStateText = "Valid task name";
             }
-            
+
             oCreateModel.setData(oData);
         },
 
-        onCalculationTypeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onCalculationTypeChange(oEvent) {
+            const sValue = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             if (sValue) {
                 oData.calculationTypeState = "Success";
                 oData.calculationTypeStateText = "Calculation type selected";
-                
+
                 // Smart suggestions based on calculation type
                 switch (sValue) {
-                    case "basic":
-                        oData.calculationEngine = "numpy";
-                        oData.precisionLevel = "double";
-                        oData.parallelProcessing = false;
-                        break;
-                    case "advanced":
-                    case "scientific":
-                        oData.calculationEngine = "scipy";
-                        oData.precisionLevel = "extended";
-                        oData.parallelProcessing = true;
-                        oData.threadCount = 8;
-                        break;
-                    case "statistical":
-                        oData.calculationEngine = "scipy";
-                        oData.formulaCategory = "statistical";
-                        oData.resultValidation = true;
-                        break;
-                    case "financial":
-                        oData.calculationEngine = "numpy";
-                        oData.formulaCategory = "financial";
-                        oData.precisionLevel = "decimal128";
-                        break;
-                    case "matrix_operations":
-                        oData.calculationEngine = "numpy";
-                        oData.gpuAcceleration = true;
-                        oData.parallelProcessing = true;
-                        break;
-                    case "optimization":
-                        oData.calculationEngine = "scipy";
-                        oData.precisionLevel = "quadruple";
-                        oData.parallelProcessing = true;
-                        break;
+                case "basic":
+                    oData.calculationEngine = "numpy";
+                    oData.precisionLevel = "double";
+                    oData.parallelProcessing = false;
+                    break;
+                case "advanced":
+                case "scientific":
+                    oData.calculationEngine = "scipy";
+                    oData.precisionLevel = "extended";
+                    oData.parallelProcessing = true;
+                    oData.threadCount = 8;
+                    break;
+                case "statistical":
+                    oData.calculationEngine = "scipy";
+                    oData.formulaCategory = "statistical";
+                    oData.resultValidation = true;
+                    break;
+                case "financial":
+                    oData.calculationEngine = "numpy";
+                    oData.formulaCategory = "financial";
+                    oData.precisionLevel = "decimal128";
+                    break;
+                case "matrix_operations":
+                    oData.calculationEngine = "numpy";
+                    oData.gpuAcceleration = true;
+                    oData.parallelProcessing = true;
+                    break;
+                case "optimization":
+                    oData.calculationEngine = "scipy";
+                    oData.precisionLevel = "quadruple";
+                    oData.parallelProcessing = true;
+                    break;
                 }
             } else {
                 oData.calculationTypeState = "Error";
                 oData.calculationTypeStateText = "Please select a calculation type";
             }
-            
+
             oCreateModel.setData(oData);
         },
 
-        onFormulaCategoryChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onFormulaCategoryChange(oEvent) {
+            const sValue = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             if (sValue) {
                 oData.formulaCategoryState = "Success";
                 oData.formulaCategoryStateText = "Formula category selected";
-                
+
                 // Adjust engine based on formula category
                 switch (sValue) {
-                    case "trigonometric":
-                    case "logarithmic":
-                    case "exponential":
-                        oData.calculationEngine = "numpy";
-                        oData.precisionLevel = "extended";
-                        break;
-                    case "statistical":
-                        oData.calculationEngine = "scipy";
-                        oData.resultValidation = true;
-                        oData.confidenceInterval = 95;
-                        break;
-                    case "financial":
-                        oData.precisionLevel = "decimal128";
-                        oData.resultValidation = true;
-                        break;
-                    case "custom":
-                        oData.calculationEngine = "custom";
-                        oData.selfHealingEnabled = true;
-                        break;
+                case "trigonometric":
+                case "logarithmic":
+                case "exponential":
+                    oData.calculationEngine = "numpy";
+                    oData.precisionLevel = "extended";
+                    break;
+                case "statistical":
+                    oData.calculationEngine = "scipy";
+                    oData.resultValidation = true;
+                    oData.confidenceInterval = 95;
+                    break;
+                case "financial":
+                    oData.precisionLevel = "decimal128";
+                    oData.resultValidation = true;
+                    break;
+                case "custom":
+                    oData.calculationEngine = "custom";
+                    oData.selfHealingEnabled = true;
+                    break;
                 }
             } else {
                 oData.formulaCategoryState = "Error";
                 oData.formulaCategoryStateText = "Please select a formula category";
             }
-            
+
             oCreateModel.setData(oData);
         },
 
-        onPriorityChange: function(oEvent) {
-            var sValue = oEvent.getParameter("item").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onPriorityChange(oEvent) {
+            const sValue = oEvent.getParameter("item").getKey();
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             // Adjust resource allocation based on priority
             switch (sValue) {
-                case "high":
-                    oData.threadCount = Math.min(16, oData.threadCount * 2);
-                    oData.parallelProcessing = true;
-                    oData.cachingEnabled = true;
-                    break;
-                case "medium":
-                    oData.threadCount = 4;
-                    break;
-                case "low":
-                    oData.threadCount = Math.max(1, Math.floor(oData.threadCount / 2));
-                    oData.parallelProcessing = false;
-                    break;
+            case "high":
+                oData.threadCount = Math.min(16, oData.threadCount * 2);
+                oData.parallelProcessing = true;
+                oData.cachingEnabled = true;
+                break;
+            case "medium":
+                oData.threadCount = 4;
+                break;
+            case "low":
+                oData.threadCount = Math.max(1, Math.floor(oData.threadCount / 2));
+                oData.parallelProcessing = false;
+                break;
             }
-            
+
             oCreateModel.setData(oData);
         },
 
-        onCancelCreateCalculationTask: function() {
+        onCancelCreateCalculationTask() {
             this._oCreateDialog.close();
             this._resetCreateModel();
         },
 
-        onConfirmCreateCalculationTask: function() {
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onConfirmCreateCalculationTask() {
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             // Final validation
             if (!this._validateCreateData(oData)) {
                 return;
             }
-            
+
             this._oCreateDialog.setBusy(true);
-            
+
             // Sanitize data for security
-            var oSanitizedData = {
+            const oSanitizedData = {
                 taskName: SecurityUtils.sanitizeInput(oData.taskName),
                 description: SecurityUtils.sanitizeInput(oData.description),
                 calculationType: oData.calculationType,
@@ -377,14 +377,14 @@ sap.ui.define([
                 precisionLevel: oData.precisionLevel,
                 calculationEngine: oData.calculationEngine,
                 parallelProcessing: !!oData.parallelProcessing,
-                threadCount: parseInt(oData.threadCount) || 4,
+                threadCount: parseInt(oData.threadCount, 10) || 4,
                 gpuAcceleration: !!oData.gpuAcceleration,
                 cachingEnabled: !!oData.cachingEnabled,
                 resultValidation: !!oData.resultValidation,
                 confidenceInterval: parseFloat(oData.confidenceInterval) || 95,
                 selfHealingEnabled: !!oData.selfHealingEnabled
             };
-            
+
             SecurityUtils.secureCallFunction(this.getView().getModel(), "/CreateCalculationTask", {
                 urlParameters: oSanitizedData,
                 success: function(data) {
@@ -396,35 +396,35 @@ sap.ui.define([
                 }.bind(this),
                 error: function(error) {
                     this._oCreateDialog.setBusy(false);
-                    var errorMsg = SecurityUtils.escapeHTML(error.message || "Unknown error");
-                    MessageBox.error(this.getResourceBundle().getText("error.createTaskFailed") + ": " + errorMsg);
+                    const errorMsg = SecurityUtils.escapeHTML(error.message || "Unknown error");
+                    MessageBox.error(`${this.getResourceBundle().getText("error.createTaskFailed") }: ${ errorMsg}`);
                 }.bind(this)
             });
         },
 
-        _validateCreateData: function(oData) {
+        _validateCreateData(oData) {
             if (!oData.taskName || oData.taskName.length < 3) {
                 MessageBox.error(this.getResourceBundle().getText("validation.taskNameRequired"));
                 return false;
             }
-            
+
             if (!oData.calculationType) {
                 MessageBox.error(this.getResourceBundle().getText("validation.calculationTypeRequired"));
                 return false;
             }
-            
+
             if (!oData.formulaCategory) {
                 MessageBox.error(this.getResourceBundle().getText("validation.formulaCategoryRequired"));
                 return false;
             }
-            
+
             return true;
         },
 
-        _resetCreateModel: function() {
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        _resetCreateModel() {
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             oData.taskName = "";
             oData.description = "";
             oData.calculationType = "";
@@ -441,15 +441,15 @@ sap.ui.define([
             oData.expectedDataType = "number";
             oData.formulaComplexity = "medium";
             oData.formulaSource = "custom";
-            
+
             oCreateModel.setData(oData);
         },
 
-        onFormulaChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onFormulaChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             // Basic formula validation
             if (sValue && sValue.length > 0) {
                 // Check for basic syntax errors
@@ -457,13 +457,13 @@ sap.ui.define([
                     // Simple validation - actual validation would be more complex
                     if (oData.formulaLanguage === "javascript") {
                         // Check for balanced parentheses and brackets
-                        var openParen = (sValue.match(/\(/g) || []).length;
-                        var closeParen = (sValue.match(/\)/g) || []).length;
-                        var openBracket = (sValue.match(/\[/g) || []).length;
-                        var closeBracket = (sValue.match(/\]/g) || []).length;
-                        var openBrace = (sValue.match(/\{/g) || []).length;
-                        var closeBrace = (sValue.match(/\}/g) || []).length;
-                        
+                        const openParen = (sValue.match(/\(/g) || []).length;
+                        const closeParen = (sValue.match(/\)/g) || []).length;
+                        const openBracket = (sValue.match(/\[/g) || []).length;
+                        const closeBracket = (sValue.match(/\]/g) || []).length;
+                        const openBrace = (sValue.match(/\{/g) || []).length;
+                        const closeBrace = (sValue.match(/\}/g) || []).length;
+
                         if (openParen !== closeParen || openBracket !== closeBracket || openBrace !== closeBrace) {
                             MessageToast.show("Warning: Unbalanced parentheses or brackets");
                         }
@@ -472,49 +472,48 @@ sap.ui.define([
                     MessageToast.show("Formula syntax error");
                 }
             }
-            
+
             oCreateModel.setData(oData);
         },
 
-        onFormulaLanguageChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onFormulaLanguageChange(oEvent) {
+            const sValue = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             // Update code editor type based on language
-            var oCodeEditor = this.getView().byId("formulaEditor");
+            const oCodeEditor = this.getView().byId("formulaEditor");
             if (oCodeEditor) {
                 switch (sValue) {
-                    case "python":
-                        oCodeEditor.setType("python");
-                        break;
-                    case "r":
-                        oCodeEditor.setType("r");
-                        break;
-                    case "sql":
-                        oCodeEditor.setType("sql");
-                        break;
-                    default:
-                        oCodeEditor.setType("javascript");
+                case "python":
+                    oCodeEditor.setType("python");
+                    break;
+                case "r":
+                    oCodeEditor.setType("r");
+                    break;
+                case "sql":
+                    oCodeEditor.setType("sql");
+                    break;
+                default:
+                    oCodeEditor.setType("javascript");
                 }
             }
-            
+
             oCreateModel.setData(oData);
         },
-        
 
         // Execute Calculation Action
-        onExecuteCalculation: function() {
-            SecurityUtils.checkCalculationAuth('execute').then(function(authorized) {
+        onExecuteCalculation() {
+            SecurityUtils.checkCalculationAuth("execute").then((authorized) => {
                 if (!authorized) {
                     MessageToast.show(this.getResourceBundle().getText("error.notAuthorized"));
                     return;
                 }
-                
+
                 const oContext = this.base.getView().getBindingContext();
                 const oData = oContext.getObject();
-                
-                if (oData.status === 'calculating') {
+
+                if (oData.status === "calculating") {
                     MessageToast.show(this.getResourceBundle().getText("msg.calculationAlreadyRunning"));
                     return;
                 }
@@ -529,14 +528,14 @@ sap.ui.define([
                         }.bind(this)
                     }
                 );
-            }.bind(this));
+            });
         },
 
         // Validate Result Action
-        onValidateResult: function() {
+        onValidateResult() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
-            
+
             if (!oData.resultValue) {
                 MessageToast.show(this.getResourceBundle().getText("error.noResultToValidate"));
                 return;
@@ -546,10 +545,10 @@ sap.ui.define([
         },
 
         // Optimize Formula Action
-        onOptimizeFormula: function() {
+        onOptimizeFormula() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
-            
+
             if (!oData.formulaExpression) {
                 MessageToast.show(this.getResourceBundle().getText("error.noFormulaToOptimize"));
                 return;
@@ -560,12 +559,12 @@ sap.ui.define([
                     id: this.getView().getId(),
                     name: "a2a.network.agent10.ext.fragment.FormulaOptimizer",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._formulaOptimizer = oDialog;
                     this.getView().addDependent(oDialog);
                     this._loadFormulaOptimizationData(oContext);
                     oDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._loadFormulaOptimizationData(oContext);
                 this._formulaOptimizer.open();
@@ -573,20 +572,20 @@ sap.ui.define([
         },
 
         // Analyze Performance Action
-        onAnalyzePerformance: function() {
+        onAnalyzePerformance() {
             const oContext = this.base.getView().getBindingContext();
-            
+
             if (!this._performanceAnalyzer) {
                 Fragment.load({
                     id: this.getView().getId(),
                     name: "a2a.network.agent10.ext.fragment.PerformanceAnalyzer",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._performanceAnalyzer = oDialog;
                     this.getView().addDependent(oDialog);
                     this._loadPerformanceAnalysis(oContext);
                     oDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._loadPerformanceAnalysis(oContext);
                 this._performanceAnalyzer.open();
@@ -594,10 +593,10 @@ sap.ui.define([
         },
 
         // Test Precision Action
-        onTestPrecision: function() {
+        onTestPrecision() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
-            
+
             if (!oData.formulaExpression) {
                 MessageToast.show(this.getResourceBundle().getText("error.noFormulaToTest"));
                 return;
@@ -607,10 +606,10 @@ sap.ui.define([
         },
 
         // Run Self-Healing Action
-        onRunSelfHealing: function() {
+        onRunSelfHealing() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
-            
+
             if (!oData.selfHealingEnabled) {
                 MessageToast.show(this.getResourceBundle().getText("error.selfHealingDisabled"));
                 return;
@@ -629,10 +628,10 @@ sap.ui.define([
         },
 
         // Export Results Action
-        onExportResults: function() {
+        onExportResults() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
-            
+
             if (!oData.resultValue) {
                 MessageToast.show(this.getResourceBundle().getText("error.noResultsToExport"));
                 return;
@@ -643,21 +642,21 @@ sap.ui.define([
                     id: this.getView().getId(),
                     name: "a2a.network.agent10.ext.fragment.ResultExporter",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._resultExporter = oDialog;
                     this.getView().addDependent(oDialog);
                     oDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._resultExporter.open();
             }
         },
 
         // Visualize Data Action
-        onVisualizeData: function() {
+        onVisualizeData() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
-            
+
             if (!oData.resultValue) {
                 MessageToast.show(this.getResourceBundle().getText("error.noDataToVisualize"));
                 return;
@@ -668,12 +667,12 @@ sap.ui.define([
                     id: this.getView().getId(),
                     name: "a2a.network.agent10.ext.fragment.DataVisualizer",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._dataVisualizer = oDialog;
                     this.getView().addDependent(oDialog);
                     this._loadVisualizationData(oContext);
                     oDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._loadVisualizationData(oContext);
                 this._dataVisualizer.open();
@@ -681,16 +680,16 @@ sap.ui.define([
         },
 
         // Real-time monitoring initialization
-        onAfterRendering: function() {
+        onAfterRendering() {
             this._initializeCalculationMonitoring();
         },
 
-        _initializeCalculationMonitoring: function() {
+        _initializeCalculationMonitoring() {
             const oContext = this.base.getView().getBindingContext();
-            if (!oContext) return;
+            if (!oContext) {return;}
 
             const taskId = oContext.getObject().taskId;
-            
+
             // Subscribe to calculation updates for this specific task
             if (this._eventSource) {
                 this._eventSource.close();
@@ -698,20 +697,20 @@ sap.ui.define([
 
             try {
                 this._eventSource = SecurityUtils.createSecureEventSource(`http://localhost:8010/calculations/${taskId}/stream`);
-                
-                this._eventSource.addEventListener('calculation-progress', (event) => {
+
+                this._eventSource.addEventListener("calculation-progress", (event) => {
                     this._updateCalculationProgress(event.data);
                 });
 
-                this._eventSource.addEventListener('calculation-completed', (event) => {
+                this._eventSource.addEventListener("calculation-completed", (event) => {
                     this._handleCalculationCompleted(event.data);
                 });
 
-                this._eventSource.addEventListener('calculation-error', (event) => {
+                this._eventSource.addEventListener("calculation-error", (event) => {
                     this._handleCalculationError(event.data);
                 });
 
-                this._eventSource.addEventListener('self-healing', (event) => {
+                this._eventSource.addEventListener("self-healing", (event) => {
                     this._handleSelfHealingUpdate(event.data);
                 });
 
@@ -721,18 +720,18 @@ sap.ui.define([
             }
         },
 
-        _initializePolling: function(taskId) {
+        _initializePolling(taskId) {
             this._pollInterval = setInterval(() => {
                 this._refreshTaskData();
             }, 2000);
         },
 
-        _executeCalculation: function(oContext) {
+        _executeCalculation(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             MessageToast.show(this.getResourceBundle().getText("msg.calculationStarted"));
-            
+
             SecurityUtils.secureCallFunction(oModel, "/ExecuteCalculation", {
                 urlParameters: {
                     taskId: sTaskId
@@ -747,10 +746,10 @@ sap.ui.define([
             });
         },
 
-        _validateCalculationResult: function(oContext) {
+        _validateCalculationResult(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             SecurityUtils.secureCallFunction(oModel, "/ValidateResult", {
                 urlParameters: {
                     taskId: sTaskId
@@ -765,12 +764,12 @@ sap.ui.define([
             });
         },
 
-        _runPrecisionTest: function(oContext) {
+        _runPrecisionTest(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             MessageToast.show(this.getResourceBundle().getText("msg.precisionTestStarted"));
-            
+
             SecurityUtils.secureCallFunction(oModel, "/TestPrecision", {
                 urlParameters: {
                     taskId: sTaskId
@@ -785,12 +784,12 @@ sap.ui.define([
             });
         },
 
-        _runSelfHealing: function(oContext) {
+        _runSelfHealing(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             MessageToast.show(this.getResourceBundle().getText("msg.selfHealingTriggered"));
-            
+
             SecurityUtils.secureCallFunction(oModel, "/RunSelfHealing", {
                 urlParameters: {
                     taskId: sTaskId
@@ -805,10 +804,10 @@ sap.ui.define([
             });
         },
 
-        _loadFormulaOptimizationData: function(oContext) {
+        _loadFormulaOptimizationData(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetOptimizationSuggestions", {
                 urlParameters: {
                     taskId: sTaskId
@@ -822,10 +821,10 @@ sap.ui.define([
             });
         },
 
-        _loadPerformanceAnalysis: function(oContext) {
+        _loadPerformanceAnalysis(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetPerformanceAnalysis", {
                 urlParameters: {
                     taskId: sTaskId
@@ -839,10 +838,10 @@ sap.ui.define([
             });
         },
 
-        _loadVisualizationData: function(oContext) {
+        _loadVisualizationData(oContext) {
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetVisualizationData", {
                 urlParameters: {
                     taskId: sTaskId
@@ -856,7 +855,7 @@ sap.ui.define([
             });
         },
 
-        _updateCalculationProgress: function(data) {
+        _updateCalculationProgress(data) {
             // Update progress indicators
             const oProgressIndicator = this.getView().byId("calculationProgress");
             if (oProgressIndicator) {
@@ -865,46 +864,46 @@ sap.ui.define([
             }
         },
 
-        _handleCalculationCompleted: function(data) {
+        _handleCalculationCompleted(data) {
             MessageToast.show(this.getResourceBundle().getText("msg.calculationCompleted"));
             this._refreshTaskData();
-            
+
             // Show performance improvement if available
             if (data.performanceImprovement) {
                 MessageToast.show(this.getResourceBundle().getText("msg.performanceImproved", [data.performanceImprovement]));
             }
         },
 
-        _handleCalculationError: function(data) {
+        _handleCalculationError(data) {
             MessageBox.error(this.getResourceBundle().getText("error.calculationFailed", [SecurityUtils.escapeHTML(data.error)]));
             this._refreshTaskData();
         },
 
-        _handleSelfHealingUpdate: function(data) {
+        _handleSelfHealingUpdate(data) {
             MessageToast.show(this.getResourceBundle().getText("msg.selfHealingUpdate", [data.action]));
             this._refreshTaskData();
         },
 
-        _refreshTaskData: function() {
+        _refreshTaskData() {
             const oContext = this.base.getView().getBindingContext();
             if (oContext) {
                 oContext.refresh();
             }
         },
 
-        _displayOptimizationSuggestions: function(data) {
+        _displayOptimizationSuggestions(data) {
             // Display optimization suggestions in dialog
         },
 
-        _displayPerformanceAnalysis: function(data) {
+        _displayPerformanceAnalysis(data) {
             // Display performance analysis charts
         },
 
-        _createDataVisualization: function(data) {
+        _createDataVisualization(data) {
             // Create data visualization charts
         },
 
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.getView().getModel("i18n").getResourceBundle();
         },
 
@@ -915,9 +914,9 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Metrics dialog
          * @private
          */
-        _startMetricsMonitoring: function(sTaskId, oDialog) {
+        _startMetricsMonitoring(sTaskId, oDialog) {
             // Initialize metrics model
-            var oMetricsModel = new JSONModel({
+            const oMetricsModel = new JSONModel({
                 taskId: sTaskId,
                 isMonitoring: true,
                 lastUpdated: new Date().toISOString(),
@@ -934,7 +933,7 @@ sap.ui.define([
                 events: []
             });
             oDialog.setModel(oMetricsModel, "metrics");
-            
+
             // Start real-time monitoring
             this._initializeMetricsStream(sTaskId, oDialog);
         },
@@ -946,30 +945,30 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Metrics dialog
          * @private
          */
-        _initializeMetricsStream: function(sTaskId, oDialog) {
+        _initializeMetricsStream(sTaskId, oDialog) {
             if (this._metricsEventSource) {
                 this._metricsEventSource.close();
             }
-            
+
             try {
                 this._metricsEventSource = new EventSource(`/api/agent10/monitoring/${sTaskId}/metrics-stream`);
-                
+
                 this._metricsEventSource.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
                         this._updateMetricsDisplay(data, oDialog);
                     } catch (error) {
-                        console.error('Error parsing metrics data:', error);
+                        console.error("Error parsing metrics data:", error);
                     }
                 }.bind(this);
-                
+
                 this._metricsEventSource.onerror = function(error) {
-                    console.warn('Metrics stream error, falling back to polling:', error);
+                    console.warn("Metrics stream error, falling back to polling:", error);
                     this._startMetricsPolling(sTaskId, oDialog);
                 }.bind(this);
-                
+
             } catch (error) {
-                console.warn('EventSource not available, using polling fallback');
+                console.warn("EventSource not available, using polling fallback");
                 this._startMetricsPolling(sTaskId, oDialog);
             }
         },
@@ -981,11 +980,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Metrics dialog
          * @private
          */
-        _startMetricsPolling: function(sTaskId, oDialog) {
+        _startMetricsPolling(sTaskId, oDialog) {
             if (this._metricsPollingInterval) {
                 clearInterval(this._metricsPollingInterval);
             }
-            
+
             this._metricsPollingInterval = setInterval(() => {
                 this._fetchMetricsData(sTaskId, oDialog);
             }, 2000);
@@ -998,16 +997,16 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Metrics dialog
          * @private
          */
-        _fetchMetricsData: function(sTaskId, oDialog) {
+        _fetchMetricsData(sTaskId, oDialog) {
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetTaskMetrics", {
                 urlParameters: { taskId: sTaskId },
                 success: function(data) {
                     this._updateMetricsDisplay(data, oDialog);
                 }.bind(this),
-                error: function(error) {
-                    console.warn('Failed to fetch metrics data:', error);
+                error(error) {
+                    console.warn("Failed to fetch metrics data:", error);
                 }
             });
         },
@@ -1019,23 +1018,23 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Metrics dialog
          * @private
          */
-        _updateMetricsDisplay: function(data, oDialog) {
-            if (!oDialog || !oDialog.isOpen()) return;
-            
-            var oMetricsModel = oDialog.getModel("metrics");
+        _updateMetricsDisplay(data, oDialog) {
+            if (!oDialog || !oDialog.isOpen()) {return;}
+
+            const oMetricsModel = oDialog.getModel("metrics");
             if (oMetricsModel) {
-                var oCurrentData = oMetricsModel.getData();
+                const oCurrentData = oMetricsModel.getData();
                 oCurrentData.metrics = data.metrics || oCurrentData.metrics;
                 oCurrentData.lastUpdated = new Date().toISOString();
-                
+
                 if (data.alerts && data.alerts.length > 0) {
                     oCurrentData.alerts = data.alerts;
                 }
-                
+
                 if (data.events && data.events.length > 0) {
                     oCurrentData.events = data.events.concat(oCurrentData.events).slice(0, 100); // Keep last 100 events
                 }
-                
+
                 oMetricsModel.setData(oCurrentData);
             }
         },
@@ -1047,15 +1046,15 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Alert setup dialog
          * @private
          */
-        _loadAlertSetupData: function(sTaskId, oDialog) {
+        _loadAlertSetupData(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetTaskAlertConfig", {
                 urlParameters: { taskId: sTaskId },
                 success: function(data) {
-                    var oAlertModel = new JSONModel({
+                    const oAlertModel = new JSONModel({
                         taskId: sTaskId,
                         alerts: data.alerts || [],
                         thresholds: data.thresholds || {
@@ -1070,9 +1069,9 @@ sap.ui.define([
                     oDialog.setModel(oAlertModel, "alertSetup");
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load alert configuration: " + error.message);
+                    MessageBox.error(`Failed to load alert configuration: ${ error.message}`);
                 }
             });
         },
@@ -1084,11 +1083,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Logs dialog
          * @private
          */
-        _loadMonitoringLogs: function(sTaskId, oDialog) {
+        _loadMonitoringLogs(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetTaskLogs", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -1096,25 +1095,25 @@ sap.ui.define([
                     level: "INFO"
                 },
                 success: function(data) {
-                    var oLogsModel = oDialog.getModel("logs");
+                    const oLogsModel = oDialog.getModel("logs");
                     if (oLogsModel) {
-                        var oCurrentData = oLogsModel.getData();
+                        const oCurrentData = oLogsModel.getData();
                         oCurrentData.logs = data.logs || [];
                         oCurrentData.totalCount = data.totalCount || 0;
                         oCurrentData.lastUpdated = new Date().toISOString();
                         oLogsModel.setData(oCurrentData);
                     }
                     oDialog.setBusy(false);
-                    
+
                     // Start auto-refresh if enabled
-                    var oLogsData = oDialog.getModel("logs").getData();
+                    const oLogsData = oDialog.getModel("logs").getData();
                     if (oLogsData.autoRefresh) {
                         this._startLogsAutoRefresh(sTaskId, oDialog);
                     }
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load monitoring logs: " + error.message);
+                    MessageBox.error(`Failed to load monitoring logs: ${ error.message}`);
                 }
             });
         },
@@ -1126,12 +1125,12 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Logs dialog
          * @private
          */
-        _startLogsAutoRefresh: function(sTaskId, oDialog) {
+        _startLogsAutoRefresh(sTaskId, oDialog) {
             if (this._logsRefreshInterval) {
                 clearInterval(this._logsRefreshInterval);
             }
-            
-            var oLogsData = oDialog.getModel("logs").getData();
+
+            const oLogsData = oDialog.getModel("logs").getData();
             this._logsRefreshInterval = setInterval(() => {
                 if (oDialog.isOpen()) {
                     this._loadMonitoringLogs(sTaskId, oDialog);
@@ -1149,71 +1148,71 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache && this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             if (!this._dialogCache) {
                 this._dialogCache = {};
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -1229,19 +1228,19 @@ sap.ui.define([
          * @description Initializes security features and audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
-                    var user = this._getCurrentUser();
-                    var timestamp = new Date().toISOString();
-                    var logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                    const user = this._getCurrentUser();
+                    const timestamp = new Date().toISOString();
+                    const logEntry = {
+                        timestamp,
+                        user,
                         agent: "Agent10_Monitoring",
-                        action: action,
+                        action,
                         details: details || {}
                     };
-                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -1252,7 +1251,7 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
@@ -1263,7 +1262,7 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             if (user && user.hasRole) {
                 return user.hasRole(role);
@@ -1278,47 +1277,47 @@ sap.ui.define([
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up EventSource connections
             if (this._metricsEventSource) {
                 this._metricsEventSource.close();
                 this._metricsEventSource = null;
             }
-            
+
             // Clean up polling intervals
             if (this._metricsPollingInterval) {
                 clearInterval(this._metricsPollingInterval);
                 this._metricsPollingInterval = null;
             }
-            
+
             if (this._logsRefreshInterval) {
                 clearInterval(this._logsRefreshInterval);
                 this._logsRefreshInterval = null;
             }
-            
+
             // Clean up EventSource from original implementation
             if (this._eventSource) {
                 this._eventSource.close();
                 this._eventSource = null;
             }
-            
+
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
             }
-            
+
             // Clean up cached dialogs
             if (this._dialogCache) {
-                Object.keys(this._dialogCache).forEach(function(key) {
+                Object.keys(this._dialogCache).forEach((key) => {
                     if (this._dialogCache[key]) {
                         this._dialogCache[key].destroy();
                     }
-                }.bind(this));
+                });
                 this._dialogCache = {};
             }
         },
 
-        onExit: function() {
+        onExit() {
             this._cleanupResources();
         }
     });

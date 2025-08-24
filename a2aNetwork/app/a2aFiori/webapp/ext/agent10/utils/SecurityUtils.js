@@ -1,7 +1,7 @@
 sap.ui.define([
     "sap/base/Log",
     "sap/base/security/encodeHTML"
-], function (Log, encodeHTML) {
+], (Log, encodeHTML) => {
     "use strict";
 
     return {
@@ -9,24 +9,24 @@ sap.ui.define([
          * Get CSRF token for secure requests
          * @returns {Promise<string>} CSRF token
          */
-        getCSRFToken: function() {
-            return new Promise(function(resolve, reject) {
+        getCSRFToken() {
+            return new Promise((resolve, reject) => {
                 jQuery.ajax({
-                    url: '/sap/bc/rest/csrf',
-                    method: 'GET',
+                    url: "/sap/bc/rest/csrf",
+                    method: "GET",
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        "X-Requested-With": "XMLHttpRequest"
                     },
-                    success: function(data, textStatus, xhr) {
-                        const token = xhr.getResponseHeader('X-CSRF-Token');
+                    success(data, textStatus, xhr) {
+                        const token = xhr.getResponseHeader("X-CSRF-Token");
                         if (token) {
                             resolve(token);
                         } else {
-                            reject(new Error('No CSRF token received'));
+                            reject(new Error("No CSRF token received"));
                         }
                     },
-                    error: function(xhr, status, error) {
-                        reject(new Error('Failed to fetch CSRF token: ' + error));
+                    error(xhr, status, error) {
+                        reject(new Error(`Failed to fetch CSRF token: ${ error}`));
                     }
                 });
             });
@@ -39,20 +39,20 @@ sap.ui.define([
          * @param {object} mParameters - Parameters
          * @returns {Promise}
          */
-        secureCallFunction: function(oModel, sFunctionName, mParameters) {
-            return this.getCSRFToken().then(function(token) {
+        secureCallFunction(oModel, sFunctionName, mParameters) {
+            return this.getCSRFToken().then((token) => {
                 const secureParams = Object.assign({}, mParameters);
-                
+
                 // Add CSRF token to headers
                 if (!secureParams.headers) {
                     secureParams.headers = {};
                 }
-                secureParams.headers['X-CSRF-Token'] = token;
-                
-                return new Promise(function(resolve, reject) {
+                secureParams.headers["X-CSRF-Token"] = token;
+
+                return new Promise((resolve, reject) => {
                     const originalSuccess = secureParams.success;
                     const originalError = secureParams.error;
-                    
+
                     secureParams.success = function(data, response) {
                         Log.info("Secure function call successful", sFunctionName);
                         if (originalSuccess) {
@@ -60,7 +60,7 @@ sap.ui.define([
                         }
                         resolve(data);
                     };
-                    
+
                     secureParams.error = function(error) {
                         Log.error("Secure function call failed", error);
                         if (originalError) {
@@ -68,7 +68,7 @@ sap.ui.define([
                         }
                         reject(error);
                     };
-                    
+
                     oModel.callFunction(sFunctionName, secureParams);
                 });
             });
@@ -79,8 +79,8 @@ sap.ui.define([
          * @param {string} formula - Formula to validate
          * @returns {object} Validation result
          */
-        validateFormula: function(formula) {
-            if (!formula || typeof formula !== 'string') {
+        validateFormula(formula) {
+            if (!formula || typeof formula !== "string") {
                 return {
                     isValid: false,
                     sanitized: "",
@@ -108,15 +108,15 @@ sap.ui.define([
             dangerousPatterns.forEach(pattern => {
                 if (pattern.test(sanitized)) {
                     errors.push("Formula contains potentially dangerous code");
-                    sanitized = sanitized.replace(pattern, '');
+                    sanitized = sanitized.replace(pattern, "");
                 }
             });
 
             // Validate allowed mathematical functions
             const allowedFunctions = [
-                'abs', 'acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'exp',
-                'floor', 'log', 'max', 'min', 'pow', 'random', 'round', 'sin',
-                'sqrt', 'tan', 'sum', 'avg', 'mean', 'median', 'std', 'var'
+                "abs", "acos", "asin", "atan", "atan2", "ceil", "cos", "exp",
+                "floor", "log", "max", "min", "pow", "random", "round", "sin",
+                "sqrt", "tan", "sum", "avg", "mean", "median", "std", "var"
             ];
 
             const functionPattern = /\b([a-zA-Z_]\w*)\s*\(/g;
@@ -129,9 +129,9 @@ sap.ui.define([
 
             // Check for balanced parentheses
             let parenCount = 0;
-            for (let char of sanitized) {
-                if (char === '(') parenCount++;
-                if (char === ')') parenCount--;
+            for (const char of sanitized) {
+                if (char === "(") {parenCount++;}
+                if (char === ")") {parenCount--;}
                 if (parenCount < 0) {
                     errors.push("Unbalanced parentheses");
                     break;
@@ -149,8 +149,8 @@ sap.ui.define([
 
             return {
                 isValid: errors.length === 0,
-                sanitized: sanitized,
-                errors: errors,
+                sanitized,
+                errors,
                 original: formula
             };
         },
@@ -160,8 +160,8 @@ sap.ui.define([
          * @param {string} content - Content to escape
          * @returns {string} Escaped content
          */
-        escapeHTML: function(content) {
-            if (!content) return "";
+        escapeHTML(content) {
+            if (!content) {return "";}
             return encodeHTML(String(content));
         },
 
@@ -171,8 +171,8 @@ sap.ui.define([
          * @param {string} precision - Precision type
          * @returns {object} Validation result
          */
-        validatePrecision: function(value, precision) {
-            if (typeof value !== 'number') {
+        validatePrecision(value, precision) {
+            if (typeof value !== "number") {
                 return {
                     isValid: false,
                     error: "Value must be a number"
@@ -188,13 +188,13 @@ sap.ui.define([
 
             // Check for overflow based on precision
             const limits = {
-                'single': { min: -3.4e38, max: 3.4e38 },
-                'double': { min: Number.MIN_VALUE, max: Number.MAX_VALUE },
-                'extended': { min: Number.MIN_VALUE, max: Number.MAX_VALUE }
+                "single": { min: -3.4e38, max: 3.4e38 },
+                "double": { min: Number.MIN_VALUE, max: Number.MAX_VALUE },
+                "extended": { min: Number.MIN_VALUE, max: Number.MAX_VALUE }
             };
 
             const limit = limits[precision] || limits.double;
-            
+
             if (value < limit.min || value > limit.max) {
                 return {
                     isValid: false,
@@ -204,7 +204,7 @@ sap.ui.define([
 
             return {
                 isValid: true,
-                value: value
+                value
             };
         },
 
@@ -214,39 +214,39 @@ sap.ui.define([
          * @param {object} options - Connection options
          * @returns {WebSocket} Secure WebSocket
          */
-        createSecureWebSocket: function(url, options) {
+        createSecureWebSocket(url, options) {
             options = options || {};
-            
+
             // SECURITY: Validate authentication before creating WebSocket
             if (!this.hasRole("CalculationManager") && !this.hasRole("Admin")) {
-                this.auditLog("WEBSOCKET_ACCESS_DENIED", { url: url, reason: "insufficient_privileges" });
+                this.auditLog("WEBSOCKET_ACCESS_DENIED", { url, reason: "insufficient_privileges" });
                 throw new Error("Access denied: WebSocket connection requires CalculationManager role");
             }
-            
+
             // Force secure protocol
             let secureUrl = url;
-            if (url.startsWith('ws://')) {
-                secureUrl = url.replace('ws://', 'wss://');
+            if (url.startsWith("ws://")) {
+                secureUrl = url.replace("ws://", "wss://");
                 Log.warning("WebSocket URL upgraded to secure protocol", secureUrl);
             }
 
             // SECURITY: Add authentication token to URL
             const authToken = this.getAuthToken();
-            const separator = secureUrl.includes('?') ? '&' : '?';
+            const separator = secureUrl.includes("?") ? "&" : "?";
             const authenticatedUrl = `${secureUrl}${separator}token=${encodeURIComponent(authToken)}`;
 
             const ws = new WebSocket(authenticatedUrl);
-            
+
             // Add security event handlers
-            ws.addEventListener('open', function() {
+            ws.addEventListener("open", () => {
                 Log.info("Secure WebSocket connection established", secureUrl);
             });
 
-            ws.addEventListener('error', function(error) {
+            ws.addEventListener("error", (error) => {
                 Log.error("WebSocket error", error);
             });
 
-            ws.addEventListener('message', function(event) {
+            ws.addEventListener("message", (event) => {
                 try {
                     // Validate incoming data
                     const data = JSON.parse(event.data);
@@ -267,34 +267,34 @@ sap.ui.define([
          * @param {object} options - Options
          * @returns {EventSource} Secure EventSource
          */
-        createSecureEventSource: function(url, options) {
+        createSecureEventSource(url, options) {
             options = options || {};
-            
+
             // SECURITY: Validate authentication before creating EventSource
             if (!this.hasRole("CalculationManager") && !this.hasRole("Admin")) {
-                this.auditLog("EVENTSOURCE_ACCESS_DENIED", { url: url, reason: "insufficient_privileges" });
+                this.auditLog("EVENTSOURCE_ACCESS_DENIED", { url, reason: "insufficient_privileges" });
                 throw new Error("Access denied: EventSource connection requires CalculationManager role");
             }
-            
+
             // Force HTTPS protocol
             let secureUrl = url;
-            if (url.startsWith('http://')) {
-                secureUrl = url.replace('http://', 'https://');
+            if (url.startsWith("http://")) {
+                secureUrl = url.replace("http://", "https://");
                 Log.warning("EventSource URL upgraded to secure protocol", secureUrl);
             }
 
             // SECURITY: Add authentication headers
             const headers = {
-                'Authorization': `Bearer ${this.getAuthToken()}`,
-                'X-CSRF-Token': this.getCSRFToken()
+                "Authorization": `Bearer ${this.getAuthToken()}`,
+                "X-CSRF-Token": this.getCSRFToken()
             };
 
             // Create EventSource with authentication
             const eventSource = new EventSource(secureUrl, {
-                headers: headers,
+                headers,
                 withCredentials: true
             });
-            
+
             // Add validation for incoming events
             const originalAddEventListener = eventSource.addEventListener;
             eventSource.addEventListener = function(type, listener, options) {
@@ -303,7 +303,7 @@ sap.ui.define([
                         // Validate event data if it's JSON
                         if (event.data) {
                             const data = JSON.parse(event.data);
-                            const validatedEvent = Object.assign({}, event, { data: data });
+                            const validatedEvent = Object.assign({}, event, { data });
                             listener(validatedEvent);
                         } else {
                             listener(event);
@@ -312,7 +312,7 @@ sap.ui.define([
                         Log.error("Invalid EventSource data format", event.data);
                     }
                 };
-                
+
                 originalAddEventListener.call(this, type, secureListener, options);
             };
 
@@ -324,14 +324,14 @@ sap.ui.define([
          * @param {string} operation - Operation type
          * @returns {Promise<boolean>} Authorization result
          */
-        checkCalculationAuth: function(operation) {
-            return new Promise(function(resolve) {
+        checkCalculationAuth(operation) {
+            return new Promise((resolve) => {
                 // Mock authorization check - implement with actual auth service
                 const allowedOperations = [
-                    'execute', 'validate', 'optimize', 'analyze', 
-                    'test', 'heal', 'export', 'visualize'
+                    "execute", "validate", "optimize", "analyze",
+                    "test", "heal", "export", "visualize"
                 ];
-                
+
                 if (allowedOperations.includes(operation.toLowerCase())) {
                     Log.info("Authorization granted for operation", operation);
                     resolve(true);
@@ -347,16 +347,16 @@ sap.ui.define([
          * @param {any} result - Calculation result
          * @returns {string} Sanitized result
          */
-        sanitizeResult: function(result) {
+        sanitizeResult(result) {
             if (result === null || result === undefined) {
                 return "N/A";
             }
 
-            if (typeof result === 'string') {
+            if (typeof result === "string") {
                 return this.escapeHTML(result);
             }
 
-            if (typeof result === 'object') {
+            if (typeof result === "object") {
                 try {
                     return this.escapeHTML(JSON.stringify(result, null, 2));
                 } catch (e) {

@@ -10,11 +10,11 @@ sap.ui.define([
     "sap/ui/core/format/DateFormat",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator"
-], function (Controller, JSONModel, MessageToast, History, DateFormat, Filter, FilterOperator) {
+], (Controller, JSONModel, MessageToast, History, DateFormat, Filter, FilterOperator) => {
     "use strict";
 
     return Controller.extend("a2a.network.fiori.controller.agentDetails", {
-        
+
         // Agent metadata matching the server configuration
         AGENT_METADATA: {
             0: { name: "Data Product Agent", port: 8000, type: "Core Processing", icon: "sap-icon://product", color: "#1873B4" },
@@ -35,7 +35,7 @@ sap.ui.define([
             15: { name: "Orchestrator Agent", port: 8015, type: "Specialized", icon: "sap-icon://workflow-tasks", color: "#283593" }
         },
 
-        onInit: function () {
+        onInit() {
             const oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("agentDetails").attachPatternMatched(this._onAgentMatched, this);
 
@@ -52,21 +52,21 @@ sap.ui.define([
             this._refreshInterval = null;
         },
 
-        _onAgentMatched: function (oEvent) {
-            const agentId = parseInt(oEvent.getParameter("arguments").agentId);
+        _onAgentMatched(oEvent) {
+            const agentId = parseInt(oEvent.getParameter("arguments").agentId, 10);
             this._agentId = agentId;
-            
+
             // Load agent details
             this._loadAgentDetails(agentId);
-            
+
             // Start auto-refresh
             this._startAutoRefresh();
         },
 
-        _loadAgentDetails: function (agentId) {
+        _loadAgentDetails(agentId) {
             const oModel = this.getView().getModel();
             const agent = this.AGENT_METADATA[agentId];
-            
+
             if (!agent) {
                 MessageToast.show("Agent not found");
                 this.onNavBack();
@@ -74,7 +74,7 @@ sap.ui.define([
             }
 
             oModel.setProperty("/busy", true);
-            
+
             // Set basic agent info
             oModel.setProperty("/agent", {
                 id: agentId,
@@ -87,18 +87,18 @@ sap.ui.define([
 
             // Fetch agent status
             this._fetchAgentStatus(agentId);
-            
+
             // Fetch agent performance metrics
             this._fetchAgentPerformance(agentId);
-            
+
             // Fetch recent tasks
             this._fetchAgentTasks(agentId);
-            
+
             // Fetch agent interactions
             this._fetchAgentInteractions(agentId);
         },
 
-        _fetchAgentStatus: function (agentId) {
+        _fetchAgentStatus(agentId) {
             blockchainClient.sendMessage(`/api/v1/agents/${agentId}/status`)
                 .then(response => response.json())
                 .then(data => {
@@ -109,12 +109,12 @@ sap.ui.define([
                     oModel.setProperty("/busy", false);
                 })
                 .catch(error => {
-                    console.error("Error fetching agent status:", error);
+                    // console.error("Error fetching agent status:", error);
                     this.getView().getModel().setProperty("/busy", false);
                 });
         },
 
-        _fetchAgentPerformance: function (agentId) {
+        _fetchAgentPerformance(agentId) {
             blockchainClient.sendMessage(`/api/v1/agents/${agentId}/performance`)
                 .then(response => response.json())
                 .then(data => {
@@ -126,77 +126,77 @@ sap.ui.define([
                     });
                 })
                 .catch(error => {
-                    console.error("Error fetching agent performance:", error);
+                    // console.error("Error fetching agent performance:", error);
                 });
         },
 
-        _fetchAgentTasks: function (agentId) {
+        _fetchAgentTasks(agentId) {
             // Simulated task data - in production, fetch from actual endpoint
             const tasks = [
                 { id: 1, name: "Data Processing", status: "completed", duration: "2.3s", timestamp: new Date() },
                 { id: 2, name: "Validation Check", status: "completed", duration: "0.8s", timestamp: new Date() },
                 { id: 3, name: "Model Training", status: "in_progress", duration: "5m 23s", timestamp: new Date() }
             ];
-            
+
             this.getView().getModel().setProperty("/tasks", tasks);
         },
 
-        _fetchAgentInteractions: function (agentId) {
+        _fetchAgentInteractions(agentId) {
             // Simulated interaction data - in production, fetch from actual endpoint
             const interactions = [
                 { partner: "Agent Manager", type: "Request", message: "Task assignment", time: "2 mins ago" },
                 { partner: "Data Manager", type: "Response", message: "Data retrieved", time: "5 mins ago" },
                 { partner: "Quality Control", type: "Request", message: "Validation needed", time: "10 mins ago" }
             ];
-            
+
             this.getView().getModel().setProperty("/interactions", interactions);
         },
 
-        _startAutoRefresh: function () {
+        _startAutoRefresh() {
             // Clear existing interval if any
             if (this._refreshInterval) {
                 clearInterval(this._refreshInterval);
             }
-            
+
             // Refresh every 30 seconds
             this._refreshInterval = setInterval(() => {
                 this._loadAgentDetails(this._agentId);
             }, 30000);
         },
 
-        onRefresh: function () {
+        onRefresh() {
             MessageToast.show("Refreshing agent data...");
             this._loadAgentDetails(this._agentId);
         },
 
-        onStartAgent: function () {
+        onStartAgent() {
             MessageToast.show(`Starting ${this.AGENT_METADATA[this._agentId].name}...`);
             // Implement actual agent start logic
         },
 
-        onStopAgent: function () {
+        onStopAgent() {
             MessageToast.show(`Stopping ${this.AGENT_METADATA[this._agentId].name}...`);
             // Implement actual agent stop logic
         },
 
-        onRestartAgent: function () {
+        onRestartAgent() {
             MessageToast.show(`Restarting ${this.AGENT_METADATA[this._agentId].name}...`);
             // Implement actual agent restart logic
         },
 
-        onViewLogs: function () {
+        onViewLogs() {
             // Navigate to logs view
             this.getOwnerComponent().getRouter().navTo("agentLogs", {
                 agentId: this._agentId
             });
         },
 
-        onConfigureAgent: function () {
+        onConfigureAgent() {
             // Open configuration dialog
             MessageToast.show("Configuration dialog would open here");
         },
 
-        onNavBack: function () {
+        onNavBack() {
             const oHistory = History.getInstance();
             const sPreviousHash = oHistory.getPreviousHash();
 
@@ -207,7 +207,7 @@ sap.ui.define([
             }
         },
 
-        onExit: function () {
+        onExit() {
             // Clean up refresh interval
             if (this._refreshInterval) {
                 clearInterval(this._refreshInterval);

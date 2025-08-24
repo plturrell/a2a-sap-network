@@ -3,7 +3,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "./SecurityUtils"
-], function (Device, MessageToast, JSONModel, SecurityUtils) {
+], (Device, MessageToast, JSONModel, SecurityUtils) => {
     "use strict";
 
     /**
@@ -12,15 +12,15 @@ sap.ui.define([
      * Includes lazy loading, virtualization, caching, and responsive utilities.
      */
     return {
-        
+
         /**
          * @function createVirtualizedTable
          * @description Creates a table with virtualization for large datasets.
          * @param {Object} oConfig - Configuration object
          * @returns {sap.m.Table} Virtualized table
          */
-        createVirtualizedTable: function(oConfig) {
-            var oTable = new sap.m.Table({
+        createVirtualizedTable(oConfig) {
+            const oTable = new sap.m.Table({
                 growing: true,
                 growingThreshold: this._getGrowingThreshold(),
                 growingScrollToLoad: true,
@@ -28,50 +28,50 @@ sap.ui.define([
                 mode: oConfig.mode || "None",
                 updateFinished: this._onTableUpdateFinished.bind(this)
             });
-            
+
             // Enable lazy loading
             this._enableLazyLoading(oTable, oConfig);
-            
+
             return oTable;
         },
-        
+
         /**
          * @function _getGrowingThreshold
          * @description Returns appropriate growing threshold based on device.
          * @returns {number} Growing threshold
          * @private
          */
-        _getGrowingThreshold: function() {
+        _getGrowingThreshold() {
             if (Device.system.phone) {
                 return 10;
             } else if (Device.system.tablet) {
                 return 20;
-            } else {
-                return 30;
             }
+            return 30;
+
         },
-        
+
         /**
          * @function _onTableUpdateFinished
          * @description Handles table update finished event for optimization.
          * @param {sap.ui.base.Event} oEvent - Update finished event
          * @private
          */
-        _onTableUpdateFinished: function(oEvent) {
-            var aItems = oEvent.getSource().getItems();
-            var iThreshold = this._getGrowingThreshold();
-            
+        _onTableUpdateFinished(oEvent) {
+            const aItems = oEvent.getSource().getItems();
+            const iThreshold = this._getGrowingThreshold();
+
             // Defer rendering of non-visible items
-            aItems.forEach(function(oItem, iIndex) {
+            aItems.forEach((oItem, iIndex) => {
                 if (iIndex > iThreshold) {
                     oItem.addStyleClass("sapUiInvisibleText");
-                    setTimeout(function() {
+                    setTimeout(() => {
                         oItem.removeStyleClass("sapUiInvisibleText");
                     }, 50 * (iIndex - iThreshold));
                 }
             });
         },
-        
+
         /**
          * @function _enableLazyLoading
          * @description Enables lazy loading for a table.
@@ -79,27 +79,27 @@ sap.ui.define([
          * @param {Object} oConfig - Configuration
          * @private
          */
-        _enableLazyLoading: function(oTable, oConfig) {
-            var that = this;
-            
-            oTable.attachUpdateFinished(function(oEvent) {
-                var oBinding = oTable.getBinding("items");
-                if (!oBinding || !oConfig.loadMoreHandler) return;
-                
-                var iTotalItems = oBinding.getLength();
-                var iLoadedItems = oTable.getItems().length;
-                
+        _enableLazyLoading(oTable, oConfig) {
+            const that = this;
+
+            oTable.attachUpdateFinished((oEvent) => {
+                const oBinding = oTable.getBinding("items");
+                if (!oBinding || !oConfig.loadMoreHandler) {return;}
+
+                const iTotalItems = oBinding.getLength();
+                const iLoadedItems = oTable.getItems().length;
+
                 // Check if we need to load more
                 if (iLoadedItems < iTotalItems && iLoadedItems % that._getGrowingThreshold() === 0) {
-                    var oBundle = oTable.getModel("i18n").getResourceBundle();
+                    const oBundle = oTable.getModel("i18n").getResourceBundle();
                     MessageToast.show(oBundle.getText("lazyload.loadingMore"));
-                    
+
                     // Call the load more handler
                     oConfig.loadMoreHandler(iLoadedItems, that._getGrowingThreshold());
                 }
             });
         },
-        
+
         /**
          * @function createCachedModel
          * @description Creates a JSON model with caching capabilities.
@@ -107,23 +107,23 @@ sap.ui.define([
          * @param {Object} oOptions - Cache options
          * @returns {sap.ui.model.json.JSONModel} Cached model
          */
-        createCachedModel: function(oData, oOptions) {
-            var oModel = new JSONModel(oData);
-            var oCacheConfig = Object.assign({
+        createCachedModel(oData, oOptions) {
+            const oModel = new JSONModel(oData);
+            const oCacheConfig = Object.assign({
                 ttl: 300000, // 5 minutes default
-                key: "agent6_cache_" + Date.now()
+                key: `agent6_cache_${ Date.now()}`
             }, oOptions);
-            
+
             // Add cache metadata
             oModel._cacheConfig = oCacheConfig;
             oModel._cacheTimestamp = Date.now();
-            
+
             // Override setData to update cache
-            var fnOriginalSetData = oModel.setData.bind(oModel);
+            const fnOriginalSetData = oModel.setData.bind(oModel);
             oModel.setData = function(oData, bMerge) {
                 fnOriginalSetData(oData, bMerge);
                 this._cacheTimestamp = Date.now();
-                
+
                 // Store in session storage
                 try {
                     sessionStorage.setItem(this._cacheConfig.key, JSON.stringify({
@@ -134,18 +134,18 @@ sap.ui.define([
                     // Storage quota exceeded
                 }
             };
-            
+
             // Add cache validation method
             oModel.isCacheValid = function() {
                 return (Date.now() - this._cacheTimestamp) < this._cacheConfig.ttl;
             };
-            
+
             // Add cache retrieval method
             oModel.loadFromCache = function() {
                 try {
-                    var sCached = sessionStorage.getItem(this._cacheConfig.key);
+                    const sCached = sessionStorage.getItem(this._cacheConfig.key);
                     if (sCached) {
-                        var oCached = JSON.parse(sCached);
+                        const oCached = JSON.parse(sCached);
                         if ((Date.now() - oCached.timestamp) < this._cacheConfig.ttl) {
                             this.setData(oCached.data);
                             return true;
@@ -156,10 +156,10 @@ sap.ui.define([
                 }
                 return false;
             };
-            
+
             return oModel;
         },
-        
+
         /**
          * @function debounce
          * @description Creates a debounced function for performance.
@@ -167,18 +167,18 @@ sap.ui.define([
          * @param {number} delay - Delay in milliseconds
          * @returns {Function} Debounced function
          */
-        debounce: function(fn, delay) {
-            var timeoutId;
+        debounce(fn, delay) {
+            let timeoutId;
             return function() {
-                var context = this;
-                var args = arguments;
+                const context = this;
+                const args = arguments;
                 clearTimeout(timeoutId);
-                timeoutId = setTimeout(function() {
+                timeoutId = setTimeout(() => {
                     fn.apply(context, args);
                 }, delay);
             };
         },
-        
+
         /**
          * @function throttle
          * @description Creates a throttled function for performance.
@@ -186,21 +186,21 @@ sap.ui.define([
          * @param {number} limit - Time limit between calls
          * @returns {Function} Throttled function
          */
-        throttle: function(fn, limit) {
-            var inThrottle;
+        throttle(fn, limit) {
+            let inThrottle;
             return function() {
-                var args = arguments;
-                var context = this;
+                const args = arguments;
+                const context = this;
                 if (!inThrottle) {
                     fn.apply(context, args);
                     inThrottle = true;
-                    setTimeout(function() {
+                    setTimeout(() => {
                         inThrottle = false;
                     }, limit);
                 }
             };
         },
-        
+
         /**
          * @function optimizeChartData
          * @description Optimizes chart data for better performance.
@@ -208,39 +208,39 @@ sap.ui.define([
          * @param {number} iMaxPoints - Maximum data points
          * @returns {Array} Optimized data
          */
-        optimizeChartData: function(aData, iMaxPoints) {
+        optimizeChartData(aData, iMaxPoints) {
             if (!aData || aData.length <= iMaxPoints) {
                 return aData;
             }
-            
+
             // Sample data points evenly
-            var iStep = Math.ceil(aData.length / iMaxPoints);
-            var aOptimized = [];
-            
-            for (var i = 0; i < aData.length; i += iStep) {
+            const iStep = Math.ceil(aData.length / iMaxPoints);
+            const aOptimized = [];
+
+            for (let i = 0; i < aData.length; i += iStep) {
                 aOptimized.push(aData[i]);
             }
-            
+
             // Always include the last point
             if (aOptimized[aOptimized.length - 1] !== aData[aData.length - 1]) {
                 aOptimized.push(aData[aData.length - 1]);
             }
-            
+
             return aOptimized;
         },
-        
+
         /**
          * @function lazyLoadImages
          * @description Sets up lazy loading for images.
          * @param {sap.ui.core.Control} oContainer - Container with images
          */
-        lazyLoadImages: function(oContainer) {
-            if (!window.IntersectionObserver) return;
-            
-            var imageObserver = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
+        lazyLoadImages(oContainer) {
+            if (!window.IntersectionObserver) {return;}
+
+            var imageObserver = new IntersectionObserver(((entries) => {
+                entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        var img = entry.target;
+                        const img = entry.target;
                         if (img.dataset.src) {
                             img.src = img.dataset.src;
                             img.classList.remove("lazy-image");
@@ -248,82 +248,82 @@ sap.ui.define([
                         }
                     }
                 });
-            }, {
+            }), {
                 rootMargin: "50px"
             });
-            
+
             // Find all lazy images
-            var $lazyImages = oContainer.$().find("img.lazy-image");
+            const $lazyImages = oContainer.$().find("img.lazy-image");
             $lazyImages.each(function() {
                 imageObserver.observe(this);
             });
         },
-        
+
         /**
          * @function cleanupMemory
          * @description Cleans up memory by removing unused objects.
          * @param {Object} oContext - Context object to clean
          */
-        cleanupMemory: function(oContext) {
+        cleanupMemory(oContext) {
             // Clean up event listeners
             if (oContext._eventListeners) {
-                oContext._eventListeners.forEach(function(listener) {
+                oContext._eventListeners.forEach((listener) => {
                     if (listener.element && listener.event) {
                         listener.element.removeEventListener(listener.event, listener.handler);
                     }
                 });
                 oContext._eventListeners = [];
             }
-            
+
             // Clean up timers
             if (oContext._timers) {
-                oContext._timers.forEach(function(timerId) {
+                oContext._timers.forEach((timerId) => {
                     clearTimeout(timerId);
                 });
                 oContext._timers = [];
             }
-            
+
             // Clean up intervals
             if (oContext._intervals) {
-                oContext._intervals.forEach(function(intervalId) {
+                oContext._intervals.forEach((intervalId) => {
                     clearInterval(intervalId);
                 });
                 oContext._intervals = [];
             }
-            
+
             // Force garbage collection hint
             if (window.gc) {
                 window.gc();
             }
         },
-        
+
         /**
          * @function getResponsiveGridSpan
          * @description Returns responsive grid span based on device.
          * @returns {string} Grid span configuration
          */
-        getResponsiveGridSpan: function() {
+        getResponsiveGridSpan() {
             if (Device.system.phone) {
                 return "L12 M12 S12";
             } else if (Device.system.tablet) {
                 return "L6 M12 S12";
-            } else {
-                return "L4 M6 S12";
             }
+            return "L4 M6 S12";
+
         },
-        
+
         /**
          * @function preloadFragments
          * @description Preloads fragments for better performance.
          * @param {Array<string>} aFragmentNames - Fragment names to preload
          * @returns {Promise} Promise when all fragments are loaded
          */
-        preloadFragments: function(aFragmentNames) {
-            var aPromises = aFragmentNames.map(function(sFragmentName) {
+        preloadFragments(aFragmentNames) {
+            const aPromises = aFragmentNames.map((sFragmentName) => {
                 return sap.ui.core.Fragment.load({
                     name: sFragmentName,
                     type: "XML"
-                }).then(function(oFragment) {
+                }).then((oFragment) => {
                     // Cache the fragment
                     if (!window._fragmentCache) {
                         window._fragmentCache = {};
@@ -332,10 +332,10 @@ sap.ui.define([
                     return oFragment;
                 });
             });
-            
+
             return Promise.all(aPromises);
         },
-        
+
         /**
          * @function measurePerformance
          * @description Measures performance of a function.
@@ -343,26 +343,26 @@ sap.ui.define([
          * @param {Function} fn - Function to measure
          * @returns {*} Function result
          */
-        measurePerformance: function(sName, fn) {
+        measurePerformance(sName, fn) {
             if (window.performance && window.performance.mark) {
-                var sStartMark = sName + "_start";
-                var sEndMark = sName + "_end";
-                
+                const sStartMark = `${sName }_start`;
+                const sEndMark = `${sName }_end`;
+
                 performance.mark(sStartMark);
-                var result = fn();
+                const result = fn();
                 performance.mark(sEndMark);
-                
+
                 performance.measure(sName, sStartMark, sEndMark);
-                
-                var measure = performance.getEntriesByName(sName)[0];
+
+                const measure = performance.getEntriesByName(sName)[0];
                 if (measure) {
-                    console.log(sName + " took " + measure.duration.toFixed(2) + "ms");
+                    console.log(`${sName } took ${ measure.duration.toFixed(2) }ms`);
                 }
-                
+
                 return result;
-            } else {
-                return fn();
             }
+            return fn();
+
         }
     };
 });

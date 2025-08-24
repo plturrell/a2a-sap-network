@@ -5,7 +5,7 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
     "sap/m/MessageBox"
-], function(BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) {
+], (BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Contracts", {
@@ -61,7 +61,7 @@ sap.ui.define([
             this.showSkeletonLoading(this.getResourceBundle().getText("contracts.loading"));
 
             // Simulate loading contracts - in production, call blockchain service
-            setTimeout(function() {
+            setTimeout(() => {
                 const aContracts = this._generateDeployedContracts();
                 const aAuditReports = this._generateAuditReports();
 
@@ -70,7 +70,7 @@ sap.ui.define([
 
                 this._updateStatistics();
                 this.hideLoading();
-            }.bind(this), 1500);
+            }, 1500);
         },
 
         _updateStatistics() {
@@ -239,9 +239,9 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
             const oContract = oEvent.getSource().getBindingContext("contracts").getObject();
 
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(oContract.address).then(function() {
+                navigator.clipboard.writeText(oContract.address).then(() => {
                     MessageToast.show(this.getResourceBundle().getText("contracts.address.copied"));
-                }.bind(this)).catch(function() {
+                }).catch(function() {
                     MessageToast.show(this.getResourceBundle().getText("contracts.address.copyError"));
                 });
             }
@@ -281,7 +281,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
             this.showSpinnerLoading(this.getResourceBundle().getText("contracts.simulating"));
 
             // Simulate contract execution
-            setTimeout(function() {
+            setTimeout(() => {
                 this.hideLoading();
                 MessageBox.success(
                     this.getResourceBundle().getText("contracts.simulation.success"),
@@ -289,7 +289,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                         title: this.getResourceBundle().getText("contracts.simulation.title")
                     }
                 );
-            }.bind(this), 2000);
+            }, 2000);
         },
 
         onConfirmExecution() {
@@ -312,7 +312,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
 
             // Simulate blockchain transaction
             let iProgress = 0;
-            const oInterval = setInterval(function() {
+            const oInterval = setInterval(() => {
                 iProgress += 10;
                 this.oUIModel.setProperty("/blockchainProgress", iProgress);
 
@@ -332,7 +332,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                     // Refresh contract data
                     this._loadContracts();
                 }
-            }.bind(this), 500);
+            }, 500);
         },
 
         onPauseContract() {
@@ -443,7 +443,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
 
             // Simulate deployment
             let iProgress = 0;
-            const oInterval = setInterval(function() {
+            const oInterval = setInterval(() => {
                 iProgress += 5;
                 this.oUIModel.setProperty("/blockchainProgress", iProgress);
 
@@ -475,7 +475,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                     this.oUIModel.setProperty("/contractView", "deployed");
                     this._loadContracts();
                 }
-            }.bind(this), 300);
+            }, 300);
         },
 
         onFileSelect(oEvent) {
@@ -492,7 +492,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
             this.showSpinnerLoading(this.getResourceBundle().getText("contracts.compiling"));
 
             // Simulate compilation
-            setTimeout(function() {
+            setTimeout(() => {
                 const sOutput = `Compiler run successful. Artifact(s) can be found in directory contracts/out.
 Compiling 1 files with 0.8.19
 Solc 0.8.19 finished in 1.23s
@@ -510,7 +510,7 @@ Warning (2018): Function state mutability can be restricted to view
 
                 this.hideLoading();
                 MessageToast.show(this.getResourceBundle().getText("contracts.compile.success"));
-            }.bind(this), 2000);
+            }, 2000);
         },
 
         _updateGasEstimates() {
@@ -528,7 +528,7 @@ Warning (2018): Function state mutability can be restricted to view
             this.showSpinnerLoading(this.getResourceBundle().getText("contracts.testing"));
 
             // Simulate test execution
-            setTimeout(function() {
+            setTimeout(() => {
                 const aResults = [
                     { name: "Should register new agent", description: "Test agent registration functionality", duration: 145, passed: true },
                     { name: "Should update agent information", description: "Test agent update functionality", duration: 89, passed: true },
@@ -542,7 +542,7 @@ Warning (2018): Function state mutability can be restricted to view
 
                 const iPassed = aResults.filter(r => r.passed).length;
                 MessageToast.show(this.getResourceBundle().getText("contracts.tests.complete", [iPassed, aResults.length]));
-            }.bind(this), 3000);
+            }, 3000);
         },
 
         onRequestAudit() {
@@ -570,7 +570,7 @@ Warning (2018): Function state mutability can be restricted to view
             this.showSpinnerLoading(this.getResourceBundle().getText("contracts.audit.scanning"));
 
             // Simulate security scan
-            setTimeout(function() {
+            setTimeout(() => {
                 const aResults = [
                     {
                         vulnerability: "Reentrancy Guard Missing",
@@ -596,7 +596,7 @@ Warning (2018): Function state mutability can be restricted to view
                 this.hideLoading();
 
                 MessageToast.show(this.getResourceBundle().getText("contracts.audit.scan.complete", [aResults.length]));
-            }.bind(this), 4000);
+            }, 4000);
         },
 
         onViewVulnerabilityDetails(oEvent) {

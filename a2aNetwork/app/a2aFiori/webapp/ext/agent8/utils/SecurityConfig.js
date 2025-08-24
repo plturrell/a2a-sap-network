@@ -1,4 +1,4 @@
-sap.ui.define([], function () {
+sap.ui.define([], () => {
     "use strict";
 
     /**
@@ -6,7 +6,7 @@ sap.ui.define([], function () {
      * Central configuration for all security policies and settings
      */
     return {
-        
+
         // Content Security Policy Settings
         contentSecurityPolicy: {
             directives: {
@@ -288,7 +288,7 @@ sap.ui.define([], function () {
          * Get the current security configuration
          * @returns {Object} Current security configuration
          */
-        getConfig: function() {
+        getConfig() {
             return JSON.parse(JSON.stringify(this)); // Deep clone to prevent modification
         },
 
@@ -298,7 +298,7 @@ sap.ui.define([], function () {
          * @param {string} setting - Specific setting
          * @returns {boolean} True if enabled
          */
-        isEnabled: function(category, setting) {
+        isEnabled(category, setting) {
             return this[category] && this[category][setting] === true;
         },
 
@@ -307,7 +307,7 @@ sap.ui.define([], function () {
          * @param {string} area - Security area (e.g., 'authentication', 'csrf')
          * @returns {Object} Security policy configuration
          */
-        getPolicy: function(area) {
+        getPolicy(area) {
             return this[area] || {};
         },
 
@@ -317,55 +317,55 @@ sap.ui.define([], function () {
          * @param {Object} context - Context for the action
          * @returns {boolean} True if allowed
          */
-        isActionAllowed: function(action, context) {
+        isActionAllowed(action, context) {
             // Implement specific policy checks based on action and context
             switch (action) {
-                case 'file_upload':
-                    return this._checkFileUploadPolicy(context);
-                case 'data_export':
-                    return this._checkDataExportPolicy(context);
-                case 'admin_access':
-                    return this._checkAdminAccessPolicy(context);
-                default:
-                    return true; // Default allow for undefined actions
+            case "file_upload":
+                return this._checkFileUploadPolicy(context);
+            case "data_export":
+                return this._checkDataExportPolicy(context);
+            case "admin_access":
+                return this._checkAdminAccessPolicy(context);
+            default:
+                return true; // Default allow for undefined actions
             }
         },
 
         // Private methods for policy checks
-        _checkFileUploadPolicy: function(context) {
-            if (!this.fileUpload.enabled) return false;
-            
+        _checkFileUploadPolicy(context) {
+            if (!this.fileUpload.enabled) {return false;}
+
             const fileSize = context.fileSize || 0;
-            const fileExtension = context.fileExtension || '';
-            
+            const fileExtension = context.fileExtension || "";
+
             return fileSize <= this.fileUpload.maxFileSize &&
                    this.fileUpload.allowedExtensions.includes(fileExtension.toLowerCase());
         },
 
-        _checkDataExportPolicy: function(context) {
+        _checkDataExportPolicy(context) {
             const recordCount = context.recordCount || 0;
-            const userRole = context.userRole || 'guest';
-            
+            const userRole = context.userRole || "guest";
+
             // Limit data export based on user role and record count
             const maxRecords = {
-                'admin': 1000000,
-                'manager': 100000,
-                'user': 10000,
-                'guest': 0
+                "admin": 1000000,
+                "manager": 100000,
+                "user": 10000,
+                "guest": 0
             };
-            
+
             return recordCount <= (maxRecords[userRole] || 0);
         },
 
-        _checkAdminAccessPolicy: function(context) {
-            const userRole = context.userRole || 'guest';
-            const ipAddress = context.ipAddress || '';
-            
+        _checkAdminAccessPolicy(context) {
+            const userRole = context.userRole || "guest";
+            const ipAddress = context.ipAddress || "";
+
             // Only allow admin access from specific roles and IP ranges
-            return userRole === 'admin' && this._isWhitelistedIp(ipAddress);
+            return userRole === "admin" && this._isWhitelistedIp(ipAddress);
         },
 
-        _isWhitelistedIp: function(ipAddress) {
+        _isWhitelistedIp(ipAddress) {
             // Simple check - in production, use proper IP range validation
             return this.rateLimiting.whitelistedIps.some(whitelistedIp => {
                 return ipAddress.startsWith(whitelistedIp) || whitelistedIp === ipAddress;

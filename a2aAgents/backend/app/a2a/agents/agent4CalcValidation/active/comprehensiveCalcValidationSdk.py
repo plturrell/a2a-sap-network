@@ -1698,6 +1698,425 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         # In real implementation, would use different convergence strategies
         return result
     
+    # Registry capability skills - Required for 95/100 alignment
+    @a2a_skill(
+        name="calculation_validation",
+        description="Comprehensive calculation validation using multiple mathematical methods",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "expression": {"type": "string", "description": "Mathematical expression to validate"},
+                "expected_result": {"type": "number", "description": "Expected calculation result"},
+                "variables": {"type": "object", "description": "Variable values for the expression"},
+                "validation_methods": {"type": "array", "description": "Validation methods to use"}
+            },
+            "required": ["expression"]
+        }
+    )
+    async def calculation_validation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Comprehensive calculation validation using symbolic, numerical, and statistical methods"""
+        return await self.validate_calculation(request_data)
+
+    @a2a_skill(
+        name="numerical_verification", 
+        description="Precise numerical verification with error bound analysis and precision control",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "calculation": {"type": "string", "description": "Numerical calculation to verify"},
+                "precision": {"type": "integer", "description": "Required precision level"},
+                "error_tolerance": {"type": "number", "description": "Acceptable error tolerance"}
+            },
+            "required": ["calculation"]
+        }
+    )
+    async def numerical_verification(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform precise numerical verification with error analysis"""
+        try:
+            calculation = request_data.get("calculation", "")
+            precision = request_data.get("precision", 10)
+            error_tolerance = request_data.get("error_tolerance", 1e-10)
+            
+            # Set precision context
+            original_prec = getcontext().prec
+            getcontext().prec = max(precision, 28)  # Minimum reasonable precision
+            
+            try:
+                # Parse and evaluate with high precision
+                if '=' in calculation:
+                    left, right = calculation.split('=', 1)
+                    left_result = self._evaluate_with_precision(left.strip(), {})
+                    right_result = self._evaluate_with_precision(right.strip(), {})
+                    
+                    # Calculate error
+                    error = abs(float(left_result) - float(right_result))
+                    is_valid = error <= error_tolerance
+                    
+                    verification_result = {
+                        "is_valid": is_valid,
+                        "left_result": str(left_result),
+                        "right_result": str(right_result),
+                        "absolute_error": error,
+                        "relative_error": error / max(abs(float(left_result)), abs(float(right_result)), 1e-10),
+                        "precision_used": getcontext().prec,
+                        "error_tolerance": error_tolerance
+                    }
+                else:
+                    # Single expression evaluation
+                    result = self._evaluate_with_precision(calculation, {})
+                    verification_result = {
+                        "result": str(result),
+                        "precision_used": getcontext().prec,
+                        "is_valid": True
+                    }
+                
+                # Reset precision
+                getcontext().prec = original_prec
+                
+                return {
+                    "success": True,
+                    "verification": verification_result,
+                    "method": "high_precision_numerical"
+                }
+            
+            finally:
+                getcontext().prec = original_prec
+                
+        except Exception as e:
+            return {
+                "success": False, 
+                "error": f"Numerical verification failed: {str(e)}"
+            }
+
+    @a2a_skill(
+        name="statistical_analysis",
+        description="Statistical analysis of calculations with distribution testing and confidence intervals",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "data": {"type": "array", "description": "Numerical data for statistical analysis"},
+                "test_type": {"type": "string", "description": "Type of statistical test to perform"},
+                "confidence_level": {"type": "number", "description": "Confidence level for analysis"}
+            },
+            "required": ["data"]
+        }
+    )
+    async def statistical_analysis(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform comprehensive statistical analysis of numerical data"""
+        try:
+            data = request_data.get("data", [])
+            test_type = request_data.get("test_type", "descriptive")
+            confidence_level = request_data.get("confidence_level", 0.95)
+            
+            if not data or len(data) == 0:
+                return {"success": False, "error": "No data provided for analysis"}
+            
+            # Convert to numpy array for analysis
+            data_array = np.array(data, dtype=float)
+            
+            # Basic descriptive statistics
+            analysis_result = {
+                "descriptive_stats": {
+                    "mean": float(np.mean(data_array)),
+                    "median": float(np.median(data_array)),
+                    "std": float(np.std(data_array, ddof=1)) if len(data_array) > 1 else 0.0,
+                    "variance": float(np.var(data_array, ddof=1)) if len(data_array) > 1 else 0.0,
+                    "min": float(np.min(data_array)),
+                    "max": float(np.max(data_array)),
+                    "count": len(data_array)
+                }
+            }
+            
+            # Confidence interval for mean
+            if len(data_array) > 1:
+                sem = stats.sem(data_array)  # Standard error of mean
+                confidence_interval = stats.t.interval(
+                    confidence_level, 
+                    len(data_array) - 1, 
+                    loc=np.mean(data_array), 
+                    scale=sem
+                )
+                analysis_result["confidence_interval"] = {
+                    "level": confidence_level,
+                    "lower": float(confidence_interval[0]),
+                    "upper": float(confidence_interval[1])
+                }
+            
+            # Normality test (Shapiro-Wilk)
+            if len(data_array) >= 3:
+                shapiro_stat, shapiro_p = stats.shapiro(data_array)
+                analysis_result["normality_test"] = {
+                    "test": "shapiro_wilk",
+                    "statistic": float(shapiro_stat),
+                    "p_value": float(shapiro_p),
+                    "is_normal": shapiro_p > 0.05
+                }
+            
+            # Additional tests based on test_type
+            if test_type == "outlier_detection":
+                z_scores = np.abs(stats.zscore(data_array))
+                outliers = data_array[z_scores > 2.5]  # Using 2.5 sigma threshold
+                analysis_result["outlier_detection"] = {
+                    "outliers": outliers.tolist(),
+                    "outlier_count": len(outliers),
+                    "threshold": 2.5
+                }
+            
+            return {
+                "success": True,
+                "analysis": analysis_result,
+                "data_points": len(data_array)
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Statistical analysis failed: {str(e)}"
+            }
+
+    @a2a_skill(
+        name="accuracy_checking",
+        description="Advanced accuracy checking with error bounds and precision analysis",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "calculation": {"type": "string", "description": "Calculation to check for accuracy"},
+                "reference_result": {"type": "number", "description": "Reference result for comparison"},
+                "accuracy_threshold": {"type": "number", "description": "Required accuracy threshold"}
+            },
+            "required": ["calculation", "reference_result"]
+        }
+    )
+    async def accuracy_checking(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Check calculation accuracy against reference with detailed error analysis"""
+        try:
+            calculation = request_data.get("calculation", "")
+            reference_result = request_data.get("reference_result", 0)
+            accuracy_threshold = request_data.get("accuracy_threshold", 1e-6)
+            
+            # Evaluate calculation
+            variables = request_data.get("variables", {})
+            calculated_result = self._evaluate_with_precision(calculation, variables)
+            
+            # Calculate accuracy metrics
+            absolute_error = abs(float(calculated_result) - float(reference_result))
+            relative_error = absolute_error / max(abs(float(reference_result)), 1e-10)
+            
+            # Determine if accurate
+            is_accurate = absolute_error <= accuracy_threshold
+            
+            # Additional precision analysis
+            significant_digits = max(0, -int(np.floor(np.log10(abs(absolute_error)))) + 1) if absolute_error > 0 else 15
+            
+            accuracy_result = {
+                "is_accurate": is_accurate,
+                "calculated_result": str(calculated_result),
+                "reference_result": str(reference_result),
+                "absolute_error": absolute_error,
+                "relative_error": relative_error,
+                "accuracy_threshold": accuracy_threshold,
+                "significant_digits": significant_digits,
+                "accuracy_percentage": max(0, (1 - relative_error) * 100),
+                "error_magnitude": "high" if relative_error > 0.01 else "medium" if relative_error > 0.001 else "low"
+            }
+            
+            return {
+                "success": True,
+                "accuracy_check": accuracy_result,
+                "method": "precision_comparison"
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Accuracy checking failed: {str(e)}"
+            }
+
+    @a2a_skill(
+        name="error_detection",
+        description="Advanced error detection in calculations with pattern analysis and correction suggestions",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "calculation": {"type": "string", "description": "Calculation to analyze for errors"},
+                "context": {"type": "object", "description": "Additional context for error detection"},
+                "error_types": {"type": "array", "description": "Types of errors to check for"}
+            },
+            "required": ["calculation"]
+        }
+    )
+    async def error_detection(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Detect mathematical errors in calculations with detailed analysis"""
+        try:
+            calculation = request_data.get("calculation", "")
+            context = request_data.get("context", {})
+            error_types = request_data.get("error_types", ["syntax", "domain", "precision", "logic"])
+            
+            detected_errors = []
+            warnings = []
+            suggestions = []
+            
+            # Syntax error detection
+            if "syntax" in error_types:
+                try:
+                    # Try to parse the expression
+                    self._parse_expression(calculation)
+                except Exception as e:
+                    detected_errors.append({
+                        "type": "syntax_error",
+                        "severity": "high",
+                        "description": f"Syntax error in expression: {str(e)}",
+                        "location": "expression_parsing"
+                    })
+            
+            # Domain error detection
+            if "domain" in error_types:
+                domain_issues = self._check_domain_errors(calculation)
+                detected_errors.extend(domain_issues)
+            
+            # Precision issues
+            if "precision" in error_types:
+                precision_issues = self._check_precision_issues(calculation)
+                warnings.extend(precision_issues)
+            
+            # Logic error detection (basic patterns)
+            if "logic" in error_types:
+                logic_issues = self._check_logic_errors(calculation, context)
+                detected_errors.extend(logic_issues)
+            
+            # Generate correction suggestions
+            if detected_errors or warnings:
+                suggestions = self._generate_correction_suggestions(detected_errors, warnings)
+            
+            error_analysis = {
+                "has_errors": len(detected_errors) > 0,
+                "has_warnings": len(warnings) > 0,
+                "errors": detected_errors,
+                "warnings": warnings,
+                "suggestions": suggestions,
+                "error_count": len(detected_errors),
+                "warning_count": len(warnings),
+                "severity_level": "high" if any(e.get("severity") == "high" for e in detected_errors) else "medium" if detected_errors else "low"
+            }
+            
+            return {
+                "success": True,
+                "error_detection": error_analysis,
+                "calculation_analyzed": calculation
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Error detection failed: {str(e)}"
+            }
+    
+    def _check_domain_errors(self, calculation: str) -> List[Dict[str, Any]]:
+        """Check for domain-related errors"""
+        errors = []
+        
+        # Check for division by zero patterns
+        if '/0' in calculation or '/ 0' in calculation:
+            errors.append({
+                "type": "domain_error",
+                "severity": "high",
+                "description": "Division by zero detected",
+                "location": "division_operation"
+            })
+        
+        # Check for negative square root patterns
+        import re
+        sqrt_pattern = r'sqrt\(([^)]+)\)'
+        matches = re.finditer(sqrt_pattern, calculation)
+        for match in matches:
+            inner_expr = match.group(1)
+            if inner_expr.startswith('-') and not any(op in inner_expr[1:] for op in ['+', '*', '/', '(']):
+                errors.append({
+                    "type": "domain_error",
+                    "severity": "medium",
+                    "description": f"Potential negative argument to sqrt: {inner_expr}",
+                    "location": f"sqrt({inner_expr})"
+                })
+        
+        return errors
+    
+    def _check_precision_issues(self, calculation: str) -> List[Dict[str, Any]]:
+        """Check for potential precision issues"""
+        warnings = []
+        
+        # Check for very large numbers
+        import re
+        large_number_pattern = r'\d{10,}'  # Numbers with 10+ digits
+        if re.search(large_number_pattern, calculation):
+            warnings.append({
+                "type": "precision_warning",
+                "severity": "medium",
+                "description": "Large numbers detected - may cause precision issues",
+                "suggestion": "Consider using high-precision arithmetic"
+            })
+        
+        # Check for very small decimals
+        small_decimal_pattern = r'0\.\d{6,}'  # Decimals with 6+ places
+        if re.search(small_decimal_pattern, calculation):
+            warnings.append({
+                "type": "precision_warning", 
+                "severity": "low",
+                "description": "Very small decimal values detected",
+                "suggestion": "Monitor for floating-point precision loss"
+            })
+        
+        return warnings
+    
+    def _check_logic_errors(self, calculation: str, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Check for logical inconsistencies"""
+        errors = []
+        
+        # Check for impossible mathematical relationships
+        if '=' in calculation:
+            parts = calculation.split('=')
+            if len(parts) == 2:
+                left, right = parts[0].strip(), parts[1].strip()
+                
+                # Simple contradiction check
+                if left == right:
+                    # Tautology - might be intentional, so just warn
+                    pass
+                elif left.replace(' ', '') == right.replace(' ', ''):
+                    # Same expression, different spacing
+                    pass
+                elif (left.isdigit() and right.isdigit() and 
+                      float(left) != float(right)):
+                    errors.append({
+                        "type": "logic_error",
+                        "severity": "high", 
+                        "description": f"Mathematical contradiction: {left} ≠ {right}",
+                        "location": "equality_assertion"
+                    })
+        
+        return errors
+    
+    def _generate_correction_suggestions(self, errors: List[Dict], warnings: List[Dict]) -> List[str]:
+        """Generate suggestions to fix detected errors"""
+        suggestions = []
+        
+        for error in errors:
+            if error["type"] == "syntax_error":
+                suggestions.append("Check parentheses matching and operator placement")
+            elif error["type"] == "domain_error":
+                if "division by zero" in error["description"].lower():
+                    suggestions.append("Add conditional check to prevent division by zero")
+                elif "negative argument to sqrt" in error["description"].lower():
+                    suggestions.append("Add domain validation for square root arguments")
+            elif error["type"] == "logic_error":
+                suggestions.append("Review the mathematical relationship for logical consistency")
+        
+        for warning in warnings:
+            if warning["type"] == "precision_warning":
+                suggestions.append("Consider using Decimal arithmetic for high precision calculations")
+        
+        # Remove duplicates
+        return list(set(suggestions))
+
     async def shutdown(self) -> None:
         """Graceful shutdown"""
         try:

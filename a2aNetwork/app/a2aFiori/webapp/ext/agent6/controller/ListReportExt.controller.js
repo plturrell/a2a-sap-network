@@ -8,7 +8,7 @@ sap.ui.define([
     "sap/base/security/encodeURL",
     "sap/base/Log",
     "../utils/SecurityUtils"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, encodeURL, Log, SecurityUtils) {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, encodeURL, Log, SecurityUtils) => {
     "use strict";
 
     /**
@@ -18,14 +18,14 @@ sap.ui.define([
      * Provides quality assessment, routing decision management, trust verification, and workflow optimization features.
      */
     return ControllerExtension.extend("a2a.network.agent6.ext.controller.ListReportExt", {
-        
+
         override: {
             /**
              * @function onInit
              * @description Initializes the controller extension with security features and device model.
              * @override
              */
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
@@ -33,18 +33,18 @@ sap.ui.define([
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
                 }
             }
         },
-        
+
         // Dialog caching for performance
         _dialogCache: {},
-        
+
         // Error recovery configuration
         _errorRecoveryConfig: {
             maxRetries: 3,
@@ -57,8 +57,8 @@ sap.ui.define([
          * @description Sets up device model for responsive design.
          * @private
          */
-        _initializeDeviceModel: function() {
-            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+        _initializeDeviceModel() {
+            const oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
             this.base.getView().setModel(oDeviceModel, "device");
         },
 
@@ -67,7 +67,7 @@ sap.ui.define([
          * @description Initializes dialog cache for performance optimization.
          * @private
          */
-        _initializeDialogCache: function() {
+        _initializeDialogCache() {
             this._dialogCache = {};
         },
 
@@ -76,39 +76,39 @@ sap.ui.define([
          * @description Initializes security features including audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
                     const logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                        timestamp,
+                        user,
                         agent: "Agent6_QualityControl",
-                        action: action,
-                        details: details
+                        action,
+                        details
                     };
-                    Log.info("AUDIT: " + JSON.stringify(logEntry));
+                    Log.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
-        
+
         /**
          * @function _getQualityThresholds
          * @description Gets quality thresholds from configuration
          * @returns {Object} Quality thresholds configuration
          * @private
          */
-        _getQualityThresholds: function() {
+        _getQualityThresholds() {
             // Get from model configuration or default to secure values
-            var oConfigModel = this.base.getView().getModel("config");
+            const oConfigModel = this.base.getView().getModel("config");
             if (oConfigModel) {
-                var thresholds = oConfigModel.getProperty("/qualityThresholds");
+                const thresholds = oConfigModel.getProperty("/qualityThresholds");
                 if (thresholds && this._securityUtils.validateQualityThreshold(thresholds)) {
                     return thresholds;
                 }
             }
-            
+
             // Return secure defaults if no valid configuration
             return {
                 minQualityScore: 80,
@@ -118,17 +118,17 @@ sap.ui.define([
                 maxWarnings: 20
             };
         },
-        
+
         /**
          * @function _getCurrentUser
          * @description Retrieves current user ID from shell container.
          * @returns {string} User ID or 'anonymous'
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
-        
+
         /**
          * @function _hasRole
          * @description Checks if current user has specified role.
@@ -136,11 +136,11 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             return user && user.hasRole && user.hasRole(role);
         },
-        
+
         /**
          * @function _validateInput
          * @description Validates user input based on type with security patterns.
@@ -149,21 +149,21 @@ sap.ui.define([
          * @returns {boolean} True if input is valid
          * @private
          */
-        _validateInput: function(input, type) {
-            if (!input || typeof input !== 'string') return false;
-            
-            switch(type) {
-                case 'taskName':
-                    return /^[a-zA-Z0-9\s\-_]{1,100}$/.test(input);
-                case 'description':
-                    return input.length <= 1000;
-                case 'qualityGate':
-                    return /^[A-Z0-9_]{1,50}$/.test(input);
-                default:
-                    return input.length > 0 && input.length <= 255;
+        _validateInput(input, type) {
+            if (!input || typeof input !== "string") {return false;}
+
+            switch (type) {
+            case "taskName":
+                return /^[a-zA-Z0-9\s\-_]{1,100}$/.test(input);
+            case "description":
+                return input.length <= 1000;
+            case "qualityGate":
+                return /^[A-Z0-9_]{1,50}$/.test(input);
+            default:
+                return input.length > 0 && input.length <= 255;
             }
         },
-        
+
         /**
          * @function _sanitizeInput
          * @description Sanitizes input to prevent XSS attacks.
@@ -171,18 +171,18 @@ sap.ui.define([
          * @returns {string} Sanitized input
          * @private
          */
-        _sanitizeInput: function(input) {
-            if (!input) return "";
+        _sanitizeInput(input) {
+            if (!input) {return "";}
             return encodeXML(input.toString().trim());
         },
-        
+
         /**
          * @function _getCsrfToken
          * @description Retrieves CSRF token for secure requests.
          * @returns {Promise<string>} Promise resolving to CSRF token
          * @private
          */
-        _getCsrfToken: function() {
+        _getCsrfToken() {
             return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     url: "/a2a/agent6/v1/csrf-token",
@@ -190,17 +190,17 @@ sap.ui.define([
                     headers: {
                         "X-CSRF-Token": "Fetch"
                     },
-                    success: function(data, textStatus, xhr) {
+                    success(data, textStatus, xhr) {
                         const token = xhr.getResponseHeader("X-CSRF-Token");
                         resolve(token);
                     },
-                    error: function(xhr) {
+                    error(xhr) {
                         reject(new Error("Failed to fetch CSRF token"));
                     }
                 });
             });
         },
-        
+
         /**
          * @function _secureAjaxCall
          * @description Makes secure AJAX call with CSRF token and error recovery.
@@ -208,7 +208,7 @@ sap.ui.define([
          * @returns {Promise} Promise for the AJAX request
          * @private
          */
-        _secureAjaxCall: function(options) {
+        _secureAjaxCall(options) {
             return this._getCsrfToken().then(token => {
                 return new Promise((resolve, reject) => {
                     const secureOptions = Object.assign({}, options, {
@@ -216,33 +216,33 @@ sap.ui.define([
                             "X-CSRF-Token": token,
                             "Content-Type": "application/json"
                         }, options.headers || {}),
-                        success: function(data, textStatus, xhr) {
+                        success(data, textStatus, xhr) {
                             resolve({ data, textStatus, xhr });
                         },
-                        error: function(xhr, textStatus, errorThrown) {
+                        error(xhr, textStatus, errorThrown) {
                             reject({ xhr, textStatus, errorThrown });
                         }
                     });
-                    
+
                     jQuery.ajax(secureOptions);
                 });
             });
         },
-        
+
         /**
          * @function _cleanupResources
          * @description Cleans up dialog resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up cached dialogs
-            Object.keys(this._dialogCache).forEach(function(key) {
+            Object.keys(this._dialogCache).forEach((key) => {
                 if (this._dialogCache[key]) {
                     this._dialogCache[key].destroy();
                 }
-            }.bind(this));
+            });
             this._dialogCache = {};
-            
+
             // Clean up legacy dialog references for backward compatibility
             if (this._oDashboard) {
                 this._oDashboard.destroy();
@@ -274,27 +274,27 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
@@ -305,24 +305,24 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             // Add keyboard navigation
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
@@ -335,7 +335,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -344,9 +344,9 @@ sap.ui.define([
                 oDialog.setContentWidth("95%");
                 oDialog.setContentHeight("90%");
             }
-            
+
             // Add resize handler
-            sap.ui.Device.resize.attachHandler(function() {
+            sap.ui.Device.resize.attachHandler(() => {
                 if (sap.ui.Device.system.phone) {
                     oDialog.setStretch(true);
                 } else {
@@ -363,28 +363,28 @@ sap.ui.define([
          * @returns {Promise} Promise with error recovery
          * @private
          */
-        _withErrorRecovery: function(fnOperation, oOptions) {
-            var that = this;
-            var oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
-            
+        _withErrorRecovery(fnOperation, oOptions) {
+            const that = this;
+            const oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
+
             function attempt(retriesLeft, delay) {
-                return fnOperation().catch(function(error) {
+                return fnOperation().catch((error) => {
                     if (retriesLeft > 0) {
-                        var oBundle = that.base.getView().getModel("i18n").getResourceBundle();
-                        var sRetryMsg = oBundle.getText("recovery.retrying");
+                        const oBundle = that.base.getView().getModel("i18n").getResourceBundle();
+                        const sRetryMsg = oBundle.getText("recovery.retrying");
                         MessageToast.show(sRetryMsg);
-                        
-                        return new Promise(function(resolve) {
+
+                        return new Promise((resolve) => {
                             setTimeout(resolve, delay);
-                        }).then(function() {
-                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
+                        }).then(() => {
+                            const nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
                             return attempt(retriesLeft - 1, nextDelay);
                         });
                     }
                     throw error;
                 });
             }
-            
+
             return attempt(oConfig.maxRetries, oConfig.retryDelay);
         },
 
@@ -393,20 +393,20 @@ sap.ui.define([
          * @description Opens dialog to create new quality control task.
          * @public
          */
-        onCreateQualityTask: function() {
+        onCreateQualityTask() {
             if (!this._hasRole("QualityManager")) {
                 MessageBox.error("Access denied: Insufficient privileges for creating quality tasks");
                 this._auditLogger.log("CREATE_TASK_ACCESS_DENIED", { action: "create_quality_task" });
                 return;
             }
-            
+
             this._auditLogger.log("CREATE_TASK_INITIATED", { action: "create_quality_task" });
-            var oView = this.base.getView();
-            
+            const oView = this.base.getView();
+
             this._getOrCreateDialog("create", "a2a.network.agent6.ext.fragment.CreateQualityTask")
-                .then(function(oDialog) {
-                    
-                    var oModel = new JSONModel({
+                .then((oDialog) => {
+
+                    const oModel = new JSONModel({
                         taskName: "",
                         description: "",
                         qualityGate: "",
@@ -424,7 +424,7 @@ sap.ui.define([
                     });
                     oDialog.setModel(oModel, "create");
                     oDialog.open();
-                }.bind(this));
+                });
         },
 
         /**
@@ -432,25 +432,25 @@ sap.ui.define([
          * @description Opens quality control dashboard with metrics and visualizations.
          * @public
          */
-        onQualityDashboard: function() {
-            var oView = this.base.getView();
-            
+        onQualityDashboard() {
+            const oView = this.base.getView();
+
             this._getOrCreateDialog("dashboard", "a2a.network.agent6.ext.fragment.QualityDashboard")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadDashboardData();
-                }.bind(this));
+                });
         },
 
-        _loadDashboardData: function() {
+        _loadDashboardData() {
             this._oDashboard.setBusy(true);
-            
+
             this._secureAjaxCall({
                 url: "/a2a/agent6/v1/dashboard",
                 type: "GET"
             }).then(result => {
                 oDialog.setBusy(false);
-                
+
                 const sanitizedData = {
                     metrics: this._sanitizeObject(result.data.metrics),
                     trends: this._sanitizeArray(result.data.trends),
@@ -459,11 +459,11 @@ sap.ui.define([
                     trustMetrics: this._sanitizeObject(result.data.trustMetrics),
                     workflowHealth: this._sanitizeObject(result.data.workflowHealth)
                 };
-                
-                var oDashboardModel = new JSONModel(sanitizedData);
+
+                const oDashboardModel = new JSONModel(sanitizedData);
                 this._oDashboard.setModel(oDashboardModel, "dashboard");
                 this._createDashboardCharts(sanitizedData);
-                
+
                 this._auditLogger.log("DASHBOARD_LOADED", { action: "load_dashboard" });
             }).catch(error => {
                 this._oDashboard.setBusy(false);
@@ -473,17 +473,17 @@ sap.ui.define([
             });
         },
 
-        _createDashboardCharts: function(data) {
+        _createDashboardCharts(data) {
             this._createQualityTrendsChart(data.trends);
             this._createRoutingDistributionChart(data.routingStats);
             this._createTrustScoreDistribution(data.trustMetrics);
         },
 
-        _createQualityTrendsChart: function(trends) {
-            var oVizFrame = this._oDashboard.byId("qualityTrendsChart");
-            if (!oVizFrame || !trends) return;
-            
-            var aChartData = trends.map(function(trend) {
+        _createQualityTrendsChart(trends) {
+            const oVizFrame = this._oDashboard.byId("qualityTrendsChart");
+            if (!oVizFrame || !trends) {return;}
+
+            const aChartData = trends.map((trend) => {
                 return {
                     Date: trend.date,
                     QualityScore: trend.averageQuality,
@@ -491,12 +491,12 @@ sap.ui.define([
                     IssueCount: trend.issueCount
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 trendData: aChartData
             });
             oVizFrame.setModel(oChartModel);
-            
+
             oVizFrame.setVizProperties({
                 categoryAxis: {
                     title: { text: "Date" }
@@ -510,19 +510,19 @@ sap.ui.define([
             });
         },
 
-        _createRoutingDistributionChart: function(routingStats) {
-            var oVizFrame = this._oDashboard.byId("routingDistributionChart");
-            if (!oVizFrame || !routingStats) return;
-            
-            var aChartData = Object.keys(routingStats).map(function(agent) {
+        _createRoutingDistributionChart(routingStats) {
+            const oVizFrame = this._oDashboard.byId("routingDistributionChart");
+            if (!oVizFrame || !routingStats) {return;}
+
+            const aChartData = Object.keys(routingStats).map((agent) => {
                 return {
                     Agent: agent,
                     TaskCount: routingStats[agent].count,
                     SuccessRate: routingStats[agent].successRate
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 routingData: aChartData
             });
             oVizFrame.setModel(oChartModel);
@@ -533,17 +533,17 @@ sap.ui.define([
          * @description Opens routing decision management interface.
          * @public
          */
-        onRoutingDecisionManager: function() {
-            var oView = this.base.getView();
-            
+        onRoutingDecisionManager() {
+            const oView = this.base.getView();
+
             this._getOrCreateDialog("routing", "a2a.network.agent6.ext.fragment.RoutingDecisionManager")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadRoutingData();
-                }.bind(this));
+                });
         },
 
-        _loadRoutingData: function() {
+        _loadRoutingData() {
             this._secureAjaxCall({
                 url: "/a2a/agent6/v1/routing-rules",
                 type: "GET"
@@ -553,10 +553,10 @@ sap.ui.define([
                     agents: this._sanitizeArray(result.data.availableAgents),
                     pendingDecisions: this._sanitizeArray(result.data.pendingDecisions)
                 };
-                
-                var oModel = new JSONModel(sanitizedData);
+
+                const oModel = new JSONModel(sanitizedData);
                 this._oRoutingDialog.setModel(oModel, "routing");
-                
+
                 this._auditLogger.log("ROUTING_DATA_LOADED", { action: "load_routing_data" });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
@@ -570,17 +570,17 @@ sap.ui.define([
          * @description Opens trust verification interface for blockchain integration.
          * @public
          */
-        onTrustVerification: function() {
-            var oView = this.base.getView();
-            
+        onTrustVerification() {
+            const oView = this.base.getView();
+
             this._getOrCreateDialog("trust", "a2a.network.agent6.ext.fragment.TrustVerification")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadTrustData();
-                }.bind(this));
+                });
         },
 
-        _loadTrustData: function() {
+        _loadTrustData() {
             this._secureAjaxCall({
                 url: "/a2a/agent6/v1/trust-metrics",
                 type: "GET"
@@ -591,14 +591,14 @@ sap.ui.define([
                     blockchainStatus: this._sanitizeObject(result.data.blockchainStatus),
                     reputationScores: this._sanitizeArray(result.data.reputationScores)
                 };
-                
-                var oModel = new JSONModel(sanitizedData);
+
+                const oModel = new JSONModel(sanitizedData);
                 this._oTrustDialog.setModel(oModel, "trust");
-                
+
                 this._auditLogger.log("TRUST_DATA_LOADED", { action: "load_trust_data" });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load trust data: " + errorMsg);
+                MessageBox.error(`Failed to load trust data: ${ errorMsg}`);
                 this._auditLogger.log("TRUST_DATA_LOAD_FAILED", { error: errorMsg });
             });
         },
@@ -608,17 +608,17 @@ sap.ui.define([
          * @description Opens workflow optimization analysis dialog.
          * @public
          */
-        onWorkflowOptimization: function() {
-            var oView = this.base.getView();
-            
+        onWorkflowOptimization() {
+            const oView = this.base.getView();
+
             this._getOrCreateDialog("workflow", "a2a.network.agent6.ext.fragment.WorkflowOptimization")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadWorkflowData();
-                }.bind(this));
+                });
         },
 
-        _loadWorkflowData: function() {
+        _loadWorkflowData() {
             this._secureAjaxCall({
                 url: "/a2a/agent6/v1/workflow-analysis",
                 type: "GET"
@@ -629,32 +629,32 @@ sap.ui.define([
                     performance: this._sanitizeArray(result.data.performance),
                     resourceUtilization: this._sanitizeObject(result.data.resourceUtilization)
                 };
-                
-                var oModel = new JSONModel(sanitizedData);
+
+                const oModel = new JSONModel(sanitizedData);
                 this._oWorkflowDialog.setModel(oModel, "workflow");
                 this._createWorkflowVisualizations(sanitizedData);
-                
+
                 this._auditLogger.log("WORKFLOW_DATA_LOADED", { action: "load_workflow_data" });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load workflow data: " + errorMsg);
+                MessageBox.error(`Failed to load workflow data: ${ errorMsg}`);
                 this._auditLogger.log("WORKFLOW_DATA_LOAD_FAILED", { error: errorMsg });
             });
         },
 
-        _createWorkflowVisualizations: function(data) {
-            var oChart = this._oWorkflowDialog.byId("workflowChart");
-            if (!oChart) return;
-            
-            var aChartData = data.performance.map(function(perf) {
+        _createWorkflowVisualizations(data) {
+            const oChart = this._oWorkflowDialog.byId("workflowChart");
+            if (!oChart) {return;}
+
+            const aChartData = data.performance.map((perf) => {
                 return {
                     Stage: perf.stage,
                     Duration: perf.averageDuration,
                     Efficiency: perf.efficiency
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 performanceData: aChartData
             });
             oChart.setModel(oChartModel);
@@ -665,17 +665,17 @@ sap.ui.define([
          * @description Initiates batch quality assessment for selected tasks.
          * @public
          */
-        onBatchAssessment: function() {
-            var oTable = this._extensionAPI.getTable();
-            var aSelectedContexts = oTable.getSelectedContexts();
-            
+        onBatchAssessment() {
+            const oTable = this._extensionAPI.getTable();
+            const aSelectedContexts = oTable.getSelectedContexts();
+
             if (aSelectedContexts.length === 0) {
                 MessageBox.warning("Please select at least one task for batch assessment.");
                 return;
             }
-            
+
             MessageBox.confirm(
-                "Start batch quality assessment for " + aSelectedContexts.length + " tasks?",
+                `Start batch quality assessment for ${ aSelectedContexts.length } tasks?`,
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -686,24 +686,24 @@ sap.ui.define([
             );
         },
 
-        _startBatchAssessment: function(aContexts) {
-            var aTaskIds = aContexts.map(function(oContext) {
+        _startBatchAssessment(aContexts) {
+            const aTaskIds = aContexts.map((oContext) => {
                 return this._sanitizeInput(oContext.getProperty("ID"));
-            }.bind(this));
-            
+            });
+
             if (aTaskIds.length > 50) {
                 MessageBox.error("Batch size limited to 50 tasks for security reasons");
                 return;
             }
-            
+
             this.base.getView().setBusy(true);
-            
+
             const requestData = {
                 taskIds: aTaskIds,
                 assessmentType: "COMPREHENSIVE",
                 parallel: true
             };
-            
+
             this._secureAjaxCall({
                 url: "/a2a/agent6/v1/batch-assessment",
                 type: "POST",
@@ -713,11 +713,11 @@ sap.ui.define([
                 const data = result.data;
                 MessageBox.success(
                     "Batch assessment started!\\n" +
-                    "Job ID: " + this._sanitizeInput(data.jobId) + "\\n" +
-                    "Estimated time: " + this._sanitizeInput(data.estimatedTime) + " minutes"
+                    `Job ID: ${ this._sanitizeInput(data.jobId) }\\n` +
+                    `Estimated time: ${ this._sanitizeInput(data.estimatedTime) } minutes`
                 );
                 this._extensionAPI.refresh();
-                
+
                 this._auditLogger.log("BATCH_ASSESSMENT_STARTED", {
                     taskCount: aTaskIds.length,
                     jobId: data.jobId
@@ -725,7 +725,7 @@ sap.ui.define([
             }).catch(error => {
                 this.base.getView().setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Batch assessment failed: " + errorMsg);
+                MessageBox.error(`Batch assessment failed: ${ errorMsg}`);
                 this._auditLogger.log("BATCH_ASSESSMENT_FAILED", { error: errorMsg });
             });
         },
@@ -735,30 +735,30 @@ sap.ui.define([
          * @description Navigates to quality gates configuration.
          * @public
          */
-        onConfigureQualityGates: function() {
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this.base.getView());
+        onConfigureQualityGates() {
+            const oRouter = sap.ui.core.UIComponent.getRouterFor(this.base.getView());
             oRouter.navTo("QualityGates");
         },
 
-        onConfirmCreateTask: function() {
-            var oModel = this._oCreateDialog.getModel("create");
-            var oData = oModel.getData();
-            
-            if (!this._validateInput(oData.taskName, 'taskName')) {
+        onConfirmCreateTask() {
+            const oModel = this._oCreateDialog.getModel("create");
+            const oData = oModel.getData();
+
+            if (!this._validateInput(oData.taskName, "taskName")) {
                 MessageBox.error("Invalid task name. Use only alphanumeric characters, spaces, hyphens, and underscores (max 100 chars)");
                 return;
             }
-            
-            if (!this._validateInput(oData.description, 'description')) {
+
+            if (!this._validateInput(oData.description, "description")) {
                 MessageBox.error("Description too long (max 1000 characters)");
                 return;
             }
-            
-            if (!this._validateInput(oData.qualityGate, 'qualityGate')) {
+
+            if (!this._validateInput(oData.qualityGate, "qualityGate")) {
                 MessageBox.error("Invalid quality gate format. Use uppercase letters, numbers, and underscores only (max 50 chars)");
                 return;
             }
-            
+
             const sanitizedData = {
                 taskName: this._sanitizeInput(oData.taskName),
                 description: this._sanitizeInput(oData.description),
@@ -768,9 +768,9 @@ sap.ui.define([
                 evaluationCriteria: oData.evaluationCriteria,
                 thresholds: oData.thresholds
             };
-            
+
             this._oCreateDialog.setBusy(true);
-            
+
             this._secureAjaxCall({
                 url: "/a2a/agent6/v1/tasks",
                 type: "POST",
@@ -780,7 +780,7 @@ sap.ui.define([
                 this._oCreateDialog.close();
                 MessageToast.show("Quality control task created successfully");
                 this._extensionAPI.refresh();
-                
+
                 this._auditLogger.log("TASK_CREATED", {
                     taskName: sanitizedData.taskName,
                     qualityGate: sanitizedData.qualityGate
@@ -788,15 +788,15 @@ sap.ui.define([
             }).catch(error => {
                 this._oCreateDialog.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to create task: " + errorMsg);
+                MessageBox.error(`Failed to create task: ${ errorMsg}`);
                 this._auditLogger.log("TASK_CREATION_FAILED", { error: errorMsg });
             });
         },
 
-        onCancelCreateTask: function() {
+        onCancelCreateTask() {
             this._oCreateDialog.close();
         },
-        
+
         /**
          * @function _sanitizeObject
          * @description Recursively sanitizes object properties.
@@ -804,15 +804,15 @@ sap.ui.define([
          * @returns {Object} Sanitized object
          * @private
          */
-        _sanitizeObject: function(obj) {
-            if (!obj || typeof obj !== 'object') return {};
+        _sanitizeObject(obj) {
+            if (!obj || typeof obj !== "object") {return {};}
             const sanitized = {};
             Object.keys(obj).forEach(key => {
-                if (typeof obj[key] === 'string') {
+                if (typeof obj[key] === "string") {
                     sanitized[key] = this._sanitizeInput(obj[key]);
                 } else if (Array.isArray(obj[key])) {
                     sanitized[key] = this._sanitizeArray(obj[key]);
-                } else if (typeof obj[key] === 'object') {
+                } else if (typeof obj[key] === "object") {
                     sanitized[key] = this._sanitizeObject(obj[key]);
                 } else {
                     sanitized[key] = obj[key];
@@ -820,7 +820,7 @@ sap.ui.define([
             });
             return sanitized;
         },
-        
+
         /**
          * @function _sanitizeArray
          * @description Sanitizes array elements.
@@ -828,16 +828,16 @@ sap.ui.define([
          * @returns {Array} Sanitized array
          * @private
          */
-        _sanitizeArray: function(arr) {
-            if (!Array.isArray(arr)) return [];
+        _sanitizeArray(arr) {
+            if (!Array.isArray(arr)) {return [];}
             return arr.map(item => {
-                if (typeof item === 'string') {
+                if (typeof item === "string") {
                     return this._sanitizeInput(item);
-                } else if (typeof item === 'object') {
+                } else if (typeof item === "object") {
                     return this._sanitizeObject(item);
-                } else {
-                    return item;
                 }
+                return item;
+
             });
         },
 
@@ -848,28 +848,28 @@ sap.ui.define([
          * @memberof a2a.network.agent6.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onRunQualityChecks: function() {
-            var oTable = this._extensionAPI.getTable();
-            var aSelectedContexts = oTable.getSelectedContexts();
-            
+        onRunQualityChecks() {
+            const oTable = this._extensionAPI.getTable();
+            const aSelectedContexts = oTable.getSelectedContexts();
+
             if (aSelectedContexts.length === 0) {
                 MessageBox.warning("Please select at least one quality task to run checks.");
                 return;
             }
-            
+
             if (!this._hasRole("QualityManager")) {
                 MessageBox.error("Access denied: Insufficient privileges for running quality checks");
                 this._auditLogger.log("RUN_QUALITY_CHECKS_ACCESS_DENIED", { action: "run_quality_checks" });
                 return;
             }
-            
-            var aTaskNames = aSelectedContexts.map(function(oContext) {
+
+            const aTaskNames = aSelectedContexts.map((oContext) => {
                 return this._sanitizeInput(oContext.getProperty("taskName"));
-            }.bind(this));
-            
+            });
+
             MessageBox.confirm(
-                "Run quality checks for " + aSelectedContexts.length + " selected task(s)?\n\n" +
-                "Tasks: " + aTaskNames.join(", "),
+                `Run quality checks for ${ aSelectedContexts.length } selected task(s)?\n\n` +
+                `Tasks: ${ aTaskNames.join(", ")}`,
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -887,16 +887,16 @@ sap.ui.define([
          * @memberof a2a.network.agent6.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        onGenerateReport: function() {
+        onGenerateReport() {
             if (!this._hasRole("QualityManager")) {
                 MessageBox.error("Access denied: Insufficient privileges for generating reports");
                 this._auditLogger.log("GENERATE_REPORT_ACCESS_DENIED", { action: "generate_report" });
                 return;
             }
-            
+
             this._getOrCreateDialog("reportGenerator", "a2a.network.agent6.ext.fragment.ReportGenerator")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
+                .then((oDialog) => {
+                    const oModel = new JSONModel({
                         reportType: "comprehensive",
                         dateRange: {
                             from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
@@ -909,9 +909,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oModel, "report");
                     oDialog.open();
-                    
+
                     this._auditLogger.log("REPORT_GENERATION_INITIATED", { action: "generate_report" });
-                }.bind(this));
+                });
         },
 
         /**
@@ -922,14 +922,14 @@ sap.ui.define([
          * @memberof a2a.network.agent6.ext.controller.ListReportExt
          * @since 1.0.0
          */
-        _executeQualityChecks: function(aContexts) {
-            var aTaskIds = aContexts.map(function(oContext) {
+        _executeQualityChecks(aContexts) {
+            const aTaskIds = aContexts.map((oContext) => {
                 return this._sanitizeInput(oContext.getProperty("ID"));
-            }.bind(this));
-            
+            });
+
             // Show busy indicator
             this.base.getView().setBusy(true);
-            
+
             this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent6/v1/quality-checks",
                 type: "POST",
@@ -941,27 +941,27 @@ sap.ui.define([
                 }),
                 success: function(data) {
                     this.base.getView().setBusy(false);
-                    
+
                     if (data.success) {
                         MessageBox.success(
                             "Quality checks initiated successfully!\n" +
-                            "Job ID: " + this._sanitizeInput(data.jobId) + "\n" +
-                            "Processing " + data.taskCount + " task(s)"
+                            `Job ID: ${ this._sanitizeInput(data.jobId) }\n` +
+                            `Processing ${ data.taskCount } task(s)`
                         );
                         this._extensionAPI.refresh();
-                        this._auditLogger.log("QUALITY_CHECKS_STARTED", { 
-                            jobId: data.jobId, 
-                            taskCount: data.taskCount 
+                        this._auditLogger.log("QUALITY_CHECKS_STARTED", {
+                            jobId: data.jobId,
+                            taskCount: data.taskCount
                         });
                     } else {
-                        MessageBox.warning("Some quality checks could not be initiated: " + 
-                                         this._sanitizeInput(data.message));
+                        MessageBox.warning(`Some quality checks could not be initiated: ${
+                            this._sanitizeInput(data.message)}`);
                     }
                 }.bind(this),
                 error: function(xhr) {
                     this.base.getView().setBusy(false);
-                    var errorMsg = this._sanitizeInput(xhr.responseText || "Unknown error");
-                    MessageBox.error("Quality checks failed: " + errorMsg);
+                    const errorMsg = this._sanitizeInput(xhr.responseText || "Unknown error");
+                    MessageBox.error(`Quality checks failed: ${ errorMsg}`);
                     this._auditLogger.log("QUALITY_CHECKS_FAILED", { error: errorMsg });
                 }.bind(this)
             });

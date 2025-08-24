@@ -10,30 +10,30 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent12/ext/utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent12.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeSecurity();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache
                 this._dialogCache = {};
-                
+
                 // Initialize real-time monitoring
                 this._initializeRealtimeMonitoring();
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
@@ -46,7 +46,7 @@ sap.ui.define([
          * @description Opens performance analytics dashboard with real-time metrics and visualizations.
          * @public
          */
-        onViewAnalytics: function() {
+        onViewAnalytics() {
             if (!this._hasRole("PerformanceUser")) {
                 MessageBox.error("Access denied. Performance User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewAnalytics", reason: "Insufficient permissions" });
@@ -57,12 +57,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("VIEW_ANALYTICS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("viewAnalytics", "a2a.network.agent12.ext.fragment.ViewAnalytics")
-                .then(function(oDialog) {
-                    var oAnalyticsModel = new JSONModel({
+                .then((oDialog) => {
+                    const oAnalyticsModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         timeRange: "LAST_HOUR",
@@ -91,9 +91,9 @@ sap.ui.define([
                     oDialog.setModel(oAnalyticsModel, "analytics");
                     oDialog.open();
                     this._startAnalyticsStreaming(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Analytics Dashboard: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Analytics Dashboard: ${ error.message}`);
                 });
         },
 
@@ -102,7 +102,7 @@ sap.ui.define([
          * @description Runs comprehensive performance test with customizable parameters.
          * @public
          */
-        onRunPerformanceTest: function() {
+        onRunPerformanceTest() {
             if (!this._hasRole("PerformanceAdmin")) {
                 MessageBox.error("Access denied. Performance Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "RunPerformanceTest", reason: "Insufficient permissions" });
@@ -113,18 +113,18 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             // Check if test is already running
             if (oData.status === "TESTING") {
                 MessageToast.show(this.getResourceBundle().getText("msg.testAlreadyRunning"));
                 return;
             }
-            
+
             this._auditLogger.log("RUN_PERFORMANCE_TEST", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("runPerformanceTest", "a2a.network.agent12.ext.fragment.RunPerformanceTest")
-                .then(function(oDialog) {
-                    var oTestModel = new JSONModel({
+                .then((oDialog) => {
+                    const oTestModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         testType: "LOAD",
@@ -158,9 +158,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oTestModel, "test");
                     oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Performance Test: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Performance Test: ${ error.message}`);
                 });
         },
 
@@ -169,7 +169,7 @@ sap.ui.define([
          * @description Generates comprehensive benchmark report with analysis and recommendations.
          * @public
          */
-        onGenerateBenchmarkReport: function() {
+        onGenerateBenchmarkReport() {
             if (!this._hasRole("PerformanceUser")) {
                 MessageBox.error("Access denied. Performance User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "GenerateBenchmarkReport", reason: "Insufficient permissions" });
@@ -180,18 +180,18 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             // Check if benchmark data is available
             if (!oData.lastBenchmarkDate) {
                 MessageBox.warning(this.getResourceBundle().getText("msg.noBenchmarkData"));
                 return;
             }
-            
+
             this._auditLogger.log("GENERATE_BENCHMARK_REPORT", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("generateBenchmarkReport", "a2a.network.agent12.ext.fragment.GenerateBenchmarkReport")
-                .then(function(oDialog) {
-                    var oReportModel = new JSONModel({
+                .then((oDialog) => {
+                    const oReportModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         reportFormat: "PDF",
@@ -219,9 +219,9 @@ sap.ui.define([
                     oDialog.setModel(oReportModel, "report");
                     oDialog.open();
                     this._loadBenchmarkData(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Benchmark Report Generation: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Benchmark Report Generation: ${ error.message}`);
                 });
         },
 
@@ -230,7 +230,7 @@ sap.ui.define([
          * @description Opens performance threshold configuration interface.
          * @public
          */
-        onConfigureThresholds: function() {
+        onConfigureThresholds() {
             if (!this._hasRole("PerformanceAdmin")) {
                 MessageBox.error("Access denied. Performance Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ConfigureThresholds", reason: "Insufficient permissions" });
@@ -241,12 +241,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("CONFIGURE_THRESHOLDS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("configureThresholds", "a2a.network.agent12.ext.fragment.ConfigureThresholds")
-                .then(function(oDialog) {
-                    var oThresholdModel = new JSONModel({
+                .then((oDialog) => {
+                    const oThresholdModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         categories: [
@@ -269,9 +269,9 @@ sap.ui.define([
                     oDialog.setModel(oThresholdModel, "threshold");
                     oDialog.open();
                     this._loadThresholdConfiguration(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Threshold Configuration: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Threshold Configuration: ${ error.message}`);
                 });
         },
 
@@ -282,30 +282,30 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Analytics dialog
          * @private
          */
-        _startAnalyticsStreaming: function(sTaskId, oDialog) {
+        _startAnalyticsStreaming(sTaskId, oDialog) {
             if (this._analyticsEventSource) {
                 this._analyticsEventSource.close();
             }
-            
+
             try {
-                this._analyticsEventSource = new EventSource('/api/agent12/performance/analytics-stream/' + sTaskId);
-                
+                this._analyticsEventSource = new EventSource(`/api/agent12/performance/analytics-stream/${ sTaskId}`);
+
                 this._analyticsEventSource.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
                         this._updateAnalyticsData(data, oDialog);
                     } catch (error) {
-                        console.error('Error parsing analytics data:', error);
+                        console.error("Error parsing analytics data:", error);
                     }
                 }.bind(this);
-                
+
                 this._analyticsEventSource.onerror = function(error) {
-                    console.warn('Analytics stream error, falling back to polling:', error);
+                    console.warn("Analytics stream error, falling back to polling:", error);
                     this._startAnalyticsPolling(sTaskId, oDialog);
                 }.bind(this);
-                
+
             } catch (error) {
-                console.warn('EventSource not available, using polling fallback');
+                console.warn("EventSource not available, using polling fallback");
                 this._startAnalyticsPolling(sTaskId, oDialog);
             }
         },
@@ -317,13 +317,13 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Analytics dialog
          * @private
          */
-        _startAnalyticsPolling: function(sTaskId, oDialog) {
+        _startAnalyticsPolling(sTaskId, oDialog) {
             if (this._analyticsPollingInterval) {
                 clearInterval(this._analyticsPollingInterval);
             }
-            
+
             const refreshInterval = oDialog.getModel("analytics").getData().refreshInterval || 5000;
-            
+
             this._analyticsPollingInterval = setInterval(() => {
                 if (oDialog.isOpen()) {
                     this._fetchAnalyticsData(sTaskId, oDialog);
@@ -331,7 +331,7 @@ sap.ui.define([
                     clearInterval(this._analyticsPollingInterval);
                 }
             }, refreshInterval);
-            
+
             // Initial fetch
             this._fetchAnalyticsData(sTaskId, oDialog);
         },
@@ -343,21 +343,21 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Analytics dialog
          * @private
          */
-        _fetchAnalyticsData: function(sTaskId, oDialog) {
+        _fetchAnalyticsData(sTaskId, oDialog) {
             const oModel = this.base.getView().getModel();
             const oAnalyticsData = oDialog.getModel("analytics").getData();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetPerformanceAnalytics", {
                 urlParameters: {
                     taskId: sTaskId,
                     timeRange: oAnalyticsData.timeRange,
-                    metrics: oAnalyticsData.selectedMetrics.join(',')
+                    metrics: oAnalyticsData.selectedMetrics.join(",")
                 },
                 success: function(data) {
                     this._updateAnalyticsData(data, oDialog);
                 }.bind(this),
-                error: function(error) {
-                    console.error('Failed to fetch analytics data:', error);
+                error(error) {
+                    console.error("Failed to fetch analytics data:", error);
                 }
             });
         },
@@ -369,27 +369,27 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Analytics dialog
          * @private
          */
-        _updateAnalyticsData: function(data, oDialog) {
-            if (!oDialog || !oDialog.isOpen()) return;
-            
-            var oAnalyticsModel = oDialog.getModel("analytics");
+        _updateAnalyticsData(data, oDialog) {
+            if (!oDialog || !oDialog.isOpen()) {return;}
+
+            const oAnalyticsModel = oDialog.getModel("analytics");
             if (oAnalyticsModel) {
-                var oCurrentData = oAnalyticsModel.getData();
-                
+                const oCurrentData = oAnalyticsModel.getData();
+
                 // Update metrics
                 if (data.metrics) {
-                    Object.keys(data.metrics).forEach(function(metric) {
+                    Object.keys(data.metrics).forEach((metric) => {
                         if (oCurrentData.metrics[metric]) {
                             oCurrentData.metrics[metric] = data.metrics[metric];
                         }
                     });
                 }
-                
+
                 // Check for alerts
                 if (data.alerts && data.alerts.length > 0) {
                     this._handlePerformanceAlerts(data.alerts);
                 }
-                
+
                 oCurrentData.lastUpdated = new Date().toISOString();
                 oAnalyticsModel.setData(oCurrentData);
             }
@@ -401,12 +401,12 @@ sap.ui.define([
          * @param {Array} alerts - Array of performance alerts
          * @private
          */
-        _handlePerformanceAlerts: function(alerts) {
-            alerts.forEach(function(alert) {
-                var sMessage = this.getResourceBundle().getText("alert." + alert.type, [alert.metric, alert.value, alert.threshold]);
+        _handlePerformanceAlerts(alerts) {
+            alerts.forEach((alert) => {
+                const sMessage = this.getResourceBundle().getText(`alert.${ alert.type}`, [alert.metric, alert.value, alert.threshold]);
                 MessageToast.show(sMessage || alert.message);
                 this._auditLogger.log("PERFORMANCE_ALERT", alert);
-            }.bind(this));
+            });
         },
 
         /**
@@ -416,11 +416,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Report dialog
          * @private
          */
-        _loadBenchmarkData: function(sTaskId, oDialog) {
+        _loadBenchmarkData(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetBenchmarkData", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -428,9 +428,9 @@ sap.ui.define([
                     limit: 30
                 },
                 success: function(data) {
-                    var oReportModel = oDialog.getModel("report");
+                    const oReportModel = oDialog.getModel("report");
                     if (oReportModel) {
-                        var oCurrentData = oReportModel.getData();
+                        const oCurrentData = oReportModel.getData();
                         oCurrentData.benchmarkData = data.benchmarks || [];
                         oCurrentData.historicalData = data.history || [];
                         oCurrentData.comparativeData = data.comparisons || {};
@@ -439,9 +439,9 @@ sap.ui.define([
                     }
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load benchmark data: " + error.message);
+                    MessageBox.error(`Failed to load benchmark data: ${ error.message}`);
                 }
             });
         },
@@ -453,15 +453,15 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Threshold dialog
          * @private
          */
-        _loadThresholdConfiguration: function(sTaskId, oDialog) {
+        _loadThresholdConfiguration(sTaskId, oDialog) {
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetThresholdConfiguration", {
                 urlParameters: { taskId: sTaskId },
                 success: function(data) {
-                    var oThresholdModel = oDialog.getModel("threshold");
+                    const oThresholdModel = oDialog.getModel("threshold");
                     if (oThresholdModel) {
-                        var oCurrentData = oThresholdModel.getData();
+                        const oCurrentData = oThresholdModel.getData();
                         oCurrentData.thresholds = data.thresholds || {};
                         oCurrentData.notificationChannels = data.notificationChannels || [];
                         oCurrentData.escalationPolicies = data.escalationPolicies || [];
@@ -470,8 +470,8 @@ sap.ui.define([
                         oThresholdModel.setData(oCurrentData);
                     }
                 }.bind(this),
-                error: function(error) {
-                    MessageBox.error("Failed to load threshold configuration: " + error.message);
+                error(error) {
+                    MessageBox.error(`Failed to load threshold configuration: ${ error.message}`);
                 }
             });
         },
@@ -481,7 +481,7 @@ sap.ui.define([
          * @description Initializes real-time monitoring for performance metrics.
          * @private
          */
-        _initializeRealtimeMonitoring: function() {
+        _initializeRealtimeMonitoring() {
             // WebSocket for real-time performance updates
             this._initializePerformanceWebSocket();
         },
@@ -491,11 +491,11 @@ sap.ui.define([
          * @description Initializes WebSocket for performance updates.
          * @private
          */
-        _initializePerformanceWebSocket: function() {
-            if (this._performanceWs) return;
+        _initializePerformanceWebSocket() {
+            if (this._performanceWs) {return;}
 
             try {
-                this._performanceWs = SecurityUtils.createSecureWebSocket('blockchain://a2a-events', {
+                this._performanceWs = SecurityUtils.createSecureWebSocket("blockchain://a2a-events", {
                     onMessage: function(data) {
                         this._handlePerformanceMetricUpdate(data);
                     }.bind(this)
@@ -517,7 +517,7 @@ sap.ui.define([
          * @param {Object} data - Metric update data
          * @private
          */
-        _handlePerformanceMetricUpdate: function(data) {
+        _handlePerformanceMetricUpdate(data) {
             // Update any open dialogs with real-time data
             if (this._dialogCache.viewAnalytics && this._dialogCache.viewAnalytics.isOpen()) {
                 this._updateAnalyticsData(data, this._dialogCache.viewAnalytics);
@@ -532,71 +532,71 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache && this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             if (!this._dialogCache) {
                 this._dialogCache = {};
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -612,19 +612,19 @@ sap.ui.define([
          * @description Initializes security features and audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
-                    var user = this._getCurrentUser();
-                    var timestamp = new Date().toISOString();
-                    var logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                    const user = this._getCurrentUser();
+                    const timestamp = new Date().toISOString();
+                    const logEntry = {
+                        timestamp,
+                        user,
                         agent: "Agent12_Performance",
-                        action: action,
+                        action,
                         details: details || {}
                     };
-                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -635,7 +635,7 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
@@ -646,7 +646,7 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             if (user && user.hasRole) {
                 return user.hasRole(role);
@@ -661,32 +661,32 @@ sap.ui.define([
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up WebSocket connections
             if (this._performanceWs) {
                 this._performanceWs.close();
                 this._performanceWs = null;
             }
-            
+
             // Clean up EventSource connections
             if (this._analyticsEventSource) {
                 this._analyticsEventSource.close();
                 this._analyticsEventSource = null;
             }
-            
+
             // Clean up polling intervals
             if (this._analyticsPollingInterval) {
                 clearInterval(this._analyticsPollingInterval);
                 this._analyticsPollingInterval = null;
             }
-            
+
             // Clean up cached dialogs
             if (this._dialogCache) {
-                Object.keys(this._dialogCache).forEach(function(key) {
+                Object.keys(this._dialogCache).forEach((key) => {
                     if (this._dialogCache[key]) {
                         this._dialogCache[key].destroy();
                     }
-                }.bind(this));
+                });
                 this._dialogCache = {};
             }
         },
@@ -697,7 +697,7 @@ sap.ui.define([
          * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });

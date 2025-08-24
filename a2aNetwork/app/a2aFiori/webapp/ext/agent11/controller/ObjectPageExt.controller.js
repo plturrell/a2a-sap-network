@@ -5,27 +5,27 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent11/ext/utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent11.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeSecurity();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache
                 this._dialogCache = {};
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
@@ -38,7 +38,7 @@ sap.ui.define([
          * @description Opens audit trail viewer with comprehensive compliance audit history.
          * @public
          */
-        onViewAudit: function() {
+        onViewAudit() {
             if (!this._hasRole("ComplianceUser")) {
                 MessageBox.error("Access denied. Compliance User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewAudit", reason: "Insufficient permissions" });
@@ -48,12 +48,12 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("VIEW_AUDIT", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("viewAudit", "a2a.network.agent11.ext.fragment.ViewAudit")
-                .then(function(oDialog) {
-                    var oAuditModel = new JSONModel({
+                .then((oDialog) => {
+                    const oAuditModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         dateRange: "LAST_30_DAYS",
@@ -68,9 +68,9 @@ sap.ui.define([
                     oDialog.setModel(oAuditModel, "audit");
                     oDialog.open();
                     this._loadAuditTrail(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Audit Trail: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Audit Trail: ${ error.message}`);
                 });
         },
 
@@ -79,7 +79,7 @@ sap.ui.define([
          * @description Exports comprehensive compliance report with detailed analysis and charts.
          * @public
          */
-        onExportComplianceReport: function() {
+        onExportComplianceReport() {
             if (!this._hasRole("ComplianceUser")) {
                 MessageBox.error("Access denied. Compliance User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ExportComplianceReport", reason: "Insufficient permissions" });
@@ -89,12 +89,12 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("EXPORT_COMPLIANCE_REPORT", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("exportCompliance", "a2a.network.agent11.ext.fragment.ExportComplianceReport")
-                .then(function(oDialog) {
-                    var oExportModel = new JSONModel({
+                .then((oDialog) => {
+                    const oExportModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         reportType: "FULL_COMPLIANCE",
@@ -113,9 +113,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oExportModel, "export");
                     oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Export Compliance Report: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Export Compliance Report: ${ error.message}`);
                 });
         },
 
@@ -124,7 +124,7 @@ sap.ui.define([
          * @description Opens compliance scheduling interface for automated compliance checks.
          * @public
          */
-        onScheduleCompliance: function() {
+        onScheduleCompliance() {
             if (!this._hasRole("ComplianceAdmin")) {
                 MessageBox.error("Access denied. Compliance Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ScheduleCompliance", reason: "Insufficient permissions" });
@@ -134,12 +134,12 @@ sap.ui.define([
             const oContext = this.base.getView().getBindingContext();
             const sTaskId = oContext.getObject().taskId;
             const sTaskName = oContext.getObject().taskName;
-            
+
             this._auditLogger.log("SCHEDULE_COMPLIANCE", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("scheduleCompliance", "a2a.network.agent11.ext.fragment.ScheduleCompliance")
-                .then(function(oDialog) {
-                    var oScheduleModel = new JSONModel({
+                .then((oDialog) => {
+                    const oScheduleModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         scheduleType: "RECURRING",
@@ -163,9 +163,9 @@ sap.ui.define([
                     oDialog.setModel(oScheduleModel, "schedule");
                     oDialog.open();
                     this._loadScheduleOptions(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Schedule Compliance: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Schedule Compliance: ${ error.message}`);
                 });
         },
 
@@ -174,7 +174,7 @@ sap.ui.define([
          * @description Opens violations review interface with detailed analysis and remediation options.
          * @public
          */
-        onReviewViolations: function() {
+        onReviewViolations() {
             if (!this._hasRole("ComplianceUser")) {
                 MessageBox.error("Access denied. Compliance User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ReviewViolations", reason: "Insufficient permissions" });
@@ -185,22 +185,22 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             // Check if there are violations to review
             if (!oData.violationCount || oData.violationCount === 0) {
                 MessageToast.show(this.getResourceBundle().getText("msg.noViolationsToReview"));
                 return;
             }
-            
-            this._auditLogger.log("REVIEW_VIOLATIONS", { 
-                taskId: sTaskId, 
-                taskName: sTaskName, 
-                violationCount: oData.violationCount 
+
+            this._auditLogger.log("REVIEW_VIOLATIONS", {
+                taskId: sTaskId,
+                taskName: sTaskName,
+                violationCount: oData.violationCount
             });
-            
+
             this._getOrCreateDialog("reviewViolations", "a2a.network.agent11.ext.fragment.ReviewViolations")
-                .then(function(oDialog) {
-                    var oViolationsModel = new JSONModel({
+                .then((oDialog) => {
+                    const oViolationsModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         violationCount: oData.violationCount,
@@ -217,9 +217,9 @@ sap.ui.define([
                     oDialog.setModel(oViolationsModel, "violations");
                     oDialog.open();
                     this._loadViolationsData(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Review Violations: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Review Violations: ${ error.message}`);
                 });
         },
 
@@ -230,11 +230,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Audit dialog
          * @private
          */
-        _loadAuditTrail: function(sTaskId, oDialog) {
+        _loadAuditTrail(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetComplianceAuditTrail", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -242,9 +242,9 @@ sap.ui.define([
                     includeSystemEvents: true
                 },
                 success: function(data) {
-                    var oAuditModel = oDialog.getModel("audit");
+                    const oAuditModel = oDialog.getModel("audit");
                     if (oAuditModel) {
-                        var oCurrentData = oAuditModel.getData();
+                        const oCurrentData = oAuditModel.getData();
                         oCurrentData.auditEntries = data.auditEntries || [];
                         oCurrentData.totalCount = data.totalCount || 0;
                         oCurrentData.summaryStats = data.summaryStats || {};
@@ -253,9 +253,9 @@ sap.ui.define([
                     }
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load audit trail: " + error.message);
+                    MessageBox.error(`Failed to load audit trail: ${ error.message}`);
                 }
             });
         },
@@ -266,16 +266,16 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Schedule dialog
          * @private
          */
-        _loadScheduleOptions: function(oDialog) {
+        _loadScheduleOptions(oDialog) {
             const oModel = this.base.getView().getModel();
             const oScheduleData = oDialog.getModel("schedule").getData();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetScheduleOptions", {
                 urlParameters: { taskId: oScheduleData.taskId },
                 success: function(data) {
-                    var oScheduleModel = oDialog.getModel("schedule");
+                    const oScheduleModel = oDialog.getModel("schedule");
                     if (oScheduleModel) {
-                        var oCurrentData = oScheduleModel.getData();
+                        const oCurrentData = oScheduleModel.getData();
                         oCurrentData.availableTimezones = data.timezones || [];
                         oCurrentData.notificationChannels = data.notificationChannels || [];
                         oCurrentData.escalationPolicies = data.escalationPolicies || [];
@@ -283,8 +283,8 @@ sap.ui.define([
                         oScheduleModel.setData(oCurrentData);
                     }
                 }.bind(this),
-                error: function(error) {
-                    MessageBox.error("Failed to load schedule options: " + error.message);
+                error(error) {
+                    MessageBox.error(`Failed to load schedule options: ${ error.message}`);
                 }
             });
         },
@@ -296,11 +296,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Violations dialog
          * @private
          */
-        _loadViolationsData: function(sTaskId, oDialog) {
+        _loadViolationsData(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetComplianceViolations", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -308,7 +308,7 @@ sap.ui.define([
                     includeRecommendations: true
                 },
                 success: function(data) {
-                    var oViolationsModel = oDialog.getModel("violations");
+                    const oViolationsModel = oDialog.getModel("violations");
                     if (oViolationsModel) {
                         var oCurrentData = oViolationsModel.getData();
                         oCurrentData.violations = data.violations || [];
@@ -320,15 +320,15 @@ sap.ui.define([
                         oViolationsModel.setData(oCurrentData);
                     }
                     oDialog.setBusy(false);
-                    
+
                     // Start auto-refresh if enabled
                     if (oCurrentData.autoRefresh) {
                         this._startViolationsAutoRefresh(sTaskId, oDialog);
                     }
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load violations data: " + error.message);
+                    MessageBox.error(`Failed to load violations data: ${ error.message}`);
                 }
             });
         },
@@ -340,12 +340,12 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Violations dialog
          * @private
          */
-        _startViolationsAutoRefresh: function(sTaskId, oDialog) {
+        _startViolationsAutoRefresh(sTaskId, oDialog) {
             if (this._violationsRefreshInterval) {
                 clearInterval(this._violationsRefreshInterval);
             }
-            
-            var oViolationsData = oDialog.getModel("violations").getData();
+
+            const oViolationsData = oDialog.getModel("violations").getData();
             this._violationsRefreshInterval = setInterval(() => {
                 if (oDialog.isOpen()) {
                     this._loadViolationsData(sTaskId, oDialog);
@@ -363,71 +363,71 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache && this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             if (!this._dialogCache) {
                 this._dialogCache = {};
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -443,19 +443,19 @@ sap.ui.define([
          * @description Initializes security features and audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
-                    var user = this._getCurrentUser();
-                    var timestamp = new Date().toISOString();
-                    var logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                    const user = this._getCurrentUser();
+                    const timestamp = new Date().toISOString();
+                    const logEntry = {
+                        timestamp,
+                        user,
                         agent: "Agent11_Compliance",
-                        action: action,
+                        action,
                         details: details || {}
                     };
-                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -466,7 +466,7 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
@@ -477,7 +477,7 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             if (user && user.hasRole) {
                 return user.hasRole(role);
@@ -492,20 +492,20 @@ sap.ui.define([
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up intervals
             if (this._violationsRefreshInterval) {
                 clearInterval(this._violationsRefreshInterval);
                 this._violationsRefreshInterval = null;
             }
-            
+
             // Clean up cached dialogs
             if (this._dialogCache) {
-                Object.keys(this._dialogCache).forEach(function(key) {
+                Object.keys(this._dialogCache).forEach((key) => {
                     if (this._dialogCache[key]) {
                         this._dialogCache[key].destroy();
                     }
-                }.bind(this));
+                });
                 this._dialogCache = {};
             }
         },
@@ -516,7 +516,7 @@ sap.ui.define([
          * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });

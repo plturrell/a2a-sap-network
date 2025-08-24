@@ -7,7 +7,7 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/export/Spreadsheet",
     "sap/ui/export/library"
-], function(BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox, Spreadsheet, exportLibrary) {
+], (BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox, Spreadsheet, exportLibrary) => {
     "use strict";
 
     const EdmType = exportLibrary.EdmType;
@@ -164,7 +164,7 @@ sap.ui.define([
                 success: function(data) {
                     let aLogs = data.logs || [];
                     // Transform logs to match the expected format
-                    aLogs = aLogs.map(function(log, index) {
+                    aLogs = aLogs.map((log, index) => {
                         return {
                             id: log.id || `log_${ index}`,
                             timestamp: new Date(log.timestamp),
@@ -295,7 +295,7 @@ sap.ui.define([
                 trace: 0
             };
 
-            aEntries.forEach(function(entry) {
+            aEntries.forEach((entry) => {
                 switch (entry.level) {
                 case "ERROR": oStats.errors++; break;
                 case "WARNING": oStats.warnings++; break;
@@ -312,11 +312,11 @@ sap.ui.define([
             const aEntries = this.oLogsModel.getProperty("/entries");
             const oSourceMap = {};
 
-            aEntries.forEach(function(entry) {
+            aEntries.forEach((entry) => {
                 oSourceMap[entry.source] = true;
             });
 
-            const aSources = Object.keys(oSourceMap).map(function(source) {
+            const aSources = Object.keys(oSourceMap).map((source) => {
                 return { name: source };
             });
 
@@ -342,7 +342,7 @@ sap.ui.define([
             // Level filter
             const aLevelFilters = this.byId("levelFilter").getSelectedKeys();
             if (aLevelFilters.length > 0) {
-                const aLevelFilterObjects = aLevelFilters.map(function(level) {
+                const aLevelFilterObjects = aLevelFilters.map((level) => {
                     return new Filter("level", FilterOperator.EQ, level);
                 });
                 aFilters.push(new Filter({
@@ -354,7 +354,7 @@ sap.ui.define([
             // Source filter
             const aSourceFilters = this.byId("sourceFilter").getSelectedKeys();
             if (aSourceFilters.length > 0) {
-                const aSourceFilterObjects = aSourceFilters.map(function(source) {
+                const aSourceFilterObjects = aSourceFilters.map((source) => {
                     return new Filter("source", FilterOperator.EQ, source);
                 });
                 aFilters.push(new Filter({
@@ -427,9 +427,9 @@ sap.ui.define([
             const sLogText = this._formatLogForClipboard(oLog);
 
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(sLogText).then(function() {
+                navigator.clipboard.writeText(sLogText).then(() => {
                     MessageToast.show(this.getResourceBundle().getText("logs.copy.success"));
-                }.bind(this)).catch(function() {
+                }).catch(function() {
                     MessageToast.show(this.getResourceBundle().getText("logs.copy.error"));
                 });
             }
@@ -478,7 +478,7 @@ sap.ui.define([
 
         onLogSelectionChange(oEvent) {
             const aSelectedItems = oEvent.getSource().getSelectedItems();
-            const aSelectedLogs = aSelectedItems.map(function(item) {
+            const aSelectedLogs = aSelectedItems.map((item) => {
                 return item.getBindingContext("logs").getObject();
             });
             this.oUIModel.setProperty("/selectedLogs", aSelectedLogs);
@@ -492,9 +492,9 @@ sap.ui.define([
         },
 
         _downloadLogsAsFile(aLogs) {
-            const sContent = aLogs.map(function(log) {
+            const sContent = aLogs.map((log) => {
                 return this._formatLogForFile(log);
-            }.bind(this)).join("\n\n");
+            }).join("\n\n");
 
             const blob = new Blob([sContent], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
@@ -534,13 +534,13 @@ sap.ui.define([
             this.showSpinnerLoading(this.getResourceBundle().getText("logs.clearing"));
 
             // In production, call backend service to clear logs
-            setTimeout(function() {
+            setTimeout(() => {
                 this.oLogsModel.setProperty("/entries", []);
                 this.oLogsModel.setProperty("/totalCount", 0);
                 this._updateStatistics();
                 this.hideLoading();
                 MessageToast.show(this.getResourceBundle().getText("logs.clear.success"));
-            }.bind(this), 1000);
+            }, 1000);
         },
 
         onRefreshLogs() {
@@ -562,12 +562,12 @@ sap.ui.define([
 
             const oSpreadsheet = new Spreadsheet(oSettings);
             oSpreadsheet.build()
-                .then(function() {
+                .then(() => {
                     MessageToast.show(this.getResourceBundle().getText("logs.export.success"));
-                }.bind(this))
-                .catch(function(sMessage) {
+                })
+                .catch((sMessage) => {
                     MessageToast.show(this.getResourceBundle().getText("logs.export.error"));
-                }.bind(this));
+                });
         },
 
         _createExportColumns() {
@@ -588,7 +588,7 @@ sap.ui.define([
             const _oBinding = oTable.getBinding("items");
             const aContexts = oBinding.getContexts();
 
-            return aContexts.map(function(oContext) {
+            return aContexts.map((oContext) => {
                 return oContext.getObject();
             });
         },
@@ -603,11 +603,11 @@ sap.ui.define([
         },
 
         _startAutoRefresh() {
-            this._refreshInterval = setInterval(function() {
+            this._refreshInterval = setInterval(() => {
                 if (!this.oUIModel.getProperty("/realtimeEnabled")) {
                     this._loadLogs();
                 }
-            }.bind(this), 30000); // Refresh every 30 seconds
+            }, 30000); // Refresh every 30 seconds
         },
 
         _saveFilters() {

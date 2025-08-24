@@ -7,7 +7,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/model/json/JSONModel"
-], function(Controller, MessageToast, MessageBox, JSONModel) {
+], (Controller, MessageToast, MessageBox, JSONModel) => {
     "use strict";
 
     /**
@@ -403,7 +403,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _generateCorrelationId() {
-            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
                 const r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });

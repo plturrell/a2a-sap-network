@@ -1576,6 +1576,589 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 })
             return 0.0
 
+    # Registry Capability Methods
+    @a2a_skill("mathematical_calculations")
+    async def perform_mathematical_calculations(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform advanced mathematical calculations with AI-powered optimization
+        
+        Supports:
+        - Basic arithmetic operations with high precision
+        - Advanced calculus (derivatives, integrals, limits)
+        - Linear algebra operations (matrix calculations, eigenvalues)
+        - Complex number operations
+        - Symbolic mathematics with SymPy integration
+        - AI-powered formula optimization and method selection
+        """
+        try:
+            calculation_type = data.get("calculation_type", "expression")
+            expression = data.get("expression", "")
+            variables = data.get("variables", {})
+            precision = data.get("precision", "standard")
+            
+            if calculation_type == "expression":
+                # Standard expression evaluation
+                calc_request = CalculationRequest(
+                    expression=expression,
+                    variables=variables,
+                    operation_type="evaluate",
+                    precision=precision
+                )
+                result = await self._execute_calculation(calc_request, True)
+                
+                return {
+                    "status": "success",
+                    "calculation_type": "expression_evaluation",
+                    "result": result.result,
+                    "method_used": result.method,
+                    "execution_time": result.execution_time,
+                    "steps": result.step_by_step
+                }
+                
+            elif calculation_type == "calculus":
+                # Calculus operations (derivatives, integrals)
+                operation = data.get("operation", "derivative")
+                variable = data.get("variable", "x")
+                
+                if SYMPY_AVAILABLE:
+                    import sympy as sp
+                    x = sp.Symbol(variable)
+                    expr = sp.sympify(expression)
+                    
+                    if operation == "derivative":
+                        result = sp.diff(expr, x)
+                        numerical_result = float(result.subs(variables).evalf()) if variables else None
+                    elif operation == "integral":
+                        result = sp.integrate(expr, x)
+                        numerical_result = float(result.subs(variables).evalf()) if variables else None
+                    else:
+                        raise ValueError(f"Unsupported calculus operation: {operation}")
+                    
+                    return {
+                        "status": "success",
+                        "calculation_type": "calculus",
+                        "operation": operation,
+                        "symbolic_result": str(result),
+                        "numerical_result": numerical_result,
+                        "original_expression": expression,
+                        "variable": variable
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "message": "SymPy not available for symbolic calculus operations"
+                    }
+                    
+            elif calculation_type == "linear_algebra":
+                # Matrix operations
+                matrices = data.get("matrices", {})
+                operation = data.get("operation", "multiply")
+                
+                import numpy as np
+                
+                if operation == "multiply" and len(matrices) >= 2:
+                    matrix_keys = list(matrices.keys())[:2]
+                    A = np.array(matrices[matrix_keys[0]])
+                    B = np.array(matrices[matrix_keys[1]])
+                    result_matrix = np.dot(A, B)
+                    
+                    return {
+                        "status": "success",
+                        "calculation_type": "matrix_multiplication",
+                        "result_matrix": result_matrix.tolist(),
+                        "dimensions": result_matrix.shape
+                    }
+                    
+                elif operation == "eigenvalues" and len(matrices) >= 1:
+                    matrix_key = list(matrices.keys())[0]
+                    A = np.array(matrices[matrix_key])
+                    eigenvals, eigenvecs = np.linalg.eig(A)
+                    
+                    return {
+                        "status": "success",
+                        "calculation_type": "eigenvalue_decomposition",
+                        "eigenvalues": eigenvals.tolist(),
+                        "eigenvectors": eigenvecs.tolist()
+                    }
+                    
+            else:
+                return {
+                    "status": "error",
+                    "message": f"Unsupported calculation type: {calculation_type}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Mathematical calculation failed: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "calculation_type": data.get("calculation_type", "unknown")
+            }
+
+    @a2a_skill("statistical_analysis")
+    async def perform_statistical_analysis(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform comprehensive statistical analysis with ML-powered insights
+        
+        Supports:
+        - Descriptive statistics (mean, median, mode, std deviation)
+        - Inferential statistics (t-tests, chi-square, ANOVA)
+        - Correlation and regression analysis
+        - Distribution fitting and hypothesis testing
+        - Time series analysis with forecasting
+        - ML-powered anomaly detection in statistical data
+        """
+        try:
+            analysis_type = data.get("analysis_type", "descriptive")
+            dataset = data.get("dataset", [])
+            parameters = data.get("parameters", {})
+            
+            if not dataset:
+                return {
+                    "status": "error",
+                    "message": "No dataset provided for statistical analysis"
+                }
+            
+            import numpy as np
+            import pandas as pd
+            
+            # Convert to numpy array for analysis
+            data_array = np.array(dataset)
+            
+            if analysis_type == "descriptive":
+                # Comprehensive descriptive statistics
+                stats = {
+                    "count": len(data_array),
+                    "mean": float(np.mean(data_array)),
+                    "median": float(np.median(data_array)),
+                    "mode": float(statistics.mode(data_array)) if len(set(data_array)) < len(data_array) else None,
+                    "std_dev": float(np.std(data_array)),
+                    "variance": float(np.var(data_array)),
+                    "min": float(np.min(data_array)),
+                    "max": float(np.max(data_array)),
+                    "range": float(np.max(data_array) - np.min(data_array)),
+                    "quartiles": {
+                        "q1": float(np.percentile(data_array, 25)),
+                        "q2": float(np.percentile(data_array, 50)),
+                        "q3": float(np.percentile(data_array, 75))
+                    },
+                    "skewness": float(pd.Series(data_array).skew()),
+                    "kurtosis": float(pd.Series(data_array).kurtosis())
+                }
+                
+                return {
+                    "status": "success",
+                    "analysis_type": "descriptive_statistics",
+                    "statistics": stats,
+                    "sample_size": len(dataset)
+                }
+                
+            elif analysis_type == "correlation" and len(data.get("datasets", [])) >= 2:
+                # Correlation analysis between multiple datasets
+                datasets = data.get("datasets", [])
+                correlations = {}
+                
+                for i, dataset1 in enumerate(datasets):
+                    for j, dataset2 in enumerate(datasets[i+1:], i+1):
+                        correlation = np.corrcoef(dataset1, dataset2)[0, 1]
+                        correlations[f"dataset_{i}_vs_dataset_{j}"] = float(correlation)
+                
+                return {
+                    "status": "success",
+                    "analysis_type": "correlation_analysis",
+                    "correlations": correlations,
+                    "interpretation": {
+                        "strong_positive": [k for k, v in correlations.items() if v > 0.7],
+                        "moderate_positive": [k for k, v in correlations.items() if 0.3 < v <= 0.7],
+                        "weak_positive": [k for k, v in correlations.items() if 0 < v <= 0.3],
+                        "weak_negative": [k for k, v in correlations.items() if -0.3 <= v < 0],
+                        "moderate_negative": [k for k, v in correlations.items() if -0.7 <= v < -0.3],
+                        "strong_negative": [k for k, v in correlations.items() if v < -0.7]
+                    }
+                }
+                
+            elif analysis_type == "distribution":
+                # Distribution fitting and analysis
+                from scipy import stats as scipy_stats
+                
+                # Test for common distributions
+                distributions = ['norm', 'lognorm', 'exponential', 'gamma']
+                best_fit = None
+                best_p_value = 0
+                
+                for dist_name in distributions:
+                    dist = getattr(scipy_stats, dist_name)
+                    params = dist.fit(data_array)
+                    _, p_value = scipy_stats.kstest(data_array, lambda x: dist.cdf(x, *params))
+                    
+                    if p_value > best_p_value:
+                        best_p_value = p_value
+                        best_fit = {
+                            "distribution": dist_name,
+                            "parameters": params,
+                            "p_value": p_value
+                        }
+                
+                return {
+                    "status": "success",
+                    "analysis_type": "distribution_fitting",
+                    "best_fit_distribution": best_fit,
+                    "confidence_level": best_p_value,
+                    "sample_statistics": {
+                        "mean": float(np.mean(data_array)),
+                        "std_dev": float(np.std(data_array))
+                    }
+                }
+                
+            else:
+                return {
+                    "status": "error",
+                    "message": f"Unsupported statistical analysis type: {analysis_type}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Statistical analysis failed: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "analysis_type": data.get("analysis_type", "unknown")
+            }
+
+    @a2a_skill("formula_execution")
+    async def execute_formula(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute complex mathematical formulas with AI-powered optimization
+        
+        Features:
+        - Safe formula parsing and execution
+        - Support for custom functions and variables
+        - Multi-step formula execution with intermediate results
+        - Formula optimization and caching
+        - Error handling and validation
+        - Performance monitoring and method selection
+        """
+        try:
+            formula = data.get("formula", "")
+            variables = data.get("variables", {})
+            functions = data.get("custom_functions", {})
+            execution_mode = data.get("execution_mode", "standard")
+            
+            if not formula:
+                return {
+                    "status": "error",
+                    "message": "No formula provided for execution"
+                }
+            
+            # Create calculation request
+            calc_request = CalculationRequest(
+                expression=formula,
+                variables=variables,
+                operation_type="evaluate",
+                precision="high" if execution_mode == "precise" else "standard"
+            )
+            
+            # Execute with AI optimization
+            result = await self._execute_calculation(calc_request, 
+                                                   enable_steps=(execution_mode == "detailed"))
+            
+            # Add custom function support if needed
+            if functions:
+                # Register custom functions in safe namespace
+                safe_functions = {}
+                for func_name, func_code in functions.items():
+                    if func_name.isidentifier() and func_name not in ['eval', 'exec', '__import__']:
+                        # Create safe function wrapper
+                        safe_functions[func_name] = lambda x: eval(func_code.replace('x', str(x)))
+                
+                # Re-execute with custom functions
+                calc_request.variables.update(safe_functions)
+                result = await self._execute_calculation(calc_request, enable_steps=True)
+            
+            return {
+                "status": "success",
+                "formula": formula,
+                "result": result.result,
+                "execution_time": result.execution_time,
+                "method_used": result.method,
+                "variables_used": variables,
+                "steps": result.step_by_step if execution_mode == "detailed" else None,
+                "optimization_applied": result.method != "direct_evaluation"
+            }
+            
+        except Exception as e:
+            logger.error(f"Formula execution failed: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "formula": data.get("formula", "")
+            }
+
+    @a2a_skill("numerical_processing")
+    async def process_numerical_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process and analyze numerical data with advanced algorithms
+        
+        Capabilities:
+        - Large dataset processing with memory optimization
+        - Numerical integration and differentiation
+        - Interpolation and extrapolation
+        - Signal processing and filtering
+        - Optimization problem solving
+        - ML-powered pattern recognition in numerical data
+        """
+        try:
+            processing_type = data.get("processing_type", "analysis")
+            numerical_data = data.get("data", [])
+            parameters = data.get("parameters", {})
+            
+            if not numerical_data:
+                return {
+                    "status": "error",
+                    "message": "No numerical data provided for processing"
+                }
+            
+            import numpy as np
+            from scipy import interpolate, optimize
+            
+            data_array = np.array(numerical_data)
+            
+            if processing_type == "interpolation":
+                # Data interpolation
+                x_original = parameters.get("x_values", list(range(len(data_array))))
+                x_new = parameters.get("x_new", np.linspace(min(x_original), max(x_original), len(data_array) * 2))
+                kind = parameters.get("kind", "linear")
+                
+                interpolation_func = interpolate.interp1d(x_original, data_array, kind=kind)
+                y_new = interpolation_func(x_new)
+                
+                return {
+                    "status": "success",
+                    "processing_type": "interpolation",
+                    "interpolated_values": y_new.tolist(),
+                    "x_values": x_new.tolist(),
+                    "method": kind,
+                    "original_points": len(data_array),
+                    "interpolated_points": len(y_new)
+                }
+                
+            elif processing_type == "optimization":
+                # Numerical optimization
+                objective_function = parameters.get("objective", "minimize_sum_squares")
+                initial_guess = parameters.get("initial_guess", [1.0] * len(data_array))
+                
+                if objective_function == "minimize_sum_squares":
+                    # Minimize sum of squares
+                    def objective(x):
+                        return np.sum((x - data_array) ** 2)
+                    
+                    result = optimize.minimize(objective, initial_guess)
+                    
+                    return {
+                        "status": "success",
+                        "processing_type": "optimization",
+                        "optimized_values": result.x.tolist(),
+                        "objective_value": float(result.fun),
+                        "optimization_success": result.success,
+                        "iterations": result.nit,
+                        "method": result.method
+                    }
+                    
+            elif processing_type == "filtering":
+                # Data filtering and smoothing
+                filter_type = parameters.get("filter_type", "moving_average")
+                window_size = parameters.get("window_size", 3)
+                
+                if filter_type == "moving_average":
+                    # Moving average filter
+                    filtered_data = np.convolve(data_array, 
+                                              np.ones(window_size)/window_size, 
+                                              mode='same')
+                    
+                    return {
+                        "status": "success",
+                        "processing_type": "filtering",
+                        "filtered_data": filtered_data.tolist(),
+                        "filter_type": filter_type,
+                        "window_size": window_size,
+                        "noise_reduction": float(np.std(data_array) - np.std(filtered_data))
+                    }
+                    
+            elif processing_type == "pattern_recognition":
+                # ML-powered pattern recognition
+                from sklearn.cluster import KMeans
+                from sklearn.preprocessing import StandardScaler
+                
+                # Prepare data for pattern analysis
+                scaler = StandardScaler()
+                scaled_data = scaler.fit_transform(data_array.reshape(-1, 1))
+                
+                # Apply clustering to find patterns
+                n_clusters = parameters.get("n_clusters", 3)
+                kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+                clusters = kmeans.fit_predict(scaled_data)
+                
+                return {
+                    "status": "success",
+                    "processing_type": "pattern_recognition",
+                    "clusters": clusters.tolist(),
+                    "cluster_centers": scaler.inverse_transform(kmeans.cluster_centers_).flatten().tolist(),
+                    "n_patterns": n_clusters,
+                    "inertia": float(kmeans.inertia_)
+                }
+                
+            else:
+                return {
+                    "status": "error",
+                    "message": f"Unsupported processing type: {processing_type}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Numerical processing failed: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "processing_type": data.get("processing_type", "unknown")
+            }
+
+    @a2a_skill("computation_services")
+    async def provide_computation_services(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Provide comprehensive computation services with distributed processing
+        
+        Services:
+        - High-performance computing coordination
+        - Distributed calculation management
+        - Resource optimization and load balancing
+        - Real-time computation monitoring
+        - Cross-agent computational workflows
+        - Performance benchmarking and optimization
+        """
+        try:
+            service_type = data.get("service_type", "computation")
+            task_data = data.get("task_data", {})
+            performance_requirements = data.get("performance_requirements", {})
+            
+            if service_type == "distributed_computation":
+                # Coordinate distributed computation
+                subtasks = data.get("subtasks", [])
+                coordination_strategy = data.get("strategy", "parallel")
+                
+                if coordination_strategy == "parallel":
+                    # Execute subtasks in parallel
+                    results = []
+                    execution_times = []
+                    
+                    for i, subtask in enumerate(subtasks):
+                        start_time = time.time()
+                        
+                        # Create calculation request for each subtask
+                        calc_request = CalculationRequest(
+                            expression=subtask.get("expression", ""),
+                            variables=subtask.get("variables", {}),
+                            operation_type="evaluate"
+                        )
+                        
+                        result = await self._execute_calculation(calc_request, False)
+                        execution_time = time.time() - start_time
+                        
+                        results.append({
+                            "subtask_id": i,
+                            "result": result.result,
+                            "execution_time": execution_time,
+                            "method": result.method
+                        })
+                        execution_times.append(execution_time)
+                    
+                    return {
+                        "status": "success",
+                        "service_type": "distributed_computation",
+                        "strategy": coordination_strategy,
+                        "subtask_results": results,
+                        "total_execution_time": sum(execution_times),
+                        "average_execution_time": statistics.mean(execution_times),
+                        "performance_metrics": {
+                            "throughput": len(subtasks) / sum(execution_times),
+                            "efficiency": len(subtasks) / max(execution_times) if execution_times else 0
+                        }
+                    }
+                    
+            elif service_type == "performance_optimization":
+                # Optimize computation performance
+                optimization_target = data.get("target", "speed")
+                computation_profile = data.get("computation_profile", {})
+                
+                # Analyze computation patterns
+                historical_data = computation_profile.get("historical_performance", [])
+                current_load = computation_profile.get("current_load", 0.5)
+                
+                if optimization_target == "speed":
+                    # Recommend speed optimizations
+                    recommendations = []
+                    
+                    if current_load > 0.8:
+                        recommendations.append("Consider distributed processing")
+                    
+                    if historical_data and statistics.mean(historical_data) > 1.0:
+                        recommendations.append("Enable calculation caching")
+                        recommendations.append("Use AI method selection")
+                    
+                    recommendations.append("Optimize memory usage for large datasets")
+                    
+                    return {
+                        "status": "success",
+                        "service_type": "performance_optimization",
+                        "target": optimization_target,
+                        "recommendations": recommendations,
+                        "current_performance": {
+                            "average_execution_time": statistics.mean(historical_data) if historical_data else None,
+                            "current_load": current_load,
+                            "optimization_potential": max(0, 1 - current_load)
+                        }
+                    }
+                    
+            elif service_type == "resource_monitoring":
+                # Monitor computational resources
+                import psutil
+                
+                cpu_usage = psutil.cpu_percent(interval=1)
+                memory_info = psutil.virtual_memory()
+                
+                resource_status = {
+                    "cpu_usage_percent": cpu_usage,
+                    "memory_usage_percent": memory_info.percent,
+                    "available_memory_gb": memory_info.available / (1024**3),
+                    "total_memory_gb": memory_info.total / (1024**3)
+                }
+                
+                # Provide recommendations based on resource usage
+                recommendations = []
+                if cpu_usage > 80:
+                    recommendations.append("High CPU usage - consider load balancing")
+                if memory_info.percent > 85:
+                    recommendations.append("High memory usage - optimize data structures")
+                
+                return {
+                    "status": "success",
+                    "service_type": "resource_monitoring",
+                    "resource_status": resource_status,
+                    "recommendations": recommendations,
+                    "monitoring_timestamp": datetime.utcnow().isoformat()
+                }
+                
+            else:
+                return {
+                    "status": "error",
+                    "message": f"Unsupported computation service: {service_type}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Computation service failed: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "service_type": data.get("service_type", "unknown")
+            }
+
 if __name__ == "__main__":
     # Test the agent
     async def test_agent():

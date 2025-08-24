@@ -1,0 +1,239 @@
+<mvc:View
+    controllerName="a2a.network.fiori.ext.goalManagement.GoalDashboard"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:viz="sap.viz"
+    xmlns:layout="sap.ui.layout"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards">
+    
+    <Page title="A2A Goal Management Dashboard" showNavButton="false" class="sapUiResponsiveContentPadding">
+        <content>
+            <!-- Header KPI Cards -->
+            <layout:HorizontalLayout class="sapUiMediumMarginBottom">
+                <f:Card class="sapUiMediumMarginEnd" width="200px">
+                    <f:header>
+                        <card:Header title="Total Agents" subtitle="with active goals"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin" alignItems="Center">
+                            <ObjectNumber number="{goalModel>/systemMetrics/totalAgents}" 
+                                        emphasized="true" 
+                                        class="sapUiLargeMarginBottom"/>
+                            <ProgressIndicator percentValue="{goalModel>/systemMetrics/averageProgress}" 
+                                             displayValue="{goalModel>/systemMetrics/averageProgress}% avg progress"
+                                             state="Success"/>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+
+                <f:Card class="sapUiMediumMarginEnd" width="200px">
+                    <f:header>
+                        <card:Header title="Active Goals" subtitle="currently tracked"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin" alignItems="Center">
+                            <ObjectNumber number="{goalModel>/systemMetrics/activeGoals}" 
+                                        emphasized="true" 
+                                        state="Information"
+                                        class="sapUiLargeMarginBottom"/>
+                            <Text text="Real-time tracking" class="sapUiContentPadding"/>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+
+                <f:Card class="sapUiMediumMarginEnd" width="200px">
+                    <f:header>
+                        <card:Header title="Milestones" subtitle="achieved"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin" alignItems="Center">
+                            <ObjectNumber number="{goalModel>/systemMetrics/milestonesAchieved}" 
+                                        emphasized="true" 
+                                        state="Success"
+                                        class="sapUiLargeMarginBottom"/>
+                            <Text text="AI-detected achievements" class="sapUiContentPadding"/>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+
+                <f:Card width="200px">
+                    <f:header>
+                        <card:Header title="Completed" subtitle="goals"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin" alignItems="Center">
+                            <ObjectNumber number="{goalModel>/systemMetrics/completedGoals}" 
+                                        emphasized="true" 
+                                        state="Success"
+                                        class="sapUiLargeMarginBottom"/>
+                            <Text text="Enterprise compliance" class="sapUiContentPadding"/>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+            </layout:HorizontalLayout>
+
+            <!-- Action Bar -->
+            <Toolbar class="sapUiMediumMarginBottom">
+                <Button text="Create SMART Goal" 
+                       type="Emphasized" 
+                       icon="sap-icon://add" 
+                       press="onCreateGoal"/>
+                <Button text="Refresh Data" 
+                       icon="sap-icon://refresh" 
+                       press="onRefreshGoals"/>
+                <ToolbarSpacer/>
+                <SearchField width="300px" 
+                           placeholder="Search agents, goals, or status..." 
+                           search="onFilterGoals"/>
+            </Toolbar>
+
+            <!-- Charts Section -->
+            <layout:HorizontalLayout class="sapUiMediumMarginBottom">
+                <f:Card class="sapUiMediumMarginEnd" width="50%">
+                    <f:header>
+                        <card:Header title="Goal Management Overview" subtitle="System-wide metrics"/>
+                    </f:header>
+                    <f:content>
+                        <viz:Popover id="goalProgressPopover"></viz:Popover>
+                        <viz:VizFrame id="goalProgressChart" 
+                                    vizType="donut" 
+                                    width="100%" 
+                                    height="300px">
+                            <viz:dataset>
+                                <viz:FlattenedDataset data="{/data}">
+                                    <viz:dimensions>
+                                        <viz:DimensionDefinition name="Metric" value="{metric}"/>
+                                    </viz:dimensions>
+                                    <viz:measures>
+                                        <viz:MeasureDefinition name="Value" value="{value}"/>
+                                    </viz:measures>
+                                </viz:FlattenedDataset>
+                            </viz:dataset>
+                            <viz:feeds>
+                                <viz:FeedItem uid="size" type="Measure" values="Value"/>
+                                <viz:FeedItem uid="color" type="Dimension" values="Metric"/>
+                            </viz:feeds>
+                        </viz:VizFrame>
+                    </f:content>
+                </f:Card>
+
+                <f:Card width="50%">
+                    <f:header>
+                        <card:Header title="Agent Performance" subtitle="Individual progress tracking"/>
+                    </f:header>
+                    <f:content>
+                        <viz:Popover id="agentPerformancePopover"></viz:Popover>
+                        <viz:VizFrame id="agentPerformanceChart" 
+                                    vizType="column" 
+                                    width="100%" 
+                                    height="300px">
+                            <viz:dataset>
+                                <viz:FlattenedDataset data="{/data}">
+                                    <viz:dimensions>
+                                        <viz:DimensionDefinition name="Agent" value="{agentName}"/>
+                                    </viz:dimensions>
+                                    <viz:measures>
+                                        <viz:MeasureDefinition name="Progress" value="{progress}"/>
+                                        <viz:MeasureDefinition name="Milestones" value="{milestones}"/>
+                                    </viz:measures>
+                                </viz:FlattenedDataset>
+                            </viz:dataset>
+                            <viz:feeds>
+                                <viz:FeedItem uid="valueAxis" type="Measure" values="Progress,Milestones"/>
+                                <viz:FeedItem uid="categoryAxis" type="Dimension" values="Agent"/>
+                            </viz:feeds>
+                        </viz:VizFrame>
+                    </f:content>
+                </f:Card>
+            </layout:HorizontalLayout>
+
+            <!-- Agent Goals Table -->
+            <f:Card>
+                <f:header>
+                    <card:Header title="Agent Goal Details" subtitle="Real-time A2A goal tracking"/>
+                </f:header>
+                <f:content>
+                    <Table id="agentGoalsTable" 
+                           items="{goalModel>/agents}" 
+                           mode="SingleSelection"
+                           class="sapUiResponsiveMargin">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Agents ({goalModel>/agents/length})" level="H2"/>
+                                <ToolbarSpacer/>
+                                <Button icon="sap-icon://excel-attachment" 
+                                       tooltip="Export to Excel"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        
+                        <columns>
+                            <Column width="12em">
+                                <Text text="Agent"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Progress"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Goal Type"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Priority"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Milestones"/>
+                            </Column>
+                            <Column width="10em">
+                                <Text text="Target Date"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Status"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Trend"/>
+                            </Column>
+                        </columns>
+                        
+                        <items>
+                            <ColumnListItem press="onAgentGoalPress" type="Active">
+                                <cells>
+                                    <VBox>
+                                        <Text text="{goalModel>agentName}" class="sapMText"/>
+                                        <Text text="{goalModel>agentId}" class="sapUiContentPadding"/>
+                                    </VBox>
+                                    
+                                    <VBox alignItems="Center">
+                                        <ProgressIndicator percentValue="{goalModel>overallProgress}" 
+                                                         displayValue="{goalModel>overallProgress}%"
+                                                         state="{parts: ['goalModel>overallProgress'], formatter: '.formatProgressState'}"/>
+                                        <Text text="{goalModel>totalGoals} goals" class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                    
+                                    <ObjectStatus text="{goalModel>goalType}" 
+                                                state="{parts: ['goalModel>goalType'], formatter: '.formatGoalTypeState'}"/>
+                                    
+                                    <ObjectStatus text="{goalModel>priority}" 
+                                                state="{parts: ['goalModel>priority'], formatter: '.formatPriorityState'}"/>
+                                    
+                                    <ObjectNumber number="{goalModel>milestones}" 
+                                                emphasized="true" 
+                                                state="Success"/>
+                                    
+                                    <Text text="{path: 'goalModel>targetDate', formatter: '.formatDate'}"/>
+                                    
+                                    <ObjectStatus text="{goalModel>status}" 
+                                                state="{parts: ['goalModel>status'], formatter: '.formatStatusState'}"/>
+                                    
+                                    <core:Icon src="{parts: ['goalModel>progressTrend'], formatter: '.formatTrendIcon'}" 
+                                             color="{parts: ['goalModel>progressTrend'], formatter: '.formatTrendColor'}"
+                                             tooltip="{goalModel>progressTrend}"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </f:content>
+            </f:Card>
+        </content>
+    </Page>
+</mvc:View>

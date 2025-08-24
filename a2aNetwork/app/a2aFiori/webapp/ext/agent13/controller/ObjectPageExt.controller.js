@@ -10,30 +10,30 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent13/ext/utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent13.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeSecurity();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache
                 this._dialogCache = {};
-                
+
                 // Initialize real-time monitoring
                 this._initializeRealtimeMonitoring();
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
@@ -46,7 +46,7 @@ sap.ui.define([
          * @description Opens vulnerability viewer with detailed security findings.
          * @public
          */
-        onViewVulnerabilities: function() {
+        onViewVulnerabilities() {
             if (!this._hasRole("SecurityAnalyst")) {
                 MessageBox.error("Access denied. Security Analyst role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewVulnerabilities", reason: "Insufficient permissions" });
@@ -57,12 +57,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("VIEW_VULNERABILITIES", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("viewVulnerabilities", "a2a.network.agent13.ext.fragment.ViewVulnerabilities")
-                .then(function(oDialog) {
-                    var oVulnModel = new JSONModel({
+                .then((oDialog) => {
+                    const oVulnModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         severityFilter: "ALL",
@@ -89,9 +89,9 @@ sap.ui.define([
                     oDialog.setModel(oVulnModel, "vuln");
                     oDialog.open();
                     this._loadVulnerabilities(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Vulnerabilities Viewer: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Vulnerabilities Viewer: ${ error.message}`);
                 });
         },
 
@@ -100,7 +100,7 @@ sap.ui.define([
          * @description Runs comprehensive threat analysis for the security task.
          * @public
          */
-        onRunThreatAnalysis: function() {
+        onRunThreatAnalysis() {
             if (!this._hasRole("SecurityAdmin")) {
                 MessageBox.error("Access denied. Security Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "RunThreatAnalysis", reason: "Insufficient permissions" });
@@ -111,18 +111,18 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             // Check if analysis is already running
             if (oData.analysisStatus === "RUNNING") {
                 MessageToast.show(this.getResourceBundle().getText("msg.analysisAlreadyRunning"));
                 return;
             }
-            
+
             this._auditLogger.log("RUN_THREAT_ANALYSIS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("threatAnalysis", "a2a.network.agent13.ext.fragment.ThreatAnalysis")
-                .then(function(oDialog) {
-                    var oAnalysisModel = new JSONModel({
+                .then((oDialog) => {
+                    const oAnalysisModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         analysisType: "COMPREHENSIVE",
@@ -152,9 +152,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oAnalysisModel, "analysis");
                     oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Threat Analysis: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Threat Analysis: ${ error.message}`);
                 });
         },
 
@@ -163,7 +163,7 @@ sap.ui.define([
          * @description Generates comprehensive security report.
          * @public
          */
-        onGenerateSecurityReport: function() {
+        onGenerateSecurityReport() {
             if (!this._hasRole("SecurityAnalyst")) {
                 MessageBox.error("Access denied. Security Analyst role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "GenerateSecurityReport", reason: "Insufficient permissions" });
@@ -174,12 +174,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("GENERATE_SECURITY_REPORT", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("generateReport", "a2a.network.agent13.ext.fragment.GenerateSecurityReport")
-                .then(function(oDialog) {
-                    var oReportModel = new JSONModel({
+                .then((oDialog) => {
+                    const oReportModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         reportType: "COMPREHENSIVE",
@@ -207,9 +207,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oReportModel, "report");
                     oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Report Generator: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Report Generator: ${ error.message}`);
                 });
         },
 
@@ -218,7 +218,7 @@ sap.ui.define([
          * @description Opens firewall rules configuration interface.
          * @public
          */
-        onConfigureFirewall: function() {
+        onConfigureFirewall() {
             if (!this._hasRole("SecurityAdmin")) {
                 MessageBox.error("Access denied. Security Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ConfigureFirewall", reason: "Insufficient permissions" });
@@ -229,12 +229,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("CONFIGURE_FIREWALL", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("configureFirewall", "a2a.network.agent13.ext.fragment.ConfigureFirewall")
-                .then(function(oDialog) {
-                    var oFirewallModel = new JSONModel({
+                .then((oDialog) => {
+                    const oFirewallModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         rulesets: [],
@@ -259,9 +259,9 @@ sap.ui.define([
                     oDialog.setModel(oFirewallModel, "firewall");
                     oDialog.open();
                     this._loadFirewallRules(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Firewall Configuration: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Firewall Configuration: ${ error.message}`);
                 });
         },
 
@@ -272,11 +272,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _loadVulnerabilities: function(sTaskId, oDialog) {
+        _loadVulnerabilities(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetVulnerabilities", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -284,7 +284,7 @@ sap.ui.define([
                     includeRemediation: true
                 },
                 success: function(data) {
-                    var oVulnModel = oDialog.getModel("vuln");
+                    const oVulnModel = oDialog.getModel("vuln");
                     if (oVulnModel) {
                         var oCurrentData = oVulnModel.getData();
                         oCurrentData.vulnerabilities = data.vulnerabilities || [];
@@ -295,15 +295,15 @@ sap.ui.define([
                         oVulnModel.setData(oCurrentData);
                     }
                     oDialog.setBusy(false);
-                    
+
                     // Start auto-refresh if enabled
                     if (oCurrentData.autoRefresh) {
                         this._startVulnerabilityAutoRefresh(sTaskId, oDialog);
                     }
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load vulnerabilities: " + error.message);
+                    MessageBox.error(`Failed to load vulnerabilities: ${ error.message}`);
                 }
             });
         },
@@ -315,12 +315,12 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _startVulnerabilityAutoRefresh: function(sTaskId, oDialog) {
+        _startVulnerabilityAutoRefresh(sTaskId, oDialog) {
             if (this._vulnRefreshInterval) {
                 clearInterval(this._vulnRefreshInterval);
             }
-            
-            var oVulnData = oDialog.getModel("vuln").getData();
+
+            const oVulnData = oDialog.getModel("vuln").getData();
             this._vulnRefreshInterval = setInterval(() => {
                 if (oDialog.isOpen()) {
                     this._loadVulnerabilities(sTaskId, oDialog);
@@ -337,20 +337,20 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Firewall configuration dialog
          * @private
          */
-        _loadFirewallRules: function(sTaskId, oDialog) {
+        _loadFirewallRules(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetFirewallConfiguration", {
                 urlParameters: {
                     taskId: sTaskId,
                     includeTemplates: true
                 },
                 success: function(data) {
-                    var oFirewallModel = oDialog.getModel("firewall");
+                    const oFirewallModel = oDialog.getModel("firewall");
                     if (oFirewallModel) {
-                        var oCurrentData = oFirewallModel.getData();
+                        const oCurrentData = oFirewallModel.getData();
                         oCurrentData.rulesets = data.rulesets || [];
                         oCurrentData.currentRules = data.currentRules || [];
                         oCurrentData.ruleTemplates = data.templates || [];
@@ -360,9 +360,9 @@ sap.ui.define([
                     }
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load firewall configuration: " + error.message);
+                    MessageBox.error(`Failed to load firewall configuration: ${ error.message}`);
                 }
             });
         },
@@ -372,10 +372,10 @@ sap.ui.define([
          * @description Initializes real-time monitoring for security events.
          * @private
          */
-        _initializeRealtimeMonitoring: function() {
+        _initializeRealtimeMonitoring() {
             // WebSocket for real-time security alerts
             this._initializeSecurityWebSocket();
-            
+
             // EventSource for threat intelligence updates
             this._initializeThreatIntelligence();
         },
@@ -385,11 +385,11 @@ sap.ui.define([
          * @description Initializes WebSocket for security alerts.
          * @private
          */
-        _initializeSecurityWebSocket: function() {
-            if (this._securityWs) return;
+        _initializeSecurityWebSocket() {
+            if (this._securityWs) {return;}
 
             try {
-                this._securityWs = SecurityUtils.createSecureWebSocket('blockchain://a2a-events', {
+                this._securityWs = SecurityUtils.createSecureWebSocket("blockchain://a2a-events", {
                     onMessage: function(data) {
                         this._handleSecurityAlert(data);
                     }.bind(this)
@@ -410,27 +410,27 @@ sap.ui.define([
          * @description Initializes threat intelligence feed.
          * @private
          */
-        _initializeThreatIntelligence: function() {
-            if (this._threatEventSource) return;
-            
+        _initializeThreatIntelligence() {
+            if (this._threatEventSource) {return;}
+
             try {
-                this._threatEventSource = new EventSource('/api/agent13/security/threat-intelligence');
-                
+                this._threatEventSource = new EventSource("/api/agent13/security/threat-intelligence");
+
                 this._threatEventSource.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
                         this._handleThreatIntelligence(data);
                     } catch (error) {
-                        console.error('Error parsing threat intelligence:', error);
+                        console.error("Error parsing threat intelligence:", error);
                     }
                 }.bind(this);
-                
+
                 this._threatEventSource.onerror = function(error) {
-                    console.warn('Threat intelligence stream error:', error);
+                    console.warn("Threat intelligence stream error:", error);
                 }.bind(this);
-                
+
             } catch (error) {
-                console.warn('EventSource not available for threat intelligence');
+                console.warn("EventSource not available for threat intelligence");
             }
         },
 
@@ -440,17 +440,17 @@ sap.ui.define([
          * @param {Object} data - Alert data
          * @private
          */
-        _handleSecurityAlert: function(data) {
+        _handleSecurityAlert(data) {
             if (data.severity === "CRITICAL") {
-                MessageBox.error("Critical Security Alert: " + data.message);
+                MessageBox.error(`Critical Security Alert: ${ data.message}`);
                 this._auditLogger.log("CRITICAL_SECURITY_ALERT", data);
             } else if (data.severity === "HIGH") {
-                MessageBox.warning("High Priority Security Alert: " + data.message);
+                MessageBox.warning(`High Priority Security Alert: ${ data.message}`);
                 this._auditLogger.log("HIGH_SECURITY_ALERT", data);
             } else {
-                MessageToast.show("Security Alert: " + data.message);
+                MessageToast.show(`Security Alert: ${ data.message}`);
             }
-            
+
             // Update any open vulnerability dialogs
             if (this._dialogCache.viewVulnerabilities && this._dialogCache.viewVulnerabilities.isOpen()) {
                 this._refreshVulnerabilityData();
@@ -463,9 +463,9 @@ sap.ui.define([
          * @param {Object} data - Threat intelligence data
          * @private
          */
-        _handleThreatIntelligence: function(data) {
+        _handleThreatIntelligence(data) {
             if (data.type === "NEW_THREAT") {
-                MessageToast.show("New threat detected: " + data.threatName);
+                MessageToast.show(`New threat detected: ${ data.threatName}`);
             } else if (data.type === "THREAT_UPDATE") {
                 // Update threat analysis if dialog is open
                 if (this._dialogCache.threatAnalysis && this._dialogCache.threatAnalysis.isOpen()) {
@@ -479,7 +479,7 @@ sap.ui.define([
          * @description Refreshes vulnerability data in open dialog.
          * @private
          */
-        _refreshVulnerabilityData: function() {
+        _refreshVulnerabilityData() {
             const oDialog = this._dialogCache.viewVulnerabilities;
             if (oDialog && oDialog.isOpen()) {
                 const oVulnModel = oDialog.getModel("vuln");
@@ -496,7 +496,7 @@ sap.ui.define([
          * @param {Object} data - Threat data
          * @private
          */
-        _updateThreatAnalysisData: function(data) {
+        _updateThreatAnalysisData(data) {
             const oDialog = this._dialogCache.threatAnalysis;
             if (oDialog && oDialog.isOpen()) {
                 const oAnalysisModel = oDialog.getModel("analysis");
@@ -519,71 +519,71 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache && this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             if (!this._dialogCache) {
                 this._dialogCache = {};
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -599,19 +599,19 @@ sap.ui.define([
          * @description Initializes security features and audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
-                    var user = this._getCurrentUser();
-                    var timestamp = new Date().toISOString();
-                    var logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                    const user = this._getCurrentUser();
+                    const timestamp = new Date().toISOString();
+                    const logEntry = {
+                        timestamp,
+                        user,
                         agent: "Agent13_Security",
-                        action: action,
+                        action,
                         details: details || {}
                     };
-                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -622,7 +622,7 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
@@ -633,7 +633,7 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             if (user && user.hasRole) {
                 return user.hasRole(role);
@@ -648,32 +648,32 @@ sap.ui.define([
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up WebSocket connections
             if (this._securityWs) {
                 this._securityWs.close();
                 this._securityWs = null;
             }
-            
+
             // Clean up EventSource connections
             if (this._threatEventSource) {
                 this._threatEventSource.close();
                 this._threatEventSource = null;
             }
-            
+
             // Clean up intervals
             if (this._vulnRefreshInterval) {
                 clearInterval(this._vulnRefreshInterval);
                 this._vulnRefreshInterval = null;
             }
-            
+
             // Clean up cached dialogs
             if (this._dialogCache) {
-                Object.keys(this._dialogCache).forEach(function(key) {
+                Object.keys(this._dialogCache).forEach((key) => {
                     if (this._dialogCache[key]) {
                         this._dialogCache[key].destroy();
                     }
-                }.bind(this));
+                });
                 this._dialogCache = {};
             }
         },
@@ -684,7 +684,7 @@ sap.ui.define([
          * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });

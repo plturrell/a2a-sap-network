@@ -15,9 +15,9 @@ sap.ui.define([
     "sap/ui/export/Spreadsheet",
     "../utils/constants",
     "../utils/errorHandler"
-], function(Controller, JSONModel, MessageBox, MessageToast, Fragment, Filter, FilterOperator,
+], (Controller, JSONModel, MessageBox, MessageToast, Fragment, Filter, FilterOperator,
     VariantManagement, Engine, SelectionController, SortController, FilterController,
-    GroupController, Spreadsheet, constants, errorHandler) {
+    GroupController, Spreadsheet, constants, errorHandler) => {
     "use strict";
 
     return Controller.extend("a2a.controller.reputation", {
@@ -688,7 +688,7 @@ sap.ui.define([
             const _aColumns = oTable.getColumns();
             const aP13nColumns = [];
 
-            aColumns.forEach(function(oColumn, iIndex) {
+            aColumns.forEach((oColumn, iIndex) => {
                 aP13nColumns.push({
                     columnKey: oColumn.getId(),
                     text: oColumn.getHeader().getText(),

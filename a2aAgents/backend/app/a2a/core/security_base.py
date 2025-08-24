@@ -66,7 +66,7 @@ class SecureA2AAgent(A2AAgentBase):
         # Input validation patterns
         self.validation_patterns = {
             'sql_injection': re.compile(
-                r"((SELECT|INSERT|UPDATE|DELETE|DROP|UNION|WHERE|FROM)|--|;|'|"|\*|OR\s+1=1|AND\s+1=1)",
+                r"((SELECT|INSERT|UPDATE|DELETE|DROP|UNION|WHERE|FROM)|--|;|'|\"|\\*|OR\\s+1=1|AND\\s+1=1)",
                 re.IGNORECASE
             ),
             'xss_attack': re.compile(

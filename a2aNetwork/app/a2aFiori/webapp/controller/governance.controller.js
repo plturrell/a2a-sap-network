@@ -15,9 +15,9 @@ sap.ui.define([
     "sap/m/p13n/SortController",
     "sap/m/p13n/FilterController",
     "sap/m/p13n/GroupController"
-], function(Controller, JSONModel, MessageBox, MessageToast, Fragment, Filter, FilterOperator,
+], (Controller, JSONModel, MessageBox, MessageToast, Fragment, Filter, FilterOperator,
     Web3Manager, GovernanceService, Log, VariantManagement, Engine, SelectionController,
-    SortController, FilterController, GroupController) {
+    SortController, FilterController, GroupController) => {
     "use strict";
 
     return Controller.extend("a2a.network.fiori.controller.governance", {
@@ -299,20 +299,20 @@ sap.ui.define([
                 this._loadUserStakes(),
                 this._loadTopDelegates(),
                 this._loadUserHistory()
-            ]).then(function() {
+            ]).then(() => {
                 this.getView().getModel("governance").setProperty("/busy", false);
                 Log.info("Governance data loaded successfully");
-            }.bind(this)).catch(function(oError) {
+            }).catch((oError) => {
                 Log.error("Failed to load governance data", oError);
                 this.getView().getModel("governance").setProperty("/busy", false);
                 MessageBox.error(this._getResourceBundle().getText("loadDataError"));
-            }.bind(this));
+            });
         },
 
         _loadProposals() {
-            return this._oGovernanceService.getActiveProposals().then(function(aProposals) {
+            return this._oGovernanceService.getActiveProposals().then((aProposals) => {
                 this.getView().getModel("governance").setProperty("/proposals", aProposals);
-            }.bind(this));
+            });
         },
 
         _loadUserStats() {
@@ -320,15 +320,15 @@ sap.ui.define([
                 return Promise.resolve();
             }
 
-            return this._oGovernanceService.getUserStats().then(function(oStats) {
+            return this._oGovernanceService.getUserStats().then((oStats) => {
                 this.getView().getModel("governance").setProperty("/userStats", oStats);
-            }.bind(this));
+            });
         },
 
         _loadTokenStats() {
-            return this._oGovernanceService.getTokenStats().then(function(oStats) {
+            return this._oGovernanceService.getTokenStats().then((oStats) => {
                 this.getView().getModel("governance").setProperty("/tokenStats", oStats);
-            }.bind(this));
+            });
         },
 
         _loadUserStakes() {
@@ -336,15 +336,15 @@ sap.ui.define([
                 return Promise.resolve();
             }
 
-            return this._oGovernanceService.getUserStakes().then(function(aStakes) {
+            return this._oGovernanceService.getUserStakes().then((aStakes) => {
                 this.getView().getModel("governance").setProperty("/userStakes", aStakes);
-            }.bind(this));
+            });
         },
 
         _loadTopDelegates() {
-            return this._oGovernanceService.getTopDelegates().then(function(aDelegates) {
+            return this._oGovernanceService.getTopDelegates().then((aDelegates) => {
                 this.getView().getModel("governance").setProperty("/topDelegates", aDelegates);
-            }.bind(this));
+            });
         },
 
         _loadUserHistory() {
@@ -352,9 +352,9 @@ sap.ui.define([
                 return Promise.resolve();
             }
 
-            return this._oGovernanceService.getUserHistory().then(function(aHistory) {
+            return this._oGovernanceService.getUserHistory().then((aHistory) => {
                 this.getView().getModel("governance").setProperty("/userHistory", aHistory);
-            }.bind(this));
+            });
         },
 
         _castVote(sProposalId, iSupport, sReason) {
@@ -369,14 +369,14 @@ sap.ui.define([
                     onClose: function(sAction) {
                         if (sAction === MessageBox.Action.OK) {
                             this._oGovernanceService.castVote(sProposalId, iSupport, sReason)
-                                .then(function(sTxHash) {
+                                .then((sTxHash) => {
                                     MessageToast.show(this._getResourceBundle().getText("voteSubmitted"));
                                     this._loadProposals();
-                                }.bind(this))
-                                .catch(function(oError) {
+                                })
+                                .catch((oError) => {
                                     Log.error("Vote failed", oError);
                                     MessageBox.error(this._getResourceBundle().getText("voteFailed"));
-                                }.bind(this));
+                                });
                         }
                     }.bind(this)
                 }
@@ -390,15 +390,15 @@ sap.ui.define([
             }
 
             this._oGovernanceService.stakeTokens(sAmount, sPeriod)
-                .then(function(sTxHash) {
+                .then((sTxHash) => {
                     MessageToast.show(this._getResourceBundle().getText("tokensStaked"));
                     this._loadUserStats();
                     this._loadUserStakes();
-                }.bind(this))
-                .catch(function(oError) {
+                })
+                .catch((oError) => {
                     Log.error("Staking failed", oError);
                     MessageBox.error(this._getResourceBundle().getText("stakingFailed"));
-                }.bind(this));
+                });
         },
 
         _unstakeTokens(sStakeId) {
@@ -413,15 +413,15 @@ sap.ui.define([
                     onClose: function(sAction) {
                         if (sAction === MessageBox.Action.OK) {
                             this._oGovernanceService.unstakeTokens(sStakeId)
-                                .then(function(sTxHash) {
+                                .then((sTxHash) => {
                                     MessageToast.show(this._getResourceBundle().getText("tokensUnstaked"));
                                     this._loadUserStats();
                                     this._loadUserStakes();
-                                }.bind(this))
-                                .catch(function(oError) {
+                                })
+                                .catch((oError) => {
                                     Log.error("Unstaking failed", oError);
                                     MessageBox.error(this._getResourceBundle().getText("unstakingFailed"));
-                                }.bind(this));
+                                });
                         }
                     }.bind(this)
                 }
@@ -435,14 +435,14 @@ sap.ui.define([
             }
 
             this._oGovernanceService.delegateVotes(sDelegateAddress)
-                .then(function(sTxHash) {
+                .then((sTxHash) => {
                     MessageToast.show(this._getResourceBundle().getText("votesDelegated"));
                     this._loadUserStats();
-                }.bind(this))
-                .catch(function(oError) {
+                })
+                .catch((oError) => {
                     Log.error("Delegation failed", oError);
                     MessageBox.error(this._getResourceBundle().getText("delegationFailed"));
-                }.bind(this));
+                });
         },
 
         _createProposal() {
@@ -460,15 +460,15 @@ sap.ui.define([
             }
 
             this._oGovernanceService.createProposal(oProposal)
-                .then(function(sTxHash) {
+                .then((sTxHash) => {
                     MessageToast.show(this._getResourceBundle().getText("proposalCreated"));
                     this._closeCreateProposalDialog();
                     this._loadProposals();
-                }.bind(this))
-                .catch(function(oError) {
+                })
+                .catch((oError) => {
                     Log.error("Proposal creation failed", oError);
                     MessageBox.error(this._getResourceBundle().getText("proposalCreationFailed"));
-                }.bind(this));
+                });
         },
 
         _openCreateProposalDialog() {
@@ -477,16 +477,16 @@ sap.ui.define([
                     id: this.getView().getId(),
                     name: "a2a.network.fiori.view.fragments.CreateProposalDialog",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this.getView().addDependent(oDialog);
                     return oDialog;
-                }.bind(this));
+                });
             }
 
-            this._oCreateProposalDialog.then(function(oDialog) {
+            this._oCreateProposalDialog.then((oDialog) => {
                 this._resetProposalForm();
                 oDialog.open();
-            }.bind(this));
+            });
         },
 
         _closeCreateProposalDialog() {

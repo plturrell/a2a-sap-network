@@ -3,7 +3,7 @@ sap.ui.define([
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
     "sap/base/Log"
-], function (encodeXML, escapeRegExp, sanitizeHTML, Log) {
+], (encodeXML, escapeRegExp, sanitizeHTML, Log) => {
     "use strict";
 
     /**
@@ -12,15 +12,15 @@ sap.ui.define([
      * authentication, authorization, input validation, and secure communications
      */
     return {
-        
+
         /**
          * Validate agent management operations for security
          * @param {string} sOperation - The operation to validate
          * @returns {Object} Validation result with isValid and errors
          */
-        validateAgentOperation: function(sOperation) {
-            var aErrors = [];
-            var aDangerousPatterns = [
+        validateAgentOperation(sOperation) {
+            const aErrors = [];
+            const aDangerousPatterns = [
                 { pattern: /\beval\s*\(/gi, message: "eval() function not allowed in agent operations" },
                 { pattern: /\bnew\s+Function\s*\(/gi, message: "Dynamic function creation not allowed" },
                 { pattern: /\bsetTimeout\s*\([^)]*['\"].*<script/gi, message: "Script injection in setTimeout not allowed" },
@@ -38,18 +38,18 @@ sap.ui.define([
                 { pattern: /\bdelattr\s*\(/gi, message: "delattr operations not allowed" }
             ];
 
-            if (!sOperation || typeof sOperation !== 'string') {
+            if (!sOperation || typeof sOperation !== "string") {
                 aErrors.push("Invalid operation format");
                 return { isValid: false, errors: aErrors };
             }
 
-            var sCleanOperation = sOperation.trim();
+            const sCleanOperation = sOperation.trim();
             if (sCleanOperation.length > 500) {
                 aErrors.push("Operation description too long (max 500 characters)");
             }
 
             // Check for dangerous patterns
-            aDangerousPatterns.forEach(function(oDangerous) {
+            aDangerousPatterns.forEach((oDangerous) => {
                 if (oDangerous.pattern.test(sCleanOperation)) {
                     aErrors.push(oDangerous.message);
                 }
@@ -67,17 +67,17 @@ sap.ui.define([
          * @param {Object} oConfig - Agent configuration object
          * @returns {Object} Validation result
          */
-        validateAgentConfig: function(oConfig) {
-            var aErrors = [];
-            
-            if (!oConfig || typeof oConfig !== 'object') {
+        validateAgentConfig(oConfig) {
+            const aErrors = [];
+
+            if (!oConfig || typeof oConfig !== "object") {
                 aErrors.push("Invalid configuration object");
                 return { isValid: false, errors: aErrors };
             }
 
             // Validate agent name
             if (oConfig.agentName) {
-                if (typeof oConfig.agentName !== 'string' || oConfig.agentName.length > 100) {
+                if (typeof oConfig.agentName !== "string" || oConfig.agentName.length > 100) {
                     aErrors.push("Agent name must be a string with max 100 characters");
                 }
                 if (!/^[a-zA-Z0-9_\-\s]+$/.test(oConfig.agentName)) {
@@ -86,14 +86,14 @@ sap.ui.define([
             }
 
             // Validate agent type
-            var aValidTypes = ["DATA_PROCESSING", "ANALYSIS", "COORDINATION", "MONITORING", "VALIDATION"];
+            const aValidTypes = ["DATA_PROCESSING", "ANALYSIS", "COORDINATION", "MONITORING", "VALIDATION"];
             if (oConfig.agentType && !aValidTypes.includes(oConfig.agentType)) {
                 aErrors.push("Invalid agent type");
             }
 
             // Validate priority
             if (oConfig.priority !== undefined) {
-                var nPriority = parseInt(oConfig.priority, 10);
+                const nPriority = parseInt(oConfig.priority, 10);
                 if (isNaN(nPriority) || nPriority < 1 || nPriority > 10) {
                     aErrors.push("Priority must be between 1 and 10");
                 }
@@ -101,7 +101,7 @@ sap.ui.define([
 
             // Validate memory limits
             if (oConfig.memoryLimit !== undefined) {
-                var nMemory = parseInt(oConfig.memoryLimit, 10);
+                const nMemory = parseInt(oConfig.memoryLimit, 10);
                 if (isNaN(nMemory) || nMemory < 128 || nMemory > 8192) {
                     aErrors.push("Memory limit must be between 128MB and 8192MB");
                 }
@@ -109,7 +109,7 @@ sap.ui.define([
 
             // Validate timeout values
             if (oConfig.timeout !== undefined) {
-                var nTimeout = parseInt(oConfig.timeout, 10);
+                const nTimeout = parseInt(oConfig.timeout, 10);
                 if (isNaN(nTimeout) || nTimeout < 1 || nTimeout > 3600) {
                     aErrors.push("Timeout must be between 1 and 3600 seconds");
                 }
@@ -127,11 +127,11 @@ sap.ui.define([
          * @param {Object} oConfig - Configuration to sanitize
          * @returns {Object} Sanitized configuration
          */
-        sanitizeAgentConfig: function(oConfig) {
-            if (!oConfig) return {};
-            
-            var oSanitized = {};
-            
+        sanitizeAgentConfig(oConfig) {
+            if (!oConfig) {return {};}
+
+            const oSanitized = {};
+
             if (oConfig.agentName) {
                 oSanitized.agentName = this.sanitizeInput(oConfig.agentName);
             }
@@ -150,7 +150,7 @@ sap.ui.define([
             if (oConfig.timeout !== undefined) {
                 oSanitized.timeout = Math.max(1, Math.min(3600, parseInt(oConfig.timeout, 10) || 300));
             }
-            
+
             return oSanitized;
         },
 
@@ -160,9 +160,9 @@ sap.ui.define([
          * @param {string} sOperation - Bulk operation type
          * @returns {Object} Validation result
          */
-        validateBulkOperation: function(aAgentIds, sOperation) {
-            var aErrors = [];
-            
+        validateBulkOperation(aAgentIds, sOperation) {
+            const aErrors = [];
+
             if (!Array.isArray(aAgentIds)) {
                 aErrors.push("Agent IDs must be provided as an array");
                 return { isValid: false, errors: aErrors };
@@ -180,26 +180,26 @@ sap.ui.define([
             }
 
             // Validate operation type
-            var aValidOperations = ["START", "STOP", "RESTART", "UPDATE_CONFIG", "HEALTH_CHECK", "DELETE"];
+            const aValidOperations = ["START", "STOP", "RESTART", "UPDATE_CONFIG", "HEALTH_CHECK", "DELETE"];
             if (!sOperation || !aValidOperations.includes(sOperation)) {
                 aErrors.push("Invalid bulk operation type");
             }
 
             // Validate each agent ID
-            aAgentIds.forEach(function(sAgentId, index) {
-                if (typeof sAgentId !== 'string' || sAgentId.length === 0) {
-                    aErrors.push("Agent ID at index " + index + " is invalid");
+            aAgentIds.forEach((sAgentId, index) => {
+                if (typeof sAgentId !== "string" || sAgentId.length === 0) {
+                    aErrors.push(`Agent ID at index ${ index } is invalid`);
                 } else if (sAgentId.length > 50) {
-                    aErrors.push("Agent ID at index " + index + " is too long");
+                    aErrors.push(`Agent ID at index ${ index } is too long`);
                 } else if (!/^[a-zA-Z0-9_\-]+$/.test(sAgentId)) {
-                    aErrors.push("Agent ID at index " + index + " contains invalid characters");
+                    aErrors.push(`Agent ID at index ${ index } contains invalid characters`);
                 }
             });
 
             return {
                 isValid: aErrors.length === 0,
                 errors: aErrors,
-                sanitizedIds: aAgentIds.map(function(id) { return this.sanitizeInput(id); }.bind(this)),
+                sanitizedIds: aAgentIds.map((id) => { return this.sanitizeInput(id); }),
                 sanitizedOperation: this.sanitizeInput(sOperation)
             };
         },
@@ -209,20 +209,20 @@ sap.ui.define([
          * @param {string} sInput - Input to sanitize
          * @returns {string} Sanitized input
          */
-        sanitizeInput: function(sInput) {
-            if (typeof sInput !== 'string') {
-                return String(sInput || '');
+        sanitizeInput(sInput) {
+            if (typeof sInput !== "string") {
+                return String(sInput || "");
             }
-            
+
             // Remove potential XSS patterns
-            var sSanitized = sInput
-                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-                .replace(/javascript:/gi, '')
-                .replace(/on\w+\s*=/gi, '')
-                .replace(/eval\s*\(/gi, '')
-                .replace(/new\s+Function\s*\(/gi, '');
-            
+            const sSanitized = sInput
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+                .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
+                .replace(/javascript:/gi, "")
+                .replace(/on\w+\s*=/gi, "")
+                .replace(/eval\s*\(/gi, "")
+                .replace(/new\s+Function\s*\(/gi, "");
+
             return encodeXML(sSanitized);
         },
 
@@ -231,31 +231,31 @@ sap.ui.define([
          * @param {Object} oOptions - Request options
          * @returns {Promise} Promise for the request
          */
-        secureAjaxRequest: function(oOptions) {
-            var that = this;
-            
-            return new Promise(function(resolve, reject) {
+        secureAjaxRequest(oOptions) {
+            const that = this;
+
+            return new Promise((resolve, reject) => {
                 // Get CSRF token first
-                that.getCSRFToken().then(function(sToken) {
+                that.getCSRFToken().then((sToken) => {
                     // Set default headers
                     oOptions.headers = oOptions.headers || {};
                     oOptions.headers["X-CSRF-Token"] = sToken;
                     oOptions.headers["Content-Type"] = oOptions.headers["Content-Type"] || "application/json";
                     oOptions.headers["X-Requested-With"] = "XMLHttpRequest";
-                    
+
                     // Add authentication header if available
-                    var sAuthToken = sessionStorage.getItem("a2a_auth_token");
+                    const sAuthToken = sessionStorage.getItem("a2a_auth_token");
                     if (sAuthToken) {
-                        oOptions.headers["Authorization"] = "Bearer " + sAuthToken;
+                        oOptions.headers["Authorization"] = `Bearer ${ sAuthToken}`;
                     }
-                    
+
                     // Set timeout if not specified (default 30 seconds)
                     oOptions.timeout = oOptions.timeout || 30000;
-                    
+
                     // Make the request
                     jQuery.ajax(oOptions)
                         .done(resolve)
-                        .fail(function(xhr, status, error) {
+                        .fail((xhr, status, error) => {
                             Log.error("Secure AJAX request failed", {
                                 status: xhr.status,
                                 statusText: xhr.statusText,
@@ -263,7 +263,7 @@ sap.ui.define([
                             });
                             reject(xhr);
                         });
-                }).catch(function(error) {
+                }).catch((error) => {
                     Log.error("Failed to get CSRF token for secure request");
                     reject(error);
                 });
@@ -274,22 +274,22 @@ sap.ui.define([
          * Get CSRF token for secure requests
          * @returns {Promise<string>} Promise that resolves to CSRF token
          */
-        getCSRFToken: function() {
-            return new Promise(function(resolve, reject) {
+        getCSRFToken() {
+            return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     url: "/a2a/common/v1/csrf-token",
                     type: "GET",
                     headers: {
                         "X-Requested-With": "XMLHttpRequest"
                     },
-                    success: function(data) {
+                    success(data) {
                         if (data && data.token) {
                             resolve(data.token);
                         } else {
                             reject("Invalid CSRF token response");
                         }
                     },
-                    error: function() {
+                    error() {
                         reject("Failed to retrieve CSRF token");
                     }
                 });
@@ -301,19 +301,19 @@ sap.ui.define([
          * @param {string} sUrl - URL to validate
          * @returns {Object} Validation result
          */
-        validateEventSourceURL: function(sUrl) {
-            var aErrors = [];
-            
-            if (!sUrl || typeof sUrl !== 'string') {
+        validateEventSourceURL(sUrl) {
+            const aErrors = [];
+
+            if (!sUrl || typeof sUrl !== "string") {
                 aErrors.push("Invalid URL format");
                 return { isValid: false, errors: aErrors };
             }
 
             // Must be relative URL or same origin
-            if (sUrl.startsWith('http://') || sUrl.startsWith('https://')) {
+            if (sUrl.startsWith("http://") || sUrl.startsWith("https://")) {
                 try {
-                    var oURL = new URL(sUrl);
-                    var sCurrentHost = window.location.host;
+                    const oURL = new URL(sUrl);
+                    const sCurrentHost = window.location.host;
                     if (oURL.host !== sCurrentHost) {
                         aErrors.push("External EventSource URLs not allowed");
                     }
@@ -337,7 +337,7 @@ sap.ui.define([
         /**
          * Security headers for API responses
          */
-        getSecurityHeaders: function() {
+        getSecurityHeaders() {
             return {
                 "X-Content-Type-Options": "nosniff",
                 "X-Frame-Options": "DENY",
@@ -353,8 +353,8 @@ sap.ui.define([
          * @param {string} sDescription - Event description
          * @param {Object} oData - Additional data
          */
-        logSecurityEvent: function(sEvent, sDescription, oData) {
-            var oLogData = {
+        logSecurityEvent(sEvent, sDescription, oData) {
+            const oLogData = {
                 timestamp: new Date().toISOString(),
                 event: sEvent,
                 description: sDescription,
@@ -363,14 +363,14 @@ sap.ui.define([
                 userAgent: navigator.userAgent.substring(0, 200)
             };
 
-            Log.info("Security Event: " + sEvent, oLogData);
-            
+            Log.info(`Security Event: ${ sEvent}`, oLogData);
+
             // Also send to audit service
             this.secureAjaxRequest({
                 url: "/a2a/common/v1/audit",
                 type: "POST",
                 data: JSON.stringify(oLogData)
-            }).catch(function() {
+            }).catch(() => {
                 // Silent fail for audit service
             });
         }

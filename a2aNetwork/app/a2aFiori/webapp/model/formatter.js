@@ -2,7 +2,7 @@ sap.ui.define([
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/ValueState",
     "sap/base/Log"
-], function(DateFormat, ValueState, Log) {
+], (DateFormat, ValueState, Log) => {
     "use strict";
 
     return {

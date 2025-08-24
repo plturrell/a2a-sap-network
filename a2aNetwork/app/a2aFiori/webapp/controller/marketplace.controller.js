@@ -9,7 +9,7 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
     "sap/m/MessageBox"
-], function(BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) {
+], (BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Marketplace", {
@@ -170,7 +170,7 @@ sap.ui.define([
             }
 
             // Apply filters
-            aItems.forEach(function(item) {
+            aItems.forEach((item) => {
                 let bVisible = true;
 
                 // Search filter
@@ -263,7 +263,7 @@ sap.ui.define([
             const oCart = this.oMarketplaceModel.getProperty("/cart");
 
             // Check if already in cart
-            const bExists = oCart.items.some(function(item) {
+            const bExists = oCart.items.some((item) => {
                 return item.id === oItem.id;
             });
 
@@ -288,7 +288,7 @@ sap.ui.define([
             const oCart = this.oMarketplaceModel.getProperty("/cart");
             let fTotal = 0;
 
-            oCart.items.forEach(function(item) {
+            oCart.items.forEach((item) => {
                 if (item.pricing === "subscription") {
                     fTotal += item.price; // Monthly subscription
                 } else if (item.pricing === "one-time") {
@@ -312,7 +312,7 @@ sap.ui.define([
             const oItem = oEvent.getParameter("listItem").getBindingContext("marketplace").getObject();
             const oCart = this.oMarketplaceModel.getProperty("/cart");
 
-            const iIndex = oCart.items.findIndex(function(item) {
+            const iIndex = oCart.items.findIndex((item) => {
                 return item.id === oItem.id;
             });
 

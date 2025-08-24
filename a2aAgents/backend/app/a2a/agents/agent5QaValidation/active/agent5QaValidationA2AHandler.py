@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
-from .None import None
+from .enhancedQaValidationAgentMcp import EnhancedQAValidationAgentMCP
 
 logger = logging.getLogger(__name__)
 
@@ -28,27 +28,33 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
     All communication through blockchain messaging only
     """
     
-    def __init__(self, agent_sdk: None):
+    def __init__(self, agent_sdk: EnhancedQAValidationAgentMCP):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
         config = SecureAgentConfig(
-            agent_id="agent5QaValidation",
-            agent_name="Agent 5 - QA Validation",
-            agent_version="1.0.0",
+            agent_id="qa_validation_agent",
+            agent_name="QA Validation Agent",
+            agent_version="2.0.0",
             allowed_operations={
-                "initialize_agent_endpoint",
+                # Registry capabilities
+                "qa_validation",
+                "quality_assurance",
+                "test_execution",
+                "validation_reporting",
+                "compliance_checking",
+                # Enhanced operations
+                "generate_qa_tests",
+                "validate_answers",
+                "execute_test_suite",
+                "generate_validation_report",
+                "check_compliance",
+                "semantic_validation",
+                "batch_processing",
+                "websocket_management",
+                "template_management",
+                # Base operations
                 "health_check",
-                "get_agent_card",
-                "discover_ord_products",
-                "generate_dynamic_tests",
-                "execute_a2a_task",
-                "get_task_status",
-                "get_task_report",
-                "get_partial_task_report",
-                "get_question_templates",
-                "get_metrics",
-                "reset_validation_state",
-                "shutdown_agent"
+                "get_supported_formats"
             },
             enable_authentication=True,
             enable_rate_limiting=True,
@@ -76,17 +82,26 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
     def _register_handlers(self):
         """Register A2A message handlers"""
 
-        @self.secure_handler("initialize_agent_endpoint")
-        async def handle_initialize_agent_endpoint(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle initialize_agent_endpoint operation"""
+        @self.secure_handler("get_supported_formats")
+        async def handle_get_supported_formats(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle get_supported_formats operation"""
             try:
-                # TODO: Implement initialize_agent_endpoint logic
-                # Example: result = await self.agent_sdk.initialize_agent_endpoint(data)
-                result = {"status": "success", "operation": "initialize_agent_endpoint"}
+                result = {
+                    "supported_formats": [
+                        "json", "xml", "yaml", "csv", "text"
+                    ],
+                    "validation_methods": [
+                        "exact_match", "semantic_similarity", "fuzzy_matching",
+                        "knowledge_graph", "contextual_analysis", "multi_modal"
+                    ],
+                    "template_types": [
+                        "factual", "inferential", "comparative", "analytical", "evaluative", "synthetic"
+                    ]
+                }
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="initialize_agent_endpoint",
+                    operation="get_supported_formats",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -95,7 +110,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to initialize_agent_endpoint: {e}")
+                logger.error(f"Failed to get_supported_formats: {e}")
                 return self.create_secure_response(str(e), status="error")
 
         @self.secure_handler("health_check")
@@ -126,16 +141,21 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("get_agent_card")
-        async def handle_get_agent_card(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Get agent card information"""
+        # Registry capability handlers
+        @self.secure_handler("qa_validation")
+        async def handle_qa_validation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle comprehensive QA validation"""
             try:
-                agent_card = await self.agent_sdk.get_agent_card()
-                result = agent_card
+                result = await self.agent_sdk.generate_sophisticated_qa_tests_mcp(
+                    content_data=data.get("content_data", {}),
+                    template_complexity=data.get("complexity", "intermediate"),
+                    test_count=data.get("test_count", 20),
+                    validation_methods=data.get("validation_methods")
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="get_agent_card",
+                    operation="qa_validation",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -144,20 +164,22 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to get_agent_card: {e}")
+                logger.error(f"Failed to qa_validation: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("discover_ord_products")
-        async def handle_discover_ord_products(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle discover_ord_products operation"""
+        @self.secure_handler("quality_assurance")
+        async def handle_quality_assurance(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle quality assurance operations"""
             try:
-                # TODO: Implement discover_ord_products logic
-                # Example: result = await self.agent_sdk.discover_ord_products(data)
-                result = {"status": "success", "operation": "discover_ord_products"}
+                result = await self.agent_sdk.validate_answers_semantically_mcp(
+                    qa_pairs=data.get("qa_pairs", []),
+                    validation_methods=data.get("validation_methods"),
+                    confidence_threshold=data.get("confidence_threshold", 0.7)
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="discover_ord_products",
+                    operation="quality_assurance",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -166,20 +188,22 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to discover_ord_products: {e}")
+                logger.error(f"Failed to quality_assurance: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("generate_dynamic_tests")
-        async def handle_generate_dynamic_tests(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle generate_dynamic_tests operation"""
+        @self.secure_handler("test_execution")
+        async def handle_test_execution(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle test execution operations"""
             try:
-                # TODO: Implement generate_dynamic_tests logic
-                # Example: result = await self.agent_sdk.generate_dynamic_tests(data)
-                result = {"status": "success", "operation": "generate_dynamic_tests"}
+                result = await self.agent_sdk.optimize_qa_batch_processing_mcp(
+                    test_data=data.get("test_data", []),
+                    optimization_strategy=data.get("strategy", "adaptive"),
+                    max_batch_size=data.get("batch_size", 100)
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="generate_dynamic_tests",
+                    operation="test_execution",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -188,20 +212,18 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to generate_dynamic_tests: {e}")
+                logger.error(f"Failed to test_execution: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("execute_a2a_task")
-        async def handle_execute_a2a_task(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle execute_a2a_task operation"""
+        @self.secure_handler("validation_reporting")
+        async def handle_validation_reporting(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle validation reporting operations"""
             try:
-                # TODO: Implement execute_a2a_task logic
-                # Example: result = await self.agent_sdk.execute_a2a_task(data)
-                result = {"status": "success", "operation": "execute_a2a_task"}
+                result = await self.agent_sdk.get_batch_processing_metrics()
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="execute_a2a_task",
+                    operation="validation_reporting",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -210,23 +232,18 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to execute_a2a_task: {e}")
+                logger.error(f"Failed to validation_reporting: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("get_task_status")
-        async def handle_get_task_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Get status of a specific task"""
+        @self.secure_handler("compliance_checking")
+        async def handle_compliance_checking(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle compliance checking operations"""
             try:
-                task_id = data.get("task_id")
-                if not task_id:
-                    raise ValueError("task_id is required")
-                
-                status = await self.agent_sdk.get_task_status(task_id)
-                result = status
+                result = await self.agent_sdk.get_semantic_validation_status()
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="get_task_status",
+                    operation="compliance_checking",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -235,20 +252,24 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to get_task_status: {e}")
+                logger.error(f"Failed to compliance_checking: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("get_task_report")
-        async def handle_get_task_report(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle get_task_report operation"""
+        # Enhanced operation handlers
+        @self.secure_handler("generate_qa_tests")
+        async def handle_generate_qa_tests(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle QA test generation with sophisticated templates"""
             try:
-                # TODO: Implement get_task_report logic
-                # Example: result = await self.agent_sdk.get_task_report(data)
-                result = {"status": "success", "operation": "get_task_report"}
+                result = await self.agent_sdk.generate_sophisticated_qa_tests_mcp(
+                    content_data=data.get("content_data", {}),
+                    template_complexity=data.get("complexity", "intermediate"),
+                    test_count=data.get("test_count", 20),
+                    batch_optimization=data.get("batch_optimization", True)
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="get_task_report",
+                    operation="generate_qa_tests",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -257,20 +278,23 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to get_task_report: {e}")
+                logger.error(f"Failed to generate_qa_tests: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("get_partial_task_report")
-        async def handle_get_partial_task_report(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle get_partial_task_report operation"""
+        @self.secure_handler("validate_answers")
+        async def handle_validate_answers(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle answer validation with semantic analysis"""
             try:
-                # TODO: Implement get_partial_task_report logic
-                # Example: result = await self.agent_sdk.get_partial_task_report(data)
-                result = {"status": "success", "operation": "get_partial_task_report"}
+                result = await self.agent_sdk.validate_answers_semantically_mcp(
+                    qa_pairs=data.get("qa_pairs", []),
+                    validation_methods=data.get("validation_methods"),
+                    confidence_threshold=data.get("confidence_threshold", 0.7),
+                    enable_consensus=data.get("enable_consensus", True)
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="get_partial_task_report",
+                    operation="validate_answers",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -279,20 +303,23 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to get_partial_task_report: {e}")
+                logger.error(f"Failed to validate_answers: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("get_question_templates")
-        async def handle_get_question_templates(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle get_question_templates operation"""
+        @self.secure_handler("execute_test_suite")
+        async def handle_execute_test_suite(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle test suite execution with optimization"""
             try:
-                # TODO: Implement get_question_templates logic
-                # Example: result = await self.agent_sdk.get_question_templates(data)
-                result = {"status": "success", "operation": "get_question_templates"}
+                result = await self.agent_sdk.optimize_qa_batch_processing_mcp(
+                    test_data=data.get("test_data", []),
+                    optimization_strategy=data.get("strategy", "adaptive"),
+                    max_batch_size=data.get("batch_size", 100),
+                    enable_caching=data.get("enable_caching", True)
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="get_question_templates",
+                    operation="execute_test_suite",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -301,20 +328,18 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to get_question_templates: {e}")
+                logger.error(f"Failed to execute_test_suite: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("get_metrics")
-        async def handle_get_metrics(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle get_metrics operation"""
+        @self.secure_handler("generate_validation_report")
+        async def handle_generate_validation_report(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle validation report generation"""
             try:
-                # TODO: Implement get_metrics logic
-                # Example: result = await self.agent_sdk.get_metrics(data)
-                result = {"status": "success", "operation": "get_metrics"}
+                result = await self.agent_sdk.get_batch_processing_metrics()
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="get_metrics",
+                    operation="generate_validation_report",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -323,20 +348,18 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to get_metrics: {e}")
+                logger.error(f"Failed to generate_validation_report: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("reset_validation_state")
-        async def handle_reset_validation_state(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle reset_validation_state operation"""
+        @self.secure_handler("check_compliance")
+        async def handle_check_compliance(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle compliance checking with advanced validation"""
             try:
-                # TODO: Implement reset_validation_state logic
-                # Example: result = await self.agent_sdk.reset_validation_state(data)
-                result = {"status": "success", "operation": "reset_validation_state"}
+                result = await self.agent_sdk.get_semantic_validation_status()
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="reset_validation_state",
+                    operation="check_compliance",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -345,20 +368,22 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to reset_validation_state: {e}")
+                logger.error(f"Failed to check_compliance: {e}")
                 return self.create_secure_response(str(e), status="error")
 
-        @self.secure_handler("shutdown_agent")
-        async def handle_shutdown_agent(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            """Handle shutdown_agent operation"""
+        @self.secure_handler("semantic_validation")
+        async def handle_semantic_validation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle advanced semantic validation"""
             try:
-                # TODO: Implement shutdown_agent logic
-                # Example: result = await self.agent_sdk.shutdown_agent(data)
-                result = {"status": "success", "operation": "shutdown_agent"}
+                result = await self.agent_sdk.validate_answers_semantically_mcp(
+                    qa_pairs=data.get("qa_pairs", []),
+                    validation_methods=data.get("validation_methods", ["semantic_similarity", "contextual_analysis"]),
+                    confidence_threshold=data.get("confidence_threshold", 0.8)
+                )
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
-                    operation="shutdown_agent",
+                    operation="semantic_validation",
                     data_hash=self._hash_data(data),
                     result_hash=self._hash_data(result),
                     context_id=context_id
@@ -367,7 +392,75 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 return self.create_secure_response(result)
                 
             except Exception as e:
-                logger.error(f"Failed to shutdown_agent: {e}")
+                logger.error(f"Failed to semantic_validation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("batch_processing")
+        async def handle_batch_processing(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle optimized batch processing"""
+            try:
+                result = await self.agent_sdk.optimize_qa_batch_processing_mcp(
+                    test_data=data.get("test_data", []),
+                    optimization_strategy=data.get("strategy", "adaptive"),
+                    max_batch_size=data.get("batch_size", 100)
+                )
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="batch_processing",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to batch_processing: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("websocket_management")
+        async def handle_websocket_management(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle WebSocket connection management"""
+            try:
+                result = await self.agent_sdk.manage_websocket_connections_mcp(
+                    action=data.get("action", "status"),
+                    task_id=data.get("task_id"),
+                    connection_config=data.get("connection_config", {})
+                )
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="websocket_management",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to websocket_management: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("template_management")
+        async def handle_template_management(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle template management operations"""
+            try:
+                result = await self.agent_sdk.get_template_capabilities()
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="template_management",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to template_management: {e}")
                 return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
@@ -475,8 +568,8 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
 
 
 # Factory function to create A2A handler
-def create_agent5QaValidation_a2a_handler(agent_sdk: None) -> Agent5QavalidationA2AHandler:
-    """Create A2A-compliant handler for Agent 5 - QA Validation"""
+def create_agent5QaValidation_a2a_handler(agent_sdk: EnhancedQAValidationAgentMCP) -> Agent5QavalidationA2AHandler:
+    """Create A2A-compliant handler for Agent 5 - QA Validation Agent"""
     return Agent5QavalidationA2AHandler(agent_sdk)
 
 

@@ -9,7 +9,7 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "sap/base/Log",
     "../utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
     "use strict";
 
     /**
@@ -19,25 +19,25 @@ sap.ui.define([
      * Provides comprehensive test execution, compliance validation, reporting, and defect management features.
      */
     return ControllerExtension.extend("a2a.network.agent5.ext.controller.ObjectPageExt", {
-        
+
         override: {
             /**
              * @function onInit
              * @description Initializes the controller extension, sets up performance optimizations and device model.
              * @override
              */
-            onInit: function () {
+            onInit() {
                 // Initialize device model for responsive design
-                var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+                const oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
                 this.base.getView().setModel(oDeviceModel, "device");
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 // Initialize performance optimizations
                 this._throttledProgressUpdate = this._throttle(this._updateProgressDisplay.bind(this), 1000);
-                
+
                 // Initialize create model
                 this._initializeCreateModel();
-                
+
                 // Initialize resource bundle for i18n
                 this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             },
@@ -48,7 +48,7 @@ sap.ui.define([
              * Ensures proper cleanup of dialogs, WebSocket connections, and intervals.
              * @override
              */
-            onExit: function() {
+            onExit() {
                 // Cleanup resources and WebSocket connections
                 if (this._oComplianceDialog) {
                     this._oComplianceDialog.destroy();
@@ -79,8 +79,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeCreateModel: function() {
-            var oCreateModel = new JSONModel({
+        _initializeCreateModel() {
+            const oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
                 testSuite: "",
@@ -125,10 +125,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oModel = this.base.getView().getModel("create");
-            
+        onTaskNameChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oModel = this.base.getView().getModel("create");
+
             if (!sValue || sValue.trim().length === 0) {
                 oModel.setProperty("/taskNameState", "Error");
                 oModel.setProperty("/taskNameStateText", this._oResourceBundle.getText("validation.taskNameRequired"));
@@ -145,7 +145,7 @@ sap.ui.define([
                 oModel.setProperty("/taskNameState", "Success");
                 oModel.setProperty("/taskNameStateText", "");
             }
-            
+
             this._validateForm();
         },
 
@@ -155,42 +155,42 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTestTypeChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oModel = this.base.getView().getModel("create");
-            
+        onTestTypeChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oModel = this.base.getView().getModel("create");
+
             if (!sSelectedKey) {
                 oModel.setProperty("/testTypeState", "Error");
                 oModel.setProperty("/testTypeStateText", this._oResourceBundle.getText("validation.testTypeRequired"));
             } else {
                 oModel.setProperty("/testTypeState", "Success");
                 oModel.setProperty("/testTypeStateText", "");
-                
+
                 // Auto-suggest test framework based on test type
-                switch(sSelectedKey) {
-                    case "UNIT":
-                        oModel.setProperty("/testFramework", "JEST");
-                        oModel.setProperty("/automationLevel", 90);
-                        break;
-                    case "INTEGRATION":
-                    case "SYSTEM":
-                        oModel.setProperty("/testFramework", "SELENIUM");
-                        oModel.setProperty("/automationLevel", 70);
-                        break;
-                    case "PERFORMANCE":
-                        oModel.setProperty("/testFramework", "JMETER");
-                        oModel.setProperty("/automationLevel", 80);
-                        break;
-                    case "SECURITY":
-                        oModel.setProperty("/securityValidation", true);
-                        break;
-                    case "ACCESSIBILITY":
-                        oModel.setProperty("/accessibilityTesting", true);
-                        oModel.setProperty("/complianceStandard", "WCAG");
-                        break;
+                switch (sSelectedKey) {
+                case "UNIT":
+                    oModel.setProperty("/testFramework", "JEST");
+                    oModel.setProperty("/automationLevel", 90);
+                    break;
+                case "INTEGRATION":
+                case "SYSTEM":
+                    oModel.setProperty("/testFramework", "SELENIUM");
+                    oModel.setProperty("/automationLevel", 70);
+                    break;
+                case "PERFORMANCE":
+                    oModel.setProperty("/testFramework", "JMETER");
+                    oModel.setProperty("/automationLevel", 80);
+                    break;
+                case "SECURITY":
+                    oModel.setProperty("/securityValidation", true);
+                    break;
+                case "ACCESSIBILITY":
+                    oModel.setProperty("/accessibilityTesting", true);
+                    oModel.setProperty("/complianceStandard", "WCAG");
+                    break;
                 }
             }
-            
+
             this._validateForm();
         },
 
@@ -200,10 +200,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTargetApplicationChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oModel = this.base.getView().getModel("create");
-            
+        onTargetApplicationChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oModel = this.base.getView().getModel("create");
+
             if (!sValue || sValue.trim().length === 0) {
                 oModel.setProperty("/targetApplicationState", "Error");
                 oModel.setProperty("/targetApplicationStateText", this._oResourceBundle.getText("validation.targetApplicationRequired"));
@@ -214,7 +214,7 @@ sap.ui.define([
                 oModel.setProperty("/targetApplicationState", "Success");
                 oModel.setProperty("/targetApplicationStateText", "");
             }
-            
+
             this._validateForm();
         },
 
@@ -224,24 +224,24 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTestFrameworkChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oModel = this.base.getView().getModel("create");
-            
+        onTestFrameworkChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oModel = this.base.getView().getModel("create");
+
             // Adjust timeout based on framework
-            switch(sSelectedKey) {
-                case "CYPRESS":
-                case "PLAYWRIGHT":
-                    oModel.setProperty("/testTimeout", 20);
-                    oModel.setProperty("/captureScreenshots", true);
-                    break;
-                case "SELENIUM":
-                    oModel.setProperty("/testTimeout", 30);
-                    break;
-                case "JEST":
-                case "MOCHA":
-                    oModel.setProperty("/testTimeout", 10);
-                    break;
+            switch (sSelectedKey) {
+            case "CYPRESS":
+            case "PLAYWRIGHT":
+                oModel.setProperty("/testTimeout", 20);
+                oModel.setProperty("/captureScreenshots", true);
+                break;
+            case "SELENIUM":
+                oModel.setProperty("/testTimeout", 30);
+                break;
+            case "JEST":
+            case "MOCHA":
+                oModel.setProperty("/testTimeout", 10);
+                break;
             }
         },
 
@@ -251,31 +251,31 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onComplianceStandardChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oModel = this.base.getView().getModel("create");
-            
+        onComplianceStandardChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oModel = this.base.getView().getModel("create");
+
             // Auto-enable relevant compliance requirements
-            switch(sSelectedKey) {
-                case "GDPR":
-                case "HIPAA":
-                    oModel.setProperty("/requiresApproval", true);
-                    oModel.setProperty("/auditTrail", true);
-                    oModel.setProperty("/securityValidation", true);
-                    break;
-                case "SOX":
-                    oModel.setProperty("/requiresApproval", true);
-                    oModel.setProperty("/auditTrail", true);
-                    oModel.setProperty("/regulatoryCompliance", true);
-                    break;
-                case "WCAG":
-                    oModel.setProperty("/accessibilityTesting", true);
-                    oModel.setProperty("/usabilityTesting", true);
-                    break;
-                case "PCI":
-                    oModel.setProperty("/securityValidation", true);
-                    oModel.setProperty("/performanceValidation", true);
-                    break;
+            switch (sSelectedKey) {
+            case "GDPR":
+            case "HIPAA":
+                oModel.setProperty("/requiresApproval", true);
+                oModel.setProperty("/auditTrail", true);
+                oModel.setProperty("/securityValidation", true);
+                break;
+            case "SOX":
+                oModel.setProperty("/requiresApproval", true);
+                oModel.setProperty("/auditTrail", true);
+                oModel.setProperty("/regulatoryCompliance", true);
+                break;
+            case "WCAG":
+                oModel.setProperty("/accessibilityTesting", true);
+                oModel.setProperty("/usabilityTesting", true);
+                break;
+            case "PCI":
+                oModel.setProperty("/securityValidation", true);
+                oModel.setProperty("/performanceValidation", true);
+                break;
             }
         },
 
@@ -284,10 +284,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onAddTestCase: function() {
-            var oModel = this.base.getView().getModel("create");
-            var aTestCases = oModel.getProperty("/testCases");
-            
+        onAddTestCase() {
+            const oModel = this.base.getView().getModel("create");
+            const aTestCases = oModel.getProperty("/testCases");
+
             aTestCases.push({
                 testName: "",
                 description: "",
@@ -296,7 +296,7 @@ sap.ui.define([
                 automationLevel: "AUTOMATED",
                 id: Date.now()
             });
-            
+
             oModel.setProperty("/testCases", aTestCases);
             this._validateForm();
         },
@@ -307,7 +307,7 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTestCaseNameChange: function(oEvent) {
+        onTestCaseNameChange(oEvent) {
             this._validateForm();
         },
 
@@ -316,14 +316,14 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _validateForm: function() {
-            var oModel = this.base.getView().getModel("create");
-            var oData = oModel.getData();
-            
-            var bValid = oData.taskNameState === "Success" &&
+        _validateForm() {
+            const oModel = this.base.getView().getModel("create");
+            const oData = oModel.getData();
+
+            const bValid = oData.taskNameState === "Success" &&
                         oData.testTypeState === "Success" &&
                         oData.targetApplicationState === "Success";
-            
+
             oModel.setProperty("/isValid", bValid);
         },
 
@@ -335,28 +335,28 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog instance
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Add keyboard navigation support
                 oDialog.addEventDelegate({
-                    onAfterRendering: function() {
+                    onAfterRendering() {
                         that._enableKeyboardNavigation(oDialog);
                     }
                 });
-                
+
                 return oDialog;
             });
         },
@@ -367,14 +367,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog instance
          * @private
          */
-        _enableKeyboardNavigation: function(oDialog) {
-            var $dialog = oDialog.$();
-            
+        _enableKeyboardNavigation(oDialog) {
+            const $dialog = oDialog.$();
+
             // Set tabindex for focusable elements
             $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-            
+
             // Handle escape key to close dialog
-            $dialog.on("keydown", function(e) {
+            $dialog.on("keydown", (e) => {
                 if (e.key === "Escape") {
                     oDialog.close();
                 }
@@ -389,43 +389,43 @@ sap.ui.define([
          * @returns {Promise} Promise with error recovery
          * @private
          */
-        _withErrorRecovery: function(fnOperation, oOptions) {
-            var that = this;
-            var oDefaults = {
+        _withErrorRecovery(fnOperation, oOptions) {
+            const that = this;
+            const oDefaults = {
                 retries: 3,
                 retryDelay: 1000,
                 fallback: null,
                 errorHandler: null
             };
-            var oSettings = Object.assign({}, oDefaults, oOptions);
-            
+            const oSettings = Object.assign({}, oDefaults, oOptions);
+
             function attempt(retriesLeft) {
-                return fnOperation().catch(function(error) {
+                return fnOperation().catch((error) => {
                     if (retriesLeft > 0) {
                         that._logAuditEvent("ERROR_RECOVERY_RETRY", "Retrying operation", {
-                            retriesLeft: retriesLeft,
+                            retriesLeft,
                             error: error.message
                         });
-                        
-                        return new Promise(function(resolve) {
+
+                        return new Promise((resolve) => {
                             setTimeout(resolve, oSettings.retryDelay);
-                        }).then(function() {
+                        }).then(() => {
                             return attempt(retriesLeft - 1);
                         });
                     }
-                    
+
                     if (oSettings.errorHandler) {
                         oSettings.errorHandler(error);
                     }
-                    
+
                     if (oSettings.fallback) {
                         return oSettings.fallback();
                     }
-                    
+
                     throw error;
                 });
             }
-            
+
             return attempt(oSettings.retries);
         },
 
@@ -438,14 +438,14 @@ sap.ui.define([
          * @returns {*} Appropriate value for current device
          * @private
          */
-        _getResponsiveValue: function(phoneValue, tabletValue, desktopValue) {
+        _getResponsiveValue(phoneValue, tabletValue, desktopValue) {
             if (sap.ui.Device.system.phone) {
                 return phoneValue;
             } else if (sap.ui.Device.system.tablet) {
                 return tabletValue;
-            } else {
-                return desktopValue;
             }
+            return desktopValue;
+
         },
 
         /**
@@ -456,15 +456,15 @@ sap.ui.define([
          * @returns {Function} Throttled function
          * @private
          */
-        _throttle: function(fn, limit) {
-            var inThrottle;
+        _throttle(fn, limit) {
+            let inThrottle;
             return function() {
-                var args = arguments;
-                var context = this;
+                const args = arguments;
+                const context = this;
                 if (!inThrottle) {
                     fn.apply(context, args);
                     inThrottle = true;
-                    setTimeout(function() { inThrottle = false; }, limit);
+                    setTimeout(() => { inThrottle = false; }, limit);
                 }
             };
         },
@@ -477,50 +477,50 @@ sap.ui.define([
          * @returns {Object} Validation result with isValid flag and sanitized value
          * @private
          */
-        _validateInput: function(sInput, sType) {
-            if (!sInput || typeof sInput !== 'string') {
+        _validateInput(sInput, sType) {
+            if (!sInput || typeof sInput !== "string") {
                 return { isValid: false, message: "Invalid input format" };
             }
 
-            var sSanitized = sInput.trim();
-            
+            const sSanitized = sInput.trim();
+
             // XSS prevention patterns
-            var aXSSPatterns = [
-                /<script/i, /javascript:/i, /on\w+\s*=/i, /<iframe/i, 
+            const aXSSPatterns = [
+                /<script/i, /javascript:/i, /on\w+\s*=/i, /<iframe/i,
                 /<object/i, /<embed/i, /eval\s*\(/i, /Function\s*\(/i
             ];
 
-            for (var i = 0; i < aXSSPatterns.length; i++) {
+            for (let i = 0; i < aXSSPatterns.length; i++) {
                 if (aXSSPatterns[i].test(sSanitized)) {
-                    this._logAuditEvent("XSS_ATTEMPT", "Blocked XSS attempt in " + sType, sInput);
+                    this._logAuditEvent("XSS_ATTEMPT", `Blocked XSS attempt in ${ sType}`, sInput);
                     return { isValid: false, message: "Invalid characters detected" };
                 }
             }
 
             // Type-specific validation
             switch (sType) {
-                case "taskId":
-                    if (!/^[a-zA-Z0-9_-]+$/.test(sSanitized) || sSanitized.length > 50) {
-                        return { isValid: false, message: "Invalid task ID format" };
-                    }
-                    break;
-                case "reportType":
-                    var aValidTypes = ["EXECUTIVE", "DETAILED", "SUMMARY", "COMPLIANCE"];
-                    if (!aValidTypes.includes(sSanitized)) {
-                        return { isValid: false, message: "Invalid report type" };
-                    }
-                    break;
-                case "defectTitle":
-                    if (sSanitized.length > 200) {
-                        return { isValid: false, message: "Defect title too long" };
-                    }
-                    break;
-                case "complianceStandard":
-                    var aValidStandards = ["ISO27001", "SOX", "GDPR", "HIPAA", "PCI", "FISMA", "WCAG"];
-                    if (sSanitized && !aValidStandards.includes(sSanitized)) {
-                        return { isValid: false, message: "Invalid compliance standard" };
-                    }
-                    break;
+            case "taskId":
+                if (!/^[a-zA-Z0-9_-]+$/.test(sSanitized) || sSanitized.length > 50) {
+                    return { isValid: false, message: "Invalid task ID format" };
+                }
+                break;
+            case "reportType":
+                var aValidTypes = ["EXECUTIVE", "DETAILED", "SUMMARY", "COMPLIANCE"];
+                if (!aValidTypes.includes(sSanitized)) {
+                    return { isValid: false, message: "Invalid report type" };
+                }
+                break;
+            case "defectTitle":
+                if (sSanitized.length > 200) {
+                    return { isValid: false, message: "Defect title too long" };
+                }
+                break;
+            case "complianceStandard":
+                var aValidStandards = ["ISO27001", "SOX", "GDPR", "HIPAA", "PCI", "FISMA", "WCAG"];
+                if (sSanitized && !aValidStandards.includes(sSanitized)) {
+                    return { isValid: false, message: "Invalid compliance standard" };
+                }
+                break;
             }
 
             return { isValid: true, sanitized: sSanitized };
@@ -532,15 +532,15 @@ sap.ui.define([
          * @returns {Promise<string>} Promise resolving to CSRF token
          * @private
          */
-        _getCSRFToken: function() {
+        _getCSRFToken() {
             return new Promise(function(resolve, reject) {
                 this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent5/v1/csrf-token",
                     type: "GET",
-                    success: function(data) {
+                    success(data) {
                         resolve(data.token);
                     },
-                    error: function() {
+                    error() {
                         reject("Failed to retrieve CSRF token");
                     }
                 });
@@ -554,22 +554,22 @@ sap.ui.define([
          * @returns {Promise} jQuery promise for the AJAX request
          * @private
          */
-        _secureAjax: function(oOptions) {
-            var that = this;
+        _secureAjax(oOptions) {
+            const that = this;
             return this._getCSRFToken().then(function(sToken) {
                 oOptions.headers = oOptions.headers || {};
                 oOptions.headers["X-CSRF-Token"] = sToken;
-                
-                var sAuthToken = that._getAuthToken();
+
+                const sAuthToken = that._getAuthToken();
                 if (sAuthToken) {
-                    oOptions.headers["Authorization"] = "Bearer " + sAuthToken;
+                    oOptions.headers["Authorization"] = `Bearer ${ sAuthToken}`;
                 }
 
                 return this._securityUtils.secureAjaxRequest(oOptions);
             });
         },
 
-        _getAuthToken: function() {
+        _getAuthToken() {
             return sessionStorage.getItem("a2a_auth_token") || "";
         },
 
@@ -581,9 +581,9 @@ sap.ui.define([
          * @param {*} sData - Additional data to log
          * @private
          */
-        _logAuditEvent: function(sEventType, sDescription, sData) {
+        _logAuditEvent(sEventType, sDescription, sData) {
             // Comprehensive audit trail logging
-            var oAuditData = {
+            const oAuditData = {
                 timestamp: new Date().toISOString(),
                 eventType: sEventType,
                 description: sDescription,
@@ -603,32 +603,32 @@ sap.ui.define([
                 contentType: "application/json",
                 data: JSON.stringify(oAuditData),
                 async: true,
-                success: function() {
+                success() {
                     console.log("Audit trail recorded:", sEventType);
                 },
-                error: function() {
+                error() {
                     // Fallback audit logging to local storage
                     try {
-                        var aLocalAudit = JSON.parse(localStorage.getItem("a2a_audit_log") || "[]");
+                        let aLocalAudit = JSON.parse(localStorage.getItem("a2a_audit_log") || "[]");
                         aLocalAudit.push(oAuditData);
-                        if (aLocalAudit.length > 100) aLocalAudit = aLocalAudit.slice(-100);
+                        if (aLocalAudit.length > 100) {aLocalAudit = aLocalAudit.slice(-100);}
                         localStorage.setItem("a2a_audit_log", JSON.stringify(aLocalAudit));
-                    } catch(e) {
+                    } catch (e) {
                         // Silent fail for localStorage issues
                     }
                 }
             });
         },
 
-        _getSessionId: function() {
+        _getSessionId() {
             return sessionStorage.getItem("a2a_session_id") || "unknown";
         },
 
-        _getClientIP: function() {
+        _getClientIP() {
             return "client_ip_masked";
         },
 
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return "current_user"; // Placeholder
         },
 
@@ -639,9 +639,9 @@ sap.ui.define([
          * @returns {boolean} True if user has permission
          * @private
          */
-        _checkPermission: function(sAction) {
-            var aUserRoles = this._getUserRoles();
-            var mRequiredPermissions = {
+        _checkPermission(sAction) {
+            const aUserRoles = this._getUserRoles();
+            const mRequiredPermissions = {
                 "EXECUTE_TESTS": ["QA_ADMIN", "QA_USER"],
                 "VALIDATE_COMPLIANCE": ["QA_ADMIN", "COMPLIANCE_OFFICER"],
                 "GENERATE_REPORTS": ["QA_ADMIN", "QA_MANAGER"],
@@ -649,13 +649,13 @@ sap.ui.define([
                 "SCHEDULE_REGRESSION": ["QA_ADMIN"]
             };
 
-            var aRequiredRoles = mRequiredPermissions[sAction] || [];
-            return aRequiredRoles.some(function(sRole) {
+            const aRequiredRoles = mRequiredPermissions[sAction] || [];
+            return aRequiredRoles.some((sRole) => {
                 return aUserRoles.includes(sRole);
             });
         },
 
-        _getUserRoles: function() {
+        _getUserRoles() {
             return ["QA_USER"]; // Placeholder
         },
 
@@ -666,8 +666,8 @@ sap.ui.define([
          * @returns {string} Encoded text safe for display
          * @public
          */
-        formatSecureText: function(sText) {
-            if (!sText) return "";
+        formatSecureText(sText) {
+            if (!sText) {return "";}
             return jQuery.sap.encodeXML(String(sText));
         },
 
@@ -678,8 +678,8 @@ sap.ui.define([
          * @returns {string} Formatted count string
          * @public
          */
-        formatTestCount: function(nValue) {
-            if (typeof nValue !== 'number' || !isFinite(nValue)) {
+        formatTestCount(nValue) {
+            if (typeof nValue !== "number" || !isFinite(nValue)) {
                 return "0";
             }
             return Math.max(0, Math.min(nValue, 999999)).toString();
@@ -692,20 +692,20 @@ sap.ui.define([
          * @returns {string} Formatted duration string
          * @public
          */
-        formatDuration: function(nMilliseconds) {
-            if (typeof nMilliseconds !== 'number' || !isFinite(nMilliseconds)) {
+        formatDuration(nMilliseconds) {
+            if (typeof nMilliseconds !== "number" || !isFinite(nMilliseconds)) {
                 return "0ms";
             }
-            var nSeconds = Math.floor(nMilliseconds / 1000);
-            var nMinutes = Math.floor(nSeconds / 60);
-            return nMinutes > 0 ? nMinutes + "m " + (nSeconds % 60) + "s" : nSeconds + "s";
+            const nSeconds = Math.floor(nMilliseconds / 1000);
+            const nMinutes = Math.floor(nSeconds / 60);
+            return nMinutes > 0 ? `${nMinutes }m ${ nSeconds % 60 }s` : `${nSeconds }s`;
         },
 
-        _validateWebSocketURL: function(sURL) {
+        _validateWebSocketURL(sURL) {
             // Validate WebSocket URL for security
             try {
-                var oURL = new URL(sURL);
-                return oURL.protocol === "wss:" && 
+                const oURL = new URL(sURL);
+                return oURL.protocol === "wss:" &&
                        oURL.hostname === window.location.hostname &&
                        oURL.pathname.startsWith("/a2a/agent5/");
             } catch (e) {
@@ -718,24 +718,24 @@ sap.ui.define([
          * @description Handles test execution action with permission and validation checks.
          * @public
          */
-        onExecuteTests: function() {
+        onExecuteTests() {
             if (!this._checkPermission("EXECUTE_TESTS")) {
                 MessageBox.error("Insufficient permissions to execute tests");
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            var iTotalTests = oContext.getProperty("totalTests");
-            
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+            const iTotalTests = oContext.getProperty("totalTests");
+
             // Validate task data
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
-                MessageBox.error("Invalid task ID: " + oTaskIdValidation.message);
+                MessageBox.error(`Invalid task ID: ${ oTaskIdValidation.message}`);
                 return;
             }
-            
+
             if (iTotalTests === 0) {
                 MessageBox.error("No test cases defined for this task. Please add test cases before execution.");
                 return;
@@ -746,8 +746,8 @@ sap.ui.define([
                 MessageBox.error("Too many test cases. Maximum 10,000 tests allowed for security reasons.");
                 return;
             }
-            
-            MessageBox.confirm("Execute " + this.formatTestCount(iTotalTests) + " tests for '" + this.formatSecureText(sTaskName) + "'?", {
+
+            MessageBox.confirm(`Execute ${ this.formatTestCount(iTotalTests) } tests for '${ this.formatSecureText(sTaskName) }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeTestTask(oTaskIdValidation.sanitized);
@@ -762,11 +762,11 @@ sap.ui.define([
          * @param {string} sTaskId - Sanitized task ID
          * @private
          */
-        _executeTestTask: function(sTaskId) {
+        _executeTestTask(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent5/v1/tasks/" + encodeURIComponent(sTaskId) + "/execute",
+                url: `/a2a/agent5/v1/tasks/${ encodeURIComponent(sTaskId) }/execute`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -774,19 +774,19 @@ sap.ui.define([
                     maxExecutionTime: 3600000, // 1 hour max
                     enableSafeguards: true
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._extensionAPI.getView().setBusy(false);
                 MessageToast.show("Test execution started");
                 this._extensionAPI.refresh();
-                
+
                 // Start secure real-time monitoring
                 this._startTestExecutionMonitoring(sTaskId, data.executionId);
                 this._logAuditEvent("TEST_EXECUTION_STARTED", "Test execution started", { taskId: sTaskId });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._extensionAPI.getView().setBusy(false);
-                MessageBox.error("Failed to start test execution: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(`Failed to start test execution: ${ this.formatSecureText(xhr.responseText)}`);
                 this._logAuditEvent("TEST_EXECUTION_ERROR", "Failed to start test execution", xhr.responseText);
-            }.bind(this));
+            });
         },
 
         /**
@@ -796,73 +796,73 @@ sap.ui.define([
          * @param {string} sExecutionId - Execution ID
          * @private
          */
-        _startTestExecutionMonitoring: function(sTaskId, sExecutionId) {
+        _startTestExecutionMonitoring(sTaskId, sExecutionId) {
             // Secure WebSocket for real-time test execution updates
-            var sWebSocketURL = "wss://" + window.location.host + "/a2a/agent5/v1/tasks/" + 
-                               encodeURIComponent(sTaskId) + "/execution/" + encodeURIComponent(sExecutionId) + "/ws";
-            
+            const sWebSocketURL = `wss://${ window.location.host }/a2a/agent5/v1/tasks/${
+                encodeURIComponent(sTaskId) }/execution/${ encodeURIComponent(sExecutionId) }/ws`;
+
             // Validate WebSocket URL
             if (!this._validateWebSocketURL(sWebSocketURL)) {
                 MessageBox.error("Invalid WebSocket URL for monitoring");
                 return;
             }
-            
+
             this._ws = new WebSocket(sWebSocketURL);
-            
+
             // Set connection timeout
-            var connectionTimeout = setTimeout(function() {
+            const connectionTimeout = setTimeout(() => {
                 if (this._ws && this._ws.readyState === WebSocket.CONNECTING) {
                     this._ws.close();
                     MessageBox.error("WebSocket connection timeout");
                 }
-            }.bind(this), 10000);
-            
+            }, 10000);
+
             this._ws.onopen = function() {
                 clearTimeout(connectionTimeout);
                 this._logAuditEvent("WEBSOCKET_CONNECTED", "Test monitoring WebSocket connected");
             }.bind(this);
-            
+
             this._ws.onmessage = function(event) {
                 try {
-                    var data = JSON.parse(event.data);
-                    
+                    const data = JSON.parse(event.data);
+
                     // Validate message data
-                    if (!data || typeof data !== 'object') {
+                    if (!data || typeof data !== "object") {
                         return;
                     }
-                    
-                    switch(data.type) {
-                        case "test_started":
-                            if (data.testName) {
-                                MessageToast.show("Test started: " + this.formatSecureText(data.testName));
-                            }
-                            break;
-                        case "test_completed":
-                            if (data.testName && data.result) {
-                                var sStatus = data.result === "PASS" ? "✓" : "✗";
-                                var sDuration = this.formatDuration(data.duration);
-                                MessageToast.show(sStatus + " " + this.formatSecureText(data.testName) + " (" + sDuration + ")");
-                            }
-                            break;
-                        case "suite_completed":
-                            this._ws.close();
-                            this._extensionAPI.refresh();
-                            this._showExecutionSummary(data);
-                            break;
-                        case "progress_update":
-                            this._throttledProgressUpdate(data);
-                            break;
-                        case "error":
-                            this._ws.close();
-                            MessageBox.error("Test execution error: " + this.formatSecureText(data.error));
-                            this._logAuditEvent("TEST_EXECUTION_WS_ERROR", "WebSocket error", data.error);
-                            break;
+
+                    switch (data.type) {
+                    case "test_started":
+                        if (data.testName) {
+                            MessageToast.show(`Test started: ${ this.formatSecureText(data.testName)}`);
+                        }
+                        break;
+                    case "test_completed":
+                        if (data.testName && data.result) {
+                            const sStatus = data.result === "PASS" ? "✓" : "✗";
+                            const sDuration = this.formatDuration(data.duration);
+                            MessageToast.show(`${sStatus } ${ this.formatSecureText(data.testName) } (${ sDuration })`);
+                        }
+                        break;
+                    case "suite_completed":
+                        this._ws.close();
+                        this._extensionAPI.refresh();
+                        this._showExecutionSummary(data);
+                        break;
+                    case "progress_update":
+                        this._throttledProgressUpdate(data);
+                        break;
+                    case "error":
+                        this._ws.close();
+                        MessageBox.error(`Test execution error: ${ this.formatSecureText(data.error)}`);
+                        this._logAuditEvent("TEST_EXECUTION_WS_ERROR", "WebSocket error", data.error);
+                        break;
                     }
                 } catch (e) {
                     // Ignore malformed messages
                 }
             }.bind(this);
-            
+
             this._ws.onerror = function() {
                 MessageBox.error("Lost connection to test execution");
                 this._logAuditEvent("WEBSOCKET_ERROR", "WebSocket connection error");
@@ -874,27 +874,27 @@ sap.ui.define([
             }.bind(this);
         },
 
-        _updateProgressDisplay: function(data) {
+        _updateProgressDisplay(data) {
             // Throttled progress update to prevent UI spam
             if (data.progress !== undefined) {
-                var nProgress = Math.max(0, Math.min(100, parseFloat(data.progress) || 0));
+                const _nProgress = Math.max(0, Math.min(100, parseFloat(data.progress) || 0));
                 // Update progress display if UI element exists
             }
         },
 
-        _showExecutionSummary: function(data) {
-            var sMessage = "Test Execution Summary:\n\n" +
-                          "Total Tests: " + this.formatTestCount(data.totalTests) + "\n" +
-                          "Passed: " + this.formatTestCount(data.passedTests) + "\n" +
-                          "Failed: " + this.formatTestCount(data.failedTests) + "\n" +
-                          "Skipped: " + this.formatTestCount(data.skippedTests) + "\n" +
-                          "Success Rate: " + this.formatTestCount(data.successRate) + "%\n" +
-                          "Execution Time: " + this.formatDuration(data.totalDuration);
-            
+        _showExecutionSummary(data) {
+            const sMessage = "Test Execution Summary:\n\n" +
+                          `Total Tests: ${ this.formatTestCount(data.totalTests) }\n` +
+                          `Passed: ${ this.formatTestCount(data.passedTests) }\n` +
+                          `Failed: ${ this.formatTestCount(data.failedTests) }\n` +
+                          `Skipped: ${ this.formatTestCount(data.skippedTests) }\n` +
+                          `Success Rate: ${ this.formatTestCount(data.successRate) }%\n` +
+                          `Execution Time: ${ this.formatDuration(data.totalDuration)}`;
+
             MessageBox.success(sMessage, {
                 title: "Execution Completed"
             });
-            
+
             this._logAuditEvent("TEST_EXECUTION_SUMMARY", "Test execution summary displayed", data);
         },
 
@@ -903,37 +903,37 @@ sap.ui.define([
          * @description Handles compliance validation action for various standards.
          * @public
          */
-        onValidateCompliance: function() {
+        onValidateCompliance() {
             if (!this._checkPermission("VALIDATE_COMPLIANCE")) {
                 MessageBox.error("Insufficient permissions to validate compliance");
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sComplianceStandard = oContext.getProperty("complianceStandard");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sComplianceStandard = oContext.getProperty("complianceStandard");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error("Invalid task ID");
                 return;
             }
-            
+
             if (!sComplianceStandard) {
                 MessageBox.error("No compliance standard specified for this task");
                 return;
             }
 
-            var oStandardValidation = this._validateInput(sComplianceStandard, "complianceStandard");
+            const oStandardValidation = this._validateInput(sComplianceStandard, "complianceStandard");
             if (!oStandardValidation.isValid) {
-                MessageBox.error("Invalid compliance standard: " + oStandardValidation.message);
+                MessageBox.error(`Invalid compliance standard: ${ oStandardValidation.message}`);
                 return;
             }
-            
+
             this._getOrCreateDialog("compliance", "a2a.network.agent5.ext.fragment.ComplianceValidation")
-                .then(function(oDialog) {
-                    
-                    var oModel = new JSONModel({
+                .then((oDialog) => {
+
+                    const oModel = new JSONModel({
                         taskId: oTaskIdValidation.sanitized,
                         standard: oStandardValidation.sanitized,
                         validationScope: "FULL",
@@ -943,17 +943,17 @@ sap.ui.define([
                     });
                     oDialog.setModel(oModel, "compliance");
                     oDialog.open();
-                }.bind(this));
+                });
         },
 
-        onExecuteComplianceValidation: function() {
-            var oModel = this._oComplianceDialog.getModel("compliance");
-            var oData = oModel.getData();
-            
+        onExecuteComplianceValidation() {
+            const oModel = this._oComplianceDialog.getModel("compliance");
+            const oData = oModel.getData();
+
             this._oComplianceDialog.setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent5/v1/tasks/" + encodeURIComponent(oData.taskId) + "/validate-compliance",
+                url: `/a2a/agent5/v1/tasks/${ encodeURIComponent(oData.taskId) }/validate-compliance`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -964,22 +964,22 @@ sap.ui.define([
                     maxValidationTime: Math.min(oData.maxValidationTime, 1800000), // Security limit
                     securityMode: "STRICT"
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._oComplianceDialog.setBusy(false);
-                
+
                 // Validate compliance response
-                var oValidatedData = this._validateComplianceResponse(data);
+                const oValidatedData = this._validateComplianceResponse(data);
                 if (!oValidatedData.isValid) {
                     MessageBox.error("Invalid compliance validation response");
                     return;
                 }
-                
+
                 if (data.compliant) {
                     MessageBox.success(
                         "Compliance validation passed!\n" +
-                        "Standard: " + this.formatSecureText(data.standard) + "\n" +
-                        "Score: " + this.formatTestCount(data.complianceScore) + "%\n" +
-                        "Certificate ID: " + this.formatSecureText(data.certificateId)
+                        `Standard: ${ this.formatSecureText(data.standard) }\n` +
+                        `Score: ${ this.formatTestCount(data.complianceScore) }%\n` +
+                        `Certificate ID: ${ this.formatSecureText(data.certificateId)}`
                     );
                     this._logAuditEvent("COMPLIANCE_VALIDATED", "Compliance validation passed", {
                         standard: data.standard,
@@ -988,41 +988,41 @@ sap.ui.define([
                 } else {
                     this._showComplianceIssues(data.issues || []);
                 }
-                
+
                 this._oComplianceDialog.close();
                 this._extensionAPI.refresh();
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._oComplianceDialog.setBusy(false);
-                MessageBox.error("Compliance validation failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(`Compliance validation failed: ${ this.formatSecureText(xhr.responseText)}`);
                 this._logAuditEvent("COMPLIANCE_VALIDATION_ERROR", "Compliance validation failed", xhr.responseText);
-            }.bind(this));
+            });
         },
 
-        _validateComplianceResponse: function(oData) {
-            if (!oData || typeof oData !== 'object') {
+        _validateComplianceResponse(oData) {
+            if (!oData || typeof oData !== "object") {
                 return { isValid: false };
             }
-            
+
             // Validate required fields
-            if (typeof oData.compliant !== 'boolean') {
+            if (typeof oData.compliant !== "boolean") {
                 return { isValid: false };
             }
-            
+
             return { isValid: true };
         },
 
-        _showComplianceIssues: function(aIssues) {
-            var sMessage = "Compliance Issues Found:\n\n";
-            aIssues.slice(0, 10).forEach(function(issue, index) { // Limit to 10 issues
-                sMessage += (index + 1) + ". " + this.formatSecureText(issue.description) + "\n";
-                sMessage += "   Severity: " + this.formatSecureText(issue.severity) + "\n";
-                sMessage += "   Recommendation: " + this.formatSecureText(issue.recommendation) + "\n\n";
-            }.bind(this));
-            
+        _showComplianceIssues(aIssues) {
+            let sMessage = "Compliance Issues Found:\n\n";
+            aIssues.slice(0, 10).forEach((issue, index) => { // Limit to 10 issues
+                sMessage += `${index + 1 }. ${ this.formatSecureText(issue.description) }\n`;
+                sMessage += `   Severity: ${ this.formatSecureText(issue.severity) }\n`;
+                sMessage += `   Recommendation: ${ this.formatSecureText(issue.recommendation) }\n\n`;
+            });
+
             MessageBox.warning(sMessage, {
                 title: "Compliance Validation Failed"
             });
-            
+
             this._logAuditEvent("COMPLIANCE_ISSUES", "Compliance issues found", { issueCount: aIssues.length });
         },
 
@@ -1031,32 +1031,32 @@ sap.ui.define([
          * @description Initiates test report generation dialog.
          * @public
          */
-        onGenerateTestReport: function() {
+        onGenerateTestReport() {
             if (!this._checkPermission("GENERATE_REPORTS")) {
                 MessageBox.error("Insufficient permissions to generate reports");
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error("Invalid task ID");
                 return;
             }
-            
+
             if (!this._oReportDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent5.ext.fragment.TestReport",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oReportDialog = oDialog;
                     this.base.getView().addDependent(this._oReportDialog);
-                    
-                    var oModel = new JSONModel({
+
+                    const oModel = new JSONModel({
                         taskId: oTaskIdValidation.sanitized,
                         taskName: this.formatSecureText(sTaskName),
                         reportType: "EXECUTIVE",
@@ -1070,28 +1070,28 @@ sap.ui.define([
                     });
                     this._oReportDialog.setModel(oModel, "report");
                     this._oReportDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oReportDialog.open();
             }
         },
 
-        onGenerateReport: function() {
-            var oDialog = this._dialogCache.report;
-            var oModel = oDialog.getModel("report");
-            var oData = oModel.getData();
-            
+        onGenerateReport() {
+            const oDialog = this._dialogCache.report;
+            const oModel = oDialog.getModel("report");
+            const oData = oModel.getData();
+
             // Validate report type
-            var oReportTypeValidation = this._validateInput(oData.reportType, "reportType");
+            const oReportTypeValidation = this._validateInput(oData.reportType, "reportType");
             if (!oReportTypeValidation.isValid) {
                 MessageBox.error("Invalid report type");
                 return;
             }
-            
+
             oDialog.setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent5/v1/tasks/" + encodeURIComponent(oData.taskId) + "/generate-report",
+                url: `/a2a/agent5/v1/tasks/${ encodeURIComponent(oData.taskId) }/generate-report`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -1104,10 +1104,10 @@ sap.ui.define([
                     maxFileSize: Math.min(oData.maxFileSize || 25, 50), // Limit file size
                     distribution: (oData.distribution || []).slice(0, 10) // Limit recipients
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 oDialog.setBusy(false);
                 oDialog.close();
-                
+
                 MessageBox.success(
                     "Test report generated successfully!",
                     {
@@ -1119,23 +1119,23 @@ sap.ui.define([
                         }.bind(this)
                     }
                 );
-                
-                this._logAuditEvent("REPORT_GENERATED", "Test report generated", { 
+
+                this._logAuditEvent("REPORT_GENERATED", "Test report generated", {
                     taskId: oData.taskId,
-                    type: oData.reportType 
+                    type: oData.reportType
                 });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 oDialog.setBusy(false);
-                MessageBox.error("Report generation failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(`Report generation failed: ${ this.formatSecureText(xhr.responseText)}`);
                 this._logAuditEvent("REPORT_GENERATION_ERROR", "Report generation failed", xhr.responseText);
-            }.bind(this));
+            });
         },
 
-        _secureDownload: function(sUrl) {
+        _secureDownload(sUrl) {
             // Validate download URL for security
             try {
-                var oUrl = new URL(sUrl, window.location.origin);
-                if (oUrl.origin === window.location.origin && oUrl.pathname.startsWith('/a2a/agent5/')) {
+                const oUrl = new URL(sUrl, window.location.origin);
+                if (oUrl.origin === window.location.origin && oUrl.pathname.startsWith("/a2a/agent5/")) {
                     window.open(sUrl, "_blank");
                     this._logAuditEvent("REPORT_DOWNLOADED", "Report download initiated", sUrl);
                 } else {
@@ -1151,39 +1151,39 @@ sap.ui.define([
          * @description Opens dialog to create defects from failed tests.
          * @public
          */
-        onCreateDefect: function() {
+        onCreateDefect() {
             if (!this._checkPermission("CREATE_DEFECTS")) {
                 MessageBox.error("Insufficient permissions to create defects");
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var iFailedTests = oContext.getProperty("failedTests");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const iFailedTests = oContext.getProperty("failedTests");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error("Invalid task ID");
                 return;
             }
-            
+
             if (iFailedTests === 0) {
                 MessageBox.information("No failed tests found to create defects from.");
                 return;
             }
-            
+
             if (!this._oDefectDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent5.ext.fragment.CreateDefect",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oDefectDialog = oDialog;
                     this.base.getView().addDependent(this._oDefectDialog);
-                    
+
                     this._loadFailedTests(oTaskIdValidation.sanitized);
                     this._oDefectDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._loadFailedTests(oTaskIdValidation.sanitized);
                 this._oDefectDialog.open();
@@ -1196,12 +1196,12 @@ sap.ui.define([
          * @param {string} sTaskId - Task ID
          * @private
          */
-        _loadFailedTests: function(sTaskId) {
-            var oDialog = this._dialogCache.defect;
+        _loadFailedTests(sTaskId) {
+            const oDialog = this._dialogCache.defect;
             oDialog.setBusy(true);
-            
+
             // Initialize lazy loading model
-            var oLazyModel = new JSONModel({
+            const oLazyModel = new JSONModel({
                 taskId: sTaskId,
                 failedTests: [],
                 loadedTests: 0,
@@ -1219,27 +1219,27 @@ sap.ui.define([
                     labels: []
                 }
             });
-            
+
             oDialog.setModel(oLazyModel, "defect");
-            
+
             // Load initial batch
-            this._loadFailedTestsBatch(sTaskId, 0, 20).then(function(result) {
+            this._loadFailedTestsBatch(sTaskId, 0, 20).then((result) => {
                 oDialog.setBusy(false);
-                
-                var oData = oLazyModel.getData();
+
+                const oData = oLazyModel.getData();
                 oData.failedTests = result.tests;
                 oData.totalTests = result.total;
                 oData.loadedTests = result.tests.length;
                 oLazyModel.setData(oData);
-                
+
                 // Setup scroll listener for lazy loading
                 this._setupLazyLoadingScroll(oDialog, sTaskId);
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 oDialog.setBusy(false);
-                MessageBox.error("Failed to load failed tests: " + this.formatSecureText(xhr.responseText));
-            }.bind(this));
+                MessageBox.error(`Failed to load failed tests: ${ this.formatSecureText(xhr.responseText)}`);
+            });
         },
-        
+
         /**
          * @function _loadFailedTestsBatch
          * @description Loads a batch of failed tests.
@@ -1249,22 +1249,22 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to test data
          * @private
          */
-        _loadFailedTestsBatch: function(sTaskId, iSkip, iTop) {
+        _loadFailedTestsBatch(sTaskId, iSkip, iTop) {
             return this._secureAjax({
-                url: "/a2a/agent5/v1/tasks/" + encodeURIComponent(sTaskId) + "/failed-tests",
+                url: `/a2a/agent5/v1/tasks/${ encodeURIComponent(sTaskId) }/failed-tests`,
                 type: "GET",
                 data: {
                     $skip: iSkip,
                     $top: iTop
                 }
-            }).then(function(data) {
+            }).then((data) => {
                 return {
                     tests: this._sanitizeFailedTestsData(data.tests || []),
                     total: data.total || 0
                 };
-            }.bind(this));
+            });
         },
-        
+
         /**
          * @function _setupLazyLoadingScroll
          * @description Sets up scroll listener for lazy loading more tests.
@@ -1272,19 +1272,19 @@ sap.ui.define([
          * @param {string} sTaskId - Task ID
          * @private
          */
-        _setupLazyLoadingScroll: function(oDialog, sTaskId) {
-            var that = this;
-            var oModel = oDialog.getModel("defect");
-            
+        _setupLazyLoadingScroll(oDialog, sTaskId) {
+            const that = this;
+            const oModel = oDialog.getModel("defect");
+
             // Find scrollable container
-            var $scrollContainer = oDialog.$().find(".sapMScrollContainer");
-            
+            const $scrollContainer = oDialog.$().find(".sapMScrollContainer");
+
             if ($scrollContainer.length > 0) {
-                $scrollContainer.on("scroll", this._throttle(function() {
-                    var scrollTop = $scrollContainer.scrollTop();
-                    var scrollHeight = $scrollContainer[0].scrollHeight;
-                    var containerHeight = $scrollContainer.height();
-                    
+                $scrollContainer.on("scroll", this._throttle(() => {
+                    const scrollTop = $scrollContainer.scrollTop();
+                    const scrollHeight = $scrollContainer[0].scrollHeight;
+                    const containerHeight = $scrollContainer.height();
+
                     // Load more when near bottom (90%)
                     if (scrollTop + containerHeight >= scrollHeight * 0.9) {
                         that._loadMoreFailedTests(sTaskId, oModel);
@@ -1292,7 +1292,7 @@ sap.ui.define([
                 }, 200));
             }
         },
-        
+
         /**
          * @function _loadMoreFailedTests
          * @description Loads more failed tests when scrolling near bottom.
@@ -1300,50 +1300,50 @@ sap.ui.define([
          * @param {sap.ui.model.json.JSONModel} oModel - Model instance
          * @private
          */
-        _loadMoreFailedTests: function(sTaskId, oModel) {
-            var oData = oModel.getData();
-            
+        _loadMoreFailedTests(sTaskId, oModel) {
+            const oData = oModel.getData();
+
             // Check if already loading or all loaded
             if (oData.isLoading || oData.loadedTests >= oData.totalTests) {
                 return;
             }
-            
+
             oData.isLoading = true;
             oModel.setData(oData);
-            
+
             this._loadFailedTestsBatch(sTaskId, oData.loadedTests, oData.pageSize)
-                .then(function(result) {
-                    var oUpdatedData = oModel.getData();
+                .then((result) => {
+                    const oUpdatedData = oModel.getData();
                     oUpdatedData.failedTests = oUpdatedData.failedTests.concat(result.tests);
                     oUpdatedData.loadedTests += result.tests.length;
                     oUpdatedData.isLoading = false;
                     oModel.setData(oUpdatedData);
-                }.bind(this))
-                .catch(function() {
-                    var oUpdatedData = oModel.getData();
+                })
+                .catch(() => {
+                    const oUpdatedData = oModel.getData();
                     oUpdatedData.isLoading = false;
                     oModel.setData(oUpdatedData);
                     MessageToast.show("Failed to load more tests");
                 });
         },
 
-        _sanitizeFailedTestsData: function(aTests) {
-            return aTests.slice(0, 100).map(function(test) { // Limit to 100 failed tests
+        _sanitizeFailedTestsData(aTests) {
+            return aTests.slice(0, 100).map((test) => { // Limit to 100 failed tests
                 return {
                     id: this.formatSecureText(test.id),
                     testName: this.formatSecureText(test.testName),
                     errorMessage: this.formatSecureText(test.errorMessage),
                     stackTrace: test.stackTrace ? this.formatSecureText(test.stackTrace.substring(0, 1000)) : "",
-                    duration: typeof test.duration === 'number' ? Math.min(test.duration, 3600000) : 0
+                    duration: typeof test.duration === "number" ? Math.min(test.duration, 3600000) : 0
                 };
-            }.bind(this));
+            });
         },
 
-        onSubmitDefect: function() {
-            var oDialog = this._dialogCache.defect;
-            var oModel = oDialog.getModel("defect");
-            var oData = oModel.getData();
-            
+        onSubmitDefect() {
+            const oDialog = this._dialogCache.defect;
+            const oModel = oDialog.getModel("defect");
+            const oData = oModel.getData();
+
             if (oData.selectedTests.length === 0) {
                 MessageBox.error("Please select at least one failed test");
                 return;
@@ -1356,20 +1356,20 @@ sap.ui.define([
             }
 
             // Validate defect information
-            var oTitleValidation = this._validateInput(oData.defectInfo.title, "defectTitle");
+            const oTitleValidation = this._validateInput(oData.defectInfo.title, "defectTitle");
             if (!oTitleValidation.isValid) {
-                MessageBox.error("Invalid defect title: " + oTitleValidation.message);
+                MessageBox.error(`Invalid defect title: ${ oTitleValidation.message}`);
                 return;
             }
-            
+
             if (!oData.defectInfo.description) {
                 MessageBox.error("Please provide defect description");
                 return;
             }
-            
+
             oDialog.setBusy(true);
-            
-            var oSanitizedData = {
+
+            const oSanitizedData = {
                 taskId: oData.taskId,
                 failedTests: oData.selectedTests.slice(0, 20), // Security limit
                 defectInfo: {
@@ -1379,9 +1379,9 @@ sap.ui.define([
                     priority: oData.defectInfo.priority,
                     assignee: this.formatSecureText(oData.defectInfo.assignee),
                     component: this.formatSecureText(oData.defectInfo.component),
-                    labels: (oData.defectInfo.labels || []).slice(0, 10).map(function(label) {
+                    labels: (oData.defectInfo.labels || []).slice(0, 10).map((label) => {
                         return this.formatSecureText(label);
-                    }.bind(this))
+                    })
                 }
             };
 
@@ -1390,25 +1390,25 @@ sap.ui.define([
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oSanitizedData)
-            }).then(function(data) {
+            }).then((data) => {
                 oDialog.setBusy(false);
                 oDialog.close();
-                
+
                 MessageBox.success(
                     "Defect created successfully!\n" +
-                    "Defect ID: " + this.formatSecureText(data.defectId) + "\n" +
-                    "Tracking URL: " + this.formatSecureText(data.trackingUrl)
+                    `Defect ID: ${ this.formatSecureText(data.defectId) }\n` +
+                    `Tracking URL: ${ this.formatSecureText(data.trackingUrl)}`
                 );
-                
-                this._logAuditEvent("DEFECT_CREATED", "Defect created", { 
+
+                this._logAuditEvent("DEFECT_CREATED", "Defect created", {
                     defectId: data.defectId,
-                    testCount: oData.selectedTests.length 
+                    testCount: oData.selectedTests.length
                 });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 oDialog.setBusy(false);
-                MessageBox.error("Defect creation failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(`Defect creation failed: ${ this.formatSecureText(xhr.responseText)}`);
                 this._logAuditEvent("DEFECT_CREATION_ERROR", "Defect creation failed", xhr.responseText);
-            }.bind(this));
+            });
         },
 
         /**
@@ -1416,31 +1416,31 @@ sap.ui.define([
          * @description Opens dialog to schedule regression test execution.
          * @public
          */
-        onScheduleRegression: function() {
+        onScheduleRegression() {
             if (!this._checkPermission("SCHEDULE_REGRESSION")) {
                 MessageBox.error("Insufficient permissions to schedule regression tests");
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error("Invalid task ID");
                 return;
             }
-            
+
             if (!this._oRegressionDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent5.ext.fragment.ScheduleRegression",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oRegressionDialog = oDialog;
                     this.base.getView().addDependent(this._oRegressionDialog);
-                    
-                    var oModel = new JSONModel({
+
+                    const oModel = new JSONModel({
                         taskId: oTaskIdValidation.sanitized,
                         scheduleType: "IMMEDIATE",
                         cronExpression: "",
@@ -1453,24 +1453,24 @@ sap.ui.define([
                     });
                     this._oRegressionDialog.setModel(oModel, "regression");
                     this._oRegressionDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oRegressionDialog.open();
             }
         },
 
-        onScheduleRegressionExecution: function() {
-            var oDialog = this._dialogCache.regression;
-            var oModel = oDialog.getModel("regression");
-            var oData = oModel.getData();
-            
+        onScheduleRegressionExecution() {
+            const oDialog = this._dialogCache.regression;
+            const oModel = oDialog.getModel("regression");
+            const oData = oModel.getData();
+
             oDialog.setBusy(true);
-            
-            var oRequestData = {
+
+            const oRequestData = {
                 scheduleType: oData.scheduleType,
                 cronExpression: oData.scheduleType === "CRON" ? this.formatSecureText(oData.cronExpression) : "",
-                scheduledDateTime: oData.scheduleType === "SCHEDULED" ? 
-                    new Date(oData.selectedDate + "T" + oData.selectedTime).toISOString() : null,
+                scheduledDateTime: oData.scheduleType === "SCHEDULED" ?
+                    new Date(`${oData.selectedDate }T${ oData.selectedTime}`).toISOString() : null,
                 includeNewTests: Boolean(oData.includeNewTests),
                 onlyFailedTests: Boolean(oData.onlyFailedTests),
                 notifications: Boolean(oData.notifications),
@@ -1479,29 +1479,29 @@ sap.ui.define([
             };
 
             this._secureAjax({
-                url: "/a2a/agent5/v1/tasks/" + encodeURIComponent(oData.taskId) + "/schedule-regression",
+                url: `/a2a/agent5/v1/tasks/${ encodeURIComponent(oData.taskId) }/schedule-regression`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oRequestData)
-            }).then(function(data) {
+            }).then((data) => {
                 oDialog.setBusy(false);
                 oDialog.close();
-                
+
                 MessageBox.success(
                     "Regression test scheduled successfully!\n" +
-                    "Schedule ID: " + this.formatSecureText(data.scheduleId) + "\n" +
-                    "Next execution: " + this.formatSecureText(data.nextExecution)
+                    `Schedule ID: ${ this.formatSecureText(data.scheduleId) }\n` +
+                    `Next execution: ${ this.formatSecureText(data.nextExecution)}`
                 );
-                
-                this._logAuditEvent("REGRESSION_SCHEDULED", "Regression test scheduled", { 
+
+                this._logAuditEvent("REGRESSION_SCHEDULED", "Regression test scheduled", {
                     scheduleId: data.scheduleId,
-                    taskId: oData.taskId 
+                    taskId: oData.taskId
                 });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 oDialog.setBusy(false);
-                MessageBox.error("Scheduling failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(`Scheduling failed: ${ this.formatSecureText(xhr.responseText)}`);
                 this._logAuditEvent("REGRESSION_SCHEDULE_ERROR", "Regression scheduling failed", xhr.responseText);
-            }.bind(this));
+            });
         }
     });
 });

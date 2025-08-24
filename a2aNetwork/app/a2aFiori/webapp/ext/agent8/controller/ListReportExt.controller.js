@@ -1276,9 +1276,9 @@ sap.ui.define([
                     var data = JSON.parse(event.data);
                     
                     if (data.type === "progress") {
-                        const progress = Math.max(0, Math.min(100, parseInt(data.progress) || 0));
-                        const completed = parseInt(data.completed) || 0;
-                        const total = parseInt(data.total) || 0;
+                        const progress = Math.max(0, Math.min(100, parseInt(data.progress, 10) || 0));
+                        const completed = parseInt(data.completed, 10) || 0;
+                        const total = parseInt(data.total, 10) || 0;
                         MessageToast.show("Batch progress: " + completed + "/" + total + " (" + progress + "%)");
                     } else if (data.type === "task_completed") {
                         const taskName = this._securityUtils.sanitizeInput(data.taskName);
@@ -1384,12 +1384,12 @@ sap.ui.define([
                 recurrence: {
                     enabled: Boolean(oData.recurrence.enabled),
                     frequency: this._securityUtils.sanitizeInput(oData.recurrence.frequency || "DAILY"),
-                    interval: Math.max(1, Math.min(365, parseInt(oData.recurrence.interval) || 1)),
+                    interval: Math.max(1, Math.min(365, parseInt(oData.recurrence.interval, 10) || 1)),
                     endDate: oData.recurrence.endDate ? oData.recurrence.endDate.toISOString() : null
                 },
                 executionOptions: {
                     parallelExecution: Boolean(oData.executionOptions.parallelExecution),
-                    maxConcurrency: Math.max(1, Math.min(10, parseInt(oData.executionOptions.maxConcurrency) || 3)),
+                    maxConcurrency: Math.max(1, Math.min(10, parseInt(oData.executionOptions.maxConcurrency, 10) || 3)),
                     continueOnError: Boolean(oData.executionOptions.continueOnError),
                     notifyOnCompletion: Boolean(oData.executionOptions.notifyOnCompletion)
                 }
@@ -1474,7 +1474,7 @@ sap.ui.define([
                 },
                 processingOptions: {
                     parallelProcessing: Boolean(oData.processingOptions.parallelProcessing),
-                    batchSize: Math.max(100, Math.min(10000, parseInt(oData.processingOptions.batchSize) || 1000)),
+                    batchSize: Math.max(100, Math.min(10000, parseInt(oData.processingOptions.batchSize, 10) || 1000)),
                     errorHandling: this._securityUtils.sanitizeInput(oData.processingOptions.errorHandling || "CONTINUE"),
                     backupBeforeTransform: Boolean(oData.processingOptions.backupBeforeTransform)
                 }

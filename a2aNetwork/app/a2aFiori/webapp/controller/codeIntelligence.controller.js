@@ -6,7 +6,7 @@ sap.ui.define([
     "../model/formatter",
     "../utils/CodeAnalysisService",
     "sap/ui/core/format/NumberFormat"
-], function(BaseController, MessageToast, MessageBox, JSONModel, formatter, CodeAnalysisService, NumberFormat) {
+], (BaseController, MessageToast, MessageBox, JSONModel, formatter, CodeAnalysisService, NumberFormat) => {
     "use strict";
 
     /**
@@ -126,9 +126,9 @@ sap.ui.define([
          */
         _setupRealTimeUpdates() {
             // Update dashboard every 30 seconds
-            this._updateTimer = setInterval(function() {
+            this._updateTimer = setInterval(() => {
                 this._updateMetrics();
-            }.bind(this), 30000);
+            }, 30000);
         },
 
         /**
@@ -145,13 +145,13 @@ sap.ui.define([
                 this._loadDuplicateMetrics(),
                 this._loadRecommendations(),
                 this._loadQualityAlerts()
-            ]).then(function(results) {
+            ]).then((results) => {
                 this._updateDashboardData(results);
                 this._showDashboardLoading(false);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 this._handleDashboardError(error);
                 this._showDashboardLoading(false);
-            }.bind(this));
+            });
         },
 
         /**
@@ -170,14 +170,14 @@ sap.ui.define([
                 analysisType: this.getModel("analysis").getProperty("/analysisType"),
                 includeMetrics: this.getModel("analysis").getProperty("/includeMetrics"),
                 maxDepth: this.getModel("analysis").getProperty("/maxDepth")
-            }).then(function(results) {
+            }).then((results) => {
                 this._updateAnalysisResults(results);
                 this._showDashboardLoading(false);
                 MessageToast.show(this.getResourceBundle().getText("analysisCompleted"));
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 this._handleAnalysisError(error);
                 this._showDashboardLoading(false);
-            }.bind(this));
+            });
         },
 
         /**
@@ -194,7 +194,7 @@ sap.ui.define([
          */
         onMetricSelectionChange(oEvent) {
             const aSelectedItems = oEvent.getParameter("selectedItems");
-            const aMetrics = aSelectedItems.map(function(oItem) {
+            const aMetrics = aSelectedItems.map((oItem) => {
                 return oItem.getKey();
             });
             this.getModel("analysis").setProperty("/includeMetrics", aMetrics);
@@ -220,7 +220,7 @@ sap.ui.define([
                 searchType: sSearchType,
                 fuzzyThreshold: this.getModel("analysis").getProperty("/fuzzyThreshold"),
                 maxResults: 50
-            }).then(function(results) {
+            }).then((results) => {
                 oSearchModel.setProperty("/searchResults", results.results);
                 oSearchModel.setProperty("/totalResults", results.resultCount);
                 oSearchModel.setProperty("/isSearching", false);
@@ -228,10 +228,10 @@ sap.ui.define([
                 if (results.resultCount === 0) {
                     MessageToast.show(this.getResourceBundle().getText("noSearchResults"));
                 }
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 this._handleSearchError(error);
                 oSearchModel.setProperty("/isSearching", false);
-            }.bind(this));
+            });
         },
 
         /**
@@ -463,14 +463,14 @@ sap.ui.define([
                 return;
             }
 
-            this.oCodeAnalysisService.getQuickMetrics().then(function(metrics) {
+            this.oCodeAnalysisService.getQuickMetrics().then((metrics) => {
                 const oDashboardModel = this.getModel("dashboard");
                 oDashboardModel.setProperty("/overview/codeQualityScore", metrics.qualityScore);
                 oDashboardModel.setProperty("/overview/technicalDebt", metrics.technicalDebt);
                 oDashboardModel.setProperty("/overview/lastUpdated", new Date());
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 this.logger.error("Quick metrics update failed:", error);
-            }.bind(this));
+            });
         },
 
         /**
@@ -480,7 +480,7 @@ sap.ui.define([
         _executeAutomatedRefactoring(oRefactoring) {
             this.showLoadingDialog(this.getResourceBundle().getText("executingRefactoring"));
 
-            this.oCodeAnalysisService.executeRefactoring(oRefactoring.id).then(function(result) {
+            this.oCodeAnalysisService.executeRefactoring(oRefactoring.id).then((result) => {
                 this.hideLoadingDialog();
 
                 if (result.success) {
@@ -494,10 +494,10 @@ sap.ui.define([
                         }
                     );
                 }
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 this.hideLoadingDialog();
                 this._handleAnalysisError(error);
-            }.bind(this));
+            });
         },
 
         /**

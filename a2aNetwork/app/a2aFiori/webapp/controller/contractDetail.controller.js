@@ -6,7 +6,7 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/base/Log"
-], function(BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator, Log) {
+], (BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator, Log) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.ContractDetail", {

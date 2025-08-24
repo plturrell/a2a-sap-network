@@ -33,10 +33,17 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
         # Configure secure agent
         config = SecureAgentConfig(
             agent_id="calculation_agent",
-            agent_name="calculation",
+            agent_name="Calculation Agent",
             agent_version="1.0.0",
             allowed_operations={
                 "calculation_agent_info",
+                # Registry capabilities
+                "mathematical_calculations",
+                "statistical_analysis", 
+                "formula_execution",
+                "numerical_processing",
+                "computation_services",
+                # Enhanced operations
                 "perform_calculation",
                 "natural_language_calculation",
                 "intelligent_dispatch",
@@ -50,7 +57,6 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
                 "find_shortest_path",
                 "distributed_calculation",
                 "ai_assisted_calculation",
-                "intelligent_dispatch",
                 "multi_step_calculation",
                 "create_workflow",
                 "execute_workflow",
@@ -530,6 +536,107 @@ class CalculationAgentA2AHandler(SecureA2AAgent):
                 
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        # Registry capability handlers
+        @self.secure_handler("mathematical_calculations")
+        async def handle_mathematical_calculations(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle mathematical calculations operations"""
+            try:
+                result = await self.agent_sdk.perform_mathematical_calculations(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="mathematical_calculations",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to mathematical_calculations: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("statistical_analysis")
+        async def handle_statistical_analysis(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle statistical analysis operations"""
+            try:
+                result = await self.agent_sdk.perform_statistical_analysis(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="statistical_analysis",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to statistical_analysis: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("formula_execution")
+        async def handle_formula_execution(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle formula execution operations"""
+            try:
+                result = await self.agent_sdk.execute_formula(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="formula_execution",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to formula_execution: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("numerical_processing")
+        async def handle_numerical_processing(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle numerical processing operations"""
+            try:
+                result = await self.agent_sdk.process_numerical_data(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="numerical_processing",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to numerical_processing: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("computation_services")
+        async def handle_computation_services(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle computation services operations"""
+            try:
+                result = await self.agent_sdk.provide_computation_services(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="computation_services",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to computation_services: {e}")
                 return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:

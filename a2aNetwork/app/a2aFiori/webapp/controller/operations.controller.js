@@ -8,7 +8,7 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/model/json/JSONModel",
     "sap/base/Log"
-], function(BaseController, MessageToast, MessageBox, JSONModel, Log) {
+], (BaseController, MessageToast, MessageBox, JSONModel, Log) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Operations", {

@@ -9,38 +9,38 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "sap/base/Log",
     "../utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent4.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache for better performance
                 this._dialogCache = {};
-                
+
                 // Initialize create model
                 this._initializeCreateModel();
-                
+
                 // Initialize resource bundle for i18n
                 this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             },
 
-            onExit: function() {
+            onExit() {
                 // Cleanup resources and intervals
                 if (this._validationInterval) {
                     clearInterval(this._validationInterval);
                 }
                 // Clean up cached dialogs
-                for (var sKey in this._dialogCache) {
+                for (const sKey in this._dialogCache) {
                     if (this._dialogCache.hasOwnProperty(sKey)) {
                         this._dialogCache[sKey].destroy();
                     }
@@ -63,8 +63,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeCreateModel: function() {
-            var oCreateModel = new JSONModel({
+        _initializeCreateModel() {
+            const oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
                 calculationType: "",
@@ -110,10 +110,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oModel = this.base.getView().getModel("create");
-            
+        onTaskNameChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oModel = this.base.getView().getModel("create");
+
             if (!sValue || sValue.trim().length === 0) {
                 oModel.setProperty("/taskNameState", "Error");
                 oModel.setProperty("/taskNameStateText", this._oResourceBundle.getText("validation.taskNameRequired"));
@@ -130,7 +130,7 @@ sap.ui.define([
                 oModel.setProperty("/taskNameState", "Success");
                 oModel.setProperty("/taskNameStateText", "");
             }
-            
+
             this._validateForm();
         },
 
@@ -140,35 +140,35 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onCalculationTypeChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oModel = this.base.getView().getModel("create");
-            
+        onCalculationTypeChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oModel = this.base.getView().getModel("create");
+
             if (!sSelectedKey) {
                 oModel.setProperty("/calculationTypeState", "Error");
                 oModel.setProperty("/calculationTypeStateText", this._oResourceBundle.getText("validation.calculationTypeRequired"));
             } else {
                 oModel.setProperty("/calculationTypeState", "Success");
                 oModel.setProperty("/calculationTypeStateText", "");
-                
+
                 // Auto-suggest validation mode based on calculation type
-                switch(sSelectedKey) {
-                    case "FINANCIAL":
-                    case "ACCOUNTING":
-                        oModel.setProperty("/validationMode", "STRICT");
-                        oModel.setProperty("/precisionThreshold", 0.00001);
-                        break;
-                    case "ENGINEERING":
-                    case "PHYSICS":
-                        oModel.setProperty("/validationMode", "STANDARD");
-                        oModel.setProperty("/precisionThreshold", 0.0001);
-                        break;
-                    case "STATISTICAL":
-                        oModel.setProperty("/enableStatisticalTests", true);
-                        break;
+                switch (sSelectedKey) {
+                case "FINANCIAL":
+                case "ACCOUNTING":
+                    oModel.setProperty("/validationMode", "STRICT");
+                    oModel.setProperty("/precisionThreshold", 0.00001);
+                    break;
+                case "ENGINEERING":
+                case "PHYSICS":
+                    oModel.setProperty("/validationMode", "STANDARD");
+                    oModel.setProperty("/precisionThreshold", 0.0001);
+                    break;
+                case "STATISTICAL":
+                    oModel.setProperty("/enableStatisticalTests", true);
+                    break;
                 }
             }
-            
+
             this._validateForm();
         },
 
@@ -178,10 +178,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onDataSourceChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oModel = this.base.getView().getModel("create");
-            
+        onDataSourceChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oModel = this.base.getView().getModel("create");
+
             if (sValue && sValue.trim().length > 0) {
                 // Basic path validation
                 if (/[<>:"|?*]/.test(sValue)) {
@@ -198,7 +198,7 @@ sap.ui.define([
                 oModel.setProperty("/dataSourceState", "None");
                 oModel.setProperty("/dataSourceStateText", "");
             }
-            
+
             this._validateForm();
         },
 
@@ -208,25 +208,25 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onValidationModeChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oModel = this.base.getView().getModel("create");
-            
+        onValidationModeChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oModel = this.base.getView().getModel("create");
+
             // Adjust settings based on validation mode
-            switch(sSelectedKey) {
-                case "STRICT":
-                    oModel.setProperty("/precisionThreshold", 0.000001);
-                    oModel.setProperty("/toleranceLevel", 0.0001);
-                    oModel.setProperty("/enableCrossValidation", true);
-                    break;
-                case "BENCHMARK":
-                    oModel.setProperty("/enableStatisticalTests", true);
-                    oModel.setProperty("/detailedLogs", true);
-                    break;
-                case "CUSTOM":
-                    // Show custom rules text area
-                    MessageToast.show(this.getResourceBundle().getText("message.configureCustomRules"));
-                    break;
+            switch (sSelectedKey) {
+            case "STRICT":
+                oModel.setProperty("/precisionThreshold", 0.000001);
+                oModel.setProperty("/toleranceLevel", 0.0001);
+                oModel.setProperty("/enableCrossValidation", true);
+                break;
+            case "BENCHMARK":
+                oModel.setProperty("/enableStatisticalTests", true);
+                oModel.setProperty("/detailedLogs", true);
+                break;
+            case "CUSTOM":
+                // Show custom rules text area
+                MessageToast.show(this.getResourceBundle().getText("message.configureCustomRules"));
+                break;
             }
         },
 
@@ -235,10 +235,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onAddFormula: function() {
-            var oModel = this.base.getView().getModel("create");
-            var aFormulas = oModel.getProperty("/formulas");
-            
+        onAddFormula() {
+            const oModel = this.base.getView().getModel("create");
+            const aFormulas = oModel.getProperty("/formulas");
+
             aFormulas.push({
                 expression: "",
                 expectedResult: 0,
@@ -246,7 +246,7 @@ sap.ui.define([
                 testData: "",
                 id: Date.now()
             });
-            
+
             oModel.setProperty("/formulas", aFormulas);
             this._validateForm();
         },
@@ -257,26 +257,26 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onFormulaExpressionChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oSource = oEvent.getSource();
-            var oContext = oSource.getBindingContext("create");
-            
+        onFormulaExpressionChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oSource = oEvent.getSource();
+            const oContext = oSource.getBindingContext("create");
+
             if (oContext) {
-                var sPath = oContext.getPath();
-                var oModel = this.base.getView().getModel("create");
-                
+                const sPath = oContext.getPath();
+                const oModel = this.base.getView().getModel("create");
+
                 // Basic formula validation
                 if (sValue && sValue.trim().length > 0) {
                     // Check for common formula syntax
                     if (/[a-zA-Z0-9\+\-\*\/\^\(\)\s\.]+/.test(sValue)) {
-                        oModel.setProperty(sPath + "/isValid", true);
+                        oModel.setProperty(`${sPath }/isValid`, true);
                     } else {
-                        oModel.setProperty(sPath + "/isValid", false);
+                        oModel.setProperty(`${sPath }/isValid`, false);
                     }
                 }
             }
-            
+
             this._validateForm();
         },
 
@@ -285,101 +285,101 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _validateForm: function() {
-            var oModel = this.base.getView().getModel("create");
-            var oData = oModel.getData();
-            
-            var bValid = oData.taskNameState === "Success" &&
+        _validateForm() {
+            const oModel = this.base.getView().getModel("create");
+            const oData = oModel.getData();
+
+            const bValid = oData.taskNameState === "Success" &&
                         oData.calculationType &&
                         oData.formulas.length > 0 &&
-                        oData.formulas.some(function(formula) {
+                        oData.formulas.some((formula) => {
                             return formula.expression && formula.expression.trim().length > 0;
                         });
-            
+
             oModel.setProperty("/isValid", bValid);
         },
 
-        // Security and validation utilities  
-        _validateInput: function(sInput, sType) {
-            if (!sInput || typeof sInput !== 'string') {
+        // Security and validation utilities
+        _validateInput(sInput, sType) {
+            if (!sInput || typeof sInput !== "string") {
                 return { isValid: false, message: "Invalid input format" };
             }
 
-            var sSanitized = sInput.trim();
-            
+            const sSanitized = sInput.trim();
+
             // XSS prevention
-            var aXSSPatterns = [
-                /<script/i, /javascript:/i, /on\w+\s*=/i, /<iframe/i, 
+            const aXSSPatterns = [
+                /<script/i, /javascript:/i, /on\w+\s*=/i, /<iframe/i,
                 /<object/i, /<embed/i, /eval\s*\(/i, /Function\s*\(/i
             ];
 
-            for (var i = 0; i < aXSSPatterns.length; i++) {
+            for (let i = 0; i < aXSSPatterns.length; i++) {
                 if (aXSSPatterns[i].test(sSanitized)) {
-                    this._logAuditEvent("XSS_ATTEMPT", "Blocked XSS attempt in " + sType, sInput);
+                    this._logAuditEvent("XSS_ATTEMPT", `Blocked XSS attempt in ${ sType}`, sInput);
                     return { isValid: false, message: "Invalid characters detected" };
                 }
             }
 
             // Type-specific validation
             switch (sType) {
-                case "taskId":
-                    if (!/^[a-zA-Z0-9_-]+$/.test(sSanitized) || sSanitized.length > 50) {
-                        return { isValid: false, message: "Invalid task ID format" };
-                    }
-                    break;
-                case "formula":
-                    if (sSanitized.length > 10000) {
-                        return { isValid: false, message: "Formula too long" };
-                    }
-                    break;
-                case "reportType":
-                    var aValidTypes = ["SUMMARY", "DETAILED", "PERFORMANCE", "ERRORS"];
-                    if (!aValidTypes.includes(sSanitized)) {
-                        return { isValid: false, message: "Invalid report type" };
-                    }
-                    break;
+            case "taskId":
+                if (!/^[a-zA-Z0-9_-]+$/.test(sSanitized) || sSanitized.length > 50) {
+                    return { isValid: false, message: "Invalid task ID format" };
+                }
+                break;
+            case "formula":
+                if (sSanitized.length > 10000) {
+                    return { isValid: false, message: "Formula too long" };
+                }
+                break;
+            case "reportType":
+                var aValidTypes = ["SUMMARY", "DETAILED", "PERFORMANCE", "ERRORS"];
+                if (!aValidTypes.includes(sSanitized)) {
+                    return { isValid: false, message: "Invalid report type" };
+                }
+                break;
             }
 
             return { isValid: true, sanitized: sSanitized };
         },
 
-        _getCSRFToken: function() {
+        _getCSRFToken() {
             return new Promise(function(resolve, reject) {
                 this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent4/v1/csrf-token",
                     type: "GET",
-                    success: function(data) {
+                    success(data) {
                         resolve(data.token);
                     },
-                    error: function() {
+                    error() {
                         reject("Failed to retrieve CSRF token");
                     }
                 });
             });
         },
 
-        _secureAjax: function(oOptions) {
-            var that = this;
+        _secureAjax(oOptions) {
+            const that = this;
             return this._getCSRFToken().then(function(sToken) {
                 oOptions.headers = oOptions.headers || {};
                 oOptions.headers["X-CSRF-Token"] = sToken;
-                
-                var sAuthToken = that._getAuthToken();
+
+                const sAuthToken = that._getAuthToken();
                 if (sAuthToken) {
-                    oOptions.headers["Authorization"] = "Bearer " + sAuthToken;
+                    oOptions.headers["Authorization"] = `Bearer ${ sAuthToken}`;
                 }
 
                 return this._securityUtils.secureAjaxRequest(oOptions);
             });
         },
 
-        _getAuthToken: function() {
+        _getAuthToken() {
             return sessionStorage.getItem("a2a_auth_token") || "";
         },
 
-        _logAuditEvent: function(sEventType, sDescription, sData) {
+        _logAuditEvent(sEventType, sDescription, sData) {
             // Comprehensive audit trail logging
-            var oAuditData = {
+            const oAuditData = {
                 timestamp: new Date().toISOString(),
                 eventType: sEventType,
                 description: sDescription,
@@ -399,40 +399,40 @@ sap.ui.define([
                 contentType: "application/json",
                 data: JSON.stringify(oAuditData),
                 async: true,
-                success: function() {
+                success() {
                     // Audit success logging
                     console.log("Audit trail recorded:", sEventType);
                 },
-                error: function() {
+                error() {
                     // Fallback audit logging to local storage
                     try {
-                        var aLocalAudit = JSON.parse(localStorage.getItem("a2a_audit_log") || "[]");
+                        let aLocalAudit = JSON.parse(localStorage.getItem("a2a_audit_log") || "[]");
                         aLocalAudit.push(oAuditData);
-                        if (aLocalAudit.length > 100) aLocalAudit = aLocalAudit.slice(-100);
+                        if (aLocalAudit.length > 100) {aLocalAudit = aLocalAudit.slice(-100);}
                         localStorage.setItem("a2a_audit_log", JSON.stringify(aLocalAudit));
-                    } catch(e) {
+                    } catch (e) {
                         // Silent fail for localStorage issues
                     }
                 }
             });
         },
 
-        _getSessionId: function() {
+        _getSessionId() {
             return sessionStorage.getItem("a2a_session_id") || "unknown";
         },
 
-        _getClientIP: function() {
+        _getClientIP() {
             // In real implementation, this would come from server-side
             return "client_ip_masked";
         },
 
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return "current_user"; // Placeholder
         },
 
-        _checkPermission: function(sAction) {
-            var aUserRoles = this._getUserRoles();
-            var mRequiredPermissions = {
+        _checkPermission(sAction) {
+            const aUserRoles = this._getUserRoles();
+            const mRequiredPermissions = {
                 "START_VALIDATION": ["CALCULATION_ADMIN", "VALIDATION_USER"],
                 "VALIDATE_FORMULAS": ["CALCULATION_ADMIN", "VALIDATION_USER"],
                 "RUN_BENCHMARK": ["CALCULATION_ADMIN"],
@@ -440,23 +440,23 @@ sap.ui.define([
                 "OPTIMIZE_CALCULATIONS": ["CALCULATION_ADMIN"]
             };
 
-            var aRequiredRoles = mRequiredPermissions[sAction] || [];
-            return aRequiredRoles.some(function(sRole) {
+            const aRequiredRoles = mRequiredPermissions[sAction] || [];
+            return aRequiredRoles.some((sRole) => {
                 return aUserRoles.includes(sRole);
             });
         },
 
-        _getUserRoles: function() {
+        _getUserRoles() {
             return ["VALIDATION_USER"]; // Placeholder
         },
 
-        formatSecureText: function(sText) {
-            if (!sText) return "";
+        formatSecureText(sText) {
+            if (!sText) {return "";}
             return jQuery.sap.encodeXML(String(sText));
         },
 
-        formatCalculationResult: function(nValue) {
-            if (typeof nValue !== 'number' || !isFinite(nValue)) {
+        formatCalculationResult(nValue) {
+            if (typeof nValue !== "number" || !isFinite(nValue)) {
                 return "Invalid";
             }
             if (Math.abs(nValue) > Number.MAX_SAFE_INTEGER) {
@@ -465,26 +465,26 @@ sap.ui.define([
             return nValue.toFixed(6);
         },
 
-        formatPercentage: function(nValue) {
-            if (typeof nValue !== 'number' || !isFinite(nValue)) {
+        formatPercentage(nValue) {
+            if (typeof nValue !== "number" || !isFinite(nValue)) {
                 return "0%";
             }
-            return Math.round(Math.max(0, Math.min(100, nValue))) + "%";
+            return `${Math.round(Math.max(0, Math.min(100, nValue))) }%`;
         },
 
-        _validateCalculationResult: function(oResult) {
+        _validateCalculationResult(oResult) {
             // Validate calculation results for security
-            if (!oResult || typeof oResult !== 'object') {
+            if (!oResult || typeof oResult !== "object") {
                 return { isValid: false, message: "Invalid result object" };
             }
 
             // Check for suspicious values
-            if (oResult.hasOwnProperty('value')) {
-                var nValue = parseFloat(oResult.value);
+            if (oResult.hasOwnProperty("value")) {
+                const nValue = parseFloat(oResult.value);
                 if (!isFinite(nValue)) {
                     return { isValid: false, message: "Invalid calculation result" };
                 }
-                
+
                 // Check for potential overflow attacks
                 if (Math.abs(nValue) > Number.MAX_SAFE_INTEGER) {
                     this._logAuditEvent("OVERFLOW_ATTEMPT", "Potential overflow attack detected", nValue);
@@ -495,23 +495,23 @@ sap.ui.define([
             return { isValid: true, sanitized: oResult };
         },
 
-        onStartValidation: function() {
+        onStartValidation() {
             if (!this._checkPermission("START_VALIDATION")) {
                 MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.validation"));
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
             // Validate task ID
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskName", [oTaskIdValidation.message]));
                 return;
             }
-            
+
             MessageBox.confirm(this.getResourceBundle().getText("confirm.startValidation", [this.formatSecureText(sTaskName)]), {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
@@ -521,11 +521,11 @@ sap.ui.define([
             });
         },
 
-        _startValidationProcess: function(sTaskId) {
+        _startValidationProcess(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent4/v1/tasks/" + encodeURIComponent(sTaskId) + "/validate",
+                url: `/a2a/agent4/v1/tasks/${ encodeURIComponent(sTaskId) }/validate`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -534,50 +534,50 @@ sap.ui.define([
                     maxExecutionTime: 600000, // 10 minutes max
                     enableSafeguards: true
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._extensionAPI.getView().setBusy(false);
                 MessageToast.show(this.getResourceBundle().getText("message.validationStarted"));
                 this._extensionAPI.refresh();
-                
+
                 // Start secure progress monitoring
                 this._startValidationMonitoring(sTaskId);
                 this._logAuditEvent("VALIDATION_STARTED", "Validation process started", { taskId: sTaskId });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._extensionAPI.getView().setBusy(false);
                 MessageBox.error(this.getResourceBundle().getText("error.operation.validationStartFailed", [this.formatSecureText(xhr.responseText)]));
                 this._logAuditEvent("VALIDATION_START_ERROR", "Failed to start validation", xhr.responseText);
-            }.bind(this));
+            });
         },
 
-        _startValidationMonitoring: function(sTaskId) {
+        _startValidationMonitoring(sTaskId) {
             // Secure polling with rate limiting
-            var nPollCount = 0;
-            var nMaxPolls = 300; // Max 10 minutes of polling (2s intervals)
-            
-            this._validationInterval = setInterval(function() {
+            let nPollCount = 0;
+            const nMaxPolls = 300; // Max 10 minutes of polling (2s intervals)
+
+            this._validationInterval = setInterval(() => {
                 nPollCount++;
-                
+
                 if (nPollCount > nMaxPolls) {
                     clearInterval(this._validationInterval);
                     MessageBox.warning(this.getResourceBundle().getText("warning.validationTimeout"));
                     return;
                 }
-                
+
                 this._secureAjax({
-                    url: "/a2a/agent4/v1/tasks/" + encodeURIComponent(sTaskId) + "/progress",
+                    url: `/a2a/agent4/v1/tasks/${ encodeURIComponent(sTaskId) }/progress`,
                     type: "GET"
-                }).then(function(data) {
+                }).then((data) => {
                     // Validate progress data
-                    var oValidatedData = this._validateProgressData(data);
+                    const oValidatedData = this._validateProgressData(data);
                     if (!oValidatedData.isValid) {
                         clearInterval(this._validationInterval);
                         return;
                     }
-                    
+
                     if (data.status === "COMPLETED" || data.status === "FAILED") {
                         clearInterval(this._validationInterval);
                         this._extensionAPI.refresh();
-                        
+
                         if (data.status === "COMPLETED") {
                             MessageBox.success(
                                 this.getResourceBundle().getText("success.validationComplete", [
@@ -594,86 +594,86 @@ sap.ui.define([
                     } else {
                         // Update progress with throttling
                         if (nPollCount % 5 === 0) { // Only show progress every 10 seconds
-                            MessageToast.show("Validating: " + this.formatPercentage(data.progress));
+                            MessageToast.show(`Validating: ${ this.formatPercentage(data.progress)}`);
                         }
                     }
-                }.bind(this)).catch(function() {
+                }).catch(() => {
                     // Fail silently on progress errors to avoid spam
                     if (nPollCount > 10) { // Only stop after some attempts
                         clearInterval(this._validationInterval);
                     }
-                }.bind(this));
-            }.bind(this), 2000);
+                });
+            }, 2000);
         },
 
-        _validateProgressData: function(oData) {
-            if (!oData || typeof oData !== 'object') {
+        _validateProgressData(oData) {
+            if (!oData || typeof oData !== "object") {
                 return { isValid: false };
             }
-            
+
             // Validate status
-            var aValidStatuses = ["PENDING", "RUNNING", "COMPLETED", "FAILED", "PAUSED"];
+            const aValidStatuses = ["PENDING", "RUNNING", "COMPLETED", "FAILED", "PAUSED"];
             if (!aValidStatuses.includes(oData.status)) {
                 return { isValid: false };
             }
-            
+
             // Validate numeric fields
-            if (oData.hasOwnProperty('progress')) {
-                var nProgress = parseFloat(oData.progress);
+            if (oData.hasOwnProperty("progress")) {
+                const nProgress = parseFloat(oData.progress);
                 if (!isFinite(nProgress) || nProgress < 0 || nProgress > 100) {
                     return { isValid: false };
                 }
             }
-            
+
             return { isValid: true };
         },
 
-        onValidateFormulas: function() {
+        onValidateFormulas() {
             if (!this._checkPermission("VALIDATE_FORMULAS")) {
                 MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.formulaValidation"));
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
-            
+
             if (!this._oFormulaValidationDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent4.ext.fragment.ValidationResults",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oFormulaValidationDialog = oDialog;
                     this.base.getView().addDependent(this._oFormulaValidationDialog);
-                    
+
                     // Load formulas for this task
                     this._loadTaskFormulas(oTaskIdValidation.sanitized);
                     this._oFormulaValidationDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._loadTaskFormulas(oTaskIdValidation.sanitized);
                 this._oFormulaValidationDialog.open();
             }
         },
 
-        _loadTaskFormulas: function(sTaskId) {
+        _loadTaskFormulas(sTaskId) {
             this._oFormulaValidationDialog.setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent4/v1/tasks/" + encodeURIComponent(sTaskId) + "/formulas",
+                url: `/a2a/agent4/v1/tasks/${ encodeURIComponent(sTaskId) }/formulas`,
                 type: "GET"
-            }).then(function(data) {
+            }).then((data) => {
                 this._oFormulaValidationDialog.setBusy(false);
-                
+
                 // Sanitize formula data
-                var oSanitizedData = this._sanitizeFormulaData(data);
-                var oModel = new JSONModel({
+                const oSanitizedData = this._sanitizeFormulaData(data);
+                const oModel = new JSONModel({
                     taskId: sTaskId,
                     formulas: oSanitizedData.formulas || [],
                     validationSettings: {
@@ -684,18 +684,18 @@ sap.ui.define([
                     }
                 });
                 this._oFormulaValidationDialog.setModel(oModel, "validation");
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._oFormulaValidationDialog.setBusy(false);
                 MessageBox.error(this.getResourceBundle().getText("error.operation.formulaLoadFailed", [this.formatSecureText(xhr.responseText)]));
-            }.bind(this));
+            });
         },
 
-        _sanitizeFormulaData: function(oData) {
+        _sanitizeFormulaData(oData) {
             if (!oData || !Array.isArray(oData.formulas)) {
                 return { formulas: [] };
             }
-            
-            var aSanitizedFormulas = oData.formulas.map(function(formula) {
+
+            const aSanitizedFormulas = oData.formulas.map((formula) => {
                 return {
                     id: this.formatSecureText(formula.id),
                     expression: this.formatSecureText(formula.expression),
@@ -703,22 +703,22 @@ sap.ui.define([
                     type: this.formatSecureText(formula.type),
                     selected: Boolean(formula.selected),
                     validationResult: formula.validationResult ? this.formatSecureText(formula.validationResult) : "",
-                    actualValue: typeof formula.actualValue === 'number' ? this.formatCalculationResult(formula.actualValue) : "",
-                    expectedValue: typeof formula.expectedValue === 'number' ? this.formatCalculationResult(formula.expectedValue) : "",
-                    variance: typeof formula.variance === 'number' ? this.formatCalculationResult(formula.variance) : ""
+                    actualValue: typeof formula.actualValue === "number" ? this.formatCalculationResult(formula.actualValue) : "",
+                    expectedValue: typeof formula.expectedValue === "number" ? this.formatCalculationResult(formula.expectedValue) : "",
+                    variance: typeof formula.variance === "number" ? this.formatCalculationResult(formula.variance) : ""
                 };
-            }.bind(this));
-            
+            });
+
             return { formulas: aSanitizedFormulas };
         },
 
-        onValidateSelectedFormulas: function() {
-            var oModel = this._oFormulaValidationDialog.getModel("validation");
-            var aFormulas = oModel.getProperty("/formulas");
-            var aSelectedFormulas = aFormulas.filter(function(formula) {
+        onValidateSelectedFormulas() {
+            const oModel = this._oFormulaValidationDialog.getModel("validation");
+            const aFormulas = oModel.getProperty("/formulas");
+            const aSelectedFormulas = aFormulas.filter((formula) => {
                 return formula.selected;
             });
-            
+
             if (aSelectedFormulas.length === 0) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.selectFormulas"));
                 return;
@@ -729,15 +729,15 @@ sap.ui.define([
                 MessageBox.error(this.getResourceBundle().getText("error.validation.maxFormulas"));
                 return;
             }
-            
+
             this._oFormulaValidationDialog.setBusy(true);
-            
+
             this._secureAjax({
                 url: "/a2a/agent4/v1/validate-formulas",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
-                    formulas: aSelectedFormulas.map(function(formula) {
+                    formulas: aSelectedFormulas.map((formula) => {
                         return {
                             id: formula.id,
                             expression: formula.expression
@@ -745,13 +745,13 @@ sap.ui.define([
                     }),
                     settings: oModel.getProperty("/validationSettings")
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._oFormulaValidationDialog.setBusy(false);
-                
+
                 // Validate and update results
                 if (data.results && Array.isArray(data.results)) {
                     this._updateFormulaResults(data.results);
-                    
+
                     MessageBox.success(
                         this.getResourceBundle().getText("success.formulaValidationCompleted", [
                             this.formatCalculationResult(data.validated),
@@ -760,30 +760,30 @@ sap.ui.define([
                             this.formatCalculationResult(data.failed)
                         ])
                     );
-                    
-                    this._logAuditEvent("FORMULAS_VALIDATED", "Formulas validated", { 
+
+                    this._logAuditEvent("FORMULAS_VALIDATED", "Formulas validated", {
                         count: aSelectedFormulas.length,
                         passed: data.passed,
-                        failed: data.failed 
+                        failed: data.failed
                     });
                 }
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._oFormulaValidationDialog.setBusy(false);
                 MessageBox.error(this.getResourceBundle().getText("error.operation.formulaValidationFailed", [this.formatSecureText(xhr.responseText)]));
-            }.bind(this));
+            });
         },
 
-        _updateFormulaResults: function(aResults) {
-            var oModel = this._oFormulaValidationDialog.getModel("validation");
-            var aFormulas = oModel.getProperty("/formulas");
-            
-            aResults.forEach(function(result) {
-                var oFormula = aFormulas.find(function(f) {
+        _updateFormulaResults(aResults) {
+            const oModel = this._oFormulaValidationDialog.getModel("validation");
+            const aFormulas = oModel.getProperty("/formulas");
+
+            aResults.forEach((result) => {
+                const oFormula = aFormulas.find((f) => {
                     return f.id === result.formulaId;
                 });
                 if (oFormula) {
                     // Validate result data before updating
-                    var oValidatedResult = this._validateCalculationResult(result);
+                    const oValidatedResult = this._validateCalculationResult(result);
                     if (oValidatedResult.isValid) {
                         oFormula.validationResult = this.formatSecureText(result.result);
                         oFormula.actualValue = this.formatCalculationResult(result.actualValue);
@@ -791,26 +791,26 @@ sap.ui.define([
                         oFormula.errors = result.errors ? this.formatSecureText(JSON.stringify(result.errors)) : "";
                     }
                 }
-            }.bind(this));
-            
+            });
+
             oModel.setProperty("/formulas", aFormulas);
         },
 
-        onRunBenchmark: function() {
+        onRunBenchmark() {
             if (!this._checkPermission("RUN_BENCHMARK")) {
                 MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.benchmarks"));
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
-            
+
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirm.runBenchmarkSimple"),
                 {
@@ -823,11 +823,11 @@ sap.ui.define([
             );
         },
 
-        _runPerformanceBenchmark: function(sTaskId) {
+        _runPerformanceBenchmark(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent4/v1/tasks/" + encodeURIComponent(sTaskId) + "/benchmark",
+                url: `/a2a/agent4/v1/tasks/${ encodeURIComponent(sTaskId) }/benchmark`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -838,56 +838,56 @@ sap.ui.define([
                     maxExecutionTime: 300000, // 5 minutes max
                     enableSafeguards: true
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._extensionAPI.getView().setBusy(false);
                 this._showBenchmarkResults(data);
                 this._logAuditEvent("BENCHMARK_COMPLETED", "Performance benchmark completed", { taskId: sTaskId });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._extensionAPI.getView().setBusy(false);
                 MessageBox.error(this.getResourceBundle().getText("error.operation.benchmarkFailed", [this.formatSecureText(xhr.responseText)]));
                 this._logAuditEvent("BENCHMARK_ERROR", "Benchmark failed", xhr.responseText);
-            }.bind(this));
+            });
         },
 
-        _showBenchmarkResults: function(data) {
+        _showBenchmarkResults(data) {
             // Sanitize benchmark data
-            var sMessage = "Benchmark Results:\n\n" +
-                          "Average execution time: " + this.formatCalculationResult(data.avgExecutionTime) + " ms\n" +
-                          "Memory usage: " + this.formatCalculationResult(data.memoryUsage) + " MB\n" +
-                          "CPU efficiency: " + this.formatPercentage(data.cpuEfficiency) + "\n" +
-                          "Formulas per second: " + this.formatCalculationResult(data.formulasPerSecond);
-            
+            const sMessage = "Benchmark Results:\n\n" +
+                          `Average execution time: ${ this.formatCalculationResult(data.avgExecutionTime) } ms\n` +
+                          `Memory usage: ${ this.formatCalculationResult(data.memoryUsage) } MB\n` +
+                          `CPU efficiency: ${ this.formatPercentage(data.cpuEfficiency) }\n` +
+                          `Formulas per second: ${ this.formatCalculationResult(data.formulasPerSecond)}`;
+
             MessageBox.information(sMessage, {
                 title: "Performance Benchmark"
             });
         },
 
-        onGenerateReport: function() {
+        onGenerateReport() {
             if (!this._checkPermission("GENERATE_REPORT")) {
                 MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.reports"));
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
-            
+
             if (!this._oReportDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent4.ext.fragment.ValidationMethodsSelector",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oReportDialog = oDialog;
                     this.base.getView().addDependent(this._oReportDialog);
-                    
-                    var oModel = new JSONModel({
+
+                    const oModel = new JSONModel({
                         taskId: oTaskIdValidation.sanitized,
                         taskName: this.formatSecureText(sTaskName),
                         reportType: "DETAILED",
@@ -899,27 +899,27 @@ sap.ui.define([
                     });
                     this._oReportDialog.setModel(oModel, "report");
                     this._oReportDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oReportDialog.open();
             }
         },
 
-        onGenerateValidationReport: function() {
-            var oModel = this._oReportDialog.getModel("report");
-            var oData = oModel.getData();
-            
+        onGenerateValidationReport() {
+            const oModel = this._oReportDialog.getModel("report");
+            const oData = oModel.getData();
+
             // Validate report type
-            var oReportTypeValidation = this._validateInput(oData.reportType, "reportType");
+            const oReportTypeValidation = this._validateInput(oData.reportType, "reportType");
             if (!oReportTypeValidation.isValid) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.invalidReportType"));
                 return;
             }
-            
+
             this._oReportDialog.setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent4/v1/tasks/" + encodeURIComponent(oData.taskId) + "/report",
+                url: `/a2a/agent4/v1/tasks/${ encodeURIComponent(oData.taskId) }/report`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -930,12 +930,12 @@ sap.ui.define([
                     format: oData.format === "PDF" ? "PDF" : "HTML", // Whitelist formats
                     maxFileSize: Math.min(oData.maxFileSize || 10, 50) // Limit file size
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._oReportDialog.setBusy(false);
                 this._oReportDialog.close();
-                
+
                 // Validate download URL
-                if (data.downloadUrl && typeof data.downloadUrl === 'string') {
+                if (data.downloadUrl && typeof data.downloadUrl === "string") {
                     MessageBox.success(
                         this.getResourceBundle().getText("success.reportGeneratedSuccess"),
                         {
@@ -948,22 +948,22 @@ sap.ui.define([
                             }.bind(this)
                         }
                     );
-                    this._logAuditEvent("REPORT_GENERATED", "Validation report generated", { 
+                    this._logAuditEvent("REPORT_GENERATED", "Validation report generated", {
                         taskId: oData.taskId,
-                        type: oData.reportType 
+                        type: oData.reportType
                     });
                 }
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._oReportDialog.setBusy(false);
                 MessageBox.error(this.getResourceBundle().getText("error.operation.reportGenerationFailed", [this.formatSecureText(xhr.responseText)]));
-            }.bind(this));
+            });
         },
 
-        _secureDownload: function(sUrl) {
+        _secureDownload(sUrl) {
             // Validate URL format and origin
             try {
-                var oUrl = new URL(sUrl, window.location.origin);
-                if (oUrl.origin === window.location.origin && oUrl.pathname.startsWith('/a2a/agent4/')) {
+                const oUrl = new URL(sUrl, window.location.origin);
+                if (oUrl.origin === window.location.origin && oUrl.pathname.startsWith("/a2a/agent4/")) {
                     window.open(sUrl, "_blank");
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("error.validation.invalidDownloadUrl"));
@@ -973,21 +973,21 @@ sap.ui.define([
             }
         },
 
-        onOptimizeCalculations: function() {
+        onOptimizeCalculations() {
             if (!this._checkPermission("OPTIMIZE_CALCULATIONS")) {
                 MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.optimization"));
                 return;
             }
 
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
-            var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
+            const oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
                 MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
-            
+
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirm.optimizeCalculationsSimple"),
                 {
@@ -1000,11 +1000,11 @@ sap.ui.define([
             );
         },
 
-        _optimizeCalculations: function(sTaskId) {
+        _optimizeCalculations(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._secureAjax({
-                url: "/a2a/agent4/v1/tasks/" + encodeURIComponent(sTaskId) + "/optimize",
+                url: `/a2a/agent4/v1/tasks/${ encodeURIComponent(sTaskId) }/optimize`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -1014,53 +1014,53 @@ sap.ui.define([
                     enableSafeguards: true,
                     maxExecutionTime: 180000 // 3 minutes max
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 this._extensionAPI.getView().setBusy(false);
-                
+
                 if (data.optimizations && data.optimizations.length > 0) {
                     this._showOptimizationSuggestions(data);
                 } else {
                     MessageBox.information(this.getResourceBundle().getText("success.optimizationCompleted"));
                 }
                 this._logAuditEvent("OPTIMIZATION_COMPLETED", "Calculation optimization completed", { taskId: sTaskId });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 this._extensionAPI.getView().setBusy(false);
                 MessageBox.error(this.getResourceBundle().getText("error.operation.optimizationFailed", [this.formatSecureText(xhr.responseText)]));
-            }.bind(this));
+            });
         },
 
-        _showOptimizationSuggestions: function(data) {
-            var oView = this.base.getView();
-            
+        _showOptimizationSuggestions(data) {
+            const oView = this.base.getView();
+
             if (!this._oOptimizationDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent4.ext.fragment.ExpressionBuilder",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oOptimizationDialog = oDialog;
                     oView.addDependent(this._oOptimizationDialog);
-                    
+
                     // Sanitize optimization data
-                    var oSanitizedData = this._sanitizeOptimizationData(data);
-                    var oModel = new JSONModel(oSanitizedData);
+                    const oSanitizedData = this._sanitizeOptimizationData(data);
+                    const oModel = new JSONModel(oSanitizedData);
                     this._oOptimizationDialog.setModel(oModel, "optimization");
                     this._oOptimizationDialog.open();
-                }.bind(this));
+                });
             } else {
-                var oSanitizedData = this._sanitizeOptimizationData(data);
-                var oModel = new JSONModel(oSanitizedData);
+                const oSanitizedData = this._sanitizeOptimizationData(data);
+                const oModel = new JSONModel(oSanitizedData);
                 this._oOptimizationDialog.setModel(oModel, "optimization");
                 this._oOptimizationDialog.open();
             }
         },
 
-        _sanitizeOptimizationData: function(oData) {
+        _sanitizeOptimizationData(oData) {
             if (!oData || !Array.isArray(oData.optimizations)) {
                 return { optimizations: [] };
             }
-            
-            var aSanitizedOptimizations = oData.optimizations.slice(0, 20).map(function(opt) {
+
+            const aSanitizedOptimizations = oData.optimizations.slice(0, 20).map((opt) => {
                 return {
                     id: this.formatSecureText(opt.id),
                     description: this.formatSecureText(opt.description),
@@ -1069,9 +1069,9 @@ sap.ui.define([
                     type: this.formatSecureText(opt.type),
                     safe: Boolean(opt.safe)
                 };
-            }.bind(this));
-            
-            return { 
+            });
+
+            return {
                 optimizations: aSanitizedOptimizations,
                 summary: {
                     totalSuggestions: aSanitizedOptimizations.length,
@@ -1080,17 +1080,17 @@ sap.ui.define([
             };
         },
 
-        onApplyOptimization: function(oEvent) {
-            var oSource = oEvent.getSource();
-            var oBindingContext = oSource.getBindingContext("optimization");
-            var oOptimization = oBindingContext.getObject();
-            
+        onApplyOptimization(oEvent) {
+            const oSource = oEvent.getSource();
+            const oBindingContext = oSource.getBindingContext("optimization");
+            const oOptimization = oBindingContext.getObject();
+
             // Security check - only apply safe optimizations
             if (!oOptimization.safe) {
                 MessageBox.error(this.getResourceBundle().getText("warning.optimizationUnsafe"));
                 return;
             }
-            
+
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirm.applyOptimizationWithDetails", [
                     oOptimization.description,
@@ -1106,7 +1106,7 @@ sap.ui.define([
             );
         },
 
-        _applyOptimization: function(oOptimization) {
+        _applyOptimization(oOptimization) {
             this._secureAjax({
                 url: "/a2a/agent4/v1/apply-optimization",
                 type: "POST",
@@ -1116,16 +1116,16 @@ sap.ui.define([
                     type: oOptimization.type,
                     confirmSafe: true
                 })
-            }).then(function(data) {
+            }).then((data) => {
                 MessageToast.show(this.getResourceBundle().getText("success.optimizationApplied"));
                 this._extensionAPI.refresh();
-                this._logAuditEvent("OPTIMIZATION_APPLIED", "Optimization applied", { 
+                this._logAuditEvent("OPTIMIZATION_APPLIED", "Optimization applied", {
                     optimizationId: oOptimization.id,
-                    type: oOptimization.type 
+                    type: oOptimization.type
                 });
-            }.bind(this)).catch(function(xhr) {
+            }).catch((xhr) => {
                 MessageBox.error(this.getResourceBundle().getText("error.operation.optimizationFailed", [this.formatSecureText(xhr.responseText)]));
-            }.bind(this));
+            });
         }
     });
 });

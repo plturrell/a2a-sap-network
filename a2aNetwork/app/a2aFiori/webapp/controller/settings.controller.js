@@ -12,8 +12,8 @@ sap.ui.define([
     "sap/base/Log",
     "sap/viz/ui5/controls/VizFrame",
     "sap/viz/ui5/data/FlattenedDataset"
-], function(BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator,
-    Log, VizFrame, FlattenedDataset) {
+], (BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator,
+    Log, VizFrame, FlattenedDataset) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Settings", {

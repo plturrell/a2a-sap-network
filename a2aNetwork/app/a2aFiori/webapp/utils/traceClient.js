@@ -6,7 +6,7 @@
 
 sap.ui.define([
     "sap/base/Log"
-], function(Log) {
+], (Log) => {
     "use strict";
 
     /**
@@ -254,7 +254,7 @@ sap.ui.define([
                 headers: {
                     "X-Trace-ID": this._traceId
                 }
-            }).fail(function(error) {
+            }).fail((error) => {
                 Log.warning("Failed to send action to backend", { error });
             });
         },
@@ -278,7 +278,7 @@ sap.ui.define([
                 headers: {
                     "X-Trace-ID": this._traceId
                 }
-            }).fail(function(error) {
+            }).fail((error) => {
                 Log.warning("Failed to send error to backend", { error });
             });
         },
@@ -302,7 +302,7 @@ sap.ui.define([
             const self = this;
 
             // Handle uncaught JavaScript errors
-            window.addEventListener("error", function(event) {
+            window.addEventListener("error", (event) => {
                 self.trackError(event.error || new Error(event.message), {
                     component: "global",
                     action: "uncaught_error",
@@ -311,7 +311,7 @@ sap.ui.define([
             });
 
             // Handle unhandled promise rejections
-            window.addEventListener("unhandledrejection", function(event) {
+            window.addEventListener("unhandledrejection", (event) => {
                 self.trackError(event.reason || new Error("Unhandled promise rejection"), {
                     component: "global",
                     action: "unhandled_rejection",
@@ -321,7 +321,7 @@ sap.ui.define([
 
             // Integrate with UI5 error handling
             if (sap.ui.getCore) {
-                sap.ui.getCore().attachEvent("parseError", function(oEvent) {
+                sap.ui.getCore().attachEvent("parseError", (oEvent) => {
                     self.trackError(new Error(oEvent.getParameter("message")), {
                         component: "ui5",
                         action: "parse_error",

@@ -37,6 +37,13 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
             agent_version="1.0.0",
             allowed_operations={
                 "get_agent_card",
+                # Registry capabilities
+                "catalog_management",
+                "metadata_indexing",
+                "service_discovery",
+                "catalog_search",
+                "resource_registration",
+                # Enhanced operations
                 "json_rpc",
                 "process_message",
                 "get_task_status",
@@ -337,6 +344,107 @@ class CatalogManagerA2AHandler(SecureA2AAgent):
                 
             except Exception as e:
                 logger.error(f"Failed to assess_ord_quality: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        # Registry capability handlers
+        @self.secure_handler("catalog_management")
+        async def handle_catalog_management(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle catalog management operations"""
+            try:
+                result = await self.agent_sdk.manage_catalog(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="catalog_management",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to catalog_management: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("metadata_indexing")
+        async def handle_metadata_indexing(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle metadata indexing operations"""
+            try:
+                result = await self.agent_sdk.index_metadata(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="metadata_indexing",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to metadata_indexing: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("service_discovery")
+        async def handle_service_discovery(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle service discovery operations"""
+            try:
+                result = await self.agent_sdk.discover_services(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="service_discovery",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to service_discovery: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("catalog_search")
+        async def handle_catalog_search(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle catalog search operations"""
+            try:
+                result = await self.agent_sdk.search_catalog(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="catalog_search",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to catalog_search: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("resource_registration")
+        async def handle_resource_registration(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle resource registration operations"""
+            try:
+                result = await self.agent_sdk.register_resource(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="resource_registration",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to resource_registration: {e}")
                 return self.create_secure_response(str(e), status="error")
     
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:

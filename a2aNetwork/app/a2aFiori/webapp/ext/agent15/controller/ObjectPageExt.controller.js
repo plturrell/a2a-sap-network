@@ -10,30 +10,30 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "../../../utils/SharedSecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeSecurity();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache
                 this._dialogCache = {};
-                
+
                 // Initialize real-time monitoring
                 this._initializeRealtimeMonitoring();
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
@@ -46,7 +46,7 @@ sap.ui.define([
          * @description Initiates rollback of deployment to previous version.
          * @public
          */
-        onRollbackDeployment: function() {
+        onRollbackDeployment() {
             if (!this._securityUtils.hasRole("DeploymentAdmin")) {
                 MessageBox.error("Access denied. Deployment Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "RollbackDeployment", reason: "Insufficient permissions" });
@@ -57,15 +57,15 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             // Check if rollback is possible
             if (!oData.previousVersion) {
                 MessageBox.warning(this.getResourceBundle().getText("msg.noPreviousVersion"));
                 return;
             }
-            
+
             this._auditLogger.log("ROLLBACK_DEPLOYMENT_REQUESTED", { taskId: sTaskId, taskName: sTaskName });
-            
+
             MessageBox.confirm(
                 this.getResourceBundle().getText("msg.rollbackConfirm", [sTaskName, oData.previousVersion]),
                 {
@@ -88,7 +88,7 @@ sap.ui.define([
          * @description Validates deployment integrity and configuration.
          * @public
          */
-        onValidateDeployment: function() {
+        onValidateDeployment() {
             if (!this._securityUtils.hasRole("DeploymentUser")) {
                 MessageBox.error("Access denied. Deployment User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ValidateDeployment", reason: "Insufficient permissions" });
@@ -99,12 +99,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("VALIDATE_DEPLOYMENT", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("validateDeployment", "a2a.network.agent15.ext.fragment.ValidateDeployment")
-                .then(function(oDialog) {
-                    var oValidationModel = new JSONModel({
+                .then((oDialog) => {
+                    const oValidationModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         deploymentId: oData.deploymentId,
@@ -134,9 +134,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oValidationModel, "validation");
                     oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Validate Deployment dialog: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Validate Deployment dialog: ${ error.message}`);
                 });
         },
 
@@ -145,7 +145,7 @@ sap.ui.define([
          * @description Opens deployment logs viewer with filtering and search capabilities.
          * @public
          */
-        onViewLogs: function() {
+        onViewLogs() {
             if (!this._securityUtils.hasRole("DeploymentUser")) {
                 MessageBox.error("Access denied. Deployment User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewLogs", reason: "Insufficient permissions" });
@@ -156,12 +156,12 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             this._auditLogger.log("VIEW_LOGS", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("viewLogs", "a2a.network.agent15.ext.fragment.ViewLogs")
-                .then(function(oDialog) {
-                    var oLogModel = new JSONModel({
+                .then((oDialog) => {
+                    const oLogModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         deploymentId: oData.deploymentId,
@@ -193,9 +193,9 @@ sap.ui.define([
                     oDialog.setModel(oLogModel, "logs");
                     oDialog.open();
                     this._loadDeploymentLogs(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Logs Viewer: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Logs Viewer: ${ error.message}`);
                 });
         },
 
@@ -204,7 +204,7 @@ sap.ui.define([
          * @description Promotes deployment to production environment.
          * @public
          */
-        onPromoteToProduction: function() {
+        onPromoteToProduction() {
             if (!this._securityUtils.hasRole("DeploymentAdmin")) {
                 MessageBox.error("Access denied. Deployment Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "PromoteToProduction", reason: "Insufficient permissions" });
@@ -215,23 +215,23 @@ sap.ui.define([
             const oData = oContext.getObject();
             const sTaskId = oData.taskId;
             const sTaskName = oData.taskName;
-            
+
             // Check if promotion is allowed
             if (oData.environment === "PRODUCTION") {
                 MessageBox.warning(this.getResourceBundle().getText("msg.alreadyInProduction"));
                 return;
             }
-            
+
             if (oData.status !== "DEPLOYED") {
                 MessageBox.warning(this.getResourceBundle().getText("msg.deploymentNotReady"));
                 return;
             }
-            
+
             this._auditLogger.log("PROMOTE_TO_PRODUCTION_REQUESTED", { taskId: sTaskId, taskName: sTaskName });
-            
+
             this._getOrCreateDialog("promoteToProduction", "a2a.network.agent15.ext.fragment.PromoteToProduction")
-                .then(function(oDialog) {
-                    var oPromoteModel = new JSONModel({
+                .then((oDialog) => {
+                    const oPromoteModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         currentEnvironment: oData.environment,
@@ -263,9 +263,9 @@ sap.ui.define([
                     oDialog.setModel(oPromoteModel, "promote");
                     oDialog.open();
                     this._loadPromotionPlan(sTaskId, oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Promote to Production dialog: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Promote to Production dialog: ${ error.message}`);
                 });
         },
 
@@ -277,9 +277,9 @@ sap.ui.define([
          * @param {Object} oData - Deployment data
          * @private
          */
-        _executeRollback: function(sTaskId, sTaskName, oData) {
+        _executeRollback(sTaskId, sTaskName, oData) {
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/RollbackDeployment", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -290,23 +290,23 @@ sap.ui.define([
                 },
                 success: function(data) {
                     MessageToast.show(this.getResourceBundle().getText("msg.rollbackInitiated"));
-                    this._auditLogger.log("ROLLBACK_INITIATED", { 
-                        taskId: sTaskId, 
+                    this._auditLogger.log("ROLLBACK_INITIATED", {
+                        taskId: sTaskId,
                         taskName: sTaskName,
                         targetVersion: oData.previousVersion,
                         rollbackId: data.rollbackId,
-                        success: true 
+                        success: true
                     });
-                    
+
                     // Start monitoring rollback progress
                     this._startRollbackMonitoring(data.rollbackId);
                 }.bind(this),
                 error: function(error) {
                     MessageBox.error(this.getResourceBundle().getText("error.rollbackFailed"));
-                    this._auditLogger.log("ROLLBACK_FAILED", { 
-                        taskId: sTaskId, 
+                    this._auditLogger.log("ROLLBACK_FAILED", {
+                        taskId: sTaskId,
                         taskName: sTaskName,
-                        error: error.message 
+                        error: error.message
                     });
                 }.bind(this)
             });
@@ -319,11 +319,11 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Logs dialog
          * @private
          */
-        _loadDeploymentLogs: function(sTaskId, oDialog) {
+        _loadDeploymentLogs(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetDeploymentLogs", {
                 urlParameters: {
                     taskId: sTaskId,
@@ -332,7 +332,7 @@ sap.ui.define([
                     includeMetadata: true
                 },
                 success: function(data) {
-                    var oLogModel = oDialog.getModel("logs");
+                    const oLogModel = oDialog.getModel("logs");
                     if (oLogModel) {
                         var oCurrentData = oLogModel.getData();
                         oCurrentData.logs = data.logs || [];
@@ -342,15 +342,15 @@ sap.ui.define([
                         oLogModel.setData(oCurrentData);
                     }
                     oDialog.setBusy(false);
-                    
+
                     // Start auto-refresh if enabled
                     if (oCurrentData.autoRefresh) {
                         this._startLogAutoRefresh(sTaskId, oDialog);
                     }
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load deployment logs: " + error.message);
+                    MessageBox.error(`Failed to load deployment logs: ${ error.message}`);
                 }
             });
         },
@@ -362,20 +362,20 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Promotion dialog
          * @private
          */
-        _loadPromotionPlan: function(sTaskId, oDialog) {
+        _loadPromotionPlan(sTaskId, oDialog) {
             oDialog.setBusy(true);
-            
+
             const oModel = this.base.getView().getModel();
-            
+
             SecurityUtils.secureCallFunction(oModel, "/GetPromotionPlan", {
                 urlParameters: {
                     taskId: sTaskId,
                     targetEnvironment: "PRODUCTION"
                 },
                 success: function(data) {
-                    var oPromoteModel = oDialog.getModel("promote");
+                    const oPromoteModel = oDialog.getModel("promote");
                     if (oPromoteModel) {
-                        var oCurrentData = oPromoteModel.getData();
+                        const oCurrentData = oPromoteModel.getData();
                         oCurrentData.promotionPlan = data.plan || {};
                         oCurrentData.approvers = data.approvers || [];
                         oCurrentData.requirements = data.requirements || {};
@@ -384,9 +384,9 @@ sap.ui.define([
                     }
                     oDialog.setBusy(false);
                 }.bind(this),
-                error: function(error) {
+                error(error) {
                     oDialog.setBusy(false);
-                    MessageBox.error("Failed to load promotion plan: " + error.message);
+                    MessageBox.error(`Failed to load promotion plan: ${ error.message}`);
                 }
             });
         },
@@ -397,7 +397,7 @@ sap.ui.define([
          * @param {string} sRollbackId - Rollback ID to monitor
          * @private
          */
-        _startRollbackMonitoring: function(sRollbackId) {
+        _startRollbackMonitoring(sRollbackId) {
             // Update context to show rollback in progress
             const oContext = this.base.getView().getBindingContext();
             if (oContext) {
@@ -412,12 +412,12 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Logs dialog
          * @private
          */
-        _startLogAutoRefresh: function(sTaskId, oDialog) {
+        _startLogAutoRefresh(sTaskId, oDialog) {
             if (this._logRefreshInterval) {
                 clearInterval(this._logRefreshInterval);
             }
-            
-            var oLogData = oDialog.getModel("logs").getData();
+
+            const oLogData = oDialog.getModel("logs").getData();
             this._logRefreshInterval = setInterval(() => {
                 if (oDialog.isOpen() && oLogData.autoRefresh) {
                     this._loadDeploymentLogs(sTaskId, oDialog);
@@ -432,7 +432,7 @@ sap.ui.define([
          * @description Initializes real-time monitoring for deployment operations.
          * @private
          */
-        _initializeRealtimeMonitoring: function() {
+        _initializeRealtimeMonitoring() {
             // WebSocket for real-time deployment updates
             this._initializeDeploymentWebSocket();
         },
@@ -442,11 +442,11 @@ sap.ui.define([
          * @description Initializes WebSocket for deployment updates.
          * @private
          */
-        _initializeDeploymentWebSocket: function() {
-            if (this._deploymentWs) return;
+        _initializeDeploymentWebSocket() {
+            if (this._deploymentWs) {return;}
 
             try {
-                this._deploymentWs = SecurityUtils.createSecureWebSocket('blockchain://a2a-events', {
+                this._deploymentWs = SecurityUtils.createSecureWebSocket("blockchain://a2a-events", {
                     onMessage: function(data) {
                         this._handleDeploymentTaskUpdate(data);
                     }.bind(this)
@@ -468,33 +468,33 @@ sap.ui.define([
          * @param {Object} data - Update data
          * @private
          */
-        _handleDeploymentTaskUpdate: function(data) {
+        _handleDeploymentTaskUpdate(data) {
             const oContext = this.base.getView().getBindingContext();
-            if (!oContext) return;
-            
+            if (!oContext) {return;}
+
             const oCurrentData = oContext.getObject();
-            
+
             // Check if update is for current task
             if (data.taskId === oCurrentData.taskId) {
                 switch (data.type) {
-                    case 'STATUS_UPDATE':
-                        // Refresh the binding to get latest status
-                        oContext.refresh();
-                        break;
-                    case 'VALIDATION_COMPLETED':
-                        MessageToast.show("Deployment validation completed");
-                        this._updateValidationResults(data);
-                        break;
-                    case 'ROLLBACK_PROGRESS':
-                        this._updateRollbackProgress(data);
-                        break;
-                    case 'LOGS_UPDATED':
-                        this._refreshLogsIfOpen(data.taskId);
-                        break;
-                    case 'PROMOTION_APPROVED':
-                        MessageToast.show("Promotion to production approved");
-                        oContext.refresh();
-                        break;
+                case "STATUS_UPDATE":
+                    // Refresh the binding to get latest status
+                    oContext.refresh();
+                    break;
+                case "VALIDATION_COMPLETED":
+                    MessageToast.show("Deployment validation completed");
+                    this._updateValidationResults(data);
+                    break;
+                case "ROLLBACK_PROGRESS":
+                    this._updateRollbackProgress(data);
+                    break;
+                case "LOGS_UPDATED":
+                    this._refreshLogsIfOpen(data.taskId);
+                    break;
+                case "PROMOTION_APPROVED":
+                    MessageToast.show("Promotion to production approved");
+                    oContext.refresh();
+                    break;
                 }
             }
         },
@@ -505,7 +505,7 @@ sap.ui.define([
          * @param {Object} data - Validation data
          * @private
          */
-        _updateValidationResults: function(data) {
+        _updateValidationResults(data) {
             if (this._dialogCache.validateDeployment && this._dialogCache.validateDeployment.isOpen()) {
                 const oValidationModel = this._dialogCache.validateDeployment.getModel("validation");
                 if (oValidationModel) {
@@ -522,14 +522,14 @@ sap.ui.define([
          * @param {Object} data - Rollback progress data
          * @private
          */
-        _updateRollbackProgress: function(data) {
+        _updateRollbackProgress(data) {
             // Show rollback progress notifications
             if (data.status === "COMPLETED") {
                 MessageToast.show("Rollback completed successfully");
             } else if (data.status === "FAILED") {
-                MessageBox.error("Rollback failed: " + data.message);
+                MessageBox.error(`Rollback failed: ${ data.message}`);
             } else {
-                MessageToast.show("Rollback in progress: " + data.currentStep);
+                MessageToast.show(`Rollback in progress: ${ data.currentStep}`);
             }
         },
 
@@ -539,7 +539,7 @@ sap.ui.define([
          * @param {string} sTaskId - Task ID
          * @private
          */
-        _refreshLogsIfOpen: function(sTaskId) {
+        _refreshLogsIfOpen(sTaskId) {
             if (this._dialogCache.viewLogs && this._dialogCache.viewLogs.isOpen()) {
                 this._loadDeploymentLogs(sTaskId, this._dialogCache.viewLogs);
             }
@@ -553,71 +553,71 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache && this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             if (!this._dialogCache) {
                 this._dialogCache = {};
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -633,19 +633,19 @@ sap.ui.define([
          * @description Initializes security features and audit logging.
          * @private
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
-                    var user = this._getCurrentUser();
-                    var timestamp = new Date().toISOString();
-                    var logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                    const user = this._getCurrentUser();
+                    const timestamp = new Date().toISOString();
+                    const logEntry = {
+                        timestamp,
+                        user,
                         agent: "Agent15_Deployment",
-                        action: action,
+                        action,
                         details: details || {}
                     };
-                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
@@ -656,36 +656,35 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
-
 
         /**
          * @function _cleanupResources
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up WebSocket connections
             if (this._deploymentWs) {
                 this._deploymentWs.close();
                 this._deploymentWs = null;
             }
-            
+
             // Clean up intervals
             if (this._logRefreshInterval) {
                 clearInterval(this._logRefreshInterval);
                 this._logRefreshInterval = null;
             }
-            
+
             // Clean up cached dialogs
             if (this._dialogCache) {
-                Object.keys(this._dialogCache).forEach(function(key) {
+                Object.keys(this._dialogCache).forEach((key) => {
                     if (this._dialogCache[key]) {
                         this._dialogCache[key].destroy();
                     }
-                }.bind(this));
+                });
                 this._dialogCache = {};
             }
         },
@@ -696,7 +695,7 @@ sap.ui.define([
          * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });

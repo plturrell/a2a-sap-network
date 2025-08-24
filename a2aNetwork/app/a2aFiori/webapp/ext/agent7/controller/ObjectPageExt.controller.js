@@ -10,95 +10,95 @@ sap.ui.define([
     "sap/ui/core/routing/Router",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent7.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._initializeSecurity();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize create dialog model
                 this._initializeCreateModel();
             },
-            
-            onExit: function() {
+
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
                 }
             }
         },
-        
-        _initializeSecurity: function() {
+
+        _initializeSecurity() {
             this._auditLogger = {
                 log: function(action, details) {
                     const user = this._getCurrentUser();
                     const timestamp = new Date().toISOString();
                     const logEntry = {
-                        timestamp: timestamp,
-                        user: user,
+                        timestamp,
+                        user,
                         agent: "Agent7_AgentManager",
-                        action: action,
-                        details: details
+                        action,
+                        details
                     };
-                    Log.info("AUDIT: " + JSON.stringify(logEntry));
+                    Log.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },
-        
-        _getCurrentUser: function() {
+
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
-        
-        _hasRole: function(role) {
+
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             return user && user.hasRole && user.hasRole(role);
         },
-        
-        _validateInput: function(input, type) {
-            if (!input || typeof input !== 'string') return false;
-            
-            switch(type) {
-                case 'agentId':
-                    return /^[a-zA-Z0-9\-_]{1,36}$/.test(input);
-                case 'operation':
-                    return /^[A-Z_]{1,20}$/.test(input);
-                case 'version':
-                    return /^\d+\.\d+\.\d+$/.test(input);
-                case 'url':
-                    return /^https?\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$/.test(input);
-                default:
-                    return input.length > 0 && input.length <= 255;
+
+        _validateInput(input, type) {
+            if (!input || typeof input !== "string") {return false;}
+
+            switch (type) {
+            case "agentId":
+                return /^[a-zA-Z0-9\-_]{1,36}$/.test(input);
+            case "operation":
+                return /^[A-Z_]{1,20}$/.test(input);
+            case "version":
+                return /^\d+\.\d+\.\d+$/.test(input);
+            case "url":
+                return /^https?\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$/.test(input);
+            default:
+                return input.length > 0 && input.length <= 255;
             }
         },
-        
-        _sanitizeInput: function(input) {
-            if (!input) return "";
+
+        _sanitizeInput(input) {
+            if (!input) {return "";}
             return encodeXML(input.toString().trim());
         },
-        
-        _validateAgentId: function(agentId) {
-            return this._validateInput(agentId, 'agentId');
+
+        _validateAgentId(agentId) {
+            return this._validateInput(agentId, "agentId");
         },
-        
-        _authorizeOperation: function(operation, agentId) {
-            const allowedOperations = ['START', 'STOP', 'RESTART', 'UPDATE', 'CONFIGURE'];
-            return allowedOperations.includes(operation) && this._hasRole('AgentOperator');
+
+        _authorizeOperation(operation, agentId) {
+            const allowedOperations = ["START", "STOP", "RESTART", "UPDATE", "CONFIGURE"];
+            return allowedOperations.includes(operation) && this._hasRole("AgentOperator");
         },
-        
-        _validateEventSourceUrl: function(url) {
-            return url && url.startsWith('/a2a/agent7/v1/') && !url.includes('..');
+
+        _validateEventSourceUrl(url) {
+            return url && url.startsWith("/a2a/agent7/v1/") && !url.includes("..");
         },
-        
-        _getCsrfToken: function() {
+
+        _getCsrfToken() {
             return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     url: "/a2a/agent7/v1/csrf-token",
@@ -106,18 +106,18 @@ sap.ui.define([
                     headers: {
                         "X-CSRF-Token": "Fetch"
                     },
-                    success: function(data, textStatus, xhr) {
+                    success(data, textStatus, xhr) {
                         const token = xhr.getResponseHeader("X-CSRF-Token");
                         resolve(token);
                     },
-                    error: function(xhr) {
+                    error(xhr) {
                         reject(new Error("Failed to fetch CSRF token"));
                     }
                 });
             });
         },
-        
-        _secureAjaxCall: function(options) {
+
+        _secureAjaxCall(options) {
             return this._getCsrfToken().then(token => {
                 return new Promise((resolve, reject) => {
                     const secureOptions = Object.assign({}, options, {
@@ -125,20 +125,20 @@ sap.ui.define([
                             "X-CSRF-Token": token,
                             "Content-Type": "application/json"
                         }, options.headers || {}),
-                        success: function(data, textStatus, xhr) {
+                        success(data, textStatus, xhr) {
                             resolve({ data, textStatus, xhr });
                         },
-                        error: function(xhr, textStatus, errorThrown) {
+                        error(xhr, textStatus, errorThrown) {
                             reject({ xhr, textStatus, errorThrown });
                         }
                     });
-                    
+
                     jQuery.ajax(secureOptions);
                 });
             });
         },
-        
-        _cleanupResources: function() {
+
+        _cleanupResources() {
             if (this._operationEventSource) {
                 this._operationEventSource.close();
                 this._operationEventSource = null;
@@ -151,17 +151,17 @@ sap.ui.define([
                 this._streamMonitoringEventSource.close();
                 this._streamMonitoringEventSource = null;
             }
-            
+
             // Clean up cached dialogs
             if (this._dialogCache) {
-                Object.keys(this._dialogCache).forEach(function(key) {
+                Object.keys(this._dialogCache).forEach((key) => {
                     if (this._dialogCache[key]) {
                         this._dialogCache[key].destroy();
                     }
-                }.bind(this));
+                });
                 this._dialogCache = {};
             }
-            
+
             // Clean up legacy dialog references
             if (this._oUpdateDialog) {
                 this._oUpdateDialog.destroy();
@@ -184,8 +184,8 @@ sap.ui.define([
                 this._oCreateDialog = null;
             }
         },
-        
-        _initializeCreateModel: function() {
+
+        _initializeCreateModel() {
             this._oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
@@ -231,23 +231,23 @@ sap.ui.define([
             });
         },
 
-        onStartAgent: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            var sAgentName = this._sanitizeInput(oContext.getProperty("taskName"));
-            
+        onStartAgent() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+            const sAgentName = this._sanitizeInput(oContext.getProperty("taskName"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             if (!this._authorizeOperation("START", sAgentId)) {
                 MessageBox.error("Access denied: Insufficient privileges for starting agents");
                 this._auditLogger.log("START_AGENT_ACCESS_DENIED", { agentId: sAgentId });
                 return;
             }
-            
-            MessageBox.confirm("Start agent '" + sAgentName + "'?", {
+
+            MessageBox.confirm(`Start agent '${ sAgentName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeAgentOperation(sAgentId, "START");
@@ -256,23 +256,23 @@ sap.ui.define([
             });
         },
 
-        onStopAgent: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            var sAgentName = this._sanitizeInput(oContext.getProperty("taskName"));
-            
+        onStopAgent() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+            const sAgentName = this._sanitizeInput(oContext.getProperty("taskName"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             if (!this._authorizeOperation("STOP", sAgentId)) {
                 MessageBox.error("Access denied: Insufficient privileges for stopping agents");
                 this._auditLogger.log("STOP_AGENT_ACCESS_DENIED", { agentId: sAgentId });
                 return;
             }
-            
-            MessageBox.confirm("Stop agent '" + sAgentName + "'?", {
+
+            MessageBox.confirm(`Stop agent '${ sAgentName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeAgentOperation(sAgentId, "STOP");
@@ -281,23 +281,23 @@ sap.ui.define([
             });
         },
 
-        onRestartAgent: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            var sAgentName = this._sanitizeInput(oContext.getProperty("taskName"));
-            
+        onRestartAgent() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+            const sAgentName = this._sanitizeInput(oContext.getProperty("taskName"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             if (!this._authorizeOperation("RESTART", sAgentId)) {
                 MessageBox.error("Access denied: Insufficient privileges for restarting agents");
                 this._auditLogger.log("RESTART_AGENT_ACCESS_DENIED", { agentId: sAgentId });
                 return;
             }
-            
-            MessageBox.confirm("Restart agent '" + sAgentName + "'?", {
+
+            MessageBox.confirm(`Restart agent '${ sAgentName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeAgentOperation(sAgentId, "RESTART");
@@ -306,34 +306,34 @@ sap.ui.define([
             });
         },
 
-        _executeAgentOperation: function(sAgentId, sOperation) {
+        _executeAgentOperation(sAgentId, sOperation) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             const requestData = {
                 operation: sOperation,
                 timestamp: new Date().toISOString()
             };
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/operations",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/operations`,
                 type: "POST",
                 data: JSON.stringify(requestData)
             }).then(result => {
                 this._extensionAPI.getView().setBusy(false);
-                
+
                 const data = result.data;
-                var sMessage = sOperation.toLowerCase() + " operation initiated successfully";
+                let sMessage = `${sOperation.toLowerCase() } operation initiated successfully`;
                 if (data.estimatedTime) {
-                    sMessage += "\nEstimated completion: " + this._sanitizeInput(data.estimatedTime) + " seconds";
+                    sMessage += `\nEstimated completion: ${ this._sanitizeInput(data.estimatedTime) } seconds`;
                 }
-                
+
                 MessageToast.show(sMessage);
                 this._extensionAPI.refresh();
-                
+
                 if (data.monitoringUrl) {
                     this._startOperationMonitoring(data.operationId);
                 }
-                
+
                 this._auditLogger.log("AGENT_OPERATION_EXECUTED", {
                     agentId: sAgentId,
                     operation: sOperation,
@@ -342,7 +342,7 @@ sap.ui.define([
             }).catch(error => {
                 this._extensionAPI.getView().setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Operation failed: " + errorMsg);
+                MessageBox.error(`Operation failed: ${ errorMsg}`);
                 this._auditLogger.log("AGENT_OPERATION_FAILED", {
                     agentId: sAgentId,
                     operation: sOperation,
@@ -351,24 +351,24 @@ sap.ui.define([
             });
         },
 
-        _startOperationMonitoring: function(sOperationId) {
-            const streamUrl = "/a2a/agent7/v1/operations/" + encodeURL(sOperationId) + "/stream";
-            
+        _startOperationMonitoring(sOperationId) {
+            const streamUrl = `/a2a/agent7/v1/operations/${ encodeURL(sOperationId) }/stream`;
+
             if (!this._validateEventSourceUrl(streamUrl)) {
                 MessageBox.error("Invalid operation monitoring stream URL");
                 return;
             }
-            
+
             this._operationEventSource = new EventSource(streamUrl);
-            
+
             this._operationEventSource.onmessage = function(event) {
                 try {
-                    var data = JSON.parse(event.data);
-                    
+                    const data = JSON.parse(event.data);
+
                     if (data.type === "progress") {
                         const stage = this._sanitizeInput(data.stage);
-                        const progress = Math.max(0, Math.min(100, parseInt(data.progress) || 0));
-                        MessageToast.show(stage + ": " + progress + "%");
+                        const progress = Math.max(0, Math.min(100, parseInt(data.progress, 10) || 0));
+                        MessageToast.show(`${stage }: ${ progress }%`);
                     } else if (data.type === "complete") {
                         this._operationEventSource.close();
                         this._extensionAPI.refresh();
@@ -377,7 +377,7 @@ sap.ui.define([
                     } else if (data.type === "error") {
                         this._operationEventSource.close();
                         const errorMsg = this._sanitizeInput(data.error || "Unknown error");
-                        MessageBox.error("Operation failed: " + errorMsg);
+                        MessageBox.error(`Operation failed: ${ errorMsg}`);
                         this._auditLogger.log("OPERATION_FAILED", { operationId: sOperationId, error: errorMsg });
                     }
                 } catch (e) {
@@ -386,7 +386,7 @@ sap.ui.define([
                     this._auditLogger.log("OPERATION_STREAM_ERROR", { operationId: sOperationId, error: e.message });
                 }
             }.bind(this);
-            
+
             this._operationEventSource.onerror = function() {
                 if (this._operationEventSource) {
                     this._operationEventSource.close();
@@ -397,25 +397,25 @@ sap.ui.define([
             }.bind(this);
         },
 
-        onUpdateAgent: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onUpdateAgent() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             if (!this._oUpdateDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent7.ext.fragment.UpdateAgent",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oUpdateDialog = oDialog;
                     this.base.getView().addDependent(this._oUpdateDialog);
-                    
-                    var oModel = new JSONModel({
+
+                    const oModel = new JSONModel({
                         agentId: sAgentId,
                         updateType: "MINOR",
                         version: "",
@@ -425,226 +425,226 @@ sap.ui.define([
                     });
                     this._oUpdateDialog.setModel(oModel, "update");
                     this._oUpdateDialog.open();
-                    
+
                     this._loadAvailableVersions(sAgentId);
-                }.bind(this));
+                });
             } else {
                 this._oUpdateDialog.open();
                 this._loadAvailableVersions(sAgentId);
             }
         },
 
-        _loadAvailableVersions: function(sAgentId) {
+        _loadAvailableVersions(sAgentId) {
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/available-versions",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/available-versions`,
                 type: "GET"
             }).then(result => {
-                var oModel = this._oUpdateDialog.getModel("update");
-                var oData = oModel.getData();
+                const oModel = this._oUpdateDialog.getModel("update");
+                const oData = oModel.getData();
                 oData.availableVersions = this._sanitizeArray(result.data.versions);
                 oData.currentVersion = this._sanitizeInput(result.data.currentVersion);
                 oModel.setData(oData);
-                
+
                 this._auditLogger.log("AVAILABLE_VERSIONS_LOADED", { agentId: sAgentId });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load available versions: " + errorMsg);
+                MessageBox.error(`Failed to load available versions: ${ errorMsg}`);
                 this._auditLogger.log("AVAILABLE_VERSIONS_LOAD_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        onHealthCheck: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onHealthCheck() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/health-check",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/health-check`,
                 type: "POST"
             }).then(result => {
                 this._extensionAPI.getView().setBusy(false);
                 this._showHealthCheckResults(result.data);
-                
+
                 this._auditLogger.log("HEALTH_CHECK_EXECUTED", { agentId: sAgentId });
             }).catch(error => {
                 this._extensionAPI.getView().setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Health check failed: " + errorMsg);
+                MessageBox.error(`Health check failed: ${ errorMsg}`);
                 this._auditLogger.log("HEALTH_CHECK_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        _showHealthCheckResults: function(healthData) {
-            var oView = this.base.getView();
-            
+        _showHealthCheckResults(healthData) {
+            const oView = this.base.getView();
+
             if (!this._oHealthResultsDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent7.ext.fragment.HealthCheckResults",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oHealthResultsDialog = oDialog;
                     oView.addDependent(this._oHealthResultsDialog);
-                    
-                    var oModel = new JSONModel(this._sanitizeObject(healthData));
+
+                    const oModel = new JSONModel(this._sanitizeObject(healthData));
                     this._oHealthResultsDialog.setModel(oModel, "health");
                     this._oHealthResultsDialog.open();
-                    
+
                     this._createHealthVisualizations(healthData);
-                }.bind(this));
+                });
             } else {
-                var oModel = new JSONModel(this._sanitizeObject(healthData));
+                const oModel = new JSONModel(this._sanitizeObject(healthData));
                 this._oHealthResultsDialog.setModel(oModel, "health");
                 this._oHealthResultsDialog.open();
                 this._createHealthVisualizations(healthData);
             }
         },
 
-        _createHealthVisualizations: function(data) {
-            var oRadarChart = this._oHealthResultsDialog.byId("healthRadarChart");
-            if (!oRadarChart || !data.metrics) return;
-            
+        _createHealthVisualizations(data) {
+            const oRadarChart = this._oHealthResultsDialog.byId("healthRadarChart");
+            if (!oRadarChart || !data.metrics) {return;}
+
             const sanitizedMetrics = this._sanitizeObject(data.metrics);
-            var aRadarData = Object.keys(sanitizedMetrics).map(function(key) {
+            const aRadarData = Object.keys(sanitizedMetrics).map((key) => {
                 return {
                     Metric: this._sanitizeInput(key),
                     Score: sanitizedMetrics[key]
                 };
-            }.bind(this));
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+            });
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 healthData: aRadarData
             });
             oRadarChart.setModel(oChartModel);
         },
 
-        onPerformanceCheck: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onPerformanceCheck() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/performance-check",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/performance-check`,
                 type: "POST"
             }).then(result => {
                 this._extensionAPI.getView().setBusy(false);
                 this._showPerformanceResults(result.data);
-                
+
                 this._auditLogger.log("PERFORMANCE_CHECK_EXECUTED", { agentId: sAgentId });
             }).catch(error => {
                 this._extensionAPI.getView().setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Performance check failed: " + errorMsg);
+                MessageBox.error(`Performance check failed: ${ errorMsg}`);
                 this._auditLogger.log("PERFORMANCE_CHECK_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        _showPerformanceResults: function(performanceData) {
+        _showPerformanceResults(performanceData) {
             const sanitizedData = this._sanitizeObject(performanceData);
-            var sMessage = "Performance Check Results:\n\n";
-            
-            sMessage += "Response Time: " + sanitizedData.responseTime + "ms\n";
-            sMessage += "Throughput: " + sanitizedData.throughput + " req/sec\n";
-            sMessage += "Memory Usage: " + sanitizedData.memoryUsage + "%\n";
-            sMessage += "CPU Usage: " + sanitizedData.cpuUsage + "%\n";
-            sMessage += "Error Rate: " + sanitizedData.errorRate + "%\n\n";
-            
+            let sMessage = "Performance Check Results:\n\n";
+
+            sMessage += `Response Time: ${ sanitizedData.responseTime }ms\n`;
+            sMessage += `Throughput: ${ sanitizedData.throughput } req/sec\n`;
+            sMessage += `Memory Usage: ${ sanitizedData.memoryUsage }%\n`;
+            sMessage += `CPU Usage: ${ sanitizedData.cpuUsage }%\n`;
+            sMessage += `Error Rate: ${ sanitizedData.errorRate }%\n\n`;
+
             if (sanitizedData.recommendations && sanitizedData.recommendations.length > 0) {
                 sMessage += "Recommendations:\n";
-                sanitizedData.recommendations.forEach(function(rec) {
-                    sMessage += "• " + rec + "\n";
+                sanitizedData.recommendations.forEach((rec) => {
+                    sMessage += `• ${ rec }\n`;
                 });
             }
-            
+
             MessageBox.information(sMessage);
         },
 
-        onConfigureAgent: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onConfigureAgent() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             if (!this._oConfigDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent7.ext.fragment.AgentConfiguration",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oConfigDialog = oDialog;
                     this.base.getView().addDependent(this._oConfigDialog);
                     this._oConfigDialog.open();
                     this._loadAgentConfiguration(sAgentId);
-                }.bind(this));
+                });
             } else {
                 this._oConfigDialog.open();
                 this._loadAgentConfiguration(sAgentId);
             }
         },
 
-        _loadAgentConfiguration: function(sAgentId) {
+        _loadAgentConfiguration(sAgentId) {
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/configuration",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/configuration`,
                 type: "GET"
             }).then(result => {
-                var oModel = new JSONModel({
+                const oModel = new JSONModel({
                     agentId: sAgentId,
                     configuration: this._sanitizeObject(result.data.configuration),
                     schema: this._sanitizeObject(result.data.schema),
                     modifiedFields: []
                 });
                 this._oConfigDialog.setModel(oModel, "config");
-                
+
                 this._auditLogger.log("AGENT_CONFIGURATION_LOADED", { agentId: sAgentId });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load configuration: " + errorMsg);
+                MessageBox.error(`Failed to load configuration: ${ errorMsg}`);
                 this._auditLogger.log("AGENT_CONFIGURATION_LOAD_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        onSaveConfiguration: function() {
-            var oModel = this._oConfigDialog.getModel("config");
-            var oData = oModel.getData();
-            
+        onSaveConfiguration() {
+            const oModel = this._oConfigDialog.getModel("config");
+            const oData = oModel.getData();
+
             this._oConfigDialog.setBusy(true);
-            
+
             const requestData = {
                 configuration: this._sanitizeObject(oData.configuration),
                 modifiedFields: this._sanitizeArray(oData.modifiedFields)
             };
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(oData.agentId) + "/configuration",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(oData.agentId) }/configuration`,
                 type: "PUT",
                 data: JSON.stringify(requestData)
             }).then(result => {
                 this._oConfigDialog.setBusy(false);
                 this._oConfigDialog.close();
-                
+
                 const data = result.data;
                 MessageBox.success(
                     "Configuration updated successfully!\n" +
-                    "Restart required: " + (data.restartRequired ? "Yes" : "No")
+                    `Restart required: ${ data.restartRequired ? "Yes" : "No"}`
                 );
-                
+
                 this._extensionAPI.refresh();
-                
+
                 this._auditLogger.log("AGENT_CONFIGURATION_UPDATED", {
                     agentId: oData.agentId,
                     restartRequired: data.restartRequired
@@ -652,7 +652,7 @@ sap.ui.define([
             }).catch(error => {
                 this._oConfigDialog.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Configuration update failed: " + errorMsg);
+                MessageBox.error(`Configuration update failed: ${ errorMsg}`);
                 this._auditLogger.log("AGENT_CONFIGURATION_UPDATE_FAILED", {
                     agentId: oData.agentId,
                     error: errorMsg
@@ -660,147 +660,147 @@ sap.ui.define([
             });
         },
 
-        onViewLogs: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onViewLogs() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             if (!this._oLogsDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent7.ext.fragment.AgentLogs",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oLogsDialog = oDialog;
                     this.base.getView().addDependent(this._oLogsDialog);
                     this._oLogsDialog.open();
                     this._loadAgentLogs(sAgentId);
-                }.bind(this));
+                });
             } else {
                 this._oLogsDialog.open();
                 this._loadAgentLogs(sAgentId);
             }
         },
 
-        _loadAgentLogs: function(sAgentId) {
+        _loadAgentLogs(sAgentId) {
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/logs",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/logs`,
                 type: "GET",
                 data: {
                     limit: 1000,
                     level: "ALL"
                 }
             }).then(result => {
-                var oModel = new JSONModel({
+                const oModel = new JSONModel({
                     logs: this._sanitizeArray(result.data.logs),
                     logLevels: this._sanitizeArray(result.data.availableLevels),
                     selectedLevel: "ALL"
                 });
                 this._oLogsDialog.setModel(oModel, "logs");
-                
+
                 this._auditLogger.log("AGENT_LOGS_LOADED", { agentId: sAgentId });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load logs: " + errorMsg);
+                MessageBox.error(`Failed to load logs: ${ errorMsg}`);
                 this._auditLogger.log("AGENT_LOGS_LOAD_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        onAgentDetails: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onAgentDetails() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/details",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/details`,
                 type: "GET"
             }).then(result => {
                 this._showAgentDetails(result.data);
                 this._auditLogger.log("AGENT_DETAILS_VIEWED", { agentId: sAgentId });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load agent details: " + errorMsg);
+                MessageBox.error(`Failed to load agent details: ${ errorMsg}`);
                 this._auditLogger.log("AGENT_DETAILS_LOAD_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        _showAgentDetails: function(agentData) {
+        _showAgentDetails(agentData) {
             const sanitizedData = this._sanitizeObject(agentData);
-            var sMessage = "Agent Details:\n\n";
-            
-            sMessage += "Name: " + sanitizedData.name + "\n";
-            sMessage += "Type: " + sanitizedData.type + "\n";
-            sMessage += "Version: " + sanitizedData.version + "\n";
-            sMessage += "Status: " + sanitizedData.status + "\n";
-            sMessage += "Endpoint: " + sanitizedData.endpoint + "\n";
-            sMessage += "Uptime: " + sanitizedData.uptime + "\n";
-            sMessage += "Last Health Check: " + sanitizedData.lastHealthCheck + "\n\n";
-            
+            let sMessage = "Agent Details:\n\n";
+
+            sMessage += `Name: ${ sanitizedData.name }\n`;
+            sMessage += `Type: ${ sanitizedData.type }\n`;
+            sMessage += `Version: ${ sanitizedData.version }\n`;
+            sMessage += `Status: ${ sanitizedData.status }\n`;
+            sMessage += `Endpoint: ${ sanitizedData.endpoint }\n`;
+            sMessage += `Uptime: ${ sanitizedData.uptime }\n`;
+            sMessage += `Last Health Check: ${ sanitizedData.lastHealthCheck }\n\n`;
+
             if (sanitizedData.capabilities && sanitizedData.capabilities.length > 0) {
                 sMessage += "Capabilities:\n";
-                sanitizedData.capabilities.forEach(function(cap) {
-                    sMessage += "• " + cap + "\n";
+                sanitizedData.capabilities.forEach((cap) => {
+                    sMessage += `• ${ cap }\n`;
                 });
                 sMessage += "\n";
             }
-            
+
             if (sanitizedData.dependencies && sanitizedData.dependencies.length > 0) {
                 sMessage += "Dependencies:\n";
-                sanitizedData.dependencies.forEach(function(dep) {
-                    sMessage += "• " + dep + "\n";
+                sanitizedData.dependencies.forEach((dep) => {
+                    sMessage += `• ${ dep }\n`;
                 });
             }
-            
+
             MessageBox.information(sMessage);
         },
 
-        onCoordination: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
-            
+        onCoordination() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sAgentId = this._sanitizeInput(oContext.getProperty("managedAgent"));
+
             if (!this._validateAgentId(sAgentId)) {
                 MessageBox.error("Invalid agent ID format");
                 return;
             }
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/coordination-status",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/coordination-status`,
                 type: "GET"
             }).then(result => {
                 this._showCoordinationStatus(result.data, sAgentId);
                 this._auditLogger.log("COORDINATION_STATUS_VIEWED", { agentId: sAgentId });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load coordination status: " + errorMsg);
+                MessageBox.error(`Failed to load coordination status: ${ errorMsg}`);
                 this._auditLogger.log("COORDINATION_STATUS_LOAD_FAILED", { agentId: sAgentId, error: errorMsg });
             });
         },
 
-        _showCoordinationStatus: function(coordinationData, sAgentId) {
+        _showCoordinationStatus(coordinationData, sAgentId) {
             const sanitizedData = this._sanitizeObject(coordinationData);
-            var sMessage = "Agent Coordination Status:\n\n";
-            
-            sMessage += "Coordination Enabled: " + (sanitizedData.enabled ? "Yes" : "No") + "\n";
-            sMessage += "Active Connections: " + sanitizedData.activeConnections + "\n";
-            sMessage += "Workflow Participation: " + sanitizedData.workflowParticipation + "\n";
-            sMessage += "Load Balancing: " + (sanitizedData.loadBalancing ? "Enabled" : "Disabled") + "\n";
-            sMessage += "Trust Level: " + sanitizedData.trustLevel + "\n\n";
-            
+            let sMessage = "Agent Coordination Status:\n\n";
+
+            sMessage += `Coordination Enabled: ${ sanitizedData.enabled ? "Yes" : "No" }\n`;
+            sMessage += `Active Connections: ${ sanitizedData.activeConnections }\n`;
+            sMessage += `Workflow Participation: ${ sanitizedData.workflowParticipation }\n`;
+            sMessage += `Load Balancing: ${ sanitizedData.loadBalancing ? "Enabled" : "Disabled" }\n`;
+            sMessage += `Trust Level: ${ sanitizedData.trustLevel }\n\n`;
+
             if (sanitizedData.connectedAgents && sanitizedData.connectedAgents.length > 0) {
                 sMessage += "Connected Agents:\n";
-                sanitizedData.connectedAgents.forEach(function(agent) {
-                    sMessage += "• " + agent.name + " (" + agent.status + ")\n";
+                sanitizedData.connectedAgents.forEach((agent) => {
+                    sMessage += `• ${ agent.name } (${ agent.status })\n`;
                 });
             }
-            
+
             MessageBox.information(sMessage, {
                 actions: ["Enable Coordination", "Disable Coordination", MessageBox.Action.CLOSE],
                 onClose: function(oAction) {
@@ -811,22 +811,22 @@ sap.ui.define([
             });
         },
 
-        _toggleCoordination: function(sAgentId, bEnable) {
+        _toggleCoordination(sAgentId, bEnable) {
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sAgentId) + "/coordination",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sAgentId) }/coordination`,
                 type: "PUT",
                 data: JSON.stringify({ enabled: bEnable })
             }).then(result => {
-                MessageToast.show("Coordination " + (bEnable ? "enabled" : "disabled") + " successfully");
+                MessageToast.show(`Coordination ${ bEnable ? "enabled" : "disabled" } successfully`);
                 this._extensionAPI.refresh();
-                
+
                 this._auditLogger.log("COORDINATION_TOGGLED", {
                     agentId: sAgentId,
                     enabled: bEnable
                 });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to toggle coordination: " + errorMsg);
+                MessageBox.error(`Failed to toggle coordination: ${ errorMsg}`);
                 this._auditLogger.log("COORDINATION_TOGGLE_FAILED", {
                     agentId: sAgentId,
                     enabled: bEnable,
@@ -835,15 +835,15 @@ sap.ui.define([
             });
         },
 
-        onConfirmUpdate: function() {
-            var oModel = this._oUpdateDialog.getModel("update");
-            var oData = oModel.getData();
-            
-            if (!this._validateInput(oData.version, 'version')) {
+        onConfirmUpdate() {
+            const oModel = this._oUpdateDialog.getModel("update");
+            const oData = oModel.getData();
+
+            if (!this._validateInput(oData.version, "version")) {
                 MessageBox.error("Please select a valid version to update to");
                 return;
             }
-            
+
             const sanitizedData = {
                 agentId: this._sanitizeInput(oData.agentId),
                 updateType: this._sanitizeInput(oData.updateType),
@@ -852,27 +852,27 @@ sap.ui.define([
                 restartAfterUpdate: Boolean(oData.restartAfterUpdate),
                 backupBeforeUpdate: Boolean(oData.backupBeforeUpdate)
             };
-            
+
             this._oUpdateDialog.setBusy(true);
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/agents/" + encodeURL(sanitizedData.agentId) + "/update",
+                url: `/a2a/agent7/v1/agents/${ encodeURL(sanitizedData.agentId) }/update`,
                 type: "POST",
                 data: JSON.stringify(sanitizedData)
             }).then(result => {
                 this._oUpdateDialog.setBusy(false);
                 this._oUpdateDialog.close();
-                
+
                 const data = result.data;
                 MessageBox.success(
                     "Agent update initiated!\n" +
-                    "Update ID: " + this._sanitizeInput(data.updateId) + "\n" +
-                    "Estimated time: " + this._sanitizeInput(data.estimatedTime) + " minutes"
+                    `Update ID: ${ this._sanitizeInput(data.updateId) }\n` +
+                    `Estimated time: ${ this._sanitizeInput(data.estimatedTime) } minutes`
                 );
-                
+
                 this._extensionAPI.refresh();
                 this._startOperationMonitoring(data.updateId);
-                
+
                 this._auditLogger.log("AGENT_UPDATE_INITIATED", {
                     agentId: sanitizedData.agentId,
                     version: sanitizedData.version,
@@ -881,23 +881,23 @@ sap.ui.define([
             }).catch(error => {
                 this._oUpdateDialog.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Agent update failed: " + errorMsg);
+                MessageBox.error(`Agent update failed: ${ errorMsg}`);
                 this._auditLogger.log("AGENT_UPDATE_FAILED", {
                     agentId: sanitizedData.agentId,
                     error: errorMsg
                 });
             });
         },
-        
-        _sanitizeObject: function(obj) {
-            if (!obj || typeof obj !== 'object') return {};
+
+        _sanitizeObject(obj) {
+            if (!obj || typeof obj !== "object") {return {};}
             const sanitized = {};
             Object.keys(obj).forEach(key => {
-                if (typeof obj[key] === 'string') {
+                if (typeof obj[key] === "string") {
                     sanitized[key] = this._sanitizeInput(obj[key]);
                 } else if (Array.isArray(obj[key])) {
                     sanitized[key] = this._sanitizeArray(obj[key]);
-                } else if (typeof obj[key] === 'object') {
+                } else if (typeof obj[key] === "object") {
                     sanitized[key] = this._sanitizeObject(obj[key]);
                 } else {
                     sanitized[key] = obj[key];
@@ -905,47 +905,47 @@ sap.ui.define([
             });
             return sanitized;
         },
-        
-        _sanitizeArray: function(arr) {
-            if (!Array.isArray(arr)) return [];
+
+        _sanitizeArray(arr) {
+            if (!Array.isArray(arr)) {return [];}
             return arr.map(item => {
-                if (typeof item === 'string') {
+                if (typeof item === "string") {
                     return this._sanitizeInput(item);
-                } else if (typeof item === 'object') {
+                } else if (typeof item === "object") {
                     return this._sanitizeObject(item);
-                } else {
-                    return item;
                 }
+                return item;
+
             });
         },
-        
+
         // Create Management Task Dialog Methods
-        onCreateManagementTask: function() {
-            var oView = this.base.getView();
-            
+        onCreateManagementTask() {
+            const oView = this.base.getView();
+
             if (!this._oCreateDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent7.ext.fragment.CreateManagementTask",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oCreateDialog = oDialog;
                     oView.addDependent(this._oCreateDialog);
                     this._oCreateDialog.setModel(this._oCreateModel, "create");
                     this._oCreateDialog.open();
-                    
+
                     // Load available agents
                     this._loadAvailableAgents();
-                    
+
                     this._auditLogger.log("CREATE_MANAGEMENT_DIALOG_OPENED", { action: "create_management_task" });
-                }.bind(this));
+                });
             } else {
                 this._oCreateDialog.open();
                 this._loadAvailableAgents();
             }
         },
-        
-        _loadAvailableAgents: function() {
+
+        _loadAvailableAgents() {
             this._secureAjaxCall({
                 url: "/a2a/agent7/v1/agents",
                 type: "GET"
@@ -954,28 +954,28 @@ sap.ui.define([
                 this._oCreateModel.setProperty("/availableAgents", sanitizedAgents);
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                Log.warning("Failed to load available agents: " + errorMsg);
+                Log.warning(`Failed to load available agents: ${ errorMsg}`);
                 // Set empty array as fallback
                 this._oCreateModel.setProperty("/availableAgents", []);
             });
         },
-        
-        onCancelCreateTask: function() {
+
+        onCancelCreateTask() {
             this._oCreateDialog.close();
         },
-        
-        onConfirmCreateTask: function() {
-            var oData = this._oCreateModel.getData();
-            
+
+        onConfirmCreateTask() {
+            const oData = this._oCreateModel.getData();
+
             // Validate form
             if (!this._validateForm()) {
                 MessageBox.error("Please correct the validation errors before creating the task.");
                 return;
             }
-            
+
             this._oCreateDialog.setBusy(true);
-            
-            var oSanitizedData = {
+
+            const oSanitizedData = {
                 taskName: this._sanitizeInput(oData.taskName),
                 description: this._sanitizeInput(oData.description),
                 managedAgent: this._sanitizeInput(oData.managedAgent),
@@ -983,8 +983,8 @@ sap.ui.define([
                 priority: oData.priority,
                 executionMode: oData.executionMode,
                 scheduledTime: oData.scheduledTime,
-                timeout: Math.max(1, Math.min(1440, parseInt(oData.timeout) || 30)),
-                retryAttempts: Math.max(0, Math.min(10, parseInt(oData.retryAttempts) || 3)),
+                timeout: Math.max(1, Math.min(1440, parseInt(oData.timeout, 10) || 30)),
+                retryAttempts: Math.max(0, Math.min(10, parseInt(oData.retryAttempts, 10) || 3)),
                 forceExecution: Boolean(oData.forceExecution),
                 createBackup: Boolean(oData.createBackup),
                 rollbackOnFailure: Boolean(oData.rollbackOnFailure),
@@ -992,25 +992,25 @@ sap.ui.define([
                 dependencyType: oData.dependencyType,
                 requiredAgentStatus: this._sanitizeInput(oData.requiredAgentStatus),
                 prerequisiteTasks: this._sanitizeInput(oData.prerequisiteTasks),
-                minCpuAvailable: Math.max(0, Math.min(100, parseInt(oData.minCpuAvailable) || 0)),
-                minMemoryAvailable: Math.max(0, Math.min(100, parseInt(oData.minMemoryAvailable) || 0)),
+                minCpuAvailable: Math.max(0, Math.min(100, parseInt(oData.minCpuAvailable, 10) || 0)),
+                minMemoryAvailable: Math.max(0, Math.min(100, parseInt(oData.minMemoryAvailable, 10) || 0)),
                 timeWindowStart: oData.timeWindowStart,
                 timeWindowEnd: oData.timeWindowEnd,
                 monitoringLevel: oData.monitoringLevel,
-                healthCheckInterval: Math.max(5, Math.min(300, parseInt(oData.healthCheckInterval) || 30)),
+                healthCheckInterval: Math.max(5, Math.min(300, parseInt(oData.healthCheckInterval, 10) || 30)),
                 monitorCpu: Boolean(oData.monitorCpu),
                 monitorMemory: Boolean(oData.monitorMemory),
                 monitorNetwork: Boolean(oData.monitorNetwork),
                 monitorResponse: Boolean(oData.monitorResponse),
-                cpuAlertThreshold: Math.max(50, Math.min(100, parseInt(oData.cpuAlertThreshold) || 80)),
-                memoryAlertThreshold: Math.max(50, Math.min(100, parseInt(oData.memoryAlertThreshold) || 85)),
-                responseTimeAlert: Math.max(100, Math.min(10000, parseInt(oData.responseTimeAlert) || 2000)),
+                cpuAlertThreshold: Math.max(50, Math.min(100, parseInt(oData.cpuAlertThreshold, 10) || 80)),
+                memoryAlertThreshold: Math.max(50, Math.min(100, parseInt(oData.memoryAlertThreshold, 10) || 85)),
+                responseTimeAlert: Math.max(100, Math.min(10000, parseInt(oData.responseTimeAlert, 10) || 2000)),
                 emailNotifications: Boolean(oData.emailNotifications),
                 smsNotifications: Boolean(oData.smsNotifications),
                 slackNotifications: Boolean(oData.slackNotifications),
                 parameters: this._sanitizeArray(oData.parameters || [])
             };
-            
+
             this._secureAjaxCall({
                 url: "/a2a/agent7/v1/tasks",
                 type: "POST",
@@ -1020,106 +1020,106 @@ sap.ui.define([
                 this._oCreateDialog.close();
                 MessageToast.show("Management task created successfully");
                 this._extensionAPI.refresh();
-                
+
                 this._auditLogger.log("MANAGEMENT_TASK_CREATED", { taskName: oSanitizedData.taskName });
             }).catch(error => {
                 this._oCreateDialog.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to create management task: " + errorMsg);
+                MessageBox.error(`Failed to create management task: ${ errorMsg}`);
                 this._auditLogger.log("MANAGEMENT_TASK_CREATE_FAILED", { error: errorMsg });
             });
         },
-        
+
         // Validation Event Handlers
-        onTaskNameChange: function() {
-            var sValue = this._oCreateModel.getProperty("/taskName");
-            var oValidation = this._validateTaskName(sValue);
-            
+        onTaskNameChange() {
+            const sValue = this._oCreateModel.getProperty("/taskName");
+            const oValidation = this._validateTaskName(sValue);
+
             this._oCreateModel.setProperty("/taskNameState", oValidation.state);
             this._oCreateModel.setProperty("/taskNameStateText", oValidation.message);
         },
-        
-        onManagedAgentChange: function() {
-            var sValue = this._oCreateModel.getProperty("/managedAgent");
-            var oValidation = this._validateManagedAgent(sValue);
-            
+
+        onManagedAgentChange() {
+            const sValue = this._oCreateModel.getProperty("/managedAgent");
+            const oValidation = this._validateManagedAgent(sValue);
+
             this._oCreateModel.setProperty("/managedAgentState", oValidation.state);
             this._oCreateModel.setProperty("/managedAgentStateText", oValidation.message);
         },
-        
-        onOperationTypeChange: function() {
-            var sValue = this._oCreateModel.getProperty("/operationType");
-            var oValidation = this._validateOperationType(sValue);
-            
+
+        onOperationTypeChange() {
+            const sValue = this._oCreateModel.getProperty("/operationType");
+            const oValidation = this._validateOperationType(sValue);
+
             this._oCreateModel.setProperty("/operationTypeState", oValidation.state);
             this._oCreateModel.setProperty("/operationTypeStateText", oValidation.message);
-            
+
             // Auto-suggest configurations based on operation type
             this._applyOperationDefaults(sValue);
         },
-        
-        _applyOperationDefaults: function(sOperationType) {
+
+        _applyOperationDefaults(sOperationType) {
             switch (sOperationType) {
-                case "START":
-                case "STOP":
-                case "RESTART":
-                    this._oCreateModel.setProperty("/timeout", 60);
-                    this._oCreateModel.setProperty("/createBackup", false);
-                    break;
-                case "UPDATE":
-                    this._oCreateModel.setProperty("/timeout", 300);
-                    this._oCreateModel.setProperty("/createBackup", true);
-                    this._oCreateModel.setProperty("/rollbackOnFailure", true);
-                    break;
-                case "CONFIGURE":
-                    this._oCreateModel.setProperty("/timeout", 120);
-                    this._oCreateModel.setProperty("/createBackup", true);
-                    break;
-                case "HEALTH_CHECK":
-                case "PERFORMANCE_CHECK":
-                    this._oCreateModel.setProperty("/timeout", 30);
-                    this._oCreateModel.setProperty("/createBackup", false);
-                    break;
-                default:
-                    // Keep current values
-                    break;
+            case "START":
+            case "STOP":
+            case "RESTART":
+                this._oCreateModel.setProperty("/timeout", 60);
+                this._oCreateModel.setProperty("/createBackup", false);
+                break;
+            case "UPDATE":
+                this._oCreateModel.setProperty("/timeout", 300);
+                this._oCreateModel.setProperty("/createBackup", true);
+                this._oCreateModel.setProperty("/rollbackOnFailure", true);
+                break;
+            case "CONFIGURE":
+                this._oCreateModel.setProperty("/timeout", 120);
+                this._oCreateModel.setProperty("/createBackup", true);
+                break;
+            case "HEALTH_CHECK":
+            case "PERFORMANCE_CHECK":
+                this._oCreateModel.setProperty("/timeout", 30);
+                this._oCreateModel.setProperty("/createBackup", false);
+                break;
+            default:
+                // Keep current values
+                break;
             }
         },
-        
-        onAddParameter: function() {
-            var aParameters = this._oCreateModel.getProperty("/parameters");
-            
+
+        onAddParameter() {
+            const aParameters = this._oCreateModel.getProperty("/parameters");
+
             // Limit number of parameters for security
             if (aParameters.length >= 50) {
                 MessageBox.error("Maximum 50 parameters allowed for security reasons");
                 return;
             }
-            
+
             aParameters.push({
                 parameterName: "",
                 parameterType: "STRING",
                 parameterValue: "",
                 required: false
             });
-            
+
             this._oCreateModel.setProperty("/parameters", aParameters);
         },
-        
-        onDeleteParameter: function(oEvent) {
-            var sPath = oEvent.getParameter("listItem").getBindingContext("create").getPath();
-            var iIndex = parseInt(sPath.split("/").pop());
-            var aParameters = this._oCreateModel.getProperty("/parameters");
-            
+
+        onDeleteParameter(oEvent) {
+            const sPath = oEvent.getParameter("listItem").getBindingContext("create").getPath();
+            const iIndex = parseInt(sPath.split("/", 10).pop());
+            const aParameters = this._oCreateModel.getProperty("/parameters");
+
             aParameters.splice(iIndex, 1);
             this._oCreateModel.setProperty("/parameters", aParameters);
         },
-        
-        onLoadParameterTemplate: function() {
+
+        onLoadParameterTemplate() {
             MessageBox.information("Parameter template functionality will be available in a future update.");
         },
-        
+
         // Validation Methods
-        _validateTaskName: function(sValue) {
+        _validateTaskName(sValue) {
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Task name is required" };
             }
@@ -1134,50 +1134,50 @@ sap.ui.define([
             }
             return { state: "Success", message: "" };
         },
-        
-        _validateManagedAgent: function(sValue) {
+
+        _validateManagedAgent(sValue) {
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Managed agent is required" };
             }
-            if (!this._validateInput(sValue, 'agentId')) {
+            if (!this._validateInput(sValue, "agentId")) {
                 return { state: "Error", message: "Invalid agent ID format" };
             }
             return { state: "Success", message: "" };
         },
-        
-        _validateOperationType: function(sValue) {
+
+        _validateOperationType(sValue) {
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Operation type is required" };
             }
-            const allowedOperations = ['START', 'STOP', 'RESTART', 'UPDATE', 'CONFIGURE', 'REGISTER', 'DEREGISTER', 'HEALTH_CHECK', 'PERFORMANCE_CHECK'];
+            const allowedOperations = ["START", "STOP", "RESTART", "UPDATE", "CONFIGURE", "REGISTER", "DEREGISTER", "HEALTH_CHECK", "PERFORMANCE_CHECK"];
             if (!allowedOperations.includes(sValue)) {
                 return { state: "Error", message: "Invalid operation type" };
             }
             return { state: "Success", message: "" };
         },
-        
-        _validateForm: function() {
-            var oData = this._oCreateModel.getData();
-            var bValid = true;
-            
+
+        _validateForm() {
+            const oData = this._oCreateModel.getData();
+            let bValid = true;
+
             // Validate task name
-            var oTaskNameValidation = this._validateTaskName(oData.taskName);
+            const oTaskNameValidation = this._validateTaskName(oData.taskName);
             this._oCreateModel.setProperty("/taskNameState", oTaskNameValidation.state);
             this._oCreateModel.setProperty("/taskNameStateText", oTaskNameValidation.message);
-            if (oTaskNameValidation.state === "Error") bValid = false;
-            
+            if (oTaskNameValidation.state === "Error") {bValid = false;}
+
             // Validate managed agent
-            var oManagedAgentValidation = this._validateManagedAgent(oData.managedAgent);
+            const oManagedAgentValidation = this._validateManagedAgent(oData.managedAgent);
             this._oCreateModel.setProperty("/managedAgentState", oManagedAgentValidation.state);
             this._oCreateModel.setProperty("/managedAgentStateText", oManagedAgentValidation.message);
-            if (oManagedAgentValidation.state === "Error") bValid = false;
-            
+            if (oManagedAgentValidation.state === "Error") {bValid = false;}
+
             // Validate operation type
-            var oOperationTypeValidation = this._validateOperationType(oData.operationType);
+            const oOperationTypeValidation = this._validateOperationType(oData.operationType);
             this._oCreateModel.setProperty("/operationTypeState", oOperationTypeValidation.state);
             this._oCreateModel.setProperty("/operationTypeStateText", oOperationTypeValidation.message);
-            if (oOperationTypeValidation.state === "Error") bValid = false;
-            
+            if (oOperationTypeValidation.state === "Error") {bValid = false;}
+
             return bValid;
         },
 
@@ -1188,18 +1188,18 @@ sap.ui.define([
          * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onStartStreamProcessing: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
-            var sTaskName = this._sanitizeInput(oContext.getProperty("taskName"));
-            
+        onStartStreamProcessing() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+            const sTaskName = this._sanitizeInput(oContext.getProperty("taskName"));
+
             if (!this._hasRole("StreamProcessor")) {
                 MessageBox.error("Access denied: Insufficient privileges for starting stream processing");
                 this._auditLogger.log("START_STREAM_ACCESS_DENIED", { taskId: sTaskId });
                 return;
             }
-            
-            MessageBox.confirm("Start stream processing for task '" + sTaskName + "'?", {
+
+            MessageBox.confirm(`Start stream processing for task '${ sTaskName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeStreamOperation(sTaskId, "START_PROCESSING");
@@ -1215,18 +1215,18 @@ sap.ui.define([
          * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onStopStreamProcessing: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
-            var sTaskName = this._sanitizeInput(oContext.getProperty("taskName"));
-            
+        onStopStreamProcessing() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+            const sTaskName = this._sanitizeInput(oContext.getProperty("taskName"));
+
             if (!this._hasRole("StreamProcessor")) {
                 MessageBox.error("Access denied: Insufficient privileges for stopping stream processing");
                 this._auditLogger.log("STOP_STREAM_ACCESS_DENIED", { taskId: sTaskId });
                 return;
             }
-            
-            MessageBox.confirm("Stop stream processing for task '" + sTaskName + "'?", {
+
+            MessageBox.confirm(`Stop stream processing for task '${ sTaskName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeStreamOperation(sTaskId, "STOP_PROCESSING");
@@ -1242,18 +1242,18 @@ sap.ui.define([
          * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onViewRealTimeMetrics: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
-            
+        onViewRealTimeMetrics() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+
             this._getOrCreateDialog("realTimeMetrics", "a2a.network.agent7.ext.fragment.RealTimeMetrics")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadStreamMetrics(sTaskId, oDialog);
                     this._startStreamMetricsMonitoring(sTaskId, oDialog);
-                    
+
                     this._auditLogger.log("REALTIME_METRICS_VIEWED", { taskId: sTaskId });
-                }.bind(this));
+                });
         },
 
         /**
@@ -1263,19 +1263,19 @@ sap.ui.define([
          * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onExportStreamData: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
-            
+        onExportStreamData() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+
             if (!this._hasRole("StreamProcessor")) {
                 MessageBox.error("Access denied: Insufficient privileges for exporting stream data");
                 this._auditLogger.log("EXPORT_STREAM_ACCESS_DENIED", { taskId: sTaskId });
                 return;
             }
-            
+
             this._getOrCreateDialog("exportStream", "a2a.network.agent7.ext.fragment.ExportStreamData")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
+                .then((oDialog) => {
+                    const oModel = new JSONModel({
                         taskId: sTaskId,
                         exportFormat: "JSON",
                         dateRange: {
@@ -1288,9 +1288,9 @@ sap.ui.define([
                     });
                     oDialog.setModel(oModel, "export");
                     oDialog.open();
-                    
+
                     this._auditLogger.log("EXPORT_STREAM_DIALOG_OPENED", { taskId: sTaskId });
-                }.bind(this));
+                });
         },
 
         /**
@@ -1300,34 +1300,34 @@ sap.ui.define([
          * @param {string} sOperation - Operation type
          * @private
          */
-        _executeStreamOperation: function(sTaskId, sOperation) {
+        _executeStreamOperation(sTaskId, sOperation) {
             this.base.getView().setBusy(true);
-            
+
             const requestData = {
                 operation: sOperation,
                 timestamp: new Date().toISOString()
             };
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/stream-processing/" + encodeURL(sTaskId) + "/operations",
+                url: `/a2a/agent7/v1/stream-processing/${ encodeURL(sTaskId) }/operations`,
                 type: "POST",
                 data: JSON.stringify(requestData)
             }).then(result => {
                 this.base.getView().setBusy(false);
-                
+
                 const data = result.data;
-                var sMessage = sOperation.replace("_", " ").toLowerCase() + " operation initiated successfully";
+                let sMessage = `${sOperation.replace("_", " ").toLowerCase() } operation initiated successfully`;
                 if (data.estimatedStartTime) {
-                    sMessage += "\nEstimated start: " + this._sanitizeInput(data.estimatedStartTime);
+                    sMessage += `\nEstimated start: ${ this._sanitizeInput(data.estimatedStartTime)}`;
                 }
-                
+
                 MessageToast.show(sMessage);
                 this._extensionAPI.refresh();
-                
+
                 if (data.monitoringUrl && sOperation === "START_PROCESSING") {
                     this._startStreamMonitoring(data.processingId);
                 }
-                
+
                 this._auditLogger.log("STREAM_OPERATION_EXECUTED", {
                     taskId: sTaskId,
                     operation: sOperation,
@@ -1336,7 +1336,7 @@ sap.ui.define([
             }).catch(error => {
                 this.base.getView().setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Stream operation failed: " + errorMsg);
+                MessageBox.error(`Stream operation failed: ${ errorMsg}`);
                 this._auditLogger.log("STREAM_OPERATION_FAILED", {
                     taskId: sTaskId,
                     operation: sOperation,
@@ -1352,19 +1352,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _loadStreamMetrics: function(sTaskId, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
-            if (!oTargetDialog) return;
-            
+        _loadStreamMetrics(sTaskId, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
+
             this._secureAjaxCall({
-                url: "/a2a/agent7/v1/stream-processing/" + encodeURL(sTaskId) + "/metrics",
+                url: `/a2a/agent7/v1/stream-processing/${ encodeURL(sTaskId) }/metrics`,
                 type: "GET"
             }).then(result => {
                 oTargetDialog.setBusy(false);
-                
-                var oModel = new JSONModel({
+
+                const oModel = new JSONModel({
                     taskId: sTaskId,
                     metrics: this._sanitizeObject(result.data.metrics),
                     throughput: this._sanitizeObject(result.data.throughput),
@@ -1373,13 +1373,13 @@ sap.ui.define([
                     resourceUtilization: this._sanitizeObject(result.data.resourceUtilization)
                 });
                 oTargetDialog.setModel(oModel, "metrics");
-                
+
                 this._createStreamMetricsCharts(result.data, oTargetDialog);
                 this._auditLogger.log("STREAM_METRICS_LOADED", { taskId: sTaskId });
             }).catch(error => {
                 oTargetDialog.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load stream metrics: " + errorMsg);
+                MessageBox.error(`Failed to load stream metrics: ${ errorMsg}`);
                 this._auditLogger.log("STREAM_METRICS_LOAD_FAILED", { taskId: sTaskId, error: errorMsg });
             });
         },
@@ -1391,29 +1391,29 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _startStreamMetricsMonitoring: function(sTaskId, oDialog) {
+        _startStreamMetricsMonitoring(sTaskId, oDialog) {
             if (this._streamMetricsEventSource) {
                 this._streamMetricsEventSource.close();
             }
-            
-            const streamUrl = "/a2a/agent7/v1/stream-processing/" + encodeURL(sTaskId) + "/metrics-stream";
-            
+
+            const streamUrl = `/a2a/agent7/v1/stream-processing/${ encodeURL(sTaskId) }/metrics-stream`;
+
             if (!this._validateEventSourceUrl(streamUrl)) {
                 MessageBox.error("Invalid metrics stream URL");
                 return;
             }
-            
+
             this._streamMetricsEventSource = new EventSource(streamUrl);
-            
+
             this._streamMetricsEventSource.onmessage = function(event) {
                 try {
-                    var data = JSON.parse(event.data);
+                    const data = JSON.parse(event.data);
                     this._updateStreamMetricsDisplay(data, oDialog);
                 } catch (e) {
-                    Log.error("Invalid data received from stream metrics: " + e.message);
+                    Log.error(`Invalid data received from stream metrics: ${ e.message}`);
                 }
             }.bind(this);
-            
+
             this._streamMetricsEventSource.onerror = function() {
                 if (this._streamMetricsEventSource) {
                     this._streamMetricsEventSource.close();
@@ -1429,20 +1429,20 @@ sap.ui.define([
          * @param {string} sProcessingId - Processing ID
          * @private
          */
-        _startStreamMonitoring: function(sProcessingId) {
-            const streamUrl = "/a2a/agent7/v1/stream-processing/monitoring/" + encodeURL(sProcessingId);
-            
+        _startStreamMonitoring(sProcessingId) {
+            const streamUrl = `/a2a/agent7/v1/stream-processing/monitoring/${ encodeURL(sProcessingId)}`;
+
             if (!this._validateEventSourceUrl(streamUrl)) {
                 MessageBox.error("Invalid stream monitoring URL");
                 return;
             }
-            
+
             this._streamMonitoringEventSource = new EventSource(streamUrl);
-            
+
             this._streamMonitoringEventSource.onmessage = function(event) {
                 try {
-                    var data = JSON.parse(event.data);
-                    
+                    const data = JSON.parse(event.data);
+
                     if (data.type === "processing_started") {
                         MessageToast.show("Stream processing started successfully");
                         this._extensionAPI.refresh();
@@ -1453,17 +1453,17 @@ sap.ui.define([
                     } else if (data.type === "processing_error") {
                         this._streamMonitoringEventSource.close();
                         const errorMsg = this._sanitizeInput(data.error || "Unknown error");
-                        MessageBox.error("Stream processing failed: " + errorMsg);
+                        MessageBox.error(`Stream processing failed: ${ errorMsg}`);
                     } else if (data.type === "throughput_update") {
                         const throughput = this._sanitizeInput(data.recordsPerSecond) || "0";
-                        MessageToast.show("Processing rate: " + throughput + " records/sec");
+                        MessageToast.show(`Processing rate: ${ throughput } records/sec`);
                     }
                 } catch (e) {
                     this._streamMonitoringEventSource.close();
                     MessageBox.error("Invalid data received from stream monitoring");
                 }
             }.bind(this);
-            
+
             this._streamMonitoringEventSource.onerror = function() {
                 if (this._streamMonitoringEventSource) {
                     this._streamMonitoringEventSource.close();
@@ -1480,15 +1480,15 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _updateStreamMetricsDisplay: function(metricsData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
-            if (!oTargetDialog) return;
-            
-            var oModel = oTargetDialog.getModel("metrics");
-            if (!oModel) return;
-            
-            var oData = oModel.getData();
-            
+        _updateStreamMetricsDisplay(metricsData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) {return;}
+
+            const oModel = oTargetDialog.getModel("metrics");
+            if (!oModel) {return;}
+
+            const oData = oModel.getData();
+
             if (metricsData.type === "throughput_update") {
                 oData.throughput = this._sanitizeObject(metricsData.data);
                 oModel.setData(oData);
@@ -1511,10 +1511,10 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createStreamMetricsCharts: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
-            if (!oTargetDialog) return;
-            
+        _createStreamMetricsCharts(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) {return;}
+
             this._createThroughputChart(data.throughput, oTargetDialog);
             this._createLatencyChart(data.latency, oTargetDialog);
             this._createErrorRateChart(data.errorRates, oTargetDialog);
@@ -1527,22 +1527,22 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createThroughputChart: function(throughputData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
-            if (!oTargetDialog) return;
-            
-            var oChart = oTargetDialog.byId("throughputChart");
-            if (!oChart || !throughputData) return;
-            
-            var aChartData = (throughputData.timeSeries || []).map(function(point) {
+        _createThroughputChart(throughputData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) {return;}
+
+            const oChart = oTargetDialog.byId("throughputChart");
+            if (!oChart || !throughputData) {return;}
+
+            const aChartData = (throughputData.timeSeries || []).map((point) => {
                 return {
                     Time: new Date(point.timestamp).toLocaleTimeString(),
                     RecordsPerSecond: point.recordsPerSecond,
                     BytesPerSecond: point.bytesPerSecond
                 };
             });
-            
-            var oChartModel = new JSONModel({
+
+            const oChartModel = new JSONModel({
                 throughputData: aChartData
             });
             oChart.setModel(oChartModel);
@@ -1555,7 +1555,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _updateThroughputChart: function(data, oDialog) {
+        _updateThroughputChart(data, oDialog) {
             this._createThroughputChart(data, oDialog);
         },
 
@@ -1566,14 +1566,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createLatencyChart: function(latencyData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
-            if (!oTargetDialog) return;
-            
-            var oChart = oTargetDialog.byId("latencyChart");
-            if (!oChart || !latencyData) return;
-            
-            var aChartData = (latencyData.timeSeries || []).map(function(point) {
+        _createLatencyChart(latencyData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) {return;}
+
+            const oChart = oTargetDialog.byId("latencyChart");
+            if (!oChart || !latencyData) {return;}
+
+            const aChartData = (latencyData.timeSeries || []).map((point) => {
                 return {
                     Time: new Date(point.timestamp).toLocaleTimeString(),
                     P50Latency: point.p50LatencyMs,
@@ -1581,8 +1581,8 @@ sap.ui.define([
                     P99Latency: point.p99LatencyMs
                 };
             });
-            
-            var oChartModel = new JSONModel({
+
+            const oChartModel = new JSONModel({
                 latencyData: aChartData
             });
             oChart.setModel(oChartModel);
@@ -1595,7 +1595,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _updateLatencyChart: function(data, oDialog) {
+        _updateLatencyChart(data, oDialog) {
             this._createLatencyChart(data, oDialog);
         },
 
@@ -1606,22 +1606,22 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createErrorRateChart: function(errorData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
-            if (!oTargetDialog) return;
-            
-            var oChart = oTargetDialog.byId("errorRateChart");
-            if (!oChart || !errorData) return;
-            
-            var aChartData = (errorData.timeSeries || []).map(function(point) {
+        _createErrorRateChart(errorData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) {return;}
+
+            const oChart = oTargetDialog.byId("errorRateChart");
+            if (!oChart || !errorData) {return;}
+
+            const aChartData = (errorData.timeSeries || []).map((point) => {
                 return {
                     Time: new Date(point.timestamp).toLocaleTimeString(),
                     ErrorRate: point.errorRate,
                     TotalErrors: point.totalErrors
                 };
             });
-            
-            var oChartModel = new JSONModel({
+
+            const oChartModel = new JSONModel({
                 errorData: aChartData
             });
             oChart.setModel(oChartModel);
@@ -1634,7 +1634,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _updateErrorRateChart: function(data, oDialog) {
+        _updateErrorRateChart(data, oDialog) {
             this._createErrorRateChart(data, oDialog);
         },
 
@@ -1646,32 +1646,32 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache && this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             // Initialize dialog cache if not exists
             if (!this._dialogCache) {
                 this._dialogCache = {};
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
@@ -1682,23 +1682,23 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
@@ -1711,7 +1711,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -1720,9 +1720,9 @@ sap.ui.define([
                 oDialog.setContentWidth("95%");
                 oDialog.setContentHeight("90%");
             }
-            
+
             // Add resize handler
-            sap.ui.Device.resize.attachHandler(function() {
+            sap.ui.Device.resize.attachHandler(() => {
                 if (sap.ui.Device.system.phone) {
                     oDialog.setStretch(true);
                 } else {
@@ -1736,26 +1736,26 @@ sap.ui.define([
          * @description Confirms and starts stream data export.
          * @public
          */
-        onConfirmExportStreamData: function() {
-            var oDialog = this._dialogCache["exportStream"];
-            if (!oDialog) return;
-            
-            var oModel = oDialog.getModel("export");
-            var oData = oModel.getData();
-            
+        onConfirmExportStreamData() {
+            const oDialog = this._dialogCache["exportStream"];
+            if (!oDialog) {return;}
+
+            const oModel = oDialog.getModel("export");
+            const oData = oModel.getData();
+
             // Validate export parameters
             if (!oData.dateRange.from || !oData.dateRange.to) {
                 MessageBox.error("Please specify valid date range for export");
                 return;
             }
-            
+
             if (oData.dateRange.from >= oData.dateRange.to) {
                 MessageBox.error("Start date must be before end date");
                 return;
             }
-            
+
             oDialog.setBusy(true);
-            
+
             const requestData = {
                 taskId: this._sanitizeInput(oData.taskId),
                 format: this._sanitizeInput(oData.exportFormat),
@@ -1763,9 +1763,9 @@ sap.ui.define([
                 endDate: oData.dateRange.to.toISOString(),
                 includeMetadata: Boolean(oData.includeMetadata),
                 compressOutput: Boolean(oData.compressOutput),
-                maxRecords: Math.max(1, Math.min(100000, parseInt(oData.maxRecords) || 10000))
+                maxRecords: Math.max(1, Math.min(100000, parseInt(oData.maxRecords, 10) || 10000))
             };
-            
+
             this._secureAjaxCall({
                 url: "/a2a/agent7/v1/stream-processing/export",
                 type: "POST",
@@ -1773,15 +1773,15 @@ sap.ui.define([
             }).then(result => {
                 oDialog.setBusy(false);
                 oDialog.close();
-                
+
                 const data = result.data;
                 MessageBox.success(
                     "Export initiated successfully!\n" +
-                    "Export ID: " + this._sanitizeInput(data.exportId) + "\n" +
-                    "Estimated time: " + this._sanitizeInput(data.estimatedTime) + " minutes\n" +
+                    `Export ID: ${ this._sanitizeInput(data.exportId) }\n` +
+                    `Estimated time: ${ this._sanitizeInput(data.estimatedTime) } minutes\n` +
                     "You will be notified when the export is ready for download."
                 );
-                
+
                 this._auditLogger.log("STREAM_EXPORT_STARTED", {
                     taskId: requestData.taskId,
                     exportId: data.exportId,
@@ -1790,7 +1790,7 @@ sap.ui.define([
             }).catch(error => {
                 oDialog.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Export failed: " + errorMsg);
+                MessageBox.error(`Export failed: ${ errorMsg}`);
                 this._auditLogger.log("STREAM_EXPORT_FAILED", {
                     taskId: requestData.taskId,
                     error: errorMsg
@@ -1803,8 +1803,8 @@ sap.ui.define([
          * @description Cancels stream data export dialog.
          * @public
          */
-        onCancelExportStreamData: function() {
-            var oDialog = this._dialogCache["exportStream"];
+        onCancelExportStreamData() {
+            const oDialog = this._dialogCache["exportStream"];
             if (oDialog) {
                 oDialog.close();
             }

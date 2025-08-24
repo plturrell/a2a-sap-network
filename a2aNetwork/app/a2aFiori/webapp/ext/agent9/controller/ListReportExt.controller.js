@@ -5,7 +5,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent9/ext/utils/SecurityUtils"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) => {
     "use strict";
 
     /**
@@ -16,14 +16,14 @@ sap.ui.define([
      * logical analysis, decision making, and problem solving with enterprise-grade security and accessibility.
      */
     return ControllerExtension.extend("a2a.network.agent9.ext.controller.ListReportExt", {
-        
+
         override: {
             /**
              * @function onInit
              * @description Initializes the controller extension with security utilities, device model, dialog caching, and real-time updates.
              * @override
              */
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._initializeDeviceModel();
@@ -31,23 +31,23 @@ sap.ui.define([
                 this._initializePerformanceOptimizations();
                 this._startRealtimeUpdates();
             },
-            
+
             /**
              * @function onExit
              * @description Cleanup resources on controller destruction.
              * @override
              */
-            onExit: function() {
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
                 }
             }
         },
-        
+
         // Dialog caching for performance
         _dialogCache: {},
-        
+
         // Error recovery configuration
         _errorRecoveryConfig: {
             maxRetries: 3,
@@ -60,32 +60,32 @@ sap.ui.define([
          * @description Sets up device model for responsive design.
          * @private
          */
-        _initializeDeviceModel: function() {
-            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+        _initializeDeviceModel() {
+            const oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
             this.base.getView().setModel(oDeviceModel, "device");
         },
-        
+
         /**
          * @function _initializeDialogCache
          * @description Initializes dialog cache for performance.
          * @private
          */
-        _initializeDialogCache: function() {
+        _initializeDialogCache() {
             this._dialogCache = {};
         },
-        
+
         /**
          * @function _initializePerformanceOptimizations
          * @description Sets up performance optimization features.
          * @private
          */
-        _initializePerformanceOptimizations: function() {
+        _initializePerformanceOptimizations() {
             // Throttle dashboard updates
             this._throttledDashboardUpdate = this._throttle(this._loadDashboardData.bind(this), 1000);
             // Debounce search operations
             this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
         },
-        
+
         /**
          * @function _throttle
          * @description Creates a throttled function.
@@ -94,19 +94,19 @@ sap.ui.define([
          * @returns {Function} Throttled function
          * @private
          */
-        _throttle: function(fn, limit) {
-            var inThrottle;
+        _throttle(fn, limit) {
+            let inThrottle;
             return function() {
-                var args = arguments;
-                var context = this;
+                const args = arguments;
+                const context = this;
                 if (!inThrottle) {
                     fn.apply(context, args);
                     inThrottle = true;
-                    setTimeout(function() { inThrottle = false; }, limit);
+                    setTimeout(() => { inThrottle = false; }, limit);
                 }
             };
         },
-        
+
         /**
          * @function _debounce
          * @description Creates a debounced function.
@@ -115,44 +115,44 @@ sap.ui.define([
          * @returns {Function} Debounced function
          * @private
          */
-        _debounce: function(fn, delay) {
-            var timeoutId;
+        _debounce(fn, delay) {
+            let timeoutId;
             return function() {
-                var context = this;
-                var args = arguments;
+                const context = this;
+                const args = arguments;
                 clearTimeout(timeoutId);
-                timeoutId = setTimeout(function() {
+                timeoutId = setTimeout(() => {
                     fn.apply(context, args);
                 }, delay);
             };
         },
-        
+
         /**
          * @function _performSearch
          * @description Performs search operation (placeholder for search functionality).
          * @param {string} sQuery - Search query
          * @private
          */
-        _performSearch: function(sQuery) {
+        _performSearch(sQuery) {
             // Implement search logic for reasoning tasks and knowledge base
         },
-        
+
         /**
          * @function onCreateIntegration
          * @description Opens dialog to create new API integration task.
          * @public
          */
-        onCreateIntegration: function() {
+        onCreateIntegration() {
             // Security check: Validate user authorization for creating integrations
             if (!this._hasRole("IntegrationAdmin")) {
                 MessageBox.error("Access denied: Insufficient privileges for creating API integrations");
                 this._auditLog("CREATE_INTEGRATION_ACCESS_DENIED", "User attempted integration creation without IntegrationAdmin role");
                 return;
             }
-            
+
             this._getOrCreateDialog("createIntegration", "a2a.network.agent9.ext.fragment.CreateIntegration")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
+                .then((oDialog) => {
+                    const oModel = new JSONModel({
                         integrationName: "",
                         description: "",
                         integrationType: "REST_API",
@@ -193,13 +193,13 @@ sap.ui.define([
                     oDialog.setModel(oModel, "create");
                     oDialog.open();
                     this._loadIntegrationOptions(oDialog);
-                    
+
                     this._auditLog("CREATE_INTEGRATION_INITIATED", "Integration creation dialog opened");
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open integration creation dialog: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open integration creation dialog: ${ error.message}`);
                     this._auditLog("CREATE_INTEGRATION_ERROR", "Failed to open dialog", { error: error.message });
-                }.bind(this));
+                });
         },
 
         /**
@@ -207,25 +207,25 @@ sap.ui.define([
          * @description Opens endpoint management interface for API configurations.
          * @public
          */
-        onManageEndpoints: function() {
+        onManageEndpoints() {
             // Security check: Validate user authorization for managing endpoints
             if (!this._hasRole("IntegrationAdmin")) {
                 MessageBox.error("Access denied: Insufficient privileges for managing endpoints");
                 this._auditLog("MANAGE_ENDPOINTS_ACCESS_DENIED", "User attempted endpoint management without IntegrationAdmin role");
                 return;
             }
-            
+
             this._getOrCreateDialog("manageEndpoints", "a2a.network.agent9.ext.fragment.EndpointManager")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadEndpointData(oDialog);
-                    
+
                     this._auditLog("MANAGE_ENDPOINTS_OPENED", "Endpoint management dialog opened");
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open endpoint management: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open endpoint management: ${ error.message}`);
                     this._auditLog("MANAGE_ENDPOINTS_ERROR", "Failed to open dialog", { error: error.message });
-                }.bind(this));
+                });
         },
 
         /**
@@ -233,24 +233,24 @@ sap.ui.define([
          * @description Tests API connections for selected integrations.
          * @public
          */
-        onTestConnections: function() {
-            var oTable = this._extensionAPI.getTable();
-            var aSelectedContexts = oTable.getSelectedContexts();
-            
+        onTestConnections() {
+            const oTable = this._extensionAPI.getTable();
+            const aSelectedContexts = oTable.getSelectedContexts();
+
             if (aSelectedContexts.length === 0) {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("msg.selectIntegrationsForTest") || "Please select at least one integration to test.";
+                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                const sMessage = oBundle.getText("msg.selectIntegrationsForTest") || "Please select at least one integration to test.";
                 MessageBox.warning(sMessage);
                 return;
             }
-            
+
             // Security check: Validate user authorization for testing connections
             if (!this._hasRole("IntegrationUser")) {
                 MessageBox.error("Access denied: Insufficient privileges for testing connections");
                 this._auditLog("TEST_CONNECTIONS_ACCESS_DENIED", "User attempted connection test without IntegrationUser role");
                 return;
             }
-            
+
             // Limit bulk operations for security
             if (aSelectedContexts.length > 20) {
                 MessageBox.error("Connection testing limited to 20 integrations maximum for security reasons");
@@ -260,26 +260,26 @@ sap.ui.define([
                 });
                 return;
             }
-            
-            var aIntegrationIds = aSelectedContexts.map(function(oContext) {
-                var sIntegrationId = oContext.getProperty("integrationId");
+
+            const aIntegrationIds = aSelectedContexts.map((oContext) => {
+                const sIntegrationId = oContext.getProperty("integrationId");
                 return this._securityUtils ? this._securityUtils.sanitizeInput(sIntegrationId) : sIntegrationId;
-            }.bind(this));
-            
+            });
+
             // Validate integration IDs for security
-            var invalidIds = aIntegrationIds.filter(function(id) {
+            const invalidIds = aIntegrationIds.filter((id) => {
                 return !this._securityUtils.validateIntegrationId(id);
-            }.bind(this));
-            
+            });
+
             if (invalidIds.length > 0) {
-                MessageBox.error("Invalid integration IDs detected: " + invalidIds.join(", "));
-                this._auditLog("TEST_CONNECTIONS_INVALID_IDS", "Invalid integration IDs in bulk test", { invalidIds: invalidIds });
+                MessageBox.error(`Invalid integration IDs detected: ${ invalidIds.join(", ")}`);
+                this._auditLog("TEST_CONNECTIONS_INVALID_IDS", "Invalid integration IDs in bulk test", { invalidIds });
                 return;
             }
-            
+
             this._getOrCreateDialog("testConnections", "a2a.network.agent9.ext.fragment.ConnectionTester")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
+                .then((oDialog) => {
+                    const oModel = new JSONModel({
                         selectedIntegrations: aIntegrationIds,
                         testResults: [],
                         testInProgress: false,
@@ -293,17 +293,17 @@ sap.ui.define([
                     oDialog.setModel(oModel, "test");
                     oDialog.open();
                     this._startConnectionTests(aIntegrationIds, oDialog);
-                    
+
                     this._auditLog("TEST_CONNECTIONS_STARTED", "Connection testing initiated", {
                         integrationCount: aIntegrationIds.length
                     });
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to start connection tests: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to start connection tests: ${ error.message}`);
                     this._auditLog("TEST_CONNECTIONS_ERROR", "Failed to start tests", { error: error.message });
-                }.bind(this));
+                });
         },
-        
+
         /**
          * @function _getOrCreateDialog
          * @description Gets cached dialog or creates new one with accessibility and responsive features.
@@ -312,67 +312,67 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
-            var that = this;
-            
+        _getOrCreateDialog(sDialogId, sFragmentName) {
+            const that = this;
+
             if (this._dialogCache[sDialogId]) {
                 return Promise.resolve(this._dialogCache[sDialogId]);
             }
-            
+
             return Fragment.load({
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
-                
+
                 // Enable accessibility
                 that._enableDialogAccessibility(oDialog);
-                
+
                 // Optimize for mobile
                 that._optimizeDialogForDevice(oDialog);
-                
+
                 return oDialog;
             });
         },
-        
+
         /**
          * @function _enableDialogAccessibility
          * @description Adds accessibility features to dialog.
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    var $dialog = oDialog.$();
-                    
+                onAfterRendering() {
+                    const $dialog = oDialog.$();
+
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
-                    
+
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
-                    
+
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
             });
         },
-        
+
         /**
          * @function _optimizeDialogForDevice
          * @description Optimizes dialog for current device.
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -382,7 +382,7 @@ sap.ui.define([
                 oDialog.setContentHeight("90%");
             }
         },
-        
+
         /**
          * @function _withErrorRecovery
          * @description Wraps operation with error recovery.
@@ -391,37 +391,37 @@ sap.ui.define([
          * @returns {Promise} Promise with error recovery
          * @private
          */
-        _withErrorRecovery: function(fnOperation, oOptions) {
-            var that = this;
-            var oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
-            
+        _withErrorRecovery(fnOperation, oOptions) {
+            const that = this;
+            const oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
+
             function attempt(retriesLeft, delay) {
-                return fnOperation().catch(function(error) {
+                return fnOperation().catch((error) => {
                     if (retriesLeft > 0) {
-                        var oBundle = that.base.getView().getModel("i18n").getResourceBundle();
-                        var sRetryMsg = oBundle.getText("recovery.retrying") || "Network error. Retrying...";
+                        const oBundle = that.base.getView().getModel("i18n").getResourceBundle();
+                        const sRetryMsg = oBundle.getText("recovery.retrying") || "Network error. Retrying...";
                         MessageToast.show(sRetryMsg);
-                        
-                        return new Promise(function(resolve) {
+
+                        return new Promise((resolve) => {
                             setTimeout(resolve, delay);
-                        }).then(function() {
-                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
+                        }).then(() => {
+                            const nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
                             return attempt(retriesLeft - 1, nextDelay);
                         });
                     }
                     throw error;
                 });
             }
-            
+
             return attempt(oConfig.maxRetries, oConfig.retryDelay);
         },
-        
+
         /**
          * @function _cleanupResources
          * @description Cleans up resources to prevent memory leaks.
          * @private
          */
-        _cleanupResources: function() {
+        _cleanupResources() {
             // Clean up event sources
             if (this._realtimeEventSource) {
                 this._realtimeEventSource.close();
@@ -431,16 +431,16 @@ sap.ui.define([
                 this._testEventSource.close();
                 this._testEventSource = null;
             }
-            
+
             // Clean up cached dialogs
-            Object.keys(this._dialogCache).forEach(function(key) {
+            Object.keys(this._dialogCache).forEach((key) => {
                 if (this._dialogCache[key]) {
                     this._dialogCache[key].destroy();
                 }
-            }.bind(this));
+            });
             this._dialogCache = {};
-            
-            this._auditLog('RESOURCES_CLEANED_UP', 'Controller resources cleaned up on exit');
+
+            this._auditLog("RESOURCES_CLEANED_UP", "Controller resources cleaned up on exit");
         },
 
         /**
@@ -449,14 +449,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadIntegrationOptions: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["createIntegration"];
-            if (!oTargetDialog) return;
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+        _loadIntegrationOptions(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["createIntegration"];
+            if (!oTargetDialog) {return;}
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     // Create secure AJAX configuration
-                    var ajaxConfig = {
+                    const ajaxConfig = {
                         url: "/a2a/agent9/v1/integration-options",
                         type: "GET",
                         headers: {
@@ -466,37 +466,37 @@ sap.ui.define([
                         timeout: 15000,
                         success: function(data) {
                             // Sanitize response data
-                            var sanitizedData = {
+                            const sanitizedData = {
                                 integrationTypes: this._sanitizeArray(data.integrationTypes || []),
                                 authMethods: this._sanitizeArray(data.authMethods || []),
                                 protocols: this._sanitizeArray(data.protocols || []),
                                 dataFormats: this._sanitizeArray(data.dataFormats || []),
                                 templates: this._sanitizeArray(data.templates || [])
                             };
-                            
-                            var oModel = oTargetDialog.getModel("create");
-                            var oData = oModel.getData();
+
+                            const oModel = oTargetDialog.getModel("create");
+                            const oData = oModel.getData();
                             Object.assign(oData, sanitizedData);
                             oModel.setData(oData);
                             resolve(sanitizedData);
                         }.bind(this),
                         error: function(xhr, textStatus, errorThrown) {
-                            var errorMsg = "Network error";
+                            let errorMsg = "Network error";
                             if (xhr.responseText) {
-                                errorMsg = this._securityUtils ? 
-                                    this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                                errorMsg = this._securityUtils ?
+                                    this._securityUtils.sanitizeErrorMessage(xhr.responseText) :
                                     "Server error";
                             }
-                            reject(new Error("Failed to load integration options: " + errorMsg));
+                            reject(new Error(`Failed to load integration options: ${ errorMsg}`));
                         }.bind(this)
                     };
-                    
+
                     jQuery.ajax(ajaxConfig);
-                }.bind(this));
-            }.bind(this)).catch(function(error) {
+                });
+            }).catch((error) => {
                 MessageBox.error(error.message);
                 this._auditLog("LOAD_INTEGRATION_OPTIONS_FAILED", "Failed to load options", { error: error.message });
-            }.bind(this));
+            });
         },
 
         /**
@@ -505,14 +505,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadEndpointData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["manageEndpoints"];
-            if (!oTargetDialog) return;
-            
+        _loadEndpointData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["manageEndpoints"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/endpoints",
                         type: "GET",
@@ -522,7 +522,7 @@ sap.ui.define([
                         },
                         timeout: 15000,
                         success: function(data) {
-                            var oModel = new JSONModel({
+                            const oModel = new JSONModel({
                                 endpoints: this._sanitizeArray(data.endpoints || []),
                                 healthStatus: this._sanitizeObject(data.healthStatus || {}),
                                 configurations: this._sanitizeArray(data.configurations || []),
@@ -533,22 +533,22 @@ sap.ui.define([
                             resolve(data);
                         }.bind(this),
                         error: function(xhr) {
-                            var errorMsg = this._securityUtils ? 
-                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                            const errorMsg = this._securityUtils ?
+                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) :
                                 "Failed to load endpoint data";
                             reject(new Error(errorMsg));
                         }.bind(this)
                     });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
+                });
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createEndpointVisualizations(data, oTargetDialog);
                 this._auditLog("ENDPOINT_DATA_LOADED", "Endpoint data loaded successfully", { endpointCount: data.endpoints.length });
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
                 this._auditLog("ENDPOINT_DATA_LOAD_FAILED", "Failed to load endpoint data", { error: error.message });
-            }.bind(this));
+            });
         },
 
         /**
@@ -558,21 +558,21 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _startConnectionTests: function(aIntegrationIds, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["testConnections"];
-            if (!oTargetDialog || !aIntegrationIds.length) return;
-            
-            var oModel = oTargetDialog.getModel("test");
-            var oData = oModel.getData();
+        _startConnectionTests(aIntegrationIds, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["testConnections"];
+            if (!oTargetDialog || !aIntegrationIds.length) {return;}
+
+            const oModel = oTargetDialog.getModel("test");
+            const oData = oModel.getData();
             oData.testInProgress = true;
             oData.testResults = [];
             oModel.setData(oData);
-            
+
             // Start real-time monitoring of connection tests
             this._startTestMonitoring(aIntegrationIds, oTargetDialog);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/test-connections",
                         type: "POST",
@@ -595,27 +595,27 @@ sap.ui.define([
                         error: function(xhr) {
                             oData.testInProgress = false;
                             oModel.setData(oData);
-                            var errorMsg = this._securityUtils ? 
-                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                            const errorMsg = this._securityUtils ?
+                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) :
                                 "Connection test failed";
                             reject(new Error(errorMsg));
                         }.bind(this)
                     });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
+                });
+            }).then((data) => {
                 this._processTestResults(data.results, oTargetDialog);
                 this._auditLog("CONNECTION_TESTS_COMPLETED", "Connection tests completed", {
                     integrationCount: aIntegrationIds.length,
                     successCount: data.results.filter(r => r.success).length
                 });
-            }.bind(this)).catch(function(error) {
-                var oModel = oTargetDialog.getModel("test");
-                var oData = oModel.getData();
+            }).catch((error) => {
+                const oModel = oTargetDialog.getModel("test");
+                const oData = oModel.getData();
                 oData.testInProgress = false;
                 oModel.setData(oData);
-                MessageBox.error("Connection test failed: " + error.message);
+                MessageBox.error(`Connection test failed: ${ error.message}`);
                 this._auditLog("CONNECTION_TESTS_FAILED", "Connection tests failed", { error: error.message });
-            }.bind(this));
+            });
         },
 
         /**
@@ -625,32 +625,32 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _startTestMonitoring: function(aIntegrationIds, oDialog) {
+        _startTestMonitoring(aIntegrationIds, oDialog) {
             if (this._testEventSource) {
                 this._testEventSource.close();
             }
-            
+
             // Validate EventSource URL for security
-            var testStreamUrl = "/a2a/agent9/v1/test-stream?ids=" + encodeURIComponent(aIntegrationIds.join(','));
+            const testStreamUrl = `/a2a/agent9/v1/test-stream?ids=${ encodeURIComponent(aIntegrationIds.join(","))}`;
             if (!this._securityUtils || !this._securityUtils.validateEventSourceUrl(testStreamUrl)) {
                 console.warn("Invalid test stream URL, skipping real-time monitoring");
                 return;
             }
-            
+
             this._testEventSource = new EventSource(testStreamUrl);
-            
+
             this._testEventSource.onmessage = function(event) {
                 try {
-                    var data = JSON.parse(event.data);
+                    const data = JSON.parse(event.data);
                     this._updateTestProgress(data, oDialog);
                 } catch (error) {
                     console.error("Error processing test update:", error);
                 }
             }.bind(this);
-            
+
             this._testEventSource.onerror = function() {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("error.testMonitoringLost") || "Test monitoring connection lost";
+                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                const sMessage = oBundle.getText("error.testMonitoringLost") || "Test monitoring connection lost";
                 MessageToast.show(sMessage);
             }.bind(this);
         },
@@ -662,20 +662,20 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _updateTestProgress: function(testData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["testConnections"];
-            if (!oTargetDialog) return;
-            
-            var oModel = oTargetDialog.getModel("test");
-            if (!oModel) return;
-            
-            var oData = oModel.getData();
-            
+        _updateTestProgress(testData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["testConnections"];
+            if (!oTargetDialog) {return;}
+
+            const oModel = oTargetDialog.getModel("test");
+            if (!oModel) {return;}
+
+            const oData = oModel.getData();
+
             if (testData.type === "progress_update") {
-                var integrationIndex = oData.testResults.findIndex(function(result) {
+                const integrationIndex = oData.testResults.findIndex((result) => {
                     return result.integrationId === testData.integrationId;
                 });
-                
+
                 if (integrationIndex >= 0) {
                     oData.testResults[integrationIndex] = this._sanitizeObject(testData.result);
                 } else {
@@ -692,19 +692,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _processTestResults: function(aResults, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["testConnections"];
-            if (!oTargetDialog || !aResults) return;
-            
-            var successCount = aResults.filter(function(result) {
+        _processTestResults(aResults, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["testConnections"];
+            if (!oTargetDialog || !aResults) {return;}
+
+            const successCount = aResults.filter((result) => {
                 return result.success;
             }).length;
-            
-            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-            var sMessage = oBundle.getText("msg.connectionTestResults") || "Connection tests completed";
-            sMessage += ": " + successCount + "/" + aResults.length + " successful";
+
+            const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+            let sMessage = oBundle.getText("msg.connectionTestResults") || "Connection tests completed";
+            sMessage += `: ${ successCount }/${ aResults.length } successful`;
             MessageToast.show(sMessage);
-            
+
             // Create test results visualization
             this._createTestResultsChart(aResults, oTargetDialog);
         },
@@ -716,14 +716,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createTestResultsChart: function(aResults, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["testConnections"];
-            if (!oTargetDialog) return;
-            
-            var oChart = oTargetDialog.byId("testResultsChart");
-            if (!oChart || !aResults) return;
-            
-            var aChartData = aResults.map(function(result) {
+        _createTestResultsChart(aResults, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["testConnections"];
+            if (!oTargetDialog) {return;}
+
+            const oChart = oTargetDialog.byId("testResultsChart");
+            if (!oChart || !aResults) {return;}
+
+            const aChartData = aResults.map((result) => {
                 return {
                     Integration: result.integrationName || result.integrationId,
                     Status: result.success ? "Success" : "Failed",
@@ -731,8 +731,8 @@ sap.ui.define([
                     ErrorCode: result.errorCode || ""
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 testData: aChartData
             });
             oChart.setModel(oChartModel);
@@ -745,10 +745,10 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createEndpointVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["manageEndpoints"];
-            if (!oTargetDialog) return;
-            
+        _createEndpointVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["manageEndpoints"];
+            if (!oTargetDialog) {return;}
+
             this._createEndpointHealthChart(data.healthStatus, oTargetDialog);
             this._createRateLimitChart(data.rateLimits, oTargetDialog);
         },
@@ -760,15 +760,15 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createEndpointHealthChart: function(healthData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["manageEndpoints"];
-            if (!oTargetDialog) return;
-            
-            var oHealthChart = oTargetDialog.byId("endpointHealthChart");
-            if (!oHealthChart || !healthData) return;
-            
-            var aChartData = Object.keys(healthData).map(function(endpoint) {
-                var health = healthData[endpoint];
+        _createEndpointHealthChart(healthData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["manageEndpoints"];
+            if (!oTargetDialog) {return;}
+
+            const oHealthChart = oTargetDialog.byId("endpointHealthChart");
+            if (!oHealthChart || !healthData) {return;}
+
+            const aChartData = Object.keys(healthData).map((endpoint) => {
+                const health = healthData[endpoint];
                 return {
                     Endpoint: endpoint,
                     Uptime: health.uptimePercent || 0,
@@ -776,13 +776,13 @@ sap.ui.define([
                     ErrorRate: health.errorRate || 0
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 healthData: aChartData
             });
             oHealthChart.setModel(oChartModel);
-            
-            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+
+            const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
             oHealthChart.setVizProperties({
                 categoryAxis: {
                     title: { text: oBundle.getText("chart.endpoints") || "Endpoints" }
@@ -802,19 +802,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadDashboardData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["reasoningDashboard"];
-            if (!oTargetDialog) return;
-            
+        _loadDashboardData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["reasoningDashboard"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/dashboard",
                         type: "GET",
-                        success: function(data) {
-                            var oDashboardModel = new JSONModel({
+                        success(data) {
+                            const oDashboardModel = new JSONModel({
                                 summary: data.summary,
                                 reasoningMetrics: data.reasoningMetrics,
                                 knowledgeBase: data.knowledgeBase,
@@ -822,20 +822,20 @@ sap.ui.define([
                                 inferenceTrends: data.inferenceTrends,
                                 decisionAccuracy: data.decisionAccuracy
                             });
-                            
+
                             oTargetDialog.setModel(oDashboardModel, "dashboard");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load dashboard data: " + errorMsg));
+                            reject(new Error(`Failed to load dashboard data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createDashboardCharts(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -848,10 +848,10 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createDashboardCharts: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["reasoningDashboard"];
-            if (!oTargetDialog) return;
-            
+        _createDashboardCharts(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["reasoningDashboard"];
+            if (!oTargetDialog) {return;}
+
             this._createConfidenceTrendsChart(data.inferenceTrends, oTargetDialog);
             this._createEnginePerformanceChart(data.enginePerformance, oTargetDialog);
             this._createDecisionAccuracyChart(data.decisionAccuracy, oTargetDialog);
@@ -864,14 +864,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createConfidenceTrendsChart: function(trendsData, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["reasoningDashboard"];
-            if (!oTargetDialog) return;
-            
-            var oVizFrame = oTargetDialog.byId("confidenceTrendsChart");
-            if (!oVizFrame || !trendsData) return;
-            
-            var aChartData = trendsData.map(function(trend) {
+        _createConfidenceTrendsChart(trendsData, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["reasoningDashboard"];
+            if (!oTargetDialog) {return;}
+
+            const oVizFrame = oTargetDialog.byId("confidenceTrendsChart");
+            if (!oVizFrame || !trendsData) {return;}
+
+            const aChartData = trendsData.map((trend) => {
                 return {
                     Time: trend.timestamp,
                     Confidence: trend.averageConfidence,
@@ -879,13 +879,13 @@ sap.ui.define([
                     Accuracy: trend.accuracy
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 trendsData: aChartData
             });
             oVizFrame.setModel(oChartModel);
-            
-            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+
+            const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
             oVizFrame.setVizProperties({
                 categoryAxis: {
                     title: { text: oBundle.getText("chart.time") || "Time" }
@@ -904,14 +904,14 @@ sap.ui.define([
          * @description Opens knowledge management interface for facts, rules, and ontologies.
          * @public
          */
-        onKnowledgeManager: function() {
+        onKnowledgeManager() {
             this._getOrCreateDialog("knowledgeManager", "a2a.network.agent9.ext.fragment.KnowledgeManager")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadKnowledgeData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Knowledge Manager: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Knowledge Manager: ${ error.message}`);
                 });
         },
 
@@ -921,19 +921,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadKnowledgeData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["knowledgeManager"];
-            if (!oTargetDialog) return;
-            
+        _loadKnowledgeData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["knowledgeManager"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/knowledge-base",
                         type: "GET",
-                        success: function(data) {
-                            var oModel = new JSONModel({
+                        success(data) {
+                            const oModel = new JSONModel({
                                 facts: data.facts,
                                 rules: data.rules,
                                 ontologies: data.ontologies,
@@ -944,16 +944,16 @@ sap.ui.define([
                             oTargetDialog.setModel(oModel, "knowledge");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load knowledge data: " + errorMsg));
+                            reject(new Error(`Failed to load knowledge data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createKnowledgeVisualizations(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -966,14 +966,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createKnowledgeVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["knowledgeManager"];
-            if (!oTargetDialog) return;
-            
-            var oKnowledgeChart = oTargetDialog.byId("knowledgeGrowthChart");
-            if (!oKnowledgeChart || !data.growth) return;
-            
-            var aChartData = data.growth.map(function(point) {
+        _createKnowledgeVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["knowledgeManager"];
+            if (!oTargetDialog) {return;}
+
+            const oKnowledgeChart = oTargetDialog.byId("knowledgeGrowthChart");
+            if (!oKnowledgeChart || !data.growth) {return;}
+
+            const aChartData = data.growth.map((point) => {
                 return {
                     Date: point.date,
                     Facts: point.factsCount,
@@ -981,13 +981,13 @@ sap.ui.define([
                     Inferences: point.inferencesCount
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 growthData: aChartData
             });
             oKnowledgeChart.setModel(oChartModel);
-            
-            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+
+            const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
             oKnowledgeChart.setVizProperties({
                 categoryAxis: {
                     title: { text: oBundle.getText("chart.time") || "Time" }
@@ -1006,14 +1006,14 @@ sap.ui.define([
          * @description Opens rule engine configuration interface for managing inference rules.
          * @public
          */
-        onRuleEngine: function() {
+        onRuleEngine() {
             this._getOrCreateDialog("ruleEngine", "a2a.network.agent9.ext.fragment.RuleEngine")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadRuleData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Rule Engine: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Rule Engine: ${ error.message}`);
                 });
         },
 
@@ -1023,19 +1023,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadRuleData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["ruleEngine"];
-            if (!oTargetDialog) return;
-            
+        _loadRuleData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["ruleEngine"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/rules",
                         type: "GET",
-                        success: function(data) {
-                            var oModel = new JSONModel({
+                        success(data) {
+                            const oModel = new JSONModel({
                                 rules: data.rules,
                                 ruleTypes: data.ruleTypes,
                                 conflictResolution: data.conflictResolution,
@@ -1044,16 +1044,16 @@ sap.ui.define([
                             oTargetDialog.setModel(oModel, "rules");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load rule data: " + errorMsg));
+                            reject(new Error(`Failed to load rule data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createRuleVisualizations(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -1064,14 +1064,14 @@ sap.ui.define([
          * @description Opens inference engine interface for managing logical inferences.
          * @public
          */
-        onInferenceEngine: function() {
+        onInferenceEngine() {
             this._getOrCreateDialog("inferenceEngine", "a2a.network.agent9.ext.fragment.InferenceEngine")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadInferenceData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Inference Engine: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Inference Engine: ${ error.message}`);
                 });
         },
 
@@ -1081,19 +1081,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadInferenceData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
-            if (!oTargetDialog) return;
-            
+        _loadInferenceData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/inferences",
                         type: "GET",
-                        success: function(data) {
-                            var oModel = new JSONModel({
+                        success(data) {
+                            const oModel = new JSONModel({
                                 inferences: data.inferences,
                                 inferenceChains: data.chains,
                                 confidence: data.confidence,
@@ -1102,16 +1102,16 @@ sap.ui.define([
                             oTargetDialog.setModel(oModel, "inference");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load inference data: " + errorMsg));
+                            reject(new Error(`Failed to load inference data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createInferenceVisualizations(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -1124,10 +1124,10 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createInferenceVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
-            if (!oTargetDialog) return;
-            
+        _createInferenceVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
+            if (!oTargetDialog) {return;}
+
             this._createInferenceChainDiagram(data.chains, oTargetDialog);
             this._createConfidenceDistribution(data.confidence, oTargetDialog);
         },
@@ -1139,14 +1139,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createInferenceChainDiagram: function(chains, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
-            if (!oTargetDialog || !chains) return;
-            
-            var oChainChart = oTargetDialog.byId("inferenceChainChart");
-            if (!oChainChart) return;
-            
-            var aChartData = chains.map(function(chain) {
+        _createInferenceChainDiagram(chains, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
+            if (!oTargetDialog || !chains) {return;}
+
+            const oChainChart = oTargetDialog.byId("inferenceChainChart");
+            if (!oChainChart) {return;}
+
+            const aChartData = chains.map((chain) => {
                 return {
                     ChainId: chain.id,
                     Steps: chain.steps.length,
@@ -1154,8 +1154,8 @@ sap.ui.define([
                     Depth: chain.depth
                 };
             });
-            
-            var oChainModel = new sap.ui.model.json.JSONModel({
+
+            const oChainModel = new sap.ui.model.json.JSONModel({
                 chainData: aChartData
             });
             oChainChart.setModel(oChainModel);
@@ -1166,14 +1166,14 @@ sap.ui.define([
          * @description Opens decision-making interface for multi-criteria analysis.
          * @public
          */
-        onDecisionMaker: function() {
+        onDecisionMaker() {
             this._getOrCreateDialog("decisionMaker", "a2a.network.agent9.ext.fragment.DecisionMaker")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadDecisionData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Decision Maker: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Decision Maker: ${ error.message}`);
                 });
         },
 
@@ -1183,19 +1183,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadDecisionData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["decisionMaker"];
-            if (!oTargetDialog) return;
-            
+        _loadDecisionData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["decisionMaker"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/decisions",
                         type: "GET",
-                        success: function(data) {
-                            var oModel = new JSONModel({
+                        success(data) {
+                            const oModel = new JSONModel({
                                 decisions: data.decisions,
                                 criteria: data.criteria,
                                 alternatives: data.alternatives,
@@ -1204,16 +1204,16 @@ sap.ui.define([
                             oTargetDialog.setModel(oModel, "decision");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load decision data: " + errorMsg));
+                            reject(new Error(`Failed to load decision data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createDecisionVisualizations(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -1224,14 +1224,14 @@ sap.ui.define([
          * @description Opens problem-solving interface for complex reasoning scenarios.
          * @public
          */
-        onProblemSolver: function() {
+        onProblemSolver() {
             this._getOrCreateDialog("problemSolver", "a2a.network.agent9.ext.fragment.ProblemSolver")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadProblemData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Problem Solver: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Problem Solver: ${ error.message}`);
                 });
         },
 
@@ -1241,19 +1241,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadProblemData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["problemSolver"];
-            if (!oTargetDialog) return;
-            
+        _loadProblemData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["problemSolver"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/problems",
                         type: "GET",
-                        success: function(data) {
-                            var oModel = new JSONModel({
+                        success(data) {
+                            const oModel = new JSONModel({
                                 problems: data.problems,
                                 solutions: data.solutions,
                                 strategies: data.strategies,
@@ -1262,16 +1262,16 @@ sap.ui.define([
                             oTargetDialog.setModel(oModel, "problem");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load problem data: " + errorMsg));
+                            reject(new Error(`Failed to load problem data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createProblemVisualizations(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -1282,14 +1282,14 @@ sap.ui.define([
          * @description Opens logical analyzer for consistency checks and contradiction detection.
          * @public
          */
-        onLogicalAnalyzer: function() {
+        onLogicalAnalyzer() {
             this._getOrCreateDialog("logicalAnalyzer", "a2a.network.agent9.ext.fragment.LogicalAnalyzer")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadAnalysisData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Logical Analyzer: " + error.message);
+                })
+                .catch((error) => {
+                    MessageBox.error(`Failed to open Logical Analyzer: ${ error.message}`);
                 });
         },
 
@@ -1299,19 +1299,19 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog (optional)
          * @private
          */
-        _loadAnalysisData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["logicalAnalyzer"];
-            if (!oTargetDialog) return;
-            
+        _loadAnalysisData(oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["logicalAnalyzer"];
+            if (!oTargetDialog) {return;}
+
             oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/analysis",
                         type: "GET",
-                        success: function(data) {
-                            var oModel = new JSONModel({
+                        success(data) {
+                            const oModel = new JSONModel({
                                 contradictions: data.contradictions,
                                 consistencyChecks: data.consistencyChecks,
                                 logicalErrors: data.logicalErrors,
@@ -1320,16 +1320,16 @@ sap.ui.define([
                             oTargetDialog.setModel(oModel, "analysis");
                             resolve(data);
                         },
-                        error: function(xhr) {
+                        error(xhr) {
                             const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                            reject(new Error("Failed to load analysis data: " + errorMsg));
+                            reject(new Error(`Failed to load analysis data: ${ errorMsg}`));
                         }
                     });
                 });
-            }).then(function(data) {
+            }).then((data) => {
                 oTargetDialog.setBusy(false);
                 this._createAnalysisVisualizations(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oTargetDialog.setBusy(false);
                 MessageBox.error(error.message);
             });
@@ -1340,62 +1340,62 @@ sap.ui.define([
          * @description Starts real-time updates for API integration events and status changes.
          * @private
          */
-        _startRealtimeUpdates: function() {
+        _startRealtimeUpdates() {
             // Validate EventSource URL for security
-            var eventSourceUrl = "/a2a/agent9/v1/realtime-updates";
+            const eventSourceUrl = "/a2a/agent9/v1/realtime-updates";
             if (this._securityUtils && !this._securityUtils.validateEventSourceUrl(eventSourceUrl)) {
                 MessageBox.error("Invalid real-time update URL");
-                this._auditLog('REALTIME_UPDATES_BLOCKED', 'Invalid EventSource URL blocked', { url: eventSourceUrl });
+                this._auditLog("REALTIME_UPDATES_BLOCKED", "Invalid EventSource URL blocked", { url: eventSourceUrl });
                 return;
             }
-            
+
             this._realtimeEventSource = new EventSource(eventSourceUrl);
-            
+
             this._realtimeEventSource.onmessage = function(event) {
                 try {
-                    var data = JSON.parse(event.data);
-                    
+                    const data = JSON.parse(event.data);
+
                     if (data.type === "integration_complete") {
-                        const safeIntegrationName = this._securityUtils ? 
-                            this._securityUtils.encodeHTML(data.integrationName || 'Unknown integration') : 
-                            (data.integrationName || 'Unknown integration');
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = oBundle.getText("msg.integrationCompleted") || "Integration completed";
-                        MessageToast.show(sMessage + ": " + safeIntegrationName);
+                        const safeIntegrationName = this._securityUtils ?
+                            this._securityUtils.encodeHTML(data.integrationName || "Unknown integration") :
+                            (data.integrationName || "Unknown integration");
+                        const oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                        const sMessage = oResourceBundle.getText("msg.integrationCompleted") || "Integration completed";
+                        MessageToast.show(`${sMessage }: ${ safeIntegrationName}`);
                         this._extensionAPI.refresh();
                     } else if (data.type === "connection_test_result") {
-                        const safeEndpointName = this._securityUtils ? 
-                            this._securityUtils.encodeHTML(data.endpointName || 'Unknown endpoint') : 
-                            (data.endpointName || 'Unknown endpoint');
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = data.success ? 
-                            (oBundle.getText("msg.connectionTestSuccess") || "Connection test successful") :
-                            (oBundle.getText("msg.connectionTestFailed") || "Connection test failed");
-                        MessageToast.show(sMessage + ": " + safeEndpointName);
+                        const safeEndpointName = this._securityUtils ?
+                            this._securityUtils.encodeHTML(data.endpointName || "Unknown endpoint") :
+                            (data.endpointName || "Unknown endpoint");
+                        const oResourceBundle2 = this.base.getView().getModel("i18n").getResourceBundle();
+                        const sMessage2 = data.success ?
+                            (oResourceBundle2.getText("msg.connectionTestSuccess") || "Connection test successful") :
+                            (oResourceBundle2.getText("msg.connectionTestFailed") || "Connection test failed");
+                        MessageToast.show(`${sMessage2 }: ${ safeEndpointName}`);
                     } else if (data.type === "rate_limit_exceeded") {
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = oBundle.getText("msg.rateLimitExceeded") || "Rate limit exceeded for API endpoint";
-                        MessageToast.show(sMessage);
+                        const oResourceBundle3 = this.base.getView().getModel("i18n").getResourceBundle();
+                        const sMessage3 = oResourceBundle3.getText("msg.rateLimitExceeded") || "Rate limit exceeded for API endpoint";
+                        MessageToast.show(sMessage3);
                     } else if (data.type === "authentication_failure") {
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = oBundle.getText("msg.authenticationFailure") || "Authentication failure detected";
-                        MessageToast.show(sMessage);
-                        this._auditLog('AUTHENTICATION_FAILURE_DETECTED', 'Real-time authentication failure event', data);
+                        const oResourceBundle4 = this.base.getView().getModel("i18n").getResourceBundle();
+                        const sMessage4 = oResourceBundle4.getText("msg.authenticationFailure") || "Authentication failure detected";
+                        MessageToast.show(sMessage4);
+                        this._auditLog("AUTHENTICATION_FAILURE_DETECTED", "Real-time authentication failure event", data);
                     }
                 } catch (error) {
-                    console.error("Error processing real-time update:", error);
-                    this._auditLog('REALTIME_UPDATE_ERROR', 'Error processing real-time update', { error: error.message });
+                    // console.error("Error processing real-time update:", error);
+                    this._auditLog("REALTIME_UPDATE_ERROR", "Error processing real-time update", { error: error.message });
                 }
             }.bind(this);
-            
+
             this._realtimeEventSource.onerror = function() {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("msg.realtimeDisconnected") || "Real-time updates disconnected";
+                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                const sMessage = oBundle.getText("msg.realtimeDisconnected") || "Real-time updates disconnected";
                 MessageToast.show(sMessage);
-                this._auditLog('REALTIME_UPDATES_DISCONNECTED', 'EventSource connection lost');
+                this._auditLog("REALTIME_UPDATES_DISCONNECTED", "EventSource connection lost");
             }.bind(this);
-            
-            this._auditLog('REALTIME_UPDATES_STARTED', 'EventSource connection established');
+
+            this._auditLog("REALTIME_UPDATES_STARTED", "EventSource connection established");
         },
 
         /**
@@ -1403,39 +1403,39 @@ sap.ui.define([
          * @description Confirms and creates a new API integration with validation.
          * @public
          */
-        onConfirmCreateIntegration: function() {
-            var oDialog = this._dialogCache["createIntegration"];
+        onConfirmCreateIntegration() {
+            const oDialog = this._dialogCache["createIntegration"];
             if (!oDialog) {
                 MessageBox.error("Create integration dialog not found");
                 return;
             }
-            
-            var oModel = oDialog.getModel("create");
-            var oData = oModel.getData();
-            
+
+            const oModel = oDialog.getModel("create");
+            const oData = oModel.getData();
+
             // Validate required fields
             const validation = this._validateCreateIntegrationData(oData);
             if (!validation.isValid) {
                 MessageBox.error(validation.message);
                 return;
             }
-            
+
             // Validate integration parameters with SecurityUtils
             if (this._securityUtils && this._securityUtils.validateIntegrationParameters) {
                 const paramValidation = this._securityUtils.validateIntegrationParameters(oData);
                 if (!paramValidation.isValid) {
-                    MessageBox.error("Invalid integration parameters: " + paramValidation.message);
+                    MessageBox.error(`Invalid integration parameters: ${ paramValidation.message}`);
                     return;
                 }
             }
-            
+
             // Sanitize input data
             const sanitizedData = this._sanitizeCreateIntegrationData(oData);
-            
+
             oDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
+
+            this._withErrorRecovery(() => {
+                return new Promise((resolve, reject) => {
                     jQuery.ajax({
                         url: "/a2a/agent9/v1/integrations",
                         type: "POST",
@@ -1446,38 +1446,38 @@ sap.ui.define([
                         },
                         data: JSON.stringify(sanitizedData),
                         timeout: 30000,
-                        success: function(data) {
+                        success(data) {
                             resolve(data);
                         },
                         error: function(xhr, textStatus, errorThrown) {
-                            var errorMsg = "Network error";
+                            let errorMsg = "Network error";
                             if (xhr.responseText) {
-                                errorMsg = this._securityUtils ? 
-                                    this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                                errorMsg = this._securityUtils ?
+                                    this._securityUtils.sanitizeErrorMessage(xhr.responseText) :
                                     "Server error";
                             }
                             reject(new Error(errorMsg));
                         }.bind(this)
                     });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
+                });
+            }).then((data) => {
                 oDialog.setBusy(false);
                 oDialog.close();
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("msg.integrationCreated") || "API integration created successfully";
+                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                const sMessage = oBundle.getText("msg.integrationCreated") || "API integration created successfully";
                 MessageToast.show(sMessage);
                 this._extensionAPI.refresh();
-                this._auditLog('INTEGRATION_CREATED', 'API integration created successfully', { 
+                this._auditLog("INTEGRATION_CREATED", "API integration created successfully", {
                     integrationName: sanitizedData.integrationName,
-                    integrationType: sanitizedData.integrationType 
+                    integrationType: sanitizedData.integrationType
                 });
-            }.bind(this)).catch(function(error) {
+            }).catch((error) => {
                 oDialog.setBusy(false);
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sErrorMsg = oBundle.getText("error.createIntegrationFailed") || "Failed to create integration";
-                MessageBox.error(sErrorMsg + ": " + error.message);
-                this._auditLog('INTEGRATION_CREATE_FAILED', 'Failed to create API integration', { error: error.message });
-            }.bind(this));
+                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                const sErrorMsg = oBundle.getText("error.createIntegrationFailed") || "Failed to create integration";
+                MessageBox.error(`${sErrorMsg }: ${ error.message}`);
+                this._auditLog("INTEGRATION_CREATE_FAILED", "Failed to create API integration", { error: error.message });
+            });
         },
 
         /**
@@ -1485,8 +1485,8 @@ sap.ui.define([
          * @description Cancels integration creation and closes dialog.
          * @public
          */
-        onCancelCreateIntegration: function() {
-            var oDialog = this._dialogCache["createIntegration"];
+        onCancelCreateIntegration() {
+            const oDialog = this._dialogCache["createIntegration"];
             if (oDialog) {
                 oDialog.close();
             }
@@ -1499,39 +1499,36 @@ sap.ui.define([
          * @returns {Object} Validation result with isValid flag and message
          * @private
          */
-        _validateCreateIntegrationData: function(oData) {
+        _validateCreateIntegrationData(oData) {
+            const oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
+            
             if (!oData.integrationName || !oData.integrationName.trim()) {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("validation.integrationNameRequired") || "Integration name is required";
+                const sMessage = oResourceBundle.getText("validation.integrationNameRequired") || "Integration name is required";
                 return { isValid: false, message: sMessage };
             }
-            
+
             // Validate integration name format
             if (!/^[a-zA-Z0-9\s\-_]{3,50}$/.test(oData.integrationName)) {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("validation.integrationNameFormat") || "Integration name must be 3-50 characters (alphanumeric, spaces, hyphens, underscores)";
+                const sMessage = oResourceBundle.getText("validation.integrationNameFormat") || "Integration name must be 3-50 characters (alphanumeric, spaces, hyphens, underscores)";
                 return { isValid: false, message: sMessage };
             }
-            
+
             if (!oData.integrationType || !oData.integrationType.trim()) {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("validation.integrationTypeRequired") || "Integration type is required";
+                const sMessage = oResourceBundle.getText("validation.integrationTypeRequired") || "Integration type is required";
                 return { isValid: false, message: sMessage };
             }
-            
+
             if (!oData.endpointUrl || !oData.endpointUrl.trim()) {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("validation.endpointUrlRequired") || "Endpoint URL is required";
+                const sMessage = oResourceBundle.getText("validation.endpointUrlRequired") || "Endpoint URL is required";
                 return { isValid: false, message: sMessage };
             }
-            
+
             // Validate URL format and security
             if (!/^https:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$/.test(oData.endpointUrl)) {
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                var sMessage = oBundle.getText("validation.endpointUrlFormat") || "Endpoint URL must be a valid HTTPS URL";
+                const sMessage = oResourceBundle.getText("validation.endpointUrlFormat") || "Endpoint URL must be a valid HTTPS URL";
                 return { isValid: false, message: sMessage };
             }
-            
+
             return { isValid: true };
         },
 
@@ -1542,26 +1539,34 @@ sap.ui.define([
          * @returns {Object} Sanitized integration data
          * @private
          */
-        _sanitizeCreateIntegrationData: function(oData) {
+        _sanitizeCreateIntegrationData(oData) {
             return {
-                integrationName: this._securityUtils ? this._securityUtils.sanitizeInput(oData.integrationName) : oData.integrationName.trim(),
-                description: this._securityUtils ? this._securityUtils.sanitizeInput(oData.description || '') : (oData.description || '').trim(),
-                integrationType: this._securityUtils ? this._securityUtils.sanitizeInput(oData.integrationType) : oData.integrationType,
-                endpointUrl: this._securityUtils ? this._securityUtils.sanitizeInput(oData.endpointUrl) : oData.endpointUrl.trim(),
-                authMethod: this._securityUtils ? this._securityUtils.sanitizeInput(oData.authMethod) : oData.authMethod,
-                protocol: this._securityUtils ? this._securityUtils.sanitizeInput(oData.protocol || 'HTTPS') : (oData.protocol || 'HTTPS'),
-                timeout: Math.max(1000, Math.min(300000, parseInt(oData.timeout) || 30000)),
+                integrationName: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.integrationName) : oData.integrationName.trim(),
+                description: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.description || "") : (oData.description || "").trim(),
+                integrationType: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.integrationType) : oData.integrationType,
+                endpointUrl: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.endpointUrl) : oData.endpointUrl.trim(),
+                authMethod: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.authMethod) : oData.authMethod,
+                protocol: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.protocol || "HTTPS") : (oData.protocol || "HTTPS"),
+                timeout: Math.max(1000, Math.min(300000, parseInt(oData.timeout, 10) || 30000)),
                 retryPolicy: {
-                    maxRetries: Math.max(0, Math.min(10, parseInt(oData.retryPolicy?.maxRetries) || 3)),
-                    retryDelay: Math.max(100, Math.min(30000, parseInt(oData.retryPolicy?.retryDelay) || 1000)),
+                    maxRetries: Math.max(0, Math.min(10, parseInt(oData.retryPolicy?.maxRetries, 10) || 3)),
+                    retryDelay: Math.max(100, Math.min(30000, parseInt(oData.retryPolicy?.retryDelay, 10) || 1000)),
                     exponentialBackoff: Boolean(oData.retryPolicy?.exponentialBackoff)
                 },
                 rateLimiting: {
-                    requestsPerSecond: Math.max(1, Math.min(1000, parseInt(oData.rateLimiting?.requestsPerSecond) || 10)),
-                    burstSize: Math.max(1, Math.min(10000, parseInt(oData.rateLimiting?.burstSize) || 50)),
+                    requestsPerSecond: Math.max(1, Math.min(1000,
+                        parseInt(oData.rateLimiting?.requestsPerSecond, 10) || 10)),
+                    burstSize: Math.max(1, Math.min(10000, parseInt(oData.rateLimiting?.burstSize, 10) || 50)),
                     enabled: Boolean(oData.rateLimiting?.enabled)
                 },
-                dataFormat: this._securityUtils ? this._securityUtils.sanitizeInput(oData.dataFormat || 'JSON') : (oData.dataFormat || 'JSON'),
+                dataFormat: this._securityUtils ?
+                    this._securityUtils.sanitizeInput(oData.dataFormat || "JSON") : (oData.dataFormat || "JSON"),
                 validation: {
                     validateSchema: Boolean(oData.validation?.validateSchema),
                     strictMode: Boolean(oData.validation?.strictMode),
@@ -1572,7 +1577,7 @@ sap.ui.define([
                     trackPerformance: Boolean(oData.monitoring?.trackPerformance),
                     alertOnFailure: Boolean(oData.monitoring?.alertOnFailure)
                 },
-                priority: this._securityUtils ? this._securityUtils.sanitizeInput(oData.priority || 'MEDIUM') : (oData.priority || 'MEDIUM')
+                priority: this._securityUtils ? this._securityUtils.sanitizeInput(oData.priority || "MEDIUM") : (oData.priority || "MEDIUM")
             };
         },
 
@@ -1583,14 +1588,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createRuleVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["ruleEngine"];
-            if (!oTargetDialog || !data.performance) return;
-            
-            var oRuleChart = oTargetDialog.byId("rulePerformanceChart");
-            if (!oRuleChart) return;
-            
-            var aChartData = data.performance.map(function(perf) {
+        _createRuleVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["ruleEngine"];
+            if (!oTargetDialog || !data.performance) {return;}
+
+            const oRuleChart = oTargetDialog.byId("rulePerformanceChart");
+            if (!oRuleChart) {return;}
+
+            const aChartData = data.performance.map((perf) => {
                 return {
                     RuleType: perf.type,
                     ExecutionTime: perf.avgExecutionTime,
@@ -1598,8 +1603,8 @@ sap.ui.define([
                     Usage: perf.usageCount
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 performanceData: aChartData
             });
             oRuleChart.setModel(oChartModel);
@@ -1612,22 +1617,22 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createDecisionVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["decisionMaker"];
-            if (!oTargetDialog || !data.criteria) return;
-            
-            var oDecisionChart = oTargetDialog.byId("decisionCriteriaChart");
-            if (!oDecisionChart) return;
-            
-            var aChartData = data.criteria.map(function(criterion) {
+        _createDecisionVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["decisionMaker"];
+            if (!oTargetDialog || !data.criteria) {return;}
+
+            const oDecisionChart = oTargetDialog.byId("decisionCriteriaChart");
+            if (!oDecisionChart) {return;}
+
+            const aChartData = data.criteria.map((criterion) => {
                 return {
                     Criterion: criterion.name,
                     Weight: criterion.weight,
                     Impact: criterion.impact
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 criteriaData: aChartData
             });
             oDecisionChart.setModel(oChartModel);
@@ -1640,14 +1645,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createProblemVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["problemSolver"];
-            if (!oTargetDialog || !data.complexity) return;
-            
-            var oProblemChart = oTargetDialog.byId("problemComplexityChart");
-            if (!oProblemChart) return;
-            
-            var aChartData = data.complexity.map(function(complex) {
+        _createProblemVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["problemSolver"];
+            if (!oTargetDialog || !data.complexity) {return;}
+
+            const oProblemChart = oTargetDialog.byId("problemComplexityChart");
+            if (!oProblemChart) {return;}
+
+            const aChartData = data.complexity.map((complex) => {
                 return {
                     Domain: complex.domain,
                     Complexity: complex.score,
@@ -1655,8 +1660,8 @@ sap.ui.define([
                     Success: complex.successRate
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 complexityData: aChartData
             });
             oProblemChart.setModel(oChartModel);
@@ -1669,14 +1674,14 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createAnalysisVisualizations: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["logicalAnalyzer"];
-            if (!oTargetDialog || !data.consistencyChecks) return;
-            
-            var oAnalysisChart = oTargetDialog.byId("consistencyTrendsChart");
-            if (!oAnalysisChart) return;
-            
-            var aChartData = data.consistencyChecks.map(function(check) {
+        _createAnalysisVisualizations(data, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["logicalAnalyzer"];
+            if (!oTargetDialog || !data.consistencyChecks) {return;}
+
+            const oAnalysisChart = oTargetDialog.byId("consistencyTrendsChart");
+            if (!oAnalysisChart) {return;}
+
+            const aChartData = data.consistencyChecks.map((check) => {
                 return {
                     Timestamp: check.timestamp,
                     Consistency: check.score,
@@ -1684,8 +1689,8 @@ sap.ui.define([
                     Resolved: check.resolvedCount
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 consistencyData: aChartData
             });
             oAnalysisChart.setModel(oChartModel);
@@ -1698,22 +1703,22 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createConfidenceDistribution: function(confidence, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
-            if (!oTargetDialog || !confidence) return;
-            
-            var oConfidenceChart = oTargetDialog.byId("confidenceDistributionChart");
-            if (!oConfidenceChart) return;
-            
-            var aChartData = confidence.distribution.map(function(dist) {
+        _createConfidenceDistribution(confidence, oDialog) {
+            const oTargetDialog = oDialog || this._dialogCache["inferenceEngine"];
+            if (!oTargetDialog || !confidence) {return;}
+
+            const oConfidenceChart = oTargetDialog.byId("confidenceDistributionChart");
+            if (!oConfidenceChart) {return;}
+
+            const aChartData = confidence.distribution.map((dist) => {
                 return {
                     Range: dist.range,
                     Count: dist.count,
                     Percentage: dist.percentage
                 };
             });
-            
-            var oChartModel = new sap.ui.model.json.JSONModel({
+
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 distributionData: aChartData
             });
             oConfidenceChart.setModel(oChartModel);
@@ -1726,7 +1731,7 @@ sap.ui.define([
          * @returns {boolean} True if user has role
          * @private
          */
-        _hasRole: function(role) {
+        _hasRole(role) {
             const user = sap.ushell?.Container?.getUser();
             if (user && user.hasRole) {
                 return user.hasRole(role);
@@ -1744,18 +1749,18 @@ sap.ui.define([
          * @param {Object} details - Additional details (optional)
          * @private
          */
-        _auditLog: function(action, description, details) {
-            var user = this._getCurrentUser();
-            var timestamp = new Date().toISOString();
-            var logEntry = {
-                timestamp: timestamp,
-                user: user,
+        _auditLog(action, description, details) {
+            const user = this._getCurrentUser();
+            const timestamp = new Date().toISOString();
+            const logEntry = {
+                timestamp,
+                user,
                 agent: "Agent9_APIIntegration",
-                action: action,
-                description: description,
+                action,
+                description,
                 details: details || {}
             };
-            console.info("AUDIT: " + JSON.stringify(logEntry));
+            console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
         },
 
         /**
@@ -1764,7 +1769,7 @@ sap.ui.define([
          * @returns {string} User ID or "anonymous"
          * @private
          */
-        _getCurrentUser: function() {
+        _getCurrentUser() {
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
@@ -1774,7 +1779,7 @@ sap.ui.define([
          * @returns {string} CSRF token
          * @private
          */
-        _getCSRFToken: function() {
+        _getCSRFToken() {
             // In a real implementation, this would fetch the actual CSRF token
             // For now, return a placeholder that would be handled by the security utils
             return this._securityUtils ? this._securityUtils.getCSRFToken() : "placeholder-token";
@@ -1787,17 +1792,17 @@ sap.ui.define([
          * @returns {Array} Sanitized array
          * @private
          */
-        _sanitizeArray: function(arr) {
-            if (!Array.isArray(arr)) return [];
-            return arr.map(function(item) {
-                if (typeof item === 'string') {
+        _sanitizeArray(arr) {
+            if (!Array.isArray(arr)) {return [];}
+            return arr.map((item) => {
+                if (typeof item === "string") {
                     return this._securityUtils ? this._securityUtils.sanitizeInput(item) : item;
-                } else if (typeof item === 'object' && item !== null) {
+                } else if (typeof item === "object" && item !== null) {
                     return this._sanitizeObject(item);
-                } else {
-                    return item;
                 }
-            }.bind(this));
+                return item;
+
+            });
         },
 
         /**
@@ -1807,20 +1812,20 @@ sap.ui.define([
          * @returns {Object} Sanitized object
          * @private
          */
-        _sanitizeObject: function(obj) {
-            if (!obj || typeof obj !== 'object') return {};
+        _sanitizeObject(obj) {
+            if (!obj || typeof obj !== "object") {return {};}
             const sanitized = {};
-            Object.keys(obj).forEach(function(key) {
-                if (typeof obj[key] === 'string') {
+            Object.keys(obj).forEach((key) => {
+                if (typeof obj[key] === "string") {
                     sanitized[key] = this._securityUtils ? this._securityUtils.sanitizeInput(obj[key]) : obj[key];
                 } else if (Array.isArray(obj[key])) {
                     sanitized[key] = this._sanitizeArray(obj[key]);
-                } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                } else if (typeof obj[key] === "object" && obj[key] !== null) {
                     sanitized[key] = this._sanitizeObject(obj[key]);
                 } else {
                     sanitized[key] = obj[key];
                 }
-            }.bind(this));
+            });
             return sanitized;
         }
     });

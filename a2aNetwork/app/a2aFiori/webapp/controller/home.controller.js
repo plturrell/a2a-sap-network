@@ -6,7 +6,7 @@ sap.ui.define([
     "../model/formatter",
     "sap/base/Log",
     "sap/ui/model/json/JSONModel"
-], function(BaseController, History, MessageToast, MessageBox, formatter, Log, JSONModel) {
+], (BaseController, History, MessageToast, MessageBox, formatter, Log, JSONModel) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Home", {
@@ -39,17 +39,17 @@ sap.ui.define([
             this.getRouter().getRoute("home").attachPatternMatched(this._onRouteMatched, this);
 
             // Set refresh interval for dashboard (30 seconds)
-            this._iRefreshInterval = setInterval(function() {
+            this._iRefreshInterval = setInterval(() => {
                 this._refreshDashboard();
-            }.bind(this), 30000);
+            }, 30000);
 
             // Register for cleanup
-            this._registerForCleanup(function() {
+            this._registerForCleanup(() => {
                 if (this._iRefreshInterval) {
                     clearInterval(this._iRefreshInterval);
                     this._iRefreshInterval = null;
                 }
-            }.bind(this));
+            });
 
             Log.info("Home controller initialized");
         },

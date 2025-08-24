@@ -6,13 +6,13 @@ sap.ui.define([
     "sap/base/security/encodeXML",
     "sap/base/strings/escapeRegExp",
     "../utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, encodeXML, escapeRegExp, SecurityUtils) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, encodeXML, escapeRegExp, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent1.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
@@ -22,12 +22,12 @@ sap.ui.define([
                     sourceFields: [],
                     targetFields: []
                 };
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+                const oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize create model for dialog
                 this._initializeCreateModel();
             }
@@ -38,8 +38,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeCreateModel: function() {
-            var oCreateModel = new sap.ui.model.json.JSONModel({
+        _initializeCreateModel() {
+            const oCreateModel = new sap.ui.model.json.JSONModel({
                 taskName: "",
                 description: "",
                 sourceFormat: "",
@@ -61,12 +61,12 @@ sap.ui.define([
             this.base.getView().setModel(oCreateModel, "create");
         },
 
-        onStartStandardization: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
-            MessageBox.confirm("Start standardization for '" + sTaskName + "'?", {
+        onStartStandardization() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
+            MessageBox.confirm(`Start standardization for '${ sTaskName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._startStandardizationProcess(sTaskId);
@@ -75,42 +75,42 @@ sap.ui.define([
             });
         },
 
-        _startStandardizationProcess: function(sTaskId) {
+        _startStandardizationProcess(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._securityUtils.secureAjaxRequest({
-                url: "/a2a/agent1/v1/tasks/" + encodeURIComponent(sTaskId) + "/start",
+                url: `/a2a/agent1/v1/tasks/${ encodeURIComponent(sTaskId) }/start`,
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
                     MessageToast.show("Standardization process started");
                     this._extensionAPI.refresh();
-                    
+
                     // Start monitoring progress
                     this._startProgressMonitoring(sTaskId);
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Failed to start standardization: " + xhr.responseText);
+                    MessageBox.error(`Failed to start standardization: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        _startProgressMonitoring: function(sTaskId) {
+        _startProgressMonitoring(sTaskId) {
             // Poll for progress updates every 2 seconds
-            this._progressInterval = setInterval(function() {
+            this._progressInterval = setInterval(() => {
                 this._securityUtils.secureAjaxRequest({
-                    url: "/a2a/agent1/v1/tasks/" + sTaskId + "/progress",
+                    url: `/a2a/agent1/v1/tasks/${ sTaskId }/progress`,
                     type: "GET",
                     success: function(data) {
                         if (data.status === "COMPLETED" || data.status === "FAILED") {
                             clearInterval(this._progressInterval);
                             this._extensionAPI.refresh();
-                            
+
                             if (data.status === "COMPLETED") {
                                 MessageBox.success("Standardization completed successfully!");
                             } else {
-                                MessageBox.error("Standardization failed: " + data.error);
+                                MessageBox.error(`Standardization failed: ${ data.error}`);
                             }
                         }
                     }.bind(this),
@@ -118,13 +118,13 @@ sap.ui.define([
                         clearInterval(this._progressInterval);
                     }.bind(this)
                 });
-            }.bind(this), 2000);
+            }, 2000);
         },
 
-        onPauseStandardization: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
+        onPauseStandardization() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
             MessageBox.confirm("Pause standardization process?", {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
@@ -134,32 +134,32 @@ sap.ui.define([
             });
         },
 
-        _pauseStandardization: function(sTaskId) {
+        _pauseStandardization(sTaskId) {
             this._securityUtils.secureAjaxRequest({
-                url: "/a2a/agent1/v1/tasks/" + sTaskId + "/pause",
+                url: `/a2a/agent1/v1/tasks/${ sTaskId }/pause`,
                 type: "POST",
                 success: function() {
                     MessageToast.show("Standardization process paused");
                     clearInterval(this._progressInterval);
                     this._extensionAPI.refresh();
                 }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to pause standardization: " + xhr.responseText);
+                error(xhr) {
+                    MessageBox.error(`Failed to pause standardization: ${ xhr.responseText}`);
                 }
             });
         },
 
-        onValidateMapping: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var oData = oContext.getObject();
-            
+        onValidateMapping() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const oData = oContext.getObject();
+
             if (!oData.mappingRules || oData.mappingRules.length === 0) {
                 MessageBox.warning("No mapping rules defined. Please define mapping rules first.");
                 return;
             }
-            
+
             this._extensionAPI.getView().setBusy(true);
-            
+
             this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/validate-mapping",
                 type: "POST",
@@ -171,12 +171,12 @@ sap.ui.define([
                 }),
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
-                    
+
                     if (data.isValid) {
                         MessageBox.success(
                             "Schema mapping is valid!\n\n" +
-                            "Coverage: " + data.coverage + "%\n" +
-                            "Mapped fields: " + data.mappedFields + "/" + data.totalFields
+                            `Coverage: ${ data.coverage }%\n` +
+                            `Mapped fields: ${ data.mappedFields }/${ data.totalFields}`
                         );
                     } else {
                         this._showValidationErrors(data.errors);
@@ -184,61 +184,61 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Validation failed: " + xhr.responseText);
+                    MessageBox.error(`Validation failed: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        _showValidationErrors: function(aErrors) {
-            var oView = this.base.getView();
-            
+        _showValidationErrors(aErrors) {
+            const oView = this.base.getView();
+
             if (!this._oValidationErrorsDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent1.ext.fragment.ValidationErrors",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oValidationErrorsDialog = oDialog;
                     oView.addDependent(this._oValidationErrorsDialog);
-                    
-                    var oModel = new sap.ui.model.json.JSONModel({ errors: aErrors });
+
+                    const oModel = new sap.ui.model.json.JSONModel({ errors: aErrors });
                     this._oValidationErrorsDialog.setModel(oModel, "errors");
                     this._oValidationErrorsDialog.open();
-                }.bind(this));
+                });
             } else {
-                var oModel = new sap.ui.model.json.JSONModel({ errors: aErrors });
+                const oModel = new sap.ui.model.json.JSONModel({ errors: aErrors });
                 this._oValidationErrorsDialog.setModel(oModel, "errors");
                 this._oValidationErrorsDialog.open();
             }
         },
 
-        onExportResults: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
-            var oExportOptions = {
+        onExportResults() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
+            const oExportOptions = {
                 formats: ["CSV", "JSON", "PARQUET"],
                 includeErrors: true,
                 includeMetadata: true
             };
-            
+
             this._showExportDialog(sTaskId, sTaskName, oExportOptions);
         },
 
-        _showExportDialog: function(sTaskId, sTaskName, oOptions) {
-            var oView = this.base.getView();
-            
+        _showExportDialog(sTaskId, sTaskName, oOptions) {
+            const oView = this.base.getView();
+
             if (!this._oExportDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent1.ext.fragment.ExportResults",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oExportDialog = oDialog;
                     oView.addDependent(this._oExportDialog);
-                    
-                    var oModel = new sap.ui.model.json.JSONModel({
+
+                    const oModel = new sap.ui.model.json.JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         options: oOptions,
@@ -246,9 +246,9 @@ sap.ui.define([
                     });
                     this._oExportDialog.setModel(oModel, "export");
                     this._oExportDialog.open();
-                }.bind(this));
+                });
             } else {
-                var oModel = new sap.ui.model.json.JSONModel({
+                const oModel = new sap.ui.model.json.JSONModel({
                     taskId: sTaskId,
                     taskName: sTaskName,
                     options: oOptions,
@@ -259,14 +259,14 @@ sap.ui.define([
             }
         },
 
-        onExecuteExport: function() {
-            var oExportModel = this._oExportDialog.getModel("export");
-            var oExportData = oExportModel.getData();
-            
+        onExecuteExport() {
+            const oExportModel = this._oExportDialog.getModel("export");
+            const oExportData = oExportModel.getData();
+
             this._oExportDialog.setBusy(true);
-            
+
             this._securityUtils.secureAjaxRequest({
-                url: "/a2a/agent1/v1/tasks/" + oExportData.taskId + "/export",
+                url: `/a2a/agent1/v1/tasks/${ oExportData.taskId }/export`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -277,53 +277,53 @@ sap.ui.define([
                 success: function(data) {
                     this._oExportDialog.setBusy(false);
                     this._oExportDialog.close();
-                    
+
                     // Download the exported file
                     window.open(data.downloadUrl, "_blank");
                     MessageToast.show("Export completed successfully");
                 }.bind(this),
                 error: function(xhr) {
                     this._oExportDialog.setBusy(false);
-                    MessageBox.error("Export failed: " + xhr.responseText);
+                    MessageBox.error(`Export failed: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        onPreviewTransformation: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var oData = oContext.getObject();
-            
+        onPreviewTransformation() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const oData = oContext.getObject();
+
             if (!oData.mappingRules || oData.mappingRules.length === 0) {
                 MessageBox.warning("No mapping rules defined for preview.");
                 return;
             }
-            
+
             // Open preview dialog with sample data transformation
             this._showTransformationPreview(oData);
         },
 
-        _showTransformationPreview: function(oTaskData) {
-            var oView = this.base.getView();
-            
+        _showTransformationPreview(oTaskData) {
+            const oView = this.base.getView();
+
             if (!this._oPreviewDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent1.ext.fragment.TransformationPreview",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oPreviewDialog = oDialog;
                     oView.addDependent(this._oPreviewDialog);
-                    
+
                     this._loadPreviewData(oTaskData);
                     this._oPreviewDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._loadPreviewData(oTaskData);
                 this._oPreviewDialog.open();
             }
         },
 
-        _loadPreviewData: function(oTaskData) {
+        _loadPreviewData(oTaskData) {
             this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/preview-transformation",
                 type: "POST",
@@ -335,11 +335,11 @@ sap.ui.define([
                     sampleSize: 5
                 }),
                 success: function(data) {
-                    var oModel = new sap.ui.model.json.JSONModel(data);
+                    const oModel = new sap.ui.model.json.JSONModel(data);
                     this._oPreviewDialog.setModel(oModel, "preview");
                 }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to generate preview: " + xhr.responseText);
+                error(xhr) {
+                    MessageBox.error(`Failed to generate preview: ${ xhr.responseText}`);
                 }
             });
         },
@@ -350,8 +350,8 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onSearchSourceFields: function(oEvent) {
-            var sQuery = oEvent.getParameter("query");
+        onSearchSourceFields(oEvent) {
+            const sQuery = oEvent.getParameter("query");
             this._filterSchemaFields("sourceSchemaTree", sQuery, "sourceFields");
         },
 
@@ -361,8 +361,8 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onSearchTargetFields: function(oEvent) {
-            var sQuery = oEvent.getParameter("query");
+        onSearchTargetFields(oEvent) {
+            const sQuery = oEvent.getParameter("query");
             this._filterSchemaFields("targetSchemaTree", sQuery, "targetFields");
         },
 
@@ -374,15 +374,15 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _filterSchemaFields: function(sTreeId, sQuery, sFieldType) {
-            var oTree = sap.ui.getCore().byId(sTreeId);
-            if (!oTree) return;
+        _filterSchemaFields(sTreeId, sQuery, sFieldType) {
+            const oTree = sap.ui.getCore().byId(sTreeId);
+            if (!oTree) {return;}
 
-            var oBinding = oTree.getBinding("items");
-            var aFilters = [];
+            const oBinding = oTree.getBinding("items");
+            const aFilters = [];
 
             if (sQuery && sQuery.length > 0) {
-                var oFilter = new sap.ui.model.Filter([
+                const oFilter = new sap.ui.model.Filter([
                     new sap.ui.model.Filter("fieldName", sap.ui.model.FilterOperator.Contains, sQuery),
                     new sap.ui.model.Filter("dataType", sap.ui.model.FilterOperator.Contains, sQuery)
                 ], false);
@@ -400,26 +400,26 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        getDataTypeIcon: function(sDataType) {
+        getDataTypeIcon(sDataType) {
             switch (sDataType?.toLowerCase()) {
-                case "string":
-                case "text":
-                    return "sap-icon://text";
-                case "number":
-                case "integer":
-                case "decimal":
-                    return "sap-icon://number-sign";
-                case "date":
-                case "datetime":
-                    return "sap-icon://calendar";
-                case "boolean":
-                    return "sap-icon://accept";
-                case "array":
-                    return "sap-icon://list";
-                case "object":
-                    return "sap-icon://folder";
-                default:
-                    return "sap-icon://question-mark";
+            case "string":
+            case "text":
+                return "sap-icon://text";
+            case "number":
+            case "integer":
+            case "decimal":
+                return "sap-icon://number-sign";
+            case "date":
+            case "datetime":
+                return "sap-icon://calendar";
+            case "boolean":
+                return "sap-icon://accept";
+            case "array":
+                return "sap-icon://list";
+            case "object":
+                return "sap-icon://folder";
+            default:
+                return "sap-icon://question-mark";
             }
         },
 
@@ -429,15 +429,15 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onSourceFieldSelect: function(oEvent) {
-            var oSelectedItem = oEvent.getParameter("listItem");
-            var oContext = oSelectedItem.getBindingContext("mapping");
-            var sFieldName = oContext.getProperty("fieldName");
-            
+        onSourceFieldSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("listItem");
+            const oContext = oSelectedItem.getBindingContext("mapping");
+            const sFieldName = oContext.getProperty("fieldName");
+
             // Announce selection to screen readers
             sap.ui.getCore().announceForAccessibility(
-                "Selected source field: " + sFieldName + 
-                ", type: " + oContext.getProperty("dataType")
+                `Selected source field: ${ sFieldName
+                }, type: ${ oContext.getProperty("dataType")}`
             );
         },
 
@@ -447,15 +447,15 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTargetFieldSelect: function(oEvent) {
-            var oSelectedItem = oEvent.getParameter("listItem");
-            var oContext = oSelectedItem.getBindingContext("mapping");
-            var sFieldName = oContext.getProperty("fieldName");
-            
+        onTargetFieldSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("listItem");
+            const oContext = oSelectedItem.getBindingContext("mapping");
+            const sFieldName = oContext.getProperty("fieldName");
+
             // Announce selection to screen readers
             sap.ui.getCore().announceForAccessibility(
-                "Selected target field: " + sFieldName + 
-                ", type: " + oContext.getProperty("dataType")
+                `Selected target field: ${ sFieldName
+                }, type: ${ oContext.getProperty("dataType")}`
             );
         },
 
@@ -465,16 +465,16 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onMappingRulePress: function(oEvent) {
-            var oContext = oEvent.getParameter("listItem").getBindingContext("mapping");
-            var sSourceField = oContext.getProperty("sourceField");
-            var sTargetField = oContext.getProperty("targetField");
-            var sTransformation = oContext.getProperty("transformation");
-            
+        onMappingRulePress(oEvent) {
+            const oContext = oEvent.getParameter("listItem").getBindingContext("mapping");
+            const sSourceField = oContext.getProperty("sourceField");
+            const sTargetField = oContext.getProperty("targetField");
+            const sTransformation = oContext.getProperty("transformation");
+
             // Announce mapping details to screen readers
             sap.ui.getCore().announceForAccessibility(
-                "Mapping rule: " + sSourceField + " transforms to " + 
-                sTargetField + " using " + sTransformation + " method"
+                `Mapping rule: ${ sSourceField } transforms to ${
+                    sTargetField } using ${ sTransformation } method`
             );
         },
 
@@ -483,33 +483,33 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onValidateScript: function() {
-            var oScriptArea = sap.ui.getCore().byId("transformationScript");
-            if (!oScriptArea) return;
+        onValidateScript() {
+            const oScriptArea = sap.ui.getCore().byId("transformationScript");
+            if (!oScriptArea) {return;}
 
-            var sScript = oScriptArea.getValue();
-            
+            const sScript = oScriptArea.getValue();
+
             try {
                 // Validate script for security
-                var validation = this._securityUtils.validateTransformationScript(sScript);
+                const validation = this._securityUtils.validateTransformationScript(sScript);
                 if (!validation.isValid) {
                     throw new Error(validation.errors.join(", "));
                 }
-                
+
                 // Announce success to screen readers
                 sap.ui.getCore().announceForAccessibility("Script validation successful");
                 MessageToast.show("Script syntax is valid");
-                
+
                 oScriptArea.setValueState("Success");
                 oScriptArea.setValueStateText("Script syntax is valid");
-                
+
             } catch (oError) {
                 // Announce error to screen readers
-                sap.ui.getCore().announceForAccessibility("Script validation failed: " + oError.message);
-                MessageToast.show("Script syntax error: " + oError.message);
-                
+                sap.ui.getCore().announceForAccessibility(`Script validation failed: ${ oError.message}`);
+                MessageToast.show(`Script syntax error: ${ oError.message}`);
+
                 oScriptArea.setValueState("Error");
-                oScriptArea.setValueStateText("Syntax error: " + oError.message);
+                oScriptArea.setValueStateText(`Syntax error: ${ oError.message}`);
             }
         },
 
@@ -518,35 +518,35 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTestScript: function() {
-            var oScriptArea = sap.ui.getCore().byId("transformationScript");
-            if (!oScriptArea) return;
+        onTestScript() {
+            const oScriptArea = sap.ui.getCore().byId("transformationScript");
+            if (!oScriptArea) {return;}
 
-            var sScript = oScriptArea.getValue();
-            
+            const sScript = oScriptArea.getValue();
+
             // Validate script before execution
-            var validation = this._securityUtils.validateTransformationScript(sScript);
+            const validation = this._securityUtils.validateTransformationScript(sScript);
             if (!validation.isValid) {
-                MessageBox.error("Script validation failed: " + validation.errors.join(", "));
+                MessageBox.error(`Script validation failed: ${ validation.errors.join(", ")}`);
                 return;
             }
-            
+
             try {
                 // Use secure sandbox evaluation instead of Function constructor
-                var result = this._securityUtils.executeSecureTransformation(sScript, {
+                const result = this._securityUtils.executeSecureTransformation(sScript, {
                     value: "Sample Value",
                     row: { field1: "data1", field2: "data2" },
                     context: { sourceFormat: "CSV", targetFormat: "JSON" }
                 });
-                
+
                 // Announce test result to screen readers
-                sap.ui.getCore().announceForAccessibility("Script test completed successfully. Result: " + result);
-                MessageBox.information("Script test successful!\n\nInput: Sample Value\nOutput: " + result);
-                
+                sap.ui.getCore().announceForAccessibility(`Script test completed successfully. Result: ${ result}`);
+                MessageBox.information(`Script test successful!\n\nInput: Sample Value\nOutput: ${ result}`);
+
             } catch (oError) {
                 // Announce test error to screen readers
-                sap.ui.getCore().announceForAccessibility("Script test failed: " + oError.message);
-                MessageBox.error("Script test failed: " + oError.message);
+                sap.ui.getCore().announceForAccessibility(`Script test failed: ${ oError.message}`);
+                MessageBox.error(`Script test failed: ${ oError.message}`);
             }
         },
 
@@ -556,17 +556,17 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onScriptChange: function(oEvent) {
-            var oScriptArea = oEvent.getSource();
-            var sScript = oEvent.getParameter("value");
-            
+        onScriptChange(oEvent) {
+            const oScriptArea = oEvent.getSource();
+            const sScript = oEvent.getParameter("value");
+
             // Validate input parameter
-            if (!this._securityUtils.validateInputParameter(sScript, 'string')) {
+            if (!this._securityUtils.validateInputParameter(sScript, "string")) {
                 oScriptArea.setValueState("Error");
                 oScriptArea.setValueStateText("Invalid input");
                 return;
             }
-            
+
             // Reset validation state for live editing
             if (sScript.length === 0) {
                 oScriptArea.setValueState("None");
@@ -580,10 +580,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onSourceFormatChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.base.getView().getModel("create");
-            
+        onSourceFormatChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.base.getView().getModel("create");
+
             if (sSelectedKey) {
                 oCreateModel.setProperty("/sourceFormatState", "None");
                 oCreateModel.setProperty("/sourceFormatStateText", "");
@@ -591,7 +591,7 @@ sap.ui.define([
                 oCreateModel.setProperty("/sourceFormatState", "Error");
                 oCreateModel.setProperty("/sourceFormatStateText", "Please select a source format");
             }
-            
+
             this._validateForm();
         },
 
@@ -601,10 +601,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTargetFormatChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.base.getView().getModel("create");
-            
+        onTargetFormatChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.base.getView().getModel("create");
+
             if (sSelectedKey) {
                 oCreateModel.setProperty("/targetFormatState", "None");
                 oCreateModel.setProperty("/targetFormatStateText", "");
@@ -612,7 +612,7 @@ sap.ui.define([
                 oCreateModel.setProperty("/targetFormatState", "Error");
                 oCreateModel.setProperty("/targetFormatStateText", "Please select a target format");
             }
-            
+
             this._validateForm();
         },
 
@@ -622,10 +622,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.base.getView().getModel("create");
-            
+        onTaskNameChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oCreateModel = this.base.getView().getModel("create");
+
             if (!sValue || sValue.trim().length < 3) {
                 oCreateModel.setProperty("/taskNameState", "Error");
                 oCreateModel.setProperty("/taskNameStateText", "Task name must be at least 3 characters");
@@ -639,7 +639,7 @@ sap.ui.define([
                 oCreateModel.setProperty("/taskNameState", "Success");
                 oCreateModel.setProperty("/taskNameStateText", "Valid task name");
             }
-            
+
             this._validateForm();
         },
 
@@ -648,18 +648,18 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _validateForm: function() {
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            var bIsValid = oData.taskName && 
+        _validateForm() {
+            const oCreateModel = this.base.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
+            const bIsValid = oData.taskName &&
                           oData.taskName.trim().length >= 3 &&
                           oData.sourceFormat &&
                           oData.targetFormat &&
                           oData.taskNameState !== "Error" &&
                           oData.sourceFormatState !== "Error" &&
                           oData.targetFormatState !== "Error";
-            
+
             oCreateModel.setProperty("/isValid", bIsValid);
         },
 
@@ -668,7 +668,7 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onCancelCreate: function() {
+        onCancelCreate() {
             this._getCreateDialog().close();
             this._initializeCreateModel(); // Reset form
         },
@@ -678,17 +678,17 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onConfirmCreate: function() {
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
+        onConfirmCreate() {
+            const oCreateModel = this.base.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
             if (!oData.isValid) {
                 MessageBox.error("Please complete all required fields correctly.");
                 return;
             }
-            
+
             this.base.getView().setBusy(true);
-            
+
             this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/tasks",
                 type: "POST",
@@ -718,7 +718,7 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this.base.getView().setBusy(false);
-                    MessageBox.error("Failed to create task: " + xhr.responseText);
+                    MessageBox.error(`Failed to create task: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
@@ -729,7 +729,7 @@ sap.ui.define([
          * @returns {sap.m.Dialog} The create dialog
          * @since 1.0.0
          */
-        _getCreateDialog: function() {
+        _getCreateDialog() {
             if (!this._oCreateDialog) {
                 this._oCreateDialog = sap.ui.xmlfragment(
                     this.base.getView().getId(),
@@ -746,20 +746,20 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onUploadTemplate: function() {
-            var oFileUploader = new sap.ui.unified.FileUploader({
+        onUploadTemplate() {
+            const oFileUploader = new sap.ui.unified.FileUploader({
                 fileType: ["json"],
                 maximumFileSize: 5,
                 change: function(oEvent) {
-                    var oFile = oEvent.getParameter("files")[0];
+                    const oFile = oEvent.getParameter("files")[0];
                     if (oFile) {
                         this._processTemplateUpload(oFile);
                     }
                 }.bind(this)
             });
-            
+
             oFileUploader.placeAt("content", "only");
-            oFileUploader.$().find('input[type=file]').trigger('click');
+            oFileUploader.$().find("input[type=file]").trigger("click");
         },
 
         /**
@@ -768,17 +768,17 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _processTemplateUpload: function(oFile) {
-            var oReader = new FileReader();
+        _processTemplateUpload(oFile) {
+            const oReader = new FileReader();
             oReader.onload = function(e) {
                 try {
                     // Pre-validate content before parsing
-                    var rawContent = e.target.result;
+                    const rawContent = e.target.result;
                     if (!this._securityUtils.validateRawJSON(rawContent)) {
                         throw new Error("Invalid or potentially malicious JSON content detected");
                     }
-                    
-                    var oTemplate = JSON.parse(rawContent);
+
+                    let oTemplate = JSON.parse(rawContent);
                     // Validate and sanitize the schema
                     if (!this._securityUtils.validateSchema(oTemplate)) {
                         throw new Error("Invalid schema format");
@@ -787,7 +787,7 @@ sap.ui.define([
                     this._validateTemplateSchema(oTemplate);
                     MessageToast.show(this._resourceBundle.getText("msg.templateUploadSuccess"));
                 } catch (oError) {
-                    MessageBox.error("Invalid template file: " + oError.message);
+                    MessageBox.error(`Invalid template file: ${ oError.message}`);
                 }
             }.bind(this);
             oReader.readAsText(oFile);
@@ -799,7 +799,7 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _validateTemplateSchema: function(oTemplate) {
+        _validateTemplateSchema(oTemplate) {
             if (!oTemplate.schema || !oTemplate.name) {
                 throw new Error("Template must contain 'schema' and 'name' properties");
             }

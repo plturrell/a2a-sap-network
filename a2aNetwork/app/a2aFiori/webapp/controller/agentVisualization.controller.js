@@ -9,8 +9,8 @@ sap.ui.define([
     "sap/base/Log",
     "sap/viz/ui5/format/ChartFormatter",
     "sap/viz/ui5/api/env/Format"
-], function(BaseController, MessageToast, MessageBox, formatter, JSONModel, Filter,
-    FilterOperator, Log, ChartFormatter, Format) {
+], (BaseController, MessageToast, MessageBox, formatter, JSONModel, Filter,
+    FilterOperator, Log, ChartFormatter, Format) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.AgentVisualization", {
@@ -183,7 +183,7 @@ sap.ui.define([
                     this.hideLoading();
 
                     // Process agents data
-                    const aAgents = oData.results.map(function(oAgent) {
+                    const aAgents = oData.results.map((oAgent) => {
                         return {
                             id: oAgent.id,
                             name: oAgent.name,
@@ -200,10 +200,10 @@ sap.ui.define([
 
                     // Calculate summary statistics
                     const iTotal = aAgents.length;
-                    const iActive = aAgents.filter(function(a) {
+                    const iActive = aAgents.filter((a) => {
                         return a.status === "active";
                     }).length;
-                    const fAvgRep = aAgents.reduce(function(sum, a) {
+                    const fAvgRep = aAgents.reduce((sum, a) => {
                         return sum + a.reputation;
                     }, 0) / iTotal;
 
@@ -333,11 +333,11 @@ sap.ui.define([
 
             // Prepare data
             const oTypeCount = {};
-            aAgents.forEach(function(agent) {
+            aAgents.forEach((agent) => {
                 oTypeCount[agent.type] = (oTypeCount[agent.type] || 0) + 1;
             });
 
-            const aChartData = Object.keys(oTypeCount).map(function(type) {
+            const aChartData = Object.keys(oTypeCount).map((type) => {
                 return {
                     Type: type,
                     Count: oTypeCount[type]
@@ -402,11 +402,11 @@ sap.ui.define([
 
             // Get top 10 agents by reputation
             const aTopAgents = aAgents
-                .sort(function(a, b) {
+                .sort((a, b) => {
                     return b.reputation - a.reputation;
                 })
                 .slice(0, 10)
-                .map(function(agent) {
+                .map((agent) => {
                     return {
                         Name: agent.name,
                         Reputation: agent.reputation,
@@ -493,16 +493,16 @@ sap.ui.define([
             ];
 
             // Count agents in each range
-            aAgents.forEach(function(agent) {
+            aAgents.forEach((agent) => {
                 const rep = agent.reputation;
-                aRanges.forEach(function(range) {
+                aRanges.forEach((range) => {
                     if (rep >= range.min && rep <= range.max) {
                         range.count++;
                     }
                 });
             });
 
-            const aChartData = aRanges.map(function(range) {
+            const aChartData = aRanges.map((range) => {
                 return {
                     Range: range.range,
                     Count: range.count
@@ -570,8 +570,8 @@ sap.ui.define([
             const aDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
             const aHours = ["00", "04", "08", "12", "16", "20"];
 
-            aDays.forEach(function(day) {
-                aHours.forEach(function(hour) {
+            aDays.forEach((day) => {
+                aHours.forEach((hour) => {
                     aActivityData.push({
                         Day: day,
                         Hour: hour,

@@ -2,7 +2,7 @@ sap.ui.define([
     "sap/ui/base/Object",
     "sap/ui/base/EventProvider",
     "sap/base/Log"
-], function(BaseObject, EventProvider, Log) {
+], (BaseObject, EventProvider, Log) => {
     "use strict";
 
     /**
@@ -160,7 +160,7 @@ sap.ui.define([
             this._provider = {
                 isEnterprise: true,
                 request(params) {
-                    return new Promise(function(resolve, reject) {
+                    return new Promise((resolve, reject) => {
                         // Handle enterprise wallet operations
                         Log.info("Enterprise wallet request", params);
                         resolve(null);
@@ -179,7 +179,7 @@ sap.ui.define([
             }
 
             // Account changed
-            this._provider.on("accountsChanged", function(accounts) {
+            this._provider.on("accountsChanged", (accounts) => {
                 const sOldAccount = this._currentAccount;
                 this._currentAccount = accounts[0] || null;
 
@@ -194,10 +194,10 @@ sap.ui.define([
                     from: sOldAccount,
                     to: this._currentAccount
                 });
-            }.bind(this));
+            });
 
             // Network changed
-            this._provider.on("chainChanged", function(chainId) {
+            this._provider.on("chainChanged", (chainId) => {
                 const sOldNetwork = this._currentNetwork;
                 this._currentNetwork = parseInt(chainId, 16).toString();
 
@@ -212,16 +212,16 @@ sap.ui.define([
                     from: sOldNetwork,
                     to: this._currentNetwork
                 });
-            }.bind(this));
+            });
 
             // Disconnect
-            this._provider.on("disconnect", function() {
+            this._provider.on("disconnect", () => {
                 this._currentAccount = null;
                 this._currentNetwork = null;
                 this._updateConnectionState();
 
                 Log.info("Web3 provider disconnected");
-            }.bind(this));
+            });
         },
 
         /**
@@ -230,15 +230,15 @@ sap.ui.define([
          */
         _checkPreviousConnection() {
             if (this._provider && this._provider.selectedAddress) {
-                this._getCurrentAccount().then(function(sAccount) {
+                this._getCurrentAccount().then((sAccount) => {
                     if (sAccount) {
                         this._currentAccount = sAccount;
-                        this._getCurrentNetwork().then(function(sNetwork) {
+                        this._getCurrentNetwork().then((sNetwork) => {
                             this._currentNetwork = sNetwork;
                             this._updateConnectionState();
-                        }.bind(this));
+                        });
                     }
-                }.bind(this));
+                });
             }
         },
 
@@ -270,11 +270,11 @@ sap.ui.define([
             }
 
             return this._provider.request({ method: "eth_requestAccounts" })
-                .then(function(accounts) {
+                .then((accounts) => {
                     this._currentAccount = accounts[0];
                     return this._getCurrentNetwork();
-                }.bind(this))
-                .then(function(sNetwork) {
+                })
+                .then((sNetwork) => {
                     this._currentNetwork = sNetwork;
                     this._updateConnectionState();
 
@@ -287,8 +287,8 @@ sap.ui.define([
                         account: this._currentAccount,
                         network: this._currentNetwork
                     };
-                }.bind(this))
-                .catch(function(oError) {
+                })
+                .catch((oError) => {
                     Log.error("Web3 connection failed", oError);
                     throw oError;
                 });
@@ -317,7 +317,7 @@ sap.ui.define([
             }
 
             return this._web3.eth.getAccounts()
-                .then(function(accounts) {
+                .then((accounts) => {
                     return accounts[0] || null;
                 });
         },
@@ -333,7 +333,7 @@ sap.ui.define([
             }
 
             return this._web3.eth.net.getId()
-                .then(function(networkId) {
+                .then((networkId) => {
                     return networkId.toString();
                 });
         },
@@ -382,15 +382,15 @@ sap.ui.define([
             return this._web3.eth.sendTransaction({
                 from: this._currentAccount,
                 ...oTransaction
-            }).then(function(oReceipt) {
+            }).then((oReceipt) => {
                 // Log successful transaction
                 this._logTransactionSuccess(oReceipt, sCorrelationId);
                 return oReceipt;
-            }.bind(this)).catch(function(oError) {
+            }).catch((oError) => {
                 // Log failed transaction
                 this._logTransactionFailure(oError, sCorrelationId);
                 throw oError;
-            }.bind(this));
+            });
         },
 
         /**

@@ -3,7 +3,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "../model/formatter"
-], function(Controller, MessageToast, MessageBox, formatter) {
+], (Controller, MessageToast, MessageBox, formatter) => {
     "use strict";
 
     return Controller.extend("a2a.network.fiori.controller.Services", {

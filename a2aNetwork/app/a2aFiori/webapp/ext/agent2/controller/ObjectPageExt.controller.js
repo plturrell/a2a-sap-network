@@ -6,23 +6,23 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/base/security/encodeXML",
     "sap/base/strings/escapeRegExp"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent2.ext.controller.ObjectPageExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache for better performance
                 this._dialogCache = {};
-                
+
                 // Initialize create model
                 this._initializeCreateModel();
             }
@@ -33,8 +33,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeCreateModel: function() {
-            var oCreateModel = new JSONModel({
+        _initializeCreateModel() {
+            const oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
                 datasetName: "",
@@ -63,12 +63,12 @@ sap.ui.define([
             this.base.getView().setModel(oCreateModel, "create");
         },
 
-        onStartPreparation: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
-            MessageBox.confirm("Start AI data preparation for '" + sTaskName + "'?", {
+        onStartPreparation() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
+            MessageBox.confirm(`Start AI data preparation for '${ sTaskName }'?`, {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._startPreparationProcess(sTaskId);
@@ -77,36 +77,36 @@ sap.ui.define([
             });
         },
 
-        _startPreparationProcess: function(sTaskId) {
+        _startPreparationProcess(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
-            
+
             jQuery.ajax({
-                url: "/a2a/agent2/v1/tasks/" + sTaskId + "/prepare",
+                url: `/a2a/agent2/v1/tasks/${ sTaskId }/prepare`,
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
                     MessageToast.show("AI data preparation started");
                     this._extensionAPI.refresh();
-                    
+
                     // Start real-time monitoring
                     this._startRealtimeMonitoring(sTaskId);
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Failed to start preparation: " + xhr.responseText);
+                    MessageBox.error(`Failed to start preparation: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        _startRealtimeMonitoring: function(sTaskId) {
+        _startRealtimeMonitoring(sTaskId) {
             // Use EventSource for real-time updates
             // Create secure EventSource with authentication
-            var sToken = this._getAuthToken();
-            this._eventSource = this._createSecureEventSource("/a2a/agent2/v1/tasks/" + sTaskId + "/stream", sToken);
-            
+            const sToken = this._getAuthToken();
+            this._eventSource = this._createSecureEventSource(`/a2a/agent2/v1/tasks/${ sTaskId }/stream`, sToken);
+
             this._eventSource.onmessage = function(event) {
-                var data = JSON.parse(event.data);
-                
+                const data = JSON.parse(event.data);
+
                 // Update progress in UI
                 if (data.type === "progress") {
                     this._updateProgress(data);
@@ -116,29 +116,29 @@ sap.ui.define([
                     MessageBox.success("AI data preparation completed successfully!");
                 } else if (data.type === "error") {
                     this._eventSource.close();
-                    MessageBox.error("Preparation failed: " + data.error);
+                    MessageBox.error(`Preparation failed: ${ data.error}`);
                 }
             }.bind(this);
-            
+
             this._eventSource.onerror = function() {
                 this._eventSource.close();
                 MessageBox.error("Lost connection to preparation process");
             }.bind(this);
         },
 
-        _updateProgress: function(data) {
+        _updateProgress(data) {
             // Update progress indicators in the UI
-            MessageToast.show(data.stage + ": " + data.progress + "%");
+            MessageToast.show(`${data.stage }: ${ data.progress }%`);
         },
 
-        onAnalyzeFeatures: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
+        onAnalyzeFeatures() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
             this._extensionAPI.getView().setBusy(true);
-            
+
             jQuery.ajax({
-                url: "/a2a/agent2/v1/tasks/" + sTaskId + "/analyze-features",
+                url: `/a2a/agent2/v1/tasks/${ sTaskId }/analyze-features`,
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
@@ -146,90 +146,90 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Feature analysis failed: " + xhr.responseText);
+                    MessageBox.error(`Feature analysis failed: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        _showFeatureAnalysis: function(analysisData) {
-            var oView = this.base.getView();
-            
+        _showFeatureAnalysis(analysisData) {
+            const oView = this.base.getView();
+
             if (!this._oFeatureAnalysisDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent2.ext.fragment.FeatureAnalysis",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oFeatureAnalysisDialog = oDialog;
                     oView.addDependent(this._oFeatureAnalysisDialog);
-                    
-                    var oModel = new JSONModel(analysisData);
+
+                    const oModel = new JSONModel(analysisData);
                     this._oFeatureAnalysisDialog.setModel(oModel, "analysis");
                     this._oFeatureAnalysisDialog.open();
-                    
+
                     // Create visualizations
                     this._createFeatureVisualizations(analysisData);
-                }.bind(this));
+                });
             } else {
-                var oModel = new JSONModel(analysisData);
+                const oModel = new JSONModel(analysisData);
                 this._oFeatureAnalysisDialog.setModel(oModel, "analysis");
                 this._oFeatureAnalysisDialog.open();
                 this._createFeatureVisualizations(analysisData);
             }
         },
 
-        _createFeatureVisualizations: function(data) {
+        _createFeatureVisualizations(data) {
             // Create feature importance chart, correlation matrix, etc.
-            if (!data.features || !this._oFeatureAnalysisDialog) return;
-            
+            if (!data.features || !this._oFeatureAnalysisDialog) {return;}
+
             // Create feature importance chart
             this._createFeatureImportanceChart(data.features);
-            
+
             // Create correlation matrix visualization
             if (data.correlation_matrix) {
                 this._createCorrelationMatrix(data.correlation_matrix);
             }
-            
+
             // Create feature distribution charts
             this._createFeatureDistributionCharts(data.features);
         },
-        
-        _createFeatureImportanceChart: function(features) {
+
+        _createFeatureImportanceChart(features) {
             // Sort features by importance
-            var aSortedFeatures = features.slice().sort(function(a, b) {
+            const aSortedFeatures = features.slice().sort((a, b) => {
                 return (b.importance || 0) - (a.importance || 0);
             }).slice(0, 10); // Top 10 features
-            
+
             // Prepare chart data
-            var aChartData = aSortedFeatures.map(function(feature) {
+            const aChartData = aSortedFeatures.map((feature) => {
                 return {
                     Feature: feature.name,
                     Importance: (feature.importance || 0) * 100,
                     Type: feature.type || "Unknown"
                 };
             });
-            
+
             // Create chart model
-            var oChartModel = new sap.ui.model.json.JSONModel({
+            const oChartModel = new sap.ui.model.json.JSONModel({
                 importanceData: aChartData
             });
-            
+
             // Find or create chart container
-            var oDialog = this._oFeatureAnalysisDialog;
-            var oChartContainer = new sap.m.Panel({
+            const oDialog = this._oFeatureAnalysisDialog;
+            const oChartContainer = new sap.m.Panel({
                 headerText: "Feature Importance (Top 10)",
                 class: "sapUiMediumMargin"
             });
-            
+
             // Create horizontal bar chart using VizFrame
-            var oVizFrame = new sap.viz.ui5.controls.VizFrame({
+            const oVizFrame = new sap.viz.ui5.controls.VizFrame({
                 height: "400px",
                 width: "100%",
                 vizType: "horizontal_bar"
             });
-            
+
             oVizFrame.setModel(oChartModel);
-            
+
             // Configure chart properties
             oVizFrame.setVizProperties({
                 categoryAxis: {
@@ -245,9 +245,9 @@ sap.ui.define([
                     visible: false
                 }
             });
-            
+
             // Set data binding
-            var oDataset = new sap.viz.ui5.data.FlattenedDataset({
+            const oDataset = new sap.viz.ui5.data.FlattenedDataset({
                 dimensions: [{
                     name: "Feature",
                     value: "{Feature}"
@@ -261,158 +261,158 @@ sap.ui.define([
                 }
             });
             oVizFrame.setDataset(oDataset);
-            
+
             // Set feeds
-            var oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 uid: "valueAxis",
                 type: "Measure",
                 values: ["Importance"]
             });
-            var oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 uid: "categoryAxis",
                 type: "Dimension",
                 values: ["Feature"]
             });
-            
+
             oVizFrame.addFeed(oFeedValueAxis);
             oVizFrame.addFeed(oFeedCategoryAxis);
-            
+
             oChartContainer.addContent(oVizFrame);
-            
+
             // Add to dialog content
-            var oContent = oDialog.getContent()[0]; // Should be the container
+            const oContent = oDialog.getContent()[0]; // Should be the container
             if (oContent && oContent.addContent) {
                 oContent.addContent(oChartContainer);
             }
         },
-        
-        _createCorrelationMatrix: function(correlationMatrix) {
-            if (!correlationMatrix || !Array.isArray(correlationMatrix)) return;
-            
-            var oPanel = new sap.m.Panel({
+
+        _createCorrelationMatrix(correlationMatrix) {
+            if (!correlationMatrix || !Array.isArray(correlationMatrix)) {return;}
+
+            const oPanel = new sap.m.Panel({
                 headerText: "Feature Correlation Matrix",
                 class: "sapUiMediumMargin"
             });
-            
+
             // Create a simple grid representation of correlation matrix
-            var oGrid = new sap.ui.layout.Grid({
+            const oGrid = new sap.ui.layout.Grid({
                 defaultSpan: "XL2 L2 M3 S6"
             });
-            
-            correlationMatrix.forEach(function(row, i) {
-                if (i >= 6) return; // Limit for display
-                row.forEach(function(correlation, j) {
-                    if (j >= 6) return; // Limit for display
-                    
-                    var sState = "None";
-                    if (Math.abs(correlation) > 0.7) sState = "Success";
-                    else if (Math.abs(correlation) > 0.5) sState = "Warning";
-                    else if (Math.abs(correlation) > 0.3) sState = "Information";
-                    
-                    var oTile = new sap.m.GenericTile({
+
+            correlationMatrix.forEach((row, i) => {
+                if (i >= 6) {return;} // Limit for display
+                row.forEach((correlation, j) => {
+                    if (j >= 6) {return;} // Limit for display
+
+                    let sState = "None";
+                    if (Math.abs(correlation) > 0.7) {sState = "Success";}
+                    else if (Math.abs(correlation) > 0.5) {sState = "Warning";}
+                    else if (Math.abs(correlation) > 0.3) {sState = "Information";}
+
+                    const oTile = new sap.m.GenericTile({
                         class: "sapUiTinyMargin",
                         header: correlation.toFixed(2),
-                        subheader: "(" + i + "," + j + ")",
+                        subheader: `(${ i },${ j })`,
                         state: sState,
-                        press: function() {
-                            sap.m.MessageToast.show("Correlation: " + correlation.toFixed(3));
+                        press() {
+                            sap.m.MessageToast.show(`Correlation: ${ correlation.toFixed(3)}`);
                         }
                     });
-                    
+
                     oGrid.addContent(oTile);
                 });
             });
-            
+
             oPanel.addContent(oGrid);
-            
+
             // Add to dialog
-            var oDialog = this._oFeatureAnalysisDialog;
-            var oContent = oDialog.getContent()[0];
-            if (oContent && oContent.addContent) {
-                oContent.addContent(oPanel);
-            }
-        },
-        
-        _createFeatureDistributionCharts: function(features) {
-            var oPanel = new sap.m.Panel({
-                headerText: "Feature Distributions",
-                class: "sapUiMediumMargin"
-            });
-            
-            var oGrid = new sap.ui.layout.Grid({
-                defaultSpan: "XL4 L4 M6 S12"
-            });
-            
-            // Create distribution charts for numerical features
-            features.slice(0, 8).forEach(function(feature) {
-                if (feature.type !== "NUMERICAL" && feature.type !== "numerical") return;
-                
-                var oFeaturePanel = new sap.m.Panel({
-                    headerText: feature.name,
-                    class: "sapUiTinyMargin"
-                });
-                
-                // Create micro chart for distribution
-                var oMicroChart = new sap.suite.ui.microchart.AreaMicroChart({
-                    height: "100px",
-                    width: "100%"
-                });
-                
-                // Generate sample distribution data
-                var aPoints = [];
-                var mean = feature.mean_value || 0;
-                var stdDev = feature.std_dev || 1;
-                
-                for (var i = 0; i < 20; i++) {
-                    var x = (i - 10) / 2;
-                    var y = Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
-                    aPoints.push(new sap.suite.ui.microchart.AreaMicroChartPoint({
-                        x: i,
-                        y: y * 100
-                    }));
-                }
-                
-                aPoints.forEach(function(point) {
-                    oMicroChart.addPoint(point);
-                });
-                
-                // Add statistics text
-                var oStatsText = new sap.m.Text({
-                    text: "Mean: " + (feature.mean_value || 0).toFixed(2) + 
-                          ", Std: " + (feature.std_dev || 0).toFixed(2) +
-                          ", Missing: " + (feature.missing_percent || 0).toFixed(1) + "%"
-                });
-                
-                oFeaturePanel.addContent(oMicroChart);
-                oFeaturePanel.addContent(oStatsText);
-                oGrid.addContent(oFeaturePanel);
-            });
-            
-            oPanel.addContent(oGrid);
-            
-            // Add to dialog
-            var oDialog = this._oFeatureAnalysisDialog;
-            var oContent = oDialog.getContent()[0];
+            const oDialog = this._oFeatureAnalysisDialog;
+            const oContent = oDialog.getContent()[0];
             if (oContent && oContent.addContent) {
                 oContent.addContent(oPanel);
             }
         },
 
-        onGenerateEmbeddings: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sModelType = oContext.getProperty("modelType");
-            
+        _createFeatureDistributionCharts(features) {
+            const oPanel = new sap.m.Panel({
+                headerText: "Feature Distributions",
+                class: "sapUiMediumMargin"
+            });
+
+            const oGrid = new sap.ui.layout.Grid({
+                defaultSpan: "XL4 L4 M6 S12"
+            });
+
+            // Create distribution charts for numerical features
+            features.slice(0, 8).forEach((feature) => {
+                if (feature.type !== "NUMERICAL" && feature.type !== "numerical") {return;}
+
+                const oFeaturePanel = new sap.m.Panel({
+                    headerText: feature.name,
+                    class: "sapUiTinyMargin"
+                });
+
+                // Create micro chart for distribution
+                const oMicroChart = new sap.suite.ui.microchart.AreaMicroChart({
+                    height: "100px",
+                    width: "100%"
+                });
+
+                // Generate sample distribution data
+                const aPoints = [];
+                const mean = feature.mean_value || 0;
+                const stdDev = feature.std_dev || 1;
+
+                for (let i = 0; i < 20; i++) {
+                    const x = (i - 10) / 2;
+                    const y = Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
+                    aPoints.push(new sap.suite.ui.microchart.AreaMicroChartPoint({
+                        x: i,
+                        y: y * 100
+                    }));
+                }
+
+                aPoints.forEach((point) => {
+                    oMicroChart.addPoint(point);
+                });
+
+                // Add statistics text
+                const oStatsText = new sap.m.Text({
+                    text: `Mean: ${ (feature.mean_value || 0).toFixed(2)
+                    }, Std: ${ (feature.std_dev || 0).toFixed(2)
+                    }, Missing: ${ (feature.missing_percent || 0).toFixed(1) }%`
+                });
+
+                oFeaturePanel.addContent(oMicroChart);
+                oFeaturePanel.addContent(oStatsText);
+                oGrid.addContent(oFeaturePanel);
+            });
+
+            oPanel.addContent(oGrid);
+
+            // Add to dialog
+            const oDialog = this._oFeatureAnalysisDialog;
+            const oContent = oDialog.getContent()[0];
+            if (oContent && oContent.addContent) {
+                oContent.addContent(oPanel);
+            }
+        },
+
+        onGenerateEmbeddings() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sModelType = oContext.getProperty("modelType");
+
             if (!this._oEmbeddingDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent2.ext.fragment.EmbeddingConfiguration",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oEmbeddingDialog = oDialog;
                     this.base.getView().addDependent(this._oEmbeddingDialog);
-                    
-                    var oModel = new JSONModel({
+
+                    const oModel = new JSONModel({
                         taskId: sTaskId,
                         embeddingModel: sModelType === "LLM" ? "text-embedding-ada-002" : "custom",
                         dimensions: 768,
@@ -422,20 +422,20 @@ sap.ui.define([
                     });
                     this._oEmbeddingDialog.setModel(oModel, "embedding");
                     this._oEmbeddingDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oEmbeddingDialog.open();
             }
         },
 
-        onConfirmGenerateEmbeddings: function() {
-            var oModel = this._oEmbeddingDialog.getModel("embedding");
-            var oData = oModel.getData();
-            
+        onConfirmGenerateEmbeddings() {
+            const oModel = this._oEmbeddingDialog.getModel("embedding");
+            const oData = oModel.getData();
+
             this._oEmbeddingDialog.setBusy(true);
-            
+
             jQuery.ajax({
-                url: "/a2a/agent2/v1/tasks/" + oData.taskId + "/generate-embeddings",
+                url: `/a2a/agent2/v1/tasks/${ oData.taskId }/generate-embeddings`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -448,38 +448,38 @@ sap.ui.define([
                 success: function(data) {
                     this._oEmbeddingDialog.setBusy(false);
                     this._oEmbeddingDialog.close();
-                    
+
                     MessageBox.success(
                         "Embeddings generated successfully!\n" +
-                        "Vectors: " + data.vectorCount + "\n" +
-                        "Dimensions: " + data.dimensions + "\n" +
-                        "Processing time: " + data.processingTime + "s"
+                        `Vectors: ${ data.vectorCount }\n` +
+                        `Dimensions: ${ data.dimensions }\n` +
+                        `Processing time: ${ data.processingTime }s`
                     );
-                    
+
                     this._extensionAPI.refresh();
                 }.bind(this),
                 error: function(xhr) {
                     this._oEmbeddingDialog.setBusy(false);
-                    MessageBox.error("Failed to generate embeddings: " + xhr.responseText);
+                    MessageBox.error(`Failed to generate embeddings: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        onExportPreparedData: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
+        onExportPreparedData() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+            const sTaskName = oContext.getProperty("taskName");
+
             if (!this._oExportDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent2.ext.fragment.ExportPreparedData",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oExportDialog = oDialog;
                     this.base.getView().addDependent(this._oExportDialog);
-                    
-                    var oModel = new JSONModel({
+
+                    const oModel = new JSONModel({
                         taskId: sTaskId,
                         taskName: sTaskName,
                         format: "TENSORFLOW",
@@ -489,20 +489,20 @@ sap.ui.define([
                     });
                     this._oExportDialog.setModel(oModel, "export");
                     this._oExportDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oExportDialog.open();
             }
         },
 
-        onExecuteExport: function() {
-            var oModel = this._oExportDialog.getModel("export");
-            var oData = oModel.getData();
-            
+        onExecuteExport() {
+            const oModel = this._oExportDialog.getModel("export");
+            const oData = oModel.getData();
+
             this._oExportDialog.setBusy(true);
-            
+
             jQuery.ajax({
-                url: "/a2a/agent2/v1/tasks/" + oData.taskId + "/export",
+                url: `/a2a/agent2/v1/tasks/${ oData.taskId }/export`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -514,28 +514,28 @@ sap.ui.define([
                 success: function(data) {
                     this._oExportDialog.setBusy(false);
                     this._oExportDialog.close();
-                    
+
                     // Provide download links
                     this._showDownloadLinks(data.files);
                 }.bind(this),
                 error: function(xhr) {
                     this._oExportDialog.setBusy(false);
-                    MessageBox.error("Export failed: " + xhr.responseText);
+                    MessageBox.error(`Export failed: ${ xhr.responseText}`);
                 }.bind(this)
             });
         },
 
-        _showDownloadLinks: function(files) {
-            var sMessage = "Export completed! Download files:\n\n";
-            files.forEach(function(file) {
-                sMessage += file.name + " (" + file.size + ")\n";
+        _showDownloadLinks(files) {
+            let sMessage = "Export completed! Download files:\n\n";
+            files.forEach((file) => {
+                sMessage += `${file.name } (${ file.size })\n`;
             });
-            
+
             MessageBox.information(sMessage, {
                 actions: ["Download All", MessageBox.Action.CLOSE],
-                onClose: function(oAction) {
+                onClose(oAction) {
                     if (oAction === "Download All") {
-                        files.forEach(function(file) {
+                        files.forEach((file) => {
                             window.open(file.url, "_blank");
                         });
                     }
@@ -543,10 +543,10 @@ sap.ui.define([
             });
         },
 
-        onOptimizeHyperparameters: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            
+        onOptimizeHyperparameters() {
+            const oContext = this._extensionAPI.getBindingContext();
+            const sTaskId = oContext.getProperty("ID");
+
             MessageBox.confirm(
                 "Start hyperparameter optimization? This may take several hours.",
                 {
@@ -559,9 +559,9 @@ sap.ui.define([
             );
         },
 
-        _startHyperparameterOptimization: function(sTaskId) {
+        _startHyperparameterOptimization(sTaskId) {
             jQuery.ajax({
-                url: "/a2a/agent2/v1/tasks/" + sTaskId + "/optimize",
+                url: `/a2a/agent2/v1/tasks/${ sTaskId }/optimize`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
@@ -573,13 +573,13 @@ sap.ui.define([
                 success: function(data) {
                     MessageBox.success(
                         "Optimization started!\n" +
-                        "Job ID: " + data.jobId + "\n" +
+                        `Job ID: ${ data.jobId }\n` +
                         "You will be notified when complete."
                     );
                 }.bind(this),
                 error: function(xhr) {
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Failed to start optimization: " + errorMsg);
+                    const errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error(`Failed to start optimization: ${ errorMsg}`);
                 }.bind(this)
             });
         },
@@ -588,9 +588,9 @@ sap.ui.define([
          * Get authentication token for secure API calls
          * @returns {string} Authentication token
          */
-        _getAuthToken: function() {
+        _getAuthToken() {
             // Implementation to get auth token from session or user context
-            var sUserId = sap.ushell?.Container?.getUser?.()?.getId?.();
+            const sUserId = sap.ushell?.Container?.getUser?.()?.getId?.();
             return sUserId || this._generateSessionToken();
         },
 
@@ -598,8 +598,8 @@ sap.ui.define([
          * Generate a session-based token
          * @returns {string} Session token
          */
-        _generateSessionToken: function() {
-            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        _generateSessionToken() {
+            return `session_${ Date.now() }_${ Math.random().toString(36).substr(2, 9)}`;
         },
 
         /**
@@ -608,15 +608,15 @@ sap.ui.define([
          * @param {string} sType - Type of validation
          * @returns {object} Validation result
          */
-        _validateInput: function(sInput, sType) {
-            if (!sInput || typeof sInput !== 'string') {
+        _validateInput(sInput, sType) {
+            if (!sInput || typeof sInput !== "string") {
                 return { isValid: false, message: "Input is required" };
             }
 
-            var sSanitized = sInput.trim();
-            
+            const sSanitized = sInput.trim();
+
             // Check for XSS patterns
-            var aXSSPatterns = [
+            const aXSSPatterns = [
                 /<script/i,
                 /javascript:/i,
                 /on\w+\s*=/i,
@@ -627,7 +627,7 @@ sap.ui.define([
                 /Function\s*\(/i
             ];
 
-            for (var i = 0; i < aXSSPatterns.length; i++) {
+            for (let i = 0; i < aXSSPatterns.length; i++) {
                 if (aXSSPatterns[i].test(sSanitized)) {
                     return { isValid: false, message: "Invalid characters detected" };
                 }
@@ -635,23 +635,23 @@ sap.ui.define([
 
             // Type-specific validation
             switch (sType) {
-                case "modelConfig":
-                    if (sSanitized.length > 5000) {
-                        return { isValid: false, message: "Configuration too large" };
-                    }
-                    break;
-                
-                case "featureName":
-                    if (!/^[a-zA-Z0-9_\-\.]+$/.test(sSanitized)) {
-                        return { isValid: false, message: "Invalid feature name format" };
-                    }
-                    break;
-                
-                default:
-                    if (sSanitized.length > 10000) {
-                        return { isValid: false, message: "Input too long" };
-                    }
-                    break;
+            case "modelConfig":
+                if (sSanitized.length > 5000) {
+                    return { isValid: false, message: "Configuration too large" };
+                }
+                break;
+
+            case "featureName":
+                if (!/^[a-zA-Z0-9_\-\.]+$/.test(sSanitized)) {
+                    return { isValid: false, message: "Invalid feature name format" };
+                }
+                break;
+
+            default:
+                if (sSanitized.length > 10000) {
+                    return { isValid: false, message: "Input too long" };
+                }
+                break;
             }
 
             return { isValid: true, sanitized: encodeXML(sSanitized) };
@@ -662,17 +662,17 @@ sap.ui.define([
          * @param {string} sMessage - Error message
          * @returns {string} Sanitized message
          */
-        _sanitizeErrorMessage: function(sMessage) {
+        _sanitizeErrorMessage(sMessage) {
             if (!sMessage) {
                 return "An error occurred";
             }
 
             // Remove sensitive information
-            var sSanitized = sMessage
-                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
-                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
-                .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')
-                .replace(/https?:\/\/[^\s]+/g, '[URL]');
+            const sSanitized = sMessage
+                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, "[REDACTED]")
+                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, "[IP_ADDRESS]")
+                .replace(/file:\/\/[^\s]+/g, "[FILE_PATH]")
+                .replace(/https?:\/\/[^\s]+/g, "[URL]");
 
             return encodeXML(sSanitized);
         },
@@ -683,15 +683,15 @@ sap.ui.define([
          * @param {string} sToken - Authentication token
          * @returns {EventSource} Secure EventSource
          */
-        _createSecureEventSource: function(sUrl, sToken) {
+        _createSecureEventSource(sUrl, sToken) {
             if (!sUrl || !sToken) {
                 throw new Error("URL and token required for secure EventSource");
             }
 
             // Validate URL
             try {
-                var oUrl = new URL(sUrl, window.location.origin);
-                if (!['http:', 'https:'].includes(oUrl.protocol)) {
+                const oUrl = new URL(sUrl, window.location.origin);
+                if (!["http:", "https:"].includes(oUrl.protocol)) {
                     throw new Error("Invalid protocol for EventSource");
                 }
             } catch (e) {
@@ -699,9 +699,9 @@ sap.ui.define([
             }
 
             // Add authentication to URL
-            var sAuthParam = 'auth_token';
-            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + sAuthParam + '=' + encodeURIComponent(sToken);
-            
+            const sAuthParam = "auth_token";
+            const sSecureUrl = `${sUrl + (sUrl.includes("?") ? "&" : "?") + sAuthParam }=${ encodeURIComponent(sToken)}`;
+
             return new EventSource(sSecureUrl);
         },
 
@@ -710,7 +710,7 @@ sap.ui.define([
          * @param {string} sText - Text to format
          * @returns {string} Encoded text
          */
-        formatSecureText: function(sText) {
+        formatSecureText(sText) {
             if (!sText) {
                 return "";
             }
@@ -723,10 +723,10 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.base.getView().getModel("create");
-            
+        onTaskNameChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oCreateModel = this.base.getView().getModel("create");
+
             if (!sValue || sValue.trim().length < 3) {
                 oCreateModel.setProperty("/taskNameState", "Error");
                 oCreateModel.setProperty("/taskNameStateText", "Task name must be at least 3 characters");
@@ -740,7 +740,7 @@ sap.ui.define([
                 oCreateModel.setProperty("/taskNameState", "Success");
                 oCreateModel.setProperty("/taskNameStateText", "Valid task name");
             }
-            
+
             this._validateForm();
         },
 
@@ -750,21 +750,21 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onModelTypeChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.base.getView().getModel("create");
-            
+        onModelTypeChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.base.getView().getModel("create");
+
             if (sSelectedKey) {
                 oCreateModel.setProperty("/modelTypeState", "None");
                 oCreateModel.setProperty("/modelTypeStateText", "");
-                
+
                 // Auto-suggest optimization metric based on model type
                 this._suggestOptimizationMetric(sSelectedKey, oCreateModel);
             } else {
                 oCreateModel.setProperty("/modelTypeState", "Error");
                 oCreateModel.setProperty("/modelTypeStateText", "Please select a model type");
             }
-            
+
             this._validateForm();
         },
 
@@ -774,21 +774,21 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onDataTypeChange: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.base.getView().getModel("create");
-            
+        onDataTypeChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            const oCreateModel = this.base.getView().getModel("create");
+
             if (sSelectedKey) {
                 oCreateModel.setProperty("/dataTypeState", "None");
                 oCreateModel.setProperty("/dataTypeStateText", "");
-                
+
                 // Auto-suggest framework based on data type
                 this._suggestFramework(sSelectedKey, oCreateModel);
             } else {
                 oCreateModel.setProperty("/dataTypeState", "Error");
                 oCreateModel.setProperty("/dataTypeStateText", "Please select a data type");
             }
-            
+
             this._validateForm();
         },
 
@@ -799,8 +799,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _suggestOptimizationMetric: function(sModelType, oModel) {
-            var mMetricSuggestions = {
+        _suggestOptimizationMetric(sModelType, oModel) {
+            const mMetricSuggestions = {
                 "CLASSIFICATION": "F1",
                 "REGRESSION": "MAE",
                 "CLUSTERING": "SILHOUETTE",
@@ -810,8 +810,8 @@ sap.ui.define([
                 "RECOMMENDATION": "AUC",
                 "ANOMALY": "AUC"
             };
-            
-            var sSuggestedMetric = mMetricSuggestions[sModelType] || "AUTO";
+
+            const sSuggestedMetric = mMetricSuggestions[sModelType] || "AUTO";
             oModel.setProperty("/optimizationMetric", sSuggestedMetric);
         },
 
@@ -822,8 +822,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _suggestFramework: function(sDataType, oModel) {
-            var mFrameworkSuggestions = {
+        _suggestFramework(sDataType, oModel) {
+            const mFrameworkSuggestions = {
                 "TABULAR": "SCIKIT_LEARN",
                 "TEXT": "HUGGINGFACE",
                 "IMAGE": "PYTORCH",
@@ -832,8 +832,8 @@ sap.ui.define([
                 "TIME_SERIES": "TENSORFLOW",
                 "GRAPH": "PYTORCH"
             };
-            
-            var sSuggestedFramework = mFrameworkSuggestions[sDataType] || "AUTO";
+
+            const sSuggestedFramework = mFrameworkSuggestions[sDataType] || "AUTO";
             oModel.setProperty("/framework", sSuggestedFramework);
         },
 
@@ -842,7 +842,7 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onSelectDataset: function() {
+        onSelectDataset() {
             MessageToast.show("Opening dataset browser...");
             // Implementation for dataset selection dialog
             this._openDatasetBrowser();
@@ -853,18 +853,18 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _openDatasetBrowser: function() {
+        _openDatasetBrowser() {
             if (!this._oDatasetDialog) {
                 Fragment.load({
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent2.ext.fragment.DatasetBrowser",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oDatasetDialog = oDialog;
                     this.base.getView().addDependent(this._oDatasetDialog);
                     this._loadAvailableDatasets();
                     this._oDatasetDialog.open();
-                }.bind(this)).catch(function() {
+                }).catch(() => {
                     // Fallback if fragment doesn't exist
                     MessageBox.information("Dataset browser not yet implemented. Please enter dataset name manually.");
                 });
@@ -878,7 +878,7 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _loadAvailableDatasets: function() {
+        _loadAvailableDatasets() {
             // Implementation for loading datasets
             MessageToast.show("Loading available datasets...");
         },
@@ -888,13 +888,13 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onDialogAfterOpen: function() {
+        onDialogAfterOpen() {
             // Focus on first input field for accessibility
-            var oDialog = this.base.getView().byId("createAITaskDialog");
+            const oDialog = this.base.getView().byId("createAITaskDialog");
             if (oDialog) {
-                var oFirstInput = oDialog.byId("aiTaskNameInput");
+                const oFirstInput = oDialog.byId("aiTaskNameInput");
                 if (oFirstInput) {
-                    setTimeout(function() {
+                    setTimeout(() => {
                         oFirstInput.focus();
                     }, 100);
                 }
@@ -906,7 +906,7 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onDialogAfterClose: function() {
+        onDialogAfterClose() {
             // Reset form when dialog closes
             this._initializeCreateModel();
         },
@@ -916,11 +916,11 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _validateForm: function() {
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            var bIsValid = oData.taskName && 
+        _validateForm() {
+            const oCreateModel = this.base.getView().getModel("create");
+            const oData = oCreateModel.getData();
+
+            const bIsValid = oData.taskName &&
                           oData.taskName.trim().length >= 3 &&
                           oData.datasetName &&
                           oData.modelType &&
@@ -929,7 +929,7 @@ sap.ui.define([
                           oData.datasetNameState !== "Error" &&
                           oData.modelTypeState !== "Error" &&
                           oData.dataTypeState !== "Error";
-            
+
             oCreateModel.setProperty("/isValid", bIsValid);
         },
 
@@ -938,7 +938,7 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        onCancelCreate: function() {
+        onCancelCreate() {
             this._getCreateDialog().close();
         },
 
@@ -948,7 +948,7 @@ sap.ui.define([
          * @returns {sap.m.Dialog} The create dialog
          * @since 1.0.0
          */
-        _getCreateDialog: function() {
+        _getCreateDialog() {
             return this.base.getView().byId("createAITaskDialog");
         }
     });

@@ -3,14 +3,14 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel"
-], function(Controller, MessageBox, MessageToast, JSONModel) {
+], (Controller, MessageBox, MessageToast, JSONModel) => {
     "use strict";
 
     return Controller.extend("a2a.network.fiori.ext.agent0.DataProductCreationWizard", {
-        
-        onInit: function() {
+
+        onInit() {
             // Initialize wizard model
-            var oWizardModel = new JSONModel({
+            const oWizardModel = new JSONModel({
                 dataProduct: {
                     name: "",
                     description: "",
@@ -40,28 +40,28 @@ sap.ui.define([
             this.getView().setModel(oWizardModel, "wizard");
         },
 
-        onFileChange: function(oEvent) {
-            var aFiles = oEvent.getParameter("files");
+        onFileChange(oEvent) {
+            const aFiles = oEvent.getParameter("files");
             if (aFiles && aFiles.length > 0) {
-                var oFile = aFiles[0];
-                var oWizardModel = this.getView().getModel("wizard");
-                
+                const oFile = aFiles[0];
+                const oWizardModel = this.getView().getModel("wizard");
+
                 // Update model with file info
                 oWizardModel.setProperty("/dataProduct/file", oFile);
                 oWizardModel.setProperty("/dataProduct/format", this._detectFormat(oFile.name));
                 oWizardModel.setProperty("/dataProduct/metadata/dcFormat", oFile.type);
-                
+
                 // Auto-populate some metadata
                 oWizardModel.setProperty("/dataProduct/metadata/dcTitle", oFile.name);
                 oWizardModel.setProperty("/dataProduct/metadata/dcDate", new Date());
-                
-                MessageToast.show("File uploaded: " + oFile.name);
+
+                MessageToast.show(`File uploaded: ${ oFile.name}`);
             }
         },
 
-        _detectFormat: function(sFileName) {
-            var sExtension = sFileName.split('.').pop().toLowerCase();
-            var formatMap = {
+        _detectFormat(sFileName) {
+            const sExtension = sFileName.split(".").pop().toLowerCase();
+            const formatMap = {
                 "csv": "CSV",
                 "json": "JSON",
                 "xml": "XML",
@@ -73,10 +73,10 @@ sap.ui.define([
             return formatMap[sExtension] || "UNKNOWN";
         },
 
-        onValidateStep1: function() {
-            var oWizardModel = this.getView().getModel("wizard");
-            var oData = oWizardModel.getProperty("/dataProduct");
-            
+        onValidateStep1() {
+            const oWizardModel = this.getView().getModel("wizard");
+            const oData = oWizardModel.getProperty("/dataProduct");
+
             if (!oData.name || !oData.description || !oData.file) {
                 MessageBox.error("Please fill all required fields and upload a file");
                 return false;
@@ -84,10 +84,10 @@ sap.ui.define([
             return true;
         },
 
-        onValidateMetadata: function() {
-            var oWizardModel = this.getView().getModel("wizard");
-            var oMetadata = oWizardModel.getProperty("/dataProduct/metadata");
-            
+        onValidateMetadata() {
+            const oWizardModel = this.getView().getModel("wizard");
+            const oMetadata = oWizardModel.getProperty("/dataProduct/metadata");
+
             // Validate required Dublin Core fields
             if (!oMetadata.dcTitle || !oMetadata.dcCreator || !oMetadata.dcType) {
                 MessageBox.error("Please fill all required metadata fields");
@@ -96,26 +96,26 @@ sap.ui.define([
             return true;
         },
 
-        onAddTransformationRule: function() {
-            var oWizardModel = this.getView().getModel("wizard");
-            var aRules = oWizardModel.getProperty("/dataProduct/transformationRules");
-            
+        onAddTransformationRule() {
+            const oWizardModel = this.getView().getModel("wizard");
+            const aRules = oWizardModel.getProperty("/dataProduct/transformationRules");
+
             aRules.push({
                 type: "",
                 field: "",
                 operation: "",
                 parameters: {}
             });
-            
+
             oWizardModel.setProperty("/dataProduct/transformationRules", aRules);
         },
 
-        onWizardComplete: function() {
-            var oWizardModel = this.getView().getModel("wizard");
-            var oDataProduct = oWizardModel.getProperty("/dataProduct");
-            
+        onWizardComplete() {
+            const oWizardModel = this.getView().getModel("wizard");
+            const oDataProduct = oWizardModel.getProperty("/dataProduct");
+
             // Prepare FormData for file upload
-            var oFormData = new FormData();
+            const oFormData = new FormData();
             oFormData.append("file", oDataProduct.file);
             oFormData.append("metadata", JSON.stringify({
                 name: oDataProduct.name,
@@ -125,7 +125,7 @@ sap.ui.define([
                 transformationRules: oDataProduct.transformationRules,
                 qualityThreshold: oDataProduct.qualityThreshold
             }));
-            
+
             // Call Agent 0 API
             jQuery.ajax({
                 url: "/a2a/agent0/v1/data-products",
@@ -141,13 +141,13 @@ sap.ui.define([
                         }.bind(this)
                     });
                 }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to create Data Product: " + xhr.responseText);
+                error(xhr) {
+                    MessageBox.error(`Failed to create Data Product: ${ xhr.responseText}`);
                 }
             });
         },
 
-        onWizardCancel: function() {
+        onWizardCancel() {
             MessageBox.confirm("Are you sure you want to cancel?", {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
@@ -158,13 +158,13 @@ sap.ui.define([
             });
         },
 
-        _resetWizard: function() {
-            var oWizard = this.byId("dataProductWizard");
-            var oWizardModel = this.getView().getModel("wizard");
-            
+        _resetWizard() {
+            const oWizard = this.byId("dataProductWizard");
+            const oWizardModel = this.getView().getModel("wizard");
+
             // Reset wizard to first step
             oWizard.discardProgress(oWizard.getSteps()[0]);
-            
+
             // Reset model
             oWizardModel.setProperty("/dataProduct", {
                 name: "",

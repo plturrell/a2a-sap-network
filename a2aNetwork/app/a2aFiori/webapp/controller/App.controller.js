@@ -9,8 +9,8 @@ sap.ui.define([
     "sap/base/Log",
     "../mixin/PersonalizationMixin",
     "../mixin/OfflineMixin"
-], function(BaseController, MessageToast, ResponsivePopover, Button, List, StandardListItem,
-    NotificationListItem, Log, PersonalizationMixin, OfflineMixin) {
+], (BaseController, MessageToast, ResponsivePopover, Button, List, StandardListItem,
+    NotificationListItem, Log, PersonalizationMixin, OfflineMixin) => {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.App", {
@@ -34,7 +34,7 @@ sap.ui.define([
             }
 
             // Register for cleanup
-            this._registerForCleanup(function() {
+            this._registerForCleanup(() => {
                 if (this._oNotificationPopover) {
                     this._oNotificationPopover.destroy();
                     this._oNotificationPopover = null;
@@ -47,7 +47,7 @@ sap.ui.define([
                 // Cleanup mixins
                 this.cleanupPersonalization();
                 this.cleanupOfflineCapabilities();
-            }.bind(this));
+            });
 
             Log.info("App controller initialized with personalization and offline capabilities");
         },

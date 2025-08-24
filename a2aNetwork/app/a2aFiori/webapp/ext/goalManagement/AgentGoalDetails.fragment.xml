@@ -1,0 +1,293 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:viz="sap.viz">
+    
+    <Dialog title="Agent Goal Details - {agentDetail>/agentName}" 
+            contentWidth="800px" 
+            contentHeight="600px"
+            draggable="true" 
+            resizable="true">
+        <content>
+            <IconTabBar expanded="true" class="sapUiResponsiveContentPadding">
+                
+                <!-- Overview Tab -->
+                <IconTabFilter text="Overview" icon="sap-icon://overview-chart">
+                    <VBox class="sapUiMediumMargin">
+                        <layout:Grid defaultSpan="XL6 L6 M12 S12">
+                            <f:Card>
+                                <f:header>
+                                    <f:Header title="Current Progress"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiMediumMargin" alignItems="Center">
+                                        <ProgressIndicator percentValue="{agentDetail>/overallProgress}" 
+                                                         displayValue="{agentDetail>/overallProgress}%"
+                                                         width="200px"
+                                                         state="Success"/>
+                                        <Text text="Overall Goal Progress" class="sapUiMediumMarginTop"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                            
+                            <f:Card>
+                                <f:header>
+                                    <f:Header title="Goal Status"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiMediumMargin">
+                                        <ObjectStatus text="{agentDetail>/status}" 
+                                                    state="{parts: ['agentDetail>/status'], formatter: '.formatStatusState'}"/>
+                                        <Text text="Priority: {agentDetail>/priority}" class="sapUiMediumMarginTop"/>
+                                        <Text text="Type: {agentDetail>/goalType}" class="sapUiTinyMarginTop"/>
+                                        <Text text="Target: {path: 'agentDetail>/targetDate', formatter: '.formatDate'}" class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                        </layout:Grid>
+                        
+                        <!-- SMART Goal Details -->
+                        <f:Card class="sapUiMediumMarginTop">
+                            <f:header>
+                                <f:Header title="SMART Goal Definition"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <Label text="Specific Objective:"/>
+                                    <Text text="{agentDetail>/currentGoal/specific}" class="sapUiMediumMarginBottom"/>
+                                    
+                                    <Label text="Measurable Targets:"/>
+                                    <layout:Grid defaultSpan="XL3 L3 M6 S12" class="sapUiMediumMarginBottom">
+                                        <VBox>
+                                            <Text text="Success Rate"/>
+                                            <ObjectNumber number="{agentDetail>/measurableTargets/success_rate}" 
+                                                        unit="%" 
+                                                        state="Information"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Response Time"/>
+                                            <ObjectNumber number="{agentDetail>/measurableTargets/response_time}" 
+                                                        unit="sec" 
+                                                        state="Information"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Quality Score"/>
+                                            <ObjectNumber number="{agentDetail>/measurableTargets/quality_score}" 
+                                                        unit="%" 
+                                                        state="Information"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Throughput"/>
+                                            <ObjectNumber number="{agentDetail>/measurableTargets/throughput}" 
+                                                        unit="/hr" 
+                                                        state="Information"/>
+                                        </VBox>
+                                    </layout:Grid>
+                                    
+                                    <Label text="Business Relevance:"/>
+                                    <Text text="{agentDetail>/currentGoal/relevant}"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Progress Tracking Tab -->
+                <IconTabFilter text="Progress" icon="sap-icon://line-chart">
+                    <VBox class="sapUiMediumMargin">
+                        <f:Card>
+                            <f:header>
+                                <f:Header title="Progress Timeline"/>
+                            </f:header>
+                            <f:content>
+                                <viz:VizFrame id="progressTimelineChart" 
+                                            vizType="line" 
+                                            width="100%" 
+                                            height="300px">
+                                    <viz:dataset>
+                                        <viz:FlattenedDataset data="{agentDetail>/progressHistory}">
+                                            <viz:dimensions>
+                                                <viz:DimensionDefinition name="Date" value="{timestamp}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:MeasureDefinition name="Progress" value="{progress}"/>
+                                            </viz:measures>
+                                        </viz:FlattenedDataset>
+                                    </viz:dataset>
+                                    <viz:feeds>
+                                        <viz:FeedItem uid="valueAxis" type="Measure" values="Progress"/>
+                                        <viz:FeedItem uid="categoryAxis" type="Dimension" values="Date"/>
+                                    </viz:feeds>
+                                </viz:VizFrame>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Milestones -->
+                        <f:Card class="sapUiMediumMarginTop">
+                            <f:header>
+                                <f:Header title="Achieved Milestones ({agentDetail>/milestones})"/>
+                            </f:header>
+                            <f:content>
+                                <List items="{agentDetail>/achievedMilestones}" class="sapUiMediumMargin">
+                                    <StandardListItem title="{title}" 
+                                                    description="{description}"
+                                                    info="{path: 'achievedDate', formatter: '.formatDate'}"
+                                                    icon="sap-icon://accept"/>
+                                </List>
+                            </f:content>
+                        </f:Card>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- AI Insights Tab -->
+                <IconTabFilter text="AI Insights" icon="sap-icon://artificial-intelligence">
+                    <VBox class="sapUiMediumMargin">
+                        <f:Card>
+                            <f:header>
+                                <f:Header title="AI-Powered Predictions"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <layout:Grid defaultSpan="XL6 L6 M12 S12">
+                                        <VBox>
+                                            <Label text="Completion Prediction"/>
+                                            <ObjectStatus text="{agentDetail>/aiInsights/completionPrediction}" 
+                                                        state="Success"/>
+                                            <Text text="Confidence: {agentDetail>/aiInsights/confidence}%" 
+                                                  class="sapUiTinyMarginTop"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Risk Assessment"/>
+                                            <ObjectStatus text="{agentDetail>/aiInsights/riskLevel}" 
+                                                        state="{parts: ['agentDetail>/aiInsights/riskLevel'], formatter: '.formatRiskState'}"/>
+                                            <Text text="{agentDetail>/aiInsights/riskFactors}" 
+                                                  class="sapUiTinyMarginTop"/>
+                                        </VBox>
+                                    </layout:Grid>
+                                    
+                                    <Label text="AI Recommendations:" class="sapUiMediumMarginTop"/>
+                                    <List items="{agentDetail>/aiInsights/recommendations}">
+                                        <StandardListItem title="{title}" 
+                                                        description="{description}"
+                                                        icon="sap-icon://lightbulb"/>
+                                    </List>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <f:Card class="sapUiMediumMarginTop">
+                            <f:header>
+                                <f:Header title="Performance Optimization"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <Text text="Strategy Optimization Score: {agentDetail>/aiInsights/optimizationScore}%" 
+                                          class="sapUiMediumMarginBottom"/>
+                                    <ProgressIndicator percentValue="{agentDetail>/aiInsights/optimizationScore}" 
+                                                     state="Information"/>
+                                    
+                                    <Label text="Suggested Improvements:" class="sapUiMediumMarginTop"/>
+                                    <List items="{agentDetail>/aiInsights/improvements}">
+                                        <StandardListItem title="{improvement}" 
+                                                        description="Impact: {impact}"
+                                                        icon="sap-icon://trend-up"/>
+                                    </List>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Real-time Metrics Tab -->
+                <IconTabFilter text="Live Metrics" icon="sap-icon://monitor-payments">
+                    <VBox class="sapUiMediumMargin">
+                        <f:Card>
+                            <f:header>
+                                <f:Header title="Current Performance Metrics"/>
+                            </f:header>
+                            <f:content>
+                                <layout:Grid defaultSpan="XL3 L3 M6 S12" class="sapUiMediumMargin">
+                                    <VBox alignItems="Center">
+                                        <Text text="Success Rate"/>
+                                        <ObjectNumber number="{agentDetail>/currentMetrics/success_rate}" 
+                                                    unit="%" 
+                                                    emphasized="true"
+                                                    state="Success"/>
+                                    </VBox>
+                                    <VBox alignItems="Center">
+                                        <Text text="Avg Response"/>
+                                        <ObjectNumber number="{agentDetail>/currentMetrics/response_time}" 
+                                                    unit="sec" 
+                                                    emphasized="true"
+                                                    state="Information"/>
+                                    </VBox>
+                                    <VBox alignItems="Center">
+                                        <Text text="Quality Score"/>
+                                        <ObjectNumber number="{agentDetail>/currentMetrics/quality_score}" 
+                                                    unit="%" 
+                                                    emphasized="true"
+                                                    state="Success"/>
+                                    </VBox>
+                                    <VBox alignItems="Center">
+                                        <Text text="Throughput"/>
+                                        <ObjectNumber number="{agentDetail>/currentMetrics/throughput}" 
+                                                    unit="/hr" 
+                                                    emphasized="true"
+                                                    state="Information"/>
+                                    </VBox>
+                                </layout:Grid>
+                            </f:content>
+                        </f:Card>
+                        
+                        <f:Card class="sapUiMediumMarginTop">
+                            <f:header>
+                                <f:Header title="A2A Network Status"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <layout:Grid defaultSpan="XL4 L4 M6 S12">
+                                        <VBox>
+                                            <Text text="Messages Sent"/>
+                                            <ObjectNumber number="{agentDetail>/a2aMetrics/messagesSent}" 
+                                                        emphasized="true"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Messages Received"/>
+                                            <ObjectNumber number="{agentDetail>/a2aMetrics/messagesReceived}" 
+                                                        emphasized="true"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Blockchain Transactions"/>
+                                            <ObjectNumber number="{agentDetail>/a2aMetrics/blockchainTxs}" 
+                                                        emphasized="true"/>
+                                        </VBox>
+                                    </layout:Grid>
+                                    
+                                    <ObjectStatus text="A2A Network: {agentDetail>/a2aMetrics/networkStatus}" 
+                                                state="Success" 
+                                                class="sapUiMediumMarginTop"/>
+                                    <Text text="Last Update: {path: 'agentDetail>/lastUpdated', formatter: '.formatDateTime'}" 
+                                          class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </VBox>
+                </IconTabFilter>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button text="Update Goal" 
+                   type="Emphasized" 
+                   icon="sap-icon://edit"
+                   press="onUpdateGoal"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Close" 
+                   press="onCloseAgentDetails"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

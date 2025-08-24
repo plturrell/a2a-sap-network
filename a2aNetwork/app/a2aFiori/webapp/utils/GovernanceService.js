@@ -1,7 +1,7 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "sap/base/Log"
-], function(BaseObject, Log) {
+], (BaseObject, Log) => {
     "use strict";
 
     /**
@@ -29,7 +29,7 @@ sap.ui.define([
         _initializeContracts() {
             try {
                 // Load ABIs (in production, these would come from SAP destination service)
-                this._loadContractABIs().then(function(oABIs) {
+                this._loadContractABIs().then((oABIs) => {
                     if (this._oWeb3Manager.isConnected()) {
                         this._governanceToken = this._oWeb3Manager.getContract("governanceToken", oABIs.governanceToken);
                         this._governor = this._oWeb3Manager.getContract("governor", oABIs.governor);
@@ -37,7 +37,7 @@ sap.ui.define([
 
                         Log.info("Governance contracts initialized");
                     }
-                }.bind(this)).catch(function(oError) {
+                }).catch((oError) => {
                     Log.error("Failed to initialize governance contracts", oError);
                 });
             } catch (oError) {
@@ -66,7 +66,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to ABIs
          */
         _loadABIsFromSAP() {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     url: "/destinations/blockchain-abis",
                     type: "GET",
@@ -79,7 +79,7 @@ sap.ui.define([
                         this._loadABIsFromStatic().then(resolve).catch(reject);
                     }.bind(this)
                 });
-            }.bind(this));
+            });
         },
 
         /**
@@ -92,7 +92,7 @@ sap.ui.define([
                 this._loadABI("GovernanceToken"),
                 this._loadABI("A2AGovernor"),
                 this._loadABI("A2ATimelock")
-            ]).then(function(aABIs) {
+            ]).then((aABIs) => {
                 return {
                     governanceToken: aABIs[0],
                     governor: aABIs[1],
@@ -108,7 +108,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to ABI
          */
         _loadABI(sContractName) {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     url: `./contracts/${sContractName}.json`,
                     type: "GET",
@@ -134,7 +134,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to proposals array
          */
         getActiveProposals() {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 if (!this._governor) {
                     resolve(this._getMockProposals());
                     return;
@@ -143,7 +143,7 @@ sap.ui.define([
                 try {
                     // Get proposal count
                     this._governor.methods.proposalCount().call()
-                        .then(function(iCount) {
+                        .then((iCount) => {
                             const aPromises = [];
 
                             // Get details for each proposal
@@ -152,25 +152,25 @@ sap.ui.define([
                             }
 
                             return Promise.all(aPromises);
-                        }.bind(this))
-                        .then(function(aProposals) {
+                        })
+                        .then((aProposals) => {
                             // Filter active proposals
-                            const aActive = aProposals.filter(function(oProposal) {
+                            const aActive = aProposals.filter((oProposal) => {
                                 return oProposal.status === "Active";
                             });
 
                             resolve(aActive);
                         })
-                        .catch(function(oError) {
+                        .catch((oError) => {
                             Log.error("Failed to get active proposals", oError);
                             resolve(this._getMockProposals());
-                        }.bind(this));
+                        });
 
                 } catch (oError) {
                     Log.error("Error getting proposals", oError);
                     resolve(this._getMockProposals());
                 }
-            }.bind(this));
+            });
         },
 
         /**
@@ -184,7 +184,7 @@ sap.ui.define([
                 this._governor.methods.state(iProposalId).call(),
                 this._governor.methods.proposalVotes(iProposalId).call(),
                 this._governor.methods.getProposalMetadata(iProposalId).call()
-            ]).then(function(aResults) {
+            ]).then((aResults) => {
                 const iState = aResults[0];
                 const oVotes = aResults[1];
                 const oMetadata = aResults[2];
@@ -202,7 +202,7 @@ sap.ui.define([
                     ipfsHash: oMetadata.ipfsHash,
                     estimatedImpact: oMetadata.estimatedImpact
                 };
-            }.bind(this));
+            });
         },
 
         /**
@@ -211,7 +211,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to user stats
          */
         getUserStats() {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 if (!this._oWeb3Manager.isConnected()) {
                     resolve(this._getMockUserStats());
                     return;
@@ -224,7 +224,7 @@ sap.ui.define([
                     this._governanceToken.methods.getVotingPower(sAccount).call(),
                     this._governanceToken.methods.delegates(sAccount).call(),
                     this._governanceToken.methods.stakingBalances(sAccount).call()
-                ]).then(function(aResults) {
+                ]).then((aResults) => {
                     const sBalance = this._formatTokenAmount(aResults[0]);
                     const sVotingPower = this._formatTokenAmount(aResults[1]);
                     const sDelegate = aResults[2];
@@ -239,11 +239,11 @@ sap.ui.define([
                         hasDelegated: sDelegate !== sAccount,
                         stakedTokens: sStaked
                     });
-                }.bind(this)).catch(function(oError) {
+                }).catch((oError) => {
                     Log.error("Failed to get user stats", oError);
                     resolve(this._getMockUserStats());
-                }.bind(this));
-            }.bind(this));
+                });
+            });
         },
 
         /**
@@ -252,7 +252,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to token stats
          */
         getTokenStats() {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 if (!this._governanceToken) {
                     resolve(this._getMockTokenStats());
                     return;
@@ -261,7 +261,7 @@ sap.ui.define([
                 Promise.all([
                     this._governanceToken.methods.totalSupply().call(),
                     this._governanceToken.methods.stakingRewardRate().call()
-                ]).then(function(aResults) {
+                ]).then((aResults) => {
                     const sTotalSupply = this._formatTokenAmount(aResults[0]);
                     const iStakingAPR = aResults[1];
 
@@ -271,11 +271,11 @@ sap.ui.define([
                         stakedTokens: "250,000,000", // Mock
                         stakingAPR: iStakingAPR.toString()
                     });
-                }.bind(this)).catch(function(oError) {
+                }).catch((oError) => {
                     Log.error("Failed to get token stats", oError);
                     resolve(this._getMockTokenStats());
-                }.bind(this));
-            }.bind(this));
+                });
+            });
         },
 
         /**
@@ -400,7 +400,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to stakes array
          */
         getUserStakes() {
-            return new Promise(function(resolve) {
+            return new Promise((resolve) => {
                 // Mock data for now
                 resolve([
                     {
@@ -429,7 +429,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to delegates array
          */
         getTopDelegates() {
-            return new Promise(function(resolve) {
+            return new Promise((resolve) => {
                 // Mock data for now
                 resolve([
                     {
@@ -463,7 +463,7 @@ sap.ui.define([
          * @returns {Promise} Promise resolving to history array
          */
         getUserHistory() {
-            return new Promise(function(resolve) {
+            return new Promise((resolve) => {
                 // Mock data for now
                 resolve([
                     {
@@ -558,7 +558,7 @@ sap.ui.define([
          * @returns {number} Quorum percentage
          */
         _calculateQuorumPercentage(oVotes) {
-            const iTotalVotes = parseInt(oVotes.forVotes) + parseInt(oVotes.againstVotes) + parseInt(oVotes.abstainVotes);
+            const iTotalVotes = parseInt(oVotes.forVotes, 10) + parseInt(oVotes.againstVotes, 10) + parseInt(oVotes.abstainVotes, 10);
             // Mock total supply for calculation
             const iTotalSupply = 1000000000;
             return Math.round((iTotalVotes / iTotalSupply) * 100);

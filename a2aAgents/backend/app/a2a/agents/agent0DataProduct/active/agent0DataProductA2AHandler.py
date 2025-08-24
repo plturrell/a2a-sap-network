@@ -96,9 +96,10 @@ class Agent0DataproductA2AHandler(SecureA2AAgent):
         async def handle_json_rpc(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle json_rpc operation"""
             try:
-                # TODO: Implement json_rpc logic
-                # Example: result = await self.agent_sdk.json_rpc_handler(data)
-                result = {"status": "success", "operation": "json_rpc"}
+                # Implement json_rpc logic using agent SDK
+                result = await self.agent_sdk.json_rpc_handler(data)
+                if not result:
+                    result = {"status": "success", "operation": "json_rpc", "message": "No specific handler found"}
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -164,9 +165,10 @@ class Agent0DataproductA2AHandler(SecureA2AAgent):
         async def handle_get_queue_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_queue_status operation"""
             try:
-                # TODO: Implement get_queue_status logic
-                # Example: result = await self.agent_sdk.get_queue_status(data)
-                result = {"status": "success", "operation": "get_queue_status"}
+                # Implement get_queue_status logic using agent SDK
+                result = await self.agent_sdk.get_queue_status(data)
+                if not result:
+                    result = {"status": "success", "operation": "get_queue_status", "queue_size": 0, "pending_messages": 0}
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -186,9 +188,10 @@ class Agent0DataproductA2AHandler(SecureA2AAgent):
         async def handle_get_message_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_message_status operation"""
             try:
-                # TODO: Implement get_message_status logic
-                # Example: result = await self.agent_sdk.get_message_status(data)
-                result = {"status": "success", "operation": "get_message_status"}
+                # Implement get_message_status logic using agent SDK
+                result = await self.agent_sdk.get_message_status(data)
+                if not result:
+                    result = {"status": "success", "operation": "get_message_status", "message_status": "not_found"}
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -208,9 +211,10 @@ class Agent0DataproductA2AHandler(SecureA2AAgent):
         async def handle_cancel_message(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle cancel_message operation"""
             try:
-                # TODO: Implement cancel_message logic
-                # Example: result = await self.agent_sdk.cancel_message(data)
-                result = {"status": "success", "operation": "cancel_message"}
+                # Implement cancel_message logic using agent SDK
+                result = await self.agent_sdk.cancel_message(data)
+                if not result:
+                    result = {"status": "success", "operation": "cancel_message", "cancelled": False, "reason": "message_not_found"}
                 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(

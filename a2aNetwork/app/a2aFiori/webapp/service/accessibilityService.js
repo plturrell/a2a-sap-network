@@ -10,7 +10,7 @@
  */
 sap.ui.define([
     "sap/base/Log"
-], function(Log) {
+], (Log) => {
     "use strict";
 
     const AccessibilityService = {
@@ -224,7 +224,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         releaseFocusTrap(trapId) {
-            const trapIndex = this._focusTraps.findIndex(function(trap) {
+            const trapIndex = this._focusTraps.findIndex((trap) => {
                 return trap.id === trapId;
             });
 
@@ -270,7 +270,7 @@ sap.ui.define([
                 return false;
             }
 
-            const existingLink = this._skipLinks.find(function(link) {
+            const existingLink = this._skipLinks.find((link) => {
                 return link.id === skipLink.id;
             });
 
@@ -323,13 +323,13 @@ sap.ui.define([
                 `;
             });
 
-            linkElement.addEventListener("click", function(e) {
+            linkElement.addEventListener("click", (e) => {
                 e.preventDefault();
                 const target = document.getElementById(skipLink.target);
                 if (target) {
                     this.setFocus(target, `Skipped to ${ skipLink.text}`);
                 }
-            }.bind(this));
+            });
 
             document.body.insertBefore(linkElement, document.body.firstChild);
 
@@ -342,7 +342,7 @@ sap.ui.define([
             });
 
             // Sort skip links by order
-            this._skipLinks.sort(function(a, b) {
+            this._skipLinks.sort((a, b) => {
                 return a.order - b.order;
             });
 
@@ -466,7 +466,7 @@ sap.ui.define([
             const that = this;
 
             // Global keyboard handler
-            document.addEventListener("keydown", function(e) {
+            document.addEventListener("keydown", (e) => {
                 // Skip to main content on Ctrl+M
                 if (e.ctrlKey && e.key === "m") {
                     e.preventDefault();
@@ -483,7 +483,7 @@ sap.ui.define([
             });
 
             // Hide focus indicators on mouse interaction
-            document.addEventListener("mousedown", function() {
+            document.addEventListener("mousedown", () => {
                 document.body.classList.remove("keyboard-navigation");
             });
         },
@@ -554,9 +554,9 @@ sap.ui.define([
             this._ariaLiveRegion.textContent = message;
 
             // Clear after announcement
-            setTimeout(function() {
+            setTimeout(() => {
                 this._ariaLiveRegion.textContent = "";
-            }.bind(this), 1000);
+            }, 1000);
         },
 
         /**
@@ -574,9 +574,9 @@ sap.ui.define([
 
             // Process next announcement after delay
             if (this._screenReaderBuffer.length > 0) {
-                setTimeout(function() {
+                setTimeout(() => {
                     this._processAnnouncementQueue();
-                }.bind(this), 1500);
+                }, 1500);
             }
         },
 
@@ -628,9 +628,9 @@ sap.ui.define([
             ].join(", ");
 
             return Array.from(container.querySelectorAll(focusableSelector))
-                .filter(function(element) {
+                .filter((element) => {
                     return this._isFocusable(element);
-                }.bind(this));
+                });
         },
 
         /**
@@ -747,11 +747,11 @@ sap.ui.define([
          */
         _auditAriaAttributes(element, audit) {
             const ariaAttributes = Array.from(element.attributes)
-                .filter(function(attr) {
+                .filter((attr) => {
                     return attr.name.startsWith("aria-");
                 });
 
-            ariaAttributes.forEach(function(attr) {
+            ariaAttributes.forEach((attr) => {
                 // Check for empty ARIA values
                 if (!attr.value.trim()) {
                     audit.warnings.push(`Empty ARIA attribute: ${ attr.name}`);
@@ -760,7 +760,7 @@ sap.ui.define([
                 // Check for references to non-existent elements
                 if (attr.name === "aria-labelledby" || attr.name === "aria-describedby") {
                     const ids = attr.value.split(/\s+/);
-                    ids.forEach(function(id) {
+                    ids.forEach((id) => {
                         if (!document.getElementById(id)) {
                             audit.errors.push(`ARIA reference to non-existent element: ${ id}`);
                             audit.valid = false;
@@ -824,7 +824,7 @@ sap.ui.define([
             // RGB/RGBA format
             const rgbMatch = colorStr.match(/rgba?\(([^)]+)\)/);
             if (rgbMatch) {
-                const values = rgbMatch[1].split(",").map(function(v) {
+                const values = rgbMatch[1].split(",").map((v) => {
                     return parseFloat(v.trim());
                 });
                 return {
@@ -991,12 +991,12 @@ sap.ui.define([
          * @since 1.0.0
          */
         _cleanupFocusTraps() {
-            this._focusTraps.forEach(function(trap) {
+            this._focusTraps.forEach((trap) => {
                 if (trap.keyHandler) {
                     trap.container.removeEventListener("keydown", trap.keyHandler);
                 }
                 trap.container.classList.remove(this.FOCUS_TRAP_CLASS);
-            }.bind(this));
+            });
 
             this._focusTraps = [];
         },
@@ -1008,7 +1008,7 @@ sap.ui.define([
          */
         _cleanupKeyboardHandlers() {
             // Remove skip links
-            this._skipLinks.forEach(function(link) {
+            this._skipLinks.forEach((link) => {
                 if (link.element && link.element.parentNode) {
                     link.element.parentNode.removeChild(link.element);
                 }

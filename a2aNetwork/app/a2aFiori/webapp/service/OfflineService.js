@@ -11,7 +11,7 @@
 sap.ui.define([
     "sap/base/Log",
     "./CacheService"
-], function(Log, CacheService) {
+], (Log, CacheService) => {
     "use strict";
 
     const OfflineService = {
@@ -110,11 +110,11 @@ sap.ui.define([
         execute(operation) {
             const that = this;
 
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 if (that._isOnline) {
                     // Online - execute immediately
                     that._executeOnline(operation)
-                        .then(function(result) {
+                        .then((result) => {
                             // Cache successful GET responses
                             if (operation.type === "GET" && operation.cacheKey) {
                                 CacheService.set(operation.cacheKey, result, {
@@ -124,7 +124,7 @@ sap.ui.define([
                             }
                             resolve(result);
                         })
-                        .catch(function(error) {
+                        .catch((error) => {
                             // If it's a GET request, try cache fallback
                             if (operation.type === "GET" && operation.cacheKey) {
                                 const cachedData = CacheService.get(operation.cacheKey);
@@ -252,8 +252,8 @@ sap.ui.define([
         resolveConflict(conflictId, resolution) {
             const that = this;
 
-            return new Promise(function(resolve, reject) {
-                const conflict = that._conflictQueue.find(function(c) {
+            return new Promise((resolve, reject) => {
+                const conflict = that._conflictQueue.find((c) => {
                     return c.id === conflictId;
                 });
                 if (!conflict) {
@@ -263,9 +263,9 @@ sap.ui.define([
 
                 // Apply resolution
                 that._applyConflictResolution(conflict, resolution)
-                    .then(function(result) {
+                    .then((result) => {
                         // Remove from conflict queue
-                        that._conflictQueue = that._conflictQueue.filter(function(c) {
+                        that._conflictQueue = that._conflictQueue.filter((c) => {
                             return c.id !== conflictId;
                         });
                         that._saveConflictQueue();
@@ -293,7 +293,7 @@ sap.ui.define([
         _registerNetworkEvents() {
             const that = this;
 
-            window.addEventListener("online", function() {
+            window.addEventListener("online", () => {
                 that._isOnline = true;
                 Log.info("Network status changed: online");
 
@@ -302,12 +302,12 @@ sap.ui.define([
                 });
 
                 // Automatically sync when coming back online
-                setTimeout(function() {
+                setTimeout(() => {
                     that.sync({ force: false });
                 }, 2000); // Wait 2 seconds for network to stabilize
             });
 
-            window.addEventListener("offline", function() {
+            window.addEventListener("offline", () => {
                 that._isOnline = false;
                 Log.info("Network status changed: offline");
 
@@ -326,7 +326,7 @@ sap.ui.define([
             const that = this;
 
             // Sync every 5 minutes if online and has queued operations
-            this._syncTimer = setInterval(function() {
+            this._syncTimer = setInterval(() => {
                 if (that._isOnline && that._syncQueue.length > 0 && !that._syncInProgress) {
                     that.sync({ force: false });
                 }
@@ -341,7 +341,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _executeOnline(operation) {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 jQuery.ajax({
                     type: operation.type,
                     url: operation.url,
@@ -352,7 +352,7 @@ sap.ui.define([
                     ...operation.options
                 })
                     .done(resolve)
-                    .fail(function(xhr, status, error) {
+                    .fail((xhr, status, error) => {
                         reject(new Error(error || status));
                     });
             });
@@ -390,7 +390,7 @@ sap.ui.define([
         _performSync(options) {
             const that = this;
 
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 that._syncInProgress = true;
 
                 that._eventBus.publish("OfflineService", "SyncStarted", {
@@ -399,22 +399,22 @@ sap.ui.define([
 
                 const syncPromises = [];
                 const operationsToSync = options.operations ?
-                    that._syncQueue.filter(function(op) {
+                    that._syncQueue.filter((op) => {
                         return options.operations.indexOf(op.id) !== -1;
                     }) :
                     that._syncQueue.slice(); // Copy array
 
-                operationsToSync.forEach(function(operation) {
+                operationsToSync.forEach((operation) => {
                     syncPromises.push(that._syncOperation(operation));
                 });
 
                 Promise.allSettled(syncPromises)
-                    .then(function(results) {
+                    .then((results) => {
                         let successful = 0;
                         let failed = 0;
                         let conflicts = 0;
 
-                        results.forEach(function(result, index) {
+                        results.forEach((result, index) => {
                             if (result.status === "fulfilled") {
                                 if (result.value.conflict) {
                                     conflicts++;
@@ -452,7 +452,7 @@ sap.ui.define([
                             conflicts
                         });
                     })
-                    .catch(function(error) {
+                    .catch((error) => {
                         that._syncInProgress = false;
                         that._eventBus.publish("OfflineService", "SyncFailed", {
                             error: error.message
@@ -472,9 +472,9 @@ sap.ui.define([
         _syncOperation(operation) {
             const that = this;
 
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 that._executeOnline(operation)
-                    .then(function(result) {
+                    .then((result) => {
                         Log.debug("Operation synced successfully", {
                             operationId: operation.id,
                             type: operation.type,
@@ -482,7 +482,7 @@ sap.ui.define([
                         });
                         resolve({ success: true, result });
                     })
-                    .catch(function(error) {
+                    .catch((error) => {
                         // Check if it's a conflict (409 status)
                         if (error.message.includes("409") || error.message.includes("conflict")) {
                             that._handleConflict(operation, error);
@@ -544,13 +544,13 @@ sap.ui.define([
             };
 
             this.resolveConflict(conflict.id, resolution)
-                .then(function() {
+                .then(() => {
                     Log.info("Conflict auto-resolved", {
                         conflictId: conflict.id,
                         strategy
                     });
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     Log.error("Auto-resolution failed", {
                         conflictId: conflict.id,
                         error: error.message
@@ -632,7 +632,7 @@ sap.ui.define([
         },
 
         _removeFromQueue(operationId) {
-            this._syncQueue = this._syncQueue.filter(function(op) {
+            this._syncQueue = this._syncQueue.filter((op) => {
                 return op.id !== operationId;
             });
             this._saveSyncQueue();
@@ -656,7 +656,7 @@ sap.ui.define([
         },
 
         _getOperationsByType() {
-            return this._syncQueue.reduce(function(acc, op) {
+            return this._syncQueue.reduce((acc, op) => {
                 acc[op.type] = (acc[op.type] || 0) + 1;
                 return acc;
             }, {});
@@ -666,7 +666,7 @@ sap.ui.define([
             if (this._syncQueue.length === 0) {
                 return null;
             }
-            return this._syncQueue.reduce(function(oldest, op) {
+            return this._syncQueue.reduce((oldest, op) => {
                 return op.timestamp < oldest.timestamp ? op : oldest;
             });
         },

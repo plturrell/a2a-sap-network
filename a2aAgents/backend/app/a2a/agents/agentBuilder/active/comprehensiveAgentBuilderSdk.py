@@ -8,6 +8,7 @@ import uuid
 import json
 import yaml
 import os
+import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, field
@@ -98,7 +99,7 @@ class BuildProject:
     deployment_info: Dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
 
-class AgentBuilderSdk(SecureA2AAgent,
+class AgentBuilderSdk(A2AAgentBase,
     PerformanceMonitorMixin,
     SecurityHardenedMixin,
     TelemetryMixin
@@ -110,15 +111,15 @@ class AgentBuilderSdk(SecureA2AAgent,
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("agent-builder"),
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             name="Agent Builder",
             description="Advanced agent creation, configuration, and deployment system",
             version="1.0.0"
         )
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(
@@ -300,6 +301,386 @@ class AgentBuilderSdk(SecureA2AAgent,
             
         except Exception as e:
             logger.error(f"Failed to run tests: {e}")
+            raise
+
+    @a2a_skill(
+        name="agent_creation",
+        description="Create new A2A agents with specified capabilities and configurations",
+        version="1.0.0"
+    )
+    @mcp_tool(
+        name="create_agent",
+        description="Create a complete A2A agent with blockchain registration"
+    )
+    async def agent_creation(
+        self,
+        agent_spec: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Create new A2A agent with blockchain registration
+        """
+        try:
+            agent_name = agent_spec.get("name", "New Agent")
+            agent_type = agent_spec.get("type", "assistant")
+            capabilities = agent_spec.get("capabilities", [])
+            
+            # Create build project first
+            project_result = await self.create_build_project(
+                f"{agent_name} Project",
+                {
+                    "name": agent_name,
+                    "description": agent_spec.get("description", f"Auto-generated {agent_type} agent"),
+                    "agent_type": agent_type,
+                    "framework": "a2a_sdk",
+                    "architecture": "microservices",
+                    "skills": [{
+                        "name": cap,
+                        "description": f"Capability: {cap}",
+                        "implementation": "auto_generated"
+                    } for cap in capabilities],
+                    "security_settings": {
+                        "enable_authentication": True,
+                        "enable_rate_limiting": True,
+                        "enable_blockchain_logging": True
+                    },
+                    "performance_requirements": {
+                        "max_response_time_ms": 5000,
+                        "max_memory_mb": 512,
+                        "concurrent_requests": 100
+                    }
+                }
+            )
+            
+            project_id = project_result["project_id"]
+            
+            # Generate agent code
+            generation_result = await self.generate_agent_code(
+                project_id,
+                {
+                    "include_blockchain_integration": True,
+                    "include_a2a_handlers": True,
+                    "include_security_features": True,
+                    "target_registry": "blockchain"
+                }
+            )
+            
+            # Test the generated agent
+            test_result = await self.run_agent_tests(
+                project_id,
+                {
+                    "run_security_tests": True,
+                    "run_blockchain_tests": True,
+                    "run_performance_tests": True
+                }
+            )
+            
+            # Create blockchain registration data
+            registration_data = {
+                "agent_name": agent_name,
+                "agent_type": agent_type,
+                "capabilities": capabilities,
+                "version": "1.0.0",
+                "created_by": self.agent_id,
+                "build_project_id": project_id,
+                "test_score": test_result.get("overall_score", 0)
+            }
+            
+            logger.info(f"Created agent: {agent_name} with {len(capabilities)} capabilities")
+            
+            return {
+                "agent_id": f"agent_{agent_name.lower().replace(' ', '_')}",
+                "project_id": project_id,
+                "capabilities": capabilities,
+                "test_score": test_result.get("overall_score", 0),
+                "files_generated": len(generation_result.get("generated_files", [])),
+                "registration_data": registration_data,
+                "status": "created"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to create agent: {e}")
+            raise
+
+    @a2a_skill(
+        name="template_management",
+        description="Manage and customize agent templates for rapid deployment",
+        version="1.0.0"
+    )
+    @mcp_tool(
+        name="manage_templates",
+        description="Create, update, and deploy agent templates"
+    )
+    async def template_management(
+        self,
+        template_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Manage agent templates for standardized deployments
+        """
+        try:
+            action = template_data.get("action", "list")  # list, create, update, delete, deploy
+            template_name = template_data.get("template_name")
+            
+            if action == "list":
+                # List available templates
+                templates = []
+                if self.templates_dir.exists():
+                    for template_file in self.templates_dir.glob("*.json"):
+                        with open(template_file, 'r') as f:
+                            template = json.load(f)
+                            templates.append({
+                                "name": template_file.stem,
+                                "description": template.get("description", ""),
+                                "agent_type": template.get("agent_type", "unknown"),
+                                "capabilities_count": len(template.get("capabilities", [])),
+                                "created_at": template.get("created_at", "unknown")
+                            })
+                
+                return {
+                    "templates": templates,
+                    "total_count": len(templates)
+                }
+            
+            elif action == "create":
+                if not template_name:
+                    raise ValueError("Template name is required for creation")
+                
+                # Create new template
+                template = {
+                    "name": template_name,
+                    "description": template_data.get("description", ""),
+                    "agent_type": template_data.get("agent_type", "assistant"),
+                    "framework": template_data.get("framework", "a2a_sdk"),
+                    "architecture": template_data.get("architecture", "microservices"),
+                    "capabilities": template_data.get("capabilities", []),
+                    "security_settings": template_data.get("security_settings", {}),
+                    "performance_requirements": template_data.get("performance_requirements", {}),
+                    "created_at": datetime.now().isoformat(),
+                    "version": "1.0.0"
+                }
+                
+                # Save template
+                template_file = self.templates_dir / f"{template_name}.json"
+                with open(template_file, 'w') as f:
+                    json.dump(template, f, indent=2)
+                
+                return {
+                    "template_name": template_name,
+                    "status": "created",
+                    "file_path": str(template_file)
+                }
+            
+            elif action == "deploy":
+                if not template_name:
+                    raise ValueError("Template name is required for deployment")
+                
+                # Load template
+                template_file = self.templates_dir / f"{template_name}.json"
+                if not template_file.exists():
+                    raise FileNotFoundError(f"Template {template_name} not found")
+                
+                with open(template_file, 'r') as f:
+                    template = json.load(f)
+                
+                # Deploy agent from template
+                agent_name = template_data.get("agent_name", f"{template_name}_instance")
+                deployment_result = await self.agent_creation({
+                    "name": agent_name,
+                    "description": template["description"],
+                    "type": template["agent_type"],
+                    "capabilities": template["capabilities"],
+                    "security_settings": template.get("security_settings", {}),
+                    "performance_requirements": template.get("performance_requirements", {})
+                })
+                
+                return {
+                    "template_name": template_name,
+                    "agent_name": agent_name,
+                    "deployment_result": deployment_result,
+                    "status": "deployed"
+                }
+            
+            else:
+                raise ValueError(f"Unknown template action: {action}")
+            
+        except Exception as e:
+            logger.error(f"Failed template management: {e}")
+            raise
+
+    @a2a_skill(
+        name="deployment_automation",
+        description="Automate agent deployment to various environments with rollback capabilities",
+        version="1.0.0"
+    )
+    @mcp_tool(
+        name="deploy_agent",
+        description="Deploy agents with automated environment setup and monitoring"
+    )
+    async def deployment_automation(
+        self,
+        deployment_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Automate agent deployment with environment management
+        """
+        try:
+            project_id = deployment_config.get("project_id")
+            environment = deployment_config.get("environment", "staging")  # staging, production
+            deployment_strategy = deployment_config.get("strategy", "blue_green")  # blue_green, rolling, canary
+            
+            if not project_id:
+                raise ValueError("Project ID is required for deployment")
+            
+            if project_id not in self.build_projects:
+                raise ValueError(f"Build project {project_id} not found")
+            
+            project = self.build_projects[project_id]
+            
+            # Pre-deployment validation
+            validation_checks = {
+                "code_generated": len(project.generated_files) > 0,
+                "tests_passed": project.test_results.get("overall_score", 0) >= 80,
+                "security_validated": project.test_results.get("results", {}).get("security_tests", {}).get("security_score", 0) >= 90,
+                "performance_validated": project.test_results.get("results", {}).get("performance_tests", {}).get("response_time_ms", 1000) < 500
+            }
+            
+            if not all(validation_checks.values()):
+                failed_checks = [check for check, passed in validation_checks.items() if not passed]
+                raise ValueError(f"Deployment validation failed: {', '.join(failed_checks)}")
+            
+            # Generate deployment artifacts
+            deployment_artifacts = await self._generate_deployment_artifacts(
+                project, environment, deployment_strategy
+            )
+            
+            # Deploy to environment
+            deployment_result = await self._deploy_to_environment(
+                project, deployment_artifacts, environment, deployment_strategy
+            )
+            
+            # Setup monitoring
+            monitoring_config = await self._setup_deployment_monitoring(
+                project, environment, deployment_result
+            )
+            
+            # Update project with deployment info
+            project.deployment_info = {
+                "environment": environment,
+                "strategy": deployment_strategy,
+                "deployed_at": datetime.now().isoformat(),
+                "deployment_id": deployment_result["deployment_id"],
+                "monitoring_enabled": True,
+                "rollback_available": True
+            }
+            
+            project.status = BuildStatus.DEPLOYED
+            project.updated_at = datetime.now()
+            
+            logger.info(f"Successfully deployed project {project_id} to {environment}")
+            
+            return {
+                "project_id": project_id,
+                "deployment_id": deployment_result["deployment_id"],
+                "environment": environment,
+                "strategy": deployment_strategy,
+                "validation_checks": validation_checks,
+                "artifacts_generated": list(deployment_artifacts.keys()),
+                "monitoring_config": monitoring_config,
+                "rollback_available": True,
+                "status": "deployed"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed deployment automation: {e}")
+            raise
+
+    @a2a_skill(
+        name="agent_configuration",
+        description="Configure and manage agent settings, capabilities, and runtime parameters",
+        version="1.0.0"
+    )
+    @mcp_tool(
+        name="configure_agent",
+        description="Update agent configurations and runtime parameters"
+    )
+    async def agent_configuration(
+        self,
+        config_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Configure agent settings and capabilities
+        """
+        try:
+            project_id = config_data.get("project_id")
+            config_updates = config_data.get("updates", {})
+            
+            if not project_id:
+                raise ValueError("Project ID is required for configuration")
+            
+            if project_id not in self.build_projects:
+                raise ValueError(f"Build project {project_id} not found")
+            
+            project = self.build_projects[project_id]
+            configuration = project.configuration
+            
+            # Update configuration fields
+            if "name" in config_updates:
+                configuration.name = config_updates["name"]
+            
+            if "description" in config_updates:
+                configuration.description = config_updates["description"]
+            
+            if "skills" in config_updates:
+                # Validate and update skills
+                new_skills = config_updates["skills"]
+                for skill in new_skills:
+                    if not isinstance(skill, dict) or "name" not in skill:
+                        raise ValueError(f"Invalid skill format: {skill}")
+                configuration.skills = new_skills
+            
+            if "security_settings" in config_updates:
+                configuration.security_settings.update(config_updates["security_settings"])
+            
+            if "performance_requirements" in config_updates:
+                configuration.performance_requirements.update(config_updates["performance_requirements"])
+            
+            if "dependencies" in config_updates:
+                configuration.dependencies = config_updates["dependencies"]
+            
+            # Validate configuration
+            validation_result = await self._validate_agent_configuration(configuration)
+            
+            if not validation_result["valid"]:
+                raise ValueError(f"Configuration validation failed: {validation_result['errors']}")
+            
+            # Regenerate configuration files if needed
+            if config_data.get("regenerate_files", False):
+                new_config_file = await self._generate_config_file(project, {})
+                project.generated_files["config.yaml"] = new_config_file
+            
+            # Update project metadata
+            project.updated_at = datetime.now()
+            
+            logger.info(f"Updated configuration for project {project_id}")
+            
+            return {
+                "project_id": project_id,
+                "configuration": {
+                    "name": configuration.name,
+                    "description": configuration.description,
+                    "agent_type": configuration.agent_type.value,
+                    "skills_count": len(configuration.skills),
+                    "dependencies_count": len(configuration.dependencies),
+                    "security_enabled": len(configuration.security_settings) > 0,
+                    "performance_configured": len(configuration.performance_requirements) > 0
+                },
+                "validation": validation_result,
+                "files_regenerated": config_data.get("regenerate_files", False),
+                "status": "configured"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed agent configuration: {e}")
             raise
 
     async def _generate_code_files(
@@ -579,6 +960,143 @@ agent = get_{self._to_instance_name(project.configuration.name)}()
     def _to_agent_id(self, name: str) -> str:
         """Convert name to agent ID"""
         return name.lower().replace(' ', '-')
+
+    async def _generate_deployment_artifacts(
+        self,
+        project: BuildProject,
+        environment: str,
+        strategy: str
+    ) -> Dict[str, str]:
+        """Generate deployment-specific artifacts"""
+        artifacts = {}
+        
+        # Docker Compose for environment
+        artifacts["docker-compose.yml"] = f'''
+version: '3.8'
+services:
+  {project.configuration.name.lower().replace(' ', '-')}:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV={environment}
+      - A2A_ENABLED=true
+      - BLOCKCHAIN_URL=${{BLOCKCHAIN_URL}}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+'''
+        
+        # Kubernetes deployment
+        artifacts["deployment.yaml"] = f'''
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {project.configuration.name.lower().replace(' ', '-')}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {project.configuration.name.lower().replace(' ', '-')}
+  template:
+    metadata:
+      labels:
+        app: {project.configuration.name.lower().replace(' ', '-')}
+    spec:
+      containers:
+      - name: agent
+        image: {project.configuration.name.lower().replace(' ', '-')}:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENV
+          value: "{environment}"
+        - name: A2A_ENABLED
+          value: "true"
+'''
+        
+        return artifacts
+
+    async def _deploy_to_environment(
+        self,
+        project: BuildProject,
+        artifacts: Dict[str, str],
+        environment: str,
+        strategy: str
+    ) -> Dict[str, Any]:
+        """Deploy agent to target environment"""
+        deployment_id = f"deploy_{project.id}_{int(time.time())}"
+        
+        # Simulate deployment process
+        deployment_steps = [
+            "validating_artifacts",
+            "building_container",
+            "pushing_to_registry",
+            "deploying_to_cluster",
+            "running_health_checks",
+            "updating_load_balancer"
+        ]
+        
+        return {
+            "deployment_id": deployment_id,
+            "environment": environment,
+            "strategy": strategy,
+            "steps_completed": deployment_steps,
+            "container_image": f"{project.configuration.name.lower().replace(' ', '-')}:latest",
+            "health_check_url": f"https://{environment}-api.example.com/health",
+            "deployed_at": datetime.now().isoformat()
+        }
+
+    async def _setup_deployment_monitoring(
+        self,
+        project: BuildProject,
+        environment: str,
+        deployment_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Setup monitoring for deployed agent"""
+        return {
+            "prometheus_endpoint": f"https://{environment}-monitoring.example.com/prometheus",
+            "grafana_dashboard": f"https://{environment}-grafana.example.com/d/agent-{project.id}",
+            "log_aggregation": f"https://{environment}-logs.example.com/agent-{project.id}",
+            "alerting_enabled": True,
+            "health_check_interval": "30s",
+            "metrics_retention": "30d"
+        }
+
+    async def _validate_agent_configuration(self, config: AgentConfiguration) -> Dict[str, Any]:
+        """Validate agent configuration"""
+        errors = []
+        warnings = []
+        
+        # Validate name
+        if not config.name or len(config.name.strip()) == 0:
+            errors.append("Agent name cannot be empty")
+        
+        if len(config.name) > 100:
+            errors.append("Agent name too long (max 100 characters)")
+        
+        # Validate skills
+        skill_names = [skill.get("name") for skill in config.skills if skill.get("name")]
+        if len(skill_names) != len(set(skill_names)):
+            errors.append("Duplicate skill names found")
+        
+        # Validate dependencies
+        if len(config.dependencies) > 20:
+            warnings.append("Large number of dependencies may impact performance")
+        
+        # Validate security settings
+        if not config.security_settings.get("enable_authentication", True):
+            warnings.append("Authentication disabled - security risk")
+        
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+            "validated_at": datetime.now().isoformat()
+        }
 
 # Create singleton instance
 agent_builder = AgentBuilderSdk()

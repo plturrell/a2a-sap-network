@@ -1,4 +1,4 @@
-sap.ui.define([], function () {
+sap.ui.define([], () => {
     "use strict";
 
     /**
@@ -6,7 +6,7 @@ sap.ui.define([], function () {
      * Specific security policies for reasoning operations and knowledge management
      */
     return {
-        
+
         // Reasoning-specific security settings
         reasoning: {
             maxInferenceDepth: 50, // Maximum depth to prevent logic bombs
@@ -15,7 +15,7 @@ sap.ui.define([], function () {
             maxFactsPerTask: 10000,
             maxRulesPerEngine: 5000,
             maxContradictionsAllowed: 100,
-            
+
             // Confidence thresholds
             confidenceThresholds: {
                 minimum: 0.1,
@@ -24,7 +24,7 @@ sap.ui.define([], function () {
                 high: 0.85,
                 certain: 0.95
             },
-            
+
             // Rate limiting for reasoning operations
             rateLimiting: {
                 maxReasoningRequestsPerMinute: 20,
@@ -32,19 +32,19 @@ sap.ui.define([], function () {
                 maxKnowledgeUpdatesPerHour: 100,
                 maxContradictionAnalysesPerHour: 30
             },
-            
+
             // Allowed reasoning types
             allowedReasoningTypes: [
-                'DEDUCTIVE',
-                'INDUCTIVE',
-                'ABDUCTIVE',
-                'ANALOGICAL',
-                'PROBABILISTIC',
-                'CAUSAL',
-                'TEMPORAL',
-                'MODAL'
+                "DEDUCTIVE",
+                "INDUCTIVE",
+                "ABDUCTIVE",
+                "ANALOGICAL",
+                "PROBABILISTIC",
+                "CAUSAL",
+                "TEMPORAL",
+                "MODAL"
             ],
-            
+
             // Blocked patterns in reasoning rules
             blockedRulePatterns: [
                 /eval\(/gi,
@@ -68,16 +68,16 @@ sap.ui.define([], function () {
             requireFactValidation: true,
             requireRuleValidation: true,
             auditAllModifications: true,
-            
+
             // Access control for knowledge operations
             accessControl: {
-                read: ['user', 'analyst', 'manager', 'admin'],
-                create: ['analyst', 'manager', 'admin'],
-                update: ['manager', 'admin'],
-                delete: ['admin'],
-                bulkOperations: ['admin']
+                read: ["user", "analyst", "manager", "admin"],
+                create: ["analyst", "manager", "admin"],
+                update: ["manager", "admin"],
+                delete: ["admin"],
+                bulkOperations: ["admin"]
             },
-            
+
             // Data integrity checks
             integrityChecks: {
                 validateConsistency: true,
@@ -93,7 +93,7 @@ sap.ui.define([], function () {
             maxParallelInferences: 100,
             timeoutPerInference: 60000, // 1 minute per inference
             requireExplainability: true,
-            
+
             // Chain validation
             chainValidation: {
                 validatePremises: true,
@@ -101,7 +101,7 @@ sap.ui.define([], function () {
                 preventInfiniteLoops: true,
                 maxChainLength: 100
             },
-            
+
             // Resource limits
             resourceLimits: {
                 maxMemoryPerTask: 536870912, // 512MB
@@ -117,7 +117,7 @@ sap.ui.define([], function () {
             maxDecisionComplexity: 1000,
             requireJustification: true,
             auditAllDecisions: true,
-            
+
             // Risk assessment
             riskAssessment: {
                 requireRiskAnalysis: true,
@@ -132,15 +132,15 @@ sap.ui.define([], function () {
             maxContradictionsPerAnalysis: 500,
             requireResolutionJustification: true,
             preventMaliciousContradictions: true,
-            
+
             // Resolution strategies
             allowedResolutionStrategies: [
-                'CONFIDENCE_BASED',
-                'TEMPORAL_PRECEDENCE',
-                'SOURCE_AUTHORITY',
-                'MANUAL_REVIEW'
+                "CONFIDENCE_BASED",
+                "TEMPORAL_PRECEDENCE",
+                "SOURCE_AUTHORITY",
+                "MANUAL_REVIEW"
             ],
-            
+
             // Exploitation prevention
             exploitationPrevention: {
                 detectPatternedContradictions: true,
@@ -158,7 +158,7 @@ sap.ui.define([], function () {
                 rulePattern: /^[a-zA-Z0-9\s\-_\.\,\(\)\[\]\&\|\!\=\>\<]{1,1000}$/,
                 conclusionPattern: /^[a-zA-Z0-9\s\-_\.\,]{1,500}$/
             },
-            
+
             // Semantic validation
             semantic: {
                 checkLogicalValidity: true,
@@ -172,16 +172,16 @@ sap.ui.define([], function () {
         monitoring: {
             // Events to monitor
             monitoredEvents: [
-                'reasoning_started',
-                'inference_generated',
-                'contradiction_detected',
-                'decision_made',
-                'knowledge_updated',
-                'validation_failed',
-                'security_violation',
-                'performance_anomaly'
+                "reasoning_started",
+                "inference_generated",
+                "contradiction_detected",
+                "decision_made",
+                "knowledge_updated",
+                "validation_failed",
+                "security_violation",
+                "performance_anomaly"
             ],
-            
+
             // Anomaly detection
             anomalyDetection: {
                 unusualInferencePatterns: true,
@@ -189,7 +189,7 @@ sap.ui.define([], function () {
                 abnormalConfidenceScores: true,
                 excessiveResourceUsage: true
             },
-            
+
             // Alert thresholds
             alertThresholds: {
                 failedReasoningAttempts: 5,
@@ -201,11 +201,11 @@ sap.ui.define([], function () {
 
         // Security headers for reasoning operations
         securityHeaders: {
-            'X-Reasoning-Depth-Limit': '50',
-            'X-Inference-Timeout': '60000',
-            'X-Knowledge-Integrity': 'required',
-            'X-Contradiction-Protection': 'enabled',
-            'X-Logic-Bomb-Protection': 'active'
+            "X-Reasoning-Depth-Limit": "50",
+            "X-Inference-Timeout": "60000",
+            "X-Knowledge-Integrity": "required",
+            "X-Contradiction-Protection": "enabled",
+            "X-Logic-Bomb-Protection": "active"
         },
 
         /**
@@ -213,32 +213,32 @@ sap.ui.define([], function () {
          * @param {Object} params - Task parameters
          * @returns {Object} - Validation result
          */
-        validateReasoningTask: function(params) {
+        validateReasoningTask(params) {
             const errors = [];
-            
+
             // Check task name
             if (!this.validation.patterns.taskName.test(params.taskName)) {
-                errors.push('Invalid task name format');
+                errors.push("Invalid task name format");
             }
-            
+
             // Check reasoning type
             if (!this.reasoning.allowedReasoningTypes.includes(params.reasoningType)) {
-                errors.push('Invalid reasoning type');
+                errors.push("Invalid reasoning type");
             }
-            
+
             // Check confidence threshold
             if (params.confidenceThreshold < this.reasoning.confidenceThresholds.minimum) {
-                errors.push('Confidence threshold too low');
+                errors.push("Confidence threshold too low");
             }
-            
+
             // Check inference depth
             if (params.maxInferenceDepth > this.reasoning.maxInferenceDepth) {
-                errors.push('Inference depth exceeds maximum allowed');
+                errors.push("Inference depth exceeds maximum allowed");
             }
-            
+
             return {
                 isValid: errors.length === 0,
-                errors: errors
+                errors
             };
         },
 
@@ -247,13 +247,13 @@ sap.ui.define([], function () {
          * @param {string} rule - Rule to check
          * @returns {boolean} - True if safe
          */
-        isRuleSafe: function(rule) {
-            for (let pattern of this.reasoning.blockedRulePatterns) {
+        isRuleSafe(rule) {
+            for (const pattern of this.reasoning.blockedRulePatterns) {
                 if (pattern.test(rule)) {
                     return false;
                 }
             }
-            
+
             return rule.length <= this.knowledgeBase.maxRuleComplexity;
         },
 
@@ -263,7 +263,7 @@ sap.ui.define([], function () {
          * @param {string} userRole - User's role
          * @returns {boolean} - True if permitted
          */
-        hasKnowledgePermission: function(operation, userRole) {
+        hasKnowledgePermission(operation, userRole) {
             const allowedRoles = this.knowledgeBase.accessControl[operation];
             return allowedRoles && allowedRoles.includes(userRole);
         },
@@ -273,29 +273,29 @@ sap.ui.define([], function () {
          * @param {Object} decision - Decision parameters
          * @returns {number} - Risk score between 0 and 1
          */
-        calculateDecisionRisk: function(decision) {
+        calculateDecisionRisk(decision) {
             let riskScore = 0;
-            
+
             // Factor in confidence
             if (decision.confidence < this.reasoning.confidenceThresholds.acceptable) {
                 riskScore += 0.3;
             }
-            
+
             // Factor in alternatives
             if (!decision.alternatives || decision.alternatives.length < 2) {
                 riskScore += 0.2;
             }
-            
+
             // Factor in impact
-            if (decision.impactLevel === 'HIGH') {
+            if (decision.impactLevel === "HIGH") {
                 riskScore += 0.3;
             }
-            
+
             // Factor in reversibility
             if (!decision.reversible) {
                 riskScore += 0.2;
             }
-            
+
             return Math.min(1, riskScore);
         }
     };

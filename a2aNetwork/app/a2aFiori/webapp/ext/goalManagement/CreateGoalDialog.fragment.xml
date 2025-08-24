@@ -1,0 +1,124 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout">
+    
+    <Dialog title="Create SMART Goal" 
+            contentWidth="600px" 
+            contentHeight="700px"
+            draggable="true" 
+            resizable="true">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Agent Selection -->
+                <Label text="Target Agent" required="true"/>
+                <ComboBox id="agentSelect" 
+                         items="{goalModel>/agents}"
+                         selectedKey="{createGoal>/agentId}"
+                         placeholder="Select agent for goal assignment">
+                    <core:Item key="{goalModel>agentId}" text="{goalModel>agentName}"/>
+                </ComboBox>
+                
+                <!-- Goal Type -->
+                <Label text="Goal Type" required="true" class="sapUiMediumMarginTop"/>
+                <ComboBox selectedKey="{createGoal>/goalType}"
+                         items="{goalModel>/goalTypes}">
+                    <core:Item key="{goalModel>key}" text="{goalModel>text}"/>
+                </ComboBox>
+                
+                <!-- Priority -->
+                <Label text="Priority" required="true" class="sapUiMediumMarginTop"/>
+                <ComboBox selectedKey="{createGoal>/priority}"
+                         items="{goalModel>/priorities}">
+                    <core:Item key="{goalModel>key}" text="{goalModel>text}"/>
+                </ComboBox>
+                
+                <!-- SMART Goal Definition -->
+                <Panel headerText="SMART Goal Definition" class="sapUiMediumMarginTop" expandable="false">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Specific -->
+                            <Label text="Specific (Clear objective)" required="true"/>
+                            <TextArea value="{createGoal>/specific}" 
+                                    rows="3" 
+                                    placeholder="Define the specific objective this agent should achieve..."/>
+                            
+                            <!-- Measurable Targets -->
+                            <Label text="Measurable Targets" required="true" class="sapUiMediumMarginTop"/>
+                            <layout:Grid defaultSpan="XL6 L6 M12 S12" class="sapUiMediumMarginTop">
+                                <VBox>
+                                    <Label text="Success Rate Target (%)"/>
+                                    <Input value="{createGoal>/measurable/success_rate}" type="Number"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Response Time Target (seconds)"/>
+                                    <Input value="{createGoal>/measurable/response_time}" type="Number"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Quality Score Target (%)"/>
+                                    <Input value="{createGoal>/measurable/quality_score}" type="Number"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Throughput Target (per hour)"/>
+                                    <Input value="{createGoal>/measurable/throughput}" type="Number"/>
+                                </VBox>
+                            </layout:Grid>
+                            
+                            <!-- Achievable -->
+                            <CheckBox text="Goal is achievable based on current agent capabilities" 
+                                    selected="{createGoal>/achievable}" 
+                                    class="sapUiMediumMarginTop"/>
+                            
+                            <!-- Relevant -->
+                            <Label text="Relevant (Business justification)" class="sapUiMediumMarginTop"/>
+                            <TextArea value="{createGoal>/relevant}" 
+                                    rows="2" 
+                                    placeholder="Explain why this goal is relevant to business objectives..."/>
+                            
+                            <!-- Time-bound -->
+                            <Label text="Target Completion Date" required="true" class="sapUiMediumMarginTop"/>
+                            <DatePicker value="{createGoal>/targetDate}" 
+                                      minDate="{path: 'createGoal>/minDate', formatter: '.formatMinDate'}"/>
+                            
+                            <!-- Tracking Frequency -->
+                            <Label text="Progress Tracking Frequency" class="sapUiMediumMarginTop"/>
+                            <ComboBox selectedKey="{createGoal>/trackingFrequency}">
+                                <core:Item key="hourly" text="Hourly"/>
+                                <core:Item key="daily" text="Daily"/>
+                                <core:Item key="weekly" text="Weekly"/>
+                            </ComboBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- AI Enhancement Options -->
+                <Panel headerText="AI Enhancement Options" class="sapUiMediumMarginTop" expandable="true" expanded="false">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <CheckBox text="Enable AI-powered progress prediction" 
+                                    selected="{createGoal>/aiOptions/enablePrediction}"/>
+                            <CheckBox text="Enable intelligent milestone detection" 
+                                    selected="{createGoal>/aiOptions/enableMilestones}"/>
+                            <CheckBox text="Enable AI-driven recommendations" 
+                                    selected="{createGoal>/aiOptions/enableRecommendations}"/>
+                            <CheckBox text="Enable automated strategy optimization" 
+                                    selected="{createGoal>/aiOptions/enableOptimization}"/>
+                        </VBox>
+                    </content>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="Create Goal" 
+                   type="Emphasized" 
+                   press="onCreateGoalConfirm"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Cancel" 
+                   press="onCreateGoalCancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

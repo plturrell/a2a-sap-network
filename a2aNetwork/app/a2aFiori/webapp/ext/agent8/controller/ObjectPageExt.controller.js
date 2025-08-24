@@ -234,7 +234,7 @@ sap.ui.define([
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
                     const safeCacheSize = this._securityUtils.encodeHTML(data.cacheSize || '0');
-                    const safeRecordCount = parseInt(data.recordCount) || 0;
+                    const safeRecordCount = parseInt(data.recordCount, 10) || 0;
                     const safeCacheKey = this._securityUtils.encodeHTML(data.cacheKey || 'N/A');
                     MessageBox.success(
                         "Dataset cached successfully!\\n" +
@@ -349,7 +349,7 @@ sap.ui.define([
                 
                 if (data.type === "progress") {
                     const safeStage = this._securityUtils.encodeHTML(data.stage || 'Unknown stage');
-                    const safeProgress = parseInt(data.progress) || 0;
+                    const safeProgress = parseInt(data.progress, 10) || 0;
                     MessageToast.show("Optimization: " + safeStage + " (" + safeProgress + "%)");
                 } else if (data.type === "complete") {
                     this._optimizationEventSource.close();
@@ -384,7 +384,7 @@ sap.ui.define([
                 url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sDatasetName) + "/cache",
                 type: "DELETE",
                 success: function(data) {
-                    const safeEntries = parseInt(data.entriesRemoved) || 0;
+                    const safeEntries = parseInt(data.entriesRemoved, 10) || 0;
                     const safeMemory = this._securityUtils.encodeHTML(data.memoryFreed || '0');
                     MessageToast.show(
                         "Cache cleared: " + safeEntries + " entries removed, " +
@@ -566,7 +566,7 @@ sap.ui.define([
                     this._oStoreDialog.setBusy(false);
                     this._oStoreDialog.close();
                     
-                    const safeRecordsStored = parseInt(data.recordsStored) || 0;
+                    const safeRecordsStored = parseInt(data.recordsStored, 10) || 0;
                     const safeStorageSize = this._securityUtils.encodeHTML(data.storageSize || '0');
                     const safeCompressionRatio = parseFloat(data.compressionRatio) || 0;
                     MessageBox.success(
@@ -829,7 +829,7 @@ sap.ui.define([
                 outputFormat: this._securityUtils.sanitizeInput(oData.outputFormat || 'JSON'),
                 useCache: Boolean(oData.useCache),
                 filterCriteria: this._sanitizeObject(oData.filterCriteria || {}),
-                maxRecords: Math.max(0, parseInt(oData.maxRecords) || 0),
+                maxRecords: Math.max(0, parseInt(oData.maxRecords, 10) || 0),
                 includeMetadata: Boolean(oData.includeMetadata)
             };
         },
@@ -858,7 +858,7 @@ sap.ui.define([
                 compressionEnabled: Boolean(oData.compressionEnabled),
                 encryptionEnabled: Boolean(oData.encryptionEnabled),
                 backupLocation: this._securityUtils.sanitizeInput(oData.backupLocation || 'S3'),
-                retentionDays: Math.max(1, Math.min(3650, parseInt(oData.retentionDays) || 90))
+                retentionDays: Math.max(1, Math.min(3650, parseInt(oData.retentionDays, 10) || 90))
             };
         },
 
@@ -960,7 +960,7 @@ sap.ui.define([
                 autoWarmCache: Boolean(oData.autoWarmCache),
                 cacheOnWrite: Boolean(oData.cacheOnWrite),
                 cacheLevel: this._securityUtils.sanitizeInput(oData.cacheLevel),
-                cacheTTL: Math.max(1, Math.min(1440, parseInt(oData.cacheTTL) || 60)),
+                cacheTTL: Math.max(1, Math.min(1440, parseInt(oData.cacheTTL, 10) || 60)),
                 evictionPolicy: this._securityUtils.sanitizeInput(oData.evictionPolicy),
                 memoryCacheSize: Math.max(0.1, Math.min(64, parseFloat(oData.memoryCacheSize) || 2)),
                 redisCacheSize: Math.max(0.1, Math.min(256, parseFloat(oData.redisCacheSize) || 8)),
@@ -968,15 +968,15 @@ sap.ui.define([
                 autoVersioning: Boolean(oData.autoVersioning),
                 incrementalBackup: Boolean(oData.incrementalBackup),
                 versionStrategy: this._securityUtils.sanitizeInput(oData.versionStrategy),
-                retentionDays: Math.max(1, Math.min(365, parseInt(oData.retentionDays) || 90)),
-                maxVersions: Math.max(1, Math.min(100, parseInt(oData.maxVersions) || 10)),
+                retentionDays: Math.max(1, Math.min(365, parseInt(oData.retentionDays, 10) || 90)),
+                maxVersions: Math.max(1, Math.min(100, parseInt(oData.maxVersions, 10) || 10)),
                 checksumValidation: Boolean(oData.checksumValidation),
                 checksumAlgorithm: this._securityUtils.sanitizeInput(oData.checksumAlgorithm),
-                batchSize: Math.max(100, Math.min(100000, parseInt(oData.batchSize) || 1000)),
+                batchSize: Math.max(100, Math.min(100000, parseInt(oData.batchSize, 10) || 1000)),
                 parallelProcessing: Boolean(oData.parallelProcessing),
-                threadPoolSize: Math.max(1, Math.min(32, parseInt(oData.threadPoolSize) || 4)),
-                connectionPoolSize: Math.max(1, Math.min(100, parseInt(oData.connectionPoolSize) || 10)),
-                connectionTimeout: Math.max(5, Math.min(300, parseInt(oData.connectionTimeout) || 30)),
+                threadPoolSize: Math.max(1, Math.min(32, parseInt(oData.threadPoolSize, 10) || 4)),
+                connectionPoolSize: Math.max(1, Math.min(100, parseInt(oData.connectionPoolSize, 10) || 10)),
+                connectionTimeout: Math.max(5, Math.min(300, parseInt(oData.connectionTimeout, 10) || 30)),
                 autoOptimization: Boolean(oData.autoOptimization),
                 indexOptimization: Boolean(oData.indexOptimization),
                 queryOptimization: Boolean(oData.queryOptimization),
@@ -1420,9 +1420,9 @@ sap.ui.define([
         _showTestResults: function(testData) {
             var sMessage = "Transformation Test Results:\\n\\n";
             
-            const safeRecordsProcessed = parseInt(testData.recordsProcessed) || 0;
-            const safeRecordsTransformed = parseInt(testData.recordsTransformed) || 0;
-            const safeErrors = parseInt(testData.errors) || 0;
+            const safeRecordsProcessed = parseInt(testData.recordsProcessed, 10) || 0;
+            const safeRecordsTransformed = parseInt(testData.recordsTransformed, 10) || 0;
+            const safeErrors = parseInt(testData.errors, 10) || 0;
             const safeExecutionTime = parseFloat(testData.executionTime) || 0;
             
             sMessage += "Records Processed: " + safeRecordsProcessed + "\\n";
@@ -1498,7 +1498,7 @@ sap.ui.define([
                     var data = JSON.parse(event.data);
                     
                     if (data.type === "progress") {
-                        const progress = Math.max(0, Math.min(100, parseInt(data.progress) || 0));
+                        const progress = Math.max(0, Math.min(100, parseInt(data.progress, 10) || 0));
                         const stage = this._securityUtils.sanitizeInput(data.stage);
                         MessageToast.show("Transformation: " + stage + " (" + progress + "%)");
                     } else if (data.type === "completed") {
@@ -1731,7 +1731,7 @@ sap.ui.define([
                 includeStatistics: Boolean(oData.includeStatistics),
                 compressOutput: Boolean(oData.compressOutput),
                 outputDestination: this._securityUtils.sanitizeInput(oData.outputDestination),
-                maxRecords: Math.max(0, parseInt(oData.maxRecords) || 0),
+                maxRecords: Math.max(0, parseInt(oData.maxRecords, 10) || 0),
                 filterCriteria: this._securityUtils.sanitizeObject(oData.filterCriteria || {})
             };
             

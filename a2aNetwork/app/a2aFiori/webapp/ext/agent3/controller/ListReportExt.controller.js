@@ -8,29 +8,29 @@ sap.ui.define([
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
     "sap/base/Log"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent3.ext.controller.ListReportExt", {
-        
+
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
-                
+
                 // Initialize device model for responsive behavior
-                var oDeviceModel = new JSONModel(sap.ui.Device);
+                const oDeviceModel = new JSONModel(sap.ui.Device);
                 oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
                 this.base.getView().setModel(oDeviceModel, "device");
-                
+
                 // Initialize dialog cache for better performance
                 this._dialogCache = {};
-                
+
                 // Initialize resource bundle for i18n
                 this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             }
         },
 
-        onCreateVectorTask: function() {
+        onCreateVectorTask() {
             // Initialize create model before opening dialog
             this._initializeCreateModel();
             this._openCachedDialog("createVectorTask", "a2a.network.agent3.ext.fragment.CreateVectorTask");
@@ -41,8 +41,8 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeCreateModel: function() {
-            var oCreateModel = new JSONModel({
+        _initializeCreateModel() {
+            const oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
                 dataSource: "",
@@ -83,22 +83,22 @@ sap.ui.define([
          * @param {function} [fnCallback] - Optional callback after opening
          * @since 1.0.0
          */
-        _openCachedDialog: function(sDialogKey, sFragmentName, fnCallback) {
-            var oView = this.base.getView();
-            
+        _openCachedDialog(sDialogKey, sFragmentName, fnCallback) {
+            const oView = this.base.getView();
+
             if (!this._dialogCache[sDialogKey]) {
                 Fragment.load({
                     id: oView.getId(),
                     name: sFragmentName,
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._dialogCache[sDialogKey] = oDialog;
                     oView.addDependent(oDialog);
                     oDialog.open();
                     if (fnCallback) {
                         fnCallback(oDialog);
                     }
-                }.bind(this));
+                });
             } else {
                 this._dialogCache[sDialogKey].open();
                 if (fnCallback) {
@@ -107,20 +107,20 @@ sap.ui.define([
             }
         },
 
-        onVectorSearch: function() {
-            var oView = this.base.getView();
-            
+        onVectorSearch() {
+            const oView = this.base.getView();
+
             if (!this._oVectorSearchDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent3.ext.fragment.VectorSearch",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oVectorSearchDialog = oDialog;
                     oView.addDependent(this._oVectorSearchDialog);
-                    
+
                     // Initialize search model
-                    var oSearchModel = new JSONModel({
+                    const oSearchModel = new JSONModel({
                         query: "",
                         collection: "",
                         topK: 10,
@@ -130,17 +130,17 @@ sap.ui.define([
                     });
                     this._oVectorSearchDialog.setModel(oSearchModel, "search");
                     this._oVectorSearchDialog.open();
-                    
+
                     // Load available collections
                     this._loadVectorCollections();
-                }.bind(this));
+                });
             } else {
                 this._oVectorSearchDialog.open();
                 this._loadVectorCollections();
             }
         },
 
-        _loadVectorCollections: function() {
+        _loadVectorCollections() {
             jQuery.ajax({
                 url: "/a2a/agent3/v1/collections",
                 type: "GET",
@@ -150,30 +150,30 @@ sap.ui.define([
                 },
                 success: function(data) {
                     if (this._validateApiResponse(data)) {
-                        var oSearchModel = this._oVectorSearchDialog.getModel("search");
+                        const oSearchModel = this._oVectorSearchDialog.getModel("search");
                         oSearchModel.setProperty("/collections", data.collections);
                     }
                 }.bind(this),
                 error: function(xhr) {
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Failed to load vector collections: " + errorMsg);
+                    const errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error(`Failed to load vector collections: ${ errorMsg}`);
                 }.bind(this)
             });
         },
 
-        onExecuteVectorSearch: function() {
-            var oSearchModel = this._oVectorSearchDialog.getModel("search");
-            var oSearchData = oSearchModel.getData();
-            
+        onExecuteVectorSearch() {
+            const oSearchModel = this._oVectorSearchDialog.getModel("search");
+            const oSearchData = oSearchModel.getData();
+
             // Validate input
-            var oValidation = this._validateSearchQuery(oSearchData);
+            const oValidation = this._validateSearchQuery(oSearchData);
             if (!oValidation.isValid) {
                 MessageBox.error(oValidation.message);
                 return;
             }
-            
+
             this._oVectorSearchDialog.setBusy(true);
-            
+
             jQuery.ajax({
                 url: "/a2a/agent3/v1/search",
                 type: "POST",
@@ -187,71 +187,71 @@ sap.ui.define([
                     this._oVectorSearchDialog.setBusy(false);
                     if (this._validateApiResponse(data)) {
                         oSearchModel.setProperty("/searchResults", data.results);
-                        
+
                         if (data.results.length === 0) {
                             MessageToast.show("No similar vectors found");
                         } else {
-                            MessageToast.show("Found " + data.results.length + " similar vectors");
+                            MessageToast.show(`Found ${ data.results.length } similar vectors`);
                         }
                     }
                 }.bind(this),
                 error: function(xhr) {
                     this._oVectorSearchDialog.setBusy(false);
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Search failed: " + errorMsg);
+                    const errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error(`Search failed: ${ errorMsg}`);
                 }.bind(this)
             });
         },
 
-        onManageCollections: function() {
+        onManageCollections() {
             // Navigate to vector collections management
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this.base.getView());
+            const oRouter = sap.ui.core.UIComponent.getRouterFor(this.base.getView());
             oRouter.navTo("VectorCollections");
         },
 
-        onVectorVisualization: function() {
-            var oView = this.base.getView();
-            
+        onVectorVisualization() {
+            const oView = this.base.getView();
+
             if (!this._oVisualizationDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent3.ext.fragment.VectorVisualization3D",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oVisualizationDialog = oDialog;
                     oView.addDependent(this._oVisualizationDialog);
                     this._oVisualizationDialog.open();
-                    
+
                     // Initialize 3D visualization with throttling
                     this._init3DVisualization();
-                }.bind(this));
+                });
             } else {
                 this._oVisualizationDialog.open();
                 this._refresh3DVisualization();
             }
         },
 
-        _init3DVisualization: function() {
+        _init3DVisualization() {
             // Initialize Three.js with performance optimization
-            setTimeout(function() {
-                var oContainer = this.byId("visualization3DContainer");
+            setTimeout(() => {
+                const oContainer = this.byId("visualization3DContainer");
                 if (oContainer) {
                     // Create 3D scene with requestAnimationFrame throttling
                     this._create3DScene(oContainer.getDomRef());
                 }
-            }.bind(this), 100);
+            }, 100);
         },
 
-        _create3DScene: function(container) {
+        _create3DScene(container) {
             // Performance-optimized 3D visualization
             if (this._animationFrameId) {
                 cancelAnimationFrame(this._animationFrameId);
             }
-            
+
             // Throttled render function
-            var lastRenderTime = 0;
-            var renderThrottle = 16; // ~60fps
-            
+            let lastRenderTime = 0;
+            const renderThrottle = 16; // ~60fps
+
             var render = function(currentTime) {
                 if (currentTime - lastRenderTime > renderThrottle) {
                     // Render 3D scene here
@@ -259,12 +259,12 @@ sap.ui.define([
                 }
                 this._animationFrameId = requestAnimationFrame(render);
             }.bind(this);
-            
+
             MessageToast.show("3D visualization loading...");
             this._animationFrameId = requestAnimationFrame(render);
         },
 
-        _refresh3DVisualization: function() {
+        _refresh3DVisualization() {
             // Cleanup and reinitialize 3D scene
             if (this._animationFrameId) {
                 cancelAnimationFrame(this._animationFrameId);
@@ -272,22 +272,22 @@ sap.ui.define([
             this._init3DVisualization();
         },
 
-        onBatchProcessing: function() {
-            var oTable = this._extensionAPI.getTable();
-            var aSelectedContexts = oTable.getSelectedContexts();
-            
+        onBatchProcessing() {
+            const oTable = this._extensionAPI.getTable();
+            const aSelectedContexts = oTable.getSelectedContexts();
+
             if (aSelectedContexts.length === 0) {
                 MessageBox.warning("Please select tasks for batch processing.");
                 return;
             }
-            
+
             if (aSelectedContexts.length > 100) {
                 MessageBox.warning("Maximum 100 tasks can be processed in a single batch.");
                 return;
             }
-            
+
             MessageBox.confirm(
-                "Start batch vector processing for " + aSelectedContexts.length + " tasks?",
+                `Start batch vector processing for ${ aSelectedContexts.length } tasks?`,
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -298,13 +298,13 @@ sap.ui.define([
             );
         },
 
-        _startBatchProcessing: function(aContexts) {
-            var aTaskIds = aContexts.map(function(oContext) {
+        _startBatchProcessing(aContexts) {
+            const aTaskIds = aContexts.map((oContext) => {
                 return oContext.getProperty("ID");
             });
-            
+
             this.base.getView().setBusy(true);
-            
+
             jQuery.ajax({
                 url: "/a2a/agent3/v1/batch-process",
                 type: "POST",
@@ -325,43 +325,43 @@ sap.ui.define([
                     if (this._validateApiResponse(data)) {
                         MessageBox.success(
                             "Batch processing started!\n" +
-                            "Job ID: " + data.jobId + "\n" +
-                            "Estimated vectors: " + data.estimatedVectors
+                            `Job ID: ${ data.jobId }\n` +
+                            `Estimated vectors: ${ data.estimatedVectors}`
                         );
                         this._extensionAPI.refresh();
                     }
                 }.bind(this),
                 error: function(xhr) {
                     this.base.getView().setBusy(false);
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Batch processing failed: " + errorMsg);
+                    const errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error(`Batch processing failed: ${ errorMsg}`);
                 }.bind(this)
             });
         },
 
-        onModelComparison: function() {
-            var oView = this.base.getView();
-            
+        onModelComparison() {
+            const oView = this.base.getView();
+
             if (!this._oModelComparisonDialog) {
                 Fragment.load({
                     id: oView.getId(),
                     name: "a2a.network.agent3.ext.fragment.ModelComparison",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oModelComparisonDialog = oDialog;
                     oView.addDependent(this._oModelComparisonDialog);
                     this._oModelComparisonDialog.open();
-                    
+
                     // Load model comparison data
                     this._loadModelComparison();
-                }.bind(this));
+                });
             } else {
                 this._oModelComparisonDialog.open();
                 this._loadModelComparison();
             }
         },
 
-        _loadModelComparison: function() {
+        _loadModelComparison() {
             jQuery.ajax({
                 url: "/a2a/agent3/v1/model-comparison",
                 type: "GET",
@@ -371,30 +371,30 @@ sap.ui.define([
                 },
                 success: function(data) {
                     if (this._validateApiResponse(data)) {
-                        var oModel = new JSONModel(data);
+                        const oModel = new JSONModel(data);
                         this._oModelComparisonDialog.setModel(oModel, "comparison");
                     }
                 }.bind(this),
                 error: function(xhr) {
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Failed to load model comparison data: " + errorMsg);
+                    const errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error(`Failed to load model comparison data: ${ errorMsg}`);
                 }.bind(this)
             });
         },
 
-        onConfirmCreateTask: function() {
-            var oModel = this._oCreateDialog.getModel("create");
-            var oData = oModel.getData();
-            
+        onConfirmCreateTask() {
+            const oModel = this._oCreateDialog.getModel("create");
+            const oData = oModel.getData();
+
             // Comprehensive validation
-            var oValidation = this._validateVectorTaskData(oData);
+            const oValidation = this._validateVectorTaskData(oData);
             if (!oValidation.isValid) {
                 MessageBox.error(oValidation.message);
                 return;
             }
-            
+
             this._oCreateDialog.setBusy(true);
-            
+
             jQuery.ajax({
                 url: "/a2a/agent3/v1/tasks",
                 type: "POST",
@@ -410,20 +410,20 @@ sap.ui.define([
                         this._oCreateDialog.close();
                         MessageToast.show("Vector processing task created successfully");
                         this._extensionAPI.refresh();
-                        
+
                         // Audit logging
                         this._logAuditEvent("VECTOR_TASK_CREATED", data.taskId);
                     }
                 }.bind(this),
                 error: function(xhr) {
                     this._oCreateDialog.setBusy(false);
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Failed to create task: " + errorMsg);
+                    const errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error(`Failed to create task: ${ errorMsg}`);
                 }.bind(this)
             });
         },
 
-        onCancelCreateTask: function() {
+        onCancelCreateTask() {
             this._oCreateDialog.close();
         },
 
@@ -432,32 +432,32 @@ sap.ui.define([
          * @param {object} oData - Task data to validate
          * @returns {object} Validation result with sanitized data
          */
-        _validateVectorTaskData: function(oData) {
-            if (!oData || typeof oData !== 'object') {
+        _validateVectorTaskData(oData) {
+            if (!oData || typeof oData !== "object") {
                 return { isValid: false, message: "Invalid task data" };
             }
 
-            var oSanitized = {};
-            
+            const oSanitized = {};
+
             // Validate task name
-            var oNameValidation = this._validateInput(oData.taskName, "taskName");
+            const oNameValidation = this._validateInput(oData.taskName, "taskName");
             if (!oNameValidation.isValid) {
-                return { isValid: false, message: "Task name: " + oNameValidation.message };
+                return { isValid: false, message: `Task name: ${ oNameValidation.message}` };
             }
             oSanitized.taskName = oNameValidation.sanitized;
 
             // Validate data source path
-            var oSourceValidation = this._validateInput(oData.dataSource, "path");
+            const oSourceValidation = this._validateInput(oData.dataSource, "path");
             if (!oSourceValidation.isValid) {
-                return { isValid: false, message: "Data source: " + oSourceValidation.message };
+                return { isValid: false, message: `Data source: ${ oSourceValidation.message}` };
             }
             oSanitized.dataSource = oSourceValidation.sanitized;
 
             // Validate collection name
             if (oData.collectionName) {
-                var oCollectionValidation = this._validateInput(oData.collectionName, "collectionName");
+                const oCollectionValidation = this._validateInput(oData.collectionName, "collectionName");
                 if (!oCollectionValidation.isValid) {
-                    return { isValid: false, message: "Collection name: " + oCollectionValidation.message };
+                    return { isValid: false, message: `Collection name: ${ oCollectionValidation.message}` };
                 }
                 oSanitized.collectionName = oCollectionValidation.sanitized;
             }
@@ -465,7 +465,7 @@ sap.ui.define([
             // Validate metadata schema JSON
             if (oData.metadataSchema) {
                 try {
-                    var oSchema = JSON.parse(oData.metadataSchema);
+                    const oSchema = JSON.parse(oData.metadataSchema);
                     oSanitized.metadataSchema = JSON.stringify(oSchema);
                 } catch (e) {
                     return { isValid: false, message: "Invalid metadata schema JSON" };
@@ -473,27 +473,27 @@ sap.ui.define([
             }
 
             // Validate numeric fields
-            var nDimensions = parseInt(oData.dimensions, 10);
+            const nDimensions = parseInt(oData.dimensions, 10);
             if (isNaN(nDimensions) || nDimensions < 128 || nDimensions > 4096) {
                 return { isValid: false, message: "Dimensions must be between 128 and 4096" };
             }
             oSanitized.dimensions = nDimensions;
 
-            var nChunkSize = parseInt(oData.chunkSize, 10);
+            const nChunkSize = parseInt(oData.chunkSize, 10);
             if (isNaN(nChunkSize) || nChunkSize < 128 || nChunkSize > 2048) {
                 return { isValid: false, message: "Chunk size must be between 128 and 2048" };
             }
             oSanitized.chunkSize = nChunkSize;
 
             // Copy other safe fields
-            var aSafeFields = ['description', 'dataType', 'embeddingModel', 'modelProvider', 
-                              'vectorDatabase', 'indexType', 'distanceMetric', 'chunkOverlap',
-                              'normalization', 'batchSize', 'parallelProcessing', 'useGPU',
-                              'errorHandling', 'progressMonitoring', 'incrementalUpdates'];
-            
-            aSafeFields.forEach(function(sField) {
+            const aSafeFields = ["description", "dataType", "embeddingModel", "modelProvider",
+                "vectorDatabase", "indexType", "distanceMetric", "chunkOverlap",
+                "normalization", "batchSize", "parallelProcessing", "useGPU",
+                "errorHandling", "progressMonitoring", "incrementalUpdates"];
+
+            aSafeFields.forEach((sField) => {
                 if (oData[sField] !== undefined) {
-                    if (typeof oData[sField] === 'string') {
+                    if (typeof oData[sField] === "string") {
                         oSanitized[sField] = encodeXML(oData[sField]);
                     } else {
                         oSanitized[sField] = oData[sField];
@@ -509,42 +509,42 @@ sap.ui.define([
          * @param {object} oData - Search data to validate
          * @returns {object} Validation result
          */
-        _validateSearchQuery: function(oData) {
+        _validateSearchQuery(oData) {
             if (!oData.query || !oData.collection) {
                 return { isValid: false, message: "Please enter a query and select a collection" };
             }
 
-            var oSanitized = {};
-            
+            const oSanitized = {};
+
             // Validate and sanitize query
-            var oQueryValidation = this._validateInput(oData.query, "query");
+            const oQueryValidation = this._validateInput(oData.query, "query");
             if (!oQueryValidation.isValid) {
-                return { isValid: false, message: "Query: " + oQueryValidation.message };
+                return { isValid: false, message: `Query: ${ oQueryValidation.message}` };
             }
             oSanitized.query = oQueryValidation.sanitized;
 
             // Validate collection name
-            var oCollectionValidation = this._validateInput(oData.collection, "collectionName");
+            const oCollectionValidation = this._validateInput(oData.collection, "collectionName");
             if (!oCollectionValidation.isValid) {
-                return { isValid: false, message: "Collection: " + oCollectionValidation.message };
+                return { isValid: false, message: `Collection: ${ oCollectionValidation.message}` };
             }
             oSanitized.collection = oCollectionValidation.sanitized;
 
             // Validate numeric parameters
-            var nTopK = parseInt(oData.topK, 10);
+            const nTopK = parseInt(oData.topK, 10);
             if (isNaN(nTopK) || nTopK < 1 || nTopK > 100) {
                 return { isValid: false, message: "Top K must be between 1 and 100" };
             }
             oSanitized.topK = nTopK;
 
-            var nThreshold = parseFloat(oData.similarityThreshold);
+            const nThreshold = parseFloat(oData.similarityThreshold);
             if (isNaN(nThreshold) || nThreshold < 0 || nThreshold > 1) {
                 return { isValid: false, message: "Similarity threshold must be between 0 and 1" };
             }
             oSanitized.threshold = nThreshold;
 
             // Validate filters if present
-            if (oData.filters && typeof oData.filters === 'object') {
+            if (oData.filters && typeof oData.filters === "object") {
                 oSanitized.filters = this._sanitizeFilters(oData.filters);
             }
 
@@ -557,15 +557,15 @@ sap.ui.define([
          * @param {string} sType - Type of validation
          * @returns {object} Validation result
          */
-        _validateInput: function(sInput, sType) {
-            if (!sInput || typeof sInput !== 'string') {
+        _validateInput(sInput, sType) {
+            if (!sInput || typeof sInput !== "string") {
                 return { isValid: false, message: "Input is required" };
             }
 
-            var sSanitized = sInput.trim();
-            
+            let sSanitized = sInput.trim();
+
             // Check for XSS patterns
-            var aXSSPatterns = [
+            const aXSSPatterns = [
                 /<script/i,
                 /javascript:/i,
                 /on\w+\s*=/i,
@@ -576,7 +576,7 @@ sap.ui.define([
                 /Function\s*\(/i
             ];
 
-            for (var i = 0; i < aXSSPatterns.length; i++) {
+            for (let i = 0; i < aXSSPatterns.length; i++) {
                 if (aXSSPatterns[i].test(sSanitized)) {
                     return { isValid: false, message: "Invalid characters detected" };
                 }
@@ -584,51 +584,51 @@ sap.ui.define([
 
             // Type-specific validation
             switch (sType) {
-                case "taskName":
-                    if (sSanitized.length < 3 || sSanitized.length > 100) {
-                        return { isValid: false, message: "Must be 3-100 characters" };
-                    }
-                    if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sSanitized)) {
-                        return { isValid: false, message: "Contains invalid characters" };
-                    }
-                    break;
-                
-                case "collectionName":
-                    if (sSanitized.length < 3 || sSanitized.length > 50) {
-                        return { isValid: false, message: "Must be 3-50 characters" };
-                    }
-                    if (!/^[a-zA-Z0-9\-_]+$/.test(sSanitized)) {
-                        return { isValid: false, message: "Only alphanumeric, dash, and underscore allowed" };
-                    }
-                    break;
-                
-                case "path":
-                    if (sSanitized.length > 500) {
-                        return { isValid: false, message: "Path too long" };
-                    }
-                    // Basic path validation
-                    if (/[<>:"|?*]/.test(sSanitized)) {
-                        return { isValid: false, message: "Contains invalid path characters" };
-                    }
-                    // Prevent path traversal
-                    if (/\.\./.test(sSanitized)) {
-                        return { isValid: false, message: "Path traversal not allowed" };
-                    }
-                    break;
-                
-                case "query":
-                    if (sSanitized.length > 1000) {
-                        return { isValid: false, message: "Query too long (max 1000 characters)" };
-                    }
-                    // Escape special regex characters for vector search
-                    sSanitized = escapeRegExp(sSanitized);
-                    break;
-                
-                default:
-                    if (sSanitized.length > 10000) {
-                        return { isValid: false, message: "Input too long" };
-                    }
-                    break;
+            case "taskName":
+                if (sSanitized.length < 3 || sSanitized.length > 100) {
+                    return { isValid: false, message: "Must be 3-100 characters" };
+                }
+                if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sSanitized)) {
+                    return { isValid: false, message: "Contains invalid characters" };
+                }
+                break;
+
+            case "collectionName":
+                if (sSanitized.length < 3 || sSanitized.length > 50) {
+                    return { isValid: false, message: "Must be 3-50 characters" };
+                }
+                if (!/^[a-zA-Z0-9\-_]+$/.test(sSanitized)) {
+                    return { isValid: false, message: "Only alphanumeric, dash, and underscore allowed" };
+                }
+                break;
+
+            case "path":
+                if (sSanitized.length > 500) {
+                    return { isValid: false, message: "Path too long" };
+                }
+                // Basic path validation
+                if (/[<>:"|?*]/.test(sSanitized)) {
+                    return { isValid: false, message: "Contains invalid path characters" };
+                }
+                // Prevent path traversal
+                if (/\.\./.test(sSanitized)) {
+                    return { isValid: false, message: "Path traversal not allowed" };
+                }
+                break;
+
+            case "query":
+                if (sSanitized.length > 1000) {
+                    return { isValid: false, message: "Query too long (max 1000 characters)" };
+                }
+                // Escape special regex characters for vector search
+                sSanitized = escapeRegExp(sSanitized);
+                break;
+
+            default:
+                if (sSanitized.length > 10000) {
+                    return { isValid: false, message: "Input too long" };
+                }
+                break;
             }
 
             return { isValid: true, sanitized: encodeXML(sSanitized) };
@@ -639,29 +639,29 @@ sap.ui.define([
          * @param {object} oFilters - Filters to sanitize
          * @returns {object} Sanitized filters
          */
-        _sanitizeFilters: function(oFilters) {
-            var oSanitized = {};
-            
-            for (var sKey in oFilters) {
+        _sanitizeFilters(oFilters) {
+            const oSanitized = {};
+
+            for (const sKey in oFilters) {
                 if (oFilters.hasOwnProperty(sKey)) {
                     // Validate key
                     if (!/^[a-zA-Z0-9_]+$/.test(sKey)) {
                         continue; // Skip invalid keys
                     }
-                    
-                    var value = oFilters[sKey];
-                    if (typeof value === 'string') {
+
+                    const value = oFilters[sKey];
+                    if (typeof value === "string") {
                         oSanitized[sKey] = encodeXML(value);
-                    } else if (typeof value === 'number' || typeof value === 'boolean') {
+                    } else if (typeof value === "number" || typeof value === "boolean") {
                         oSanitized[sKey] = value;
                     } else if (Array.isArray(value)) {
-                        oSanitized[sKey] = value.map(function(item) {
-                            return typeof item === 'string' ? encodeXML(item) : item;
+                        oSanitized[sKey] = value.map((item) => {
+                            return typeof item === "string" ? encodeXML(item) : item;
                         });
                     }
                 }
             }
-            
+
             return oSanitized;
         },
 
@@ -670,14 +670,14 @@ sap.ui.define([
          * @param {object} oData - Response data
          * @returns {boolean} Whether data is valid
          */
-        _validateApiResponse: function(oData) {
-            if (!oData || typeof oData !== 'object') {
+        _validateApiResponse(oData) {
+            if (!oData || typeof oData !== "object") {
                 return false;
             }
 
             // Check for prototype pollution
-            var aSuspiciousKeys = ['__proto__', 'constructor', 'prototype'];
-            for (var sKey in oData) {
+            const aSuspiciousKeys = ["__proto__", "constructor", "prototype"];
+            for (const sKey in oData) {
                 if (aSuspiciousKeys.indexOf(sKey) !== -1) {
                     Log.error("Potential prototype pollution detected in API response");
                     return false;
@@ -692,17 +692,17 @@ sap.ui.define([
          * @param {string} sMessage - Error message
          * @returns {string} Sanitized message
          */
-        _sanitizeErrorMessage: function(sMessage) {
+        _sanitizeErrorMessage(sMessage) {
             if (!sMessage) {
                 return "An error occurred";
             }
 
             // Remove sensitive information
-            var sSanitized = sMessage
-                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
-                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
-                .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')
-                .replace(/https?:\/\/[^\s]+/g, '[URL]');
+            const sSanitized = sMessage
+                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, "[REDACTED]")
+                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, "[IP_ADDRESS]")
+                .replace(/file:\/\/[^\s]+/g, "[FILE_PATH]")
+                .replace(/https?:\/\/[^\s]+/g, "[URL]");
 
             return encodeXML(sSanitized);
         },
@@ -711,8 +711,8 @@ sap.ui.define([
          * Get CSRF token for secure API calls
          * @returns {string} CSRF token
          */
-        _getCSRFToken: function() {
-            var token = jQuery("meta[name='csrf-token']").attr("content");
+        _getCSRFToken() {
+            let token = jQuery("meta[name='csrf-token']").attr("content");
             if (!token) {
                 // Fallback to fetch token
                 jQuery.ajax({
@@ -723,7 +723,7 @@ sap.ui.define([
                         "X-CSRF-Token": "Fetch",
                         "X-Requested-With": "XMLHttpRequest"
                     },
-                    success: function(data, status, xhr) {
+                    success(data, status, xhr) {
                         token = xhr.getResponseHeader("X-CSRF-Token");
                     }
                 });
@@ -736,7 +736,7 @@ sap.ui.define([
          * @param {string} sEventType - Type of event
          * @param {string} sEntityId - Entity ID
          */
-        _logAuditEvent: function(sEventType, sEntityId) {
+        _logAuditEvent(sEventType, sEntityId) {
             try {
                 jQuery.ajax({
                     url: "/a2a/common/v1/audit",
@@ -760,19 +760,19 @@ sap.ui.define([
          * @param {string} sAction - Action to check
          * @returns {boolean} Whether user has permission
          */
-        _checkUserPermission: function(sAction) {
+        _checkUserPermission(sAction) {
             // Implementation would check against user roles/permissions
-            var userRoles = sap.ushell?.Container?.getUser?.()?.getRoles?.() || [];
-            
-            var requiredRoles = {
+            const userRoles = sap.ushell?.Container?.getUser?.()?.getRoles?.() || [];
+
+            const requiredRoles = {
                 "CREATE_VECTOR_TASK": ["VectorAdmin", "VectorUser"],
                 "BATCH_PROCESSING": ["VectorAdmin"],
                 "EXPORT_VECTORS": ["VectorAdmin", "VectorExporter"],
                 "MANAGE_COLLECTIONS": ["VectorAdmin"]
             };
-            
-            var required = requiredRoles[sAction] || [];
-            return required.length === 0 || required.some(function(role) {
+
+            const required = requiredRoles[sAction] || [];
+            return required.length === 0 || required.some((role) => {
                 return userRoles.indexOf(role) !== -1;
             });
         },
@@ -782,7 +782,7 @@ sap.ui.define([
          * @param {string} sText - Text to format
          * @returns {string} Encoded text
          */
-        formatSecureText: function(sText) {
+        formatSecureText(sText) {
             if (!sText) {
                 return "";
             }
@@ -794,8 +794,8 @@ sap.ui.define([
          * @param {number} nScore - Similarity score
          * @returns {string} Formatted score
          */
-        formatSimilarityScore: function(nScore) {
-            if (typeof nScore !== 'number') {
+        formatSimilarityScore(nScore) {
+            if (typeof nScore !== "number") {
                 return "0.000";
             }
             return nScore.toFixed(3);
@@ -804,25 +804,25 @@ sap.ui.define([
         /**
          * Clean up resources on exit
          */
-        onExit: function() {
+        onExit() {
             // Clean up 3D visualization
             if (this._animationFrameId) {
                 cancelAnimationFrame(this._animationFrameId);
             }
-            
+
             // Clean up any WebSocket connections
             if (this._ws) {
                 this._ws.close();
             }
-            
+
             // Clean up event listeners
             this._cleanup();
         },
 
-        _cleanup: function() {
+        _cleanup() {
             // Remove any global event listeners
             if (this._resizeHandler) {
-                window.removeEventListener('resize', this._resizeHandler);
+                window.removeEventListener("resize", this._resizeHandler);
             }
         }
     });

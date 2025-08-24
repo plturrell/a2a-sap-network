@@ -10,7 +10,7 @@
  */
 sap.ui.define([
     "sap/base/Log"
-], function(Log) {
+], (Log) => {
     "use strict";
 
     const CacheService = {
@@ -232,12 +232,12 @@ sap.ui.define([
                 const keys = this._getAllKeys();
                 let removed = 0;
 
-                keys.forEach(function(key) {
+                keys.forEach((key) => {
                     if (key.startsWith(this.CACHE_PREFIX) || key.startsWith(this.METADATA_PREFIX)) {
                         this._removeItem(key);
                         removed++;
                     }
-                }.bind(this));
+                });
 
                 Log.info("Cache cleared", { entriesRemoved: removed });
                 return true;
@@ -263,7 +263,7 @@ sap.ui.define([
                 const keys = this._getAllKeys();
                 let invalidated = 0;
 
-                keys.forEach(function(key) {
+                keys.forEach((key) => {
                     if (key.startsWith(this.METADATA_PREFIX)) {
                         const metadataStr = this._getItem(key);
                         if (metadataStr) {
@@ -275,7 +275,7 @@ sap.ui.define([
                             }
                         }
                     }
-                }.bind(this));
+                });
 
                 Log.info("Cache invalidated by tags", { tags, entriesInvalidated: invalidated });
                 return invalidated;
@@ -306,7 +306,7 @@ sap.ui.define([
                     entries: []
                 };
 
-                keys.forEach(function(key) {
+                keys.forEach((key) => {
                     if (key.startsWith(this.METADATA_PREFIX)) {
                         const metadataStr = this._getItem(key);
                         if (metadataStr) {
@@ -323,7 +323,7 @@ sap.ui.define([
                             });
                         }
                     }
-                }.bind(this));
+                });
 
                 // Calculate additional statistics
                 if (stats.entries.length > 0) {
@@ -382,9 +382,9 @@ sap.ui.define([
          * @since 1.0.0
          */
         _startCleanupTimer() {
-            this._cleanupTimer = setInterval(function() {
+            this._cleanupTimer = setInterval(() => {
                 this._cleanupExpiredEntries();
-            }.bind(this), this.CLEANUP_INTERVAL);
+            }, this.CLEANUP_INTERVAL);
         },
 
         /**
@@ -394,11 +394,11 @@ sap.ui.define([
          */
         _registerStorageEvents() {
             if (this._storageType === "localStorage") {
-                window.addEventListener("storage", function(e) {
+                window.addEventListener("storage", (e) => {
                     if (e.key && (e.key.startsWith(this.CACHE_PREFIX) || e.key.startsWith(this.METADATA_PREFIX))) {
                         Log.debug("Storage event detected", { key: e.key, newValue: e.newValue });
                     }
-                }.bind(this));
+                });
             }
         },
 
@@ -586,7 +586,7 @@ sap.ui.define([
             const metadataEntries = [];
 
             // Collect metadata entries
-            keys.forEach(function(key) {
+            keys.forEach((key) => {
                 if (key.startsWith(this.METADATA_PREFIX)) {
                     const metadataStr = this._getItem(key);
                     if (metadataStr) {
@@ -594,7 +594,7 @@ sap.ui.define([
                         metadataEntries.push(metadata);
                     }
                 }
-            }.bind(this));
+            });
 
             // Sort by access time (oldest first)
             metadataEntries.sort((a, b) => a.lastAccessed - b.lastAccessed);
@@ -620,7 +620,7 @@ sap.ui.define([
             const now = Date.now();
             let removed = 0;
 
-            keys.forEach(function(key) {
+            keys.forEach((key) => {
                 if (key.startsWith(this.METADATA_PREFIX)) {
                     const metadataStr = this._getItem(key);
                     if (metadataStr) {
@@ -631,7 +631,7 @@ sap.ui.define([
                         }
                     }
                 }
-            }.bind(this));
+            });
 
             if (removed > 0) {
                 Log.debug("Cleaned up expired cache entries", { entriesRemoved: removed });
@@ -647,7 +647,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _hasMatchingTag(entryTags, targetTags) {
-            return targetTags.some(function(tag) {
+            return targetTags.some((tag) => {
                 return entryTags.indexOf(tag) !== -1;
             });
         },
