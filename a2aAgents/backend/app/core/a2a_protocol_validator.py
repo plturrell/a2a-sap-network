@@ -3,24 +3,19 @@ Comprehensive A2A Protocol Validation System
 Validates message format, agent interactions, and protocol compliance
 """
 
-import asyncio
 import json
 import logging
-import time
-from typing import Dict, Any, List, Optional, Set, Union, Callable
+from typing import Dict, Any, List, Optional, Set, Union
 from datetime import datetime, timedelta
 from enum import Enum
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import re
-import hashlib
-import uuid
 from collections import defaultdict, deque
 
 # A2A imports
 from ..a2a.core.telemetry import trace_async, add_span_attributes
 from ..a2a.sdk.types import A2AMessage, MessageType, AgentCapability
-from ..a2a.sdk.agentBase import A2AAgentBase
 
 logger = logging.getLogger(__name__)
 
@@ -127,12 +122,12 @@ class MessageFormatRule(ValidationRule):
 
         # Required fields validation
         required_fields = ['id', 'type', 'sender', 'timestamp', 'payload']
-        for field in required_fields:
-            if not hasattr(message, field) or getattr(message, field) is None:
+        for field_name in required_fields:
+            if not hasattr(message, field_name) or getattr(message, field_name) is None:
                 results.append(self.create_result(
-                    f"Missing required field: {field}",
-                    {"field": field},
-                    suggestion=f"Ensure message includes '{field}' field"
+                    f"Missing required field: {field_name}",
+                    {"field": field_name},
+                    suggestion=f"Ensure message includes '{field_name}' field"
                 ))
 
         # Message ID format validation
@@ -543,7 +538,7 @@ class A2AProtocolValidator:
 
             # Only run message-applicable rules
             if rule.category in [ValidationCategory.MESSAGE_FORMAT, ValidationCategory.PROTOCOL_COMPLIANCE,
-                               ValidationCategory.SECURITY, ValidationCategory.PERFORMANCE]:
+                                 ValidationCategory.SECURITY, ValidationCategory.PERFORMANCE]:
                 try:
                     results = await rule.validate(context)
                     all_results.extend(results)
@@ -576,7 +571,7 @@ class A2AProtocolValidator:
             "sender_agent": sender_agent,
             "results_count": len(filtered_results),
             "max_severity": max([result.severity for result in filtered_results],
-                              default=ValidationSeverity.INFO).value
+                                default=ValidationSeverity.INFO).value
         })
 
         return filtered_results
@@ -667,7 +662,6 @@ class A2AProtocolValidator:
 
         # Analyze trends
         severity_trend = defaultdict(int)
-        category_trend = defaultdict(int)
 
         for validation in recent_validations:
             severity_trend[validation.get("max_severity", "info")] += 1

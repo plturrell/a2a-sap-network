@@ -607,7 +607,7 @@ class GleanFactTransformer {
         return cweMap[issueType] || null;
     }
 
-    getDocumentContent(document) {
+    async getDocumentContent(document) {
         // Try to read the actual file content for security analysis
         try {
             const fs = require('fs');

@@ -3,7 +3,6 @@ Adaptive Rate Limiting System for A2A Platform
 AI-powered rate limiting that adapts to user behavior patterns and threat detection
 """
 
-import asyncio
 import time
 import logging
 import json

@@ -23,7 +23,7 @@ sap.ui.require([
     "sap/ui/qunit/qunit-coverage"
 ], function (QUnit) {
     'use strict';
-    sap.ui.require(<%- JSON.stringify(tests) %>, function() {
+    sap.ui.require([], function() {
         QUnit.start();
     });
 });

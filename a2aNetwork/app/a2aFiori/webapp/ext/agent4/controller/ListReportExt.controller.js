@@ -67,7 +67,8 @@ sap.ui.define([
         // Performance optimization utilities
         _debounce(fn, delay) {
             let timeoutId;
-            const debounced = function() {
+            
+            const debouncedFunction = function() {
                 const args = arguments;
                 const context = this;
                 clearTimeout(timeoutId);
@@ -76,16 +77,18 @@ sap.ui.define([
                 }, delay);
             };
 
-            debounced.cancel = function() {
+            const cancelDebounce = function() {
                 clearTimeout(timeoutId);
             };
 
-            return debounced;
+            debouncedFunction.cancel = cancelDebounce;
+            return debouncedFunction;
         },
 
         _throttle(fn, limit) {
             let inThrottle;
-            return function() {
+            
+            const throttledFunction = function() {
                 const args = arguments;
                 const context = this;
                 if (!inThrottle) {
@@ -94,6 +97,8 @@ sap.ui.define([
                     setTimeout(() => { inThrottle = false; }, limit);
                 }
             };
+            
+            return throttledFunction;
         },
 
         // Security and validation utilities
@@ -150,7 +155,7 @@ sap.ui.define([
         },
 
         _getCSRFToken() {
-            return new Promise(function(resolve, reject) {
+            const csrfTokenExecutor = function(resolve, reject) {
                 this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent4/v1/csrf-token",
                     type: "GET",
@@ -161,7 +166,9 @@ sap.ui.define([
                         reject(new Error("Failed to retrieve CSRF token"));
                     }
                 });
-            });
+            }.bind(this);
+            
+            return new Promise(csrfTokenExecutor);
         },
 
         /**

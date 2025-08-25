@@ -385,7 +385,7 @@ class A2ADistributedCoordinator:
         # Send via A2A agent's messaging system
         try:
             # Use agent's built-in message processing
-            signed_request = await self.agent_base.send_signed_request(
+            await self.agent_base.send_signed_request(
                 target_agent_id=target_agent_id,
                 method="POST",
                 path="/messages",
@@ -523,7 +523,7 @@ class A2ADistributedCoordinator:
 
         try:
             # Send back to source agent
-            signed_request = await self.agent_base.send_signed_request(
+            await self.agent_base.send_signed_request(
                 target_agent_id=task.source_agent_id,
                 method="POST",
                 path="/messages",
@@ -570,7 +570,7 @@ class A2ADistributedCoordinator:
 
         try:
             # Send to agent manager or specific helper
-            signed_request = await self.agent_base.send_signed_request(
+            await self.agent_base.send_signed_request(
                 target_agent_id="agent_manager",
                 method="POST",
                 path="/messages",

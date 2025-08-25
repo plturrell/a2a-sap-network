@@ -93,23 +93,29 @@ class RealSystemEventConnector extends EventEmitter {
                 this.retryAttempts.delete('registry');
             });
 
-            registryWs.on('message', (data) => {
+            const handleRegistryMessage = (data) => {
                 try {
                     const event = JSON.parse(data);
                     this.handleAgentRegistryEvent(event);
                 } catch (error) {
                     this.logger.error('Failed to parse registry event:', error);
                 }
-            });
+            };
+            
+            registryWs.on('message', handleRegistryMessage);
 
-            registryWs.on('close', () => {
+            const handleRegistryClose = () => {
                 this.logger.warn('Agent registry WebSocket closed, attempting reconnect...');
                 this.scheduleReconnect('registry', () => this.connectToAgentRegistry());
-            });
+            };
+            
+            registryWs.on('close', handleRegistryClose);
 
-            registryWs.on('error', (error) => {
+            const handleRegistryError = (error) => {
                 this.logger.error('Agent registry WebSocket error:', error);
-            });
+            };
+            
+            registryWs.on('error', handleRegistryError);
 
         } catch (error) {
             this.logger.error('Failed to connect to agent registry:', error);
@@ -141,23 +147,29 @@ class RealSystemEventConnector extends EventEmitter {
                 }));
             });
 
-            blockchainWs.on('message', (data) => {
+            const handleBlockchainMessage = (data) => {
                 try {
                     const event = JSON.parse(data);
                     this.handleBlockchainEvent(event);
                 } catch (error) {
                     this.logger.error('Failed to parse blockchain event:', error);
                 }
-            });
+            };
+            
+            blockchainWs.on('message', handleBlockchainMessage);
 
-            blockchainWs.on('close', () => {
+            const handleBlockchainClose = () => {
                 this.logger.warn('Blockchain WebSocket closed, attempting reconnect...');
                 this.scheduleReconnect('blockchain', () => this.connectToBlockchainService());
-            });
+            };
+            
+            blockchainWs.on('close', handleBlockchainClose);
 
-            blockchainWs.on('error', (error) => {
+            const handleBlockchainError = (error) => {
                 this.logger.error('Blockchain WebSocket error:', error);
-            });
+            };
+            
+            blockchainWs.on('error', handleBlockchainError);
 
         } catch (error) {
             this.logger.error('Failed to connect to blockchain service:', error);
@@ -200,23 +212,29 @@ class RealSystemEventConnector extends EventEmitter {
                 }));
             });
 
-            metricsWs.on('message', (data) => {
+            const handleMetricsMessage = (data) => {
                 try {
                     const event = JSON.parse(data);
                     this.handleMetricsEvent(event);
                 } catch (error) {
                     this.logger.error('Failed to parse metrics event:', error);
                 }
-            });
+            };
+            
+            metricsWs.on('message', handleMetricsMessage);
 
-            metricsWs.on('close', () => {
+            const handleMetricsClose = () => {
                 this.logger.warn('Metrics WebSocket closed, attempting reconnect...');
                 this.scheduleReconnect('metrics', () => this.connectToMetricsService());
-            });
+            };
+            
+            metricsWs.on('close', handleMetricsClose);
 
-            metricsWs.on('error', (error) => {
+            const handleMetricsError = (error) => {
                 this.logger.error('Metrics WebSocket error:', error);
-            });
+            };
+            
+            metricsWs.on('error', handleMetricsError);
 
         } catch (error) {
             this.logger.error('Failed to connect to metrics service:', error);
@@ -366,10 +384,11 @@ class RealSystemEventConnector extends EventEmitter {
                 });
 
                 if (response.data.events && response.data.events.length > 0) {
-                    response.data.events.forEach(event => {
+                    const processSecurityEvent = (event) => {
                         this.handleSecurityEvent(event);
-                    });
-
+                    };
+                    
+                    response.data.events.forEach(processSecurityEvent);
                     this.logger.debug(`📡 Polled ${response.data.events.length} security events`);
                 }
             } catch (error) {
@@ -415,13 +434,15 @@ class RealSystemEventConnector extends EventEmitter {
         const delay = this.retryDelay * Math.pow(2, attempts); // Exponential backoff
         this.retryAttempts.set(serviceName, attempts + 1);
 
-        setTimeout(async () => {
+        const executeReconnection = async () => {
             try {
                 await reconnectFn();
             } catch (error) {
                 this.logger.error(`Reconnection failed for ${serviceName}:`, error);
             }
-        }, delay);
+        };
+        
+        setTimeout(executeReconnection, delay);
     }
 
     // Real agent health monitoring using existing monitoring services
@@ -429,9 +450,11 @@ class RealSystemEventConnector extends EventEmitter {
         this.logger.info('🔍 Starting continuous agent health monitoring...');
 
         // Monitor every 30 seconds
-        this.healthMonitorInterval = setInterval(async () => {
+        const performHealthCheck = async () => {
             await this.checkAgentHealth();
-        }, 30000);
+        };
+        
+        this.healthMonitorInterval = setInterval(performHealthCheck, 30000);
 
         // Initial check
         await this.checkAgentHealth();

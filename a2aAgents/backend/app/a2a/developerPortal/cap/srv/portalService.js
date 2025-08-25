@@ -436,7 +436,7 @@ class PortalService extends cds.ApplicationService {
     async _executeRealDeployment(deploymentId, agentId, agent, environment, configuration, user) {
         try {
             // Import deployment pipeline client
-            const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+            const { BlockchainClient } = require('../core/blockchain-client');
             const portalUrl = process.env.PORTAL_URL || 'http://localhost:3001';
             
             // Create deployment configuration
@@ -500,7 +500,7 @@ class PortalService extends cds.ApplicationService {
     }
     
     _monitorDeploymentStatus(deploymentId, executionId, agentId, environment, portalUrl) {
-        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const { BlockchainClient } = require('../core/blockchain-client');
         const maxAttempts = 60; // 5 minutes with 5 second intervals
         let attempts = 0;
         
@@ -585,7 +585,7 @@ class PortalService extends cds.ApplicationService {
             // Check if we have a BPMN workflow definition
             if (workflow.bpmnDefinition) {
                 // Use BPMN workflow designer API
-                const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+                const { BlockchainClient } = require('../core/blockchain-client');
                 const portalUrl = process.env.PORTAL_URL || 'http://localhost:3001';
                 
                 try {
@@ -637,7 +637,7 @@ class PortalService extends cds.ApplicationService {
     }
     
     _monitorWorkflowExecution(executionId, remoteExecutionId, portalUrl) {
-        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const { BlockchainClient } = require('../core/blockchain-client');
         const maxAttempts = 120; // 10 minutes with 5 second intervals
         let attempts = 0;
         
@@ -780,7 +780,7 @@ class PortalService extends cds.ApplicationService {
     
     async _executeServiceTask(step, input) {
         // Execute service task by calling configured endpoint
-        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const { BlockchainClient } = require('../core/blockchain-client');
         const config = JSON.parse(step.configuration || '{}');
         
         if (config.endpoint) {

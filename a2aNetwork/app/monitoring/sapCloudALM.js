@@ -16,7 +16,9 @@ class SAPCloudALMService extends EventEmitter {
             tenantId: process.env.SAP_CLOUD_ALM_TENANT_ID,
             applicationId: process.env.SAP_CLOUD_ALM_APP_ID || 'a2a-network-launchpad',
             enabled: process.env.ENABLE_SAP_CLOUD_ALM === 'true'
-        \n        this.intervals = new Map(); // Track intervals for cleanup};
+        };
+
+        this.intervals = new Map(); // Track intervals for cleanup
 
         this.authToken = null;
         this.tokenExpiry = null;
@@ -76,7 +78,7 @@ class SAPCloudALMService extends EventEmitter {
         // Start collecting metrics locally
         this.intervals.set('interval_77', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
             this.collectLocalMetrics();
-        }, 30000));
+        }, 30000)));
     }
 
     async authenticate() {
@@ -149,22 +151,22 @@ class SAPCloudALMService extends EventEmitter {
         // Report health every 2 minutes
         this.intervals.set('interval_150', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
             this.reportHealth();
-        }, 120000));
+        }, 120000)));
 
         // Report performance metrics every 5 minutes
         this.intervals.set('interval_155', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
             this.reportPerformanceMetrics();
-        }, 300000));
+        }, 300000)));
 
         // Report business metrics every 10 minutes
         this.intervals.set('interval_160', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
             this.reportBusinessMetrics();
-        }, 600000));
+        }, 600000)));
 
         // Process event queue every 30 seconds
         this.intervals.set('interval_165', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
             this.processEventQueue();
-        }, 30000));
+        }, 30000)));
     }
 
     async reportHealth() {

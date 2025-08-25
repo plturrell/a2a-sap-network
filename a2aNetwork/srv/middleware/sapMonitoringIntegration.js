@@ -14,7 +14,7 @@ const cds = require('@sap/cds');
 // const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node'); // Replaced with selective manual instrumentation to avoid HTTP conflicts
 // const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
 const promClient = require('prom-client');
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 
 class MonitoringIntegration {
   constructor() {

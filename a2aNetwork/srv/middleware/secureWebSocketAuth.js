@@ -274,7 +274,7 @@ class WebSocketSecurityManager {
                 clearInterval(heartbeatInterval);
                 clearTimeout(heartbeatTimeout);
             }
-        }, WS_SECURITY_CONFIG.HEARTBEAT_INTERVAL);
+        }, WS_SECURITY_CONFIG.HEARTBEAT_INTERVAL));
 
         socket.on('disconnect', () => {
             clearInterval(heartbeatInterval);

@@ -625,29 +625,29 @@ module.exports.shutdown = shutdown;
         // Database backups
         activeIntervals.set('interval_626', setInterval(async () => {
             try {
-                await this.createBackup('database', { name: 'primary-db' }));
+                await this.createBackup('database', { name: 'primary-db' });
             } catch (error) {
                 console.error('[DR] Automated database backup failed:', error);
             }
-        }, this.config.rpo.database);
+        }, this.config.rpo.database));
 
         // Application backups
         activeIntervals.set('interval_635', setInterval(async () => {
             try {
-                await this.createBackup('application', { name: 'all-apps' }));
+                await this.createBackup('application', { name: 'all-apps' });
             } catch (error) {
                 console.error('[DR] Automated application backup failed:', error);
             }
-        }, this.config.rpo.application);
+        }, this.config.rpo.application));
 
         // Full backups
         activeIntervals.set('interval_644', setInterval(async () => {
             try {
-                await this.createBackup('full', { name: 'complete-platform' }));
+                await this.createBackup('full', { name: 'complete-platform' });
             } catch (error) {
                 console.error('[DR] Automated full backup failed:', error);
             }
-        }, this.config.backupInterval);
+        }, this.config.backupInterval));
     }
 
     /**

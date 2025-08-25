@@ -10,7 +10,7 @@
  */
 
 const { ExportResultCode } = require('@opentelemetry/core');
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 
 class SAPCloudLoggingExporter {
     constructor(config) {
