@@ -481,9 +481,7 @@ service A2AService @(path: '/api/v1') {
     entity ReputationTransactions as projection on reputation.ReputationTransactions {
             *,
             agent : redirected to Agents,
-            createdByAgent : redirected to Agents,
-            serviceOrder : redirected to ServiceOrders,
-            workflow : redirected to Workflows
+            createdByAgent : redirected to Agents
         } actions {
             @requires: ['authenticated-user']
             action verify() returns Boolean;
@@ -518,7 +516,10 @@ service A2AService @(path: '/api/v1') {
         };
         
         event ReputationMilestoneReached : { 
-            target: db.ReputationMilestones 
+            agentId: String;
+            milestone: Integer;
+            badgeName: String;
+            achievedAt: DateTime;
         };
 
     entity DailyReputationLimits as projection on db.DailyReputationLimits;

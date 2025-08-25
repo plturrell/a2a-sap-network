@@ -7,10 +7,10 @@
 
     // Enterprise configuration based on deployment type
     const deploymentType = window['sap-ui-config'] && window['sap-ui-config']['deployment-type'] || 'standalone';
-    
+
     // Check for SAP NetWeaver environment
     const isNetWeaver = window.location.pathname.indexOf('/sap/bc/') !== -1;
-    const isBTP = window.location.hostname.indexOf('.hana.ondemand.com') !== -1 || 
+    const isBTP = window.location.hostname.indexOf('.hana.ondemand.com') !== -1 ||
                 window.location.hostname.indexOf('.cfapps.') !== -1;
 
     // Enterprise Shell Configuration
@@ -49,17 +49,17 @@
             // Common Data Model configuration for enterprise
             CommonDataModel: {
                 adapter: {
-                    module: isNetWeaver ? 
-                        'sap.ushell.adapters.abap.CommonDataModelAdapter' : 
+                    module: isNetWeaver ?
+                        'sap.ushell.adapters.abap.CommonDataModelAdapter' :
                         'sap.ushell.adapters.cdm.v3.CommonDataModelAdapter',
                     config: {
-                        cdmSiteUrl: isNetWeaver ? 
-                            '/sap/opu/odata/UI2/INTEROP' : 
+                        cdmSiteUrl: isNetWeaver ?
+                            '/sap/opu/odata/UI2/INTEROP' :
                             '/portal-site-api/v1/cdm/sites'
                     }
                 }
             },
-            
+
             // Container service for shell management
             Container: {
                 adapter: {
@@ -76,7 +76,7 @@
                     }
                 }
             },
-            
+
             // Navigation service
             CrossApplicationNavigation: {
                 adapter: {
@@ -85,58 +85,58 @@
                     }
                 }
             },
-            
+
             // User information service
             UserInfo: {
                 adapter: {
-                    module: isNetWeaver ? 
-                        'sap.ushell.adapters.abap.UserInfoAdapter' : 
+                    module: isNetWeaver ?
+                        'sap.ushell.adapters.abap.UserInfoAdapter' :
                         'sap.ushell.adapters.cdm.v3.UserInfoAdapter'
                 }
             },
-            
+
             // Personalization service
             Personalization: {
                 adapter: {
-                    module: isNetWeaver ? 
-                        'sap.ushell.adapters.abap.PersonalizationAdapter' : 
+                    module: isNetWeaver ?
+                        'sap.ushell.adapters.abap.PersonalizationAdapter' :
                         'sap.ushell.adapters.cdm.v3.PersonalizationAdapter'
                 }
             },
-            
+
             // App State service
             AppState: {
                 adapter: {
-                    module: isNetWeaver ? 
-                        'sap.ushell.adapters.abap.AppStateAdapter' : 
+                    module: isNetWeaver ?
+                        'sap.ushell.adapters.abap.AppStateAdapter' :
                         'sap.ushell.adapters.cdm.v3.AppStateAdapter'
                 }
             },
-            
+
             // Navigation Target Resolution
             ClientSideTargetResolution: {
                 adapter: {
                     module: 'sap.ushell.adapters.cdm.v3.ClientSideTargetResolutionAdapter',
                     config: {
-                        siteDataUrl: isNetWeaver ? 
-                            '/sap/bc/ui2/flp/sitedata' : 
+                        siteDataUrl: isNetWeaver ?
+                            '/sap/bc/ui2/flp/sitedata' :
                             '/portal-site-api/v1/cdm/sitedata'
                     }
                 }
             },
-            
+
             // Support Ticket Integration
             SupportTicket: {
                 adapter: {
                     config: {
-                        ticketServiceUrl: isNetWeaver ? 
-                            '/sap/bc/webdynpro/sap/ags_incident_create' : 
+                        ticketServiceUrl: isNetWeaver ?
+                            '/sap/bc/webdynpro/sap/ags_incident_create' :
                             '/support/ticket'
                     }
                 }
             }
         },
-        
+
         // Enterprise-specific configurations
         bootConfig: {
             xhrLogon: isNetWeaver,

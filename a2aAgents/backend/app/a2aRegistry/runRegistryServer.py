@@ -335,8 +335,8 @@ async def get_trust_scores(trust: object = Depends(get_trust)):
             scores[agent_id] = {
                 "trust_score": trust.get_trust_score(agent_id),
                 "trust_level": ("verified" if trust.get_trust_score(agent_id) >= 0.9 else
-                               "high" if trust.get_trust_score(agent_id) >= 0.7 else
-                               "medium" if trust.get_trust_score(agent_id) >= 0.5 else "low")
+                                "high" if trust.get_trust_score(agent_id) >= 0.7 else
+                                "medium" if trust.get_trust_score(agent_id) >= 0.5 else "low")
             }
     return {"trust_scores": scores}
 

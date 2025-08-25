@@ -2,7 +2,7 @@
  * @fileoverview SCIP to Glean Fact Transformer
  * @module gleanFactTransformer
  * @since 1.0.0
- * 
+ *
  * Transforms SCIP (SCIP Code Intelligence Protocol) data into proper Glean facts
  * following the defined Angle schema for comprehensive code analysis
  */
@@ -56,7 +56,7 @@ class GleanFactTransformer {
     processDocument(document, factBatches) {
         const filePath = document.relative_path;
         const language = this.detectLanguage(filePath);
-        
+
         // Create File fact
         const fileFact = this.createFileFact(document, language);
         factBatches['src.File'].push(fileFact);
@@ -86,7 +86,7 @@ class GleanFactTransformer {
     createFileFact(document, language) {
         const content = this.getDocumentContent(document);
         const lines = content ? content.split('\n').length : 0;
-        
+
         return {
             id: this.generateFactId(),
             key: {
@@ -140,7 +140,7 @@ class GleanFactTransformer {
 
     createSymbolFact(symbol, document) {
         const range = symbol.definition?.range;
-        
+
         return {
             id: this.generateFactId(),
             key: {
@@ -168,7 +168,7 @@ class GleanFactTransformer {
 
     createFunctionFact(symbol, document, factBatches) {
         const functionInfo = this.extractFunctionInfo(symbol, document);
-        
+
         const functionFact = {
             id: this.generateFactId(),
             key: {
@@ -193,7 +193,7 @@ class GleanFactTransformer {
 
     createClassFact(symbol, document, factBatches) {
         const classInfo = this.extractClassInfo(symbol, document);
-        
+
         const classFact = {
             id: this.generateFactId(),
             key: {
@@ -218,7 +218,7 @@ class GleanFactTransformer {
 
     createContractFact(symbol, document, factBatches) {
         const contractInfo = this.extractContractInfo(symbol, document);
-        
+
         const contractFact = {
             id: this.generateFactId(),
             key: {
@@ -242,7 +242,7 @@ class GleanFactTransformer {
 
     createImportFact(symbol, document, factBatches) {
         const importInfo = this.extractImportInfo(symbol, document);
-        
+
         const importFact = {
             id: this.generateFactId(),
             key: {
@@ -284,7 +284,7 @@ class GleanFactTransformer {
 
     createExportFact(symbol, document, factBatches) {
         const exportInfo = this.extractExportInfo(symbol, document);
-        
+
         const exportFact = {
             id: this.generateFactId(),
             key: {
@@ -305,7 +305,7 @@ class GleanFactTransformer {
 
     processOccurrence(occurrence, document, factBatches) {
         const targetSymbol = this.symbolTable.get(occurrence.symbol);
-        
+
         if (targetSymbol) {
             const xrefFact = {
                 id: this.generateFactId(),
@@ -336,10 +336,10 @@ class GleanFactTransformer {
 
         // Detect security issues
         this.detectJavaScriptSecurityIssues(content, document, factBatches);
-        
+
         // Detect performance issues
         this.detectJavaScriptPerformanceIssues(content, document, factBatches);
-        
+
         // Detect code smells
         this.detectJavaScriptCodeSmells(content, document, factBatches);
     }
@@ -403,7 +403,7 @@ class GleanFactTransformer {
             let match;
             while ((match = pattern.pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
-                
+
                 const securityFact = {
                     id: this.generateFactId(),
                     key: {
@@ -449,7 +449,7 @@ class GleanFactTransformer {
             let match;
             while ((match = pattern.pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
-                
+
                 const perfFact = {
                     id: this.generateFactId(),
                     key: {
@@ -498,7 +498,7 @@ class GleanFactTransformer {
             let match;
             while ((match = pattern.pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
-                
+
                 const securityFact = {
                     id: this.generateFactId(),
                     key: {
@@ -561,18 +561,18 @@ class GleanFactTransformer {
 
     mapSymbolRolesToXRefKind(symbolRoles) {
         if (!symbolRoles || symbolRoles.length === 0) return 'reference';
-        
+
         if (symbolRoles.includes('Definition')) return 'definition';
         if (symbolRoles.includes('Reference')) return 'reference';
         if (symbolRoles.includes('Call')) return 'call';
-        
+
         return 'reference';
     }
 
     extractSymbolName(symbol) {
         // Extract actual symbol name from SCIP symbol
         if (symbol.name) return symbol.name;
-        
+
         // Parse from symbol ID if needed
         const parts = symbol.symbol.split(' ');
         return parts[parts.length - 1] || symbol.symbol;
@@ -612,25 +612,25 @@ class GleanFactTransformer {
         try {
             const fs = require('fs');
             const path = require('path');
-            
+
             // Construct full file path
             const fullPath = path.resolve(document.relative_path);
-            
+
             // Check if file exists and read content
             if (fs.existsSync(fullPath)) {
                 return await fs.readFile(fullPath, 'utf8');
             }
-            
+
             // Fallback: try relative to current working directory
             const cwdPath = path.join(process.cwd(), document.relative_path);
             if (fs.existsSync(cwdPath)) {
                 return await fs.readFile(cwdPath, 'utf8');
             }
-            
+
         } catch (error) {
             console.warn(`Could not read file content for ${document.relative_path}: ${error.message}`);
         }
-        
+
         return null;
     }
 
@@ -694,7 +694,7 @@ class GleanFactTransformer {
     calculateComplexity(functionBody) {
         // Basic cyclomatic complexity calculation
         if (!functionBody) return 1;
-        
+
         const complexityPatterns = [
             /\bif\s*\(/g,
             /\belse\s+if\s*\(/g,
@@ -722,7 +722,7 @@ class GleanFactTransformer {
             const lines = func.split('\n').length;
             if (lines > 50) {
                 const lineNumber = this.getLineNumber(content, content.indexOf(func));
-                
+
                 const smellFact = {
                     id: this.generateFactId(),
                     key: {
@@ -749,11 +749,11 @@ class GleanFactTransformer {
         // Extract CDS entity definitions
         const entityRegex = /entity\s+(\w+)\s*(?::\s*([^{]+))?\s*\{/g;
         let match;
-        
+
         while ((match = entityRegex.exec(content)) !== null) {
             const entityName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             const entityFact = {
                 id: this.generateFactId(),
                 key: {
@@ -779,11 +779,11 @@ class GleanFactTransformer {
         // Extract CDS service definitions
         const serviceRegex = /service\s+(\w+)\s*\{/g;
         let match;
-        
+
         while ((match = serviceRegex.exec(content)) !== null) {
             const serviceName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             const serviceFact = {
                 id: this.generateFactId(),
                 key: {
@@ -831,7 +831,7 @@ class GleanFactTransformer {
             let match;
             while ((match = pattern.pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
-                
+
                 const securityFact = {
                     id: this.generateFactId(),
                     key: {
@@ -871,7 +871,7 @@ class GleanFactTransformer {
             let match;
             while ((match = pattern.pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
-                
+
                 const perfFact = {
                     id: this.generateFactId(),
                     key: {
@@ -910,7 +910,7 @@ class GleanFactTransformer {
             let match;
             while ((match = pattern.pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
-                
+
                 const perfFact = {
                     id: this.generateFactId(),
                     key: {

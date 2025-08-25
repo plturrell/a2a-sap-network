@@ -10,7 +10,7 @@ import time
 from collections import defaultdict, deque
 from typing import Dict, Any, List, Optional, Tuple, Set, Union
 from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 import hashlib
 import re

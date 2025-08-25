@@ -325,10 +325,10 @@ class EnterpriseLogger {
       this.logger.info('Health check');
       return { status: 'UP', component: 'logging' };
     } catch (error) {
-      return { 
-        status: 'DOWN', 
+      return {
+        status: 'DOWN',
         component: 'logging',
-        error: error.message 
+        error: error.message
       };
     }
   }

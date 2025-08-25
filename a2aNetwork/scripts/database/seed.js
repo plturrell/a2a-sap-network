@@ -16,7 +16,7 @@ class DatabaseSeeder {
     async initialize() {
         try {
             const env = process.env.NODE_ENV || 'development';
-            
+
             if (env === 'production') {
                 this.db = await cds.connect.to('db');
                 log.debug('✅ Connected to SAP HANA Cloud');
@@ -101,22 +101,22 @@ class DatabaseSeeder {
 
         for (const agent of agents) {
             await this.db.run(`
-                INSERT OR REPLACE INTO Agents 
+                INSERT OR REPLACE INTO Agents
                 (ID, name, description, version, status, endpoint, blockchain_address, public_key, trust_level, reputation_score, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             `, [
                 agent.ID, agent.name, agent.description, agent.version, agent.status,
                 agent.endpoint, agent.blockchain_address, agent.public_key, agent.trust_level, agent.reputation_score
             ]);
-            
+
             // Seed reputation scores for each agent
             await this.db.run(`
                 INSERT OR REPLACE INTO ReputationScores
                 (ID, agent_ID, overall_score, reliability_score, performance_score, security_score, total_interactions, successful_interactions)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `, [
-                uuidv4(), agent.ID, agent.reputation_score, agent.reputation_score * 0.95, 
-                agent.reputation_score * 1.02, agent.reputation_score * 0.98, 
+                uuidv4(), agent.ID, agent.reputation_score, agent.reputation_score * 0.95,
+                agent.reputation_score * 1.02, agent.reputation_score * 0.98,
                 Math.floor(Math.random() * 500) + 100, Math.floor(Math.random() * 450) + 90
             ]);
         }
@@ -137,11 +137,11 @@ class DatabaseSeeder {
         ];
 
         let servicesCount = 0;
-        
+
         for (let i = 0; i < agents.length; i++) {
             const agent = agents[i];
             const serviceTemplate = serviceTemplates[i % serviceTemplates.length];
-            
+
             const service = {
                 ID: uuidv4(),
                 agent_ID: agent.ID,
@@ -301,7 +301,7 @@ class DatabaseSeeder {
 // CLI Interface
 async function main() {
     const seeder = new DatabaseSeeder();
-    
+
     try {
         await seeder.initialize();
         await seeder.seed();

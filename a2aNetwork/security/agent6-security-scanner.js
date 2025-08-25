@@ -20,7 +20,7 @@ class Agent6SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // Quality Control Manager-specific vulnerability patterns
         this.qualityControlPatterns = {
             // Quality metrics manipulation
@@ -46,7 +46,7 @@ class Agent6SecurityScanner {
                 message: 'Quality metrics manipulation vulnerability detected',
                 impact: 'Could allow unauthorized manipulation of quality scores, leading to acceptance of poor quality products or services'
             },
-            
+
             // Control process bypass
             CONTROL_PROCESS_BYPASS: {
                 patterns: [
@@ -70,7 +70,7 @@ class Agent6SecurityScanner {
                 message: 'Control process bypass vulnerability',
                 impact: 'Could allow circumvention of essential quality control processes, compromising product/service quality assurance'
             },
-            
+
             // Approval workflow vulnerabilities
             APPROVAL_WORKFLOW_BYPASS: {
                 patterns: [
@@ -94,7 +94,7 @@ class Agent6SecurityScanner {
                 message: 'Approval workflow bypass vulnerability',
                 impact: 'Could allow bypassing approval workflows, enabling unauthorized approvals and compromising governance'
             },
-            
+
             // Quality gate manipulation
             QUALITY_GATE_MANIPULATION: {
                 patterns: [
@@ -118,7 +118,7 @@ class Agent6SecurityScanner {
                 message: 'Quality gate manipulation vulnerability',
                 impact: 'Could allow manipulation of quality gates, compromising quality control checkpoints'
             },
-            
+
             // Audit trail tampering
             AUDIT_TRAIL_TAMPERING: {
                 patterns: [
@@ -142,7 +142,7 @@ class Agent6SecurityScanner {
                 message: 'Audit trail tampering vulnerability',
                 impact: 'Could allow tampering with audit trails, compromising compliance, accountability, and forensic capabilities'
             },
-            
+
             // Quality standards bypasses
             QUALITY_STANDARDS_BYPASS: {
                 patterns: [
@@ -166,7 +166,7 @@ class Agent6SecurityScanner {
                 message: 'Quality standards bypass vulnerability',
                 impact: 'Could allow bypassing quality standards compliance, compromising regulatory compliance and quality assurance'
             },
-            
+
             // Inspection process vulnerabilities
             INSPECTION_PROCESS_BYPASS: {
                 patterns: [
@@ -191,7 +191,7 @@ class Agent6SecurityScanner {
                 impact: 'Could allow bypassing inspection processes, compromising quality verification and defect detection'
             }
         };
-        
+
         // OWASP vulnerability patterns
         this.owaspPatterns = {
             // XSS vulnerabilities
@@ -210,7 +210,7 @@ class Agent6SecurityScanner {
                 message: 'Cross-site scripting (XSS) vulnerability',
                 impact: 'Could allow execution of malicious scripts in quality control interfaces'
             },
-            
+
             // CSRF vulnerabilities
             CSRF_VULNERABILITY: {
                 patterns: [
@@ -225,7 +225,7 @@ class Agent6SecurityScanner {
                 message: 'Cross-Site Request Forgery (CSRF) vulnerability',
                 impact: 'Could allow unauthorized state-changing operations in quality control system'
             },
-            
+
             // Input validation vulnerabilities
             INPUT_VALIDATION: {
                 patterns: [
@@ -239,7 +239,7 @@ class Agent6SecurityScanner {
                 message: 'Input validation vulnerability',
                 impact: 'Could allow code injection and arbitrary code execution in quality control context'
             },
-            
+
             // Insecure connection patterns
             INSECURE_CONNECTION: {
                 patterns: [
@@ -254,7 +254,7 @@ class Agent6SecurityScanner {
                 impact: 'Could allow interception of quality control data during transmission'
             }
         };
-        
+
         // SAP Fiori compliance patterns
         this.fioriCompliancePatterns = {
             // i18n compliance
@@ -272,7 +272,7 @@ class Agent6SecurityScanner {
                 message: 'Missing internationalization (i18n)',
                 impact: 'Reduces internationalization support for quality control interfaces'
             },
-            
+
             // Security headers
             SECURITY_HEADERS_MISSING: {
                 patterns: [
@@ -285,7 +285,7 @@ class Agent6SecurityScanner {
                 message: 'Missing security headers',
                 impact: 'Reduces security posture of quality control application'
             },
-            
+
             // Accessibility issues
             ACCESSIBILITY_MISSING: {
                 patterns: [
@@ -302,33 +302,33 @@ class Agent6SecurityScanner {
             }
         };
     }
-    
+
     /**
      * Main scan method
      */
     async scan(targetPath) {
         console.log('🔍 Starting Agent 6 (Quality Control Manager) Security Scan');
         console.log(`📁 Target: ${path.resolve(targetPath)}\n`);
-        
+
         if (!fs.existsSync(targetPath)) {
             console.error(`❌ Target path does not exist: ${targetPath}`);
             process.exit(1);
         }
-        
+
         await this.scanDirectory(targetPath);
         this.generateReport();
     }
-    
+
     /**
      * Recursively scan directory
      */
     async scanDirectory(dirPath) {
         const items = fs.readdirSync(dirPath);
-        
+
         for (const item of items) {
             const fullPath = path.join(dirPath, item);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory()) {
                 // Skip common non-source directories
                 if (!['node_modules', '.git', 'dist', 'build', 'coverage'].includes(item)) {
@@ -343,7 +343,7 @@ class Agent6SecurityScanner {
             }
         }
     }
-    
+
     /**
      * Scan individual file
      */
@@ -351,24 +351,24 @@ class Agent6SecurityScanner {
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             this.filesScanned++;
-            
+
             // Scan for Quality Control-specific vulnerabilities
             this.scanPatterns(content, filePath, this.qualityControlPatterns);
-            
+
             // Scan for OWASP vulnerabilities
             this.scanPatterns(content, filePath, this.owaspPatterns);
-            
+
             // Scan for SAP Fiori compliance
             this.scanPatterns(content, filePath, this.fioriCompliancePatterns);
-            
+
             // Additional Quality Control-specific checks
             this.scanForQualityControlSpecificIssues(content, filePath);
-            
+
         } catch (error) {
             console.error(`⚠️  Error scanning file ${filePath}: ${error.message}`);
         }
     }
-    
+
     /**
      * Scan for patterns in content
      */
@@ -379,13 +379,13 @@ class Agent6SecurityScanner {
                 if (matches) {
                     const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                     const lineNumber = lines.length;
-                    
+
                     // Skip false positives
                     const code = lines[lineNumber - 1]?.trim() || '';
                     if (this.isFalsePositive(code, patternName, filePath)) {
                         continue;
                     }
-                    
+
                     this.vulnerabilities.push({
                         file: filePath,
                         line: lineNumber,
@@ -402,7 +402,7 @@ class Agent6SecurityScanner {
             }
         }
     }
-    
+
     /**
      * Check for false positives
      */
@@ -411,15 +411,15 @@ class Agent6SecurityScanner {
         if (code.includes('//') || code.includes('/*') || code.includes('*')) {
             return true;
         }
-        
+
         // Skip console.log and debug statements
         if (code.includes('console.log') || code.includes('console.error')) {
             return true;
         }
-        
+
         // Skip legitimate security functions
         if (filePath.includes('SecurityUtils.js') || filePath.includes('security')) {
-            if (code.includes('sanitized') || code.includes('validation') || 
+            if (code.includes('sanitized') || code.includes('validation') ||
                 code.includes('_sanitize') || code.includes('_validate')) {
                 return true;
             }
@@ -428,15 +428,15 @@ class Agent6SecurityScanner {
                 return true;
             }
         }
-        
+
         // Skip already sanitized content for XSS patterns
         if (patternName === 'XSS_INJECTION') {
-            if (code.includes('encodeXML') || code.includes('sanitizeHTML') || 
+            if (code.includes('encodeXML') || code.includes('sanitizeHTML') ||
                 code.includes('escapeRegExp') || code.includes('_sanitizeInput')) {
                 return true;
             }
         }
-        
+
         // Skip CSRF patterns that already have token validation
         if (patternName === 'CSRF_VULNERABILITY') {
             const surroundingArea = code.substring(Math.max(0, code.indexOf('ajax') - 100));
@@ -444,10 +444,10 @@ class Agent6SecurityScanner {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Scan for Quality Control-specific security issues
      */
@@ -459,25 +459,25 @@ class Agent6SecurityScanner {
             /passThreshold\s*[:=]\s*[0-9]+/gi,
             /approvalThreshold\s*[:=]\s*[0-9]+/gi
         ];
-        
+
         hardcodedThresholds.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 // Check if it's within a configuration function
                 const contextStart = Math.max(0, content.indexOf(matches[0]) - 200);
                 const contextEnd = Math.min(content.length, content.indexOf(matches[0]) + 200);
                 const context = content.substring(contextStart, contextEnd);
-                
+
                 // Skip if it's in a configuration getter or default values
-                if (context.includes('_getQualityThresholds') || 
+                if (context.includes('_getQualityThresholds') ||
                     context.includes('// Return secure defaults') ||
                     context.includes('getProperty("/qualityThresholds")')) {
                     return;
                 }
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -492,7 +492,7 @@ class Agent6SecurityScanner {
                 });
             }
         });
-        
+
         // Check for unsafe routing decisions
         const unsafeRoutingPatterns = [
             /targetAgent\s*=.*user.*input/gi,
@@ -500,13 +500,13 @@ class Agent6SecurityScanner {
             /\.routeTo\s*\([^)]*\$\{/gi,
             /agentSelection\s*=.*Function/gi
         ];
-        
+
         unsafeRoutingPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -521,7 +521,7 @@ class Agent6SecurityScanner {
                 });
             }
         });
-        
+
         // Check for trust verification bypasses
         const trustBypassPatterns = [
             /trustVerification\s*=\s*false/gi,
@@ -530,13 +530,13 @@ class Agent6SecurityScanner {
             /trustRequired\s*=\s*false/gi,
             /blockchainVerification\s*=\s*false/gi
         ];
-        
+
         trustBypassPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -551,7 +551,7 @@ class Agent6SecurityScanner {
                 });
             }
         });
-        
+
         // Check for batch operation security issues
         const batchSecurityPatterns = [
             /batchSize\s*>\s*[0-9]{3,}/gi,
@@ -560,13 +560,13 @@ class Agent6SecurityScanner {
             /batchValidation\s*=\s*false/gi,
             /parallelProcessing\s*=\s*true.*user/gi
         ];
-        
+
         batchSecurityPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -582,7 +582,7 @@ class Agent6SecurityScanner {
             }
         });
     }
-    
+
     /**
      * Generate comprehensive security report
      */
@@ -593,11 +593,11 @@ class Agent6SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🛡️  AGENT 6 (QUALITY CONTROL MANAGER) SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('📊 SCAN SUMMARY:');
         console.log(`   📂 Files Scanned: ${this.filesScanned}`);
         console.log(`   ⏱️  Scan Duration: ${(scanDuration / 1000).toFixed(2)}s`);
@@ -607,27 +607,27 @@ class Agent6SecurityScanner {
         console.log(`   🟡 Medium: ${mediumCount}`);
         console.log(`   🟢 Low: ${lowCount}`);
         console.log(`   ⚪ Warning: ${warningCount}`);
-        
+
         if (this.vulnerabilities.length > 0) {
             console.log('\n📋 VULNERABILITIES BY CATEGORY:');
             const byCategory = {};
             this.vulnerabilities.forEach(vuln => {
                 byCategory[vuln.category] = (byCategory[vuln.category] || 0) + 1;
             });
-            
+
             Object.entries(byCategory)
                 .sort(([,a], [,b]) => b - a)
                 .forEach(([category, count]) => {
                     console.log(`   • ${category}: ${count}`);
                 });
-            
+
             console.log('\n🔍 DETAILED FINDINGS:');
             console.log('-'.repeat(80));
-            
+
             // Sort by severity
             const severityOrder = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'WARNING': 4 };
             this.vulnerabilities.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
-            
+
             this.vulnerabilities.forEach((vuln, index) => {
                 const icon = this.getSeverityIcon(vuln.severity);
                 console.log(`\n${icon} [${vuln.severity}] ${vuln.category}`);
@@ -640,7 +640,7 @@ class Agent6SecurityScanner {
                 }
             });
         }
-        
+
         console.log('\n🏥 QUALITY CONTROL SECURITY RECOMMENDATIONS:');
         console.log('   1. 🔒 Implement comprehensive input validation for quality metrics and scores');
         console.log('   2. 🛡️  Add authorization checks for all quality control operations');
@@ -654,19 +654,19 @@ class Agent6SecurityScanner {
         console.log('   10. 🧪 Add workflow integrity checks and approval validations');
         console.log('   11. 🔐 Protect quality thresholds and standards configuration');
         console.log('   12. 🛡️  Implement quality gate bypass detection and prevention');
-        
+
         this.saveReport();
-        
+
         console.log('\n✅ Scan completed successfully!');
         console.log('📄 Report saved to: agent6-security-report.json');
-        
+
         if (criticalCount > 0 || highCount > 0) {
             console.log(`\n⚠️  ${criticalCount + highCount} critical/high severity issues found!`);
             console.log('🔧 Please address these issues before deploying to production.');
             process.exit(1);
         }
     }
-    
+
     /**
      * Get severity icon
      */
@@ -680,7 +680,7 @@ class Agent6SecurityScanner {
         };
         return icons[severity] || '❓';
     }
-    
+
     /**
      * Save report to JSON file
      */
@@ -721,7 +721,7 @@ class Agent6SecurityScanner {
                 'Implement role-based access control for quality control operations'
             ]
         };
-        
+
         fs.writeFileSync('agent6-security-report.json', JSON.stringify(report, null, 2));
     }
 }

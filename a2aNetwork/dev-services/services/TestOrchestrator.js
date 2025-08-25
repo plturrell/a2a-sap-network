@@ -116,7 +116,7 @@ class TestOrchestrator {
       testSuite.status = 'failed';
       testSuite.error = error.message;
       testSuite.endTime = new Date();
-      
+
       this.testResults.set(testSuite.id, testSuite);
       this.runningTests.delete(testSuite.id);
     }
@@ -124,7 +124,7 @@ class TestOrchestrator {
 
   async executeTest(test, agents) {
     const startTime = new Date();
-    
+
     try {
       let result;
 
@@ -171,7 +171,7 @@ class TestOrchestrator {
   async executeUnitTest(test, agents) {
     // Real unit test execution
     const { service, input, expectedOutput, agentName } = test.config;
-    
+
     // Find the target agent
     const agent = agents.find(a => a === agentName || a.name === agentName);
     if (!agent) {
@@ -180,7 +180,7 @@ class TestOrchestrator {
 
     // Make actual service call to the agent
     logger.debug(`Unit test: calling ${service} on ${agentName}`);
-    
+
     let actualOutput;
     try {
       // If agent is a string (agent name), discover the actual agent
@@ -191,7 +191,7 @@ class TestOrchestrator {
         if (discoveredAgents.length === 0) {
           throw new Error(`Agent ${agentName} not found in registry`);
         }
-        
+
         // Call service on the discovered agent
         const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
         const response = await blockchainClient.sendMessage(`${discoveredAgents[0].endpoint}/api/service/${service}`, {
@@ -225,14 +225,14 @@ class TestOrchestrator {
   async executeIntegrationTest(test, agents) {
     // Mock integration test execution
     const { workflow, expectedFlow } = test.config;
-    
+
     logger.debug(`Integration test: executing workflow`);
-    
+
     const executionTrace = [];
-    
+
     for (const step of workflow) {
       const { agent, service, input } = step;
-      
+
       // Simulate workflow step execution
       executionTrace.push({
         agent,
@@ -261,9 +261,9 @@ class TestOrchestrator {
   async executeE2ETest(test, agents) {
     // Mock end-to-end test execution
     const { scenario, assertions } = test.config;
-    
+
     logger.debug(`E2E test: executing scenario ${scenario.name}`);
-    
+
     const results = {
       scenario: scenario.name,
       steps: [],
@@ -313,14 +313,14 @@ class TestOrchestrator {
 
   async executeLoadTest(test, agents) {
     // Mock load test execution
-    const { 
-      concurrency = 10, 
-      duration = 30000, 
-      targetService = 'health' 
+    const {
+      concurrency = 10,
+      duration = 30000,
+      targetService = 'health'
     } = test.config;
-    
+
     logger.debug(`Load test: ${concurrency} concurrent users for ${duration}ms`);
-    
+
     const startTime = new Date();
     const results = {
       concurrency,
@@ -396,7 +396,7 @@ class TestOrchestrator {
 
   async startTestWithUpdates(testConfig, updateCallback) {
     const testSuite = await this.runTestSuite(testConfig);
-    
+
     // Add update callback to running test
     const runningTest = this.runningTests.get(testSuite.testId);
     if (runningTest) {
@@ -462,7 +462,7 @@ class TestOrchestrator {
     for (let i = 0; i < trace.length; i++) {
       const step = trace[i];
       const expected = expectedFlow[i];
-      
+
       if (step.agent !== expected.agent || step.service !== expected.service) {
         return false;
       }

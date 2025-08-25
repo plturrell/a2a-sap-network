@@ -42,13 +42,13 @@ class SecurityMonitoringService extends EventEmitter {
         try {
             // Initialize security event patterns
             this.initializeEventPatterns();
-            
+
             // Start security monitoring tasks
             this.startMonitoring();
-            
+
             // Initialize security dashboard data
             await this.initializeDashboard();
-            
+
             this.log.info('Security Monitoring Service initialized successfully');
         } catch (error) {
             this.log.error('Failed to initialize Security Monitoring Service:', error);
@@ -71,7 +71,7 @@ class SecurityMonitoringService extends EventEmitter {
                 category: 'AUTHENTICATION',
                 action: 'ALERT'
             },
-            
+
             // Injection attack patterns
             sqlInjection: {
                 pattern: /(union.*select|drop.*table|exec.*xp_|waitfor.*delay|benchmark\()/i,
@@ -85,7 +85,7 @@ class SecurityMonitoringService extends EventEmitter {
                 category: 'INJECTION',
                 action: 'BLOCK_REQUEST'
             },
-            
+
             // Data access patterns
             dataExfiltration: {
                 pattern: /bulk.*download|mass.*export|excessive.*data.*access/i,
@@ -99,7 +99,7 @@ class SecurityMonitoringService extends EventEmitter {
                 category: 'AUTHORIZATION',
                 action: 'ALERT'
             },
-            
+
             // System security patterns
             configurationChange: {
                 pattern: /security.*config.*changed|permissions.*modified|role.*assigned/i,
@@ -119,16 +119,16 @@ class SecurityMonitoringService extends EventEmitter {
     startMonitoring() {
         // Real-time security event processing
         this.on('securityEvent', this.processSecurityEvent.bind(this));
-        
+
         // Periodic security health checks
         setInterval(() => this.performSecurityHealthCheck(), 60000); // Every minute
-        
+
         // Alert cleanup and maintenance
         setInterval(() => this.cleanupExpiredAlerts(), 300000); // Every 5 minutes
-        
+
         // Security metrics aggregation
         setInterval(() => this.aggregateSecurityMetrics(), 30000); // Every 30 seconds
-        
+
         this.log.info('Security monitoring tasks started');
     }
 
@@ -162,29 +162,29 @@ class SecurityMonitoringService extends EventEmitter {
     processSecurityEvent(eventData) {
         try {
             const securityEvent = this.normalizeSecurityEvent(eventData);
-            
+
             // Classify and score the event
             const classification = this.classifySecurityEvent(securityEvent);
             securityEvent.classification = classification;
-            
+
             // Update metrics
             this.updateSecurityMetrics(securityEvent);
-            
+
             // Check for alert conditions
             this.checkAlertConditions(securityEvent);
-            
+
             // Take automated security actions if needed
             this.executeSecurityActions(securityEvent);
-            
+
             // Log the event
             this.logSecurityEvent(securityEvent);
-            
+
             // Emit for real-time dashboards
             this.emit('dashboardUpdate', {
                 type: 'securityEvent',
                 data: securityEvent
             });
-            
+
         } catch (error) {
             this.log.error('Error processing security event:', error);
         }
@@ -214,7 +214,7 @@ class SecurityMonitoringService extends EventEmitter {
     classifySecurityEvent(securityEvent) {
         let bestMatch = null;
         let highestScore = 0;
-        
+
         for (const [patternName, pattern] of Object.entries(this.securityPatterns)) {
             if (pattern.pattern.test(securityEvent.description)) {
                 const score = this.calculateThreatScore(securityEvent, pattern);
@@ -230,7 +230,7 @@ class SecurityMonitoringService extends EventEmitter {
                 }
             }
         }
-        
+
         return bestMatch || {
             pattern: 'unknown',
             severity: securityEvent.severity,
@@ -242,19 +242,19 @@ class SecurityMonitoringService extends EventEmitter {
 
     calculateThreatScore(securityEvent, pattern) {
         let score = this.getSeverityScore(pattern.severity);
-        
+
         // Increase score for repeat offenders
         const recentEvents = this.getRecentEventsByIP(securityEvent.ipAddress, 300000);
         if (recentEvents.length > 1) {
             score *= (1 + recentEvents.length * 0.2);
         }
-        
+
         // Increase score for known malicious patterns
         const suspiciousPatterns = ['admin', 'wp-admin', '.env', 'phpinfo', 'shell'];
         if (suspiciousPatterns.some(p => securityEvent.endpoint?.toLowerCase().includes(p))) {
             score *= 1.5;
         }
-        
+
         return Math.min(score, 100); // Cap at 100
     }
 
@@ -271,7 +271,7 @@ class SecurityMonitoringService extends EventEmitter {
 
     updateSecurityMetrics(securityEvent) {
         this.securityMetrics.totalEvents++;
-        
+
         switch (securityEvent.severity.toLowerCase()) {
             case 'critical':
                 this.securityMetrics.criticalEvents++;
@@ -290,12 +290,12 @@ class SecurityMonitoringService extends EventEmitter {
 
     checkAlertConditions(securityEvent) {
         const alertKey = `${securityEvent.category}_${securityEvent.ipAddress}`;
-        const threshold = this.alertThresholds[securityEvent.category.toLowerCase()] || 
+        const threshold = this.alertThresholds[securityEvent.category.toLowerCase()] ||
                          this.alertThresholds.suspiciousRequests;
-        
+
         // Get events in time window
         const recentEvents = this.getRecentEventsByKey(alertKey, threshold.window);
-        
+
         if (recentEvents.length >= threshold.count) {
             this.triggerSecurityAlert({
                 id: crypto.randomUUID(),
@@ -311,7 +311,7 @@ class SecurityMonitoringService extends EventEmitter {
                 recommendedAction: securityEvent.classification.recommendedAction
             });
         }
-        
+
         // Store event for future threshold checking
         this.storeEventForThresholding(alertKey, securityEvent);
     }
@@ -325,19 +325,19 @@ class SecurityMonitoringService extends EventEmitter {
             assignedTo: null,
             actions: []
         };
-        
+
         this.activeAlerts.set(alert.id, alert);
-        
+
         this.log.warn(`SECURITY ALERT: ${alert.type} - ${alert.description}`, {
             alertId: alert.id,
             severity: alert.severity,
             ipAddress: alert.ipAddress,
             eventCount: alert.eventCount
         });
-        
+
         // Send notifications
         this.sendSecurityNotification(alert);
-        
+
         // Emit for real-time systems
         this.emit('securityAlert', alert);
         this.emit('dashboardUpdate', {
@@ -348,31 +348,31 @@ class SecurityMonitoringService extends EventEmitter {
 
     executeSecurityActions(securityEvent) {
         const action = securityEvent.classification.recommendedAction;
-        
+
         switch (action) {
             case 'BLOCK_IMMEDIATE':
                 this.blockIPAddress(securityEvent.ipAddress, 3600000); // 1 hour
                 break;
-                
+
             case 'BLOCK_IP':
                 this.blockIPAddress(securityEvent.ipAddress, 1800000); // 30 minutes
                 break;
-                
+
             case 'QUARANTINE_USER':
                 if (securityEvent.userId) {
                     this.quarantineUser(securityEvent.userId, 7200000); // 2 hours
                 }
                 break;
-                
+
             case 'BLOCK_REQUEST':
                 // Request already blocked by middleware, just log
                 this.log.info(`Request blocked for IP: ${securityEvent.ipAddress}`);
                 break;
-                
+
             case 'AUDIT_LOG':
                 this.createAuditLogEntry(securityEvent);
                 break;
-                
+
             default:
                 // Just alert/log
                 break;
@@ -381,45 +381,45 @@ class SecurityMonitoringService extends EventEmitter {
 
     blockIPAddress(ipAddress, duration) {
         if (!ipAddress || ipAddress === 'unknown') return;
-        
+
         this.securityMetrics.blockedIPs.add(ipAddress);
-        
+
         // Store with expiration
         setTimeout(() => {
             this.securityMetrics.blockedIPs.delete(ipAddress);
             this.log.info(`IP address unblocked: ${ipAddress}`);
         }, duration);
-        
+
         this.log.warn(`IP address blocked: ${ipAddress} for ${duration / 1000 / 60} minutes`);
-        
+
         // Emit for middleware to pick up
         this.emit('ipBlocked', { ipAddress, duration, timestamp: Date.now() });
     }
 
     quarantineUser(userId, duration) {
         if (!userId) return;
-        
+
         this.securityMetrics.quarantinedUsers.add(userId);
-        
+
         setTimeout(() => {
             this.securityMetrics.quarantinedUsers.delete(userId);
             this.log.info(`User unquarantined: ${userId}`);
         }, duration);
-        
+
         this.log.warn(`User quarantined: ${userId} for ${duration / 1000 / 60} minutes`);
-        
+
         this.emit('userQuarantined', { userId, duration, timestamp: Date.now() });
     }
 
     logSecurityEvent(securityEvent) {
         // Add to in-memory log
         this.securityLog.unshift(securityEvent);
-        
+
         // Maintain log size
         if (this.securityLog.length > this.maxLogEntries) {
             this.securityLog.splice(this.maxLogEntries);
         }
-        
+
         // Log to file system for persistence (async, non-blocking)
         this.persistSecurityLog(securityEvent).catch(error => {
             this.log.error('Failed to persist security log:', error);
@@ -429,11 +429,11 @@ class SecurityMonitoringService extends EventEmitter {
     async persistSecurityLog(securityEvent) {
         const logDir = path.join(__dirname, '../logs/security');
         const logFile = path.join(logDir, `security-${new Date().toISOString().split('T')[0]}.json`);
-        
+
         try {
             // Ensure directory exists
             await fs.mkdir(logDir, { recursive: true });
-            
+
             // Append to daily log file
             const logEntry = `${JSON.stringify(securityEvent)  }\n`;
             await fs.appendFile(logFile, logEntry);
@@ -452,7 +452,7 @@ class SecurityMonitoringService extends EventEmitter {
             recipients: this.getAlertRecipients(alert.severity),
             channels: ['email', 'dashboard']
         };
-        
+
         // Emit for notification service
         this.emit('sendNotification', notification);
     }
@@ -464,14 +464,14 @@ class SecurityMonitoringService extends EventEmitter {
             medium: ['security-team@company.com'],
             low: ['security-team@company.com']
         };
-        
+
         return recipients[severity.toLowerCase()] || recipients.low;
     }
 
     // Utility methods
     getRecentEventsByIP(ipAddress, timeWindow) {
         const cutoff = Date.now() - timeWindow;
-        return this.securityLog.filter(event => 
+        return this.securityLog.filter(event =>
             event.ipAddress === ipAddress && event.epochTime > cutoff
         );
     }
@@ -486,10 +486,10 @@ class SecurityMonitoringService extends EventEmitter {
         if (!this.securityEvents.has(key)) {
             this.securityEvents.set(key, []);
         }
-        
+
         const events = this.securityEvents.get(key);
         events.push(event);
-        
+
         // Keep only recent events (last hour)
         const cutoff = Date.now() - 3600000;
         const recentEvents = events.filter(e => e.epochTime > cutoff);
@@ -505,9 +505,9 @@ class SecurityMonitoringService extends EventEmitter {
             systemHealth: this.assessSystemHealth(),
             timestamp: new Date().toISOString()
         };
-        
+
         this.emit('healthCheck', healthMetrics);
-        
+
         // Check for system-wide threats
         this.detectSystemWideThreats(healthMetrics);
     }
@@ -526,7 +526,7 @@ class SecurityMonitoringService extends EventEmitter {
     assessSystemHealth() {
         const eventRate = this.calculateEventRate();
         let riskLevel = 'LOW';
-        
+
         if (eventRate.criticalEvents > 0) {
             riskLevel = 'CRITICAL';
         } else if (eventRate.highEvents > 3 || eventRate.eventsPerMinute > 10) {
@@ -534,7 +534,7 @@ class SecurityMonitoringService extends EventEmitter {
         } else if (eventRate.eventsPerMinute > 5 || this.activeAlerts.size > 5) {
             riskLevel = 'MEDIUM';
         }
-        
+
         return {
             riskLevel,
             activeThreats: this.activeAlerts.size,
@@ -545,20 +545,20 @@ class SecurityMonitoringService extends EventEmitter {
 
     calculateHealthScore(riskLevel, eventRate) {
         let score = 100;
-        
+
         // Deduct based on risk level
         switch (riskLevel) {
             case 'CRITICAL': score -= 50; break;
             case 'HIGH': score -= 30; break;
             case 'MEDIUM': score -= 15; break;
         }
-        
+
         // Deduct based on event rate
         score -= Math.min(eventRate.eventsPerMinute * 2, 30);
-        
+
         // Deduct based on active alerts
         score -= this.activeAlerts.size * 5;
-        
+
         return Math.max(score, 0);
     }
 
@@ -577,7 +577,7 @@ class SecurityMonitoringService extends EventEmitter {
                 recommendedAction: 'SYSTEM_LOCKDOWN'
             });
         }
-        
+
         // Detect system overload
         if (this.activeAlerts.size > 10) {
             this.triggerSecurityAlert({
@@ -597,14 +597,14 @@ class SecurityMonitoringService extends EventEmitter {
         const expired = [];
         const now = Date.now();
         const alertTimeout = 24 * 60 * 60 * 1000; // 24 hours
-        
+
         for (const [alertId, alert] of this.activeAlerts.entries()) {
             const alertAge = now - new Date(alert.timestamp).getTime();
             if (alertAge > alertTimeout && alert.status !== 'INVESTIGATING') {
                 expired.push(alertId);
             }
         }
-        
+
         expired.forEach(alertId => {
             const alert = this.activeAlerts.get(alertId);
             alert.status = 'EXPIRED';
@@ -621,7 +621,7 @@ class SecurityMonitoringService extends EventEmitter {
             systemHealth: this.assessSystemHealth(),
             timestamp: new Date().toISOString()
         };
-        
+
         this.emit('metricsUpdate', metrics);
     }
 
@@ -629,11 +629,11 @@ class SecurityMonitoringService extends EventEmitter {
     getSecurityDashboard() {
         const recentEvents = this.securityLog.slice(0, 50);
         const alertsSummary = {};
-        
+
         for (const alert of this.activeAlerts.values()) {
             alertsSummary[alert.type] = (alertsSummary[alert.type] || 0) + 1;
         }
-        
+
         return {
             overview: {
                 totalEvents: this.securityMetrics.totalEvents,
@@ -665,10 +665,10 @@ class SecurityMonitoringService extends EventEmitter {
             alert.acknowledgedBy = userId;
             alert.acknowledgedAt = new Date().toISOString();
             alert.status = 'ACKNOWLEDGED';
-            
+
             this.log.info(`Alert acknowledged: ${alertId} by ${userId}`);
             this.emit('alertAcknowledged', { alertId, userId, alert });
-            
+
             return true;
         }
         return false;
@@ -681,12 +681,12 @@ class SecurityMonitoringService extends EventEmitter {
             alert.resolvedBy = userId;
             alert.resolvedAt = new Date().toISOString();
             alert.resolution = resolution;
-            
+
             this.activeAlerts.delete(alertId);
-            
+
             this.log.info(`Alert resolved: ${alertId} by ${userId}`);
             this.emit('alertResolved', { alertId, userId, alert, resolution });
-            
+
             return true;
         }
         return false;

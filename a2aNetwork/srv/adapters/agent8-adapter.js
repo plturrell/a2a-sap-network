@@ -26,7 +26,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'DataTask');
         } catch (error) {
             throw this._handleError(error);
@@ -46,7 +46,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -66,7 +66,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -100,7 +100,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -119,10 +119,10 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -139,10 +139,10 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -166,7 +166,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -183,10 +183,10 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 status: data.status?.toUpperCase(),
                 message: data.message,
@@ -205,7 +205,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 percentage: data.percentage,
                 processedRecords: data.processed_records,
@@ -234,7 +234,7 @@ class Agent8Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return data.logs.map(log => ({
                 timestamp: log.timestamp,
                 level: log.level?.toUpperCase(),
@@ -259,7 +259,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'StorageBackend');
         } catch (error) {
             throw this._handleError(error);
@@ -279,7 +279,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTBackendToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -293,10 +293,10 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 status: data.status?.toUpperCase(),
                 responseTime: data.response_time,
@@ -324,7 +324,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -349,7 +349,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CacheConfiguration');
         } catch (error) {
             throw this._handleError(error);
@@ -369,7 +369,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTCacheToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -383,10 +383,10 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -414,7 +414,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -435,7 +435,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 hitRate: data.hit_rate,
                 missRate: data.miss_rate,
@@ -462,7 +462,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'DataVersion');
         } catch (error) {
             throw this._handleError(error);
@@ -482,7 +482,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTVersionToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -504,7 +504,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -523,7 +523,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 summary: data.summary,
                 differences: data.differences.map(diff => ({
@@ -553,7 +553,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'DataBackup');
         } catch (error) {
             throw this._handleError(error);
@@ -573,7 +573,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTBackupToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -595,7 +595,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -614,10 +614,10 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 status: data.status?.toUpperCase(),
                 integrityScore: data.integrity_score,
@@ -637,7 +637,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 totalCapacity: data.total_capacity,
                 usedCapacity: data.used_capacity,
@@ -668,7 +668,7 @@ class Agent8Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 overallHitRate: data.overall_hit_rate,
                 averageResponseTime: data.average_response_time,
@@ -691,9 +691,9 @@ class Agent8Adapter {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                params: { 
+                params: {
                     status: status?.toLowerCase(),
-                    time_range: timeRange 
+                    time_range: timeRange
                 },
                 timeout: this.timeout
             })
@@ -719,7 +719,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 backendId: data.backend_id,
                 totalCapacity: data.total_capacity,
@@ -740,7 +740,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.schedules.map(schedule => ({
                 id: schedule.id,
                 name: schedule.name,
@@ -766,7 +766,7 @@ class Agent8Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return data.versions.map(version => ({
                 id: version.id,
                 versionNumber: version.version_number,
@@ -796,7 +796,7 @@ class Agent8Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 metricType: data.metric_type,
                 trend: data.trend?.toUpperCase(),
@@ -823,7 +823,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -849,7 +849,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 status: data.status?.toUpperCase(),
                 integrityScore: data.integrity_score,
@@ -877,7 +877,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 estimatedSize: data.estimated_size,
                 recommendedBackends: data.recommended_backends,
@@ -902,7 +902,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'StorageUtilization');
         } catch (error) {
             throw this._handleError(error);
@@ -921,7 +921,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CacheOperation');
         } catch (error) {
             throw this._handleError(error);
@@ -940,7 +940,7 @@ class Agent8Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'DataPerformanceMetric');
         } catch (error) {
             throw this._handleError(error);
@@ -950,13 +950,13 @@ class Agent8Adapter {
     // Utility methods
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$orderby) params.sort = query.$orderby.replace(/ desc/gi, '-').replace(/ asc/gi, '');
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$select) params.fields = query.$select;
-        
+
         return params;
     }
 
@@ -1219,11 +1219,11 @@ class Agent8Adapter {
     _handleError(error) {
         const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
         const errorCode = error.response?.status || 500;
-        
+
         const customError = new Error(`Agent 8 Data Management service error: ${errorMessage}`);
         customError.statusCode = errorCode;
         customError.originalError = error;
-        
+
         return customError;
     }
 }

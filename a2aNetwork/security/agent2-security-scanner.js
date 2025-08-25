@@ -19,7 +19,7 @@ class Agent2SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // AI Preparation-specific vulnerability patterns
         this.aiPreparationPatterns = {
             // Model training data poisoning vulnerabilities
@@ -39,7 +39,7 @@ class Agent2SecurityScanner {
                 message: 'Potential training data poisoning vulnerability',
                 impact: 'Could allow injection of malicious data into AI training sets, compromising model integrity'
             },
-            
+
             // Feature engineering injection vulnerabilities
             FEATURE_INJECTION: {
                 patterns: [
@@ -56,7 +56,7 @@ class Agent2SecurityScanner {
                 message: 'Feature engineering injection vulnerability',
                 impact: 'Could allow malicious feature manipulation affecting model training and predictions'
             },
-            
+
             // Data preprocessing vulnerabilities
             PREPROCESSING_BYPASS: {
                 patterns: [
@@ -73,7 +73,7 @@ class Agent2SecurityScanner {
                 message: 'Data preprocessing bypass vulnerability',
                 impact: 'Could allow bypassing of data validation and sanitization in AI pipelines'
             },
-            
+
             // AI pipeline security vulnerabilities
             PIPELINE_MANIPULATION: {
                 patterns: [
@@ -90,7 +90,7 @@ class Agent2SecurityScanner {
                 message: 'AI pipeline manipulation vulnerability',
                 impact: 'Could allow unauthorized modification of ML pipeline execution and data flow'
             },
-            
+
             // Model parameter manipulation vulnerabilities
             MODEL_TAMPERING: {
                 patterns: [
@@ -108,7 +108,7 @@ class Agent2SecurityScanner {
                 message: 'Model parameter tampering vulnerability',
                 impact: 'Could allow unauthorized modification of model hyperparameters and weights'
             },
-            
+
             // Training dataset validation bypass vulnerabilities
             VALIDATION_BYPASS: {
                 patterns: [
@@ -125,7 +125,7 @@ class Agent2SecurityScanner {
                 message: 'Training dataset validation bypass',
                 impact: 'Could allow poor quality or malicious data to enter training pipelines'
             },
-            
+
             // Embedding and vector manipulation vulnerabilities
             EMBEDDING_MANIPULATION: {
                 patterns: [
@@ -142,7 +142,7 @@ class Agent2SecurityScanner {
                 message: 'Embedding manipulation vulnerability',
                 impact: 'Could allow manipulation of vector embeddings affecting similarity and clustering'
             },
-            
+
             // Model export and serialization vulnerabilities
             MODEL_EXPORT_EXPOSURE: {
                 patterns: [
@@ -158,7 +158,7 @@ class Agent2SecurityScanner {
                 message: 'Model export exposure vulnerability',
                 impact: 'Could allow exposure of sensitive model parameters or training data during export'
             },
-            
+
             // AutoML security vulnerabilities
             AUTOML_MANIPULATION: {
                 patterns: [
@@ -177,29 +177,29 @@ class Agent2SecurityScanner {
             }
         };
     }
-    
+
     scanFile(filePath) {
         console.log(`🔎 Scanning: ${filePath}`);
         this.filesScanned++;
-        
+
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const lines = content.split('\n');
-            
+
             // Check for general OWASP vulnerabilities
             this.checkOWASPVulnerabilities(content, filePath, lines);
-            
+
             // Check for AI preparation-specific vulnerabilities
             this.checkAIPreparationVulnerabilities(content, filePath, lines);
-            
+
             // Check for SAP Fiori specific issues
             this.checkSAPFioriCompliance(content, filePath, lines);
-            
+
         } catch (error) {
             console.error(`❌ Error scanning ${filePath}: ${error.message}`);
         }
     }
-    
+
     checkOWASPVulnerabilities(content, filePath, lines) {
         // XSS vulnerabilities
         const xssPatterns = [
@@ -209,13 +209,13 @@ class Agent2SecurityScanner {
             { pattern: /dangerouslySetInnerHTML/gi, type: 'XSS', message: 'Potential XSS via React dangerouslySetInnerHTML' },
             { pattern: /\.setText\s*\([^)]*\+/gi, type: 'XSS', message: 'Potential XSS via dynamic text setting' }
         ];
-        
+
         xssPatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
-                
+
                 // Skip if properly sanitized
                 if (!code.includes('encodeXML') && !code.includes('sanitizeHTML') && !code.includes('escapeRegExp')) {
                     this.addVulnerability({
@@ -231,7 +231,7 @@ class Agent2SecurityScanner {
                 }
             }
         });
-        
+
         // CSRF vulnerabilities
         const csrfPatterns = [
             /\$\.ajax\s*\(\s*\{[^}]*type\s*:\s*["']POST["']/gi,
@@ -240,13 +240,13 @@ class Agent2SecurityScanner {
             /\.delete\s*\(/gi,
             /fetch\s*\([^,]+,\s*\{[^}]*method\s*:\s*["'](POST|PUT|DELETE)["']/gi
         ];
-        
+
         csrfPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 // Check if CSRF token is present nearby
                 const surroundingCode = content.substring(Math.max(0, match.index - 200), match.index + 200);
-                if (!surroundingCode.includes('X-CSRF-Token') && 
+                if (!surroundingCode.includes('X-CSRF-Token') &&
                     !surroundingCode.includes('csrf') &&
                     !surroundingCode.includes('_getSecureHeaders') &&
                     !surroundingCode.includes('_csrfToken')) {
@@ -264,20 +264,20 @@ class Agent2SecurityScanner {
                 }
             }
         });
-        
+
         // Insecure connections
         const insecurePatterns = [
             { pattern: /http:\/\//gi, type: 'INSECURE_CONNECTION', message: 'Insecure HTTP connection' },
             { pattern: /ws:\/\//gi, type: 'INSECURE_WEBSOCKET', message: 'Insecure WebSocket connection' }
         ];
-        
+
         insecurePatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
                 // Skip comments, examples, and already secured code
-                if (!code.includes('//') && !code.includes('example') && 
+                if (!code.includes('//') && !code.includes('example') &&
                     !code.includes('wss://') && !code.includes('https://')) {
                     this.addVulnerability({
                         type: type,
@@ -292,7 +292,7 @@ class Agent2SecurityScanner {
                 }
             }
         });
-        
+
         // Input validation vulnerabilities specific to AI contexts
         const inputValidationPatterns = [
             { pattern: /eval\s*\(/gi, type: 'CODE_INJECTION', message: 'Code injection via eval()' },
@@ -300,7 +300,7 @@ class Agent2SecurityScanner {
             { pattern: /setTimeout\s*\([^)]*\+/gi, type: 'CODE_INJECTION', message: 'Potential code injection in setTimeout' },
             { pattern: /setInterval\s*\([^)]*\+/gi, type: 'CODE_INJECTION', message: 'Potential code injection in setInterval' }
         ];
-        
+
         inputValidationPatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
@@ -318,7 +318,7 @@ class Agent2SecurityScanner {
             }
         });
     }
-    
+
     checkAIPreparationVulnerabilities(content, filePath, lines) {
         Object.entries(this.aiPreparationPatterns).forEach(([vulnType, config]) => {
             config.patterns.forEach(pattern => {
@@ -326,12 +326,12 @@ class Agent2SecurityScanner {
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
                     const code = lines[lineNumber - 1]?.trim() || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(code, vulnType, filePath)) {
                         continue;
                     }
-                    
+
                     this.addVulnerability({
                         type: config.category,
                         severity: config.severity,
@@ -346,7 +346,7 @@ class Agent2SecurityScanner {
             });
         });
     }
-    
+
     isFalsePositive(code, vulnType, filePath) {
         // Skip legitimate uses that are not security vulnerabilities
         const falsePositivePatterns = {
@@ -371,34 +371,34 @@ class Agent2SecurityScanner {
                 /_validate/gi  // Validation methods
             ]
         };
-        
+
         if (falsePositivePatterns[vulnType]) {
             const patterns = falsePositivePatterns[vulnType];
             if (patterns.some(pattern => pattern.test(code))) {
                 return true;
             }
         }
-        
+
         // General false positive checks
         if (filePath.includes('SecurityUtils.js') || filePath.includes('security')) {
             // Security files contain security functions that may trigger patterns
-            return code.includes('sanitized') || code.includes('validation') || 
+            return code.includes('sanitized') || code.includes('validation') ||
                    code.includes('_sanitize') || code.includes('_validate');
         }
-        
+
         // Skip comments and documentation
         if (code.includes('//') || code.includes('/*') || code.includes('*')) {
             return true;
         }
-        
+
         // Skip console.log and debug statements
         if (code.includes('console.log') || code.includes('console.error')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     getAIPreparationFix(vulnType) {
         const fixes = {
             DATA_POISONING: 'Implement strict data validation and sanitization before training data ingestion',
@@ -413,7 +413,7 @@ class Agent2SecurityScanner {
         };
         return fixes[vulnType] || 'Implement proper validation and security controls for AI operations';
     }
-    
+
     checkSAPFioriCompliance(content, filePath, lines) {
         // Check for missing i18n
         if (filePath.includes('.controller.js')) {
@@ -423,7 +423,7 @@ class Agent2SecurityScanner {
                 { pattern: /setText\s*\(\s*["'][^"']+["']\s*\)/gi, message: 'Hardcoded text in UI element' },
                 { pattern: /headerText\s*:\s*["'][^"']+["']/gi, message: 'Hardcoded header text' }
             ];
-            
+
             i18nPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -445,7 +445,7 @@ class Agent2SecurityScanner {
                 }
             });
         }
-        
+
         // Check for missing security headers in manifest
         if (filePath.includes('manifest.json')) {
             const requiredHeaders = [
@@ -453,7 +453,7 @@ class Agent2SecurityScanner {
                 'X-Frame-Options',
                 'X-Content-Type-Options'
             ];
-            
+
             requiredHeaders.forEach(header => {
                 if (!content.includes(header)) {
                     this.addVulnerability({
@@ -469,7 +469,7 @@ class Agent2SecurityScanner {
                 }
             });
         }
-        
+
         // Check for AI-specific accessibility issues
         if (filePath.includes('.controller.js') || filePath.includes('.fragment.xml')) {
             const accessibilityPatterns = [
@@ -477,7 +477,7 @@ class Agent2SecurityScanner {
                 { pattern: /MicroChart\s*\([^)]*\)/gi, message: 'MicroChart accessibility: Missing ARIA labels' },
                 { pattern: /setBusy\s*\(\s*true\s*\)/gi, message: 'Loading state accessibility: Consider announcing status changes' }
             ];
-            
+
             accessibilityPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -499,32 +499,32 @@ class Agent2SecurityScanner {
             });
         }
     }
-    
+
     getLineNumber(content, index) {
         const lines = content.substring(0, index).split('\n');
         return lines.length;
     }
-    
+
     addVulnerability(vuln) {
         // Avoid duplicates
-        const exists = this.vulnerabilities.some(v => 
-            v.file === vuln.file && 
-            v.line === vuln.line && 
+        const exists = this.vulnerabilities.some(v =>
+            v.file === vuln.file &&
+            v.line === vuln.line &&
             v.type === vuln.type
         );
-        
+
         if (!exists) {
             this.vulnerabilities.push(vuln);
         }
     }
-    
+
     scanDirectory(dirPath) {
         const files = fs.readdirSync(dirPath);
-        
+
         files.forEach(file => {
             const fullPath = path.join(dirPath, file);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
                 this.scanDirectory(fullPath);
             } else if (stat.isFile() && this.shouldScanFile(file)) {
@@ -532,12 +532,12 @@ class Agent2SecurityScanner {
             }
         });
     }
-    
+
     shouldScanFile(filename) {
         const extensions = ['.js', '.xml', '.json', '.html', '.ts'];
         return extensions.some(ext => filename.endsWith(ext));
     }
-    
+
     generateReport() {
         const scanDuration = (Date.now() - this.scanStartTime) / 1000;
         const criticalCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.CRITICAL).length;
@@ -545,11 +545,11 @@ class Agent2SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🤖 AGENT 2 AI PREPARATION SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
@@ -558,12 +558,12 @@ class Agent2SecurityScanner {
         console.log(`   Medium Issues: ${mediumCount}`);
         console.log(`   Low Issues: ${lowCount}`);
         console.log(`   Warnings: ${warningCount}`);
-        
+
         // Calculate security score
         const totalIssues = criticalCount * 10 + highCount * 5 + mediumCount * 2 + lowCount;
         const maxScore = 100;
         const score = Math.max(0, maxScore - totalIssues);
-        
+
         console.log(`\n🎯 AI PREPARATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
             console.log('   Status: ✅ EXCELLENT - AI preparation pipeline is well secured');
@@ -574,7 +574,7 @@ class Agent2SecurityScanner {
         } else {
             console.log('   Status: ❌ POOR - Significant AI security improvements needed');
         }
-        
+
         // AI-specific findings
         const aiIssues = this.vulnerabilities.filter(v => v.type.startsWith('AI_'));
         if (aiIssues.length > 0) {
@@ -583,19 +583,19 @@ class Agent2SecurityScanner {
             aiIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
             });
-            
+
             Object.entries(issueCounts).forEach(([type, count]) => {
                 console.log(`   ${type.replace('AI_', '')}: ${count} issues`);
             });
         }
-        
+
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:\n');
-            
+
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
-            
+
             severityOrder.forEach(severity => {
                 const sevVulns = this.vulnerabilities.filter(v => v.severity === severity);
                 if (sevVulns.length > 0) {
@@ -611,7 +611,7 @@ class Agent2SecurityScanner {
                 }
             });
         }
-        
+
         // AI preparation security recommendations
         console.log('💡 AGENT 2 AI PREPARATION SECURITY RECOMMENDATIONS:\n');
         console.log('1. 🛡️  Secure AI Data Pipeline');
@@ -619,46 +619,46 @@ class Agent2SecurityScanner {
         console.log('   - Use cryptographic checksums to verify data integrity');
         console.log('   - Sanitize and validate all feature engineering operations');
         console.log('   - Implement audit logging for all data preparation steps');
-        
+
         console.log('\n2. 🔒 Model Training Security');
         console.log('   - Validate all hyperparameters and model configurations');
         console.log('   - Implement secure parameter storage and access controls');
         console.log('   - Use differential privacy techniques for sensitive data');
         console.log('   - Monitor for adversarial inputs during training');
-        
+
         console.log('\n3. 🔐 Feature Engineering Protection');
         console.log('   - Use predefined, validated feature transformation templates');
         console.log('   - Implement feature importance validation and monitoring');
         console.log('   - Sanitize all custom feature engineering code');
         console.log('   - Validate feature distributions for anomalies');
-        
+
         console.log('\n4. ⚡ Pipeline Integrity');
         console.log('   - Use immutable pipeline configurations');
         console.log('   - Implement end-to-end pipeline validation');
         console.log('   - Monitor pipeline execution for anomalous behavior');
         console.log('   - Use containerization for pipeline isolation');
-        
+
         console.log('\n5. 🔍 Model Export Security');
         console.log('   - Implement access controls for model exports');
         console.log('   - Validate export configurations and data inclusion');
         console.log('   - Use encryption for sensitive model data');
         console.log('   - Audit all model export operations');
-        
+
         console.log('\n6. 🎯 AutoML Security');
         console.log('   - Validate AutoML configuration parameters');
         console.log('   - Monitor hyperparameter search boundaries');
         console.log('   - Implement resource limits for AutoML processes');
         console.log('   - Validate AutoML-generated models before deployment');
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('AI Security Scan completed. Address critical AI vulnerabilities first.');
         console.log('Focus on data poisoning and model tampering prevention.');
         console.log('='.repeat(80));
-        
+
         // Generate JSON report for further processing
         this.saveJSONReport();
     }
-    
+
     saveJSONReport() {
         const reportData = {
             agent: 'Agent2-AIPreparation',
@@ -682,7 +682,7 @@ class Agent2SecurityScanner {
                 'Validate AutoML configurations'
             ]
         };
-        
+
         try {
             fs.writeFileSync('agent2-security-report.json', JSON.stringify(reportData, null, 2));
             console.log('\n📄 Detailed report saved to: agent2-security-report.json');
@@ -690,18 +690,18 @@ class Agent2SecurityScanner {
             console.error('Failed to save JSON report:', error.message);
         }
     }
-    
+
     run(targetPath) {
         console.log('🔍 Starting Agent 2 AI Preparation Security Scan...');
         console.log(`📂 Scanning directory: ${targetPath}\n`);
-        
+
         if (fs.existsSync(targetPath)) {
             if (fs.statSync(targetPath).isDirectory()) {
                 this.scanDirectory(targetPath);
             } else {
                 this.scanFile(targetPath);
             }
-            
+
             this.generateReport();
         } else {
             console.error(`❌ Path not found: ${targetPath}`);

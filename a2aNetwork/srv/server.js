@@ -2,7 +2,7 @@
  * @fileoverview SAP CAP Server Configuration with Enterprise Middleware
  * @since 1.0.0
  * @module server
- * 
+ *
  * Main server configuration for the A2A Network service implementing
  * SAP enterprise patterns including security, monitoring, caching,
  * health checks, and distributed tracing - SAP CAP Framework Compliant
@@ -65,19 +65,19 @@ function _checkWebSocketRateLimit(clientIP) {
     const now = Date.now();
     const windowMs = 60000; // 1 minute
     const maxConnections = 10; // Max 10 connections per IP per minute
-    
+
     if (!wsConnectionAttempts.has(clientIP)) {
         wsConnectionAttempts.set(clientIP, []);
     }
-    
+
     const attempts = wsConnectionAttempts.get(clientIP);
     // Remove attempts outside the time window
     const validAttempts = attempts.filter(timestamp => now - timestamp < windowMs);
-    
+
     if (validAttempts.length >= maxConnections) {
         return false;
     }
-    
+
     validAttempts.push(now);
     wsConnectionAttempts.set(clientIP, validAttempts);
     return true;
@@ -86,16 +86,16 @@ function _checkWebSocketRateLimit(clientIP) {
 // Helper function to check topic access based on user roles with enhanced security
 function hasTopicAccess(user, topic) {
     if (!user || !user.roles) return false;
-    
+
     const roles = user.sapRoles || user.roles || [];
-    
+
     // Admin can access all topics except system-critical ones
     if (roles.includes('Admin')) {
         // Even admins can't access these ultra-sensitive topics
         const restrictedTopics = ['system.secrets', 'auth.tokens', 'security.keys'];
         return !restrictedTopics.includes(topic);
     }
-    
+
     // Enhanced topic-based access control with more granular permissions
     const topicPermissions = {
         'agent.events': ['authenticated-user', 'AgentUser', 'AgentManager'],
@@ -112,13 +112,13 @@ function hasTopicAccess(user, topic) {
         'system.diagnostics': ['Admin', 'SystemAdmin'],
         'configuration.changes': ['Admin', 'ConfigManager']
     };
-    
+
     const allowedRoles = topicPermissions[topic];
     if (!allowedRoles) {
         // SECURITY FIX: Deny access to unknown topics by default for security
         return false;
     }
-    
+
     return allowedRoles.some(role => roles.includes(role));
 }
 
@@ -132,30 +132,30 @@ cds.on('bootstrap', async (app) => {
         log.error('Environment validation failed:', error);
         throw error;
     }
-    
+
     // Initialize enterprise components
     await cacheMiddleware.initialize();
     await monitoringIntegration.initialize();
-    
+
     // Initialize i18n
     initializeI18n(app);
-    
+
     // Initialize XSUAA authentication strategy
     initializeXSUAAStrategy();
-    
+
     // Apply CORS with SAP-specific configuration
     const corsOptions = {
         origin: function (origin, callback) {
-            const allowedOrigins = process.env.ALLOWED_ORIGINS 
-                ? process.env.ALLOWED_ORIGINS.split(',') 
+            const allowedOrigins = process.env.ALLOWED_ORIGINS
+                ? process.env.ALLOWED_ORIGINS.split(',')
                 : ['http://localhost:4004', 'http://localhost:8080'];
-            
+
             // SECURITY FIX: Only allow requests with no origin in development mode
             if (!origin) {
                 // Allow requests without origin header (e.g., curl, mobile apps, same-origin requests)
                 return callback(null, true);
             }
-            
+
             if (allowedOrigins.indexOf(origin) !== -1) {
                 callback(null, true);
             } else {
@@ -166,36 +166,36 @@ cds.on('bootstrap', async (app) => {
         optionsSuccessStatus: 200
     };
     app.use(cors(corsOptions));
-    
+
     // Apply security hardening (must be early)
     app.use(securityHardening.securityHeaders());
     app.use(securityHardening.generateNonce());
-    
+
     // Apply rate limiting with exclusions for tile API endpoints
     const rateLimits = securityHardening.rateLimiting();
     app.use('/auth', rateLimits.auth);
-    
+
     // SECURITY FIX: Apply rate limiting to all API endpoints in production
     app.use('/api/v1/Agents', (req, res, next) => {
         // Only skip rate limiting in development for specific dashboard queries
-        if (process.env.NODE_ENV === 'development' && 
-            req.query.id && 
+        if (process.env.NODE_ENV === 'development' &&
+            req.query.id &&
             (req.query.id.includes('dashboard') || req.query.id.includes('visualization'))) {
             return next();
         }
         return rateLimits.strict(req, res, next);
     });
-    
+
     app.use('/api/v1/Services', (req, res, next) => {
         // Only skip rate limiting in development for specific dashboard queries
-        if (process.env.NODE_ENV === 'development' && 
-            req.query.id && 
+        if (process.env.NODE_ENV === 'development' &&
+            req.query.id &&
             req.query.id.includes('dashboard')) {
             return next();
         }
         return rateLimits.standard(req, res, next);
     });
-    
+
     // Apply default rate limiting with static file exclusions only
     app.use((req, res, next) => {
         // SECURITY FIX: Only skip rate limiting for genuine static files, not API endpoints
@@ -203,27 +203,27 @@ cds.on('bootstrap', async (app) => {
         if (staticFilePaths.some(staticPath => req.path.startsWith(staticPath))) {
             return next();
         }
-        
+
         // SECURITY FIX: Apply rate limiting to all API endpoints including NetworkStats
         return rateLimits.standard(req, res, next);
     });
-    
+
     app.use(rateLimits.slowDown);
-    
+
     // Apply enterprise logging middleware
     app.use(enterpriseLogger.requestMiddleware());
-    
+
     // Apply caching middleware
     app.use(cacheMiddleware.middleware());
-    
+
     // Apply monitoring middleware
     app.use(monitoringIntegration.metricsMiddleware());
-    
+
     // Apply SQL security middleware
     app.use(validateSQLMiddleware);
-    
+
     // Add static file serving for JavaScript resources - SAP Enterprise Standard (BEFORE input validation)
-    
+
     // Serve common JavaScript components with proper MIME types
     app.use('/common', express.static(path.join(__dirname, '../common'), {
         setHeaders: (res, filePath) => {
@@ -232,7 +232,7 @@ cds.on('bootstrap', async (app) => {
             }
         }
     }));
-    
+
     // Serve A2A Agents static files with proper MIME types
     app.use('/a2aAgents', express.static(path.join(__dirname, '../../a2aAgents'), {
         setHeaders: (res, filePath) => {
@@ -241,7 +241,7 @@ cds.on('bootstrap', async (app) => {
             }
         }
     }));
-    
+
     // Serve A2A Fiori webapp with proper MIME types
     app.use('/a2aFiori', express.static(path.join(__dirname, '../a2aFiori'), {
         setHeaders: (res, filePath) => {
@@ -250,7 +250,7 @@ cds.on('bootstrap', async (app) => {
             }
         }
     }));
-    
+
     // Serve A2A Fiori app at the standard SAP UShell expected path
     app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori'), {
         setHeaders: (res, filePath) => {
@@ -259,7 +259,7 @@ cds.on('bootstrap', async (app) => {
             }
         }
     }));
-    
+
     // CRITICAL FIX: Serve launchpad static files BEFORE blocking middleware
     app.use('/app', express.static(path.join(__dirname, '../app'), {
         setHeaders: (res, filePath) => {
@@ -270,16 +270,16 @@ cds.on('bootstrap', async (app) => {
             }
         }
     }));
-    
+
     // Serve shells directory for Fiori Sandbox configuration BEFORE blocking middleware
     app.use('/shells', express.static(path.join(__dirname, '../app/shells')));
-    
+
     // CRITICAL FIX: Bypass validation for launchpad tile endpoints
     app.use((req, res, next) => {
         const bypassPaths = [
             '/api/v1/Agents',
             '/api/v1/agents',
-            '/api/v1/Services', 
+            '/api/v1/Services',
             '/api/v1/services',
             '/api/v1/blockchain',
             '/api/v1/network',
@@ -300,240 +300,240 @@ cds.on('bootstrap', async (app) => {
             '/a2a/agent13/v1',
             '/a2a/agent14/v1'
         ];
-        
+
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
         if (shouldBypass) {
             log.debug(`Bypassing validation for: ${req.path}`);
             return next();
         }
-        
+
         // Apply input validation for all other endpoints
         securityHardening.inputValidation()(req, res, next);
     });
-    
+
     // Apply response filtering
     app.use(securityHardening.responseFilter());
-    
+
     // Add API routes BEFORE authentication middleware
     // app.use(apiRoutes); // Temporarily disabled - Express routes being converted to CAP
-    
+
     // Apply comprehensive security middleware
     applySecurityMiddleware(app);
-    
+
     // Apply authentication middleware (always enabled)
     // Use USE_DEVELOPMENT_AUTH=true for development mode
     applyAuthMiddleware(app);
-    
+
     // Apply security monitoring
     app.use(securityHardening.securityMonitoring());
-    
+
     // Apply distributed tracing middleware
     app.use(tracing.instrumentHTTP());
-    
+
     // Apply logging middleware
     app.use(loggingService.middleware());
-    
+
     // Apply health service request tracking
     app.use((req, res, next) => {
         const startTime = Date.now();
-        
+
         res.on('finish', () => {
             const duration = Date.now() - startTime;
             healthService.recordRequest(res.statusCode, duration);
         });
-        
+
         next();
     });
-    
+
     // Apply monitoring middleware
     app.use(monitoring.middleware());
-    
+
     // Apply error reporting middleware
     app.use(errorReporting.middleware());
-    
+
     // Apply enhanced error handling middleware
     const { expressErrorMiddleware } = require('./utils/errorHandler');
     app.use(expressErrorMiddleware);
-    
-    // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
-    // All Express routes are now handled through CAP services
-    
 
     // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
     // All Express routes are now handled through CAP services
-    
+
 
     // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
     // All Express routes are now handled through CAP services
-    
+
+
+    // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
+    // All Express routes are now handled through CAP services
+
 
     // ================================
     // AGENT 6-15 PROXY ROUTES - MOVED TO CAP SERVICES
     // ================================
     // Note: All agent proxy routes have been migrated to AgentProxyService.cds
     // and individual agent service files for better CAP integration
-    
+
     log.info('Agent proxy routes are now handled by CAP services');
-    
+
     // ===== AGENT 7 PROXY ROUTES =====
     // Agent Management & Orchestration System
-    
+
     // Helper function to proxy Agent 7 requests
-    
+
     // Registered Agents endpoints
-    
+
     // Agent registration and management
-    
+
     // Management Tasks endpoints
-    
+
     // Management task actions
-    
+
     // Health Check endpoints - migrated to CAP service
-    
+
     // Performance Metrics endpoints
-    
+
     // Agent Coordination endpoints
-    
+
     // Coordination actions
-    
+
     // Coordination status and management
-    
+
     // Bulk Operations endpoints
-    
+
     // Bulk operation actions
-    
+
     // Agent Management Functions
-    
+
     // Note: All agent proxy routes have been migrated to CAP services
     // Real-time updates and streaming are now handled by WebSocket services
-    
+
     // ===== AGENTS 8-15 PROXY ROUTES =====
     // Note: All agent proxy routes migrated to CAP services
-    
+
     // Agent 8 Dashboard and Analytics
-    
+
     // Agent 8 Configuration Management
-    
+
     // Agent 8 Health Check
-    
+
     // Agent 8 OData Service Proxy - Migrated to CAP service
-    
+
     // Agent 8 storage backends - migrated to CAP service
-    
+
     log.info('Agent 8 API proxy routes migrated to CAP services');
-    
+
     // ===== AGENT 9 PROXY ROUTES - Advanced Logical Reasoning and Decision-Making Agent =====
-    
+
     // Agent 9 proxy function
-    
+
     // Reasoning Tasks Management
-    
+
     // Reasoning Task Actions
-    
+
     // Knowledge Base Management
-    
+
     // Decision Making
-    
+
     // Problem Solving
-    
+
     // Reasoning Engines Management
-    
+
     // Health Check
-    
+
     // Agent 9 OData Service Proxy - migrated to CAP service
-    
+
     // Agent 9 knowledge base - migrated to CAP service
-    
+
     log.info('Agent 9 API proxy routes migrated to CAP services');
-    
+
     // ===== AGENT 10 PROXY ROUTES - Calculation Engine =====
-    
+
     // Agent 10 proxy function
-    
+
     // Calculation Tasks Management
-    
+
     // Calculation Task Actions
-    
+
     // Calculation Operations
-    
+
     // Configuration and Methods
-    
+
     // Results and History
-    
+
     // Cache Management
-    
+
     // Health Check
-    
+
     // Agent 10 OData Service Proxy - migrated to CAP service
-    
+
     log.info('Agent 10 API proxy routes migrated to CAP services');
-    
+
     // ===== AGENT 11 PROXY ROUTES - SQL Engine =====
-    
+
     // Agent 11 proxy function
-    
+
     // SQL Query Tasks Management
-    
+
     // SQL Query Actions
-    
+
     // Natural Language to SQL
-    
+
     // SQL Operations
-    
+
     // Schema and Database Information
-    
+
     // Query History and Performance
-    
+
     // Query Templates
-    
+
     // Database Connection Management
-    
+
     // Export and Backup
-    
+
     // Health Check
-    
+
     // Agent 11 OData Service Proxy - migrated to CAP service
-    
+
     log.info('Agent 11 API proxy routes migrated to CAP services');
-    
+
     // ===== AGENT 12 PROXY ROUTES - Catalog Manager =====
-    
+
     // Agent 12 proxy function
-    
+
     // Catalog Entry Management
-    
+
     // Catalog Entry Actions
-    
+
     // Dependencies Management
-    
+
     // Reviews and Ratings
-    
+
     // Metadata Management
-    
+
     // Search and Discovery
-    
+
     // Service Registration
-    
+
     // Registry Management
-    
+
     // Analysis and Reporting
-    
+
     // Bulk Operations
-    
-    // External Catalog Integration  
-    
+
+    // External Catalog Integration
+
     // Categories and Tags
-    
+
     // Recommendations and AI features
-    
+
     // Versioning
-    
+
     // Health Check
-    
+
     // Agent 12 OData Service Proxy - migrated to CAP service
-    
+
     log.info('Agent 12 API proxy routes initialized');
-    
+
     // Agent 3 OData Service Proxy - migrated to CAP service
 
     log.info('Agent 3 API proxy routes migrated to CAP services');
@@ -551,29 +551,29 @@ cds.on('bootstrap', async (app) => {
     // Metrics endpoint - migrated to CAP service
 
     // Error reporting endpoints - migrated to CAP service
-    
+
     // User API endpoints are now handled by CAP UserManagementService at /api/v1/user
-    
+
     // Serve UI5 app (duplicate removed - now served earlier before blocking middleware)
     // app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori/webapp')));
     // app.use('/app/launchpad', express.static(path.join(__dirname, '../app/launchpad')));
-    
+
     // Serve shells directory for Fiori Sandbox configuration (duplicate removed - now served earlier)
     // app.use('/shells', express.static(path.join(__dirname, '../app/shells')));
-    
+
     // Serve launchpad pages - migrated to CAP service
-    
+
     // SAP Fiori flexibility services stub endpoints - migrated to CAP service
-    
+
     // Setup monitoring routes (enhanced)
     monitoringIntegration.setupRoutes(app);
-    
+
     // Cache management endpoints - migrated to CAP service
-    
+
     // Logging endpoints - migrated to CAP service
-    
+
     // Security monitoring dashboard - migrated to CAP service
-    
+
     // Network statistics service status endpoint - migrated to CAP service
 
     // LAUNCHPAD TILE REST ENDPOINTS - For real-time tile data
@@ -588,9 +588,9 @@ cds.on('bootstrap', async (app) => {
     // Blockchain stats endpoint - migrated to CAP service
 
     // Services count endpoint - migrated to CAP service
-    
+
     // Health summary endpoint - migrated to CAP service
-    
+
 
     // NOTE: No HTTP server creation or return - CDS framework handles this
     log.info('SAP CAP server bootstrap completed successfully');
@@ -599,11 +599,11 @@ cds.on('bootstrap', async (app) => {
 // SAP CAP Framework Compliant WebSocket Initialization - After Server is Listening
 cds.on('listening', async (info) => {
     const log = cds.log('server');
-    
+
     try {
         // Get the HTTP server created by CDS framework
         const httpServer = cds.app.server;
-        
+
         // Initialize WebSocket server using CDS-managed HTTP server
         io = new Server(httpServer, {
             cors: {
@@ -615,23 +615,23 @@ cds.on('listening', async (info) => {
             pingTimeout: 60000,
             pingInterval: 25000
         });
-        
+
         // Make io available globally for CDS services
         cds.io = io;
-        
+
         // WebSocket authentication middleware with enhanced security
         io.use(async (socket, next) => {
             try {
                 const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.substring(7);
                 const clientIP = socket.handshake.address;
                 const userAgent = socket.handshake.headers['user-agent'];
-                
+
                 // Rate limiting for WebSocket connections
                 if (!_checkWebSocketRateLimit(clientIP)) {
                     log.warn(`WebSocket connection rate limit exceeded for IP: ${clientIP}`);
                     return next(new Error('Connection rate limit exceeded'));
                 }
-                
+
                 if (!token) {
                     // SECURITY FIX: Only allow development bypass in development environment
                     if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV === 'development') {
@@ -643,16 +643,16 @@ cds.on('listening', async (info) => {
                         return next(new Error('Authentication token required'));
                     }
                 }
-                
+
                 // Validate token format before processing
                 if (!token.match(/^[A-Za-z0-9\-\._~\+\/]+=*$/)) {
                     log.warn(`WebSocket authentication failed - invalid token format from IP: ${clientIP}`);
                     return next(new Error('Invalid token format'));
                 }
-                
+
                 // Use the same JWT validation as HTTP requests
                 const { validateJWT } = require('./middleware/auth');
-                const mockReq = { 
+                const mockReq = {
                     headers: { authorization: `Bearer ${token}` },
                     ip: clientIP,
                     get: (header) => socket.handshake.headers[header.toLowerCase()]
@@ -661,13 +661,13 @@ cds.on('listening', async (info) => {
                     status: () => mockRes,
                     json: (data) => { throw new Error(data.error || 'Authentication failed'); }
                 };
-                
+
                 validateJWT(mockReq, mockRes, (error) => {
                     if (error) {
                         log.warn(`WebSocket authentication failed for IP: ${clientIP}, error: ${error.message}`);
                         return next(error);
                     }
-                    
+
                     // Add security context
                     socket.user = {
                         ...mockReq.user,
@@ -675,7 +675,7 @@ cds.on('listening', async (info) => {
                         ipAddress: clientIP,
                         userAgent: userAgent
                     };
-                    
+
                     log.info(`WebSocket authentication successful for user: ${socket.user.id} from IP: ${clientIP}`);
                     next();
                 });
@@ -684,7 +684,7 @@ cds.on('listening', async (info) => {
                 next(new Error(`WebSocket authentication failed: ${  error.message}`));
             }
         });
-        
+
         // WebSocket connection handling
         io.on('blockchain-connection', (socket) => {
             const log = cds.log('websocket');
@@ -692,12 +692,12 @@ cds.on('listening', async (info) => {
                 userId: socket.user?.id,
                 userAgent: socket.handshake.headers['user-agent']
             });
-            
+
             // Join user to their personal room
             if (socket.user?.id) {
                 socket.join(`user:${socket.user.id}`);
             }
-            
+
             // Handle subscription management with enhanced validation
             socket.on('subscribe', (topics) => {
                 try {
@@ -706,60 +706,60 @@ cds.on('listening', async (info) => {
                         socket.emit('error', { message: 'Topics must be an array' });
                         return;
                     }
-                    
+
                     if (topics.length > 50) {
                         socket.emit('error', { message: 'Too many topics requested (max 50)' });
                         return;
                     }
-                    
+
                     const validTopics = topics.filter(topic => {
                         // Validate topic format
                         if (typeof topic !== 'string' || topic.length > 100) {
                             return false;
                         }
-                        
+
                         // Sanitize topic name
                         if (!/^[a-zA-Z0-9._-]+$/.test(topic)) {
                             return false;
                         }
-                        
+
                         // Check access permissions
                         return hasTopicAccess(socket.user, topic);
                     });
-                    
+
                     validTopics.forEach(topic => {
                         socket.join(`topic:${topic}`);
                         log.debug(`User ${socket.user.id} subscribed to topic: ${topic}`);
                     });
-                    
+
                     // Audit log subscription activity
                     log.info(`User ${socket.user.id} subscribed to ${validTopics.length} topics`, {
                         userId: socket.user.id,
                         topics: validTopics,
                         ipAddress: socket.user.ipAddress
                     });
-                    
+
                     socket.emit('subscribed', { topics: validTopics });
                 } catch (error) {
                     log.error('Error handling subscription:', error);
                     socket.emit('error', { message: 'Subscription failed' });
                 }
             });
-            
+
             socket.on('unsubscribe', (topics) => {
                 if (!Array.isArray(topics)) {
                     socket.emit('error', { message: 'Topics must be an array' });
                     return;
                 }
-                
+
                 topics.forEach(topic => {
                     socket.leave(`topic:${topic}`);
                     log.debug(`User ${socket.user.id} unsubscribed from topic: ${topic}`);
                 });
-                
+
                 socket.emit('unsubscribed', { topics });
             });
-            
+
             // Handle disconnection
             socket.on('disconnect', (reason) => {
                 log.info(`WebSocket client disconnected: ${socket.id}`, {
@@ -767,7 +767,7 @@ cds.on('listening', async (info) => {
                     userId: socket.user?.id
                 });
             });
-            
+
             // Send initial connection confirmation
             socket.emit('connected', {
                 socketId: socket.id,
@@ -775,27 +775,27 @@ cds.on('listening', async (info) => {
                 timestamp: new Date().toISOString()
             });
         });
-        
+
         log.info('WebSocket server initialized successfully');
-        
+
     } catch (error) {
         log.error('Failed to initialize WebSocket server:', error.message);
     }
-    
+
     // Initialize database connection
     try {
         dbConnection = await initializeDatabase();
         log.info('Database connection initialized successfully');
-        
+
         // Warm up cache with frequently accessed data
         await cacheMiddleware.warmUp();
         log.info('Cache warm-up completed');
-        
+
     } catch (error) {
         log.error('Failed to initialize database:', error.message);
         // Continue running without database for now
     }
-    
+
     // Initialize tracing collector
     try {
         const operationsService = await cds.connect.to('OperationsService');
@@ -805,7 +805,7 @@ cds.on('listening', async (info) => {
     } catch (error) {
         log.warn('Failed to initialize tracing collector:', error.message);
     }
-    
+
     // Log application startup to monitoring
     monitoring.log('info', 'A2A Network application started', {
         logger: 'server',
@@ -814,20 +814,20 @@ cds.on('listening', async (info) => {
         environment: process.env.NODE_ENV || 'development',
         port: info.port
     });
-    
+
     // Initialize enterprise services
     try {
         // Initialize notification service
         notificationService = new A2ANotificationService();
         log.info('✅ A2A Notification Service initialized successfully');
-        
+
         // Initialize real-time data service
         websocketDataService = new A2AWebSocketDataService();
         log.info('✅ A2A Real-Time Data Service initialized successfully');
     } catch (error) {
         log.error('❌ Failed to initialize A2A Enterprise Services:', error);
     }
-    
+
     // Start network statistics service
     try {
         await networkStats.start();
@@ -835,7 +835,7 @@ cds.on('listening', async (info) => {
     } catch (error) {
         log.error('Failed to start network statistics service:', error.message);
     }
-    
+
     // Flush logs periodically with non-blocking async operation
     logFlushInterval = setInterval(() => {
         // Use setImmediate to avoid blocking the event loop
@@ -847,7 +847,7 @@ cds.on('listening', async (info) => {
             }
         });
     }, 5000);
-    
+
     // Create Cloud ALM dashboard
     try {
         await cloudALM.createDashboard();
@@ -855,19 +855,19 @@ cds.on('listening', async (info) => {
     } catch (error) {
         log.error('Failed to create Cloud ALM dashboard:', error);
     }
-    
+
     // Perform launchpad health check before declaring server ready
     log.info('🏥 Performing launchpad health check...');
     try {
         const StartupHealthCheck = require('../scripts/startup-health-check');
 const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
         const healthChecker = new StartupHealthCheck(info.port);
-        
+
         // Wait a bit for all endpoints to be ready
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         const healthResult = await healthChecker.performHealthCheck();
-        
+
         if (healthResult.success) {
             log.info('✅ Launchpad health check passed - all systems operational');
         } else {
@@ -882,46 +882,46 @@ const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-e
     // ============================================
     // AGENT 13 - AGENT BUILDER PROXY ROUTES
     // ============================================
-    
-    
+
+
     // Agent 13 proxy function
-    
+
     // Template Management
-    
+
     // Template Actions
-    
+
     // Agent Build Management
-    
+
     // Build Actions
-    
+
     // Deployment Management
-    
+
     // Deployment Actions
-    
+
     // Template Component Management
-    
+
     // Component Actions
-    
+
     // Build Pipeline Management
-    
+
     // Pipeline Actions
-    
+
     // Code Generation
-    
+
     // Batch Operations
-    
+
     // Statistics and Analytics
-    
+
     // Configuration and Settings
-    
-    // Resource Management  
-    
+
+    // Resource Management
+
     // Templates and Documentation
-    
+
     // Health and Status
-    
+
     // Agent 13 OData Service Proxy - migrated to CAP service
-    
+
     log.info(`SAP CAP server listening on port ${info.port} - OpenTelemetry monitoring: ENABLED`);
 });
 
@@ -930,18 +930,18 @@ async function shutdown() {
     const log = cds.log('server');
     try {
         log.info('Shutting down gracefully...');
-        
+
         // Clear log flush interval
         if (logFlushInterval) {
             clearInterval(logFlushInterval);
             log.info('Log flush interval cleared');
         }
-        
+
         // Stop network statistics service
         if (networkStats && typeof networkStats.stop === 'function') {
             await networkStats.stop();
         }
-        
+
         // Close WebSocket server
         if (io) {
             await new Promise((resolve) => {
@@ -951,7 +951,7 @@ async function shutdown() {
                 });
             });
         }
-        
+
         // Close database connection if exists
         if (dbConnection && typeof dbConnection.close === 'function') {
             await dbConnection.close();
@@ -959,11 +959,11 @@ async function shutdown() {
         } else if (dbConnection) {
             log.info('Database connection exists but no close method available');
         }
-        
+
         // Flush any remaining logs
         await monitoring.flushLogs();
         log.info('Logs flushed successfully');
-        
+
         return 0;
     } catch (error) {
         log.error('Error during shutdown:', error);

@@ -2,7 +2,7 @@
  * @fileoverview System Monitoring Service - CAP Implementation
  * @since 1.0.0
  * @module systemMonitoringService
- * 
+ *
  * CAP service handlers for system health, monitoring, and error reporting
  * Replaces Express routes with proper SAP CAP architecture
  */
@@ -22,7 +22,7 @@ const cacheMiddleware = require('./middleware/sapCacheMiddleware');
  * CAP Service Handler for System Monitoring Actions
  */
 module.exports = function() {
-    
+
     // Basic health check
     this.on('getHealth', async (req) => {
         try {
@@ -37,7 +37,7 @@ module.exports = function() {
             req.error(500, 'HEALTH_CHECK_ERROR', `Health check failed: ${error.message}`);
         }
     });
-    
+
     // Detailed health check
     this.on('getDetailedHealth', async (req) => {
         try {
@@ -75,7 +75,7 @@ module.exports = function() {
             req.error(500, 'DETAILED_HEALTH_ERROR', `Detailed health check failed: ${error.message}`);
         }
     });
-    
+
     // Readiness probe
     this.on('getReadiness', async (req) => {
         try {
@@ -84,9 +84,9 @@ module.exports = function() {
                 { name: 'agents', ready: true },   // Would check agent health
                 { name: 'blockchain', ready: true } // Would check blockchain connection
             ];
-            
+
             const allReady = services.every(s => s.ready);
-            
+
             return {
                 ready: allReady,
                 services: services
@@ -96,7 +96,7 @@ module.exports = function() {
             req.error(503, 'READINESS_ERROR', `Readiness check failed: ${error.message}`);
         }
     });
-    
+
     // Liveness probe
     this.on('getLiveness', async (req) => {
         try {
@@ -109,13 +109,13 @@ module.exports = function() {
             req.error(500, 'LIVENESS_ERROR', `Liveness check failed: ${error.message}`);
         }
     });
-    
+
     // System metrics
     this.on('getMetrics', async (req) => {
         try {
             const memUsage = process.memoryUsage();
             const cpuUsage = process.cpuUsage();
-            
+
             const metrics = [
                 '# HELP nodejs_memory_heap_used_bytes Process heap memory used',
                 '# TYPE nodejs_memory_heap_used_bytes gauge',
@@ -130,26 +130,26 @@ module.exports = function() {
                 `process_uptime_seconds ${Math.floor(process.uptime())}`,
                 ''
             ].join('\n');
-            
+
             return metrics;
         } catch (error) {
             LOG.error('Metrics collection failed:', error);
             req.error(500, 'METRICS_ERROR', `Metrics collection failed: ${error.message}`);
         }
     });
-    
+
     // Report error
     this.on('reportError', async (req) => {
         try {
             const { error } = req.data;
-            
+
             if (!error || !error.message) {
                 req.error(400, 'INVALID_ERROR', 'Error message is required');
                 return;
             }
-            
+
             const errorId = await errorReporting.reportError(error);
-            
+
             return {
                 success: true,
                 errorId: errorId
@@ -159,7 +159,7 @@ module.exports = function() {
             req.error(500, 'ERROR_REPORT_FAILED', `Error reporting failed: ${error.message}`);
         }
     });
-    
+
     // Get error statistics
     this.on('getErrorStats', async (req) => {
         try {
@@ -178,7 +178,7 @@ module.exports = function() {
             req.error(500, 'ERROR_STATS_ERROR', `Error stats retrieval failed: ${error.message}`);
         }
     });
-    
+
     // Get recent logs
     this.on('getLogs', async (req) => {
         try {
@@ -190,7 +190,7 @@ module.exports = function() {
             req.error(500, 'LOG_RETRIEVAL_ERROR', `Log retrieval failed: ${error.message}`);
         }
     });
-    
+
     // Get cache statistics
     this.on('getCacheStats', async (req) => {
         try {
@@ -207,13 +207,13 @@ module.exports = function() {
             req.error(500, 'CACHE_STATS_ERROR', `Cache stats retrieval failed: ${error.message}`);
         }
     });
-    
+
     // Invalidate cache
     this.on('invalidateCache', async (req) => {
         try {
             const { pattern } = req.data;
             const result = await cacheMiddleware.invalidate(pattern || '*');
-            
+
             return {
                 success: true,
                 cleared: result.cleared || 0
@@ -223,6 +223,6 @@ module.exports = function() {
             req.error(500, 'CACHE_INVALIDATION_ERROR', `Cache invalidation failed: ${error.message}`);
         }
     });
-    
+
     LOG.info('System Monitoring service handlers registered');
 };

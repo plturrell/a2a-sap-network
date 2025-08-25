@@ -486,7 +486,7 @@ class HanaConnectionPool:
                     self.health_metrics["pool_exhausted_count"] += 1
                     raise Exception(f"Connection pool exhausted: {total_active} active connections")
 
-        except Exception as e:
+        except Exception:
             wait_time = time.time() - start_time
             if wait_time > self.config.pool_timeout:
                 raise Exception(f"Connection timeout after {wait_time:.2f}s")
@@ -1036,7 +1036,6 @@ class EnterpriseTransactionManager:
                 cursor = connection.cursor()
 
                 for query, parameters in queries:
-                    import time
                     start_time = time.time()
 
                     if parameters:

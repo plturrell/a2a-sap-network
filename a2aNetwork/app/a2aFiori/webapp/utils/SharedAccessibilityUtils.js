@@ -28,31 +28,33 @@ sap.ui.define([
             }
 
             // Set basic ARIA properties
+            const setupDialogAccessibility = function() {
+                const $dialog = oDialog.$();
+
+                // Set role and ARIA properties
+                $dialog.attr({
+                    "role": options.role || "dialog",
+                    "aria-modal": "true",
+                    "aria-labelledby": options.titleId || `${oDialog.getId() }-title`,
+                    "aria-describedby": options.descriptionId || `${oDialog.getId() }-content`
+                });
+
+                // Enhance form controls
+                this._enhanceFormControls($dialog);
+
+                // Setup keyboard navigation
+                this._setupKeyboardNavigation($dialog, oDialog);
+
+                // Setup focus management
+                this._setupFocusManagement($dialog, options);
+
+                // Add high contrast support
+                this._addHighContrastSupport($dialog);
+
+            }.bind(this);
+
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
-                    const $dialog = oDialog.$();
-
-                    // Set role and ARIA properties
-                    $dialog.attr({
-                        "role": options.role || "dialog",
-                        "aria-modal": "true",
-                        "aria-labelledby": options.titleId || `${oDialog.getId() }-title`,
-                        "aria-describedby": options.descriptionId || `${oDialog.getId() }-content`
-                    });
-
-                    // Enhance form controls
-                    this._enhanceFormControls($dialog);
-
-                    // Setup keyboard navigation
-                    this._setupKeyboardNavigation($dialog, oDialog);
-
-                    // Setup focus management
-                    this._setupFocusManagement($dialog, options);
-
-                    // Add high contrast support
-                    this._addHighContrastSupport($dialog);
-
-                }.bind(this)
+                onAfterRendering: setupDialogAccessibility
             });
         },
 
@@ -67,29 +69,31 @@ sap.ui.define([
                 return;
             }
 
+            const setupTableAccessibility = function() {
+                const $table = oTable.$();
+                const _tableType = oTable.getMetadata().getName();
+
+                // Set table ARIA properties
+                $table.find("table").first().attr({
+                    "role": "grid",
+                    "aria-label": options.ariaLabel || `Data table with ${ oTable.getItems().length } rows`,
+                    "aria-rowcount": oTable.getItems().length,
+                    "aria-colcount": this._getColumnCount(oTable)
+                });
+
+                // Enhance headers
+                this._enhanceTableHeaders($table, oTable, options);
+
+                // Enhance rows and cells
+                this._enhanceTableRows($table, oTable, options);
+
+                // Add sort and filter announcements
+                this._addTableAnnouncements($table, oTable);
+
+            }.bind(this);
+
             oTable.addEventDelegate({
-                onAfterRendering: function() {
-                    const $table = oTable.$();
-                    const _tableType = oTable.getMetadata().getName();
-
-                    // Set table ARIA properties
-                    $table.find("table").first().attr({
-                        "role": "grid",
-                        "aria-label": options.ariaLabel || `Data table with ${ oTable.getItems().length } rows`,
-                        "aria-rowcount": oTable.getItems().length,
-                        "aria-colcount": this._getColumnCount(oTable)
-                    });
-
-                    // Enhance headers
-                    this._enhanceTableHeaders($table, oTable, options);
-
-                    // Enhance rows and cells
-                    this._enhanceTableRows($table, oTable, options);
-
-                    // Add sort and filter announcements
-                    this._addTableAnnouncements($table, oTable);
-
-                }.bind(this)
+                onAfterRendering: setupTableAccessibility
             });
         },
 
@@ -104,20 +108,22 @@ sap.ui.define([
                 return;
             }
 
+            const setupFormAccessibility = function() {
+                const $form = oForm.$();
+
+                // Enhance input fields
+                this._enhanceFormInputs($form, options);
+
+                // Add validation message support
+                this._addValidationMessageSupport($form, options);
+
+                // Setup error announcement
+                this._setupErrorAnnouncement($form, options);
+
+            }.bind(this);
+
             oForm.addEventDelegate({
-                onAfterRendering: function() {
-                    const $form = oForm.$();
-
-                    // Enhance input fields
-                    this._enhanceFormInputs($form, options);
-
-                    // Add validation message support
-                    this._addValidationMessageSupport($form, options);
-
-                    // Setup error announcement
-                    this._setupErrorAnnouncement($form, options);
-
-                }.bind(this)
+                onAfterRendering: setupFormAccessibility
             });
         },
 
@@ -251,7 +257,7 @@ sap.ui.define([
          */
         addColorBlindSupport($container, options = {}) {
             // Add patterns/shapes in addition to colors
-            $container.find(".sapUiIcon").each(() => {
+            const enhanceIconAccessibility = function() {
                 const $icon = $(this);
                 const iconType = $icon.attr("data-sap-ui-icon");
 
@@ -259,10 +265,12 @@ sap.ui.define([
                 if (!$icon.attr("title")) {
                     $icon.attr("title", this._getIconDescription(iconType));
                 }
-            });
+            }.bind(this);
+
+            $container.find(".sapUiIcon").each(enhanceIconAccessibility);
 
             // Add text indicators for status colors
-            $container.find("[class*=\"sapUiMessageType\"]").each(function() {
+            const addStatusIndicators = function() {
                 const $element = $(this);
                 const messageType = this._extractMessageType($element[0].className);
                 const indicator = this._getStatusIndicator(messageType);
@@ -270,7 +278,9 @@ sap.ui.define([
                 if (indicator && !$element.find(".a2a-status-indicator").length) {
                     $element.prepend(`<span class="a2a-status-indicator" aria-hidden="true">${indicator}</span> `);
                 }
-            });
+            }.bind(this);
+
+            $container.find("[class*=\"sapUiMessageType\"]").each(addStatusIndicators);
         },
 
         /**
@@ -285,16 +295,18 @@ sap.ui.define([
                 .addClass("a2a-large-touch-target");
 
             // Add mobile-specific ARIA labels
-            $container.find("input[type=\"text\"], input[type=\"email\"], input[type=\"number\"]")
-                .each(function() {
-                    const $input = $(this);
-                    if (!$input.attr("aria-label") && !$input.attr("aria-labelledby")) {
-                        const placeholder = $input.attr("placeholder");
-                        if (placeholder) {
-                            $input.attr("aria-label", placeholder);
-                        }
+            const addMobileAriaLabels = function() {
+                const $input = $(this);
+                if (!$input.attr("aria-label") && !$input.attr("aria-labelledby")) {
+                    const placeholder = $input.attr("placeholder");
+                    if (placeholder) {
+                        $input.attr("aria-label", placeholder);
                     }
-                });
+                }
+            };
+
+            $container.find("input[type=\"text\"], input[type=\"email\"], input[type=\"number\"]")
+                .each(addMobileAriaLabels);
 
             // Enhance swipe gestures for screen readers
             this._addSwipeGestureSupport($container);
@@ -358,7 +370,7 @@ sap.ui.define([
         // Private helper methods
         _enhanceFormControls($container) {
             // Add ARIA labels to form controls without labels
-            $container.find("input, textarea, select").each(function() {
+            const enhanceFormControlLabels = function() {
                 const $control = $(this);
 
                 if (!$control.attr("aria-label") && !$control.attr("aria-labelledby")) {
@@ -384,7 +396,9 @@ sap.ui.define([
                         $control.attr("aria-label", label);
                     }
                 }
-            });
+            };
+
+            $container.find("input, textarea, select").each(enhanceFormControlLabels);
         },
 
         _setupKeyboardNavigation($dialog, oDialog) {
@@ -448,7 +462,7 @@ sap.ui.define([
         },
 
         _enhanceTableHeaders($table, oTable, options) {
-            $table.find("th").each(function(index) {
+            const enhanceHeaderCell = function(index) {
                 const $header = $(this);
                 $header.attr({
                     "scope": "col",
@@ -461,25 +475,31 @@ sap.ui.define([
                 if (column && column.getSorted && column.getSorted()) {
                     $header.attr("aria-sort", column.getSortOrder() === "Ascending" ? "ascending" : "descending");
                 }
-            });
+            };
+
+            $table.find("th").each(enhanceHeaderCell);
         },
 
         _enhanceTableRows($table, oTable, options) {
-            $table.find("tbody tr").each(function(rowIndex) {
+            const enhanceTableRow = function(rowIndex) {
                 const $row = $(this);
                 $row.attr({
                     "role": "row",
                     "aria-rowindex": rowIndex + 1
                 });
 
-                $row.find("td").each(function(colIndex) {
+                const enhanceTableCell = function(colIndex) {
                     const $cell = $(this);
                     $cell.attr({
                         "role": "gridcell",
                         "aria-colindex": colIndex + 1
                     });
-                });
-            });
+                };
+
+                $row.find("td").each(enhanceTableCell);
+            };
+
+            $table.find("tbody tr").each(enhanceTableRow);
         },
 
         _addTableAnnouncements($table, oTable) {
@@ -507,7 +527,7 @@ sap.ui.define([
         },
 
         _enhanceFormInputs($form, options) {
-            $form.find("input, textarea, select").each(function() {
+            const enhanceFormInput = function() {
                 const $input = $(this);
 
                 // Add required indicator
@@ -524,7 +544,9 @@ sap.ui.define([
                 if ($input.hasClass("error") || $input.attr("data-error")) {
                     $input.attr("aria-invalid", "true");
                 }
-            });
+            };
+
+            $form.find("input, textarea, select").each(enhanceFormInput);
         },
 
         _addValidationMessageSupport($form, options) {
@@ -539,17 +561,19 @@ sap.ui.define([
 
         _setupErrorAnnouncement($form, options) {
             // Monitor for error states and announce them
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === "attributes" && mutation.attributeName === "class") {
-                        const $target = $(mutation.target);
-                        if ($target.hasClass("error") && !$target.hasClass("announced")) {
-                            const label = $target.attr("aria-label") || $target.attr("placeholder") || "Field";
-                            this.announceToScreenReader(`${label} has an error`);
-                            $target.addClass("announced");
-                        }
+            const handleErrorMutation = function(mutation) {
+                if (mutation.type === "attributes" && mutation.attributeName === "class") {
+                    const $target = $(mutation.target);
+                    if ($target.hasClass("error") && !$target.hasClass("announced")) {
+                        const label = $target.attr("aria-label") || $target.attr("placeholder") || "Field";
+                        this.announceToScreenReader(`${label} has an error`);
+                        $target.addClass("announced");
                     }
-                });
+                }
+            }.bind(this);
+
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach(handleErrorMutation);
             });
 
             observer.observe($form[0], { attributes: true, subtree: true });
@@ -558,11 +582,13 @@ sap.ui.define([
         _addSwipeGestureSupport($container) {
             // Add instructions for screen reader users about swipe gestures
             if (Device.system.phone || Device.system.tablet) {
-                $container.find("[data-swipe]").each(function() {
+                const addSwipeInstructions = function() {
                     const $element = $(this);
                     const swipeAction = $element.attr("data-swipe");
                     $element.attr("aria-label", `${$element.attr("aria-label") || ""} Swipe to ${swipeAction}`.trim());
-                });
+                };
+
+                $container.find("[data-swipe]").each(addSwipeInstructions);
             }
         },
 

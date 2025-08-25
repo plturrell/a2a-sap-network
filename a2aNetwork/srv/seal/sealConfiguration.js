@@ -51,35 +51,35 @@ class SealConfiguration {
      */
     validateConfiguration() {
         const errors = [];
-        
+
         // Validate xAI Grok configuration
         if (!this.config.grok.apiKey) {
             errors.push('XAI_API_KEY or GROK_API_KEY is required');
         }
-        
+
         if (!this.config.grok.baseUrl) {
             errors.push('XAI_BASE_URL is required (should be https://api.x.ai/v1)');
         }
-        
+
         if (this.config.grok.model.startsWith('grok-4') && !this.config.grok.features.reasoning) {
             errors.push('Grok 4 requires reasoning mode to be enabled');
         }
-        
+
         // Validate RL parameters
         const rl = this.config.reinforcementLearning;
         if (rl.learningRate <= 0 || rl.learningRate >= 1) {
             errors.push('Learning rate must be between 0 and 1');
         }
-        
+
         if (rl.discountFactor <= 0 || rl.discountFactor >= 1) {
             errors.push('Discount factor must be between 0 and 1');
         }
-        
+
         // Validate compliance settings
         if (this.config.compliance.auditRetentionYears < 1) {
             errors.push('Audit retention must be at least 1 year');
         }
-        
+
         return {
             isValid: errors.length === 0,
             errors

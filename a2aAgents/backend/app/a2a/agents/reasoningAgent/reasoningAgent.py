@@ -1781,7 +1781,10 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             reasoning_paths.append(path)
 
         # Find best path
-        best_path = max(reasoning_paths, key=lambda p: p["confidence"])
+        def get_path_confidence(path):
+            return path["confidence"]
+        
+        best_path = max(reasoning_paths, key=get_path_confidence)
 
         return {
             "answer": f"Based on graph analysis of {best_path['start']}",
@@ -3107,7 +3110,10 @@ What complex reasoning challenge can I help you with today?"""
                 })
 
             # Sort by confidence
-            recommendations.sort(key=lambda x: x["confidence"], reverse=True)
+            def get_recommendation_confidence(recommendation):
+                return recommendation["confidence"]
+            
+            recommendations.sort(key=get_recommendation_confidence, reverse=True)
 
             # Format response
             response = f"""**Architecture Analysis for:** "{problem_description[:100]}{'...' if len(problem_description) > 100 else ''}"

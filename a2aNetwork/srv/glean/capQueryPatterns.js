@@ -2,7 +2,7 @@
  * @fileoverview CAP-specific Query Patterns for Glean Angle queries
  * @module capQueryPatterns
  * @since 1.0.0
- * 
+ *
  * Provides pre-built query patterns for common CAP analysis scenarios
  */
 
@@ -16,8 +16,8 @@ class CAPQueryPatterns {
         // Entity Analysis Patterns
         this.patterns.set('complex_entities', {
             name: 'Find Complex Entities',
-            query: `query FindComplexEntities(threshold: nat) : [CDSEntity] = 
-                src.CDSEntity { file, name, fieldCount, complexity } 
+            query: `query FindComplexEntities(threshold: nat) : [CDSEntity] =
+                src.CDSEntity { file, name, fieldCount, complexity }
                 where complexity > threshold`,
             description: 'Find entities with high complexity (many fields, associations, compositions)',
             category: 'complexity'
@@ -25,8 +25,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('entities_without_keys', {
             name: 'Entities Without Primary Keys',
-            query: `query EntitiesWithoutKeys() : [CDSEntity] = 
-                src.CDSEntity { file, name, keys } 
+            query: `query EntitiesWithoutKeys() : [CDSEntity] =
+                src.CDSEntity { file, name, keys }
                 where keys = []`,
             description: 'Find entities that lack proper primary key definitions',
             category: 'validation'
@@ -34,8 +34,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('managed_entities', {
             name: 'Managed Entities',
-            query: `query ManagedEntities() : [CDSEntity] = 
-                src.CDSEntity { file, name, isManaged } 
+            query: `query ManagedEntities() : [CDSEntity] =
+                src.CDSEntity { file, name, isManaged }
                 where isManaged = true`,
             description: 'Find all entities that inherit from managed aspect',
             category: 'architecture'
@@ -44,8 +44,8 @@ class CAPQueryPatterns {
         // Service Analysis Patterns
         this.patterns.set('services_without_auth', {
             name: 'Services Without Authorization',
-            query: `query ServicesWithoutAuth() : [CDSService] = 
-                src.CDSService { file, name, annotations } 
+            query: `query ServicesWithoutAuth() : [CDSService] =
+                src.CDSService { file, name, annotations }
                 where !(annotations contains "requires" || annotations contains "restrict")`,
             description: 'Find services that lack authorization annotations',
             category: 'security'
@@ -53,8 +53,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('restful_services', {
             name: 'RESTful Services',
-            query: `query RESTfulServices() : [CDSService] = 
-                src.CDSService { file, name, path, isRESTful } 
+            query: `query RESTfulServices() : [CDSService] =
+                src.CDSService { file, name, path, isRESTful }
                 where isRESTful = true`,
             description: 'Find services with REST API endpoints',
             category: 'architecture'
@@ -62,8 +62,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('large_services', {
             name: 'Large Services',
-            query: `query LargeServices(threshold: nat) : [CDSService] = 
-                src.CDSService { file, name, entityCount, actionCount, functionCount } 
+            query: `query LargeServices(threshold: nat) : [CDSService] =
+                src.CDSService { file, name, entityCount, actionCount, functionCount }
                 where entityCount + actionCount + functionCount > threshold`,
             description: 'Find services with many exposed entities, actions, and functions',
             category: 'complexity'
@@ -72,8 +72,8 @@ class CAPQueryPatterns {
         // Association and Composition Patterns
         this.patterns.set('circular_associations', {
             name: 'Circular Associations',
-            query: `query CircularAssociations() : [(string, string)] = 
-                (entity1, entity2) where 
+            query: `query CircularAssociations() : [(string, string)] =
+                (entity1, entity2) where
                     src.CDSAssociation { source = entity1, target = entity2 } &&
                     src.CDSAssociation { source = entity2, target = entity1 }`,
             description: 'Find entities with circular association relationships',
@@ -82,8 +82,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('many_to_many_associations', {
             name: 'Many-to-Many Associations',
-            query: `query ManyToManyAssociations() : [CDSAssociation] = 
-                src.CDSAssociation { source, target, cardinality, isManyToMany } 
+            query: `query ManyToManyAssociations() : [CDSAssociation] =
+                src.CDSAssociation { source, target, cardinality, isManyToMany }
                 where isManyToMany = true`,
             description: 'Find many-to-many association relationships',
             category: 'performance'
@@ -91,8 +91,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('orphaned_compositions', {
             name: 'Orphaned Compositions',
-            query: `query OrphanedCompositions() : [CDSComposition] = 
-                src.CDSComposition { source, target, name } 
+            query: `query OrphanedCompositions() : [CDSComposition] =
+                src.CDSComposition { source, target, name }
                 where !(src.CDSEntity { name = target })`,
             description: 'Find compositions pointing to non-existent entities',
             category: 'validation'
@@ -101,8 +101,8 @@ class CAPQueryPatterns {
         // Annotation Patterns
         this.patterns.set('missing_ui_annotations', {
             name: 'Entities Missing UI Annotations',
-            query: `query EntitiesMissingUIAnnotations() : [CDSEntity] = 
-                src.CDSEntity { file, name, annotations } 
+            query: `query EntitiesMissingUIAnnotations() : [CDSEntity] =
+                src.CDSEntity { file, name, annotations }
                 where !(annotations contains "title" || annotations contains "label")`,
             description: 'Find entities without UI metadata annotations',
             category: 'usability'
@@ -110,8 +110,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('validation_annotations', {
             name: 'Fields with Validation',
-            query: `query FieldsWithValidation() : [CDSField] = 
-                src.CDSField { entity, name, annotations } 
+            query: `query FieldsWithValidation() : [CDSField] =
+                src.CDSField { entity, name, annotations }
                 where annotations contains "assert"`,
             description: 'Find fields with validation annotations',
             category: 'validation'
@@ -119,8 +119,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('localized_fields', {
             name: 'Localized Fields',
-            query: `query LocalizedFields() : [CDSField] = 
-                src.CDSField { entity, name, isLocalized } 
+            query: `query LocalizedFields() : [CDSField] =
+                src.CDSField { entity, name, isLocalized }
                 where isLocalized = true`,
             description: 'Find fields that support localization',
             category: 'i18n'
@@ -129,8 +129,8 @@ class CAPQueryPatterns {
         // Performance Patterns
         this.patterns.set('potential_n_plus_one', {
             name: 'Potential N+1 Query Issues',
-            query: `query PotentialNPlusOne() : [CAPPerformance] = 
-                src.CAPPerformance { entity, issue, associationCount } 
+            query: `query PotentialNPlusOne() : [CAPPerformance] =
+                src.CAPPerformance { entity, issue, associationCount }
                 where issue = "potential_n_plus_one"`,
             description: 'Find entities with potential N+1 query problems',
             category: 'performance'
@@ -138,8 +138,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('complex_views', {
             name: 'Complex Views',
-            query: `query ComplexViews(threshold: nat) : [CDSView] = 
-                src.CDSView { file, name, complexity, columnCount } 
+            query: `query ComplexViews(threshold: nat) : [CDSView] =
+                src.CDSView { file, name, complexity, columnCount }
                 where complexity > threshold`,
             description: 'Find views with high complexity (joins, conditions)',
             category: 'performance'
@@ -148,8 +148,8 @@ class CAPQueryPatterns {
         // Security Patterns
         this.patterns.set('hardcoded_auth', {
             name: 'Hardcoded Authorization',
-            query: `query HardcodedAuth() : [CDSAnnotation] = 
-                src.CDSAnnotation { file, target, name, value } 
+            query: `query HardcodedAuth() : [CDSAnnotation] =
+                src.CDSAnnotation { file, target, name, value }
                 where name = "requires" && value contains "hardcoded"`,
             description: 'Find hardcoded authorization configurations',
             category: 'security'
@@ -157,8 +157,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('missing_field_auth', {
             name: 'Fields Without Authorization',
-            query: `query FieldsWithoutAuth() : [CDSField] = 
-                src.CDSField { entity, name, annotations } 
+            query: `query FieldsWithoutAuth() : [CDSField] =
+                src.CDSField { entity, name, annotations }
                 where !(annotations contains "readonly" || annotations contains "insertonly")`,
             description: 'Find fields without access control annotations',
             category: 'security'
@@ -167,8 +167,8 @@ class CAPQueryPatterns {
         // Best Practices Patterns
         this.patterns.set('naming_violations', {
             name: 'Naming Convention Violations',
-            query: `query NamingViolations() : [CAPBestPractice] = 
-                src.CAPBestPractice { symbol, practice, issue } 
+            query: `query NamingViolations() : [CAPBestPractice] =
+                src.CAPBestPractice { symbol, practice, issue }
                 where practice = "naming_convention"`,
             description: 'Find entities and fields not following naming conventions',
             category: 'best_practices'
@@ -176,8 +176,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('missing_annotations', {
             name: 'Missing Required Annotations',
-            query: `query MissingAnnotations() : [CAPBestPractice] = 
-                src.CAPBestPractice { entity, practice, issue } 
+            query: `query MissingAnnotations() : [CAPBestPractice] =
+                src.CAPBestPractice { entity, practice, issue }
                 where practice = "missing_annotations"`,
             description: 'Find entities without required annotations',
             category: 'best_practices'
@@ -186,8 +186,8 @@ class CAPQueryPatterns {
         // Cross-Reference Patterns
         this.patterns.set('entity_relationships', {
             name: 'Entity Relationship Graph',
-            query: `query EntityRelationships(entityName: string) : [CDSXRef] = 
-                src.CDSXRef { sourceEntity, targetEntity, relationshipType } 
+            query: `query EntityRelationships(entityName: string) : [CDSXRef] =
+                src.CDSXRef { sourceEntity, targetEntity, relationshipType }
                 where sourceEntity = entityName || targetEntity = entityName`,
             description: 'Find all relationships for a specific entity',
             category: 'architecture'
@@ -195,8 +195,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('service_dependencies', {
             name: 'Service Dependencies',
-            query: `query ServiceDependencies(serviceName: string) : [CDSDependency] = 
-                src.CDSDependency { sourceService, targetEntity, dependencyType } 
+            query: `query ServiceDependencies(serviceName: string) : [CDSDependency] =
+                src.CDSDependency { sourceService, targetEntity, dependencyType }
                 where sourceService = serviceName`,
             description: 'Find all entities exposed by a service',
             category: 'architecture'
@@ -205,8 +205,8 @@ class CAPQueryPatterns {
         // Type System Patterns
         this.patterns.set('custom_types', {
             name: 'Custom Type Definitions',
-            query: `query CustomTypes() : [CDSType] = 
-                src.CDSType { file, name, isCustomType } 
+            query: `query CustomTypes() : [CDSType] =
+                src.CDSType { file, name, isCustomType }
                 where isCustomType = true`,
             description: 'Find custom type definitions',
             category: 'architecture'
@@ -214,8 +214,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('structured_types', {
             name: 'Structured Types',
-            query: `query StructuredTypes() : [CDSType] = 
-                src.CDSType { file, name, isStructured, complexity } 
+            query: `query StructuredTypes() : [CDSType] =
+                src.CDSType { file, name, isStructured, complexity }
                 where isStructured = true`,
             description: 'Find complex structured type definitions',
             category: 'complexity'
@@ -224,8 +224,8 @@ class CAPQueryPatterns {
         // Aspect Patterns
         this.patterns.set('reusable_aspects', {
             name: 'Reusable Aspects',
-            query: `query ReusableAspects() : [CDSAspect] = 
-                src.CDSAspect { file, name, fieldCount, isReusable } 
+            query: `query ReusableAspects() : [CDSAspect] =
+                src.CDSAspect { file, name, fieldCount, isReusable }
                 where isReusable = true`,
             description: 'Find aspect definitions for code reuse',
             category: 'architecture'
@@ -233,8 +233,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('unused_aspects', {
             name: 'Unused Aspects',
-            query: `query UnusedAspects() : [CDSAspect] = 
-                src.CDSAspect { file, name } 
+            query: `query UnusedAspects() : [CDSAspect] =
+                src.CDSAspect { file, name }
                 where !(src.CDSEntity { aspects contains name })`,
             description: 'Find aspects that are not used by any entity',
             category: 'cleanup'
@@ -243,8 +243,8 @@ class CAPQueryPatterns {
         // Action and Function Patterns
         this.patterns.set('complex_actions', {
             name: 'Complex Actions',
-            query: `query ComplexActions(threshold: nat) : [CDSAction] = 
-                src.CDSAction { file, name, parameterCount } 
+            query: `query ComplexActions(threshold: nat) : [CDSAction] =
+                src.CDSAction { file, name, parameterCount }
                 where parameterCount > threshold`,
             description: 'Find actions with many parameters',
             category: 'complexity'
@@ -252,8 +252,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('void_actions', {
             name: 'Void Actions',
-            query: `query VoidActions() : [CDSAction] = 
-                src.CDSAction { file, name, isVoidAction } 
+            query: `query VoidActions() : [CDSAction] =
+                src.CDSAction { file, name, isVoidAction }
                 where isVoidAction = true`,
             description: 'Find actions that do not return values',
             category: 'design'
@@ -262,7 +262,7 @@ class CAPQueryPatterns {
         // Projection Patterns
         this.patterns.set('all_projections', {
             name: 'All Projections',
-            query: `query AllProjections() : [CDSProjection] = 
+            query: `query AllProjections() : [CDSProjection] =
                 src.CDSProjection { file, name, sourceEntity }`,
             description: 'Find all projection definitions',
             category: 'architecture'
@@ -270,8 +270,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('projection_chains', {
             name: 'Projection Chains',
-            query: `query ProjectionChains() : [(string, string)] = 
-                (proj1, proj2) where 
+            query: `query ProjectionChains() : [(string, string)] =
+                (proj1, proj2) where
                     src.CDSProjection { name = proj1, sourceEntity = proj2 } &&
                     src.CDSProjection { name = proj2 }`,
             description: 'Find projections that are based on other projections',
@@ -281,8 +281,8 @@ class CAPQueryPatterns {
         // File Organization Patterns
         this.patterns.set('large_files', {
             name: 'Large CDS Files',
-            query: `query LargeCDSFiles(threshold: nat) : [CDSFile] = 
-                src.CDSFile { file, entities, services, types, complexity } 
+            query: `query LargeCDSFiles(threshold: nat) : [CDSFile] =
+                src.CDSFile { file, entities, services, types, complexity }
                 where entities + services + types > threshold`,
             description: 'Find CDS files with many definitions',
             category: 'organization'
@@ -290,8 +290,8 @@ class CAPQueryPatterns {
 
         this.patterns.set('namespace_usage', {
             name: 'Namespace Usage',
-            query: `query NamespaceUsage(namespace: string) : [CDSFile] = 
-                src.CDSFile { file, namespace as ns } 
+            query: `query NamespaceUsage(namespace: string) : [CDSFile] =
+                src.CDSFile { file, namespace as ns }
                 where ns = namespace`,
             description: 'Find files using a specific namespace',
             category: 'organization'
@@ -337,7 +337,7 @@ class CAPQueryPatterns {
 
         this.patterns.forEach((pattern, name) => {
             const searchText = `${pattern.name} ${pattern.description} ${pattern.category}`.toLowerCase();
-            
+
             const score = searchTerms.reduce((acc, term) => {
                 return acc + (searchText.includes(term) ? 1 : 0);
             }, 0);
@@ -357,26 +357,26 @@ class CAPQueryPatterns {
     generateComplexQuery(entities, relationships, constraints) {
         // Generate complex queries based on entity relationships
         let query = 'query ComplexAnalysis() : [Result] = ';
-        
+
         // Add entity joins
-        const entityClauses = entities.map(entity => 
+        const entityClauses = entities.map(entity =>
             `src.CDSEntity { name = "${entity}", file, complexity }`
         );
-        
+
         // Add relationship constraints
-        const relationshipClauses = relationships.map(rel => 
+        const relationshipClauses = relationships.map(rel =>
             `src.CDSAssociation { source = "${rel.from}", target = "${rel.to}" }`
         );
-        
+
         // Combine clauses
         const allClauses = [...entityClauses, ...relationshipClauses];
         query += allClauses.join(' && ');
-        
+
         // Add constraints
         if (constraints && constraints.length > 0) {
             query += ` where ${  constraints.join(' && ')}`;
         }
-        
+
         return query;
     }
 }

@@ -19,7 +19,7 @@ class Agent1SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // Data Standardization-specific vulnerability patterns
         this.dataStandardizationPatterns = {
             // Data transformation injection vulnerabilities
@@ -39,7 +39,7 @@ class Agent1SecurityScanner {
                 message: 'Potential data transformation injection vulnerability',
                 impact: 'Could allow malicious code execution during data transformation'
             },
-            
+
             // Schema manipulation vulnerabilities
             SCHEMA_MANIPULATION: {
                 patterns: [
@@ -57,7 +57,7 @@ class Agent1SecurityScanner {
                 message: 'Potential schema manipulation vulnerability',
                 impact: 'Could allow unauthorized schema modifications and data corruption'
             },
-            
+
             // Format validation bypass
             FORMAT_VALIDATION_BYPASS: {
                 patterns: [
@@ -74,7 +74,7 @@ class Agent1SecurityScanner {
                 message: 'Format validation bypass vulnerability',
                 impact: 'Could allow processing of malicious or invalid data formats'
             },
-            
+
             // ETL pipeline security vulnerabilities
             ETL_PIPELINE_INJECTION: {
                 patterns: [
@@ -91,7 +91,7 @@ class Agent1SecurityScanner {
                 message: 'ETL pipeline injection vulnerability',
                 impact: 'Could allow injection of malicious code into data processing pipelines'
             },
-            
+
             // Data mapping vulnerabilities
             MAPPING_MANIPULATION: {
                 patterns: [
@@ -108,7 +108,7 @@ class Agent1SecurityScanner {
                 message: 'Data mapping manipulation vulnerability',
                 impact: 'Could allow unauthorized modification of data field mappings'
             },
-            
+
             // File upload security vulnerabilities
             FILE_UPLOAD_BYPASS: {
                 patterns: [
@@ -125,7 +125,7 @@ class Agent1SecurityScanner {
                 message: 'File upload security bypass',
                 impact: 'Could allow upload of malicious files or oversized data'
             },
-            
+
             // Data export vulnerabilities
             DATA_EXPORT_EXPOSURE: {
                 patterns: [
@@ -142,7 +142,7 @@ class Agent1SecurityScanner {
                 message: 'Sensitive data export exposure',
                 impact: 'Could allow export of sensitive transformation data or error details'
             },
-            
+
             // Standardization process bypasses
             STANDARDIZATION_BYPASS: {
                 patterns: [
@@ -158,7 +158,7 @@ class Agent1SecurityScanner {
                 message: 'Data standardization process bypass',
                 impact: 'Could allow bypassing of data standardization and approval workflows'
             },
-            
+
             // Template injection vulnerabilities
             TEMPLATE_INJECTION: {
                 patterns: [
@@ -174,7 +174,7 @@ class Agent1SecurityScanner {
                 message: 'Template injection vulnerability',
                 impact: 'Could allow injection of malicious code through schema templates'
             },
-            
+
             // Batch processing vulnerabilities
             BATCH_PROCESSING_ABUSE: {
                 patterns: [
@@ -192,29 +192,29 @@ class Agent1SecurityScanner {
             }
         };
     }
-    
+
     scanFile(filePath) {
         console.log(`🔎 Scanning: ${filePath}`);
         this.filesScanned++;
-        
+
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const lines = content.split('\n');
-            
+
             // Check for general OWASP vulnerabilities
             this.checkOWASPVulnerabilities(content, filePath, lines);
-            
+
             // Check for data standardization-specific vulnerabilities
             this.checkDataStandardizationVulnerabilities(content, filePath, lines);
-            
+
             // Check for SAP Fiori specific issues
             this.checkSAPFioriCompliance(content, filePath, lines);
-            
+
         } catch (error) {
             console.error(`❌ Error scanning ${filePath}: ${error.message}`);
         }
     }
-    
+
     checkOWASPVulnerabilities(content, filePath, lines) {
         // XSS vulnerabilities
         const xssPatterns = [
@@ -224,7 +224,7 @@ class Agent1SecurityScanner {
             { pattern: /dangerouslySetInnerHTML/gi, type: 'XSS', message: 'Potential XSS via React dangerouslySetInnerHTML' },
             { pattern: /encodeXML\s*\(/gi, type: 'XSS_GOOD', message: 'Good: Using encodeXML for XSS prevention', isGood: true }
         ];
-        
+
         xssPatterns.forEach(({ pattern, type, message, isGood }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
@@ -242,7 +242,7 @@ class Agent1SecurityScanner {
                 });
             }
         });
-        
+
         // CSRF vulnerabilities
         const csrfPatterns = [
             /\$\.ajax\s*\(\s*\{[^}]*type\s*:\s*["']POST["']/gi,
@@ -252,13 +252,13 @@ class Agent1SecurityScanner {
             /\.delete\s*\(/gi,
             /fetch\s*\([^,]+,\s*\{[^}]*method\s*:\s*["'](POST|PUT|DELETE)["']/gi
         ];
-        
+
         csrfPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 // Check if CSRF token is present nearby
                 const surroundingCode = content.substring(Math.max(0, match.index - 300), match.index + 300);
-                if (!surroundingCode.includes('X-CSRF-Token') && 
+                if (!surroundingCode.includes('X-CSRF-Token') &&
                     !surroundingCode.includes('csrf') &&
                     !surroundingCode.includes('X-Requested-With')) {
                     const lineNumber = this.getLineNumber(content, match.index);
@@ -275,20 +275,20 @@ class Agent1SecurityScanner {
                 }
             }
         });
-        
+
         // Insecure connections
         const insecurePatterns = [
             { pattern: /http:\/\/(?!localhost)/gi, type: 'INSECURE_CONNECTION', message: 'Insecure HTTP connection' },
             { pattern: /ws:\/\/(?!localhost)/gi, type: 'INSECURE_WEBSOCKET', message: 'Insecure WebSocket connection' }
         ];
-        
+
         insecurePatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
                 // Skip comments, examples, and already secure code
-                if (!code.includes('//') && !code.includes('example') && 
+                if (!code.includes('//') && !code.includes('example') &&
                     !code.includes('wss://') && !code.includes('https://')) {
                     this.addVulnerability({
                         type: type,
@@ -304,7 +304,7 @@ class Agent1SecurityScanner {
             }
         });
     }
-    
+
     checkDataStandardizationVulnerabilities(content, filePath, lines) {
         Object.entries(this.dataStandardizationPatterns).forEach(([vulnType, config]) => {
             config.patterns.forEach(pattern => {
@@ -312,12 +312,12 @@ class Agent1SecurityScanner {
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
                     const code = lines[lineNumber - 1]?.trim() || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(code, vulnType, filePath)) {
                         continue;
                     }
-                    
+
                     this.addVulnerability({
                         type: config.category,
                         severity: config.severity,
@@ -332,7 +332,7 @@ class Agent1SecurityScanner {
             });
         });
     }
-    
+
     isFalsePositive(code, vulnType, filePath) {
         // Skip legitimate uses that are not security vulnerabilities
         const falsePositivePatterns = {
@@ -361,35 +361,35 @@ class Agent1SecurityScanner {
                 /acceptAllTypes.*false/gi  // Disabled setting
             ]
         };
-        
+
         if (falsePositivePatterns[vulnType]) {
             const patterns = falsePositivePatterns[vulnType];
             if (patterns.some(pattern => pattern.test(code))) {
                 return true;
             }
         }
-        
+
         // General false positive checks
         if (filePath.includes('SecurityUtils.js') || filePath.includes('validation')) {
             // Security and validation files contain functions that may trigger patterns
-            return code.includes('sanitized') || code.includes('validation') || 
+            return code.includes('sanitized') || code.includes('validation') ||
                    code.includes('encodeXML') || code.includes('_validate');
         }
-        
+
         // Skip comments and documentation
         if (code.includes('//') || code.includes('/*') || code.includes('*') || code.includes('try {')) {
             return true;
         }
-        
+
         // Skip legitimate validation patterns
-        if (code.includes('_validateInput') || code.includes('_validateApiResponse') || 
+        if (code.includes('_validateInput') || code.includes('_validateApiResponse') ||
             code.includes('_validateFileUpload') || code.includes('_validateForm')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     getDataStandardizationFix(vulnType) {
         const fixes = {
             TRANSFORMATION_INJECTION: 'Validate and sanitize all transformation scripts, avoid dynamic code execution',
@@ -405,7 +405,7 @@ class Agent1SecurityScanner {
         };
         return fixes[vulnType] || 'Implement proper validation and security controls';
     }
-    
+
     checkSAPFioriCompliance(content, filePath, lines) {
         // Check for missing i18n
         if (filePath.includes('.controller.js')) {
@@ -414,14 +414,14 @@ class Agent1SecurityScanner {
                 { pattern: /MessageBox\.\w+\s*\(\s*["'][^"']+["']/gi, message: 'Hardcoded message in MessageBox' },
                 { pattern: /setText\s*\(\s*["'][^"']+["']\s*\)/gi, message: 'Hardcoded text in UI element' }
             ];
-            
+
             i18nPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
                     const code = lines[lineNumber - 1]?.trim() || '';
                     // Skip validation messages and technical messages
-                    if (!code.includes('validation') && !code.includes('error') && 
+                    if (!code.includes('validation') && !code.includes('error') &&
                         !code.includes('_oResourceBundle')) {
                         this.addVulnerability({
                             type: 'SAP_STANDARDS',
@@ -436,14 +436,14 @@ class Agent1SecurityScanner {
                     }
                 }
             });
-            
+
             // Check for proper input validation patterns
             const validationPatterns = [
                 { pattern: /getValue\(\).*user/gi, message: 'User input without validation' },
                 { pattern: /getParameter\(\s*["']value["']\s*\).*[^_validate]/gi, message: 'Parameter value without validation' },
                 { pattern: /oEvent\.getParameter\s*\([^)]*\).*[^validate]/gi, message: 'Event parameter without validation' }
             ];
-            
+
             validationPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -464,7 +464,7 @@ class Agent1SecurityScanner {
                 }
             });
         }
-        
+
         // Check for missing security headers in manifest
         if (filePath.includes('manifest.json')) {
             const requiredHeaders = [
@@ -473,7 +473,7 @@ class Agent1SecurityScanner {
                 'X-Content-Type-Options',
                 'Strict-Transport-Security'
             ];
-            
+
             requiredHeaders.forEach(header => {
                 if (!content.includes(header)) {
                     this.addVulnerability({
@@ -488,7 +488,7 @@ class Agent1SecurityScanner {
                     });
                 }
             });
-            
+
             // Check for data standardization-specific manifest issues
             if (content.includes('StandardizationTasks') || content.includes('agent1')) {
                 const dataServicePattern = /"uri"\s*:\s*["'][^"']*\/a2a\/agent1[^"']*["']/gi;
@@ -510,14 +510,14 @@ class Agent1SecurityScanner {
                 }
             }
         }
-        
+
         // Check for accessibility and responsive design patterns
         if (filePath.includes('.controller.js')) {
             const accessibilityPatterns = [
                 { pattern: /announceForAccessibility/gi, message: 'Good: Using accessibility announcements', isGood: true },
                 { pattern: /getModel\s*\(\s*["']device["']\s*\)/gi, message: 'Good: Using device model for responsiveness', isGood: true }
             ];
-            
+
             // Count good patterns for scoring
             accessibilityPatterns.forEach(({ pattern, isGood }) => {
                 if (isGood) {
@@ -530,32 +530,32 @@ class Agent1SecurityScanner {
             });
         }
     }
-    
+
     getLineNumber(content, index) {
         const lines = content.substring(0, index).split('\n');
         return lines.length;
     }
-    
+
     addVulnerability(vuln) {
         // Avoid duplicates
-        const exists = this.vulnerabilities.some(v => 
-            v.file === vuln.file && 
-            v.line === vuln.line && 
+        const exists = this.vulnerabilities.some(v =>
+            v.file === vuln.file &&
+            v.line === vuln.line &&
             v.type === vuln.type
         );
-        
+
         if (!exists) {
             this.vulnerabilities.push(vuln);
         }
     }
-    
+
     scanDirectory(dirPath) {
         const files = fs.readdirSync(dirPath);
-        
+
         files.forEach(file => {
             const fullPath = path.join(dirPath, file);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
                 this.scanDirectory(fullPath);
             } else if (stat.isFile() && this.shouldScanFile(file)) {
@@ -563,12 +563,12 @@ class Agent1SecurityScanner {
             }
         });
     }
-    
+
     shouldScanFile(filename) {
         const extensions = ['.js', '.xml', '.json', '.html'];
         return extensions.some(ext => filename.endsWith(ext));
     }
-    
+
     generateReport() {
         const scanDuration = (Date.now() - this.scanStartTime) / 1000;
         const criticalCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.CRITICAL).length;
@@ -576,11 +576,11 @@ class Agent1SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 1 DATA STANDARDIZATION SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
@@ -589,12 +589,12 @@ class Agent1SecurityScanner {
         console.log(`   Medium Issues: ${mediumCount}`);
         console.log(`   Low Issues: ${lowCount}`);
         console.log(`   Warnings: ${warningCount}`);
-        
+
         // Calculate security score
         const totalIssues = criticalCount * 10 + highCount * 5 + mediumCount * 2 + lowCount;
         const maxScore = 100;
         const score = Math.max(0, maxScore - totalIssues);
-        
+
         console.log(`\n🎯 DATA STANDARDIZATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
             console.log('   Status: ✅ EXCELLENT - Well secured');
@@ -605,7 +605,7 @@ class Agent1SecurityScanner {
         } else {
             console.log('   Status: ❌ POOR - Significant security improvements needed');
         }
-        
+
         // Data standardization-specific findings
         const dataStandardizationIssues = this.vulnerabilities.filter(v => v.type.startsWith('DATA_'));
         if (dataStandardizationIssues.length > 0) {
@@ -614,19 +614,19 @@ class Agent1SecurityScanner {
             dataStandardizationIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
             });
-            
+
             Object.entries(issueCounts).forEach(([type, count]) => {
                 console.log(`   ${type.replace('DATA_', '')}: ${count} issues`);
             });
         }
-        
+
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:\n');
-            
+
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
-            
+
             severityOrder.forEach(severity => {
                 const sevVulns = this.vulnerabilities.filter(v => v.severity === severity);
                 if (sevVulns.length > 0) {
@@ -642,7 +642,7 @@ class Agent1SecurityScanner {
                 }
             });
         }
-        
+
         // Data standardization security recommendations
         console.log('💡 AGENT 1 DATA STANDARDIZATION SECURITY RECOMMENDATIONS:\n');
         console.log('1. 🔐 Secure transformation scripts');
@@ -650,54 +650,54 @@ class Agent1SecurityScanner {
         console.log('   - Use safe evaluation environments (sandboxing)');
         console.log('   - Implement script content filtering and sanitization');
         console.log('   - Avoid dynamic code execution (eval, new Function)');
-        
+
         console.log('\n2. 🛡️  Protect schema integrity');
         console.log('   - Validate all schema templates against approved patterns');
         console.log('   - Implement schema versioning and approval workflows');
         console.log('   - Use cryptographic signatures for schema validation');
         console.log('   - Prevent unauthorized schema modifications');
-        
+
         console.log('\n3. 🔒 Secure ETL pipeline operations');
         console.log('   - Implement input validation for all pipeline parameters');
         console.log('   - Use resource quotas and rate limiting for batch operations');
         console.log('   - Monitor and audit all data transformation activities');
         console.log('   - Implement secure communication between pipeline components');
-        
+
         console.log('\n4. ⚡ Validate data formats and mappings');
         console.log('   - Always enable format validation for data inputs');
         console.log('   - Use whitelist-based validation for file types and formats');
         console.log('   - Validate all field mappings before transformation');
         console.log('   - Implement data lineage tracking for audit purposes');
-        
+
         console.log('\n5. 🚀 Secure file upload and export');
         console.log('   - Implement strict file type and size validation');
         console.log('   - Scan uploaded files for malicious content');
         console.log('   - Apply data classification controls to exports');
         console.log('   - Use secure temporary file handling and cleanup');
-        
+
         console.log('\n6. 🎯 Monitor standardization workflows');
         console.log('   - Implement comprehensive audit logging');
         console.log('   - Monitor for unusual processing patterns');
         console.log('   - Set up alerts for security violations');
         console.log('   - Regular security assessments of transformation logic');
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('Focus on transformation injection and schema manipulation vulnerabilities.');
         console.log('='.repeat(80));
     }
-    
+
     run(targetPath) {
         console.log('🔍 Starting Agent 1 Data Standardization Security Scan...');
         console.log(`📂 Scanning directory: ${targetPath}\n`);
-        
+
         if (fs.existsSync(targetPath)) {
             if (fs.statSync(targetPath).isDirectory()) {
                 this.scanDirectory(targetPath);
             } else {
                 this.scanFile(targetPath);
             }
-            
+
             this.generateReport();
         } else {
             console.error(`❌ Path not found: ${targetPath}`);

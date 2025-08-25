@@ -61,13 +61,13 @@ class AuditLogger extends EventEmitter {
         this.retentionDays = options.retentionDays || 2555; // 7 years
         this.complianceMode = options.complianceMode || 'SOX';
         this.maxFileSize = options.maxFileSize || 100 * 1024 * 1024; // 100MB
-        
+
         this.currentLogFile = null;
         this.logFileIndex = 0;
         this.auditQueue = [];
         this.isProcessing = false;
         this.complianceRules = this.initializeComplianceRules();
-        
+
         // SAP Enterprise features
         this.sapAuditLog = null;
         this.blockchainHash = null; // For tamper-proof logging
@@ -77,19 +77,19 @@ class AuditLogger extends EventEmitter {
             failedLogins: 3,
             privilegeEscalation: 1
         };
-        
+
         // OpenTelemetry tracer for audit spans
         this.tracer = trace ? trace.getTracer('audit-logger', '1.0.0') : null;
-        
+
         // Real-time monitoring
         this.eventCounters = new Map();
         this.alertHistory = [];
         this.complianceViolations = [];
-        
+
         // Tamper detection
         this.checksumChain = [];
         this.digitalSignatures = new Map();
-        
+
         // Enterprise metrics
         this.metrics = {
             totalEvents: 0,
@@ -101,7 +101,7 @@ class AuditLogger extends EventEmitter {
             eventsByType: new Map(),
             eventsBySeverity: new Map()
         };
-        
+
         this.log = cds.log('audit-logger');
     }
 
@@ -113,22 +113,22 @@ class AuditLogger extends EventEmitter {
             await fs.mkdir(this.auditDir, { recursive: true });
             await this.rotateLogFile();
             this.startProcessingQueue();
-            
+
             // Initialize SAP Audit Logging service
             await this.initializeSAPAuditLogging();
-            
+
             // Initialize tamper-proof blockchain logging
             await this.initializeBlockchainLogging();
-            
+
             // Start real-time monitoring
             this.startRealTimeMonitoring();
-            
+
             // Initialize compliance monitoring
             this.startComplianceMonitoring();
-            
+
             // Generate initial integrity hash
             await this.generateIntegrityCheckpoint();
-            
+
             this.log.info('Enterprise audit logger initialized', {
                 auditDir: this.auditDir,
                 complianceMode: this.complianceMode,
@@ -137,7 +137,7 @@ class AuditLogger extends EventEmitter {
                 blockchainLogging: !!this.blockchainHash,
                 encryptionEnabled: !!this.encryptionKey
             });
-            
+
             this.emit('initialized', {
                 timestamp: new Date().toISOString(),
                 features: {
@@ -147,13 +147,13 @@ class AuditLogger extends EventEmitter {
                     complianceFramework: this.complianceMode
                 }
             });
-            
+
         } catch (error) {
             this.log.error('Failed to initialize audit logger:', error);
             throw error;
         }
     }
-    
+
     /**
      * Initialize SAP Audit Logging service integration
      */
@@ -162,7 +162,7 @@ class AuditLogger extends EventEmitter {
             this.log.warn('SAP Audit Logging not available - using file-based logging only');
             return;
         }
-        
+
         try {
             // Initialize SAP Audit Log service
             const credentials = this.getSAPAuditCredentials();
@@ -174,7 +174,7 @@ class AuditLogger extends EventEmitter {
             this.log.warn('Failed to initialize SAP Audit Logging:', error);
         }
     }
-    
+
     /**
      * Get SAP Audit Logging credentials
      */
@@ -184,7 +184,7 @@ class AuditLogger extends EventEmitter {
                 const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
                 return vcapServices['auditlog-management']?.[0]?.credentials;
             }
-            
+
             // Development credentials
             return {
                 url: process.env.SAP_AUDIT_URL,
@@ -196,7 +196,7 @@ class AuditLogger extends EventEmitter {
             return null;
         }
     }
-    
+
     /**
      * Initialize blockchain-based tamper-proof logging
      */
@@ -206,7 +206,7 @@ class AuditLogger extends EventEmitter {
             this.blockchainHash = crypto.createHash('sha256')
                 .update(`AUDIT_LOG_GENESIS_${  new Date().toISOString()}`)
                 .digest('hex');
-                
+
             this.log.info('Blockchain tamper-proof logging initialized', {
                 genesisHash: `${this.blockchainHash.substring(0, 16)  }...`
             });
@@ -214,7 +214,7 @@ class AuditLogger extends EventEmitter {
             this.log.warn('Failed to initialize blockchain logging:', error);
         }
     }
-    
+
     /**
      * Start real-time monitoring and alerting
      */
@@ -223,41 +223,41 @@ class AuditLogger extends EventEmitter {
         activeIntervals.set('interval_223', setInterval(() => {
             this.analyzeSecurityPatterns();
         }, 60000)); // Every minute
-        
+
         // Monitor compliance violations
         activeIntervals.set('interval_228', setInterval(() => {
             this.checkComplianceViolations();
         }, 300000)); // Every 5 minutes
-        
+
         // Generate metrics reports
         activeIntervals.set('interval_233', setInterval(() => {
             this.generateMetricsReport();
         }, 900000)); // Every 15 minutes
-        
+
         this.log.info('Real-time monitoring started');
     }
-    
+
     /**
      * Start compliance monitoring
      */
     startComplianceMonitoring() {
         const rules = this.complianceRules[this.complianceMode];
-        
+
         // Monitor data retention compliance
         activeIntervals.set('interval_247', setInterval(async () => {
             await this.checkDataRetentionCompliance();
         }, 86400000)); // Daily
-        
+
         // Monitor encryption compliance
         if (rules.encryptionRequired) {
             activeIntervals.set('interval_253', setInterval(() => {
                 this.checkEncryptionCompliance();
             }, 3600000)); // Hourly
         }
-        
+
         this.log.info('Compliance monitoring started for framework:', this.complianceMode);
     }
-    
+
     /**
      * Generate integrity checkpoint
      */
@@ -270,10 +270,10 @@ class AuditLogger extends EventEmitter {
                 fileChecksum: await this.calculateFileChecksum(),
                 signature: await this.generateDigitalSignature()
             };
-            
+
             const checkpointFile = path.join(this.auditDir, 'integrity-checkpoint.json');
             await fs.writeFile(checkpointFile, JSON.stringify(checkpoint, null, 2));
-            
+
             this.log.info('Integrity checkpoint generated');
         } catch (error) {
             this.log.error('Failed to generate integrity checkpoint:', error);
@@ -480,7 +480,7 @@ class AuditLogger extends EventEmitter {
     async enqueueAuditEvent(auditEvent) {
         const startTime = Date.now();
         let span = null;
-        
+
         try {
             // Create OpenTelemetry span for audit event
             if (this.tracer) {
@@ -491,42 +491,42 @@ class AuditLogger extends EventEmitter {
                     }
                 });
             }
-            
+
             // Add enterprise metadata
             auditEvent.id = this.generateEventId();
             auditEvent.sequence = this.getNextSequenceNumber();
             auditEvent.node = process.env.NODE_NAME || 'unknown';
             auditEvent.version = '1.0';
             auditEvent.blockchainPrevHash = this.blockchainHash;
-            
+
             // Generate tamper-proof hash chain
             auditEvent.blockchainHash = this.generateBlockchainHash(auditEvent);
             this.blockchainHash = auditEvent.blockchainHash;
-            
+
             // Add digital signature for integrity
             auditEvent.digitalSignature = await this.signEvent(auditEvent);
-            
+
             // Validate event
             const validation = this.validateAuditEvent(auditEvent);
             if (!validation.valid) {
                 this.log.error('Invalid audit event:', validation.errors);
                 this.metrics.complianceViolations++;
-                
+
                 if (span) {
                     span.recordException(new Error('Invalid audit event'));
                     span.setStatus({ code: SpanStatusCode.ERROR });
                 }
                 return;
             }
-            
+
             // Check for security alerts
             await this.checkSecurityAlerts(auditEvent);
-            
+
             // Update metrics
             this.updateEventMetrics(auditEvent);
-            
+
             this.auditQueue.push(auditEvent);
-            
+
             // Send to SAP Audit Logging service
             if (this.sapAuditLog) {
                 try {
@@ -535,15 +535,15 @@ class AuditLogger extends EventEmitter {
                     this.log.warn('Failed to send to SAP Audit Log:', error);
                 }
             }
-            
+
             // Trigger processing if queue is getting full
             if (this.auditQueue.length >= 100) {
                 await this.processQueue();
             }
-            
+
             const processingTime = Date.now() - startTime;
             this.updateAverageProcessingTime(processingTime);
-            
+
             if (span) {
                 span.setAttributes({
                     'audit.event.id': auditEvent.id,
@@ -551,16 +551,16 @@ class AuditLogger extends EventEmitter {
                 });
                 span.setStatus({ code: SpanStatusCode.OK });
             }
-            
+
         } catch (error) {
             this.log.error('Failed to enqueue audit event:', error);
             this.metrics.tamperAttempts++;
-            
+
             if (span) {
                 span.recordException(error);
                 span.setStatus({ code: SpanStatusCode.ERROR });
             }
-            
+
             throw error;
         } finally {
             if (span) {
@@ -568,7 +568,7 @@ class AuditLogger extends EventEmitter {
             }
         }
     }
-    
+
     /**
      * Generate blockchain hash for tamper-proof logging
      */
@@ -580,12 +580,12 @@ class AuditLogger extends EventEmitter {
             id: event.id,
             checksum: event.checksum
         };
-        
+
         return crypto.createHash('sha256')
             .update(JSON.stringify(dataToHash))
             .digest('hex');
     }
-    
+
     /**
      * Generate digital signature for event integrity
      */
@@ -597,10 +597,10 @@ class AuditLogger extends EventEmitter {
                 eventType: event.eventType,
                 checksum: event.checksum
             });
-            
+
             const sign = crypto.createSign('RSA-SHA256');
             sign.update(eventData);
-            
+
             // Use environment variable for private key in production
             const privateKey = process.env.AUDIT_PRIVATE_KEY || this.generateRSAKeyPair().privateKey;
             return sign.sign(privateKey, 'hex');
@@ -609,13 +609,13 @@ class AuditLogger extends EventEmitter {
             return null;
         }
     }
-    
+
     /**
      * Send event to SAP Audit Logging service
      */
     async sendToSAPAuditLog(event) {
         if (!this.sapAuditLog) return;
-        
+
         try {
             const sapEvent = {
                 category: this.mapEventTypeToSAPCategory(event.eventType),
@@ -630,7 +630,7 @@ class AuditLogger extends EventEmitter {
                     node_id: process.env.NODE_NAME || 'unknown'
                 }
             };
-            
+
             await this.sapAuditLog.log(sapEvent);
             this.log.debug('Event sent to SAP Audit Log:', event.id);
         } catch (error) {
@@ -638,7 +638,7 @@ class AuditLogger extends EventEmitter {
             throw error;
         }
     }
-    
+
     /**
      * Map event type to SAP audit category
      */
@@ -652,36 +652,36 @@ class AuditLogger extends EventEmitter {
             'SECURITY_INCIDENT': 'SECURITY_EVENT',
             'COMPLIANCE_EVENT': 'COMPLIANCE'
         };
-        
+
         return mapping[eventType] || 'GENERAL';
     }
-    
+
     /**
      * Calculate SAP audit severity
      */
     calculateSAPSeverity(event) {
         // High severity events
-        if (event.eventType === 'SECURITY_INCIDENT' || 
+        if (event.eventType === 'SECURITY_INCIDENT' ||
             event.severity === 'critical' ||
             event.riskScore > 80) {
             return 'HIGH';
         }
-        
+
         // Medium severity events
         if (event.eventType === 'CONFIGURATION_CHANGE' ||
             event.riskScore > 50) {
             return 'MEDIUM';
         }
-        
+
         return 'LOW';
     }
-    
+
     /**
      * Check for security alerts
      */
     async checkSecurityAlerts(event) {
         const alerts = [];
-        
+
         // Check for critical events
         if (event.eventType === 'SECURITY_INCIDENT') {
             alerts.push({
@@ -690,7 +690,7 @@ class AuditLogger extends EventEmitter {
                 message: `Security incident detected: ${event.description}`
             });
         }
-        
+
         // Check for failed authentication patterns
         if (event.eventType === 'USER_AUTHENTICATION' && !event.success) {
             const recentFailures = this.getRecentFailedLogins(event.userId);
@@ -702,9 +702,9 @@ class AuditLogger extends EventEmitter {
                 });
             }
         }
-        
+
         // Check for privilege escalation
-        if (event.eventType === 'ACCESS_CONTROL' && 
+        if (event.eventType === 'ACCESS_CONTROL' &&
             event.rolesAfter && event.rolesBefore &&
             event.rolesAfter.length > event.rolesBefore.length) {
             alerts.push({
@@ -713,52 +713,52 @@ class AuditLogger extends EventEmitter {
                 message: `Privilege escalation detected for user: ${event.userId}`
             });
         }
-        
+
         // Process alerts
         for (const alert of alerts) {
             await this.triggerSecurityAlert(alert, event);
         }
     }
-    
+
     /**
      * Trigger security alert
      */
     async triggerSecurityAlert(alert, event) {
         this.metrics.alertsTriggered++;
-        
+
         const alertEvent = {
             ...alert,
             timestamp: new Date().toISOString(),
             relatedEventId: event.id,
             source: 'audit-logger'
         };
-        
+
         this.alertHistory.push(alertEvent);
         this.emit('securityAlert', alertEvent);
-        
+
         this.log.warn('Security alert triggered:', alertEvent);
     }
-    
+
     /**
      * Update event metrics
      */
     updateEventMetrics(event) {
         this.metrics.totalEvents++;
-        
+
         if (event.encrypted) {
             this.metrics.encryptedEvents++;
         }
-        
+
         // Update event type counters
         const count = this.metrics.eventsByType.get(event.eventType) || 0;
         this.metrics.eventsByType.set(event.eventType, count + 1);
-        
+
         // Update severity counters
         const severity = event.severity || 'info';
         const severityCount = this.metrics.eventsBySeverity.get(severity) || 0;
         this.metrics.eventsBySeverity.set(severity, severityCount + 1);
     }
-    
+
     /**
      * Update average processing time
      */
@@ -804,12 +804,12 @@ class AuditLogger extends EventEmitter {
     async writeAuditEvent(event) {
         try {
             // Encrypt event if required
-            const eventData = this.complianceMode === 'PCI' ? 
+            const eventData = this.complianceMode === 'PCI' ?
                 this.encryptEvent(event) : event;
 
             // Format for writing
             const logLine = `${JSON.stringify(eventData)  }\n`;
-            
+
             // Write to file
             await fs.appendFile(this.currentLogFile, logLine);
 
@@ -828,7 +828,7 @@ class AuditLogger extends EventEmitter {
     async checkLogRotation() {
         try {
             const stats = await fs.stat(this.currentLogFile);
-            
+
             if (stats.size >= this.maxFileSize) {
                 await this.rotateLogFile();
             }
@@ -965,7 +965,7 @@ class AuditLogger extends EventEmitter {
         if (!params) return params;
 
         const sanitized = JSON.parse(JSON.stringify(params));
-        
+
         // Remove private keys, passwords, etc.
         const sensitivePatterns = [
             /private[\s_]*key/i,
@@ -1046,12 +1046,12 @@ class AuditLogger extends EventEmitter {
     encryptEvent(event) {
         const iv = crypto.randomBytes(16);
         const cipher = crypto.createCipherGCM('aes-256-gcm', this.encryptionKey, iv);
-        
+
         let encrypted = cipher.update(JSON.stringify(event), 'utf8', 'hex');
         encrypted += cipher.final('hex');
-        
+
         const authTag = cipher.getAuthTag();
-        
+
         return {
             encrypted: true,
             iv: iv.toString('hex'),
@@ -1066,13 +1066,13 @@ class AuditLogger extends EventEmitter {
     decryptEvent(encryptedEvent) {
         const iv = Buffer.from(encryptedEvent.iv, 'hex');
         const authTag = Buffer.from(encryptedEvent.authTag, 'hex');
-        
+
         const decipher = crypto.createDecipherGCM('aes-256-gcm', this.encryptionKey, iv);
         decipher.setAuthTag(authTag);
-        
+
         let decrypted = decipher.update(encryptedEvent.data, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
-        
+
         return JSON.parse(decrypted);
     }
 
@@ -1083,11 +1083,11 @@ class AuditLogger extends EventEmitter {
         if (process.env.AUDIT_ENCRYPTION_KEY) {
             return Buffer.from(process.env.AUDIT_ENCRYPTION_KEY, 'hex');
         }
-        
+
         if (process.env.NODE_ENV === 'production') {
             throw new Error('AUDIT_ENCRYPTION_KEY environment variable required in production');
         }
-        
+
         return crypto.randomBytes(32);
     }
 
@@ -1104,7 +1104,7 @@ class AuditLogger extends EventEmitter {
                 if (file.startsWith('audit-') && file.endsWith('.log')) {
                     const filepath = path.join(this.auditDir, file);
                     const stats = await fs.stat(filepath);
-                    
+
                     if (stats.mtime < cutoffDate) {
                         await fs.unlink(filepath);
                         cds.log('audit-logger').info('Deleted old audit log:', file);
@@ -1149,7 +1149,7 @@ class AuditLogger extends EventEmitter {
      */
     async generateComplianceReport(startDate, endDate, framework) {
         const events = await this.queryAuditEvents(startDate, endDate);
-        
+
         const report = {
             reportId: this.generateEventId(),
             generatedAt: new Date().toISOString(),
@@ -1202,18 +1202,18 @@ class AuditLogger extends EventEmitter {
             'Regular security awareness training'
         ];
     }
-    
+
     /**
      * Analyze security patterns for real-time monitoring
      */
     analyzeSecurityPatterns() {
         const recentEvents = this.getRecentEvents(3600000); // Last hour
-        
+
         // Analyze failed login patterns
-        const failedLogins = recentEvents.filter(e => 
+        const failedLogins = recentEvents.filter(e =>
             e.eventType === 'USER_AUTHENTICATION' && !e.success
         );
-        
+
         if (failedLogins.length > this.alertThresholds.suspiciousActivity) {
             this.triggerSecurityAlert({
                 type: 'SUSPICIOUS_ACTIVITY',
@@ -1221,12 +1221,12 @@ class AuditLogger extends EventEmitter {
                 message: `High number of failed logins detected: ${failedLogins.length}`
             });
         }
-        
+
         // Analyze privilege escalation patterns
-        const privilegeChanges = recentEvents.filter(e => 
+        const privilegeChanges = recentEvents.filter(e =>
             e.eventType === 'ACCESS_CONTROL' && e.rolesAfter
         );
-        
+
         if (privilegeChanges.length > this.alertThresholds.privilegeEscalation) {
             this.triggerSecurityAlert({
                 type: 'PRIVILEGE_ESCALATION',
@@ -1235,21 +1235,21 @@ class AuditLogger extends EventEmitter {
             });
         }
     }
-    
+
     /**
      * Check compliance violations
      */
     checkComplianceViolations() {
         const rules = this.complianceRules[this.complianceMode];
         const violations = [];
-        
+
         // Check encryption compliance
         if (rules.encryptionRequired) {
             const unencryptedEvents = this.metrics.totalEvents - this.metrics.encryptedEvents;
-            const encryptionRate = this.metrics.totalEvents > 0 
-                ? (this.metrics.encryptedEvents / this.metrics.totalEvents) * 100 
+            const encryptionRate = this.metrics.totalEvents > 0
+                ? (this.metrics.encryptedEvents / this.metrics.totalEvents) * 100
                 : 100;
-                
+
             if (encryptionRate < 95) {
                 violations.push({
                     type: 'ENCRYPTION_COMPLIANCE',
@@ -1259,19 +1259,19 @@ class AuditLogger extends EventEmitter {
                 });
             }
         }
-        
+
         // Check retention compliance
         if (violations.length > 0) {
             this.complianceViolations.push(...violations);
             this.metrics.complianceViolations += violations.length;
-            
+
             violations.forEach(violation => {
                 this.emit('complianceViolation', violation);
                 this.log.warn('Compliance violation detected:', violation);
             });
         }
     }
-    
+
     /**
      * Generate metrics report
      */
@@ -1286,14 +1286,14 @@ class AuditLogger extends EventEmitter {
             },
             alerts: {
                 total: this.alertHistory.length,
-                recent: this.alertHistory.filter(a => 
+                recent: this.alertHistory.filter(a =>
                     Date.now() - new Date(a.timestamp).getTime() < 3600000
                 ).length
             },
             compliance: {
                 violations: this.complianceViolations.length,
-                encryptionRate: this.metrics.totalEvents > 0 
-                    ? (this.metrics.encryptedEvents / this.metrics.totalEvents) * 100 
+                encryptionRate: this.metrics.totalEvents > 0
+                    ? (this.metrics.encryptedEvents / this.metrics.totalEvents) * 100
                     : 100
             },
             tamperProof: {
@@ -1302,7 +1302,7 @@ class AuditLogger extends EventEmitter {
                 integrityChecks: this.checksumChain.length
             }
         };
-        
+
         this.emit('metricsReport', report);
         this.log.info('Audit metrics report generated:', {
             totalEvents: report.metrics.totalEvents,
@@ -1310,33 +1310,33 @@ class AuditLogger extends EventEmitter {
             complianceViolations: report.compliance.violations,
             encryptionRate: `${report.compliance.encryptionRate.toFixed(2)  }%`
         });
-        
+
         return report;
     }
-    
+
     /**
      * Check data retention compliance
      */
     async checkDataRetentionCompliance() {
         const rules = this.complianceRules[this.complianceMode];
         const maxAge = rules.dataRetentionYears * 365 * 24 * 60 * 60 * 1000;
-        
+
         try {
             const files = await fs.readdir(this.auditDir);
             const oldFiles = [];
-            
+
             for (const file of files) {
                 if (file.startsWith('audit-') && file.endsWith('.log')) {
                     const filepath = path.join(this.auditDir, file);
                     const stats = await fs.stat(filepath);
                     const age = Date.now() - stats.mtime.getTime();
-                    
+
                     if (age > maxAge) {
                         oldFiles.push({ file, age });
                     }
                 }
             }
-            
+
             if (oldFiles.length > 0) {
                 const violation = {
                     type: 'DATA_RETENTION',
@@ -1344,7 +1344,7 @@ class AuditLogger extends EventEmitter {
                     message: `Files exceed retention period: ${oldFiles.length} files`,
                     details: oldFiles.map(f => f.file)
                 };
-                
+
                 this.complianceViolations.push(violation);
                 this.emit('complianceViolation', violation);
                 this.log.warn('Data retention violation:', violation);
@@ -1353,13 +1353,13 @@ class AuditLogger extends EventEmitter {
             this.log.error('Data retention check failed:', error);
         }
     }
-    
+
     /**
      * Check encryption compliance
      */
     checkEncryptionCompliance() {
         const rules = this.complianceRules[this.complianceMode];
-        
+
         if (rules.encryptionRequired && !this.encryptionKey) {
             const violation = {
                 type: 'ENCRYPTION_MISSING',
@@ -1367,41 +1367,41 @@ class AuditLogger extends EventEmitter {
                 message: 'Encryption required but not configured',
                 requirement: rules
             };
-            
+
             this.complianceViolations.push(violation);
             this.emit('complianceViolation', violation);
             this.log.error('Encryption compliance violation:', violation);
         }
     }
-    
+
     /**
      * Get recent events for analysis
      */
     getRecentEvents(timeWindow) {
         const cutoff = Date.now() - timeWindow;
-        return this.auditQueue.filter(event => 
+        return this.auditQueue.filter(event =>
             new Date(event.timestamp).getTime() > cutoff
         );
     }
-    
+
     /**
      * Get recent failed logins for a user
      */
     getRecentFailedLogins(userId) {
         const recentEvents = this.getRecentEvents(3600000); // Last hour
-        return recentEvents.filter(e => 
+        return recentEvents.filter(e =>
             e.eventType === 'USER_AUTHENTICATION' &&
             e.userId === userId &&
             !e.success
         ).length;
     }
-    
+
     /**
      * Calculate file checksum for integrity
      */
     async calculateFileChecksum() {
         if (!this.currentLogFile) return null;
-        
+
         try {
             const data = await fs.readFile(this.currentLogFile);
             return crypto.createHash('sha256').update(data).digest('hex');
@@ -1410,7 +1410,7 @@ class AuditLogger extends EventEmitter {
             return null;
         }
     }
-    
+
     /**
      * Generate digital signature
      */
@@ -1421,10 +1421,10 @@ class AuditLogger extends EventEmitter {
                 totalEvents: this.metrics.totalEvents,
                 blockchainHash: this.blockchainHash
             };
-            
+
             const sign = crypto.createSign('RSA-SHA256');
             sign.update(JSON.stringify(data));
-            
+
             const privateKey = process.env.AUDIT_PRIVATE_KEY || this.generateRSAKeyPair().privateKey;
             return sign.sign(privateKey, 'hex');
         } catch (error) {
@@ -1432,7 +1432,7 @@ class AuditLogger extends EventEmitter {
             return null;
         }
     }
-    
+
     /**
      * Generate RSA key pair for development
      */
@@ -1443,7 +1443,7 @@ class AuditLogger extends EventEmitter {
             privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
         });
     }
-    
+
     /**
      * Get comprehensive audit status
      */
@@ -1455,7 +1455,7 @@ class AuditLogger extends EventEmitter {
             complianceMode: this.complianceMode,
             metrics: this.generateMetricsReport(),
             alerts: {
-                recent: this.alertHistory.filter(a => 
+                recent: this.alertHistory.filter(a =>
                     Date.now() - new Date(a.timestamp).getTime() < 3600000
                 ),
                 total: this.alertHistory.length
@@ -1467,27 +1467,27 @@ class AuditLogger extends EventEmitter {
             }
         };
     }
-    
+
     /**
      * Gracefully shutdown audit logger
      */
     async shutdown() {
         this.log.info('Shutting down audit logger...');
-        
+
         try {
             // Process remaining queue
             if (this.auditQueue.length > 0) {
                 await this.processQueue();
             }
-            
+
             // Generate final integrity checkpoint
             await this.generateIntegrityCheckpoint();
-            
+
             // Close SAP Audit Log connection
             if (this.sapAuditLog) {
                 await this.sapAuditLog.close();
             }
-            
+
             this.log.info('Audit logger shutdown completed');
         } catch (error) {
             this.log.error('Error during audit logger shutdown:', error);

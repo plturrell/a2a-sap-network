@@ -21,7 +21,7 @@ class MonitoringIntegration {
     this.serviceName = 'a2a-network-srv';
     this.serviceVersion = process.env.APP_VERSION || '1.0.0';
     this.environment = process.env.NODE_ENV || 'development';
-    
+
     // Don't initialize OpenTelemetry in constructor to avoid early HTTP patching conflicts
     this.setupCustomMetrics();
     this.setupHealthChecks();
@@ -34,7 +34,7 @@ class MonitoringIntegration {
     // Temporarily disable OpenTelemetry SDK initialization to isolate root cause of Express response patching conflict
     cds.log('service').info('OpenTelemetry temporarily disabled for debugging - SAP enterprise monitoring features will be restored after resolving Express conflict');
     return;
-    
+
     const sdk = new NodeSDK({
       resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: this.serviceName,
@@ -45,7 +45,7 @@ class MonitoringIntegration {
         'sap.cf.space': process.env.VCAP_APPLICATION ? JSON.parse(process.env.VCAP_APPLICATION).space_name : 'local',
         'sap.cf.org': process.env.VCAP_APPLICATION ? JSON.parse(process.env.VCAP_APPLICATION).organization_name : 'local'
       }),
-      
+
       traceExporter: new OTLPTraceExporter({
         url: process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || 'http://localhost:4318/v1/traces',
         headers: {
@@ -54,7 +54,7 @@ class MonitoringIntegration {
           'SAP-Language': 'EN'
         }
       }),
-      
+
       metricReader: new PeriodicExportingMetricReader({
         exporter: new OTLPMetricExporter({
           url: process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT || 'http://localhost:4318/v1/metrics',
@@ -65,7 +65,7 @@ class MonitoringIntegration {
         }),
         exportIntervalMillis: 30000 // Export every 30 seconds
       }),
-      
+
       instrumentations: [
         // Use selective manual instrumentation instead of auto-instrumentations to avoid HTTP conflicts
         new ExpressInstrumentation({
@@ -93,7 +93,7 @@ class MonitoringIntegration {
   setupCustomMetrics() {
     // Create custom metrics registry
     this.register = new promClient.Registry();
-    
+
     // Add default metrics
     promClient.collectDefaultMetrics({
       register: this.register,
@@ -201,7 +201,7 @@ class MonitoringIntegration {
       // Use event-based response handling instead of overriding res.json to avoid OpenTelemetry conflicts
       res.on('finish', (() => {
         const duration = (Date.now() - startTime) / 1000;
-        
+
         // Collect API metrics
         this.collectAPIMetrics(req, res, duration);
       }).bind(this));
@@ -225,16 +225,16 @@ class MonitoringIntegration {
       }
     } else if (path.includes('/Services')) {
       if (method === 'POST' && status === 201) {
-        this.businessMetrics.servicesTotal.inc({ 
-          category: req.body?.category || 'unknown', 
-          status: 'active' 
+        this.businessMetrics.servicesTotal.inc({
+          category: req.body?.category || 'unknown',
+          status: 'active'
         });
       }
     } else if (path.includes('/ServiceOrders')) {
       if (method === 'POST' && status === 201) {
-        this.businessMetrics.serviceOrders.inc({ 
-          status: 'created', 
-          category: req.body?.service?.category || 'unknown' 
+        this.businessMetrics.serviceOrders.inc({
+          status: 'created',
+          category: req.body?.service?.category || 'unknown'
         });
       }
     }
@@ -278,7 +278,7 @@ class MonitoringIntegration {
 
       externalServices: async () => {
         const services = [];
-        
+
         // Check SAP services
         if (process.env.SAP_GRAPH_ENDPOINT) {
           try {
@@ -303,7 +303,7 @@ class MonitoringIntegration {
   async getHealthStatus() {
     const results = {};
     const checks = Object.keys(this.healthChecks);
-    
+
     for (const check of checks) {
       try {
         results[check] = await this.healthChecks[check]();
@@ -313,7 +313,7 @@ class MonitoringIntegration {
     }
 
     const overallStatus = Object.values(results).every(r => r.status === 'UP') ? 'UP' : 'DOWN';
-    
+
     return {
       status: overallStatus,
       timestamp: new Date().toISOString(),
@@ -381,7 +381,7 @@ class MonitoringIntegration {
     return async (...args) => {
       const startTime = Date.now();
       let success = false;
-      
+
       try {
         const result = await operationFunction(...args);
         success = true;
@@ -395,7 +395,7 @@ class MonitoringIntegration {
         throw error;
       } finally {
         const duration = Date.now() - startTime;
-        
+
         // Record performance metrics
         if (this.businessMetrics.workflowDuration) {
           this.businessMetrics.workflowDuration.observe(
@@ -420,15 +420,15 @@ class MonitoringIntegration {
    */
   async initialize() {
     cds.log('service').info('Initializing SAP monitoring integration...');
-    
+
     // Setup health checks
     this.setupHealthChecks();
-    
+
     // Initialize OpenTelemetry if not already done
     if (!this.sdk) {
       this.initializeOpenTelemetry();
     }
-    
+
     cds.log('service').info('SAP monitoring integration initialized successfully');
   }
 

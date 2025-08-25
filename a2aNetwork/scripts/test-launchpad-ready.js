@@ -14,7 +14,7 @@ const chalk = require('chalk');
 
 async function checkEndpoint(path, validateFn) {
     return new Promise((resolve) => {
-        blockchainClient.sendMessage(`http://localhost:4004${path}`, { 
+        blockchainClient.sendMessage(`http://localhost:4004${path}`, {
             headers: { 'Accept': 'application/json' }
         }, (res) => {
             let data = '';
@@ -23,10 +23,10 @@ async function checkEndpoint(path, validateFn) {
                 try {
                     const json = JSON.parse(data);
                     const isValid = validateFn ? validateFn(json) : true;
-                    resolve({ 
-                        success: res.statusCode === 200 && isValid, 
+                    resolve({
+                        success: res.statusCode === 200 && isValid,
                         data: json,
-                        status: res.statusCode 
+                        status: res.statusCode
                     });
                 } catch (e) {
                     resolve({ success: false, error: 'Invalid JSON' });
@@ -40,7 +40,7 @@ async function checkEndpoint(path, validateFn) {
 
 async function testLaunchpadReady() {
     console.log(chalk.blue.bold('🧪 Quick Launchpad Readiness Test\n'));
-    
+
     // Test 1: Basic server health
     console.log('1. Testing server health...');
     const health = await checkEndpoint('/health');
@@ -49,7 +49,7 @@ async function testLaunchpadReady() {
         return false;
     }
     console.log(chalk.green('   ✅ Server healthy'));
-    
+
     // Test 2: Launchpad HTML
     console.log('2. Testing launchpad HTML...');
     const html = await new Promise(resolve => {
@@ -62,12 +62,12 @@ async function testLaunchpadReady() {
         return false;
     }
     console.log(chalk.green('   ✅ Launchpad HTML accessible'));
-    
+
     // Test 3: Tile data
     console.log('3. Testing tile data...');
     const tileData = await checkEndpoint('/api/v1/Agents?id=agent_visualization', (data) => {
-        return data.hasOwnProperty('agentCount') && 
-               data.hasOwnProperty('services') && 
+        return data.hasOwnProperty('agentCount') &&
+               data.hasOwnProperty('services') &&
                data.hasOwnProperty('workflows');
     });
     if (!tileData.success) {
@@ -75,23 +75,23 @@ async function testLaunchpadReady() {
         return false;
     }
     console.log(chalk.green('   ✅ Tile data available'));
-    
+
     // Test 4: Real data check
-    const hasRealData = tileData.data.agentCount > 0 || 
-                       tileData.data.services > 0 || 
+    const hasRealData = tileData.data.agentCount > 0 ||
+                       tileData.data.services > 0 ||
                        tileData.data.workflows > 0;
-    
+
     if (hasRealData) {
         console.log(chalk.green('   ✅ Real data detected'));
     } else {
         console.log(chalk.yellow('   ⚠️  No real data (fallback mode)'));
     }
-    
+
     console.log(chalk.green.bold('\n✅ Launchpad is ready!'));
     if (!hasRealData) {
         console.log(chalk.yellow('💡 Tip: Start agent services for real data'));
     }
-    
+
     return true;
 }
 

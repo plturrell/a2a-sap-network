@@ -114,16 +114,16 @@ sap.ui.define([], () => {
                 baseConfig.services.Container.adapter.config.enableDevelopmentMode = false;
                 baseConfig.services.Container.adapter.config.enableDebugMode = false;
                 baseConfig.services.Container.adapter.config.disablePersonalization = false;
-                
+
                 // Add performance optimizations
                 baseConfig.services.Container.adapter.config.enableAsyncComponentLoading = true;
                 baseConfig.services.Container.adapter.config.enableComponentPreload = true;
-                
+
                 // Security settings
                 baseConfig.services.Container.adapter.config.enableXFrameOptions = true;
                 baseConfig.services.Container.adapter.config.xFrameOptions = 'SAMEORIGIN';
                 baseConfig.services.Container.adapter.config.enableCSP = true;
-                
+
             } else if (environment === 'development') {
                 baseConfig.services.Container.adapter.config.enableDevelopmentMode = true;
                 baseConfig.services.Container.adapter.config.enableDebugMode = true;

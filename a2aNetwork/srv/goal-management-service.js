@@ -4,22 +4,22 @@ const goalSyncScheduler = require('./goal-sync-scheduler');
 
 module.exports = (srv) => {
     srv.service.impl(function() {
-        
+
         const { Agents, Goals } = this.entities;
-        
+
         // Constants
         const A2A_BASE_URL = process.env.A2A_SERVICE_URL || 'http://localhost:8000';
         const PROGRESS_HISTORY_LIMIT = 10;
         const ANALYTICS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
         const MIN_SPECIFIC_LENGTH = 10;
         const PREDICTION_MIN_CONFIDENCE = 0.3;
-        
+
         const axios = require('axios');
         const LOG = cds.log('goal-management');
-        
+
         // Cleanup tracking
         let analyticsRefreshTimer;
-        
+
         /**
          * Manual goal sync action
          */
@@ -37,7 +37,7 @@ module.exports = (srv) => {
                 throw new Error('Failed to synchronize goals');
             }
         });
-        
+
         /**
          * Get sync status
          */
@@ -48,7 +48,7 @@ module.exports = (srv) => {
                 serverTime: new Date()
             };
         });
-        
+
         /**
          * Get visualization data for goal dashboard
          */
@@ -57,9 +57,9 @@ module.exports = (srv) => {
                 const visualizationType = req.data.type || 'overview';
                 const agentFilter = req.data.agentId;
                 const dateRange = req.data.dateRange || 30; // days
-                
+
                 let visualizationData = {};
-                
+
                 switch (visualizationType) {
                     case 'overview':
                         visualizationData = await this._getOverviewVisualization(agentFilter, dateRange);
@@ -82,15 +82,15 @@ module.exports = (srv) => {
                     default:
                         throw new Error(`Unknown visualization type: ${visualizationType}`);
                 }
-                
+
                 return visualizationData;
-                
+
             } catch (error) {
                 LOG.error('Failed to generate visualization data', { error: error.message });
                 throw error;
             }
         });
-        
+
         /**
          * Get comprehensive goal analytics
          */
@@ -103,9 +103,9 @@ module.exports = (srv) => {
                         'Authorization': `Bearer ${req.user.token || 'system'}`
                     }
                 });
-                
+
                 const analytics = response.data;
-                
+
                 // Store in CAP database for caching
                 await srv.run(DELETE.from('SystemAnalytics'));
                 await srv.run(INSERT.into('SystemAnalytics').entries({
@@ -119,30 +119,30 @@ module.exports = (srv) => {
                     systemHealth: analytics.system_health || 'good',
                     analyticsData: JSON.stringify(analytics)
                 }));
-                
+
                 return analytics;
-                
+
             } catch (error) {
                 LOG.warn('Failed to fetch goal analytics from A2A network', { error: error.message });
-                
+
                 // Fallback to cached data
                 const cached = await srv.run(SELECT.from('SystemAnalytics').orderBy('timestamp desc').limit(1));
                 if (cached.length > 0 && cached[0].analyticsData) {
                     LOG.info('Using cached analytics data as fallback');
                     return JSON.parse(cached[0].analyticsData);
                 }
-                
+
                 LOG.error('No cached analytics data available');
                 throw new Error('Goal analytics service unavailable');
             }
         });
-        
+
         /**
          * Get agent-specific goal data
          */
         this.on('READ', 'AgentGoals', async (req) => {
             const agentId = req.params[0];
-            
+
             try {
                 const response = await axios.get(`${A2A_BASE_URL}/api/v1/goals/agent/${agentId}`, {
                     headers: {
@@ -150,17 +150,17 @@ module.exports = (srv) => {
                         'Authorization': `Bearer ${req.user.token || 'system'}`
                     }
                 });
-                
+
                 const agentGoals = response.data;
-                
+
                 // Sync with CAP database
                 await this._syncAgentGoals(agentId, agentGoals);
-                
+
                 return agentGoals;
-                
+
             } catch (error) {
                 LOG.warn('Failed to fetch goals from A2A network', { agentId, error: error.message });
-                
+
                 // Fallback to CAP database
                 const agent = await srv.run(SELECT.one.from(Agents, a => {
                     a.agentId, a.agentName, a.status;
@@ -172,7 +172,7 @@ module.exports = (srv) => {
                         g.milestones(ms => { ms.title, ms.achievedDate, ms.significance; });
                     });
                 }).where({ agentId }));
-                
+
                 if (agent) {
                     LOG.info('Using cached agent goals as fallback', { agentId });
                     return agent;
@@ -182,20 +182,20 @@ module.exports = (srv) => {
                 }
             }
         });
-        
+
         /**
          * Create new SMART goal
          */
         this.on('CREATE', 'Goals', async (req) => {
             const goalData = req.data;
-            
+
             // Input validation
             const validationErrors = this._validateGoalData(goalData);
             if (validationErrors.length > 0) {
                 req.error(400, `Goal validation failed: ${validationErrors.join(', ')}`);
                 return;
             }
-            
+
             try {
                 // Send goal assignment to A2A backend
                 const a2aPayload = {
@@ -217,7 +217,7 @@ module.exports = (srv) => {
                         }
                     }
                 };
-                
+
                 const response = await axios.post(`${A2A_BASE_URL}/api/v1/goals/assign`, a2aPayload, {
                     headers: {
                         'Content-Type': 'application/json',
@@ -225,13 +225,13 @@ module.exports = (srv) => {
                         'Authorization': `Bearer ${req.user.token || 'system'}`
                     }
                 });
-                
+
                 if (response.data.status === 'success') {
                     // Goal successfully assigned via A2A
                     goalData.assignedVia = 'manual';
                     goalData.status = 'active';
                     goalData.startDate = new Date();
-                    
+
                     // Create goal progress entry
                     await srv.run(INSERT.into('GoalProgress').entries({
                         goal_ID: goalData.ID,
@@ -241,49 +241,49 @@ module.exports = (srv) => {
                         reportedBy: 'system',
                         notes: 'Goal created and assigned via A2A network'
                     }));
-                    
+
                     return req.reply(goalData);
                 } else {
                     throw new Error('Failed to assign goal via A2A network');
                 }
-                
+
             } catch (error) {
                 const errorInfo = this._handleServiceError(error, 'goal_creation', { goalData });
                 req.error(500, errorInfo.message, errorInfo.errorId);
                 return;
             }
         });
-        
+
         /**
          * Update goal progress from A2A network
          */
         this.on('UPDATE', 'GoalProgress', async (req) => {
             const progressData = req.data;
-            
+
             // Update goal overall progress
             await UPDATE(Goals, progressData.goal_ID).set({
                 overallProgress: progressData.overallProgress,
                 modifiedAt: new Date()
             });
-            
+
             // Check for milestone achievements
             await this._detectMilestones(progressData.goal_ID, progressData);
-            
+
             // Trigger AI predictions if enabled
             const goal = await SELECT.one.from(Goals).where({ ID: progressData.goal_ID });
             if (goal && goal.aiEnabled) {
                 await this._generateAIPredictions(goal);
             }
-            
+
             return req.reply(progressData);
         });
-        
+
         /**
          * Get real-time agent metrics
          */
         this.on('READ', 'AgentMetrics', async (req) => {
             const agentId = req.params[0];
-            
+
             try {
                 const response = await axios.get(`${A2A_BASE_URL}/api/v1/agents/${agentId}/metrics`, {
                     headers: {
@@ -291,9 +291,9 @@ module.exports = (srv) => {
                         'Authorization': `Bearer ${req.user.token || 'system'}`
                     }
                 });
-                
+
                 const metrics = response.data;
-                
+
                 // Store metrics in CAP database
                 const metricsEntries = Object.entries(metrics).map(([key, value]) => ({
                     agent_agentId: agentId,
@@ -304,17 +304,17 @@ module.exports = (srv) => {
                     unit: this._getMetricUnit(key),
                     source: 'agent_sdk'
                 }));
-                
+
                 await srv.run(INSERT.into('AgentMetrics').entries(metricsEntries));
-                
+
                 return metrics;
-                
+
             } catch (error) {
                 LOG.warn('Failed to fetch metrics from A2A network', { agentId, error: error.message });
-                
+
                 // Return cached metrics
                 const cached = await srv.run(SELECT.from('AgentMetrics').where({ agent_agentId: agentId }).orderBy('timestamp desc').limit(PROGRESS_HISTORY_LIMIT));
-                
+
                 if (cached.length > 0) {
                     LOG.info('Using cached metrics as fallback', { agentId, metricsCount: cached.length });
                     return cached.reduce((acc, metric) => {
@@ -327,7 +327,7 @@ module.exports = (srv) => {
                 }
             }
         });
-        
+
         /**
          * Sync agent goals with CAP database
          */
@@ -340,7 +340,7 @@ module.exports = (srv) => {
                     status: agentGoals.status || 'active',
                     lastSeen: new Date()
                 }));
-                
+
                 // Sync goals
                 if (agentGoals.goals && agentGoals.goals.length > 0) {
                     for (const goal of agentGoals.goals) {
@@ -358,7 +358,7 @@ module.exports = (srv) => {
                             targetDate: goal.target_date,
                             aiEnabled: goal.ai_enabled || false
                         }));
-                        
+
                         // Sync measurable targets
                         if (goal.measurable) {
                             const measurableEntries = Object.entries(goal.measurable).map(([key, value]) => ({
@@ -369,13 +369,13 @@ module.exports = (srv) => {
                                 unit: this._getMetricUnit(key),
                                 progressPercent: this._calculateMetricProgress(key, value, agentGoals.current_metrics?.[key])
                             }));
-                            
+
                             await srv.run(DELETE.from('a2a.goalmanagement.MeasurableTargets').where({ goal_ID: goal.goal_id }));
                             await srv.run(INSERT.into('a2a.goalmanagement.MeasurableTargets').entries(measurableEntries));
                         }
                     }
                 }
-                
+
             } catch (error) {
                 LOG.error('Failed to sync agent goals', { agentId, error: error.message });
             }
@@ -508,7 +508,7 @@ module.exports = (srv) => {
                 for (const milestone of goalTypeMilestones) {
                     const metricValue = metrics[milestone.metricName];
                     if (metricValue !== undefined) {
-                        const thresholdMet = milestone.isLowerBetter 
+                        const thresholdMet = milestone.isLowerBetter
                             ? metricValue <= milestone.threshold
                             : metricValue >= milestone.threshold;
 
@@ -570,7 +570,7 @@ module.exports = (srv) => {
                 // Predict completion date
                 const remainingProgress = 100 - latestProgress.overallProgress;
                 const predictedDaysToComplete = velocity > 0 ? Math.ceil(remainingProgress / velocity) : null;
-                const predictedCompletionDate = predictedDaysToComplete 
+                const predictedCompletionDate = predictedDaysToComplete
                     ? new Date(Date.now() + predictedDaysToComplete * 24 * 60 * 60 * 1000)
                     : null;
 
@@ -650,7 +650,7 @@ module.exports = (srv) => {
          */
         this._calculatePredictionConfidence = function(progressHistory) {
             if (progressHistory.length < 3) return PREDICTION_MIN_CONFIDENCE; // Low confidence with few data points
-            
+
             // Check for consistent progress pattern
             let consistentProgress = 0;
             for (let i = 1; i < progressHistory.length; i++) {
@@ -658,13 +658,13 @@ module.exports = (srv) => {
                     consistentProgress++;
                 }
             }
-            
+
             const consistencyRatio = consistentProgress / (progressHistory.length - 1);
-            
+
             // More data points and consistent progress = higher confidence
             const dataConfidence = Math.min(1.0, progressHistory.length / 10);
             const patternConfidence = consistencyRatio;
-            
+
             return Math.round((dataConfidence * 0.4 + patternConfidence * 0.6) * 100) / 100;
         };
 
@@ -728,7 +728,7 @@ module.exports = (srv) => {
          */
         this._handleServiceError = function(error, operation, context = {}) {
             const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-            
+
             // Log detailed error for debugging
             LOG.error(`${operation} failed`, {
                 errorId: errorId,
@@ -795,20 +795,20 @@ module.exports = (srv) => {
         this._getOverviewVisualization = async function(agentFilter, dateRange) {
             const endDate = new Date();
             const startDate = new Date(endDate.getTime() - dateRange * 24 * 60 * 60 * 1000);
-            
+
             // Get goals with progress history
             let query = SELECT.from(Goals, g => {
                 g.ID, g.goalType, g.priority, g.status, g.overallProgress;
                 g.specific, g.targetDate, g.agent_agentId;
                 g.progress(p => { p.timestamp, p.overallProgress; }).where({ timestamp: { '>=': startDate } });
             });
-            
+
             if (agentFilter) {
                 query = query.where({ agent_agentId: agentFilter });
             }
-            
+
             const goals = await srv.run(query);
-            
+
             // Process data for visualization
             return {
                 type: 'overview',
@@ -829,19 +829,19 @@ module.exports = (srv) => {
                 recentActivity: await this._getRecentActivity(agentFilter, 10)
             };
         };
-        
+
         this._getProgressTimelineVisualization = async function(agentFilter, dateRange) {
             const endDate = new Date();
             const startDate = new Date(endDate.getTime() - dateRange * 24 * 60 * 60 * 1000);
-            
+
             // Get all progress updates in date range
             const progressQuery = SELECT.from('GoalProgress', p => {
                 p.timestamp, p.overallProgress, p.goal_ID;
                 p.goal(g => { g.goalType, g.priority, g.agent_agentId; });
             }).where({ timestamp: { between: [startDate, endDate] } }).orderBy('timestamp');
-            
+
             const progressData = await srv.run(progressQuery);
-            
+
             // Group by day for timeline
             const timelineData = {};
             progressData.forEach(p => {
@@ -860,7 +860,7 @@ module.exports = (srv) => {
                     timelineData[dateKey].goals.add(p.goal_ID);
                 }
             });
-            
+
             // Convert to array and calculate averages
             const timeline = Object.values(timelineData).map(day => ({
                 date: day.date,
@@ -868,7 +868,7 @@ module.exports = (srv) => {
                 averageProgress: day.averageProgress / day.updates,
                 uniqueGoals: day.goals.size
             }));
-            
+
             return {
                 type: 'progress_timeline',
                 timeline: timeline,
@@ -879,14 +879,14 @@ module.exports = (srv) => {
                 }
             };
         };
-        
+
         this._getAgentComparisonVisualization = async function() {
             // Get all agents with their goals
             const agents = await srv.run(SELECT.from(Agents, a => {
                 a.agentId, a.agentName, a.status;
                 a.goals(g => { g.ID, g.status, g.overallProgress, g.priority; });
             }));
-            
+
             const comparisonData = agents.map(agent => {
                 const goals = agent.goals || [];
                 return {
@@ -897,14 +897,14 @@ module.exports = (srv) => {
                         totalGoals: goals.length,
                         activeGoals: goals.filter(g => g.status === 'active').length,
                         completedGoals: goals.filter(g => g.status === 'completed').length,
-                        averageProgress: goals.length > 0 
-                            ? goals.reduce((sum, g) => sum + (g.overallProgress || 0), 0) / goals.length 
+                        averageProgress: goals.length > 0
+                            ? goals.reduce((sum, g) => sum + (g.overallProgress || 0), 0) / goals.length
                             : 0,
                         highPriorityGoals: goals.filter(g => g.priority === 'high' || g.priority === 'critical').length
                     }
                 };
             }).sort((a, b) => b.metrics.averageProgress - a.metrics.averageProgress);
-            
+
             return {
                 type: 'agent_comparison',
                 agents: comparisonData,
@@ -922,7 +922,7 @@ module.exports = (srv) => {
                 }
             };
         };
-        
+
         this._getGoalHeatmapVisualization = async function() {
             // Get all goals with their progress and dates
             const goals = await srv.run(SELECT.from(Goals, g => {
@@ -930,11 +930,11 @@ module.exports = (srv) => {
                 g.createdAt, g.modifiedAt, g.targetDate;
                 g.agent(a => { a.agentId, a.agentName; });
             }));
-            
+
             // Create heatmap data by week and goal type
             const heatmapData = {};
             const goalTypes = [...new Set(goals.map(g => g.goalType))];
-            
+
             goals.forEach(goal => {
                 const weekKey = this._getWeekKey(new Date(goal.modifiedAt));
                 if (!heatmapData[weekKey]) {
@@ -943,11 +943,11 @@ module.exports = (srv) => {
                         heatmapData[weekKey][type] = { count: 0, totalProgress: 0 };
                     });
                 }
-                
+
                 heatmapData[weekKey][goal.goalType].count++;
                 heatmapData[weekKey][goal.goalType].totalProgress += goal.overallProgress || 0;
             });
-            
+
             // Convert to visualization format
             const heatmap = Object.entries(heatmapData).map(([week, typeData]) => {
                 const weekData = { week };
@@ -959,33 +959,33 @@ module.exports = (srv) => {
                 });
                 return weekData;
             }).sort((a, b) => a.week.localeCompare(b.week));
-            
+
             return {
                 type: 'goal_heatmap',
                 heatmap: heatmap,
                 goalTypes: goalTypes,
                 intensityScale: {
                     min: 0,
-                    max: Math.max(...Object.values(heatmapData).map(week => 
+                    max: Math.max(...Object.values(heatmapData).map(week =>
                         Math.max(...Object.values(week).map(type => type.count))
                     ))
                 }
             };
         };
-        
+
         this._getDependencyGraphVisualization = async function(agentFilter) {
             // Get goals with dependencies
             let query = SELECT.from(Goals, g => {
                 g.ID, g.specific, g.status, g.overallProgress, g.agent_agentId;
                 g.dependencies(d => { d.dependsOnGoal_ID, d.dependencyType, d.isBlocking; });
             });
-            
+
             if (agentFilter) {
                 query = query.where({ agent_agentId: agentFilter });
             }
-            
+
             const goals = await srv.run(query);
-            
+
             // Build graph nodes and edges
             const nodes = goals.map(g => ({
                 id: g.ID,
@@ -995,7 +995,7 @@ module.exports = (srv) => {
                 agentId: g.agent_agentId,
                 type: 'goal'
             }));
-            
+
             const edges = [];
             goals.forEach(g => {
                 (g.dependencies || []).forEach(dep => {
@@ -1007,10 +1007,10 @@ module.exports = (srv) => {
                     });
                 });
             });
-            
+
             // Identify critical paths
             const criticalPaths = this._findCriticalPaths(nodes, edges);
-            
+
             return {
                 type: 'dependency_graph',
                 graph: {
@@ -1021,24 +1021,24 @@ module.exports = (srv) => {
                     totalDependencies: edges.length,
                     blockingDependencies: edges.filter(e => e.isBlocking).length,
                     criticalPaths: criticalPaths,
-                    isolatedGoals: nodes.filter(n => 
+                    isolatedGoals: nodes.filter(n =>
                         !edges.some(e => e.source === n.id || e.target === n.id)
                     ).length
                 }
             };
         };
-        
+
         this._getCollaborativeGoalsVisualization = async function() {
             // Get collaborative goals (goals shared between multiple agents)
             const collaborativeGoals = await srv.run(SELECT.from('CollaborativeGoals', c => {
                 c.ID, c.title, c.description, c.status, c.overallProgress;
-                c.participants(p => { 
+                c.participants(p => {
                     p.agent_agentId, p.role, p.contribution;
                     p.agent(a => { a.agentName; });
                 });
                 c.milestones(m => { m.title, m.achievedDate, m.significance; });
             }));
-            
+
             // Process collaborative network
             const agentConnections = {};
             collaborativeGoals.forEach(goal => {
@@ -1058,7 +1058,7 @@ module.exports = (srv) => {
                     });
                 });
             });
-            
+
             // Convert to network format
             const collaborationNetwork = {
                 nodes: [],
@@ -1069,19 +1069,19 @@ module.exports = (srv) => {
                     averageProgress: conn.totalProgress / conn.collaborations
                 }))
             };
-            
+
             // Get unique agents for nodes
             const uniqueAgents = new Set();
             Object.values(agentConnections).forEach(conn => {
                 conn.agents.forEach(agent => uniqueAgents.add(agent));
             });
-            
+
             collaborationNetwork.nodes = Array.from(uniqueAgents).map(agentId => ({
                 id: agentId,
                 collaborations: Object.values(agentConnections)
                     .filter(conn => conn.agents.includes(agentId)).length
             }));
-            
+
             return {
                 type: 'collaborative_goals',
                 goals: collaborativeGoals.map(g => ({
@@ -1105,13 +1105,13 @@ module.exports = (srv) => {
                 summary: {
                     totalCollaborativeGoals: collaborativeGoals.length,
                     activeCollaborations: collaborativeGoals.filter(g => g.status === 'active').length,
-                    averageParticipants: collaborativeGoals.reduce((sum, g) => 
+                    averageParticipants: collaborativeGoals.reduce((sum, g) =>
                         sum + (g.participants || []).length, 0) / (collaborativeGoals.length || 1),
                     topCollaborators: this._getTopCollaborators(collaborativeGoals)
                 }
             };
         };
-        
+
         // Helper functions for visualizations
         this._groupByProperty = function(items, property) {
             return items.reduce((groups, item) => {
@@ -1120,26 +1120,26 @@ module.exports = (srv) => {
                 return groups;
             }, {});
         };
-        
+
         this._getProgressDistribution = function(goals) {
             const bins = [0, 25, 50, 75, 100];
             const distribution = {};
-            
+
             bins.forEach((bin, i) => {
                 const nextBin = bins[i + 1] || 101;
                 const label = i === bins.length - 1 ? `${bin}%` : `${bin}-${nextBin - 1}%`;
-                distribution[label] = goals.filter(g => 
+                distribution[label] = goals.filter(g =>
                     g.overallProgress >= bin && g.overallProgress < nextBin
                 ).length;
             });
-            
+
             return distribution;
         };
-        
+
         this._getPriorityRadarData = function(goals) {
             const priorities = ['low', 'medium', 'high', 'critical'];
             const metrics = ['count', 'averageProgress', 'completionRate'];
-            
+
             const radarData = priorities.map(priority => {
                 const priorityGoals = goals.filter(g => g.priority === priority);
                 return {
@@ -1153,13 +1153,13 @@ module.exports = (srv) => {
                         : 0
                 };
             });
-            
+
             return radarData;
         };
-        
+
         this._getTypeBreakdownData = function(goals) {
             const typeGroups = {};
-            
+
             goals.forEach(goal => {
                 const type = goal.goalType || 'unknown';
                 if (!typeGroups[type]) {
@@ -1170,12 +1170,12 @@ module.exports = (srv) => {
                         statuses: {}
                     };
                 }
-                
+
                 typeGroups[type].count++;
                 typeGroups[type].totalProgress += goal.overallProgress || 0;
                 typeGroups[type].statuses[goal.status] = (typeGroups[type].statuses[goal.status] || 0) + 1;
             });
-            
+
             return Object.values(typeGroups).map(group => ({
                 type: group.type,
                 count: group.count,
@@ -1183,19 +1183,19 @@ module.exports = (srv) => {
                 statuses: group.statuses
             }));
         };
-        
+
         this._getRecentActivity = async function(agentFilter, limit = 10) {
             let query = SELECT.from('GoalActivity', a => {
                 a.timestamp, a.activityType, a.description, a.goal_ID, a.agent_agentId;
                 a.goal(g => { g.specific; });
             }).orderBy('timestamp desc').limit(limit);
-            
+
             if (agentFilter) {
                 query = query.where({ agent_agentId: agentFilter });
             }
-            
+
             const activities = await srv.run(query);
-            
+
             return activities.map(a => ({
                 timestamp: a.timestamp,
                 type: a.activityType,
@@ -1205,7 +1205,7 @@ module.exports = (srv) => {
                 agentId: a.agent_agentId
             }));
         };
-        
+
         this._getWeekKey = function(date) {
             const year = date.getFullYear();
             const firstDayOfYear = new Date(year, 0, 1);
@@ -1213,17 +1213,17 @@ module.exports = (srv) => {
             const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
             return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
         };
-        
+
         this._findCriticalPaths = function(nodes, edges) {
             // Simple critical path detection - find longest dependency chains
             const paths = [];
             const visited = new Set();
-            
+
             function findPath(nodeId, currentPath = []) {
                 if (visited.has(nodeId)) return;
                 visited.add(nodeId);
                 currentPath.push(nodeId);
-                
+
                 const dependencies = edges.filter(e => e.source === nodeId);
                 if (dependencies.length === 0) {
                     paths.push([...currentPath]);
@@ -1232,18 +1232,18 @@ module.exports = (srv) => {
                         findPath(dep.target, currentPath);
                     });
                 }
-                
+
                 currentPath.pop();
                 visited.delete(nodeId);
             }
-            
+
             // Start from nodes with no incoming edges
-            const rootNodes = nodes.filter(n => 
+            const rootNodes = nodes.filter(n =>
                 !edges.some(e => e.target === n.id)
             );
-            
+
             rootNodes.forEach(root => findPath(root.id));
-            
+
             // Return top 5 longest paths
             return paths
                 .sort((a, b) => b.length - a.length)
@@ -1251,15 +1251,15 @@ module.exports = (srv) => {
                 .map(path => ({
                     path: path,
                     length: path.length,
-                    isBlocked: edges.some(e => 
+                    isBlocked: edges.some(e =>
                         path.includes(e.source) && path.includes(e.target) && e.isBlocking
                     )
                 }));
         };
-        
+
         this._getTopCollaborators = function(collaborativeGoals) {
             const agentStats = {};
-            
+
             collaborativeGoals.forEach(goal => {
                 (goal.participants || []).forEach(p => {
                     if (!agentStats[p.agent_agentId]) {
@@ -1271,13 +1271,13 @@ module.exports = (srv) => {
                             totalContribution: 0
                         };
                     }
-                    
+
                     agentStats[p.agent_agentId].collaborations++;
                     agentStats[p.agent_agentId].roles.add(p.role);
                     agentStats[p.agent_agentId].totalContribution += p.contribution || 0;
                 });
             });
-            
+
             return Object.values(agentStats)
                 .map(stats => ({
                     ...stats,
@@ -1287,7 +1287,7 @@ module.exports = (srv) => {
                 .sort((a, b) => b.collaborations - a.collaborations)
                 .slice(0, 10);
         };
-        
+
         // Service cleanup handler
         this.on('shutdown', () => {
             if (analyticsRefreshTimer) {

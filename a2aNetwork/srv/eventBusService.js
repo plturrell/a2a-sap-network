@@ -22,7 +22,7 @@ class EventBusService extends EventEmitter {
         this.systemMonitor = null;
         this.intervals = new Map();
         this.realSystemConnector = null;
-        
+
         this.initialize().catch(error => {
             this.logger.error('Failed to initialize event bus service:', error);
         });
@@ -32,20 +32,20 @@ class EventBusService extends EventEmitter {
         try {
             // Initialize WebSocket server for event distribution
             await this.initializeBlockchainEventServer();
-            
+
             // Initialize real system connector (NO MOCKS)
             this.realSystemConnector = new RealSystemEventConnector();
             await this.realSystemConnector.initialize();
-            
+
             // Set up event handlers to forward real system events
             this.setupRealSystemEventForwarding();
-            
+
             // Set up other event handlers
             this.setupEventHandlers();
-            
+
             // Start system monitoring with real data
             this.startSystemMonitoring();
-            
+
             this.logger.info('Event bus service initialized with REAL system connections');
         } catch (error) {
             this.logger.error('Event bus initialization error:', error);
@@ -57,7 +57,7 @@ class EventBusService extends EventEmitter {
         try {
             const killConflicts = process.env.NODE_ENV === 'development';
             this.port = await portManager.allocatePortSafely('event-bus', 8080, killConflicts);
-            
+
             if (!this.port) {
                 this.logger.warn('⚠️  Event bus disabled due to port allocation failure');
                 return;
@@ -91,7 +91,7 @@ class EventBusService extends EventEmitter {
         };
 
         this.clients.set(clientId, clientInfo);
-        
+
         // Send connection acknowledgment
         this.sendToClient(clientInfo, {
             type: 'connection',
@@ -146,7 +146,7 @@ class EventBusService extends EventEmitter {
 
         data.events.forEach(eventPattern => {
             clientInfo.subscriptions.add(eventPattern);
-            
+
             // Add to global subscriptions map
             if (!this.eventSubscriptions.has(eventPattern)) {
                 this.eventSubscriptions.set(eventPattern, new Set());
@@ -171,7 +171,7 @@ class EventBusService extends EventEmitter {
 
         data.events.forEach(eventPattern => {
             clientInfo.subscriptions.delete(eventPattern);
-            
+
             // Remove from global subscriptions map
             if (this.eventSubscriptions.has(eventPattern)) {
                 this.eventSubscriptions.get(eventPattern).delete(clientInfo.id);
@@ -215,12 +215,12 @@ class EventBusService extends EventEmitter {
     handleGetHistory(clientInfo, data) {
         const limit = Math.min(data.limit || 100, 1000);
         const eventType = data.eventType;
-        
+
         let history = [...this.eventHistory];
-        
+
         // Filter by event type if specified
         if (eventType) {
-            history = history.filter(event => 
+            history = history.filter(event =>
                 this.matchesEventPattern(event.type, eventType)
             );
         }
@@ -237,7 +237,7 @@ class EventBusService extends EventEmitter {
 
     handleDisconnect(clientInfo) {
         this.logger.debug(`Event bus client ${clientInfo.id} disconnected`);
-        
+
         // Clean up subscriptions
         clientInfo.subscriptions.forEach(eventPattern => {
             if (this.eventSubscriptions.has(eventPattern)) {
@@ -270,7 +270,7 @@ class EventBusService extends EventEmitter {
 
             // Find matching subscribers
             const matchingClients = new Set();
-            
+
             for (const [eventPattern, clientIds] of this.eventSubscriptions) {
                 if (this.matchesEventPattern(event.type, eventPattern)) {
                     clientIds.forEach(clientId => matchingClients.add(clientId));
@@ -360,7 +360,7 @@ class EventBusService extends EventEmitter {
             // This would integrate with your actual agent registry
             // For now, simulate agent status changes
             const agentStatuses = await this.getAgentStatuses();
-            
+
             agentStatuses.forEach(agent => {
                 if (agent.statusChanged) {
                     const eventType = agent.connected ? 'agent.connected' : 'agent.disconnected';
@@ -426,7 +426,7 @@ class EventBusService extends EventEmitter {
             // Monitor transaction processing
             // This would integrate with your blockchain/transaction system
             const pendingTransactions = await this.getPendingTransactions();
-            
+
             pendingTransactions.forEach(tx => {
                 if (tx.completed) {
                     this.publishEvent({
@@ -462,7 +462,7 @@ class EventBusService extends EventEmitter {
         try {
             // Monitor for suspicious activities
             const securityEvents = await this.getSecurityEvents();
-            
+
             securityEvents.forEach(event => {
                 this.publishEvent({
                     type: `security.alert.${event.type}`,
@@ -555,8 +555,8 @@ class EventBusService extends EventEmitter {
 
         // NEW: Real agent crash detection events
         this.realSystemConnector.on('agent.crashed', (data) => {
-            this.publishEvent({ 
-                type: 'agent.crashed', 
+            this.publishEvent({
+                type: 'agent.crashed',
                 data,
                 priority: 'high',
                 requiresUserAttention: true
@@ -565,8 +565,8 @@ class EventBusService extends EventEmitter {
         });
 
         this.realSystemConnector.on('agent.recovered', (data) => {
-            this.publishEvent({ 
-                type: 'agent.recovered', 
+            this.publishEvent({
+                type: 'agent.recovered',
                 data,
                 priority: 'info'
             });
@@ -574,8 +574,8 @@ class EventBusService extends EventEmitter {
         });
 
         this.realSystemConnector.on('agent.degraded', (data) => {
-            this.publishEvent({ 
-                type: 'agent.degraded', 
+            this.publishEvent({
+                type: 'agent.degraded',
                 data,
                 priority: 'medium',
                 requiresUserAttention: true
@@ -662,7 +662,7 @@ class EventBusService extends EventEmitter {
                     };
 
                     const result = this.publishEvent(event);
-                    
+
                     if (result.success) {
                         res.status(201).json({
                             success: true,
@@ -689,11 +689,11 @@ class EventBusService extends EventEmitter {
                 try {
                     const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
                     const eventType = req.query.eventType;
-                    
+
                     let history = [...this.eventHistory];
-                    
+
                     if (eventType) {
-                        history = history.filter(event => 
+                        history = history.filter(event =>
                             this.matchesEventPattern(event.type, eventType)
                         );
                     }
@@ -741,7 +741,7 @@ class EventBusService extends EventEmitter {
 
     shutdown() {
         this.logger.info('Shutting down event bus service...');
-        
+
         // Stop monitoring intervals
         for (const [name, intervalId] of this.intervals) {
             clearInterval(intervalId);

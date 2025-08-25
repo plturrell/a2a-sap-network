@@ -9,25 +9,25 @@ const http = require('http');
 
 describe('Launchpad Integration Tests', function() {
     this.timeout(60000); // 60 second timeout for UI tests
-    
+
     let browser;
     let page;
     const baseUrl = process.env.TEST_URL || 'http://localhost:4004';
-    
+
     before(async () => {
         // Wait for server to be ready
         await waitForServer(baseUrl);
-        
+
         // Launch browser
         browser = await puppeteer.launch({
             headless: process.env.HEADLESS !== 'false',
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         page = await browser.newPage();
-        
+
         // Set viewport
         await page.setViewport({ width: 1920, height: 1080 });
-        
+
         // Enable console logging
         page.on('console', msg => {
             if (msg.type() === 'error') {
@@ -35,32 +35,32 @@ describe('Launchpad Integration Tests', function() {
             }
         });
     });
-    
+
     after(async () => {
         if (browser) await browser.close();
     });
-    
+
     describe('Launchpad Loading', () => {
         it('should load launchpad without errors', async () => {
             const response = await page.goto(`${baseUrl}/launchpad.html`, {
                 waitUntil: 'networkidle2',
                 timeout: 30000
             });
-            
+
             expect(response.status()).to.equal(200);
         });
-        
+
         it('should initialize SAP UI5 framework', async () => {
             const ui5Loaded = await page.waitForFunction(() => {
-                return window.sap && 
-                       window.sap.ui && 
-                       window.sap.ui.getCore && 
+                return window.sap &&
+                       window.sap.ui &&
+                       window.sap.ui.getCore &&
                        window.sap.ushell;
             }, { timeout: 15000 });
-            
+
             expect(ui5Loaded).to.be.ok;
         });
-        
+
         it('should not display error messages', async () => {
             const errorMessages = await page.evaluate(() => {
                 // Check for error dialogs
@@ -69,49 +69,49 @@ describe('Launchpad Integration Tests', function() {
                     const style = window.getComputedStyle(el);
                     return style.display !== 'none' && style.visibility !== 'hidden';
                 });
-                
+
                 // Check for error text in page
                 const bodyText = document.body.innerText || '';
                 const hasErrorText = /error|failed|exception/i.test(bodyText);
-                
+
                 return {
                     hasErrorDialogs: visibleErrors.length > 0,
                     hasErrorText: hasErrorText,
                     errorCount: visibleErrors.length
                 };
             });
-            
+
             expect(errorMessages.hasErrorDialogs).to.be.false;
             if (errorMessages.hasErrorText) {
                 console.warn('Warning: Error-like text found in page content');
             }
         });
     });
-    
+
     describe('Tile Rendering', () => {
         it('should render tile container', async () => {
             const tileContainer = await page.waitForSelector('#__xmlview0--tileContainer', {
                 timeout: 10000
             });
-            
+
             expect(tileContainer).to.exist;
         });
-        
+
         it('should render exactly 6 tiles', async () => {
             await page.waitForTimeout(2000); // Give tiles time to render
-            
+
             const tileCount = await page.evaluate(() => {
                 const container = document.querySelector('#__xmlview0--tileContainer');
                 if (!container) return 0;
-                
+
                 // Count GenericTile elements
                 const tiles = container.querySelectorAll('[class*="sapMGT"]');
                 return tiles.length;
             });
-            
+
             expect(tileCount).to.equal(6);
         });
-        
+
         it('should have no empty tiles', async () => {
             const tileData = await page.evaluate(() => {
                 const tiles = document.querySelectorAll('[class*="sapMGT"]');
@@ -125,7 +125,7 @@ describe('Launchpad Integration Tests', function() {
                     };
                 });
             });
-            
+
             expect(tileData).to.have.lengthOf(6);
             tileData.forEach((tile, index) => {
                 expect(tile.hasHeader, `Tile ${index} should have header`).to.be.true;
@@ -133,7 +133,7 @@ describe('Launchpad Integration Tests', function() {
                 expect(tile.headerText, `Tile ${index} header should not be empty`).to.not.be.null;
             });
         });
-        
+
         it('should have proper tile structure', async () => {
             const expectedTiles = [
                 'Agent Management',
@@ -143,7 +143,7 @@ describe('Launchpad Integration Tests', function() {
                 'Notification Center',
                 'Security & Audit'
             ];
-            
+
             const actualTiles = await page.evaluate(() => {
                 const tiles = document.querySelectorAll('[class*="sapMGT"]');
                 return Array.from(tiles).map(tile => {
@@ -151,13 +151,13 @@ describe('Launchpad Integration Tests', function() {
                     return header ? header.textContent.trim() : '';
                 });
             });
-            
+
             expectedTiles.forEach(expected => {
                 expect(actualTiles).to.include(expected);
             });
         });
     });
-    
+
     describe('Data Loading', () => {
         it('should fetch tile data from API', async () => {
             // Intercept API calls
@@ -170,20 +170,20 @@ describe('Launchpad Integration Tests', function() {
                     });
                 }
             });
-            
+
             // Trigger refresh
             await page.evaluate(() => {
                 const refreshButton = document.querySelector('[icon="sap-icon://refresh"]');
                 if (refreshButton) refreshButton.click();
             });
-            
+
             // Wait for API call
             await page.waitForTimeout(2000);
-            
+
             expect(apiCalls).to.have.length.greaterThan(0);
             expect(apiCalls[0].status).to.equal(200);
         });
-        
+
         it('should update tile values', async () => {
             const tileValues = await page.evaluate(() => {
                 const tiles = document.querySelectorAll('[class*="sapMGT"]');
@@ -192,7 +192,7 @@ describe('Launchpad Integration Tests', function() {
                     return valueElement ? valueElement.textContent.trim() : null;
                 });
             });
-            
+
             expect(tileValues).to.have.lengthOf(6);
             // At least one tile should have a non-zero value
             const hasNonZeroValue = tileValues.some(value => value && value !== '0');
@@ -201,11 +201,11 @@ describe('Launchpad Integration Tests', function() {
             }
         });
     });
-    
+
     describe('Visual Consistency', () => {
         it('should not have blank screen', async () => {
             const screenshot = await page.screenshot({ fullPage: true });
-            
+
             // Check if page has content
             const pageContent = await page.evaluate(() => {
                 const body = document.body;
@@ -213,16 +213,16 @@ describe('Launchpad Integration Tests', function() {
                 const hasChildElements = body.children.length > 0;
                 return { hasVisibleContent, hasChildElements };
             });
-            
+
             expect(pageContent.hasVisibleContent).to.be.true;
             expect(pageContent.hasChildElements).to.be.true;
         });
-        
+
         it('should have proper SAP theme applied', async () => {
             const theme = await page.evaluate(() => {
                 return sap.ui.getCore().getConfiguration().getTheme();
             });
-            
+
             expect(theme).to.be.oneOf(['sap_horizon', 'sap_horizon_dark', 'sap_fiori_3', 'sap_fiori_3_dark']);
         });
     });

@@ -1,3 +1,4 @@
+/* global sap, jQuery */
 sap.ui.define([
     'sap/base/Log'
 ], (Log) => {
@@ -19,7 +20,7 @@ sap.ui.define([
                 client: '100',
                 transportLayer: 'ZA2A'
             },
-            
+
             // Development package configuration
             packages: {
                 root: 'ZA2A_FIORI',
@@ -31,7 +32,7 @@ sap.ui.define([
                     tiles: 'ZA2A_FIORI_TILES'
                 }
             },
-            
+
             // Object types for transport
             objectTypes: {
                 'CHIP': {
@@ -70,14 +71,14 @@ sap.ui.define([
                     transportRequired: true
                 }
             },
-            
+
             // Transport request types
             requestTypes: {
                 'CUST': 'Customizing Request',
                 'WORK': 'Workbench Request',
                 'TRAN': 'Transport of Copies'
             },
-            
+
             // Auto-transport settings
             autoTransport: {
                 enabled: false,
@@ -172,11 +173,11 @@ sap.ui.define([
                     method: 'POST',
                     success: () => {
                         Log.info('Transport request released', transportNumber);
-                        
+
                         if (this.config.autoTransport.enabled) {
                             this._triggerImport(transportNumber);
                         }
-                        
+
                         resolve();
                     },
                     error: (error) => {
@@ -221,7 +222,7 @@ sap.ui.define([
         _determinePackage: function(objectType) {
             const typeConfig = this.config.objectTypes[objectType];
             if (typeConfig && typeConfig.package) {
-                return this.config.packages.subPackages[typeConfig.package] || 
+                return this.config.packages.subPackages[typeConfig.package] ||
                        this.config.packages.root;
             }
             return this.config.packages.root;
@@ -286,7 +287,7 @@ sap.ui.define([
         _createLocalTransportRequest: function(params) {
             const transportNumber = `A2AK9${  Date.now().toString().substr(-5)}`;
             Log.info('Created local transport request', transportNumber);
-            
+
             // Store in local storage for development
             const transports = JSON.parse(localStorage.getItem('a2a_transports') || '[]');
             transports.push({
@@ -296,7 +297,7 @@ sap.ui.define([
                 objects: []
             });
             localStorage.setItem('a2a_transports', JSON.stringify(transports));
-            
+
             return transportNumber;
         },
 
@@ -308,7 +309,7 @@ sap.ui.define([
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlData, 'text/xml');
             const requests = xmlDoc.querySelectorAll('REQUEST');
-            
+
             return Array.from(requests).map(req => ({
                 number: req.querySelector('TRKORR')?.textContent,
                 description: req.querySelector('AS4TEXT')?.textContent,
@@ -327,7 +328,7 @@ sap.ui.define([
             if (!this.config.autoTransport.importImmediately) {
                 return;
             }
-            
+
             // Implementation would trigger TMS import
             Log.info('Auto-import triggered for transport', transportNumber);
         }

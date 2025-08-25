@@ -163,14 +163,14 @@ const A2A_AGENTS = [
 
 async function registerAgents() {
     console.log('Starting A2A Agents registration into A2A Network...\n');
-    
+
     const successfulAgents = [];
     const failedAgents = [];
-    
+
     for (const agent of A2A_AGENTS) {
         try {
             console.log(`Registering ${agent.name}...`);
-            
+
             // First, create the agent
             const agentData = {
                 name: agent.name,
@@ -180,7 +180,7 @@ async function registerAgents() {
                 country_code: agent.country_code,
                 address: agent.address
             };
-            
+
             const response = await axios.post(`${A2A_NETWORK_API}/Agents`, agentData, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -188,25 +188,25 @@ async function registerAgents() {
                 }
             });
             const createdAgent = response.data;
-            
+
             console.log(`✓ Created agent: ${agent.name} (ID: ${createdAgent.ID})`);
-            
+
             // Store agent ID with capabilities for later use
             successfulAgents.push({
                 id: createdAgent.ID,
                 name: agent.name,
                 capabilities: agent.capabilities
             });
-            
+
             // TODO: Create capabilities and link them to the agent
             // This requires the Capabilities entity to be working properly
-            
+
         } catch (error) {
             console.error(`✗ Failed to register ${agent.name}:`, error.response?.data || error.message);
             failedAgents.push(agent.name);
         }
     }
-    
+
     // Summary
     console.log('\n' + '='.repeat(60));
     console.log('Registration Summary:');
@@ -215,14 +215,14 @@ async function registerAgents() {
     successfulAgents.forEach(agent => {
         console.log(`  - ${agent.name} (ID: ${agent.id})`);
     });
-    
+
     if (failedAgents.length > 0) {
         console.log(`\n✗ Failed to register: ${failedAgents.length} agents`);
         failedAgents.forEach(name => {
             console.log(`  - ${name}`);
         });
     }
-    
+
     console.log('\n' + '='.repeat(60));
     console.log('Next Steps:');
     console.log('='.repeat(60));

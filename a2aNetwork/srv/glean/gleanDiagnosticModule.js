@@ -2,7 +2,7 @@
  * @fileoverview Glean Integration Module for A2A Diagnostic Tool
  * @module gleanDiagnosticModule
  * @since 1.0.0
- * 
+ *
  * Extends the existing diagnostic tool with Glean code intelligence capabilities
  */
 
@@ -23,7 +23,7 @@ class GleanDiagnosticModule {
             // Check if Glean service is available
             const health = await blockchainClient.sendMessage(`${this.gleanUrl}/health`);
             this.isAvailable = health.ok;
-            
+
             if (this.isAvailable) {
                 this.log.info('Glean service is available for enhanced diagnostics');
                 // Connect to Glean service via CDS
@@ -71,7 +71,7 @@ class GleanDiagnosticModule {
 
             // Add to main diagnostic results
             this.diagnosticTool.results.codeAnalysis = results;
-            
+
             return results;
         } catch (error) {
             this.log.error('Code diagnostics failed:', error);
@@ -97,7 +97,7 @@ class GleanDiagnosticModule {
 
         // Calculate health score
         const score = this.calculateHealthScore(health);
-        
+
         return {
             score,
             metrics: health,
@@ -108,26 +108,26 @@ class GleanDiagnosticModule {
 
     calculateHealthScore(health) {
         let score = 100;
-        
+
         // Deduct points for various issues
         if (health.averageComplexity > 10) score -= 10;
         if (health.averageComplexity > 20) score -= 10;
-        
+
         // Deduct for code smells
         score -= Math.min(health.codeSmells.length * 2, 20);
-        
+
         // Deduct for technical debt
         score -= Math.min(health.technicalDebt.length * 3, 30);
-        
+
         // Bonus for good documentation
         if (health.documentationCoverage > 80) score += 5;
-        
+
         return Math.max(0, Math.min(100, score));
     }
 
     extractTopIssues(health) {
         const issues = [];
-        
+
         // Add high complexity files
         health.codeSmells
             .filter(smell => smell.issue === 'High complexity')
@@ -140,7 +140,7 @@ class GleanDiagnosticModule {
                     message: `Complexity: ${smell.complexity} (threshold: 10)`
                 });
             });
-        
+
         // Add documentation issues
         health.technicalDebt
             .filter(debt => debt.issue === 'Low documentation coverage')
@@ -153,7 +153,7 @@ class GleanDiagnosticModule {
                     message: `Documentation coverage: ${debt.coverage}%`
                 });
             });
-        
+
         return issues;
     }
 
@@ -166,14 +166,14 @@ class GleanDiagnosticModule {
         ];
 
         const dependencies = {};
-        
+
         for (const path of criticalPaths) {
             try {
                 const deps = await this.gleanService.send({
                     event: 'findDependencies',
                     data: { sourcePath: path, depth: 3 }
                 });
-                
+
                 dependencies[path] = {
                     direct: deps.dependencies.filter(d => d.depth === 1).length,
                     transitive: deps.dependencies.length,
@@ -188,7 +188,7 @@ class GleanDiagnosticModule {
 
         // Check for circular dependencies
         const circular = await this.detectCircularDependencies(dependencies);
-        
+
         return {
             components: dependencies,
             circularDependencies: circular,
@@ -198,7 +198,7 @@ class GleanDiagnosticModule {
 
     async detectCircularDependencies(dependencies) {
         const circular = [];
-        
+
         for (const [path, data] of Object.entries(dependencies)) {
             if (data.graph && data.graph.edges) {
                 const cycles = this.findCycles(data.graph);
@@ -210,7 +210,7 @@ class GleanDiagnosticModule {
                 });
             }
         }
-        
+
         return circular;
     }
 
@@ -218,7 +218,7 @@ class GleanDiagnosticModule {
         const cycles = [];
         const visited = new Set();
         const recursionStack = new Set();
-        
+
         const dfs = (node, path = []) => {
             if (recursionStack.has(node)) {
                 const cycleStart = path.indexOf(node);
@@ -227,27 +227,27 @@ class GleanDiagnosticModule {
                 }
                 return;
             }
-            
+
             if (visited.has(node)) return;
-            
+
             visited.add(node);
             recursionStack.add(node);
             path.push(node);
-            
+
             const edges = graph.edges.filter(e => e.from === node);
             for (const edge of edges) {
                 dfs(edge.to, [...path]);
             }
-            
+
             recursionStack.delete(node);
         };
-        
+
         for (const node of graph.nodes) {
             if (!visited.has(node)) {
                 dfs(node);
             }
         }
-        
+
         return cycles;
     }
 
@@ -274,7 +274,7 @@ class GleanDiagnosticModule {
 
         // Check for specific A2A security concerns
         const a2aSpecificIssues = await this.checkA2ASecurityPatterns();
-        
+
         return {
             summary: securityScan.bySeverity,
             critical: categorized.critical,
@@ -288,7 +288,7 @@ class GleanDiagnosticModule {
 
     async checkA2ASecurityPatterns() {
         const issues = [];
-        
+
         // Check blockchain key management
         const keyManagement = await this.gleanService.send({
             event: 'queryCode',
@@ -298,7 +298,7 @@ class GleanDiagnosticModule {
                 limit: 10
             }
         });
-        
+
         if (keyManagement.results && keyManagement.results.length > 0) {
             issues.push({
                 type: 'key_exposure',
@@ -307,7 +307,7 @@ class GleanDiagnosticModule {
                 locations: keyManagement.results
             });
         }
-        
+
         // Check agent authentication
         const authPatterns = await this.gleanService.send({
             event: 'queryCode',
@@ -317,7 +317,7 @@ class GleanDiagnosticModule {
                 limit: 10
             }
         });
-        
+
         if (!authPatterns.results || authPatterns.results.length === 0) {
             issues.push({
                 type: 'missing_auth',
@@ -325,7 +325,7 @@ class GleanDiagnosticModule {
                 message: 'Agent authentication mechanisms may be missing'
             });
         }
-        
+
         return issues;
     }
 
@@ -339,7 +339,7 @@ class GleanDiagnosticModule {
 
         // Analyze database query patterns
         const dbPatterns = await this.analyzeDatabasePatterns();
-        
+
         return {
             slowQueries: perfAnalysis.slowQueries,
             memoryLeaks: perfAnalysis.memoryLeaks,
@@ -380,7 +380,7 @@ class GleanDiagnosticModule {
 
     generatePerformanceRecommendations(analysis) {
         const recommendations = [];
-        
+
         if (analysis.slowQueries.length > 0) {
             recommendations.push({
                 type: 'database',
@@ -388,7 +388,7 @@ class GleanDiagnosticModule {
                 message: 'Optimize slow database queries using batch operations or joins'
             });
         }
-        
+
         if (analysis.memoryLeaks.length > 0) {
             recommendations.push({
                 type: 'memory',
@@ -396,7 +396,7 @@ class GleanDiagnosticModule {
                 message: 'Add cleanup handlers for timers and event listeners'
             });
         }
-        
+
         if (analysis.blockingOperations.length > 0) {
             recommendations.push({
                 type: 'async',
@@ -404,13 +404,13 @@ class GleanDiagnosticModule {
                 message: 'Convert blocking operations to async/await patterns'
             });
         }
-        
+
         return recommendations;
     }
 
     generateRecommendations(results) {
         const recommendations = [];
-        
+
         // Code health recommendations
         if (results.codeHealth.score < 70) {
             recommendations.push({
@@ -420,7 +420,7 @@ class GleanDiagnosticModule {
                 impact: 'Improve maintainability and reduce bugs'
             });
         }
-        
+
         // Security recommendations
         if (results.security.critical.length > 0) {
             recommendations.push({
@@ -430,7 +430,7 @@ class GleanDiagnosticModule {
                 impact: 'Prevent potential security breaches'
             });
         }
-        
+
         // Dependency recommendations
         if (results.dependencies.circularDependencies.length > 0) {
             recommendations.push({
@@ -440,7 +440,7 @@ class GleanDiagnosticModule {
                 impact: 'Improve build times and code organization'
             });
         }
-        
+
         // Performance recommendations
         if (results.performance.slowQueries.length > 5) {
             recommendations.push({
@@ -450,7 +450,7 @@ class GleanDiagnosticModule {
                 impact: 'Reduce response times and server load'
             });
         }
-        
+
         return recommendations.sort((a, b) => {
             const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
             return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -497,9 +497,9 @@ class GleanDiagnosticModule {
     generateActionItems() {
         const actionItems = [];
         const analysis = this.diagnosticTool.results.codeAnalysis;
-        
+
         if (!analysis) return actionItems;
-        
+
         // Critical security issues
         if (analysis.security && analysis.security.critical.length > 0) {
             analysis.security.critical.forEach(issue => {
@@ -512,7 +512,7 @@ class GleanDiagnosticModule {
                 });
             });
         }
-        
+
         // High complexity code
         if (analysis.codeHealth && analysis.codeHealth.topIssues) {
             analysis.codeHealth.topIssues
@@ -528,7 +528,7 @@ class GleanDiagnosticModule {
                     });
                 });
         }
-        
+
         return actionItems;
     }
 }

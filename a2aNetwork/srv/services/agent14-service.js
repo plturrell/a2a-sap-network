@@ -15,7 +15,7 @@ class Agent14Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent14Adapter();
-        
+
         // Entity references
         const {
             EmbeddingModels,
@@ -39,7 +39,7 @@ class Agent14Service extends cds.ApplicationService {
         this.on('CREATE', 'EmbeddingModels', async (req) => {
             try {
                 const model = await this.adapter.createEmbeddingModel(req.data);
-                
+
                 // Emit model creation event
                 await this.emit('EmbeddingModelCreated', {
                     modelId: model.ID,
@@ -48,7 +48,7 @@ class Agent14Service extends cds.ApplicationService {
                     modelType: model.modelType,
                     timestamp: new Date()
                 });
-                
+
                 return model;
             } catch (error) {
                 req.error(500, `Failed to create embedding model: ${error.message}`);
@@ -60,12 +60,12 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { modelId, trainingData, validationData, customConfig } = req.data;
                 const training = await this.adapter.startFineTuning(
-                    modelId, 
-                    trainingData, 
-                    validationData, 
+                    modelId,
+                    trainingData,
+                    validationData,
                     customConfig
                 );
-                
+
                 // Create training job record
                 const trainingRecord = await INSERT.into(TrainingJobs).entries({
                     ID: training.job_id,
@@ -77,14 +77,14 @@ class Agent14Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     createdBy: req.user.id
                 });
-                
+
                 await this.emit('FineTuningStarted', {
                     jobId: training.job_id,
                     modelId: modelId,
                     estimatedDuration: training.estimated_duration_minutes,
                     timestamp: new Date()
                 });
-                
+
                 return training;
             } catch (error) {
                 req.error(500, `Failed to start fine-tuning: ${error.message}`);
@@ -95,17 +95,17 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { jobId } = req.data;
                 const result = await this.adapter.stopFineTuning(jobId);
-                
+
                 // Update training job status
                 await UPDATE(TrainingJobs)
                     .set({ status: 'CANCELLED', endTime: new Date(), updatedAt: new Date() })
                     .where({ ID: jobId });
-                
+
                 await this.emit('FineTuningStopped', {
                     jobId,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to stop fine-tuning: ${error.message}`);
@@ -117,7 +117,7 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { jobId } = req.data;
                 const status = await this.adapter.getTrainingStatus(jobId);
-                
+
                 // Update training job record with latest status
                 if (status.progress) {
                     await UPDATE(TrainingJobs)
@@ -133,7 +133,7 @@ class Agent14Service extends cds.ApplicationService {
                         })
                         .where({ ID: jobId });
                 }
-                
+
                 return status;
             } catch (error) {
                 req.error(500, `Failed to get training status: ${error.message}`);
@@ -155,11 +155,11 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { modelId, evaluationDataset, evaluationTasks } = req.data;
                 const evaluation = await this.adapter.evaluateEmbeddingModel(
-                    modelId, 
-                    evaluationDataset, 
+                    modelId,
+                    evaluationDataset,
                     evaluationTasks
                 );
-                
+
                 // Store evaluation results
                 const evaluationRecord = await INSERT.into(ModelEvaluations).entries({
                     ID: uuidv4(),
@@ -171,14 +171,14 @@ class Agent14Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     createdBy: req.user.id
                 });
-                
+
                 await this.emit('ModelEvaluated', {
                     modelId,
                     overallScore: evaluation.overall_score,
                     evaluationId: evaluationRecord.ID,
                     timestamp: new Date()
                 });
-                
+
                 return evaluation;
             } catch (error) {
                 req.error(500, `Failed to evaluate model: ${error.message}`);
@@ -200,11 +200,11 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { modelId, optimizationTechniques, optimizationConfig } = req.data;
                 const optimization = await this.adapter.optimizeEmbeddingModel(
-                    modelId, 
-                    optimizationTechniques, 
+                    modelId,
+                    optimizationTechniques,
                     optimizationConfig
                 );
-                
+
                 // Store optimization results
                 const optimizationRecord = await INSERT.into(OptimizationResults).entries({
                     ID: uuidv4(),
@@ -215,14 +215,14 @@ class Agent14Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     createdBy: req.user.id
                 });
-                
+
                 await this.emit('ModelOptimized', {
                     modelId,
                     techniques: optimizationTechniques,
                     optimizationId: optimizationRecord.ID,
                     timestamp: new Date()
                 });
-                
+
                 return optimization;
             } catch (error) {
                 req.error(500, `Failed to optimize model: ${error.message}`);
@@ -234,7 +234,7 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { modelId, deploymentConfig } = req.data;
                 const deployment = await this.adapter.deployEmbeddingModel(modelId, deploymentConfig);
-                
+
                 // Create deployment record
                 const deploymentRecord = await INSERT.into(DeploymentRecords).entries({
                     ID: deployment.deployment_id,
@@ -246,14 +246,14 @@ class Agent14Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     createdBy: req.user.id
                 });
-                
+
                 await this.emit('ModelDeployed', {
                     modelId,
                     deploymentId: deployment.deployment_id,
                     endpointUrl: deployment.endpoint_url,
                     timestamp: new Date()
                 });
-                
+
                 return deployment;
             } catch (error) {
                 req.error(500, `Failed to deploy model: ${error.message}`);
@@ -264,21 +264,21 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { deploymentId } = req.data;
                 const result = await this.adapter.undeployModel(deploymentId);
-                
+
                 // Update deployment record
                 await UPDATE(DeploymentRecords)
-                    .set({ 
+                    .set({
                         deploymentStatus: 'UNDEPLOYED',
                         undeployedAt: new Date(),
                         updatedAt: new Date()
                     })
                     .where({ ID: deploymentId });
-                
+
                 await this.emit('ModelUndeployed', {
                     deploymentId,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to undeploy model: ${error.message}`);
@@ -290,19 +290,19 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { datasetName, dataContent, dataFormat, metadata } = req.data;
                 const upload = await this.adapter.uploadTrainingData(
-                    datasetName, 
-                    dataContent, 
-                    dataFormat, 
+                    datasetName,
+                    dataContent,
+                    dataFormat,
                     metadata
                 );
-                
+
                 await this.emit('TrainingDataUploaded', {
                     datasetName,
                     datasetId: upload.dataset_id,
                     recordCount: upload.record_count,
                     timestamp: new Date()
                 });
-                
+
                 return upload;
             } catch (error) {
                 req.error(500, `Failed to upload training data: ${error.message}`);
@@ -345,18 +345,18 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const { modelId, tuningConfig, searchStrategy } = req.data;
                 const tuning = await this.adapter.startHyperparameterTuning(
-                    modelId, 
-                    tuningConfig, 
+                    modelId,
+                    tuningConfig,
                     searchStrategy
                 );
-                
+
                 await this.emit('HyperparameterTuningStarted', {
                     modelId,
                     tuningJobId: tuning.tuning_job_id,
                     searchStrategy,
                     timestamp: new Date()
                 });
-                
+
                 return tuning;
             } catch (error) {
                 req.error(500, `Failed to start hyperparameter tuning: ${error.message}`);
@@ -377,12 +377,12 @@ class Agent14Service extends cds.ApplicationService {
             try {
                 const jobId = req.params[0];
                 await this.adapter.deleteTrainingJob(jobId);
-                
+
                 await this.emit('TrainingJobDeleted', {
                     jobId,
                     timestamp: new Date()
                 });
-                
+
             } catch (error) {
                 req.error(500, `Failed to delete training job: ${error.message}`);
             }
@@ -407,7 +407,7 @@ class Agent14Service extends cds.ApplicationService {
                 timestamp: new Date(),
                 createdAt: new Date()
             };
-            
+
             await INSERT.into('TrainingMetrics').entries(metricsData);
         } catch (error) {
             logger.error('Failed to update training metrics:', { error: error });

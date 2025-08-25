@@ -26,7 +26,7 @@ sap.ui.define([
             const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
-            
+
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 MessageToast.show('Please select at least one IP address to unblock');
                 return;
@@ -55,7 +55,7 @@ sap.ui.define([
             const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
-            
+
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 MessageToast.show('Please select at least one IP address to extend block');
                 return;
@@ -82,7 +82,7 @@ sap.ui.define([
          */
         onViewIPDetails: function (oEvent) {
             const oBindingContext = this._getSelectedContexts(oEvent)[0];
-            
+
             if (!oBindingContext) {
                 MessageToast.show('Please select an IP address to view details');
                 return;
@@ -97,7 +97,7 @@ sap.ui.define([
          */
         _getSelectedContexts: function (oEvent) {
             let aContexts = [];
-            
+
             // Try to get from event source (button press)
             if (oEvent.getSource) {
                 const oSource = oEvent.getSource();
@@ -106,7 +106,7 @@ sap.ui.define([
                     aContexts = [oBindingContext];
                 }
             }
-            
+
             // Fallback to table selection
             if (aContexts.length === 0) {
                 const oTable = this.getView().byId('fe::table::BlockedIPs::LineItem');
@@ -114,7 +114,7 @@ sap.ui.define([
                     aContexts = oTable.getSelectedContexts();
                 }
             }
-            
+
             return aContexts;
         },
 
@@ -123,7 +123,7 @@ sap.ui.define([
          */
         _showUnblockDialog: function (aContexts, oModel) {
             const that = this;
-            
+
             // Create reason input
             const oReasonInput = new Input({
                 placeholder: 'Enter reason for unblocking IP address(es)',
@@ -161,7 +161,7 @@ sap.ui.define([
                             oReasonInput.setValueStateText('Please provide a reason for unblocking');
                             return;
                         }
-                        
+
                         oDialog.close();
                         that._performBatchUnblock(aContexts, oModel, sReason);
                     }
@@ -185,7 +185,7 @@ sap.ui.define([
          */
         _showExtendBlockDialog: function (aContexts, oModel) {
             const that = this;
-            
+
             // Create duration input
             const oHoursInput = new Input({
                 placeholder: '24',
@@ -227,7 +227,7 @@ sap.ui.define([
                             oHoursInput.setValueStateText('Please enter a valid number between 1 and 8760 hours');
                             return;
                         }
-                        
+
                         oDialog.close();
                         that._performBatchExtendBlock(aContexts, oModel, iHours);
                     }
@@ -255,22 +255,22 @@ sap.ui.define([
                 items: [
                     new Label({ text: 'IP Address:' }),
                     new Text({ text: oIPData.ipAddress }).addStyleClass('sapUiMediumMarginBottom'),
-                    
+
                     new Label({ text: 'Block Type:' }),
                     new Text({ text: oIPData.blockType }).addStyleClass('sapUiMediumMarginBottom'),
-                    
+
                     new Label({ text: 'Reason:' }),
                     new Text({ text: oIPData.reason }).addStyleClass('sapUiMediumMarginBottom'),
-                    
+
                     new Label({ text: 'Country:' }),
                     new Text({ text: oIPData.country || 'Unknown' }).addStyleClass('sapUiMediumMarginBottom'),
-                    
+
                     new Label({ text: 'Organization:' }),
                     new Text({ text: oIPData.organization || 'Unknown' }).addStyleClass('sapUiMediumMarginBottom'),
-                    
+
                     new Label({ text: 'Blocked Since:' }),
                     new Text({ text: new Date(oIPData.blockedAt).toLocaleString() }).addStyleClass('sapUiMediumMarginBottom'),
-                    
+
                     new Label({ text: 'Attempt Count:' }),
                     new Text({ text: oIPData.attemptCount.toString() }).addStyleClass('sapUiMediumMarginBottom')
                 ]
@@ -306,11 +306,11 @@ sap.ui.define([
         _performBatchUnblock: function (aContexts, oModel, sReason) {
             const that = this;
             const aPromises = [];
-            
+
             aContexts.forEach(oContext => {
                 const sPath = oContext.getPath();
                 const oData = oContext.getObject();
-                
+
                 // Prepare update data
                 const oUpdateData = {
                     isActive: false,
@@ -320,7 +320,7 @@ sap.ui.define([
                     modifiedAt: new Date().toISOString(),
                     modifiedBy: this._getCurrentUser()
                 };
-                
+
                 // Create promise for OData update
                 const oPromise = new Promise((resolve, reject) => {
                     oModel.update(sPath, oUpdateData, {
@@ -332,20 +332,20 @@ sap.ui.define([
                         }
                     });
                 });
-                
+
                 aPromises.push(oPromise);
             });
-            
+
             // Execute batch operation
             Promise.allSettled(aPromises).then(results => {
                 const successCount = results.filter(r => r.status === 'fulfilled').length;
                 const failCount = results.filter(r => r.status === 'rejected').length;
-                
+
                 if (successCount > 0) {
                     MessageToast.show(`${successCount} IP address(es) unblocked successfully`);
                     oModel.refresh();
                 }
-                
+
                 if (failCount > 0) {
                     MessageBox.error(`Failed to unblock ${failCount} IP address(es). Please try again.`);
                 }
@@ -358,22 +358,22 @@ sap.ui.define([
         _performBatchExtendBlock: function (aContexts, oModel, iAdditionalHours) {
             const that = this;
             const aPromises = [];
-            
+
             aContexts.forEach(oContext => {
                 const sPath = oContext.getPath();
                 const oData = oContext.getObject();
-                
+
                 // Calculate new expiration time
                 const dCurrentExpiration = oData.expiresAt ? new Date(oData.expiresAt) : new Date();
                 const dNewExpiration = new Date(dCurrentExpiration.getTime() + (iAdditionalHours * 60 * 60 * 1000));
-                
+
                 // Prepare update data
                 const oUpdateData = {
                     expiresAt: dNewExpiration.toISOString(),
                     modifiedAt: new Date().toISOString(),
                     modifiedBy: this._getCurrentUser()
                 };
-                
+
                 // Create promise for OData update
                 const oPromise = new Promise((resolve, reject) => {
                     oModel.update(sPath, oUpdateData, {
@@ -385,20 +385,20 @@ sap.ui.define([
                         }
                     });
                 });
-                
+
                 aPromises.push(oPromise);
             });
-            
+
             // Execute batch operation
             Promise.allSettled(aPromises).then(results => {
                 const successCount = results.filter(r => r.status === 'fulfilled').length;
                 const failCount = results.filter(r => r.status === 'rejected').length;
-                
+
                 if (successCount > 0) {
                     MessageToast.show(`Block duration extended for ${successCount} IP address(es) by ${iAdditionalHours} hours`);
                     oModel.refresh();
                 }
-                
+
                 if (failCount > 0) {
                     MessageBox.error(`Failed to extend block for ${failCount} IP address(es). Please try again.`);
                 }

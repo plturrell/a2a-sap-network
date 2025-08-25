@@ -44,7 +44,7 @@ const SECURITY_CONFIG = {
         lockoutDuration: 1800000, // 30 minutes
         complexityScore: 3 // 0-4 scale
     },
-    
+
     // Session Configuration
     SESSION: {
         secret: process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex'),
@@ -55,7 +55,7 @@ const SECURITY_CONFIG = {
         httpOnly: true,
         sameSite: 'strict'
     },
-    
+
     // API Key Configuration
     API_KEY: {
         length: 32,
@@ -64,7 +64,7 @@ const SECURITY_CONFIG = {
         prefix: 'a2a_',
         algorithm: 'sha256'
     },
-    
+
     // JWT Configuration
     JWT: {
         algorithm: 'RS256', // Use RSA instead of HS256
@@ -73,7 +73,7 @@ const SECURITY_CONFIG = {
         issuer: 'a2a-network',
         audience: 'a2a-api'
     },
-    
+
     // Rate Limiting
     RATE_LIMITS: {
         global: { windowMs: 900000, max: 1000 }, // 1000 requests per 15 minutes
@@ -81,7 +81,7 @@ const SECURITY_CONFIG = {
         api: { windowMs: 60000, max: 100 }, // 100 API calls per minute
         sensitive: { windowMs: 300000, max: 10 } // 10 sensitive ops per 5 minutes
     },
-    
+
     // Security Headers
     HEADERS: {
         strictTransportSecurity: {
@@ -105,7 +105,7 @@ const SECURITY_CONFIG = {
             }
         }
     },
-    
+
     // Encryption
     ENCRYPTION: {
         algorithm: 'aes-256-gcm',
@@ -127,17 +127,17 @@ class EnterpriseSecurityManager {
         this.failedAttempts = new Map();
         this.activeSessions = new Map();
         this.securityEvents = [];
-        
+
         // Initialize key management
         this.keyManager = new KeyManager();
-        
+
         // Initialize security monitoring
         this.securityMonitor = new SecurityMonitor(this);
-        
+
         // Generate RSA key pair for JWT
         this.generateRSAKeyPair();
     }
-    
+
     /**
      * Generate RSA key pair for JWT signing
      */
@@ -155,11 +155,11 @@ class EnterpriseSecurityManager {
                 passphrase: process.env.JWT_KEY_PASSPHRASE || crypto.randomBytes(32).toString('hex')
             }
         });
-        
+
         this.jwtPublicKey = publicKey;
         this.jwtPrivateKey = privateKey;
     }
-    
+
     /**
      * Enhanced authentication middleware
      */
@@ -168,7 +168,7 @@ class EnterpriseSecurityManager {
             try {
                 // Check multiple authentication methods in order of preference
                 const authResult = await this.performAuthentication(req);
-                
+
                 if (!authResult.authenticated) {
                     return res.status(401).json({
                         error: 'Authentication required',
@@ -176,26 +176,26 @@ class EnterpriseSecurityManager {
                         supportedMethods: ['Bearer', 'APIKey', 'XSUAA']
                     });
                 }
-                
+
                 // Set user context
                 req.user = authResult.user;
                 req.authMethod = authResult.method;
                 req.authToken = authResult.token;
-                
+
                 // Log successful authentication
                 await this.logSecurityEvent('AUTH_SUCCESS', {
                     userId: authResult.user.id,
                     method: authResult.method,
                     ip: req.ip
                 });
-                
+
                 next();
             } catch (error) {
                 await this.logSecurityEvent('AUTH_ERROR', {
                     error: error.message,
                     ip: req.ip
                 });
-                
+
                 res.status(401).json({
                     error: 'Authentication failed',
                     code: 'AUTH_FAILED'
@@ -203,7 +203,7 @@ class EnterpriseSecurityManager {
             }
         };
     }
-    
+
     /**
      * Perform authentication with multiple methods
      */
@@ -225,7 +225,7 @@ class EnterpriseSecurityManager {
                 // Continue to next auth method
             }
         }
-        
+
         // 2. Check for JWT token
         if (req.headers.authorization?.startsWith('Bearer ')) {
             try {
@@ -243,7 +243,7 @@ class EnterpriseSecurityManager {
                 // Continue to next auth method
             }
         }
-        
+
         // 3. Check for API key
         const apiKey = req.headers['x-api-key'] || req.query.apiKey;
         if (apiKey) {
@@ -257,10 +257,10 @@ class EnterpriseSecurityManager {
                 };
             }
         }
-        
+
         return { authenticated: false };
     }
-    
+
     /**
      * Verify JWT with RSA
      */
@@ -281,78 +281,78 @@ class EnterpriseSecurityManager {
             );
         });
     }
-    
+
     /**
      * Enhanced password validation
      */
     validatePassword(password, userId) {
         const policy = SECURITY_CONFIG.PASSWORD_POLICY;
         const errors = [];
-        
+
         // Length check
         if (password.length < policy.minLength) {
             errors.push(`Password must be at least ${policy.minLength} characters`);
         }
-        
+
         // Complexity checks
         if (policy.requireUppercase && !/[A-Z]/.test(password)) {
             errors.push('Password must contain uppercase letters');
         }
-        
+
         if (policy.requireLowercase && !/[a-z]/.test(password)) {
             errors.push('Password must contain lowercase letters');
         }
-        
+
         if (policy.requireNumbers && !/\d/.test(password)) {
             errors.push('Password must contain numbers');
         }
-        
+
         if (policy.requireSpecialChars && !new RegExp(`[${policy.specialChars}]`).test(password)) {
             errors.push('Password must contain special characters');
         }
-        
+
         // Check password history
         if (userId && this.isPasswordInHistory(userId, password)) {
             errors.push(`Password cannot be one of your last ${policy.historyCount} passwords`);
         }
-        
+
         // Calculate complexity score
         const score = this.calculatePasswordComplexity(password);
         if (score < policy.complexityScore) {
             errors.push('Password is not complex enough');
         }
-        
+
         return {
             valid: errors.length === 0,
             errors,
             score
         };
     }
-    
+
     /**
      * Calculate password complexity score
      */
     calculatePasswordComplexity(password) {
         let score = 0;
-        
+
         // Length score
         if (password.length >= 8) score++;
         if (password.length >= 12) score++;
         if (password.length >= 16) score++;
-        
+
         // Character diversity
         if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
         if (/\d/.test(password)) score++;
         if (/[^a-zA-Z0-9]/.test(password)) score++;
-        
+
         // Pattern detection (penalize common patterns)
         if (/(.)\1{2,}/.test(password)) score--; // Repeated characters
         if (/^[a-zA-Z]+\d+$/.test(password)) score--; // Common pattern
         if (/password|123456|qwerty/i.test(password)) score -= 2; // Common passwords
-        
+
         return Math.max(0, Math.min(4, score));
     }
-    
+
     /**
      * API key generation with secure random
      */
@@ -360,7 +360,7 @@ class EnterpriseSecurityManager {
         const config = SECURITY_CONFIG.API_KEY;
         const key = crypto.randomBytes(config.length).toString('base64url');
         const apiKey = `${config.prefix}${key}`;
-        
+
         const keyInfo = {
             id: uuidv4(),
             key: apiKey,
@@ -371,21 +371,21 @@ class EnterpriseSecurityManager {
             expiresAt: new Date(Date.now() + config.rotationInterval),
             hash: crypto.createHash(config.algorithm).update(apiKey).digest('hex')
         };
-        
+
         this.apiKeys.set(keyInfo.hash, keyInfo);
-        
+
         // Schedule automatic rotation
         setTimeout(() => this.rotateAPIKey(keyInfo.id), config.rotationInterval);
-        
+
         return apiKey;
     }
-    
+
     /**
      * Enhanced rate limiting factory
      */
     createRateLimiter(type = 'api') {
         const config = SECURITY_CONFIG.RATE_LIMITS[type] || SECURITY_CONFIG.RATE_LIMITS.api;
-        
+
         return rateLimit({
             windowMs: config.windowMs,
             max: config.max,
@@ -402,7 +402,7 @@ class EnterpriseSecurityManager {
                     endpoint: req.path,
                     userAgent: req.headers['user-agent']
                 });
-                
+
                 res.status(429).json({
                     error: 'Rate limit exceeded',
                     code: 'RATE_LIMIT_EXCEEDED',
@@ -411,7 +411,7 @@ class EnterpriseSecurityManager {
             }
         });
     }
-    
+
     /**
      * CSRF protection with double submit cookie
      */
@@ -421,21 +421,21 @@ class EnterpriseSecurityManager {
             if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
                 return next();
             }
-            
+
             const token = req.headers['x-csrf-token'] || req.body._csrf;
             const cookie = req.cookies['csrf-token'];
-            
+
             if (!token || !cookie || token !== cookie) {
                 return res.status(403).json({
                     error: 'CSRF token validation failed',
                     code: 'CSRF_FAILED'
                 });
             }
-            
+
             next();
         };
     }
-    
+
     /**
      * Security headers middleware
      */
@@ -448,7 +448,7 @@ class EnterpriseSecurityManager {
             }
         });
     }
-    
+
     /**
      * Request signing validation
      */
@@ -458,18 +458,18 @@ class EnterpriseSecurityManager {
             if (!this.isSensitiveEndpoint(req.path)) {
                 return next();
             }
-            
+
             const signature = req.headers['x-signature'];
             const timestamp = req.headers['x-timestamp'];
             const nonce = req.headers['x-nonce'];
-            
+
             if (!signature || !timestamp || !nonce) {
                 return res.status(401).json({
                     error: 'Request signature required',
                     code: 'SIGNATURE_REQUIRED'
                 });
             }
-            
+
             // Validate timestamp (5 minute window)
             const requestTime = parseInt(timestamp);
             if (Math.abs(Date.now() - requestTime) > 300000) {
@@ -478,31 +478,31 @@ class EnterpriseSecurityManager {
                     code: 'TIMESTAMP_EXPIRED'
                 });
             }
-            
+
             // Validate signature
             const payload = this.createSignaturePayload(req, timestamp, nonce);
             const expectedSignature = crypto
                 .createHmac('sha256', req.user.signatureKey || '')
                 .update(payload)
                 .digest('hex');
-            
+
             if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
                 await this.logSecurityEvent('INVALID_SIGNATURE', {
                     userId: req.user.id,
                     endpoint: req.path,
                     ip: req.ip
                 });
-                
+
                 return res.status(401).json({
                     error: 'Invalid request signature',
                     code: 'INVALID_SIGNATURE'
                 });
             }
-            
+
             next();
         };
     }
-    
+
     /**
      * Input sanitization middleware
      */
@@ -512,12 +512,12 @@ class EnterpriseSecurityManager {
             if (req.query) {
                 req.query = this.sanitizeObject(req.query);
             }
-            
+
             // Sanitize body
             if (req.body) {
                 req.body = this.sanitizeObject(req.body);
             }
-            
+
             // Sanitize headers
             const sensitiveHeaders = ['authorization', 'x-api-key', 'cookie'];
             Object.keys(req.headers).forEach(header => {
@@ -525,11 +525,11 @@ class EnterpriseSecurityManager {
                     req.headers[header] = this.sanitizeValue(req.headers[header]);
                 }
             });
-            
+
             next();
         };
     }
-    
+
     /**
      * Sanitize object recursively
      */
@@ -537,54 +537,54 @@ class EnterpriseSecurityManager {
         if (typeof obj !== 'object' || obj === null) {
             return this.sanitizeValue(obj);
         }
-        
+
         const sanitized = Array.isArray(obj) ? [] : {};
-        
+
         for (const [key, value] of Object.entries(obj)) {
             // Skip prototype pollution attempts
             if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
                 continue;
             }
-            
+
             sanitized[key] = typeof value === 'object' && value !== null
                 ? this.sanitizeObject(value)
                 : this.sanitizeValue(value);
         }
-        
+
         return sanitized;
     }
-    
+
     /**
      * Sanitize individual value
      */
     sanitizeValue(value) {
         if (typeof value !== 'string') return value;
-        
+
         // Remove null bytes
         value = value.replace(/\0/g, '');
-        
+
         // Escape HTML entities
         value = validator.escape(value);
-        
+
         // Remove potential script tags
         value = value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-        
+
         return value;
     }
-    
+
     /**
      * Account lockout protection
      */
     async checkAccountLockout(userId) {
         const attempts = this.failedAttempts.get(userId) || { count: 0, firstAttempt: Date.now() };
         const policy = SECURITY_CONFIG.PASSWORD_POLICY;
-        
+
         // Reset if lockout duration has passed
         if (Date.now() - attempts.firstAttempt > policy.lockoutDuration) {
             this.failedAttempts.delete(userId);
             return { locked: false };
         }
-        
+
         // Check if account is locked
         if (attempts.count >= policy.lockoutThreshold) {
             const remainingTime = policy.lockoutDuration - (Date.now() - attempts.firstAttempt);
@@ -594,10 +594,10 @@ class EnterpriseSecurityManager {
                 message: `Account locked. Try again in ${Math.ceil(remainingTime / 60000)} minutes`
             };
         }
-        
+
         return { locked: false };
     }
-    
+
     /**
      * Log security event
      */
@@ -609,25 +609,25 @@ class EnterpriseSecurityManager {
             details,
             severity: this.getEventSeverity(eventType)
         };
-        
+
         this.securityEvents.push(event);
-        
+
         // Keep only last 10000 events in memory
         if (this.securityEvents.length > 10000) {
             this.securityEvents.shift();
         }
-        
+
         // Log to audit service if available
         if (auditLog) {
             await auditLog.logSecurityEvent(event);
         }
-        
+
         // Trigger alerts for critical events
         if (event.severity === 'CRITICAL') {
             this.securityMonitor.triggerAlert(event);
         }
     }
-    
+
     /**
      * Get event severity
      */
@@ -642,10 +642,10 @@ class EnterpriseSecurityManager {
             'UNAUTHORIZED_ACCESS': 'HIGH',
             'DATA_BREACH_ATTEMPT': 'CRITICAL'
         };
-        
+
         return severityMap[eventType] || 'LOW';
     }
-    
+
     /**
      * Create comprehensive security middleware stack
      */
@@ -669,11 +669,11 @@ class KeyManager {
         this.keys = new Map();
         this.masterKey = this.deriveMasterKey();
     }
-    
+
     deriveMasterKey() {
         const secret = process.env.MASTER_KEY_SECRET || crypto.randomBytes(64).toString('hex');
         const salt = process.env.MASTER_KEY_SALT || crypto.randomBytes(32).toString('hex');
-        
+
         return crypto.pbkdf2Sync(
             secret,
             salt,
@@ -682,7 +682,7 @@ class KeyManager {
             'sha256'
         );
     }
-    
+
     encrypt(data, keyId = 'default') {
         const key = this.getKey(keyId);
         const iv = crypto.randomBytes(SECURITY_CONFIG.ENCRYPTION.ivLength);
@@ -691,14 +691,14 @@ class KeyManager {
             key,
             iv
         );
-        
+
         const encrypted = Buffer.concat([
             cipher.update(JSON.stringify(data), 'utf8'),
             cipher.final()
         ]);
-        
+
         const tag = cipher.getAuthTag();
-        
+
         return {
             encrypted: encrypted.toString('base64'),
             iv: iv.toString('base64'),
@@ -706,27 +706,27 @@ class KeyManager {
             keyId
         };
     }
-    
+
     decrypt(encryptedData) {
         const { encrypted, iv, tag, keyId } = encryptedData;
         const key = this.getKey(keyId);
-        
+
         const decipher = crypto.createDecipheriv(
             SECURITY_CONFIG.ENCRYPTION.algorithm,
             key,
             Buffer.from(iv, 'base64')
         );
-        
+
         decipher.setAuthTag(Buffer.from(tag, 'base64'));
-        
+
         const decrypted = Buffer.concat([
             decipher.update(Buffer.from(encrypted, 'base64')),
             decipher.final()
         ]);
-        
+
         return JSON.parse(decrypted.toString('utf8'));
     }
-    
+
     getKey(keyId) {
         if (!this.keys.has(keyId)) {
             const key = crypto.pbkdf2Sync(
@@ -738,7 +738,7 @@ class KeyManager {
             );
             this.keys.set(keyId, key);
         }
-        
+
         return this.keys.get(keyId);
     }
 }
@@ -752,7 +752,7 @@ class SecurityMonitor {
         this.threats = new Map();
         this.alerts = [];
     }
-    
+
     async triggerAlert(event) {
         const alert = {
             id: uuidv4(),
@@ -760,9 +760,9 @@ class SecurityMonitor {
             timestamp: new Date(),
             status: 'ACTIVE'
         };
-        
+
         this.alerts.push(alert);
-        
+
         // Send to SAP Alert Notification Service
         if (process.env.ALERT_WEBHOOK_URL) {
             try {
@@ -775,13 +775,13 @@ class SecurityMonitor {
                 console.error('Failed to send security alert:', error);
             }
         }
-        
+
         // Take automated action for critical threats
         if (event.severity === 'CRITICAL') {
             await this.respondToThreat(event);
         }
     }
-    
+
     async respondToThreat(event) {
         switch (event.type) {
             case 'SQL_INJECTION_ATTEMPT':
@@ -789,14 +789,14 @@ class SecurityMonitor {
                 // Block IP address
                 await this.blockIP(event.details.ip);
                 break;
-            
+
             case 'BRUTE_FORCE_ATTEMPT':
                 // Lock account
                 await this.lockAccount(event.details.userId);
                 break;
         }
     }
-    
+
     async blockIP(ip) {
         // Implement IP blocking logic
         this.threats.set(ip, {
@@ -805,7 +805,7 @@ class SecurityMonitor {
             duration: 86400000 // 24 hours
         });
     }
-    
+
     async lockAccount(userId) {
         // Implement account locking logic
         this.securityManager.failedAttempts.set(userId, {

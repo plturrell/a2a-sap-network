@@ -30,11 +30,11 @@ class TraceManager {
         this.traceStore = new Map();
         this.maxTraceHistory = 10000;
         this.traceRetentionMs = 24 * 60 * 60 * 1000; // 24 hours
-        
+
         // OpenTelemetry tracer
         this.tracer = trace ? trace.getTracer('a2a-network', '1.0.0') : null;
         this.spans = new Map(); // Track OpenTelemetry spans
-        
+
         // Performance metrics
         this.metrics = {
             totalRequests: 0,
@@ -42,9 +42,9 @@ class TraceManager {
             averageResponseTime: 0,
             errorRate: 0
         };
-        
+
         this.intervals = new Map(); // Track intervals for cleanup
-        
+
         // Start cleanup interval
         this.startCleanupInterval();
     }
@@ -55,17 +55,17 @@ class TraceManager {
     initializeTrace(req, res, next) {
         const traceId = uuidv4();
         const timestamp = new Date();
-        
+
         // Update metrics
         this.metrics.totalRequests++;
         this.metrics.activeTraces = this.activeTraces.size + 1;
-        
+
         // Extract user context
         const userContext = this.extractUserContext(req);
-        
+
         // Extract frontend context
         const frontendContext = this.extractFrontendContext(req);
-        
+
         // Create OpenTelemetry span if available
         let span = null;
         if (this.tracer) {
@@ -85,7 +85,7 @@ class TraceManager {
             });
             this.spans.set(traceId, span);
         }
-        
+
         const trace = {
             traceId,
             timestamp,
@@ -113,7 +113,7 @@ class TraceManager {
 
         // Store trace
         this.activeTraces.set(traceId, trace);
-        
+
         // Attach to request/response objects
         req.traceId = traceId;
         req.trace = trace;
@@ -152,7 +152,7 @@ class TraceManager {
         };
 
         trace.steps.push(step);
-        
+
         const log = cds.log('trace-manager');
         log.debug('Trace step added', {
             traceId,
@@ -185,7 +185,7 @@ class TraceManager {
 
         trace.errors.push(errorInfo);
         trace.status = 'error';
-        
+
         // Update OpenTelemetry span if available
         const span = this.spans.get(traceId);
         if (span) {
@@ -228,7 +228,7 @@ class TraceManager {
         if (!trace) return;
 
         const totalDuration = this.calculateStepDuration(trace.performance.startTime);
-        
+
         trace.performance.totalDuration = totalDuration;
         trace.performance.endTime = process.hrtime();
         trace.status = statusCode >= 400 ? 'error' : 'completed';
@@ -244,7 +244,7 @@ class TraceManager {
                 'trace.steps': trace.steps.length,
                 'trace.errors': trace.errors.length
             });
-            
+
             if (statusCode >= 400) {
                 span.setStatus({
                     code: SpanStatusCode.ERROR,
@@ -253,7 +253,7 @@ class TraceManager {
             } else {
                 span.setStatus({ code: SpanStatusCode.OK });
             }
-            
+
             span.end();
             this.spans.delete(traceId);
         }
@@ -326,13 +326,13 @@ class TraceManager {
      */
     sanitizeHeaders(headers) {
         const sanitized = { ...headers };
-        
+
         // Remove sensitive headers
         delete sanitized.authorization;
         delete sanitized.cookie;
         delete sanitized['x-csrf-token'];
         delete sanitized['x-api-key'];
-        
+
         return sanitized;
     }
 
@@ -356,14 +356,14 @@ class TraceManager {
      */
     getTracesForUser(userId, limit = 100) {
         const traces = [];
-        
+
         for (const trace of this.traceStore.values()) {
             if (trace.userContext.userId === userId) {
                 traces.push(trace);
             }
             if (traces.length >= limit) break;
         }
-        
+
         return traces.sort((a, b) => b.timestamp - a.timestamp);
     }
 
@@ -372,14 +372,14 @@ class TraceManager {
      */
     getErrorTraces(limit = 100) {
         const errorTraces = [];
-        
+
         for (const trace of this.traceStore.values()) {
             if (trace.status === 'error') {
                 errorTraces.push(trace);
             }
             if (errorTraces.length >= limit) break;
         }
-        
+
         return errorTraces.sort((a, b) => b.timestamp - a.timestamp);
     }
 
@@ -422,14 +422,14 @@ class TraceManager {
             this.metrics.errorRate = 0;
             return;
         }
-        
+
         let errorCount = 0;
         for (const trace of this.traceStore.values()) {
             if (trace.status === 'error') {
                 errorCount++;
             }
         }
-        
+
         this.metrics.errorRate = (errorCount / totalTraces) * 100;
     }
 
@@ -441,7 +441,7 @@ class TraceManager {
         if (this.metrics.averageResponseTime === 0) {
             this.metrics.averageResponseTime = newDuration;
         } else {
-            this.metrics.averageResponseTime = 
+            this.metrics.averageResponseTime =
                 (alpha * newDuration) + ((1 - alpha) * this.metrics.averageResponseTime);
         }
     }
@@ -467,7 +467,7 @@ class TraceManager {
         const traceSize = this.traceStore.size + this.activeTraces.size;
         const estimatedBytesPerTrace = 2048; // Rough estimate
         const totalBytes = traceSize * estimatedBytesPerTrace;
-        
+
         if (totalBytes < 1024) return `${totalBytes} bytes`;
         if (totalBytes < 1024 * 1024) return `${(totalBytes / 1024).toFixed(1)} KB`;
         return `${(totalBytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -520,7 +520,7 @@ const traceManager = new TraceManager();
 module.exports = {
     TraceManager,
     traceManager,
-    
+
     // Middleware functions
     initializeTrace: (req, res, next) => traceManager.initializeTrace(req, res, next),
     addStep: (traceId, stepInfo) => traceManager.addStep(traceId, stepInfo),

@@ -1,6 +1,6 @@
 /**
  * Agent 9 Adapter - Advanced Logical Reasoning and Decision-Making Agent
- * Converts between REST API and OData formats for reasoning tasks, knowledge base management, 
+ * Converts between REST API and OData formats for reasoning tasks, knowledge base management,
  * inference generation, decision making, problem solving, and logical analysis operations
  */
 
@@ -27,7 +27,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'ReasoningTask');
         } catch (error) {
             throw this._handleError(error);
@@ -47,7 +47,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTReasoningTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -67,7 +67,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTReasoningTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -101,7 +101,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 taskName: data.task_name,
@@ -123,10 +123,10 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -144,10 +144,10 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -172,7 +172,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -197,7 +197,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 isValid: data.is_valid,
                 confidence: data.confidence,
@@ -224,7 +224,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 explanation: data.explanation,
                 reasoningChain: data.reasoning_chain || [],
@@ -250,7 +250,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'KnowledgeBaseElement');
         } catch (error) {
             throw this._handleError(error);
@@ -270,7 +270,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTKnowledgeElementToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -294,7 +294,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 elementName: data.element_name,
@@ -321,7 +321,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -347,7 +347,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 isConsistent: data.is_consistent,
                 contradictions: data.contradictions?.map(c => ({
@@ -377,7 +377,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'LogicalInference');
         } catch (error) {
             throw this._handleError(error);
@@ -397,7 +397,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTInferenceToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -419,7 +419,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 inferencesGenerated: data.inferences_generated,
@@ -450,7 +450,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 isValid: data.is_valid,
                 confidence: data.confidence,
@@ -475,7 +475,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'DecisionRecord');
         } catch (error) {
             throw this._handleError(error);
@@ -495,7 +495,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTDecisionToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -517,7 +517,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 decision: data.decision,
@@ -548,7 +548,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 successRate: data.success_rate,
                 lessonsLearned: data.lessons_learned,
@@ -573,7 +573,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'ProblemSolvingRecord');
         } catch (error) {
             throw this._handleError(error);
@@ -593,7 +593,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTProblemToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -617,7 +617,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 solution: data.solution,
@@ -647,7 +647,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 optimizedSolution: data.optimized_solution,
@@ -673,7 +673,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'ReasoningEngine');
         } catch (error) {
             throw this._handleError(error);
@@ -695,7 +695,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 newConfiguration: data.new_configuration,
@@ -721,7 +721,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 accuracyScore: data.accuracy_score,
@@ -741,7 +741,7 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 reasoningTypes: data.reasoning_types?.map(t => t.toUpperCase()) || [],
                 engineTypes: data.engine_types?.map(t => t.toUpperCase()) || [],
@@ -765,7 +765,7 @@ class Agent9Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 activeTasks: data.active_tasks || 0,
                 completedTasks: data.completed_tasks || 0,
@@ -812,7 +812,7 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 taskId: data.task_id,
                 steps: data.steps?.map(step => ({
@@ -865,7 +865,7 @@ class Agent9Adapter {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                params: { 
+                params: {
                     engine_types: engineTypes?.join(','),
                     problem_domain: problemDomain?.toLowerCase()
                 },
@@ -897,7 +897,7 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 decisionId: data.decision_id,
                 decisionQuality: data.decision_quality,
@@ -983,7 +983,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -1009,7 +1009,7 @@ class Agent9Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'ReasoningPerformanceMetric');
         } catch (error) {
             throw this._handleError(error);
@@ -1019,13 +1019,13 @@ class Agent9Adapter {
     // ===== UTILITY METHODS =====
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$orderby) params.sort = query.$orderby.replace(/ desc/gi, '-').replace(/ asc/gi, '');
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$select) params.fields = query.$select;
-        
+
         return params;
     }
 
@@ -1293,11 +1293,11 @@ class Agent9Adapter {
     _handleError(error) {
         const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
         const errorCode = error.response?.status || 500;
-        
+
         const customError = new Error(`Agent 9 Reasoning service error: ${errorMessage}`);
         customError.statusCode = errorCode;
         customError.originalError = error;
-        
+
         return customError;
     }
 }

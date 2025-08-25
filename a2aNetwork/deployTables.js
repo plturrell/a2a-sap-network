@@ -17,12 +17,12 @@ const connOptions = {
 
 async function deployTables() {
     const connection = hana.createConnection();
-    
+
     try {
         // Generate SQL from CDS
         console.log('Generating SQL from CDS models...');
         const { stdout: sql } = await execAsync('cds compile db/schema.cds --to sql');
-        
+
         // Connect to HANA
         console.log('Connecting to HANA...');
         await new Promise((resolve, reject) => {
@@ -31,16 +31,16 @@ async function deployTables() {
                 else resolve();
             });
         });
-        
+
         console.log('Connected successfully!');
-        
+
         // Split SQL statements and execute them
         const statements = sql.split(';').filter(stmt => stmt.trim().length > 0);
-        
+
         for (const statement of statements) {
             const trimmedStmt = statement.trim();
             if (!trimmedStmt) continue;
-            
+
             try {
                 console.log(`Executing: ${trimmedStmt.substring(0, 50)}...`);
                 await new Promise((resolve, reject) => {
@@ -64,10 +64,10 @@ async function deployTables() {
                 // Continue with next statement
             }
         }
-        
+
         // Create some sample data
         console.log('\nInserting sample data...');
-        
+
         const sampleAgents = [
             {
                 ID: '11111111-1111-1111-1111-111111111111',
@@ -94,7 +94,7 @@ async function deployTables() {
                 isActive: true
             }
         ];
-        
+
         for (const agent of sampleAgents) {
             try {
                 const stmt = 'INSERT INTO a2a_network_Agents (ID, name, address, endpoint, reputation, isActive) VALUES (?, ?, ?, ?, ?, ?)';
@@ -115,9 +115,9 @@ async function deployTables() {
                 console.log(`  -> Agent already exists: ${agent.name}`);
             }
         }
-        
+
         console.log('\nDeployment completed successfully!');
-        
+
     } catch (err) {
         console.error('Deployment failed:', err);
         process.exit(1);

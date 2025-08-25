@@ -20,7 +20,7 @@ class Agent7SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // Agent Management-specific vulnerability patterns
         this.agentManagementPatterns = {
             // Missing authentication checks
@@ -175,7 +175,7 @@ class Agent7SecurityScanner {
                 impact: 'Could allow falsification of performance data leading to incorrect decisions'
             }
         };
-        
+
         // Standard OWASP Top 10 patterns (adapted for Agent Management context)
         this.owaspPatterns = {
             // XSS in management interfaces
@@ -256,7 +256,7 @@ class Agent7SecurityScanner {
                 impact: 'Could expose agent management data to man-in-the-middle attacks'
             }
         };
-        
+
         // SAP Fiori compliance patterns
         this.fioriCompliancePatterns = {
             // i18n compliance for management interfaces
@@ -291,7 +291,7 @@ class Agent7SecurityScanner {
             }
         };
     }
-    
+
     /**
      * Main scan function
      */
@@ -299,26 +299,26 @@ class Agent7SecurityScanner {
         console.log('🔍 Starting Agent 7 (Agent Manager) Security Scan...');
         console.log(`📂 Target Directory: ${targetDirectory}`);
         console.log(`⏰ Scan Started: ${new Date().toISOString()}\n`);
-        
+
         if (!fs.existsSync(targetDirectory)) {
             console.error(`❌ Target directory does not exist: ${targetDirectory}`);
             return;
         }
-        
+
         await this.scanDirectory(targetDirectory);
         this.generateReport();
     }
-    
+
     /**
      * Recursively scan directory
      */
     async scanDirectory(dirPath) {
         const items = fs.readdirSync(dirPath);
-        
+
         for (const item of items) {
             const fullPath = path.join(dirPath, item);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory()) {
                 // Skip common non-source directories
                 if (!['node_modules', '.git', 'dist', 'build', 'coverage'].includes(item)) {
@@ -333,7 +333,7 @@ class Agent7SecurityScanner {
             }
         }
     }
-    
+
     /**
      * Scan individual file
      */
@@ -341,24 +341,24 @@ class Agent7SecurityScanner {
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             this.filesScanned++;
-            
+
             // Scan for Agent Management-specific vulnerabilities
             this.scanPatterns(content, filePath, this.agentManagementPatterns);
-            
+
             // Scan for OWASP vulnerabilities
             this.scanPatterns(content, filePath, this.owaspPatterns);
-            
+
             // Scan for SAP Fiori compliance
             this.scanPatterns(content, filePath, this.fioriCompliancePatterns);
-            
+
             // Additional management-specific checks
             this.scanForManagementSpecificIssues(content, filePath);
-            
+
         } catch (error) {
             console.error(`⚠️  Error scanning file ${filePath}: ${error.message}`);
         }
     }
-    
+
     /**
      * Scan for patterns in content
      */
@@ -371,12 +371,12 @@ class Agent7SecurityScanner {
                     const lineNumber = lines.length;
                     const matchedText = matches[0];
                     const lineContext = lines[lineNumber - 1] || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(matchedText, lineContext, patternName, filePath)) {
                         continue;
                     }
-                    
+
                     this.vulnerabilities.push({
                         file: filePath,
                         line: lineNumber,
@@ -393,7 +393,7 @@ class Agent7SecurityScanner {
             }
         }
     }
-    
+
     /**
      * Check if a pattern match is a false positive
      */
@@ -401,12 +401,12 @@ class Agent7SecurityScanner {
         // General false positive checks for SecurityUtils files
         if (filePath.includes('SecurityUtils.js')) {
             // SecurityUtils contains security patterns that may trigger false positives
-            return lineContext.includes('pattern') || lineContext.includes('message') || 
+            return lineContext.includes('pattern') || lineContext.includes('message') ||
                    lineContext.includes('dangerousPatterns') || lineContext.includes('test') ||
                    lineContext.includes('validateAgent') || lineContext.includes('sanitize') ||
                    lineContext.includes('validation') || lineContext.includes('_validate');
         }
-        
+
         // Specific false positives by pattern type
         switch(patternName) {
             case 'MISSING_AUTHENTICATION_CHECK':
@@ -416,7 +416,7 @@ class Agent7SecurityScanner {
                     return true;
                 }
                 break;
-                
+
             case 'UNSECURED_API_ENDPOINT':
                 // Skip if already uses secure methods
                 if (lineContext.includes('secureAjaxRequest') || lineContext.includes('_securityUtils') ||
@@ -424,7 +424,7 @@ class Agent7SecurityScanner {
                     return true;
                 }
                 break;
-                
+
             case 'XSS_VULNERABILITY':
                 // Skip normal XML attributes and property names
                 if (matchedText.includes('ontentWidth=') || matchedText.includes('onAPI =') ||
@@ -432,24 +432,24 @@ class Agent7SecurityScanner {
                     return true;
                 }
                 // Skip legitimate WebSocket/EventSource event handlers
-                if ((matchedText.includes('onerror =') || matchedText.includes('onclick =') || 
-                     matchedText.includes('onload =') || matchedText.includes('onblur =')) && 
+                if ((matchedText.includes('onerror =') || matchedText.includes('onclick =') ||
+                     matchedText.includes('onload =') || matchedText.includes('onblur =')) &&
                     (lineContext.includes('_ws.') || lineContext.includes('socket.') ||
                      lineContext.includes('WebSocket') || lineContext.includes('= function()') ||
                      lineContext.includes('EventSource'))) {
                     return true;
                 }
                 // Skip if it's in comments or property definitions
-                if (lineContext.includes('//') || lineContext.includes('*') || 
+                if (lineContext.includes('//') || lineContext.includes('*') ||
                     lineContext.includes('i18n>') || lineContext.includes('title="{i18n>')) {
                     return true;
                 }
                 break;
-                
+
             case 'I18N_COMPLIANCE':
                 // This is actually a positive pattern, so don't skip
                 return false;
-                
+
             case 'INSECURE_CONNECTION':
                 // Skip if it's just a placeholder or comment
                 if (lineContext.includes('placeholder=') || lineContext.includes('//') ||
@@ -458,16 +458,16 @@ class Agent7SecurityScanner {
                 }
                 break;
         }
-        
+
         // Skip comments and documentation
-        if (lineContext.includes('//') || lineContext.includes('/*') || 
+        if (lineContext.includes('//') || lineContext.includes('/*') ||
             lineContext.includes('*') || lineContext.includes('try {')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Scan for management-specific security issues
      */
@@ -481,7 +481,7 @@ class Agent7SecurityScanner {
             /managementCredentials\s*[:=]/gi,
             /adminPassword\s*[:=]/gi
         ];
-        
+
         credentialPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
@@ -489,14 +489,14 @@ class Agent7SecurityScanner {
                 const lineNumber = lines.length;
                 const lineContext = lines[lineNumber - 1] || '';
                 const matchedText = matches[0];
-                
+
                 // Skip false positives in SecurityUtils
-                if (filePath.includes('SecurityUtils.js') && 
+                if (filePath.includes('SecurityUtils.js') &&
                     (lineContext.includes('TOKEN=') || lineContext.includes('cookie.startsWith') ||
                      lineContext.includes('XSRF-TOKEN') || lineContext.includes('substring'))) {
                     return;
                 }
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -511,20 +511,20 @@ class Agent7SecurityScanner {
                 });
             }
         });
-        
+
         // Check for unvalidated EventSource URLs
         const eventSourcePatterns = [
             /new\s+EventSource\s*\(\s*[^)]*\)/gi,
             /EventSource\s*\(\s*[^)]*user/gi,
             /\.createEventSource\s*\(/gi
         ];
-        
+
         eventSourcePatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -540,7 +540,7 @@ class Agent7SecurityScanner {
             }
         });
     }
-    
+
     /**
      * Generate comprehensive security report
      */
@@ -551,11 +551,11 @@ class Agent7SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🛡️  AGENT 7 (AGENT MANAGER) SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('📊 SCAN SUMMARY:');
         console.log(`   📂 Files Scanned: ${this.filesScanned}`);
         console.log(`   ⏱️  Scan Duration: ${(scanDuration / 1000).toFixed(2)}s`);
@@ -565,27 +565,27 @@ class Agent7SecurityScanner {
         console.log(`   🟡 Medium: ${mediumCount}`);
         console.log(`   🟢 Low: ${lowCount}`);
         console.log(`   ⚪ Warning: ${warningCount}`);
-        
+
         if (this.vulnerabilities.length > 0) {
             console.log('\n📋 VULNERABILITIES BY CATEGORY:');
             const byCategory = {};
             this.vulnerabilities.forEach(vuln => {
                 byCategory[vuln.category] = (byCategory[vuln.category] || 0) + 1;
             });
-            
+
             Object.entries(byCategory)
                 .sort(([,a], [,b]) => b - a)
                 .forEach(([category, count]) => {
                     console.log(`   • ${category}: ${count}`);
                 });
-            
+
             console.log('\n🔍 DETAILED FINDINGS:');
             console.log('-'.repeat(80));
-            
+
             // Sort by severity
             const severityOrder = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'WARNING': 4 };
             this.vulnerabilities.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
-            
+
             this.vulnerabilities.forEach((vuln, index) => {
                 const icon = this.getSeverityIcon(vuln.severity);
                 console.log(`\n${icon} [${vuln.severity}] ${vuln.category}`);
@@ -598,7 +598,7 @@ class Agent7SecurityScanner {
                 }
             });
         }
-        
+
         console.log('\n🏥 AGENT MANAGER SECURITY RECOMMENDATIONS:');
         console.log('   1. 🔒 Implement authentication checks for all management operations');
         console.log('   2. 🛡️  Add authorization validation for administrative functions');
@@ -610,19 +610,19 @@ class Agent7SecurityScanner {
         console.log('   8. 🏭 Limit bulk operations to prevent resource exhaustion');
         console.log('   9. 📋 Implement role-based access control for all operations');
         console.log('   10. 🧪 Secure agent coordination and orchestration endpoints');
-        
+
         this.saveReport();
-        
+
         console.log('\n✅ Scan completed successfully!');
         console.log('📄 Report saved to: agent7-security-report.json');
-        
+
         if (criticalCount > 0 || highCount > 0) {
             console.log(`\n⚠️  ${criticalCount + highCount} critical/high severity issues found!`);
             console.log('🔧 Please address these issues before deploying to production.');
             process.exit(1);
         }
     }
-    
+
     /**
      * Get severity icon
      */
@@ -636,7 +636,7 @@ class Agent7SecurityScanner {
         };
         return icons[severity] || '❓';
     }
-    
+
     /**
      * Save report to JSON file
      */
@@ -671,7 +671,7 @@ class Agent7SecurityScanner {
                 'Secure agent coordination and orchestration endpoints'
             ]
         };
-        
+
         fs.writeFileSync('agent7-security-report.json', JSON.stringify(report, null, 2));
     }
 }

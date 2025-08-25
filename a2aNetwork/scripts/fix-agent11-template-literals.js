@@ -72,7 +72,7 @@ if (fs.existsSync(sqlUtilsPath)) {
     console.log('\nFixing SQLUtils.js...');
     let sqlContent = fs.readFileSync(sqlUtilsPath, 'utf8');
     let sqlReplacementCount = 0;
-    
+
     // Replace template literals in SQL queries
     sqlContent = sqlContent.replace(/sql:\s*`([^`]+)`/g, (match, query) => {
         sqlReplacementCount++;
@@ -80,13 +80,13 @@ if (fs.existsSync(sqlUtilsPath)) {
         const fixedQuery = query.replace(/\$\{([^}]+)\}/g, '" + $1 + "');
         return `sql: "${fixedQuery}"`;
     });
-    
+
     // Fix specific SQL template patterns
-    sqlContent = sqlContent.replace(/`SELECT\s+\$\{([^}]+)\}\s+FROM\s+\$\{([^}]+)\}`/g, 
+    sqlContent = sqlContent.replace(/`SELECT\s+\$\{([^}]+)\}\s+FROM\s+\$\{([^}]+)\}`/g,
         '"SELECT " + $1 + " FROM " + $2');
-    sqlContent = sqlContent.replace(/`([^`]+)\$\{([^}]+)\}([^`]+)`/g, 
+    sqlContent = sqlContent.replace(/`([^`]+)\$\{([^}]+)\}([^`]+)`/g,
         '"$1" + $2 + "$3"');
-    
+
     fs.writeFileSync(sqlUtilsPath, sqlContent, 'utf8');
     console.log(`Fixed ${sqlReplacementCount} template literals in SQLUtils.js`);
 }

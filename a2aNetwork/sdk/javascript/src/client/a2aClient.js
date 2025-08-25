@@ -30,7 +30,7 @@ const ConnectionState = {
 class A2AClient extends EventEmitter {
     constructor(config) {
         super();
-        
+
         // Validate configuration
         const validationResult = validateConfig(config);
         if (!validationResult.isValid) {
@@ -39,7 +39,7 @@ class A2AClient extends EventEmitter {
                 `Invalid configuration: ${validationResult.errors?.join(', ')}`
             );
         }
-        
+
         this.config = {
             ...config,
             network: config.network || DEFAULT_NETWORK,
@@ -52,16 +52,16 @@ class A2AClient extends EventEmitter {
         this.signer = null;
         this.websocket = null;
         this.connectionState = ConnectionState.DISCONNECTED;
-        
+
         // Contract instances
         this.contracts = new Map();
-        
+
         // Event subscriptions
         this.subscriptions = new Map();
-        
+
         // Initialize provider
         this.initializeProvider();
-        
+
         // Initialize service managers
         this.agents = new AgentManager(this);
         this.messages = new MessageManager(this);
@@ -69,7 +69,7 @@ class A2AClient extends EventEmitter {
         this.governance = new GovernanceManager(this);
         this.scalability = new ScalabilityManager(this);
         this.reputation = new ReputationManager(this);
-        
+
         // Setup event handlers
         this.setupEventHandlers();
     }
@@ -142,7 +142,7 @@ class A2AClient extends EventEmitter {
             // Verify network connection
             const network = await this.provider.getNetwork();
             const expectedChainId = NETWORKS[this.config.network].chainId;
-            
+
             if (network.chainId !== expectedChainId) {
                 throw new A2AError(
                     ErrorCode.WRONG_NETWORK,
@@ -152,7 +152,7 @@ class A2AClient extends EventEmitter {
 
             // Initialize contracts
             await this.initializeContracts();
-            
+
             // Connect WebSocket if configured
             if (this.config.websocketUrl) {
                 await this.connectWebSocket();
@@ -167,8 +167,8 @@ class A2AClient extends EventEmitter {
 
         } catch (error) {
             this.connectionState = ConnectionState.ERROR;
-            const a2aError = error instanceof A2AError 
-                ? error 
+            const a2aError = error instanceof A2AError
+                ? error
                 : new A2AError(ErrorCode.CONNECTION_FAILED, error.message);
             this.emit('error', a2aError);
             throw a2aError;
@@ -188,7 +188,7 @@ class A2AClient extends EventEmitter {
 
             // Clear subscriptions
             this.subscriptions.clear();
-            
+
             // Clear contracts
             this.contracts.clear();
 
@@ -293,15 +293,15 @@ class A2AClient extends EventEmitter {
     async reconnectWebSocket() {
         let attempts = 0;
         const maxAttempts = this.config.retryAttempts || 3;
-        
+
         while (attempts < maxAttempts) {
             try {
                 const delay = Math.pow(2, attempts) * 1000; // Exponential backoff
                 await new Promise(resolve => setTimeout(resolve, delay));
-                
+
                 await this.connectWebSocket();
                 return;
-                
+
             } catch (error) {
                 attempts++;
                 if (attempts >= maxAttempts) {
@@ -371,7 +371,7 @@ class A2AClient extends EventEmitter {
      */
     setSigner(signer) {
         this.signer = signer;
-        
+
         // Update contract instances with new signer
         for (const [name, contract] of this.contracts) {
             this.contracts.set(name, contract.connect(signer));
@@ -406,14 +406,14 @@ class A2AClient extends EventEmitter {
     async subscribe(contractName, eventName, callback) {
         const contract = this.getContract(contractName);
         const subscriptionId = `${contractName}_${eventName}_${Date.now()}`;
-        
+
         const listener = (...args) => {
             callback(...args);
         };
 
         contract.on(eventName, listener);
         this.subscriptions.set(subscriptionId, { contract, eventName, listener });
-        
+
         return subscriptionId;
     }
 
@@ -463,7 +463,7 @@ class A2AClient extends EventEmitter {
         try {
             const networkInfo = await this.getNetworkInfo();
             const address = await this.getAddress();
-            
+
             return {
                 status: 'healthy',
                 details: {

@@ -21,7 +21,7 @@ class DatabaseHealthChecker {
     async initialize() {
         try {
             const env = process.env.NODE_ENV || 'development';
-            
+
             if (env === 'production') {
                 this.db = await cds.connect.to('db');
                 log.debug('✅ Connected to SAP HANA Cloud');
@@ -68,14 +68,14 @@ class DatabaseHealthChecker {
                 const startTime = Date.now();
                 const result = await this.db.run(`SELECT COUNT(*) as count FROM ${table}`);
                 const queryTime = Date.now() - startTime;
-                
+
                 this.addHealthCheck(
                     `table_${table.toLowerCase()}`,
                     'critical',
                     true,
                     `Table exists with ${result[0]?.count || 0} records (${queryTime}ms)`
                 );
-                
+
                 this.healthStatus.performance[`${table}_query_time`] = queryTime;
             } catch (error) {
                 this.addHealthCheck(
@@ -94,12 +94,12 @@ class DatabaseHealthChecker {
         try {
             // Check for agents without reputation scores
             const agentsWithoutReputation = await this.db.run(`
-                SELECT COUNT(*) as count 
-                FROM Agents a 
-                LEFT JOIN ReputationScores r ON a.ID = r.agent_ID 
+                SELECT COUNT(*) as count
+                FROM Agents a
+                LEFT JOIN ReputationScores r ON a.ID = r.agent_ID
                 WHERE r.agent_ID IS NULL
             `);
-            
+
             if (agentsWithoutReputation[0]?.count > 0) {
                 this.addHealthCheck(
                     'agents_reputation_consistency',
@@ -118,12 +118,12 @@ class DatabaseHealthChecker {
 
             // Check for services without valid agents
             const orphanedServices = await this.db.run(`
-                SELECT COUNT(*) as count 
-                FROM Services s 
-                LEFT JOIN Agents a ON s.agent_ID = a.ID 
+                SELECT COUNT(*) as count
+                FROM Services s
+                LEFT JOIN Agents a ON s.agent_ID = a.ID
                 WHERE a.ID IS NULL
             `);
-            
+
             if (orphanedServices[0]?.count > 0) {
                 this.addHealthCheck(
                     'services_agent_consistency',
@@ -142,12 +142,12 @@ class DatabaseHealthChecker {
 
             // Check for capabilities without valid agents
             const orphanedCapabilities = await this.db.run(`
-                SELECT COUNT(*) as count 
-                FROM Capabilities c 
-                LEFT JOIN Agents a ON c.agent_ID = a.ID 
+                SELECT COUNT(*) as count
+                FROM Capabilities c
+                LEFT JOIN Agents a ON c.agent_ID = a.ID
                 WHERE a.ID IS NULL
             `);
-            
+
             if (orphanedCapabilities[0]?.count > 0) {
                 this.addHealthCheck(
                     'capabilities_agent_consistency',
@@ -279,21 +279,21 @@ class DatabaseHealthChecker {
         try {
             const fs = require('fs');
             const path = require('path');
-            
+
             // Check available space (for SQLite)
             if (process.env.NODE_ENV !== 'production') {
                 const dbPath = './data/a2a-network.db';
                 if (fs.existsSync(dbPath)) {
                     const stats = fs.statSync(dbPath);
                     const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-                    
+
                     this.addHealthCheck(
                         'disk_usage',
                         'low',
                         true,
                         `Database file size: ${sizeInMB} MB`
                     );
-                    
+
                     this.healthStatus.performance.db_size_mb = parseFloat(sizeInMB);
                 }
             }
@@ -320,25 +320,25 @@ class DatabaseHealthChecker {
 
             log.debug('\n📊 Health Check Summary:');
             log.debug(`Overall Status: ${this.healthStatus.overall.toUpperCase()}`);
-            
+
             const criticalFailures = this.healthStatus.checks.filter(c => c.severity === 'critical' && !c.passed);
             const highFailures = this.healthStatus.checks.filter(c => c.severity === 'high' && !c.passed);
             const mediumFailures = this.healthStatus.checks.filter(c => c.severity === 'medium' && !c.passed);
-            
+
             if (criticalFailures.length > 0) {
                 log.error(`❌ Critical Issues: ${criticalFailures.length}`);
                 criticalFailures.forEach(check => {
                     log.debug(`   - ${check.component}: ${check.details}`);
                 });
             }
-            
+
             if (highFailures.length > 0) {
                 log.debug(`⚠️  High Priority Issues: ${highFailures.length}`);
                 highFailures.forEach(check => {
                     log.debug(`   - ${check.component}: ${check.details}`);
                 });
             }
-            
+
             if (mediumFailures.length > 0) {
                 log.debug(`🔶 Medium Priority Issues: ${mediumFailures.length}`);
             }
@@ -372,11 +372,11 @@ class DatabaseHealthChecker {
 // CLI Interface
 async function main() {
     const healthChecker = new DatabaseHealthChecker();
-    
+
     try {
         await healthChecker.initialize();
         const healthStatus = await healthChecker.runAllChecks();
-        
+
         // Exit with appropriate code
         if (healthStatus.overall === 'unhealthy') {
             process.exit(1);
@@ -385,7 +385,7 @@ async function main() {
         } else {
             process.exit(0);
         }
-        
+
     } catch (error) {
         console.error('💥 Health check failed:', error);
         process.exit(1);

@@ -60,7 +60,7 @@ class Agent1UIScanner {
 
         // 1. CRITICAL SECURITY CHECKS
         console.log('🔒 Critical Security Validation');
-        
+
         this.check(
             'No hardcoded credentials in controllers',
             this.validateNoHardcodedCredentials(),
@@ -228,7 +228,7 @@ class Agent1UIScanner {
 
         // Check for input validation in key functions
         return listController.includes('validateInput') ||
-               (listController.includes('trim()') && 
+               (listController.includes('trim()') &&
                 listController.includes('length')) ||
                listController.includes('validation');
     }
@@ -245,15 +245,15 @@ class Agent1UIScanner {
             const content = this.readFile(path.join(this.basePath, fragment));
             if (content) {
                 // Check for proper encoding patterns
-                const hasProperBinding = content.includes('{path:') || 
+                const hasProperBinding = content.includes('{path:') ||
                                        content.includes('htmlSafe="false"') ||
                                        content.includes('escapeXML="true"');
-                
+
                 // Check for dangerous innerHTML usage
                 const hasDangerousBinding = content.includes('{= ') ||
                                           content.includes('innerHTML') ||
                                           content.includes('html}');
-                
+
                 if (hasDangerousBinding && !hasProperBinding) {
                     return false;
                 }
@@ -272,12 +272,12 @@ class Agent1UIScanner {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content && content.includes('jQuery.ajax')) {
                 // If using jQuery.ajax, should have CSRF handling
-                return content.includes('X-CSRF-Token') || 
+                return content.includes('X-CSRF-Token') ||
                        content.includes('csrf') ||
                        content.includes('sap.ui.model.odata.v2.ODataModel'); // OData handles CSRF automatically
             }
         }
-        
+
         // If no direct AJAX calls, assume OData is used (which handles CSRF)
         return true;
     }
@@ -285,7 +285,7 @@ class Agent1UIScanner {
     validateFileUploadSecurity() {
         const createTaskFragment = this.readFile(path.join(this.basePath, 'fragment/CreateStandardizationTask.fragment.xml'));
         const importSchemaFragment = this.readFile(path.join(this.basePath, 'fragment/ImportSchema.fragment.xml'));
-        
+
         if (!createTaskFragment && !importSchemaFragment) return false;
 
         // Check for file type restrictions
@@ -305,7 +305,7 @@ class Agent1UIScanner {
 
         try {
             const manifestObj = JSON.parse(manifest);
-            
+
             // Check for required Fiori Elements properties
             return manifestObj['sap.app'] &&
                    manifestObj['sap.ui5'] &&
@@ -351,7 +351,7 @@ class Agent1UIScanner {
                 const hasProperStructure = content.includes('xmlns') &&
                                          content.includes('sap.m') &&
                                          content.includes('Dialog');
-                
+
                 if (!hasProperStructure) {
                     return false;
                 }
@@ -367,8 +367,8 @@ class Agent1UIScanner {
         try {
             const manifestObj = JSON.parse(manifest);
             const dataSources = manifestObj['sap.app']?.dataSources;
-            
-            return dataSources && 
+
+            return dataSources &&
                    Object.values(dataSources).some(ds => ds.type === 'OData' || ds.uri?.includes('odata'));
         } catch (error) {
             return false;
@@ -382,7 +382,7 @@ class Agent1UIScanner {
         try {
             const manifestObj = JSON.parse(manifest);
             const routing = manifestObj['sap.ui5']?.routing;
-            
+
             return routing && routing.routes && Array.isArray(routing.routes) && routing.routes.length > 0;
         } catch (error) {
             return false;
@@ -401,7 +401,7 @@ class Agent1UIScanner {
                 // Check for proper module declaration
                 const hasProperModules = content.includes('sap.ui.define([') &&
                                         content.includes('sap/ui/core/mvc/Controller');
-                
+
                 if (!hasProperModules) {
                     return false;
                 }
@@ -444,7 +444,7 @@ class Agent1UIScanner {
                 // Check for proper model binding patterns
                 const hasBinding = content.includes('{') && content.includes('}') &&
                                  (content.includes('value="{') || content.includes('text="{'));
-                
+
                 if (hasBinding) {
                     return true;
                 }
@@ -455,15 +455,15 @@ class Agent1UIScanner {
 
     validateI18nImplementation() {
         const i18nFile = this.readFile(path.join(this.basePath, 'i18n/i18n.properties'));
-        
+
         if (!i18nFile) return false;
 
         // Check for comprehensive i18n coverage
-        const hasLabels = i18nFile.includes('title=') && 
+        const hasLabels = i18nFile.includes('title=') &&
                          (i18nFile.includes('label=') || i18nFile.includes('Label='));
-        const hasMessages = i18nFile.includes('message.') || 
+        const hasMessages = i18nFile.includes('message.') ||
                            i18nFile.includes('error.');
-        
+
         return hasLabels && hasMessages;
     }
 
@@ -481,7 +481,7 @@ class Agent1UIScanner {
                                         content.includes('error') ||
                                         content.includes('MessageToast') ||
                                         content.includes('MessageBox');
-                
+
                 if (hasErrorHandling) {
                     return true;
                 }
@@ -504,7 +504,7 @@ class Agent1UIScanner {
                                             content.includes('odata') ||
                                             content.includes('service') ||
                                             content.includes('ajax');
-                
+
                 if (hasBackendIntegration) {
                     return true;
                 }
@@ -516,11 +516,11 @@ class Agent1UIScanner {
     validateDataValidationRules() {
         const createTaskFragment = this.readFile(path.join(this.basePath, 'fragment/CreateStandardizationTask.fragment.xml'));
         const importSchemaFragment = this.readFile(path.join(this.basePath, 'fragment/ImportSchema.fragment.xml'));
-        
+
         if (!createTaskFragment && !importSchemaFragment) return false;
 
         // Check for validation controls
-        const hasValidation = (createTaskFragment && 
+        const hasValidation = (createTaskFragment &&
                               (createTaskFragment.includes('required="true"') ||
                                createTaskFragment.includes('validate'))) ||
                              (importSchemaFragment &&
@@ -544,13 +544,13 @@ class Agent1UIScanner {
                                content.includes('permission') ||
                                content.includes('role') ||
                                content.includes('access');
-                
+
                 if (hasAuth) {
                     return true;
                 }
             }
         }
-        
+
         // Check if using Fiori Elements (which handles auth automatically)
         const manifest = this.readFile(path.join(this.basePath, 'manifest.json'));
         return manifest && manifest.includes('"sap.fe"');
@@ -570,7 +570,7 @@ class Agent1UIScanner {
                                content.includes('audit') ||
                                content.includes('track') ||
                                content.includes('history');
-                
+
                 if (hasAudit) {
                     return true;
                 }
@@ -593,13 +593,13 @@ class Agent1UIScanner {
                                      content.includes('$top') ||
                                      content.includes('pagination') ||
                                      content.includes('growing');
-                
+
                 if (hasLazyLoading) {
                     return true;
                 }
             }
         }
-        
+
         // Fiori Elements has built-in lazy loading
         const manifest = this.readFile(path.join(this.basePath, 'manifest.json'));
         return manifest && manifest.includes('"sap.fe"');
@@ -620,7 +620,7 @@ class Agent1UIScanner {
                                content.includes('ariaDescribedBy') ||
                                content.includes('labelFor') ||
                                content.includes('tooltip');
-                
+
                 if (hasA11y) {
                     return true;
                 }
@@ -644,7 +644,7 @@ class Agent1UIScanner {
                                      content.includes('GridLayout') ||
                                      content.includes('FlexBox') ||
                                      content.includes('columns=');
-                
+
                 if (hasResponsive) {
                     return true;
                 }
@@ -667,7 +667,7 @@ class Agent1UIScanner {
                                      content.includes('cleanup') ||
                                      content.includes('batch') ||
                                      content.includes('stream');
-                
+
                 if (hasMemoryMgmt) {
                     return true;
                 }
@@ -682,7 +682,7 @@ class Agent1UIScanner {
         console.log('='.repeat(60));
 
         const percentage = Math.round((this.results.score / this.results.maxScore) * 100);
-        
+
         console.log(`\n🎯 Overall Score: ${this.results.score}/${this.results.maxScore} (${percentage}%)`);
         console.log(`✅ Passed: ${this.results.passed.length}`);
         console.log(`❌ Failed: ${this.results.failed.length}`);
@@ -695,13 +695,13 @@ class Agent1UIScanner {
 
         if (this.results.warnings.length > 0) {
             console.log('\n⚠️  WARNINGS:');
-            this.results.warnings.forEach(warning => 
+            this.results.warnings.forEach(warning =>
                 console.log(`  • ${warning.name}: ${warning.message}`)
             );
         }
 
         console.log(`\n${  '='.repeat(60)}`);
-        
+
         if (percentage >= 95) {
             console.log('🎉 AGENT 1 UI ENTERPRISE READY');
             console.log('✅ Meets all production security and standards requirements');

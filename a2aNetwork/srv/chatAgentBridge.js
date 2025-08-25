@@ -14,13 +14,13 @@ const EventEmitter = require('events');
  * Handles real-time communication, context preservation, and intelligent routing
  */
 class ChatAgentBridge extends EventEmitter {
-    
+
     constructor() {
         super();
         this.activeChatSessions = new Map();
         this.notificationChatMappings = new Map();
         this.chatAgentConnections = new Map();
-        
+
         this.setupBlockchainEventServer();
         this.setupA2AIntegration();
     }
@@ -33,10 +33,10 @@ class ChatAgentBridge extends EventEmitter {
 
         this.wss.on('blockchain-connection', (ws, request) => {
             const sessionId = this.generateSessionId();
-            
+
             ws.sessionId = sessionId;
             ws.isAlive = true;
-            
+
             // Handle incoming messages
             blockchainClient.on('event', (data) => {
                 this.handleClientMessage(ws, data);
@@ -134,16 +134,16 @@ class ChatAgentBridge extends EventEmitter {
                 analysis: await this.analyzeAgentCrash(notificationContext),
                 nextSteps: 'I can help you restart the agent safely, investigate the root cause, or escalate to the engineering team.'
             },
-            
+
             'security_alert': {
                 greeting: `Security alert detected: "${notificationContext.title}". This requires immediate attention.`,
                 analysis: await this.analyzeSecurityThreat(notificationContext),
                 nextSteps: 'I can help you assess the threat level, implement containment measures, or coordinate with the security team.'
             },
-            
+
             'workflow_approval': {
                 greeting: `You have a workflow approval request: "${notificationContext.title}"`,
-                analysis: await this.analyzeApprovalRequest(notificationContext), 
+                analysis: await this.analyzeApprovalRequest(notificationContext),
                 nextSteps: 'I can provide more context about this request, check compliance requirements, or help you make an informed decision.'
             }
         };
@@ -186,7 +186,7 @@ class ChatAgentBridge extends EventEmitter {
 
             // Store AI response
             session.messages.push({
-                sender: 'ai', 
+                sender: 'ai',
                 message: aiResponse.response,
                 timestamp: new Date(),
                 confidence: aiResponse.confidence,
@@ -275,7 +275,7 @@ class ChatAgentBridge extends EventEmitter {
     processAIAgentResponse(routingResponse, session) {
         // Extract meaningful response from A2A routing
         const aiResponse = routingResponse.ai_response || routingResponse.response || 'Let me look into this further.';
-        
+
         return {
             response: aiResponse,
             confidence: routingResponse.confidence || 0.8,
@@ -288,7 +288,7 @@ class ChatAgentBridge extends EventEmitter {
      */
     generateContextualActions(context, response) {
         const baseActions = ['mark_resolved', 'escalate', 'get_more_info'];
-        
+
         const contextualActions = {
             'agent_crash': ['restart_agent', 'view_logs', 'contact_support'],
             'security_alert': ['block_threat', 'investigate_further', 'alert_security_team'],
@@ -310,7 +310,7 @@ class ChatAgentBridge extends EventEmitter {
     }
 
     /**
-     * Analyze security threat for contextual response  
+     * Analyze security threat for contextual response
      */
     async analyzeSecurityThreat(context) {
         return `Security analysis shows a ${context.priority} priority threat. I'm evaluating the scope and potential impact on your systems.`;
@@ -337,16 +337,16 @@ class ChatAgentBridge extends EventEmitter {
      */
     handleClientDisconnection(ws) {
         const session = this.activeChatSessions.get(ws.sessionId);
-        
+
         if (session) {
             // Mark session as inactive
             session.status = 'inactive';
             session.endTime = new Date();
-            
+
             // Clean up mappings
             this.notificationChatMappings.delete(session.notificationId);
             this.activeChatSessions.delete(ws.sessionId);
-            
+
             logger.info(`📤 Chat session ended: ${ws.sessionId}`);
         }
     }

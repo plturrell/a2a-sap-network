@@ -1,6 +1,6 @@
 /**
  * Agent 9 Service Implementation - Advanced Logical Reasoning and Decision-Making Agent
- * Implements business logic for reasoning tasks, knowledge base management, inference generation, 
+ * Implements business logic for reasoning tasks, knowledge base management, inference generation,
  * decision making, problem solving, and logical analysis operations
  */
 
@@ -12,7 +12,7 @@ class Agent9Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent9Adapter();
-        
+
         // Entity references
         const {
             ReasoningTasks,
@@ -37,7 +37,7 @@ class Agent9Service extends cds.ApplicationService {
         this.on('CREATE', 'ReasoningTasks', async (req) => {
             try {
                 const task = await this.adapter.createReasoningTask(req.data);
-                
+
                 // Emit task creation event
                 await this.emit('ReasoningStarted', {
                     taskId: task.ID,
@@ -47,7 +47,7 @@ class Agent9Service extends cds.ApplicationService {
                     problemDomain: task.problemDomain,
                     timestamp: new Date()
                 });
-                
+
                 return task;
             } catch (error) {
                 req.error(500, `Failed to create reasoning task: ${error.message}`);
@@ -76,17 +76,17 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId, configuration } = req.data;
                 const result = await this.adapter.startReasoning(taskId, configuration);
-                
+
                 // Update task status
                 await UPDATE(ReasoningTasks)
-                    .set({ 
+                    .set({
                         status: 'REASONING',
                         startTime: new Date(),
                         progress: 0,
                         configuration: JSON.stringify(configuration)
                     })
                     .where({ ID: taskId });
-                
+
                 await this.emit('ReasoningStarted', {
                     taskId,
                     taskName: result.taskName,
@@ -95,7 +95,7 @@ class Agent9Service extends cds.ApplicationService {
                     problemDomain: result.problemDomain,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to start reasoning: ${error.message}`);
@@ -106,11 +106,11 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId } = req.data;
                 const result = await this.adapter.pauseReasoning(taskId);
-                
+
                 await UPDATE(ReasoningTasks)
                     .set({ status: 'PAUSED' })
                     .where({ ID: taskId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to pause reasoning: ${error.message}`);
@@ -121,11 +121,11 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId } = req.data;
                 const result = await this.adapter.resumeReasoning(taskId);
-                
+
                 await UPDATE(ReasoningTasks)
                     .set({ status: 'REASONING' })
                     .where({ ID: taskId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to resume reasoning: ${error.message}`);
@@ -136,15 +136,15 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId, reason } = req.data;
                 const result = await this.adapter.cancelReasoning(taskId, reason);
-                
+
                 await UPDATE(ReasoningTasks)
-                    .set({ 
+                    .set({
                         status: 'CANCELLED',
                         endTime: new Date(),
                         errorMessage: reason
                     })
                     .where({ ID: taskId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to cancel reasoning: ${error.message}`);
@@ -155,17 +155,17 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId, validationMethod } = req.data;
                 const validation = await this.adapter.validateConclusion(taskId, validationMethod);
-                
+
                 // Update task validation status
                 await UPDATE(ReasoningTasks)
-                    .set({ 
+                    .set({
                         validationStatus: validation.isValid ? 'VERIFIED' : 'CONTRADICTED',
                         validationConfidence: validation.confidence,
                         validationResults: JSON.stringify(validation.validationResults),
                         modifiedAt: new Date()
                     })
                     .where({ ID: taskId });
-                
+
                 return validation;
             } catch (error) {
                 req.error(500, `Failed to validate conclusion: ${error.message}`);
@@ -176,15 +176,15 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId, detailLevel } = req.data;
                 const explanation = await this.adapter.explainReasoning(taskId, detailLevel);
-                
+
                 // Update explanation depth
                 await UPDATE(ReasoningTasks)
-                    .set({ 
+                    .set({
                         explanationDepth: parseInt(detailLevel) || 3,
                         lastExplanationGenerated: new Date()
                     })
                     .where({ ID: taskId });
-                
+
                 return explanation;
             } catch (error) {
                 req.error(500, `Failed to explain reasoning: ${error.message}`);
@@ -204,7 +204,7 @@ class Agent9Service extends cds.ApplicationService {
         this.on('CREATE', 'KnowledgeBaseElements', async (req) => {
             try {
                 const element = await this.adapter.createKnowledgeBaseElement(req.data);
-                
+
                 await this.emit('KnowledgeUpdated', {
                     elementId: element.ID,
                     elementType: element.elementType,
@@ -213,7 +213,7 @@ class Agent9Service extends cds.ApplicationService {
                     confidenceChange: element.confidenceLevel,
                     timestamp: new Date()
                 });
-                
+
                 return element;
             } catch (error) {
                 req.error(500, `Failed to create knowledge base element: ${error.message}`);
@@ -224,7 +224,7 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { elementType, content, domain, confidenceLevel } = req.data;
                 const result = await this.adapter.addKnowledge(elementType, content, domain, confidenceLevel);
-                
+
                 // Create knowledge base element entry
                 const elementId = uuidv4();
                 await INSERT.into(KnowledgeBaseElements).entries({
@@ -240,7 +240,7 @@ class Agent9Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     modifiedAt: new Date()
                 });
-                
+
                 await this.emit('KnowledgeUpdated', {
                     elementId,
                     elementType: elementType.toUpperCase(),
@@ -249,7 +249,7 @@ class Agent9Service extends cds.ApplicationService {
                     confidenceChange: confidenceLevel,
                     timestamp: new Date()
                 });
-                
+
                 return {
                     success: result.success,
                     elementId,
@@ -264,16 +264,16 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { elementId, content, confidenceLevel } = req.data;
                 const result = await this.adapter.updateKnowledge(elementId, content, confidenceLevel);
-                
+
                 // Update knowledge base element
                 await UPDATE(KnowledgeBaseElements)
-                    .set({ 
+                    .set({
                         content,
                         confidenceLevel,
                         modifiedAt: new Date()
                     })
                     .where({ ID: elementId });
-                
+
                 await this.emit('KnowledgeUpdated', {
                     elementId,
                     elementType: result.elementType,
@@ -282,7 +282,7 @@ class Agent9Service extends cds.ApplicationService {
                     confidenceChange: confidenceLevel,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to update knowledge: ${error.message}`);
@@ -293,7 +293,7 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { domain } = req.data;
                 const validation = await this.adapter.validateKnowledgeBase(domain);
-                
+
                 if (!validation.isConsistent && validation.contradictions) {
                     // Emit contradiction detection events
                     for (const contradiction of validation.contradictions) {
@@ -307,7 +307,7 @@ class Agent9Service extends cds.ApplicationService {
                         });
                     }
                 }
-                
+
                 return validation;
             } catch (error) {
                 req.error(500, `Failed to validate knowledge base: ${error.message}`);
@@ -337,15 +337,15 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId, inferenceTypes, maxInferences } = req.data;
                 const result = await this.adapter.generateInferences(taskId, inferenceTypes, maxInferences);
-                
+
                 // Update task with inference count
                 await UPDATE(ReasoningTasks)
-                    .set({ 
+                    .set({
                         inferencesGenerated: result.inferencesGenerated,
                         lastInferenceGenerated: new Date()
                     })
                     .where({ ID: taskId });
-                
+
                 // Create inference records
                 for (const inference of result.inferences || []) {
                     const inferenceId = uuidv4();
@@ -361,7 +361,7 @@ class Agent9Service extends cds.ApplicationService {
                         isActive: true,
                         createdAt: new Date()
                     });
-                    
+
                     await this.emit('InferenceGenerated', {
                         taskId,
                         inferenceId,
@@ -372,7 +372,7 @@ class Agent9Service extends cds.ApplicationService {
                         timestamp: new Date()
                     });
                 }
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to generate inferences: ${error.message}`);
@@ -383,17 +383,17 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { inferenceId, verificationMethod } = req.data;
                 const verification = await this.adapter.verifyInference(inferenceId, verificationMethod);
-                
+
                 // Update inference verification status
                 await UPDATE(LogicalInferences)
-                    .set({ 
+                    .set({
                         validationStatus: verification.isValid ? 'VERIFIED' : 'CONTRADICTED',
                         validationConfidence: verification.confidence,
                         validationEvidence: JSON.stringify(verification.evidence),
                         modifiedAt: new Date()
                     })
                     .where({ ID: inferenceId });
-                
+
                 return verification;
             } catch (error) {
                 req.error(500, `Failed to verify inference: ${error.message}`);
@@ -423,7 +423,7 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { taskId, decisionCriteria, alternatives } = req.data;
                 const result = await this.adapter.makeDecision(taskId, decisionCriteria, alternatives);
-                
+
                 // Create decision record
                 const decisionId = uuidv4();
                 await INSERT.into(DecisionRecords).entries({
@@ -440,7 +440,7 @@ class Agent9Service extends cds.ApplicationService {
                     status: 'PENDING',
                     createdAt: new Date()
                 });
-                
+
                 await this.emit('DecisionMade', {
                     taskId,
                     decisionId,
@@ -450,7 +450,7 @@ class Agent9Service extends cds.ApplicationService {
                     riskLevel: result.riskLevel,
                     timestamp: new Date()
                 });
-                
+
                 return {
                     decision: result.decision,
                     confidence: result.confidence,
@@ -467,10 +467,10 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { decisionId, actualOutcome } = req.data;
                 const evaluation = await this.adapter.evaluateDecision(decisionId, actualOutcome);
-                
+
                 // Update decision record with evaluation
                 await UPDATE(DecisionRecords)
-                    .set({ 
+                    .set({
                         actualOutcome,
                         successRate: evaluation.successRate,
                         lessonsLearned: evaluation.lessonsLearned,
@@ -478,7 +478,7 @@ class Agent9Service extends cds.ApplicationService {
                         status: 'EVALUATED'
                     })
                     .where({ ID: decisionId });
-                
+
                 return evaluation;
             } catch (error) {
                 req.error(500, `Failed to evaluate decision: ${error.message}`);
@@ -508,7 +508,7 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { problemDescription, problemType, solvingStrategy, constraints } = req.data;
                 const result = await this.adapter.solveProblem(problemDescription, problemType, solvingStrategy, constraints);
-                
+
                 // Create problem solving record
                 const problemId = uuidv4();
                 await INSERT.into(ProblemSolvingRecords).entries({
@@ -526,7 +526,7 @@ class Agent9Service extends cds.ApplicationService {
                     status: 'SOLVED',
                     createdAt: new Date()
                 });
-                
+
                 await this.emit('ProblemSolved', {
                     problemId,
                     problemType: problemType.toUpperCase(),
@@ -535,7 +535,7 @@ class Agent9Service extends cds.ApplicationService {
                     solvingTime: result.solvingTime || 0,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to solve problem: ${error.message}`);
@@ -546,17 +546,17 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { problemId, optimizationCriteria } = req.data;
                 const result = await this.adapter.optimizeSolution(problemId, optimizationCriteria);
-                
+
                 // Update problem record with optimized solution
                 await UPDATE(ProblemSolvingRecords)
-                    .set({ 
+                    .set({
                         optimizedSolution: result.optimizedSolution,
                         improvementScore: result.improvementScore,
                         optimizationTradeoffs: result.tradeoffs,
                         modifiedAt: new Date()
                     })
                     .where({ ID: problemId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to optimize solution: ${error.message}`);
@@ -577,17 +577,17 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { engineId, optimizationType, targetMetrics } = req.data;
                 const result = await this.adapter.optimizeEngine(engineId, optimizationType, targetMetrics);
-                
+
                 // Update engine configuration
                 await UPDATE(ReasoningEngines)
-                    .set({ 
+                    .set({
                         configuration: result.newConfiguration,
                         lastOptimization: new Date(),
                         performanceGain: result.performanceGain,
                         modifiedAt: new Date()
                     })
                     .where({ ID: engineId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to optimize engine: ${error.message}`);
@@ -598,16 +598,16 @@ class Agent9Service extends cds.ApplicationService {
             try {
                 const { engineId, testDataset } = req.data;
                 const result = await this.adapter.calibrateEngine(engineId, testDataset);
-                
+
                 // Update engine calibration data
                 await UPDATE(ReasoningEngines)
-                    .set({ 
+                    .set({
                         accuracyScore: result.accuracyScore,
                         lastCalibration: new Date(),
                         calibrationResults: JSON.stringify(result.calibrationResults)
                     })
                     .where({ ID: engineId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to calibrate engine: ${error.message}`);

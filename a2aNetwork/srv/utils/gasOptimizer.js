@@ -23,7 +23,7 @@ class GasOptimizer {
      */
     async getOptimizedGasPrice() {
         const now = Date.now();
-        
+
         // Use cached gas price if still valid
         if (this.gasPriceCache && now < this.gasPriceCacheExpiry) {
             return this.gasPriceCache;
@@ -32,16 +32,16 @@ class GasOptimizer {
         try {
             // Get current gas price from network
             const networkGasPrice = await this.web3.eth.getGasPrice();
-            
+
             // Apply optimization based on transaction priority
             const optimizedPrice = this.calculateOptimizedGasPrice(networkGasPrice);
-            
+
             // Cache the result
             this.gasPriceCache = optimizedPrice;
             this.gasPriceCacheExpiry = now + this.CACHE_TTL;
-            
+
             return optimizedPrice;
-            
+
         } catch (error) {
             cds.log('gas-optimizer').error('Failed to get gas price:', error);
             // Fallback to cached value or default
@@ -54,13 +54,13 @@ class GasOptimizer {
      */
     calculateOptimizedGasPrice(networkGasPrice) {
         const basePrice = BigInt(networkGasPrice);
-        
+
         // Get current hour to adjust for network usage patterns
         const hour = new Date().getHours();
-        
+
         // Apply time-based optimization (lower gas during off-peak hours)
         let multiplier = 1.0;
-        
+
         if (hour >= 2 && hour <= 6) {
             // Early morning - typically lower usage
             multiplier = 0.9;
@@ -71,9 +71,9 @@ class GasOptimizer {
             // Evening peak - highest usage
             multiplier = 1.2;
         }
-        
+
         const optimizedPrice = BigInt(Math.floor(Number(basePrice) * multiplier));
-        
+
         // Ensure minimum viable gas price
         const minGasPrice = BigInt('1000000000'); // 1 gwei minimum
         return optimizedPrice > minGasPrice ? optimizedPrice.toString() : minGasPrice.toString();
@@ -84,7 +84,7 @@ class GasOptimizer {
      */
     async estimateGasOptimized(contractFunction, fromAddress, options = {}) {
         const cacheKey = this.generateCacheKey(contractFunction, fromAddress, options);
-        
+
         // Check cache first
         const cached = this.gasCache.get(cacheKey);
         if (cached && Date.now() < cached.expiry) {
@@ -100,7 +100,7 @@ class GasOptimizer {
 
             // Apply safety buffer (20% extra)
             const safeGasLimit = Math.floor(estimatedGas * 1.2);
-            
+
             // Cache the result
             this.gasCache.set(cacheKey, {
                 gasLimit: safeGasLimit,
@@ -108,10 +108,10 @@ class GasOptimizer {
             });
 
             return safeGasLimit;
-            
+
         } catch (error) {
             cds.log('gas-optimizer').error('Gas estimation failed:', error);
-            
+
             // Fallback to conservative estimate based on function type
             return this.getFallbackGasLimit(contractFunction.name);
         }
@@ -126,18 +126,18 @@ class GasOptimizer {
             'registerAgent': 200000,
             'updateReputation': 100000,
             'deactivateAgent': 80000,
-            
+
             // Service operations
             'listService': 150000,
             'requestService': 200000,
             'startService': 80000,
             'completeService': 100000,
             'releasePayment': 150000,
-            
+
             // Review operations
             'submitPeerReview': 180000,
             'validateReview': 120000,
-            
+
             // Default
             'default': 200000
         };
@@ -173,7 +173,7 @@ module.exports.shutdown = shutdown;
             from: fromAddress,
             options: options
         };
-        
+
         return crypto.createHash('md5')
             .update(JSON.stringify(data))
             .digest('hex');
@@ -184,7 +184,7 @@ module.exports.shutdown = shutdown;
      */
     async optimizeBatchTransactions(transactions) {
         const optimized = [];
-        
+
         // Sort transactions by gas price efficiency
         const sorted = transactions.sort((a, b) => {
             const efficiencyA = this.calculateGasEfficiency(a);
@@ -194,7 +194,7 @@ module.exports.shutdown = shutdown;
 
         // Group transactions by gas price to batch efficiently
         const gasPrice = await this.getOptimizedGasPrice();
-        
+
         for (const tx of sorted) {
             optimized.push({
                 ...tx,
@@ -222,7 +222,7 @@ module.exports.shutdown = shutdown;
 
         const priority = priorities[transaction.function?.name] || priorities.default;
         const estimatedCost = transaction.gasLimit * transaction.gasPrice;
-        
+
         // Higher priority / lower cost = better efficiency
         return priority / (estimatedCost || 1);
     }
@@ -232,13 +232,13 @@ module.exports.shutdown = shutdown;
      */
     cleanupCache() {
         const now = Date.now();
-        
+
         for (const [key, value] of this.gasCache.entries()) {
             if (now >= value.expiry) {
                 this.gasCache.delete(key);
             }
         }
-        
+
         // Clean gas price cache
         if (now >= this.gasPriceCacheExpiry) {
             this.gasPriceCache = null;

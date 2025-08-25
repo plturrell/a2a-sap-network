@@ -14,15 +14,15 @@ files.forEach(filePath => {
         console.log(`File not found: ${filePath}`);
         return;
     }
-    
+
     console.log(`\nProcessing ${filePath}...`);
     let content = fs.readFileSync(fullPath, 'utf8');
     let replacementCount = 0;
-    
+
     // Fix remaining template literals with ${} in strings
     const fixes = [
         // Fix rate limit keys
-        { 
+        {
             pattern: /"rateLimit_\$\{userId\}_" \+ operation/g,
             replacement: '"rateLimit_" + userId + "_" + operation'
         },
@@ -58,7 +58,7 @@ files.forEach(filePath => {
             replacement: '" + $1 + " + $2 + "'
         }
     ];
-    
+
     fixes.forEach(fix => {
         const before = content.length;
         content = content.replace(fix.pattern, fix.replacement);
@@ -67,11 +67,11 @@ files.forEach(filePath => {
             console.log(`Applied fix: ${fix.pattern.source.substring(0, 50)}...`);
         }
     });
-    
+
     // Fix any remaining template literal issues
     const createSetClause = /const createSetClause = \(col\) => `\$\{col\} = \?`;/g;
     content = content.replace(createSetClause, 'const createSetClause = function(col) { return col + " = ?"; };');
-    
+
     // Save the fixed content
     fs.writeFileSync(fullPath, content, 'utf8');
     console.log(`Fixed ${replacementCount} issues in ${filePath}`);

@@ -28,7 +28,7 @@ class APIEndpointTester {
             const url = new URL(endpoint, this.baseUrl);
             const isHttps = url.protocol === 'https:';
             const httpModule = isHttps ? https : http;
-            
+
             const options = {
                 hostname: url.hostname,
                 port: url.port || (isHttps ? 443 : 80),
@@ -50,12 +50,12 @@ class APIEndpointTester {
 
             const handleHttpResponse = (res) => {
                 let data = '';
-                
+
                 const handleDataChunk = (chunk) => {
                     data += chunk;
                 };
                 res.on('data', handleDataChunk);
-                
+
                 const handleResponseEnd = () => {
                     try {
                         const parsedData = data ? JSON.parse(data) : {};
@@ -77,7 +77,7 @@ class APIEndpointTester {
                 };
                 res.on('end', handleResponseEnd);
             };
-            
+
             const req = httpModule.request(options, handleHttpResponse);
 
             const handleRequestError = (error) => {
@@ -97,7 +97,7 @@ class APIEndpointTester {
 
             req.end();
         };
-        
+
         return new Promise(handleMakeRequest);
     }
 
@@ -106,15 +106,15 @@ class APIEndpointTester {
      */
     async testEndpoint(name, method, endpoint, expectedStatus = 200, headers = {}) {
         const startTime = Date.now();
-        
+
         try {
             console.log(`🧪 Testing ${name}: ${method} ${endpoint}`);
-            
+
             const response = await this.makeRequest(method, endpoint, headers);
             const duration = Date.now() - startTime;
-            
+
             const success = response.statusCode === expectedStatus;
-            
+
             const result = {
                 name,
                 method,
@@ -127,7 +127,7 @@ class APIEndpointTester {
                 headers: response.headers,
                 error: null
             };
-            
+
             if (success) {
                 console.log(`✅ ${name}: ${response.statusCode} (${duration}ms)`);
                 this.successCount++;
@@ -139,14 +139,14 @@ class APIEndpointTester {
                 }
                 this.errorCount++;
             }
-            
+
             this.results.push(result);
             return result;
-            
+
         } catch (error) {
             const duration = Date.now() - startTime;
             console.log(`💥 ${name}: Request failed - ${error.message} (${duration}ms)`);
-            
+
             const result = {
                 name,
                 method,
@@ -159,7 +159,7 @@ class APIEndpointTester {
                 headers: null,
                 error: error.message
             };
-            
+
             this.results.push(result);
             this.errorCount++;
             return result;
@@ -171,7 +171,7 @@ class APIEndpointTester {
      */
     async testTileEndpoints() {
         console.log('\n🎯 Testing Tile Data Endpoints\n');
-        
+
         const tileTests = [
             // Network Stats tile
             {
@@ -184,7 +184,7 @@ class APIEndpointTester {
                 method: 'GET',
                 endpoint: '/api/v1/NetworkStats?id=dashboard_test'
             },
-            
+
             // Agents tile
             {
                 name: 'Agents (Agent Visualization)',
@@ -196,7 +196,7 @@ class APIEndpointTester {
                 method: 'GET',
                 endpoint: '/api/v1/Agents?id=dashboard_test'
             },
-            
+
             // Services tile
             {
                 name: 'Services (Service Marketplace)',
@@ -208,7 +208,7 @@ class APIEndpointTester {
                 method: 'GET',
                 endpoint: '/api/v1/Services?id=dashboard_test'
             },
-            
+
             // Blockchain stats
             {
                 name: 'Blockchain Stats',
@@ -220,7 +220,7 @@ class APIEndpointTester {
                 method: 'GET',
                 endpoint: '/odata/v4/blockchain/BlockchainStats?id=blockchain_dashboard'
             },
-            
+
             // Notifications
             {
                 name: 'Notifications',
@@ -232,7 +232,7 @@ class APIEndpointTester {
                 method: 'GET',
                 endpoint: '/api/v1/notifications/count'
             },
-            
+
             // Network Analytics & Health
             {
                 name: 'Network Analytics',
@@ -245,7 +245,7 @@ class APIEndpointTester {
                 endpoint: '/api/v1/network/health'
             }
         ];
-        
+
         for (const test of tileTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
             // Add small delay between requests
@@ -259,7 +259,7 @@ class APIEndpointTester {
      */
     async testSystemEndpoints() {
         console.log('\n🔧 Testing System Endpoints\n');
-        
+
         const systemTests = [
             {
                 name: 'Current Metrics',
@@ -292,7 +292,7 @@ class APIEndpointTester {
                 endpoint: '/api/v1/debug/agents'
             }
         ];
-        
+
         for (const test of systemTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
             const delayBetweenSystemRequests = (resolve) => setTimeout(resolve, 100);
@@ -305,7 +305,7 @@ class APIEndpointTester {
      */
     async testVersioningEndpoints() {
         console.log('\n📋 Testing API Versioning Endpoints\n');
-        
+
         const versionTests = [
             {
                 name: 'Supported Versions',
@@ -328,7 +328,7 @@ class APIEndpointTester {
                 endpoint: '/api/deprecation-status'
             }
         ];
-        
+
         for (const test of versionTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
             const delayBetweenVersionRequests = (resolve) => setTimeout(resolve, 100);
@@ -341,7 +341,7 @@ class APIEndpointTester {
      */
     async testVersionedRequests() {
         console.log('\n🔄 Testing Versioned Requests\n');
-        
+
         const versionedTests = [
             {
                 name: 'Network Stats (v1.0.0)',
@@ -362,7 +362,7 @@ class APIEndpointTester {
                 headers: { 'Accept-Version': '1.1.0' }
             }
         ];
-        
+
         for (const test of versionedTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint, 200, test.headers);
             const delayBetweenVersionedRequests = (resolve) => setTimeout(resolve, 100);
@@ -375,7 +375,7 @@ class APIEndpointTester {
      */
     async testSecurityFixes() {
         console.log('\n🔒 Testing Security Fixes\n');
-        
+
         // Test that previously blocked legitimate queries now work
         const securityTests = [
             {
@@ -390,11 +390,11 @@ class APIEndpointTester {
             },
             {
                 name: 'Service Query',
-                method: 'GET', 
+                method: 'GET',
                 endpoint: '/api/v1/Services?id=service_marketplace'
             }
         ];
-        
+
         for (const test of securityTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
             const delayBetweenSecurityRequests = (resolve) => setTimeout(resolve, 100);
@@ -409,13 +409,13 @@ class APIEndpointTester {
         console.log(`\n${  '='.repeat(80)}`);
         console.log('📊 API ENDPOINT TEST REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('\n📈 Summary:');
         console.log(`   Total Tests: ${this.results.length}`);
         console.log(`   ✅ Successful: ${this.successCount}`);
         console.log(`   ❌ Failed: ${this.errorCount}`);
         console.log(`   📊 Success Rate: ${((this.successCount / this.results.length) * 100).toFixed(1)}%`);
-        
+
         if (this.errorCount > 0) {
             console.log('\n❌ Failed Tests:');
             const filterFailedResults = (r) => !r.success;
@@ -426,18 +426,18 @@ class APIEndpointTester {
                 .filter(filterFailedResults)
                 .forEach(logFailedResult);
         }
-        
+
         console.log('\n⏱️  Performance:');
         const calculateTotalDuration = (sum, r) => sum + r.duration;
         const avgDuration = this.results.reduce(calculateTotalDuration, 0) / this.results.length;
         const getDurationValue = (r) => r.duration;
         const maxDuration = Math.max(...this.results.map(getDurationValue));
         const minDuration = Math.min(...this.results.map(getDurationValue));
-        
+
         console.log(`   Average Response Time: ${avgDuration.toFixed(1)}ms`);
         console.log(`   Fastest Response: ${minDuration}ms`);
         console.log(`   Slowest Response: ${maxDuration}ms`);
-        
+
         // Group by endpoint type
         const isTileEndpoint = (r) => r.name.includes('Stats') || r.name.includes('Agents') || r.name.includes('Services') || r.name.includes('Notifications');
         const isSystemEndpoint = (r) => r.name.includes('Metrics') || r.name.includes('Status') || r.name.includes('Operations');
@@ -445,15 +445,15 @@ class APIEndpointTester {
         const tileEndpoints = this.results.filter(isTileEndpoint);
         const systemEndpoints = this.results.filter(isSystemEndpoint);
         const versionEndpoints = this.results.filter(isVersionEndpoint);
-        
+
         console.log('\n📋 Results by Category:');
         const isSuccessful = (r) => r.success;
         console.log(`   🎯 Tile Endpoints: ${tileEndpoints.filter(isSuccessful).length}/${tileEndpoints.length} successful`);
         console.log(`   🔧 System Endpoints: ${systemEndpoints.filter(isSuccessful).length}/${systemEndpoints.length} successful`);
         console.log(`   📝 Version Endpoints: ${versionEndpoints.filter(isSuccessful).length}/${versionEndpoints.length} successful`);
-        
+
         console.log(`\n${  '='.repeat(80)}`);
-        
+
         return {
             total: this.results.length,
             successful: this.successCount,
@@ -469,16 +469,16 @@ class APIEndpointTester {
      */
     async runAllTests() {
         console.log('🚀 Starting A2A Network API Endpoint Tests\n');
-        
+
         try {
             await this.testTileEndpoints();
-            await this.testSystemEndpoints(); 
+            await this.testSystemEndpoints();
             await this.testVersioningEndpoints();
             await this.testVersionedRequests();
             await this.testSecurityFixes();
-            
+
             return this.generateReport();
-            
+
         } catch (error) {
             console.error('💥 Test suite failed:', error);
             throw error;
@@ -493,12 +493,12 @@ if (require.main === module) {
         console.log('\n✅ Test suite completed');
         process.exit(report.failed > 0 ? 1 : 0);
     };
-    
+
     const handleTestError = (error) => {
         console.error('💥 Test suite failed:', error);
         process.exit(1);
     };
-    
+
     tester.runAllTests()
         .then(handleTestSuccess)
         .catch(handleTestError);

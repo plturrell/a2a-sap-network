@@ -35,55 +35,55 @@ class BlockchainRetry {
      */
     async executeWithRetry(operation, context = {}) {
         let lastError;
-        
+
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
             try {
-                log.debug('Executing blockchain operation', { 
-                    attempt, 
+                log.debug('Executing blockchain operation', {
+                    attempt,
                     maxRetries: this.maxRetries,
-                    ...context 
+                    ...context
                 });
-                
+
                 const result = await operation();
-                
+
                 if (attempt > 1) {
-                    log.info('Blockchain operation succeeded after retry', { 
+                    log.info('Blockchain operation succeeded after retry', {
                         attempt,
-                        ...context 
+                        ...context
                     });
                 }
-                
+
                 return result;
             } catch (error) {
                 lastError = error;
-                
+
                 if (!this.isRetryableError(error) || attempt === this.maxRetries) {
-                    log.error('Blockchain operation failed', { 
+                    log.error('Blockchain operation failed', {
                         attempt,
                         error: error.message,
                         code: error.code,
-                        ...context 
+                        ...context
                     });
                     throw error;
                 }
-                
+
                 const delay = this.calculateDelay(attempt);
-                log.warn('Retrying blockchain operation', { 
+                log.warn('Retrying blockchain operation', {
                     attempt,
                     nextAttemptIn: delay,
                     error: error.message,
-                    ...context 
+                    ...context
                 });
-                
+
                 await this.sleep(delay);
-                
+
                 // For nonce-related errors, increment nonce
                 if (this.isNonceError(error)) {
                     context.incrementNonce = true;
                 }
             }
         }
-        
+
         throw lastError;
     }
 
@@ -95,10 +95,10 @@ class BlockchainRetry {
     isRetryableError(error) {
         const errorMessage = error.message?.toLowerCase() || '';
         const errorCode = error.code || '';
-        
+
         return this.retryableErrors.some(retryable => {
             const retryableLower = retryable.toLowerCase();
-            return errorMessage.includes(retryableLower) || 
+            return errorMessage.includes(retryableLower) ||
                    errorCode === retryable ||
                    (error.reason && error.reason.toLowerCase().includes(retryableLower));
         });
@@ -111,7 +111,7 @@ class BlockchainRetry {
      */
     isNonceError(error) {
         const errorMessage = error.message?.toLowerCase() || '';
-        return errorMessage.includes('nonce too low') || 
+        return errorMessage.includes('nonce too low') ||
                errorMessage.includes('replacement fee too low');
     }
 

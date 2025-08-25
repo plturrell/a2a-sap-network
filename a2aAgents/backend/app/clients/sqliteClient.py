@@ -1143,16 +1143,19 @@ class SQLiteClient:
                         results.append(dict(zip(columns, row)))
 
                 return SQLiteResponse(
-                    success=True,
                     data=results,
-                    count=len(results)
+                    count=len(results),
+                    status_code=200,
+                    error=None
                 )
 
         except Exception as e:
             logger.error(f"Async select failed: {e}")
             return SQLiteResponse(
-                success=False,
-                error=str(e)
+                data=None,
+                count=None,
+                status_code=500,
+                error={"message": str(e)}
             )
 
     async def async_insert(
@@ -1170,7 +1173,12 @@ class SQLiteClient:
             records = data if isinstance(data, list) else [data]
 
             if not records:
-                return SQLiteResponse(success=True, count=0)
+                return SQLiteResponse(
+                    data=[],
+                    count=0,
+                    status_code=200,
+                    error=None
+                )
 
             # Get connection from pool
             async with self.connection_pool.get_async_connection() as conn:
@@ -1193,15 +1201,19 @@ class SQLiteClient:
                 await conn.commit()
 
                 return SQLiteResponse(
-                    success=True,
-                    count=inserted_count
+                    data=None,
+                    count=inserted_count,
+                    status_code=201,
+                    error=None
                 )
 
         except Exception as e:
             logger.error(f"Async insert failed: {e}")
             return SQLiteResponse(
-                success=False,
-                error=str(e)
+                data=None,
+                count=None,
+                status_code=500,
+                error={"message": str(e)}
             )
 
     def health_check(self) -> Dict[str, Any]:
@@ -1261,6 +1273,14 @@ class SQLiteClient:
                 return cursor.fetchone() is not None
         except:
             return False
+
+    def _is_valid_table_name(self, name: str) -> bool:
+        """Validate table name to prevent SQL injection"""
+        return bool(name and name.replace('_', '').isalnum())
+
+    def _is_valid_column_name(self, name: str) -> bool:
+        """Validate column name to prevent SQL injection"""
+        return bool(name and (name.replace('_', '').isalnum() or name == "*"))
 
     async def close(self):
         """Close client connections (if any persistent connections exist)"""

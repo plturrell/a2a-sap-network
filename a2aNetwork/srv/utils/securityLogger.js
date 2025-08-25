@@ -97,7 +97,7 @@ class SecurityLogger {
      */
     sanitizeDetails(details) {
         const sanitized = {};
-        
+
         for (const [key, value] of Object.entries(details)) {
             // Remove sensitive data
             if (this.isSensitiveField(key)) {
@@ -121,8 +121,8 @@ class SecurityLogger {
             'password', 'privateKey', 'secret', 'token', 'apiKey',
             'creditCard', 'ssn', 'bankAccount', 'pin'
         ];
-        
-        return sensitiveFields.some(field => 
+
+        return sensitiveFields.some(field =>
             fieldName.toLowerCase().includes(field.toLowerCase())
         );
     }
@@ -132,7 +132,7 @@ class SecurityLogger {
      */
     addToHistory(event) {
         this.eventHistory.push(event);
-        
+
         // Maintain history size limit
         if (this.eventHistory.length > this.maxHistorySize) {
             this.eventHistory.shift();
@@ -180,12 +180,12 @@ class SecurityLogger {
 
         // Keep only recent events (last 24 hours)
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        userActivity.events = userActivity.events.filter(e => 
+        userActivity.events = userActivity.events.filter(e =>
             new Date(e.timestamp) > oneDayAgo
         );
 
         userActivity.lastActivity = event.timestamp;
-        
+
         // Calculate risk score
         userActivity.riskScore = this.calculateUserRiskScore(userActivity.events);
     }
@@ -232,7 +232,7 @@ class SecurityLogger {
      * Check for rapid authentication failures
      */
     checkRapidFailures(event) {
-        const recentFailures = this.eventHistory.filter(e => 
+        const recentFailures = this.eventHistory.filter(e =>
             e.type === SecurityEventTypes.AUTHENTICATION_FAILURE &&
             e.userId === event.userId &&
             new Date(e.timestamp) > new Date(Date.now() - 5 * 60 * 1000) // Last 5 minutes
@@ -259,7 +259,7 @@ class SecurityLogger {
         // This would integrate with IP geolocation services
         // For now, just check for private/local IPs in production
         const ipAddress = event.details.ipAddress;
-        
+
         if (process.env.NODE_ENV === 'production') {
             if (this.isPrivateIP(ipAddress)) {
                 this.logSecurityEvent(
@@ -296,7 +296,7 @@ class SecurityLogger {
      */
     checkTimeAnomalies(event) {
         const hour = new Date(event.timestamp).getHours();
-        
+
         // Check for off-hours access to sensitive operations
         if ((hour < 6 || hour > 22) && event.riskLevel === RiskLevels.HIGH) {
             this.logSecurityEvent(
@@ -318,7 +318,7 @@ class SecurityLogger {
         if (event.type !== SecurityEventTypes.AUTHENTICATION_FAILURE) return;
 
         const ipAddress = event.details.ipAddress;
-        const recentAttemptsFromIP = this.eventHistory.filter(e => 
+        const recentAttemptsFromIP = this.eventHistory.filter(e =>
             e.type === SecurityEventTypes.AUTHENTICATION_FAILURE &&
             e.details.ipAddress === ipAddress &&
             new Date(e.timestamp) > new Date(Date.now() - 10 * 60 * 1000) // Last 10 minutes
@@ -356,7 +356,7 @@ class SecurityLogger {
      * Check for rapid blockchain transactions
      */
     checkRapidTransactions(event) {
-        const recentTransactions = this.eventHistory.filter(e => 
+        const recentTransactions = this.eventHistory.filter(e =>
             e.type === SecurityEventTypes.BLOCKCHAIN_TRANSACTION &&
             e.userId === event.userId &&
             new Date(e.timestamp) > new Date(Date.now() - 60 * 1000) // Last minute
@@ -386,7 +386,7 @@ class SecurityLogger {
         if (!sessionId) return;
 
         const uniqueUsers = new Set();
-        const sessionEvents = this.eventHistory.filter(e => 
+        const sessionEvents = this.eventHistory.filter(e =>
             e.details.sessionId === sessionId &&
             new Date(e.timestamp) > new Date(Date.now() - 30 * 60 * 1000) // Last 30 minutes
         );
@@ -517,8 +517,8 @@ class SecurityLogger {
     getSecurityDashboard() {
         const now = new Date();
         const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        
-        const recentEvents = this.eventHistory.filter(e => 
+
+        const recentEvents = this.eventHistory.filter(e =>
             new Date(e.timestamp) > oneDayAgo
         );
 

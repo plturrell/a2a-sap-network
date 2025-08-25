@@ -28,7 +28,7 @@ class I18nMiddleware {
      */
     async init() {
         // const { i18n } = require('./i18n-config'); // Not used currently
-        
+
         // Add i18n to CDS request context
         cds.on('bootstrap', (app) => {
             app.use((req, res, next) => {
@@ -66,7 +66,7 @@ class I18nMiddleware {
 
         // Handle localized error messages
         this.setupErrorHandling();
-        
+
         // Setup localized validations
         this.setupValidations();
     }
@@ -76,19 +76,19 @@ class I18nMiddleware {
      */
     setupErrorHandling() {
         const originalError = cds.Request.prototype.error;
-        
+
         cds.Request.prototype.error = function(code, message, ...args) {
             // Try to translate error message
             if (this._ && this._.i18n && typeof message === 'string') {
                 const translationKey = `errors.${message}`;
                 const translated = this._.i18n.__(translationKey);
-                
+
                 // Use translated message if different from key
                 if (translated !== translationKey) {
                     message = translated;
                 }
             }
-            
+
             return originalError.call(this, code, message, ...args);
         };
     }
@@ -119,39 +119,39 @@ class I18nMiddleware {
      */
     validateWithI18n(value, rules, i18n) {
         const errors = [];
-        
+
         if (rules.required && !value) {
             errors.push(i18n.__('validation.required'));
         }
-        
+
         if (rules.email && value && !this.isValidEmail(value)) {
             errors.push(i18n.__('validation.email'));
         }
-        
+
         if (rules.url && value && !this.isValidUrl(value)) {
             errors.push(i18n.__('validation.url'));
         }
-        
+
         if (rules.min !== undefined && value < rules.min) {
             errors.push(i18n.__('validation.min', { min: rules.min }));
         }
-        
+
         if (rules.max !== undefined && value > rules.max) {
             errors.push(i18n.__('validation.max', { max: rules.max }));
         }
-        
+
         if (rules.minLength && value && value.length < rules.minLength) {
             errors.push(i18n.__('validation.minLength', { min: rules.minLength }));
         }
-        
+
         if (rules.maxLength && value && value.length > rules.maxLength) {
             errors.push(i18n.__('validation.maxLength', { max: rules.maxLength }));
         }
-        
+
         if (rules.pattern && value && !rules.pattern.test(value)) {
             errors.push(i18n.__('validation.pattern'));
         }
-        
+
         return {
             valid: errors.length === 0,
             errors
@@ -168,17 +168,17 @@ class I18nMiddleware {
     async getLocalizedData(entity, data, locale) {
         const normalizedLocale = normalizeLocale(locale);
         const cacheKey = `${entity}:${data.ID}:${normalizedLocale}`;
-        
+
         // Check cache
         const cached = this.cache.get(cacheKey);
         if (cached && cached.expires > Date.now()) {
             return cached.data;
         }
-        
+
         // Get localized texts
         const texts = await SELECT.from(`${entity}.texts`)
             .where({ ID: data.ID, locale: normalizedLocale });
-        
+
         // Merge with base data
         const localizedData = { ...data };
         if (texts.length > 0) {
@@ -189,13 +189,13 @@ class I18nMiddleware {
                 }
             });
         }
-        
+
         // Cache result
         this.cache.set(cacheKey, {
             data: localizedData,
             expires: Date.now() + this.cacheTimeout
         });
-        
+
         return localizedData;
     }
 
@@ -208,12 +208,12 @@ class I18nMiddleware {
      */
     formatMessage(template, data, locale) {
         let formatted = template;
-        
+
         // Replace placeholders
         Object.keys(data).forEach(key => {
             const value = data[key];
             const placeholder = new RegExp(`{{${key}}}`, 'g');
-            
+
             // Format based on type
             if (value instanceof Date) {
                 formatted = formatted.replace(placeholder, formatDate(value, locale));
@@ -228,7 +228,7 @@ class I18nMiddleware {
                 formatted = formatted.replace(placeholder, value);
             }
         });
-        
+
         return formatted;
     }
 
@@ -239,7 +239,7 @@ class I18nMiddleware {
      */
     getLocaleConfig(locale) {
         const normalizedLocale = normalizeLocale(locale);
-        
+
         return {
             locale: normalizedLocale,
             rtl: isRTL(normalizedLocale),
@@ -267,7 +267,7 @@ class I18nMiddleware {
             'ja': { short: 'YYYY/MM/DD', medium: 'YYYY年M月D日', long: 'YYYY年M月D日' },
             'ko': { short: 'YYYY.MM.DD', medium: 'YYYY년 M월 D일', long: 'YYYY년 M월 D일' }
         };
-        
+
         return formats[locale] || formats['en'];
     }
 
@@ -288,7 +288,7 @@ class I18nMiddleware {
             'ja': { short: 'H:mm', medium: 'H:mm:ss', long: 'H時mm分ss秒 z' },
             'ko': { short: 'H:mm', medium: 'H:mm:ss', long: 'H시 mm분 ss초 z' }
         };
-        
+
         return formats[locale] || formats['en'];
     }
 
@@ -309,7 +309,7 @@ class I18nMiddleware {
             'ja': { decimal: '.', thousand: ',' },
             'ko': { decimal: '.', thousand: ',' }
         };
-        
+
         return formats[locale] || formats['en'];
     }
 
@@ -330,7 +330,7 @@ class I18nMiddleware {
             'ja': 'JPY',
             'ko': 'KRW'
         };
-        
+
         return currencies[locale] || 'USD';
     }
 

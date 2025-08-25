@@ -21,7 +21,7 @@ class BlockchainCache {
             'agentsByCapability': { ttl: 180 }, // 3 minutes
             'ordDocumentsByTag': { ttl: 300 } // 5 minutes
         };
-        
+
         this.intervals = new Map(); // Track intervals for cleanup
         this.initializeRedis();
     }
@@ -60,7 +60,7 @@ class BlockchainCache {
      */
     async get(operation, params) {
         const key = this.generateKey(operation, params);
-        
+
         try {
             // Try Redis first
             if (this.redisClient) {
@@ -70,7 +70,7 @@ class BlockchainCache {
                     return JSON.parse(cached);
                 }
             }
-            
+
             // Fallback to in-memory cache
             if (this.cache.has(key)) {
                 const entry = this.cache.get(key);
@@ -82,7 +82,7 @@ class BlockchainCache {
                     this.cache.delete(key);
                 }
             }
-            
+
             return null;
         } catch (error) {
             log.error('Cache get error', { operation, error: error.message });
@@ -100,21 +100,21 @@ class BlockchainCache {
     async set(operation, params, data) {
         const key = this.generateKey(operation, params);
         const config = this.cacheConfig[operation] || { ttl: this.defaultTTL };
-        
+
         try {
             const serialized = JSON.stringify(data);
-            
+
             // Store in Redis
             if (this.redisClient) {
                 await this.redisClient.setEx(key, config.ttl, serialized);
             }
-            
+
             // Store in memory cache as backup
             this.cache.set(key, {
                 data,
                 expires: Date.now() + (config.ttl * 1000)
             });
-            
+
             log.debug('Cache set', { operation, ttl: config.ttl, size: serialized.length });
         } catch (error) {
             log.error('Cache set error', { operation, error: error.message });
@@ -137,12 +137,12 @@ class BlockchainCache {
 
         // Execute the function
         const result = await fn();
-        
+
         // Cache the result
         if (result !== null && result !== undefined) {
             await this.set(operation, params, result);
         }
-        
+
         return result;
     }
 
@@ -157,32 +157,32 @@ class BlockchainCache {
             if (params === null) {
                 // Invalidate all entries for operation
                 const pattern = `blockchain:${operation}:*`;
-                
+
                 if (this.redisClient) {
                     const keys = await this.redisClient.keys(pattern);
                     if (keys.length > 0) {
                         await this.redisClient.del(keys);
                     }
                 }
-                
+
                 // Clear from memory cache
                 for (const key of this.cache.keys()) {
                     if (key.startsWith(`blockchain:${operation}:`)) {
                         this.cache.delete(key);
                     }
                 }
-                
+
                 log.info('Cache invalidated for operation', { operation });
             } else {
                 // Invalidate specific entry
                 const key = this.generateKey(operation, params);
-                
+
                 if (this.redisClient) {
                     await this.redisClient.del(key);
                 }
-                
+
                 this.cache.delete(key);
-                
+
                 log.debug('Cache entry invalidated', { operation, key: `${key.substring(0, 50)  }...` });
             }
         } catch (error) {
@@ -202,14 +202,14 @@ class BlockchainCache {
                     await this.redisClient.del(keys);
                 }
             }
-            
+
             // Clear memory cache
             for (const key of this.cache.keys()) {
                 if (key.startsWith('blockchain:')) {
                     this.cache.delete(key);
                 }
             }
-            
+
             log.info('All blockchain cache cleared');
         } catch (error) {
             log.error('Cache clear error', error);
@@ -224,7 +224,7 @@ class BlockchainCache {
         const memoryEntries = Array.from(this.cache.keys())
             .filter(key => key.startsWith('blockchain:'))
             .length;
-        
+
         return {
             redisConnected: !!this.redisClient?.isReady,
             memoryEntries,
@@ -239,14 +239,14 @@ class BlockchainCache {
     cleanupExpired() {
         const now = Date.now();
         let cleaned = 0;
-        
+
         for (const [key, entry] of this.cache.entries()) {
             if (key.startsWith('blockchain:') && entry.expires <= now) {
                 this.cache.delete(key);
                 cleaned++;
             }
         }
-        
+
         if (cleaned > 0) {
             log.debug('Cleaned up expired cache entries', { count: cleaned });
         }

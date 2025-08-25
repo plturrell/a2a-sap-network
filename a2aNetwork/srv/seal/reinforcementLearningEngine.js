@@ -10,30 +10,30 @@ class ReinforcementLearningEngine extends BaseService {
     constructor() {
         super();
         this.logger = cds.log('reinforcement-learning-engine');
-        
+
         // RL State Management
         this.stateSpace = new Map();
         this.actionSpace = new Map();
         this.qTable = new Map();
         this.rewardHistory = [];
         this.episodeData = [];
-        
+
         // RL Parameters
         this.learningRate = 0.1;
         this.discountFactor = 0.95;
         this.explorationRate = 0.1;
         this.explorationDecay = 0.995;
         this.minExplorationRate = 0.01;
-        
+
         // Performance tracking
         this.performanceMetrics = new Map();
         this.improvementHistory = [];
         this.actionSuccessRates = new Map();
-        
+
         // SAP Compliance
         this.auditTrail = [];
         this.complianceCheckpoints = new Set();
-    
+
         this.intervals = new Map(); // Track intervals for cleanup
 
     /**
@@ -41,19 +41,19 @@ class ReinforcementLearningEngine extends BaseService {
      */
     async initializeService() {
         this.logger.info('Initializing Reinforcement Learning Engine');
-        
+
         // Define state space for code analysis
         await this._defineStateSpace();
-        
+
         // Define action space for improvements
         await this._defineActionSpace();
-        
+
         // Initialize Q-table
         await this._initializeQTable();
-        
+
         // Load previous learning data (implement if needed)
         this._loadPreviousLearning();
-        
+
         // Start performance monitoring
         this._startPerformanceMonitoring();
     }
@@ -63,7 +63,7 @@ class ReinforcementLearningEngine extends BaseService {
      */
     async learnFromFeedback(state, action, reward, nextState, analysisContext) {
         this.logger.info(`Learning from feedback: reward=${reward}, action=${action.type}`);
-        
+
         try {
             // Record episode data
             const episode = {
@@ -75,27 +75,27 @@ class ReinforcementLearningEngine extends BaseService {
                 context: analysisContext,
                 episodeId: this._generateEpisodeId()
             };
-            
+
             // Q-Learning update
             const qUpdate = await this._performQLearningUpdate(episode);
-            
+
             // Update exploration rate
             this._updateExplorationRate();
-            
+
             // Record performance metrics (stub if not implemented)
             if (this._recordPerformanceMetrics) {
                 await this._recordPerformanceMetrics(episode, qUpdate);
             }
-            
+
             // SAP compliance audit (stub if not implemented)
             if (this._recordAuditEntry) {
                 await this._recordAuditEntry('LEARNING_UPDATE', episode);
             }
-            
+
             // Check for significant improvements (stub if not implemented)
-            const improvementDetected = this._checkForImprovement ? 
+            const improvementDetected = this._checkForImprovement ?
                 await this._checkForImprovement(episode) : false;
-            
+
             return {
                 episodeId: episode.episodeId,
                 qValueUpdate: qUpdate,
@@ -103,7 +103,7 @@ class ReinforcementLearningEngine extends BaseService {
                 improvementDetected,
                 complianceStatus: 'COMPLIANT'
             };
-            
+
         } catch (error) {
             this.logger.error('Failed to learn from feedback:', error);
             if (this._recordAuditEntry) {
@@ -118,16 +118,16 @@ class ReinforcementLearningEngine extends BaseService {
      */
     async selectAction(currentState, availableActions, contextConstraints = {}) {
         this.logger.info('Selecting optimal action using RL policy');
-        
+
         const encodedState = this._encodeState(currentState);
-        const validActions = this._filterValidActions ? 
-            this._filterValidActions(availableActions, contextConstraints) : 
+        const validActions = this._filterValidActions ?
+            this._filterValidActions(availableActions, contextConstraints) :
             availableActions;
-        
+
         // Epsilon-greedy action selection
         let selectedAction;
         let selectionReason;
-        
+
         if (Math.random() < this.explorationRate) {
             // Exploration: random action
             selectedAction = validActions[Math.floor(Math.random() * validActions.length)];
@@ -137,23 +137,23 @@ class ReinforcementLearningEngine extends BaseService {
             selectedAction = await this._selectBestKnownAction(encodedState, validActions);
             selectionReason = 'EXPLOITATION';
         }
-        
+
         // Record action selection (if method exists)
         if (this._recordActionSelection) {
             await this._recordActionSelection(currentState, selectedAction, selectionReason);
         }
-        
+
         // SAP compliance check (if method exists)
-        const complianceCheck = this._validateActionCompliance ? 
+        const complianceCheck = this._validateActionCompliance ?
             await this._validateActionCompliance(selectedAction, contextConstraints) :
             { isCompliant: true };
-        
+
         if (!complianceCheck.isCompliant && this._selectCompliantFallbackAction) {
             // Fallback to compliant action
             selectedAction = await this._selectCompliantFallbackAction(validActions, contextConstraints);
             selectionReason = 'COMPLIANCE_FALLBACK';
         }
-        
+
         return {
             action: selectedAction,
             selectionReason,
@@ -168,33 +168,33 @@ class ReinforcementLearningEngine extends BaseService {
      */
     async evaluatePolicyPerformance(evaluationPeriod = 24) { // hours
         this.logger.info(`Evaluating RL policy performance over ${evaluationPeriod} hours`);
-        
+
         const cutoffTime = new Date(Date.now() - evaluationPeriod * 60 * 60 * 1000);
         const recentEpisodes = this.episodeData.filter(ep => ep.timestamp > cutoffTime);
-        
+
         if (recentEpisodes.length === 0) {
             return {
                 status: 'INSUFFICIENT_DATA',
                 message: 'Not enough recent episodes for evaluation'
             };
         }
-        
+
         // Calculate performance metrics
         const averageReward = recentEpisodes.reduce((sum, ep) => sum + ep.reward, 0) / recentEpisodes.length;
         const rewardTrend = this._calculateRewardTrend(recentEpisodes);
         const actionDistribution = this._calculateActionDistribution(recentEpisodes);
         const convergenceMetrics = this._calculateConvergenceMetrics();
-        
+
         // Identify improvement opportunities
         const improvementOpportunities = await this._identifyImprovementOpportunities(recentEpisodes);
-        
+
         // Generate policy optimization suggestions
         const optimizationSuggestions = await this._generateOptimizationSuggestions(
             averageReward,
             rewardTrend,
             actionDistribution
         );
-        
+
         const evaluation = {
             evaluationPeriod,
             episodeCount: recentEpisodes.length,
@@ -207,10 +207,10 @@ class ReinforcementLearningEngine extends BaseService {
             overallPerformance: this._classifyPerformance(averageReward, rewardTrend),
             timestamp: new Date()
         };
-        
+
         // Record evaluation for compliance
         await this._recordAuditEntry('POLICY_EVALUATION', evaluation);
-        
+
         return evaluation;
     }
 
@@ -219,22 +219,22 @@ class ReinforcementLearningEngine extends BaseService {
      */
     async performBanditOptimization(actionCandidates, contextualFeatures) {
         this.logger.info('Performing multi-armed bandit optimization');
-        
+
         const banditResults = [];
-        
+
         for (const action of actionCandidates) {
             const actionKey = this._encodeAction(action);
             const successHistory = this.actionSuccessRates.get(actionKey) || { successes: 0, attempts: 0 };
-            
+
             // Calculate UCB1 (Upper Confidence Bound) score
             const ucb1Score = this._calculateUCB1Score(successHistory, this.episodeData.length);
-            
+
             // Calculate contextual relevance
             const contextualScore = this._calculateContextualRelevance(action, contextualFeatures);
-            
+
             // Combined score
             const combinedScore = (ucb1Score * 0.7) + (contextualScore * 0.3);
-            
+
             banditResults.push({
                 action,
                 ucb1Score,
@@ -244,16 +244,16 @@ class ReinforcementLearningEngine extends BaseService {
                 confidence: this._calculateConfidence(successHistory)
             });
         }
-        
+
         // Sort by combined score
         banditResults.sort((a, b) => b.combinedScore - a.combinedScore);
-        
+
         // Select top action with validation
         const selectedAction = banditResults[0];
-        
+
         // Update bandit statistics
         await this._updateBanditStatistics(selectedAction.action);
-        
+
         return {
             selectedAction: selectedAction.action,
             allCandidates: banditResults,
@@ -267,20 +267,20 @@ class ReinforcementLearningEngine extends BaseService {
      */
     async performThompsonSampling(actionSpace, priorBelief = { alpha: 1, beta: 1 }) {
         this.logger.info('Performing Thompson Sampling for action selection');
-        
+
         const samplingResults = [];
-        
+
         for (const action of actionSpace) {
             const actionKey = this._encodeAction(action);
             const history = this.actionSuccessRates.get(actionKey) || { successes: 0, attempts: 0 };
-            
+
             // Beta distribution parameters
             const alpha = priorBelief.alpha + history.successes;
             const beta = priorBelief.beta + (history.attempts - history.successes);
-            
+
             // Sample from Beta distribution
             const sampledValue = this._sampleFromBetaDistribution(alpha, beta);
-            
+
             samplingResults.push({
                 action,
                 sampledValue,
@@ -290,11 +290,11 @@ class ReinforcementLearningEngine extends BaseService {
                 confidence: this._calculateBetaConfidence(alpha, beta)
             });
         }
-        
+
         // Select action with highest sampled value
         samplingResults.sort((a, b) => b.sampledValue - a.sampledValue);
         const selectedAction = samplingResults[0];
-        
+
         return {
             selectedAction: selectedAction.action,
             sampledValue: selectedAction.sampledValue,
@@ -314,31 +314,31 @@ class ReinforcementLearningEngine extends BaseService {
             range: [0, 100],
             description: 'Overall codebase complexity score'
         });
-        
+
         this.stateSpace.set('analysis_accuracy', {
             type: 'continuous',
             range: [0, 1],
             description: 'Current analysis accuracy rate'
         });
-        
+
         this.stateSpace.set('performance_score', {
             type: 'continuous',
             range: [0, 1],
             description: 'Analysis performance score'
         });
-        
+
         this.stateSpace.set('user_satisfaction', {
             type: 'continuous',
             range: [0, 1],
             description: 'User satisfaction with analysis results'
         });
-        
+
         this.stateSpace.set('error_rate', {
             type: 'continuous',
             range: [0, 1],
             description: 'Analysis error rate'
         });
-        
+
         this.stateSpace.set('execution_time', {
             type: 'continuous',
             range: [0, 300], // seconds
@@ -358,28 +358,28 @@ class ReinforcementLearningEngine extends BaseService {
             impact: 'accuracy_improvement',
             cost: 'performance_decrease'
         });
-        
+
         this.actionSpace.set('add_pattern_check', {
             type: 'feature_addition',
             feature: 'pattern_recognition',
             impact: 'completeness_improvement',
             cost: 'complexity_increase'
         });
-        
+
         this.actionSpace.set('optimize_algorithm', {
             type: 'algorithm_modification',
             target: 'core_analysis',
             impact: 'performance_improvement',
             cost: 'implementation_complexity'
         });
-        
+
         this.actionSpace.set('enhance_validation', {
             type: 'quality_improvement',
             target: 'result_validation',
             impact: 'accuracy_improvement',
             cost: 'time_increase'
         });
-        
+
         this.actionSpace.set('parallel_processing', {
             type: 'architecture_change',
             target: 'execution_strategy',
@@ -400,7 +400,7 @@ class ReinforcementLearningEngine extends BaseService {
                 this.qTable.set(key, Math.random() * 0.1);
             }
         }
-        
+
         this.logger.info(`Q-table initialized with ${this.qTable.size} state-action pairs`);
     }
 
@@ -411,24 +411,24 @@ class ReinforcementLearningEngine extends BaseService {
     async _performQLearningUpdate(episode) {
         const stateActionKey = `${episode.state}:${episode.action}`;
         const currentQ = this.qTable.get(stateActionKey) || 0;
-        
+
         // Find maximum Q-value for next state
         const maxNextQ = this._getMaxQValueForState(episode.nextState);
-        
+
         // Q-Learning formula: Q(s,a) = Q(s,a) + α[r + γ*max(Q(s',a')) - Q(s,a)]
         const targetQ = episode.reward + (this.discountFactor * maxNextQ);
         const updatedQ = currentQ + (this.learningRate * (targetQ - currentQ));
-        
+
         this.qTable.set(stateActionKey, updatedQ);
-        
+
         // Record episode
         this.episodeData.push(episode);
-        
+
         // Maintain episode history limit
         if (this.episodeData.length > 10000) {
             this.episodeData = this.episodeData.slice(-8000); // Keep recent 8000
         }
-        
+
         return {
             previousQ: currentQ,
             updatedQ,
@@ -451,7 +451,7 @@ class ReinforcementLearningEngine extends BaseService {
             state.error_rate || 0,
             state.execution_time || 0
         ];
-        
+
         return features.join(',');
     }
 
@@ -478,13 +478,13 @@ class ReinforcementLearningEngine extends BaseService {
      */
     _getMaxQValueForState(state) {
         let maxQ = -Infinity;
-        
+
         for (const [actionName] of this.actionSpace) {
             const key = `${state}:${actionName}`;
             const qValue = this.qTable.get(key) || 0;
             maxQ = Math.max(maxQ, qValue);
         }
-        
+
         return maxQ === -Infinity ? 0 : maxQ;
     }
 
@@ -495,17 +495,17 @@ class ReinforcementLearningEngine extends BaseService {
     async _selectBestKnownAction(state, validActions) {
         let bestAction = validActions[0];
         let bestQValue = -Infinity;
-        
+
         for (const action of validActions) {
             const encodedAction = this._encodeAction(action);
             const qValue = this._getQValue(state, encodedAction);
-            
+
             if (qValue > bestQValue) {
                 bestQValue = qValue;
                 bestAction = action;
             }
         }
-        
+
         return bestAction;
     }
 
@@ -526,14 +526,14 @@ class ReinforcementLearningEngine extends BaseService {
         if (!contextConstraints || Object.keys(contextConstraints).length === 0) {
             return availableActions;
         }
-        
+
         return availableActions.filter(action => {
             // Filter based on constraints
-            if (contextConstraints.excludeTypes && 
+            if (contextConstraints.excludeTypes &&
                 contextConstraints.excludeTypes.includes(action.type)) {
                 return false;
             }
-            if (contextConstraints.requiredTarget && 
+            if (contextConstraints.requiredTarget &&
                 action.target !== contextConstraints.requiredTarget) {
                 return false;
             }
@@ -560,10 +560,10 @@ class ReinforcementLearningEngine extends BaseService {
         if (actionHistory.attempts === 0) {
             return Infinity; // Encourage exploration of unvisited actions
         }
-        
+
         const averageReward = actionHistory.successes / actionHistory.attempts;
         const confidence = Math.sqrt((2 * Math.log(totalAttempts)) / actionHistory.attempts);
-        
+
         return averageReward + confidence;
     }
 
@@ -575,7 +575,7 @@ class ReinforcementLearningEngine extends BaseService {
         // Simplified Beta distribution sampling using gamma distributions
         const gammaA = this._sampleFromGammaDistribution(alpha, 1);
         const gammaB = this._sampleFromGammaDistribution(beta, 1);
-        
+
         return gammaA / (gammaA + gammaB);
     }
 
@@ -588,24 +588,24 @@ class ReinforcementLearningEngine extends BaseService {
         if (shape < 1) {
             return this._sampleFromGammaDistribution(shape + 1, scale) * Math.pow(Math.random(), 1 / shape);
         }
-        
+
         const d = shape - 1/3;
         const c = 1 / Math.sqrt(9 * d);
-        
+
         while (true) {
             let x, v;
             do {
                 x = this._normalRandom();
                 v = 1 + c * x;
             } while (v <= 0);
-            
+
             v = v * v * v;
             const u = Math.random();
-            
+
             if (u < 1 - 0.0331 * x * x * x * x) {
                 return d * v * scale;
             }
-            
+
             if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) {
                 return d * v * scale;
             }
@@ -622,13 +622,13 @@ class ReinforcementLearningEngine extends BaseService {
             this._spareNormal = undefined;
             return spare;
         }
-        
+
         const u = Math.random();
         const v = Math.random();
         const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-        
+
         this._spareNormal = Math.sqrt(-2 * Math.log(u)) * Math.sin(2 * Math.PI * v);
-        
+
         return z;
     }
 
@@ -652,9 +652,9 @@ class ReinforcementLearningEngine extends BaseService {
             userId: 'RL_ENGINE',
             sessionId: this._getCurrentSessionId()
         };
-        
+
         this.auditTrail.push(auditEntry);
-        
+
         // Maintain audit trail size
         if (this.auditTrail.length > 50000) {
             this.auditTrail = this.auditTrail.slice(-40000);

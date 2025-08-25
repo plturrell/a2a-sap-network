@@ -14,13 +14,13 @@ class EnvironmentConfig {
         this.configPath = path.join(__dirname, `${this.env}.env`);
         this.secrets = new Map();
         this.logger = LoggerFactory.createNetworkLogger(this.env);
-        
+
         // Load environment variables
         this.loadEnvironment();
-        
+
         // Validate configuration
         this.validateConfig();
-        
+
         // Load secrets from secure store
         this.loadSecrets();
     }
@@ -46,7 +46,7 @@ class EnvironmentConfig {
             dotenv.config({ path: localEnvPath, override: true });
         }
 
-        this.logger.info('Configuration loaded successfully', { 
+        this.logger.info('Configuration loaded successfully', {
             environment: this.env,
             configPath: this.configPath,
             operation: 'loadEnvironment'
@@ -67,7 +67,7 @@ class EnvironmentConfig {
             PORT: joi.number().default(4004),
             HOST: joi.string().default('0.0.0.0'),
             API_VERSION: joi.string().default('v1'),
-            
+
             // Database Configuration
             DB_TYPE: joi.string()
                 .valid('sqlite', 'postgresql', 'mongodb', 'hana')
@@ -75,19 +75,19 @@ class EnvironmentConfig {
             DB_CONNECTION_STRING: joi.string().required(),
             DB_POOL_SIZE: joi.number().default(10),
             DB_CONNECTION_TIMEOUT: joi.number().default(30000),
-            
+
             // Redis Configuration
             REDIS_HOST: joi.string().default('localhost'),
             REDIS_PORT: joi.number().default(6379),
             REDIS_PASSWORD: joi.string().allow('').optional(),
             REDIS_DB: joi.number().default(0),
-            
+
             // RabbitMQ Configuration
             RABBITMQ_URL: joi.string().default('amqp://localhost'),
             MQ_PREFETCH: joi.number().default(10),
             MQ_MESSAGE_EXPIRY: joi.number().default(3600000),
             MQ_MAX_RETRIES: joi.number().default(3),
-            
+
             // Authentication
             JWT_SECRET: joi.string().min(32).required(),
             JWT_REFRESH_SECRET: joi.string().min(32).required(),
@@ -95,13 +95,13 @@ class EnvironmentConfig {
             REFRESH_TOKEN_EXPIRY: joi.string().default('7d'),
             SESSION_TIMEOUT: joi.number().default(3600),
             MAX_CONCURRENT_SESSIONS: joi.number().default(5),
-            
+
             // Security
             BCRYPT_ROUNDS: joi.number().min(10).default(12),
             RATE_LIMIT_WINDOW: joi.number().default(900000), // 15 minutes
             RATE_LIMIT_MAX: joi.number().default(100),
             CORS_ORIGINS: joi.string().default('*'),
-            
+
             // AI/Chat Configuration
             GROK_API_KEY: joi.string().when('NODE_ENV', {
                 is: 'production',
@@ -111,30 +111,30 @@ class EnvironmentConfig {
             GROK_MODEL: joi.string().default('gpt-4'),
             GROK_TEMPERATURE: joi.number().min(0).max(2).default(0.7),
             GROK_MAX_TOKENS: joi.number().default(1000),
-            
+
             // WebSocket Configuration
             WS_PORT: joi.number().default(8087),
             WS_HEARTBEAT_INTERVAL: joi.number().default(30000),
             WS_MAX_PAYLOAD: joi.number().default(1048576), // 1MB
-            
+
             // Monitoring
             ENABLE_METRICS: joi.boolean().default(true),
             METRICS_PORT: joi.number().default(9090),
             LOG_LEVEL: joi.string()
                 .valid('error', 'warn', 'info', 'debug')
                 .default('info'),
-            
+
             // Feature Flags
             ENABLE_CHAT: joi.boolean().default(true),
             ENABLE_BLOCKCHAIN: joi.boolean().default(false),
             ENABLE_ENCRYPTION: joi.boolean().default(true),
             ENABLE_RATE_LIMITING: joi.boolean().default(true),
-            
+
             // External Services
             A2A_SERVICE_URL: joi.string().uri().required(),
             A2A_BASE_URL: joi.string().uri().required(),
             BLOCKCHAIN_RPC_URL: joi.string().uri().optional(),
-            
+
             // Performance
             CACHE_TTL: joi.number().default(3600),
             MAX_CACHE_SIZE: joi.number().default(1000),
@@ -160,7 +160,7 @@ class EnvironmentConfig {
                 errors: errorDetails,
                 operation: 'validateConfig'
             });
-            
+
             if (this.env === 'production') {
                 process.exit(1);
             }
@@ -168,7 +168,7 @@ class EnvironmentConfig {
 
         // Apply validated values back to process.env
         Object.assign(process.env, value);
-        
+
         this.logger.info('Configuration validation completed successfully', {
             environment: this.env,
             operation: 'validateConfig'
@@ -183,10 +183,10 @@ class EnvironmentConfig {
             try {
                 // Example: AWS Secrets Manager
                 // const secrets = await this.loadFromAWSSecretsManager();
-                
+
                 // Example: HashiCorp Vault
                 // const secrets = await this.loadFromVault();
-                
+
                 // For now, use environment variables
                 this.secrets.set('jwt_secret', process.env.JWT_SECRET);
                 this.secrets.set('db_password', process.env.DB_PASSWORD);
@@ -323,18 +323,18 @@ class EnvironmentConfig {
     exportConfig() {
         const config = {};
         const sensitiveKeys = ['PASSWORD', 'SECRET', 'KEY', 'TOKEN'];
-        
+
         for (const [key, value] of Object.entries(process.env)) {
             if (key.startsWith('A2A_') || key.startsWith('DB_') || key.startsWith('REDIS_')) {
                 // Mask sensitive values
-                const isSensitive = sensitiveKeys.some(sensitive => 
+                const isSensitive = sensitiveKeys.some(sensitive =>
                     key.toUpperCase().includes(sensitive)
                 );
-                
+
                 config[key] = isSensitive ? '***MASKED***' : value;
             }
         }
-        
+
         return config;
     }
 }

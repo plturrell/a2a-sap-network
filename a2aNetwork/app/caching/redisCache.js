@@ -11,7 +11,7 @@ const activeIntervals = new Map();
 class A2ACacheService extends EventEmitter {
     constructor(options = {}) {
         super();
-        
+
         this.options = {
             host: process.env.REDIS_HOST || 'localhost',
             port: process.env.REDIS_PORT || 6379,
@@ -23,7 +23,7 @@ class A2ACacheService extends EventEmitter {
             lazyConnect: true,
             ...options
         };
-        
+
         this.redis = null;
         this.fallbackCache = new Map();
         this.isRedisAvailable = false;
@@ -34,7 +34,7 @@ class A2ACacheService extends EventEmitter {
             deletes: 0,
             errors: 0
         };
-        
+
         this.defaultTTL = 300; // 5 minutes
         this.maxFallbackSize = 1000; // Max items in fallback cache
     }
@@ -51,7 +51,7 @@ class A2ACacheService extends EventEmitter {
             // Test connection
             await this.redis.ping();
             this.isRedisAvailable = true;
-            
+
             // Set up event handlers
             this.redis.on('connect', () => {
                 // console.log('✅ Redis cache connected');
@@ -72,7 +72,7 @@ class A2ACacheService extends EventEmitter {
             });
 
             // console.log('✅ Cache service initialized with Redis backend');
-            
+
         } catch (error) {
             console.warn('⚠️  Redis not available, using in-memory cache fallback:', error.message);
             this.isRedisAvailable = false;
@@ -95,10 +95,10 @@ class A2ACacheService extends EventEmitter {
     // Get value from cache
     async get(key) {
         const fullKey = this.generateKey(key);
-        
+
         try {
             let value;
-            
+
             if (this.isRedisAvailable && this.redis) {
                 // Try Redis first
                 const result = await this.redis.get(fullKey);
@@ -108,7 +108,7 @@ class A2ACacheService extends EventEmitter {
                     return value;
                 }
             }
-            
+
             // Fallback to in-memory cache
             const fallbackData = this.fallbackCache.get(fullKey);
             if (fallbackData) {
@@ -118,14 +118,14 @@ class A2ACacheService extends EventEmitter {
                     this.cacheStats.misses++;
                     return null;
                 }
-                
+
                 this.cacheStats.hits++;
                 return fallbackData.value;
             }
-            
+
             this.cacheStats.misses++;
             return null;
-            
+
         } catch (error) {
             console.error('Cache get error:', error.message);
             this.cacheStats.errors++;
@@ -136,10 +136,10 @@ class A2ACacheService extends EventEmitter {
     // Set value in cache
     async set(key, value, ttl = this.defaultTTL) {
         const fullKey = this.generateKey(key);
-        
+
         try {
             const serializedValue = JSON.stringify(value);
-            
+
             if (this.isRedisAvailable && this.redis) {
                 // Set in Redis
                 if (ttl > 0) {
@@ -148,7 +148,7 @@ class A2ACacheService extends EventEmitter {
                     await this.redis.set(fullKey, serializedValue);
                 }
             }
-            
+
             // Also set in fallback cache
             const expiry = ttl > 0 ? Date.now() + (ttl * 1000) : null;
             this.fallbackCache.set(fullKey, {
@@ -156,16 +156,16 @@ class A2ACacheService extends EventEmitter {
                 expiry,
                 timestamp: Date.now()
             });
-            
+
             this.cacheStats.sets++;
-            
+
             // Cleanup fallback if too large
             if (this.fallbackCache.size > this.maxFallbackSize) {
                 this.cleanupFallbackCache();
             }
-            
+
             return true;
-            
+
         } catch (error) {
             console.error('Cache set error:', error.message);
             this.cacheStats.errors++;
@@ -176,17 +176,17 @@ class A2ACacheService extends EventEmitter {
     // Delete from cache
     async delete(key) {
         const fullKey = this.generateKey(key);
-        
+
         try {
             if (this.isRedisAvailable && this.redis) {
                 await this.redis.del(fullKey);
             }
-            
+
             this.fallbackCache.delete(fullKey);
             this.cacheStats.deletes++;
-            
+
             return true;
-            
+
         } catch (error) {
             console.error('Cache delete error:', error.message);
             this.cacheStats.errors++;
@@ -203,7 +203,7 @@ class A2ACacheService extends EventEmitter {
                     await this.redis.del(...keys);
                 }
             }
-            
+
             // Clear fallback cache
             if (pattern === '*') {
                 this.fallbackCache.clear();
@@ -215,9 +215,9 @@ class A2ACacheService extends EventEmitter {
                     }
                 }
             }
-            
+
             return true;
-            
+
         } catch (error) {
             console.error('Cache clear error:', error.message);
             this.cacheStats.errors++;
@@ -230,24 +230,24 @@ class A2ACacheService extends EventEmitter {
         try {
             // Try to get from cache first
             let value = await this.get(key);
-            
+
             if (value !== null) {
                 return value;
             }
-            
+
             // Cache miss - fetch and cache
             value = await fetchFunction();
-            
+
             if (value !== null && value !== undefined) {
                 await this.set(key, value, ttl);
             }
-            
+
             return value;
-            
+
         } catch (error) {
             console.error('Cache getOrSet error:', error.message);
             this.cacheStats.errors++;
-            
+
             // Try to execute fetch function directly
             try {
                 return await fetchFunction();
@@ -323,10 +323,10 @@ module.exports.shutdown = shutdown;
         if (this.fallbackCache.size <= this.maxFallbackSize) {
             return;
         }
-        
+
         const now = Date.now();
         const entries = Array.from(this.fallbackCache.entries());
-        
+
         // Remove expired entries first
         let removedExpired = 0;
         for (const [key, data] of entries) {
@@ -335,13 +335,13 @@ module.exports.shutdown = shutdown;
                 removedExpired++;
             }
         }
-        
+
         // If still too large, remove oldest entries
         if (this.fallbackCache.size > this.maxFallbackSize) {
             const sortedEntries = entries
                 .filter(([key]) => this.fallbackCache.has(key)) // Still exists after expiry cleanup
                 .sort(([,a], [,b]) => a.timestamp - b.timestamp);
-            
+
             const toRemove = this.fallbackCache.size - this.maxFallbackSize;
             for (let i = 0; i < toRemove; i++) {
                 if (sortedEntries[i]) {
@@ -349,7 +349,7 @@ module.exports.shutdown = shutdown;
                 }
             }
         }
-        
+
         if (removedExpired > 0) {
             // console.log(`🧹 Cleaned up ${removedExpired} expired cache entries`);
         }
@@ -408,7 +408,7 @@ module.exports.shutdown = shutdown;
             }
 
             const cacheKey = `http:${req.method}:${req.path}:${JSON.stringify(req.query)}`;
-            
+
             // Try to get from cache
             this.get(cacheKey).then(cachedResponse => {
                 if (cachedResponse) {
@@ -419,7 +419,7 @@ module.exports.shutdown = shutdown;
 
                 // Cache miss - capture response
                 res.set('X-Cache', 'MISS');
-                
+
                 const originalSend = res.send;
                 res.send = function(data) {
                     // Cache successful responses
@@ -429,7 +429,7 @@ module.exports.shutdown = shutdown;
                             data: data,
                             contentType: res.get('Content-Type')
                         };
-                        
+
                         // Cache with appropriate TTL
                         let ttl = defaultTTL;
                         if (req.path.includes('tile')) {
@@ -437,15 +437,15 @@ module.exports.shutdown = shutdown;
                         } else if (req.path.includes('user')) {
                             ttl = 600; // User data can be cached longer
                         }
-                        
+
                         this.set(cacheKey, responseData, ttl).catch(err => {
                             console.warn('Failed to cache response:', err.message);
                         });
                     }
-                    
+
                     return originalSend.call(this, data);
                 }.bind(this);
-                
+
                 next();
             }).catch(error => {
                 console.error('Cache middleware error:', error.message);

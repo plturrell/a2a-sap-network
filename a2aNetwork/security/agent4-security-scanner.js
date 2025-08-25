@@ -5,7 +5,7 @@ const path = require('path');
 
 /**
  * Agent 4 (Calculation Validation Agent) Security Scanner
- * Specialized scanner for formula processing, mathematical expression validation, 
+ * Specialized scanner for formula processing, mathematical expression validation,
  * calculation validation, and numeric computation vulnerabilities
  */
 class Agent4SecurityScanner {
@@ -20,7 +20,7 @@ class Agent4SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // Calculation Validation-specific vulnerability patterns
         this.calculationValidationPatterns = {
             // Formula injection attacks
@@ -42,7 +42,7 @@ class Agent4SecurityScanner {
                 message: 'Potential formula injection vulnerability',
                 impact: 'Could allow injection of malicious formulas leading to code execution, data manipulation, or system compromise'
             },
-            
+
             // Mathematical expression injection
             EXPRESSION_INJECTION: {
                 patterns: [
@@ -62,7 +62,7 @@ class Agent4SecurityScanner {
                 message: 'Mathematical expression injection vulnerability',
                 impact: 'Could allow injection of malicious mathematical expressions leading to arbitrary code execution'
             },
-            
+
             // Calculation bypass vulnerabilities
             CALCULATION_BYPASS: {
                 patterns: [
@@ -82,7 +82,7 @@ class Agent4SecurityScanner {
                 message: 'Calculation validation bypass vulnerability',
                 impact: 'Could allow bypassing calculation validation leading to incorrect results or data integrity issues'
             },
-            
+
             // Numeric overflow/underflow vulnerabilities
             NUMERIC_OVERFLOW: {
                 patterns: [
@@ -102,7 +102,7 @@ class Agent4SecurityScanner {
                 message: 'Numeric overflow/underflow vulnerability',
                 impact: 'Could cause numeric overflow/underflow leading to incorrect calculations and potential system instability'
             },
-            
+
             // Validation rule manipulation
             VALIDATION_MANIPULATION: {
                 patterns: [
@@ -122,7 +122,7 @@ class Agent4SecurityScanner {
                 message: 'Validation rule manipulation vulnerability',
                 impact: 'Could allow manipulation of validation rules compromising calculation integrity and accuracy'
             },
-            
+
             // Result tampering vulnerabilities
             RESULT_TAMPERING: {
                 patterns: [
@@ -142,7 +142,7 @@ class Agent4SecurityScanner {
                 message: 'Calculation result tampering vulnerability',
                 impact: 'Could allow tampering with calculation results leading to data integrity compromise'
             },
-            
+
             // Precision manipulation vulnerabilities
             PRECISION_MANIPULATION: {
                 patterns: [
@@ -162,7 +162,7 @@ class Agent4SecurityScanner {
                 message: 'Calculation precision manipulation vulnerability',
                 impact: 'Could allow manipulation of calculation precision affecting accuracy and reliability of results'
             },
-            
+
             // Batch processing vulnerabilities
             BATCH_PROCESSING_VULN: {
                 patterns: [
@@ -182,7 +182,7 @@ class Agent4SecurityScanner {
                 message: 'Batch processing security vulnerability',
                 impact: 'Could allow abuse of batch processing features leading to resource exhaustion or denial of service'
             },
-            
+
             // Formula builder vulnerabilities
             FORMULA_BUILDER_VULN: {
                 patterns: [
@@ -202,7 +202,7 @@ class Agent4SecurityScanner {
                 message: 'Formula builder security vulnerability',
                 impact: 'Could allow construction of malicious formulas through the formula builder interface'
             },
-            
+
             // Benchmark manipulation vulnerabilities
             BENCHMARK_MANIPULATION: {
                 patterns: [
@@ -222,7 +222,7 @@ class Agent4SecurityScanner {
                 message: 'Benchmark manipulation vulnerability',
                 impact: 'Could allow manipulation of benchmark results affecting performance analysis and optimization decisions'
             },
-            
+
             // Template injection vulnerabilities
             TEMPLATE_INJECTION: {
                 patterns: [
@@ -242,7 +242,7 @@ class Agent4SecurityScanner {
                 message: 'Calculation template injection vulnerability',
                 impact: 'Could allow injection of malicious content into calculation templates'
             },
-            
+
             // Report generation vulnerabilities
             REPORT_GENERATION_VULN: {
                 patterns: [
@@ -262,7 +262,7 @@ class Agent4SecurityScanner {
                 message: 'Report generation security vulnerability',
                 impact: 'Could allow injection of malicious content into generated calculation reports'
             },
-            
+
             // Function whitelist bypass vulnerabilities
             FUNCTION_WHITELIST_BYPASS: {
                 patterns: [
@@ -284,29 +284,29 @@ class Agent4SecurityScanner {
             }
         };
     }
-    
+
     scanFile(filePath) {
         console.log(`🔎 Scanning: ${filePath}`);
         this.filesScanned++;
-        
+
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const lines = content.split('\n');
-            
+
             // Check for general OWASP vulnerabilities
             this.checkOWASPVulnerabilities(content, filePath, lines);
-            
+
             // Check for calculation validation-specific vulnerabilities
             this.checkCalculationValidationVulnerabilities(content, filePath, lines);
-            
+
             // Check for SAP Fiori specific issues
             this.checkSAPFioriCompliance(content, filePath, lines);
-            
+
         } catch (error) {
             console.error(`❌ Error scanning ${filePath}: ${error.message}`);
         }
     }
-    
+
     checkOWASPVulnerabilities(content, filePath, lines) {
         // XSS vulnerabilities
         const xssPatterns = [
@@ -316,13 +316,13 @@ class Agent4SecurityScanner {
             { pattern: /dangerouslySetInnerHTML/gi, type: 'XSS', message: 'Potential XSS via React dangerouslySetInnerHTML' },
             { pattern: /\.setText\s*\([^)]*\+/gi, type: 'XSS', message: 'Potential XSS via dynamic text setting' }
         ];
-        
+
         xssPatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
-                
+
                 // Skip if properly sanitized
                 if (!code.includes('encodeXML') && !code.includes('sanitizeHTML') && !code.includes('escapeRegExp')) {
                     this.addVulnerability({
@@ -338,7 +338,7 @@ class Agent4SecurityScanner {
                 }
             }
         });
-        
+
         // CSRF vulnerabilities
         const csrfPatterns = [
             /\$\.ajax\s*\(\s*\{[^}]*type\s*:\s*["']POST["']/gi,
@@ -347,13 +347,13 @@ class Agent4SecurityScanner {
             /\.delete\s*\(/gi,
             /fetch\s*\([^,]+,\s*\{[^}]*method\s*:\s*["'](POST|PUT|DELETE)["']/gi
         ];
-        
+
         csrfPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 // Check if CSRF token is present nearby
                 const surroundingCode = content.substring(Math.max(0, match.index - 200), match.index + 200);
-                if (!surroundingCode.includes('X-CSRF-Token') && 
+                if (!surroundingCode.includes('X-CSRF-Token') &&
                     !surroundingCode.includes('csrf') &&
                     !surroundingCode.includes('_getCSRFToken') &&
                     !surroundingCode.includes('_csrfToken') &&
@@ -372,20 +372,20 @@ class Agent4SecurityScanner {
                 }
             }
         });
-        
+
         // Insecure connections
         const insecurePatterns = [
             { pattern: /http:\/\//gi, type: 'INSECURE_CONNECTION', message: 'Insecure HTTP connection' },
             { pattern: /ws:\/\//gi, type: 'INSECURE_WEBSOCKET', message: 'Insecure WebSocket connection' }
         ];
-        
+
         insecurePatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
                 // Skip comments, examples, and already secured code
-                if (!code.includes('//') && !code.includes('example') && 
+                if (!code.includes('//') && !code.includes('example') &&
                     !code.includes('wss://') && !code.includes('https://')) {
                     this.addVulnerability({
                         type: type,
@@ -400,7 +400,7 @@ class Agent4SecurityScanner {
                 }
             }
         });
-        
+
         // Input validation vulnerabilities specific to calculation contexts
         const inputValidationPatterns = [
             { pattern: /eval\s*\(/gi, type: 'CODE_INJECTION', message: 'Code injection via eval()' },
@@ -408,23 +408,23 @@ class Agent4SecurityScanner {
             { pattern: /setTimeout\s*\([^)]*\+/gi, type: 'CODE_INJECTION', message: 'Potential code injection in setTimeout' },
             { pattern: /setInterval\s*\([^)]*\+/gi, type: 'CODE_INJECTION', message: 'Potential code injection in setInterval' }
         ];
-        
+
         inputValidationPatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
                 const context = lines.slice(Math.max(0, lineNumber - 3), lineNumber + 2).join('\n');
-                
+
                 // Skip false positives in SecurityUtils
                 if (filePath.includes('SecurityUtils.js')) {
-                    if (code.includes('pattern') || code.includes('message') || 
+                    if (code.includes('pattern') || code.includes('message') ||
                         code.includes('dangerousPatterns') || context.includes('dangerousPatterns') ||
                         context.includes('validateFormula')) {
                         continue;
                     }
                 }
-                
+
                 this.addVulnerability({
                     type: type,
                     severity: this.severityLevels.CRITICAL,
@@ -438,7 +438,7 @@ class Agent4SecurityScanner {
             }
         });
     }
-    
+
     checkCalculationValidationVulnerabilities(content, filePath, lines) {
         Object.entries(this.calculationValidationPatterns).forEach(([vulnType, config]) => {
             config.patterns.forEach(pattern => {
@@ -446,12 +446,12 @@ class Agent4SecurityScanner {
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
                     const code = lines[lineNumber - 1]?.trim() || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(code, vulnType, filePath)) {
                         continue;
                     }
-                    
+
                     this.addVulnerability({
                         type: config.category,
                         severity: config.severity,
@@ -466,7 +466,7 @@ class Agent4SecurityScanner {
             });
         });
     }
-    
+
     isFalsePositive(code, vulnType, filePath) {
         // Skip legitimate uses that are not security vulnerabilities
         const falsePositivePatterns = {
@@ -508,43 +508,43 @@ class Agent4SecurityScanner {
                 /escapeHTML/gi  // SecurityUtils escaping
             ]
         };
-        
+
         if (falsePositivePatterns[vulnType]) {
             const patterns = falsePositivePatterns[vulnType];
             if (patterns.some(pattern => pattern.test(code))) {
                 return true;
             }
         }
-        
+
         // General false positive checks for SecurityUtils file
         if (filePath.includes('SecurityUtils.js')) {
             // SecurityUtils contains security patterns that may trigger false positives
-            return code.includes('pattern') || code.includes('message') || 
+            return code.includes('pattern') || code.includes('message') ||
                    code.includes('dangerousPatterns') || code.includes('test') ||
                    code.includes('validateFormula') || code.includes('sanitize') ||
                    code.includes('validation') || code.includes('_validate') ||
                    code.includes('escapeHTML') || code.includes('encodeXML');
         }
-        
+
         // Skip comments and documentation
         if (code.includes('//') || code.includes('/*') || code.includes('*') || code.includes('try {')) {
             return true;
         }
-        
+
         // Skip console.log and debug statements
         if (code.includes('console.log') || code.includes('console.error')) {
             return true;
         }
-        
+
         // Skip legitimate validation patterns
-        if (code.includes('_validateInput') || code.includes('_validateApiResponse') || 
+        if (code.includes('_validateInput') || code.includes('_validateApiResponse') ||
             code.includes('_validateCalculation') || code.includes('_validateFormula')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     getCalculationValidationFix(vulnType) {
         const fixes = {
             FORMULA_INJECTION: 'Validate and sanitize all formula input data, use parameterized formula processing with whitelist validation',
@@ -563,7 +563,7 @@ class Agent4SecurityScanner {
         };
         return fixes[vulnType] || 'Implement proper validation and security controls for calculation validation operations';
     }
-    
+
     checkSAPFioriCompliance(content, filePath, lines) {
         // Check for missing i18n
         if (filePath.includes('.controller.js')) {
@@ -573,7 +573,7 @@ class Agent4SecurityScanner {
                 { pattern: /setText\s*\(\s*["'][^"']+["']\s*\)/gi, message: 'Hardcoded text in UI element' },
                 { pattern: /headerText\s*:\s*["'][^"']+["']/gi, message: 'Hardcoded header text' }
             ];
-            
+
             i18nPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -595,7 +595,7 @@ class Agent4SecurityScanner {
                 }
             });
         }
-        
+
         // Check for missing security headers in manifest
         if (filePath.includes('manifest.json')) {
             const requiredHeaders = [
@@ -603,7 +603,7 @@ class Agent4SecurityScanner {
                 'X-Frame-Options',
                 'X-Content-Type-Options'
             ];
-            
+
             requiredHeaders.forEach(header => {
                 if (!content.includes(header)) {
                     this.addVulnerability({
@@ -619,7 +619,7 @@ class Agent4SecurityScanner {
                 }
             });
         }
-        
+
         // Check for calculation-specific accessibility issues
         if (filePath.includes('.controller.js') || filePath.includes('.fragment.xml')) {
             const accessibilityPatterns = [
@@ -629,7 +629,7 @@ class Agent4SecurityScanner {
                 { pattern: /formula.*result/gi, message: 'Formula result accessibility: Missing screen reader support for calculation results' },
                 { pattern: /validation.*error/gi, message: 'Validation error accessibility: Missing ARIA live regions for error announcements' }
             ];
-            
+
             accessibilityPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -650,7 +650,7 @@ class Agent4SecurityScanner {
                 }
             });
         }
-        
+
         // Check for calculation processing performance issues
         const performancePatterns = [
             { pattern: /setTimeout.*\d{4,}/gi, message: 'Long timeout detected: May affect calculation processing responsiveness' },
@@ -658,7 +658,7 @@ class Agent4SecurityScanner {
             { pattern: /while\s*\([^)]*length/gi, message: 'Potentially infinite loop: Could cause calculation processing to hang' },
             { pattern: /recursion.*depth/gi, message: 'Deep recursion detected: May cause stack overflow in formula processing' }
         ];
-        
+
         performancePatterns.forEach(({ pattern, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
@@ -677,32 +677,32 @@ class Agent4SecurityScanner {
             }
         });
     }
-    
+
     getLineNumber(content, index) {
         const lines = content.substring(0, index).split('\n');
         return lines.length;
     }
-    
+
     addVulnerability(vuln) {
         // Avoid duplicates
-        const exists = this.vulnerabilities.some(v => 
-            v.file === vuln.file && 
-            v.line === vuln.line && 
+        const exists = this.vulnerabilities.some(v =>
+            v.file === vuln.file &&
+            v.line === vuln.line &&
             v.type === vuln.type
         );
-        
+
         if (!exists) {
             this.vulnerabilities.push(vuln);
         }
     }
-    
+
     scanDirectory(dirPath) {
         const files = fs.readdirSync(dirPath);
-        
+
         files.forEach(file => {
             const fullPath = path.join(dirPath, file);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
                 this.scanDirectory(fullPath);
             } else if (stat.isFile() && this.shouldScanFile(file)) {
@@ -710,12 +710,12 @@ class Agent4SecurityScanner {
             }
         });
     }
-    
+
     shouldScanFile(filename) {
         const extensions = ['.js', '.xml', '.json', '.html', '.ts'];
         return extensions.some(ext => filename.endsWith(ext));
     }
-    
+
     generateReport() {
         const scanDuration = (Date.now() - this.scanStartTime) / 1000;
         const criticalCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.CRITICAL).length;
@@ -723,11 +723,11 @@ class Agent4SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🧮 AGENT 4 CALCULATION VALIDATION SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
@@ -736,12 +736,12 @@ class Agent4SecurityScanner {
         console.log(`   Medium Issues: ${mediumCount}`);
         console.log(`   Low Issues: ${lowCount}`);
         console.log(`   Warnings: ${warningCount}`);
-        
+
         // Calculate security score
         const totalIssues = criticalCount * 10 + highCount * 5 + mediumCount * 2 + lowCount;
         const maxScore = 100;
         const score = Math.max(0, maxScore - totalIssues);
-        
+
         console.log(`\n🎯 CALCULATION VALIDATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
             console.log('   Status: ✅ EXCELLENT - Calculation validation system is well secured');
@@ -752,10 +752,10 @@ class Agent4SecurityScanner {
         } else {
             console.log('   Status: ❌ POOR - Significant calculation validation security improvements needed');
         }
-        
+
         // Calculation-specific findings
-        const calculationIssues = this.vulnerabilities.filter(v => 
-            v.type.includes('FORMULA') || v.type.includes('CALCULATION') || 
+        const calculationIssues = this.vulnerabilities.filter(v =>
+            v.type.includes('FORMULA') || v.type.includes('CALCULATION') ||
             v.type.includes('EXPRESSION') || v.type.includes('VALIDATION') ||
             v.type.includes('RESULT') || v.type.includes('PRECISION') ||
             v.type.includes('BATCH') || v.type.includes('BENCHMARK'));
@@ -765,19 +765,19 @@ class Agent4SecurityScanner {
             calculationIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
             });
-            
+
             Object.entries(issueCounts).forEach(([type, count]) => {
                 console.log(`   ${type}: ${count} issues`);
             });
         }
-        
+
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:\n');
-            
+
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
-            
+
             severityOrder.forEach(severity => {
                 const sevVulns = this.vulnerabilities.filter(v => v.severity === severity);
                 if (sevVulns.length > 0) {
@@ -793,7 +793,7 @@ class Agent4SecurityScanner {
                 }
             });
         }
-        
+
         // Calculation validation security recommendations
         console.log('💡 AGENT 4 CALCULATION VALIDATION SECURITY RECOMMENDATIONS:\n');
         console.log('1. 🛡️  Secure Formula Processing');
@@ -801,70 +801,70 @@ class Agent4SecurityScanner {
         console.log('   - Use function whitelisting for allowed mathematical operations');
         console.log('   - Validate formula syntax and structure before execution');
         console.log('   - Implement secure expression parsing with bounds checking');
-        
+
         console.log('\n2. 🔒 Expression Injection Prevention');
         console.log('   - Sanitize all mathematical expressions before processing');
         console.log('   - Use parameterized calculation operations where possible');
         console.log('   - Implement expression complexity limits and validation');
         console.log('   - Monitor for suspicious expression patterns and injection attempts');
-        
+
         console.log('\n3. 🔐 Calculation Integrity Protection');
         console.log('   - Implement calculation result verification and checksums');
         console.log('   - Validate calculation inputs and outputs for consistency');
         console.log('   - Use secure arithmetic operations to prevent overflow/underflow');
         console.log('   - Monitor calculation operations for tampering attempts');
-        
+
         console.log('\n4. ⚡ Numeric Safety Controls');
         console.log('   - Implement numeric bounds checking for all calculations');
         console.log('   - Use safe arithmetic operations and overflow detection');
         console.log('   - Validate precision parameters and calculation limits');
         console.log('   - Monitor for numeric manipulation and anomalous results');
-        
+
         console.log('\n5. 🔍 Validation Rule Security');
         console.log('   - Protect validation rules from unauthorized modification');
         console.log('   - Implement immutable validation configurations');
         console.log('   - Validate rule integrity and authenticity');
         console.log('   - Monitor validation rule changes and access attempts');
-        
+
         console.log('\n6. 📊 Batch Processing Protection');
         console.log('   - Implement proper batch size limits and validation');
         console.log('   - Use rate limiting for batch calculation operations');
         console.log('   - Monitor batch processing for resource abuse');
         console.log('   - Validate batch configurations and processing parameters');
-        
+
         console.log('\n7. 🎨 Formula Builder Security');
         console.log('   - Implement secure formula building with strict validation');
         console.log('   - Sanitize all formula components and templates');
         console.log('   - Use function whitelisting in formula builder interface');
         console.log('   - Monitor formula construction for malicious patterns');
-        
+
         console.log('\n8. 📈 Benchmark Integrity');
         console.log('   - Validate benchmark configurations and parameters');
         console.log('   - Implement integrity checks for benchmark results');
         console.log('   - Monitor benchmark operations for manipulation attempts');
         console.log('   - Use secure benchmark data storage and processing');
-        
+
         console.log('\n9. 📄 Report Generation Security');
         console.log('   - Sanitize all report data and template content');
         console.log('   - Implement secure report generation with output encoding');
         console.log('   - Validate report configurations and access permissions');
         console.log('   - Monitor report generation for injection attempts');
-        
+
         console.log('\n10. 🔧 Template Processing Safety');
         console.log('    - Sanitize calculation templates and template data');
         console.log('    - Implement secure template processing with validation');
         console.log('    - Use content security policies for template rendering');
         console.log('    - Monitor template operations for injection attempts');
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('Calculation Validation Security Scan completed. Address critical formula vulnerabilities first.');
         console.log('Focus on formula injection prevention and calculation integrity protection.');
         console.log('='.repeat(80));
-        
+
         // Generate JSON report for further processing
         this.saveJSONReport();
     }
-    
+
     saveJSONReport() {
         const reportData = {
             agent: 'Agent4-CalculationValidation',
@@ -892,7 +892,7 @@ class Agent4SecurityScanner {
                 'Secure template processing with content validation'
             ]
         };
-        
+
         try {
             fs.writeFileSync('agent4-security-report.json', JSON.stringify(reportData, null, 2));
             console.log('\n📄 Detailed report saved to: agent4-security-report.json');
@@ -900,18 +900,18 @@ class Agent4SecurityScanner {
             console.error('Failed to save JSON report:', error.message);
         }
     }
-    
+
     run(targetPath) {
         console.log('🔍 Starting Agent 4 Calculation Validation Security Scan...');
         console.log(`📂 Scanning directory: ${targetPath}\n`);
-        
+
         if (fs.existsSync(targetPath)) {
             if (fs.statSync(targetPath).isDirectory()) {
                 this.scanDirectory(targetPath);
             } else {
                 this.scanFile(targetPath);
             }
-            
+
             this.generateReport();
         } else {
             console.error(`❌ Path not found: ${targetPath}`);

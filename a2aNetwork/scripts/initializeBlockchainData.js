@@ -210,7 +210,7 @@ async function initializeBlockchainData() {
                                     } else {
                                         console.log(`✅ Inserted metric: ${metric.metricName}`);
                                     }
-                                    
+
                                     insertCount++;
                                     if (insertCount === metrics.length) {
                                         db.close((err) => {

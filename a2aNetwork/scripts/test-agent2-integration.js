@@ -69,7 +69,7 @@ async function testIntegration() {
     // Test 5: Test OData query for AIPreparationTasks
     console.log('5. Testing OData AIPreparationTasks Query...');
     try {
-        const response = await blockchainClient.sendMessage(`${CAP_BASE_URL}/api/v1/AIPreparationTasks`, { 
+        const response = await blockchainClient.sendMessage(`${CAP_BASE_URL}/api/v1/AIPreparationTasks`, {
             timeout: 5000,
             headers: { 'Accept': 'application/json' }
         });
@@ -96,10 +96,10 @@ async function testIntegration() {
     try {
         const manifestResponse = await blockchainClient.sendMessage(`${CAP_BASE_URL}/app/a2aFiori/webapp/ext/agent2/manifest.json`, { timeout: 5000 });
         console.log('✅ Agent 2 UI Manifest: ACCESSIBLE');
-        
+
         const controllerResponse = await blockchainClient.sendMessage(`${CAP_BASE_URL}/app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js`, { timeout: 5000 });
         console.log('✅ Agent 2 UI Controller: ACCESSIBLE');
-        
+
         console.log('✅ Agent 2 UI Files: ALL ACCESSIBLE\n');
     } catch (error) {
         console.log('❌ Agent 2 UI Files: FAILED');
@@ -107,14 +107,14 @@ async function testIntegration() {
     }
 
     console.log('🏁 Integration Test Complete!\n');
-    
+
     console.log('📋 Summary:');
     console.log('   - Agent 2 Python backend should be running on port 8001');
     console.log('   - CAP service should be running on port 4004');
     console.log('   - Agent 2 UI is accessible through SAP Fiori Launchpad');
     console.log('   - API proxy routes bridge OData to REST calls');
     console.log('   - Full integration layer is implemented\n');
-    
+
     console.log('🎯 Agent 2 is now fully integrated and functional!');
 }
 

@@ -1,9 +1,9 @@
 /**
  * Enterprise Logging Service
- * 
+ *
  * Provides structured logging with correlation IDs, different log levels,
  * and integration with SAP Cloud Logging service following enterprise standards.
- * 
+ *
  * @author SAP SE
  * @since 1.0.0
  * @version 1.0.0
@@ -22,7 +22,7 @@ class LoggingService {
         this.logBuffer = [];
         this.maxBufferSize = 1000;
         this.correlationStore = new Map();
-        
+
         this._initializeLogger();
         this.intervals = new Map(); // Track intervals for cleanup
     }
@@ -61,14 +61,14 @@ class LoggingService {
                     stack: info.stack,
                     metadata: info.metadata
                 };
-                
+
                 // Remove undefined fields
                 Object.keys(logEntry).forEach(key => {
                     if (logEntry[key] === undefined) {
                         delete logEntry[key];
                     }
                 });
-                
+
                 return JSON.stringify(logEntry);
             })
         );
@@ -78,11 +78,11 @@ class LoggingService {
             // Console transport for development
             new winston.transports.Console({
                 level: process.env.LOG_LEVEL || 'info',
-                format: process.env.NODE_ENV === 'development' 
+                format: process.env.NODE_ENV === 'development'
                     ? winston.format.combine(
                         winston.format.colorize(),
                         winston.format.timestamp({ format: 'HH:mm:ss' }),
-                        winston.format.printf(info => 
+                        winston.format.printf(info =>
                             `${info.timestamp} [${info.level}] ${info.correlationId ? `[${info.correlationId}] ` : ''}${info.message}`
                         )
                     )
@@ -371,7 +371,7 @@ class LoggingService {
      */
     getRecentLogs(limit = 100, level = null) {
         let logs = [...this.logBuffer];
-        
+
         if (level) {
             const levels = ['debug', 'info', 'warn', 'error'];
             const minLevelIndex = levels.indexOf(level.toLowerCase());
@@ -380,7 +380,7 @@ class LoggingService {
                 logs = logs.filter(log => allowedLevels.includes(log.level));
             }
         }
-        
+
         return logs.slice(-limit).reverse();
     }
 
@@ -422,7 +422,7 @@ class LoggingService {
             warn: (message, context = {}) => this.warn(message, { ...context, component }),
             error: (message, context = {}) => this.error(message, { ...context, component }),
             security: (message, context = {}) => this.security(message, { ...context, component }),
-            performance: (operation, duration, context = {}) => 
+            performance: (operation, duration, context = {}) =>
                 this.performance(operation, duration, { ...context, component })
         };
 
@@ -437,7 +437,7 @@ class LoggingService {
     middleware() {
         return (req, res, next) => {
             const startTime = Date.now();
-            
+
             // Ensure correlation ID exists
             if (!req.correlationId) {
                 req.correlationId = this.createCorrelation();
@@ -455,7 +455,7 @@ class LoggingService {
             // Use response event listeners instead of overriding res.end to avoid OpenTelemetry conflicts
             res.on('finish', () => {
                 const duration = Date.now() - startTime;
-                
+
                 // Log request completion
                 loggingService.httpRequest(req, res, duration);
             });

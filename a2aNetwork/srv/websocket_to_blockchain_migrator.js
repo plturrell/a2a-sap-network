@@ -11,7 +11,7 @@ class WebSocketToBlockchainMigrator {
         this.filesProcessed = 0;
         this.filesMigrated = 0;
         this.errors = [];
-        
+
         // WebSocket patterns to replace
         this.WS_PATTERNS = {
             // WebSocket server creation
@@ -20,35 +20,35 @@ class WebSocketToBlockchainMigrator {
                 replacement: 'new BlockchainEventServer($1)',
                 description: 'BlockchainEventClient.Server creation'
             },
-            
+
             // WebSocket client creation
             wsClientCreation: {
                 pattern: /new\s+WebSocket\s*\(\s*['"`]ws:\/\/[^'"`]+['"`]\s*\)/g,
                 replacement: 'new BlockchainEventClient()',
                 description: 'WebSocket client creation'
             },
-            
+
             // WebSocket connection handlers
             wsOnConnection: {
                 pattern: /\.on\s*\(\s*['"`]connection['"`]\s*,/g,
                 replacement: '.on(\'blockchain-connection\',',
                 description: 'WebSocket connection handler'
             },
-            
+
             // WebSocket message handlers
             wsOnMessage: {
                 pattern: /ws\.on\s*\(\s*['"`]message['"`]\s*,/g,
                 replacement: 'blockchainClient.on(\'event\',',
                 description: 'WebSocket message handler'
             },
-            
+
             // WebSocket send
             wsSend: {
                 pattern: /ws\.send\s*\(/g,
                 replacement: 'blockchainClient.publishEvent(',
                 description: 'WebSocket send'
             },
-            
+
             // WebSocket URLs
             wsUrls: {
                 pattern: /['"`]ws:\/\/[^'"`]+['"`]/g,
@@ -56,7 +56,7 @@ class WebSocketToBlockchainMigrator {
                 description: 'WebSocket URLs'
             }
         };
-        
+
         // Blockchain event stream template
         this.BLOCKCHAIN_ADAPTER_TEMPLATE = `
 /**
@@ -69,7 +69,7 @@ class BlockchainEventAdapter {
         this.connections = new Map();
         this.logger = options.logger || console;
     }
-    
+
     on(event, handler) {
         if (event === 'connection' || event === 'blockchain-connection') {
             // Handle new connections via blockchain
@@ -85,7 +85,7 @@ class BlockchainEventAdapter {
             });
         }
     }
-    
+
     async sendToSubscriber(subscriberId, data) {
         try {
             await this.eventStream.publishEvent('message', {
@@ -113,11 +113,11 @@ class BlockchainEventClient extends BlockchainEventAdapter {
         super();
         this.readyState = 1; // OPEN - for compatibility
     }
-    
+
     send(data) {
         this.publishEvent('message', { data });
     }
-    
+
     close() {
         this.eventStream.disconnect();
         this.readyState = 3; // CLOSED
@@ -127,11 +127,11 @@ class BlockchainEventClient extends BlockchainEventAdapter {
 module.exports = { BlockchainEventServer, BlockchainEventClient };
 `;
     }
-    
+
     async analyzeFile(filePath) {
         try {
             const content = await fs.readFile(filePath, 'utf8');
-            
+
             // Check if already migrated
             if (content.includes('BlockchainEventServer') || content.includes('BlockchainEventAdapter')) {
                 return {
@@ -139,7 +139,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                     reason: 'Already migrated to blockchain events'
                 };
             }
-            
+
             // Check for WebSocket usage
             const wsPatterns = [
                 'WebSocket',
@@ -148,16 +148,16 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                 '.on(\'connection\'',
                 '.on("connection"'
             ];
-            
+
             const hasWebSocket = wsPatterns.some(pattern => content.includes(pattern));
-            
+
             if (!hasWebSocket) {
                 return {
                     needsMigration: false,
                     reason: 'No WebSocket usage found'
                 };
             }
-            
+
             // Analyze specific patterns
             const foundPatterns = [];
             for (const [name, patternInfo] of Object.entries(this.WS_PATTERNS)) {
@@ -165,12 +165,12 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                     foundPatterns.push(name);
                 }
             }
-            
+
             return {
                 needsMigration: true,
                 patterns: foundPatterns
             };
-            
+
         } catch (error) {
             this.errors.push({ file: filePath, error: error.message });
             return {
@@ -179,12 +179,12 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
             };
         }
     }
-    
+
     async migrateFile(filePath) {
         try {
             let content = await fs.readFile(filePath, 'utf8');
             const originalContent = content;
-            
+
             // Apply replacements
             let replacements = 0;
             for (const [name, patternInfo] of Object.entries(this.WS_PATTERNS)) {
@@ -194,7 +194,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                     replacements += matches.length;
                 }
             }
-            
+
             // Add blockchain adapter import if WebSocket was replaced
             if (replacements > 0 && !content.includes('BlockchainEventServer')) {
                 // Find where to add import
@@ -211,13 +211,13 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                     if (requireMatches) {
                         const lastRequireIndex = content.lastIndexOf(requireMatches[requireMatches.length - 1]);
                         const insertPos = content.indexOf('\n', lastRequireIndex) + 1;
-                        content = `${content.slice(0, insertPos)  
-                            }const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');\n${ 
+                        content = `${content.slice(0, insertPos)
+                            }const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');\n${
                             content.slice(insertPos)}`;
                     }
                 }
             }
-            
+
             // Add compatibility comments
             if (replacements > 0) {
                 const header = `/**
@@ -230,24 +230,24 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                     content = header + content;
                 }
             }
-            
+
             // Write migrated content
             if (content !== originalContent) {
                 await fs.writeFile(filePath, content);
                 this.filesMigrated++;
-                
+
                 return {
                     status: 'migrated',
                     replacements: replacements,
                     file: filePath
                 };
             }
-            
+
             return {
                 status: 'no_changes',
                 file: filePath
             };
-            
+
         } catch (error) {
             this.errors.push({ file: filePath, error: error.message });
             return {
@@ -257,7 +257,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
             };
         }
     }
-    
+
     async createBlockchainAdapter(directory) {
         try {
             const adapterPath = path.join(directory, 'blockchain-event-adapter.js');
@@ -267,7 +267,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
             console.error(`Failed to create blockchain adapter: ${error.message}`);
         }
     }
-    
+
     async processDirectory(directory) {
         const results = {
             totalFiles: 0,
@@ -275,47 +275,47 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
             filesMigrated: 0,
             fileResults: []
         };
-        
+
         try {
             const files = await this.getJsFiles(directory);
-            
+
             for (const file of files) {
                 results.totalFiles++;
-                
+
                 const analysis = await this.analyzeFile(file);
-                
+
                 if (analysis.needsMigration) {
                     results.filesNeedingMigration++;
-                    
+
                     const migrationResult = await this.migrateFile(file);
                     results.fileResults.push(migrationResult);
-                    
+
                     if (migrationResult.status === 'migrated') {
                         results.filesMigrated++;
                     }
                 }
-                
+
                 this.filesProcessed++;
             }
-            
+
             // Create blockchain adapter if files were migrated
             if (results.filesMigrated > 0) {
                 await this.createBlockchainAdapter(directory);
             }
-            
+
         } catch (error) {
             console.error(`Error processing directory: ${error.message}`);
         }
-        
+
         return results;
     }
-    
+
     async getJsFiles(directory, fileList = []) {
         const files = await fs.readdir(directory, { withFileTypes: true });
-        
+
         for (const file of files) {
             const fullPath = path.join(directory, file.name);
-            
+
             if (file.isDirectory()) {
                 // Skip node_modules and test directories
                 if (!file.name.includes('node_modules') && !file.name.includes('test')) {
@@ -325,16 +325,16 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                 fileList.push(fullPath);
             }
         }
-        
+
         return fileList;
     }
-    
+
     generateReport(results) {
         console.log('\n=== WebSocket to Blockchain Migration Report ===\n');
         console.log(`Total files scanned: ${results.totalFiles}`);
         console.log(`Files needing migration: ${results.filesNeedingMigration}`);
         console.log(`Files successfully migrated: ${results.filesMigrated}`);
-        
+
         if (results.fileResults.length > 0) {
             console.log('\nMigrated files:');
             results.fileResults.forEach(result => {
@@ -345,14 +345,14 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
                 }
             });
         }
-        
+
         if (this.errors.length > 0) {
             console.log('\nErrors encountered:');
             this.errors.forEach(error => {
                 console.log(`  - ${error.file}: ${error.error}`);
             });
         }
-        
+
         console.log('\n✅ WebSocket to blockchain migration complete!');
         console.log('🔗 All real-time communication now uses blockchain events');
         console.log('⚠️  Remember to deploy the blockchain event contracts');
@@ -361,16 +361,16 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
 
 async function main() {
     const migrator = new WebSocketToBlockchainMigrator();
-    
+
     // Process network services directory
     const networkDir = path.join(__dirname, '..');
-    
+
     console.log('🔍 Scanning for WebSocket usage...');
     const results = await migrator.processDirectory(networkDir);
-    
+
     // Generate report
     migrator.generateReport(results);
-    
+
     // Save detailed results
     const resultsPath = path.join(__dirname, 'websocket_migration_results.json');
     await fs.writeFile(resultsPath, JSON.stringify(results, null, 2));

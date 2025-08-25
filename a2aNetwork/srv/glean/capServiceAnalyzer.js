@@ -2,7 +2,7 @@
  * @fileoverview CAP Service Implementation Analyzer
  * @module capServiceAnalyzer
  * @since 1.0.0
- * 
+ *
  * Analyzes CAP service implementation files (JavaScript/TypeScript) to detect
  * event handlers, middleware, and CAP-specific patterns
  */
@@ -131,10 +131,10 @@ class CAPServiceAnalyzer {
 
     analyzeImports(path, result) {
         const node = path.node;
-        
+
         if (node.source && node.source.value) {
             const importSource = node.source.value;
-            
+
             // Detect CDS imports
             if (importSource.includes('@sap/cds') || importSource.includes('cds')) {
                 result.cdsImports.push({
@@ -153,14 +153,14 @@ class CAPServiceAnalyzer {
 
     analyzeRequireStatements(path, result) {
         const node = path.node;
-        
-        if (node.init && node.init.type === 'CallExpression' && 
+
+        if (node.init && node.init.type === 'CallExpression' &&
             node.init.callee && node.init.callee.name === 'require') {
-            
+
             const argument = node.init.arguments[0];
             if (argument && argument.type === 'StringLiteral') {
                 const requireSource = argument.value;
-                
+
                 if (requireSource.includes('@sap/cds') || requireSource.includes('cds')) {
                     result.cdsImports.push({
                         source: requireSource,
@@ -176,41 +176,41 @@ class CAPServiceAnalyzer {
 
     analyzeCallExpressions(path, result, content) {
         const node = path.node;
-        
+
         // Analyze service handler registrations
         if (node.callee && node.callee.type === 'MemberExpression') {
             const object = node.callee.object;
             const property = node.callee.property;
-            
+
             if (property && property.name) {
                 const methodName = property.name;
-                
+
                 // CAP event handlers (.on, .before, .after)
                 if (['on', 'before', 'after'].includes(methodName)) {
                     this.analyzeEventHandler(node, result, methodName, content);
                 }
-                
+
                 // Service connections (.to, .connect)
                 if (['to', 'connect'].includes(methodName)) {
                     this.analyzeServiceConnection(node, result);
                 }
-                
+
                 // Entity operations (.read, .create, .update, .delete)
                 if (['read', 'create', 'update', 'delete'].includes(methodName)) {
                     this.analyzeEntityOperation(node, result, methodName);
                 }
-                
+
                 // Emit events
                 if (methodName === 'emit') {
                     this.analyzeEventEmission(node, result);
                 }
             }
         }
-        
+
         // Analyze function calls for CAP patterns
         if (node.callee && node.callee.name) {
             const functionName = node.callee.name;
-            
+
             // CDS.connect(), CDS.serve(), etc.
             if (functionName.startsWith('cds') || functionName.toUpperCase() === 'CDS') {
                 result.metadata.isCAPService = true;
@@ -220,14 +220,14 @@ class CAPServiceAnalyzer {
 
     analyzeEventHandler(node, result, handlerType, content) {
         const args = node.arguments;
-        
+
         if (args.length >= 2) {
             const eventArg = args[0];
             const handlerArg = args[1];
-            
+
             let eventName = 'unknown';
             let entityName = null;
-            
+
             // Extract event name
             if (eventArg.type === 'StringLiteral') {
                 const eventString = eventArg.value;
@@ -235,7 +235,7 @@ class CAPServiceAnalyzer {
                 eventName = parts[0];
                 entityName = parts.length > 1 ? parts[1] : null;
             }
-            
+
             // Analyze handler function
             const handlerInfo = {
                 type: handlerType,
@@ -248,16 +248,16 @@ class CAPServiceAnalyzer {
                 hasAuthorization: false,
                 hasBusinessLogic: false
             };
-            
-            if (handlerArg.type === 'ArrowFunctionExpression' || 
+
+            if (handlerArg.type === 'ArrowFunctionExpression' ||
                 handlerArg.type === 'FunctionExpression') {
                 handlerInfo.isAsync = handlerArg.async || false;
                 handlerInfo.parameters = handlerArg.params.map(param => param.name || 'unknown');
-                
+
                 // Analyze handler body for patterns
                 this.analyzeHandlerBody(handlerArg, handlerInfo, content);
             }
-            
+
             result.serviceHandlers.push(handlerInfo);
         }
     }
@@ -267,24 +267,24 @@ class CAPServiceAnalyzer {
         traverse(handlerNode, {
             CallExpression: (path) => {
                 const node = path.node;
-                
-                if (node.callee && node.callee.type === 'MemberExpression' && 
+
+                if (node.callee && node.callee.type === 'MemberExpression' &&
                     node.callee.property && node.callee.property.name) {
-                    
+
                     const methodName = node.callee.property.name;
-                    
+
                     // Validation patterns
                     if (['assert', 'validate', 'check'].includes(methodName)) {
                         handlerInfo.hasValidation = true;
                         result.metadata.hasValidation = true;
                     }
-                    
+
                     // Authorization patterns
                     if (['authorize', 'checkAuth', 'hasRole', 'isAuthenticated'].includes(methodName)) {
                         handlerInfo.hasAuthorization = true;
                         result.metadata.hasCustomAuth = true;
                     }
-                    
+
                     // Business logic patterns
                     if (['calculate', 'process', 'transform', 'compute'].includes(methodName)) {
                         handlerInfo.hasBusinessLogic = true;
@@ -305,10 +305,10 @@ class CAPServiceAnalyzer {
 
     analyzeServiceConnection(node, result) {
         const args = node.arguments;
-        
+
         if (args.length > 0 && args[0].type === 'StringLiteral') {
             const serviceName = args[0].value;
-            
+
             result.entities.push({
                 name: serviceName,
                 type: 'external_service',
@@ -328,10 +328,10 @@ class CAPServiceAnalyzer {
 
     analyzeEventEmission(node, result) {
         const args = node.arguments;
-        
+
         if (args.length > 0 && args[0].type === 'StringLiteral') {
             const eventName = args[0].value;
-            
+
             result.eventHandlers.push({
                 type: 'emit',
                 event: eventName,
@@ -342,10 +342,10 @@ class CAPServiceAnalyzer {
 
     analyzeFunctionDeclarations(path, result) {
         const node = path.node;
-        
+
         if (node.id && node.id.name) {
             const functionName = node.id.name;
-            
+
             // Check if it's a CAP service handler
             if (functionName.includes('handler') || functionName.includes('Handler')) {
                 result.customLogic.push({
@@ -362,10 +362,10 @@ class CAPServiceAnalyzer {
     analyzeArrowFunctions(path, result) {
         // Analyze arrow function patterns that might be event handlers
         const node = path.node;
-        
+
         if (node.params && node.params.length > 0) {
             const firstParam = node.params[0];
-            
+
             // Common CAP handler parameter names
             if (firstParam.name && ['req', 'request', 'srv', 'service'].includes(firstParam.name)) {
                 result.customLogic.push({
@@ -380,12 +380,12 @@ class CAPServiceAnalyzer {
 
     analyzeMemberExpressions(path, result) {
         const node = path.node;
-        
+
         // Look for CAP service API usage
         if (node.object && node.property) {
             const objectName = node.object.name;
             const propertyName = node.property.name;
-            
+
             // CDS API patterns
             if (objectName === 'cds' || objectName === 'CDS') {
                 result.customLogic.push({
@@ -399,12 +399,12 @@ class CAPServiceAnalyzer {
 
     calculateServiceComplexity(result) {
         let complexity = 0;
-        
+
         complexity += result.serviceHandlers.length * 2;
         complexity += result.eventHandlers.length;
         complexity += result.customLogic.length;
         complexity += result.cdsImports.length;
-        
+
         // Add complexity for advanced patterns
         result.serviceHandlers.forEach(handler => {
             if (handler.hasValidation) complexity += 2;
@@ -412,53 +412,53 @@ class CAPServiceAnalyzer {
             if (handler.hasBusinessLogic) complexity += 2;
             if (handler.isAsync) complexity += 1;
         });
-        
+
         result.metadata.complexity = complexity;
     }
 
     detectCAPPatterns(result, content) {
         // Additional pattern detection
-        
+
         // Check for validation patterns
-        if (content.includes('req.error') || content.includes('request.error') || 
+        if (content.includes('req.error') || content.includes('request.error') ||
             content.includes('throw new Error') || content.includes('validate') ||
             content.includes('.assert') || content.includes('validation')) {
             result.metadata.hasValidation = true;
         }
-        
+
         // Check for authorization patterns
-        if (content.includes('req.user') || content.includes('hasRole') || 
+        if (content.includes('req.user') || content.includes('hasRole') ||
             content.includes('isAuthenticated') || content.includes('checkRole') ||
             content.includes('authorization') || content.includes('Unauthorized') ||
             content.includes('auth') || content.includes('permit')) {
             result.metadata.hasCustomAuth = true;
         }
-        
+
         // Check for business logic patterns
-        if (content.includes('business') || content.includes('calculate') || 
+        if (content.includes('business') || content.includes('calculate') ||
             content.includes('process') || content.includes('workflow') ||
             content.includes('logic') || content.includes('custom')) {
             result.metadata.hasBusinessLogic = true;
         }
-        
+
         // Check for OData annotations
         if (content.includes('@odata') || content.includes('OData')) {
             result.metadata.hasODataFeatures = true;
         }
-        
+
         // Check for SAP specific imports
         if (content.includes('@sap/') || content.includes('sap.')) {
             result.metadata.usesSAPLibraries = true;
         }
-        
+
         // Check for database operations
-        if (content.includes('SELECT') || content.includes('INSERT') || 
+        if (content.includes('SELECT') || content.includes('INSERT') ||
             content.includes('UPDATE') || content.includes('DELETE')) {
             result.metadata.hasDirectDatabaseAccess = true;
         }
-        
+
         // Check for transaction handling
-        if (content.includes('transaction') || content.includes('commit') || 
+        if (content.includes('transaction') || content.includes('commit') ||
             content.includes('rollback')) {
             result.metadata.hasTransactionHandling = true;
         }
@@ -466,7 +466,7 @@ class CAPServiceAnalyzer {
 
     fallbackRegexAnalysis(content, result) {
         // Fallback analysis using regex patterns
-        
+
         // Service handlers
         this.capPatterns.serviceHandlers.forEach(pattern => {
             let match;
@@ -478,7 +478,7 @@ class CAPServiceAnalyzer {
                 });
             }
         });
-        
+
         // Event emitters
         this.capPatterns.eventEmitters.forEach(pattern => {
             let match;
@@ -490,7 +490,7 @@ class CAPServiceAnalyzer {
                 });
             }
         });
-        
+
         // CDS require statements
         this.capPatterns.cdsRequire.forEach(pattern => {
             let match;

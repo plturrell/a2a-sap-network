@@ -7,20 +7,20 @@ const { v4: uuidv4 } = require('uuid');
 
 async function populateServices() {
     log.info('🔧 Starting safe services population...\n');
-    
+
     try {
         // Connect to database
         const db = await cds.connect.to('db');
-        
+
         // First, check if we have agents to reference
         log.debug('1. Checking existing agents...');
         const agentResult = await db.run('SELECT ID, name FROM a2a_network_Agents LIMIT 5');
-        
+
         if (agentResult.length === 0) {
             log.debug('❌ No agents found. Running agent seeding first...');
             const { execSync } = require('child_process');
             execSync('node scripts/seedTestAgents.js', { stdio: 'inherit' });
-            
+
             // Re-check agents
             const newAgentResult = await db.run('SELECT ID, name FROM a2a_network_Agents LIMIT 5');
             if (newAgentResult.length === 0) {
@@ -30,11 +30,11 @@ async function populateServices() {
         } else {
             log.debug(`✅ Found ${agentResult.length} existing agents`);
         }
-        
+
         // Get available agent IDs
         const availableAgents = await db.run('SELECT ID FROM a2a_network_Agents LIMIT 10');
         const agentIds = availableAgents.map(a => a.ID);
-        
+
         log.debug('2. Setting up currencies...');
         // First ensure EUR currency exists
         try {
@@ -46,7 +46,7 @@ async function populateServices() {
 
         log.debug('3. Clearing existing services...');
         await db.run('DELETE FROM a2a_network_Services');
-        
+
         log.debug('4. Creating service data...');
         const services = [
             {
@@ -178,7 +178,7 @@ async function populateServices() {
                 modifiedAt: new Date().toISOString()
             }
         ];
-        
+
         log.debug('5. Inserting services...');
         for (const service of services) {
             try {
@@ -219,18 +219,18 @@ async function populateServices() {
                 }
             }
         }
-        
+
         log.debug('6. Verifying services...');
         const serviceCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Services');
         const activeServiceCount = await db.run('SELECT COUNT(*) as count FROM a2a_network_Services WHERE isActive = 1');
-        
+
         log.debug(`✅ Total services: ${serviceCount[0]?.count || 0}`);
         log.debug(`✅ Active services: ${activeServiceCount[0]?.count || 0}`);
-        
+
         log.debug('7. Creating sample service usage records...');
         const usageRecords = [];
         const serviceIds = services.map(s => s.ID);
-        
+
         for (let i = 0; i < 15; i++) {
             usageRecords.push({
                 ID: uuidv4(),
@@ -243,7 +243,7 @@ async function populateServices() {
                 lastUsed: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
             });
         }
-        
+
         for (const usage of usageRecords) {
             try {
                 await db.run(`
@@ -261,10 +261,10 @@ async function populateServices() {
                 }
             }
         }
-        
+
         log.debug('\n🎉 Services population completed successfully!');
         return true;
-        
+
     } catch (error) {
         console.error('❌ Error populating services:', error);
         throw error;

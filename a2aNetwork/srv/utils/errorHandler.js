@@ -86,19 +86,19 @@ class ErrorHandler {
      */
     handleError(error, context = {}) {
         const classifiedError = this.classifyError(error, context);
-        
+
         // Log the error
         this.logError(classifiedError);
-        
+
         // Track error metrics
         this.trackErrorMetrics(classifiedError);
-        
+
         // Check if alerting is needed
         this.checkAlertThresholds(classifiedError);
-        
+
         // Store in history
         this.addToHistory(classifiedError);
-        
+
         return classifiedError;
     }
 
@@ -220,7 +220,7 @@ class ErrorHandler {
         };
 
         cds.log('blockchain-alert').error('Error threshold exceeded', alertData);
-        
+
         // In production, this would integrate with alerting systems
         // (PagerDuty, Slack, email, etc.)
         this.sendAlert(alertData);
@@ -233,7 +233,7 @@ class ErrorHandler {
         try {
             // Placeholder for actual alerting integration
             // Could integrate with PagerDuty, Slack, email, etc.
-            
+
             // Example: Send to webhook
             if (process.env.ALERT_WEBHOOK_URL) {
                 // await blockchainClient.sendMessage(process.env.ALERT_WEBHOOK_URL, {
@@ -242,9 +242,9 @@ class ErrorHandler {
                 //     body: JSON.stringify(alertData)
                 // });
             }
-            
+
             cds.log('blockchain-alert').info('Alert sent successfully', { traceId: alertData.traceId });
-            
+
         } catch (error) {
             cds.log('blockchain-alert').error('Failed to send alert', error);
         }
@@ -255,7 +255,7 @@ class ErrorHandler {
      */
     addToHistory(error) {
         this.errorHistory.push(error.toJSON());
-        
+
         // Maintain history size limit
         if (this.errorHistory.length > this.maxHistorySize) {
             this.errorHistory.shift();
@@ -278,7 +278,7 @@ class ErrorHandler {
         for (const error of this.errorHistory) {
             // By type
             stats.errorsByType[error.type] = (stats.errorsByType[error.type] || 0) + 1;
-            
+
             // By severity
             stats.errorsBySeverity[error.severity] = (stats.errorsBySeverity[error.severity] || 0) + 1;
         }

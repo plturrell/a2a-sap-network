@@ -197,8 +197,8 @@ view AgentGoalSummary as select from Agents {
   goals.overallProgress,
   goals.status as goalStatus,
   goals.targetDate,
-  count(goals) as totalGoals : Integer,
-  avg(goals.overallProgress) as avgProgress : Decimal(5,2)
+  COUNT(*) as totalGoals : Integer,
+  AVG(goals.overallProgress) as avgProgress : Decimal(5,2)
 } group by agentId, agentName, status, goals.goalType, goals.priority, goals.overallProgress, goals.status, goals.targetDate;
 
 view GoalProgressSummary as select from Goals {
@@ -210,8 +210,8 @@ view GoalProgressSummary as select from Goals {
   status,
   overallProgress,
   targetDate,
-  count(progress) as progressUpdates : Integer,
-  count(milestones) as milestonesAchieved : Integer,
+  COUNT(*) as progressUpdates : Integer,
+  COUNT(*) as milestonesAchieved : Integer,
   max(progress.timestamp) as lastUpdate : Timestamp
 } group by ID, agent.agentId, agent.agentName, goalType, priority, status, overallProgress, targetDate;
 
@@ -271,23 +271,23 @@ view ConflictAnalysis as select from GoalConflicts {
 
 // Service definition
 service GoalManagementService @(path: '/api/v1/goal-management') {
-  // Core entities
-  entity Agents as projection on a2a.goalmanagement.Agents;
-  entity Goals as projection on a2a.goalmanagement.Goals;
-  entity GoalProgress as projection on a2a.goalmanagement.GoalProgress;
-  entity Milestones as projection on a2a.goalmanagement.Milestones;
-  entity AgentMetrics as projection on a2a.goalmanagement.AgentMetrics;
+  // Core entities - projections on namespace entities
+  @readonly entity Agents as projection on a2a.goalmanagement.Agents;
+  @readonly entity Goals as projection on a2a.goalmanagement.Goals;
+  @readonly entity GoalProgress as projection on a2a.goalmanagement.GoalProgress;
+  @readonly entity Milestones as projection on a2a.goalmanagement.Milestones;
+  @readonly entity AgentMetrics as projection on a2a.goalmanagement.AgentMetrics;
   
   // Enhanced entities
-  entity GoalDependencies as projection on a2a.goalmanagement.GoalDependencies;
-  entity CollaborativeGoals as projection on a2a.goalmanagement.CollaborativeGoals;
-  entity GoalConflicts as projection on a2a.goalmanagement.GoalConflicts;
-  entity GoalActivity as projection on a2a.goalmanagement.GoalActivity;
+  @readonly entity GoalDependencies as projection on a2a.goalmanagement.GoalDependencies;
+  @readonly entity CollaborativeGoals as projection on a2a.goalmanagement.CollaborativeGoals;
+  @readonly entity GoalConflicts as projection on a2a.goalmanagement.GoalConflicts;
+  @readonly entity GoalActivity as projection on a2a.goalmanagement.GoalActivity;
   
   // Analytics and views
-  entity SystemAnalytics as projection on a2a.goalmanagement.SystemAnalytics;
-  entity AgentGoalSummary as projection on a2a.goalmanagement.AgentGoalSummary;
-  entity GoalProgressSummary as projection on a2a.goalmanagement.GoalProgressSummary;
+  @readonly entity SystemAnalytics as projection on a2a.goalmanagement.SystemAnalytics;
+  @readonly entity AgentGoalSummary as projection on a2a.goalmanagement.AgentGoalSummary;
+  @readonly entity GoalProgressSummary as projection on a2a.goalmanagement.GoalProgressSummary;
   
   // Visualization endpoints
   @readonly entity GoalVisualization {

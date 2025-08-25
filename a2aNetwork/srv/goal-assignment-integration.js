@@ -6,21 +6,21 @@ const { SELECT, INSERT, UPDATE, DELETE, UPSERT } = cds.ql;
  * Connects the A2A orchestrator goal assignment system with the CAP UI
  */
 module.exports = class GoalAssignmentIntegration {
-    
+
     constructor() {
         this.LOG = cds.log('goal-assignment-integration');
         this.ORCHESTRATOR_URL = process.env.A2A_ORCHESTRATOR_URL || 'http://localhost:8001';
     }
-    
+
     /**
      * Sync all agent goals from orchestrator to CAP database
      */
     async syncAllAgentGoals() {
         try {
             this.LOG.info('Starting full goal synchronization from orchestrator');
-            
+
             const axios = require('axios');
-            
+
             // Get all 16 agents
             const agents = [
                 { id: 'agent0_data_product', name: 'Data Product Agent', type: 'data_pipeline' },
@@ -40,10 +40,10 @@ module.exports = class GoalAssignmentIntegration {
                 { id: 'agent14_embedding_finetuner', name: 'Embedding Fine-Tuner', type: 'infrastructure' },
                 { id: 'agent15_orchestrator', name: 'Orchestrator Agent', type: 'infrastructure' }
             ];
-            
+
             let successCount = 0;
             let failureCount = 0;
-            
+
             for (const agent of agents) {
                 try {
                     // Get goals from orchestrator
@@ -53,13 +53,13 @@ module.exports = class GoalAssignmentIntegration {
                             'Authorization': `Bearer system`
                         }
                     });
-                    
+
                     if (response.data && response.data.goals) {
                         await this._syncAgentToCAP(agent, response.data);
                         successCount++;
                         this.LOG.info(`Successfully synced goals for ${agent.id}`);
                     }
-                    
+
                 } catch (error) {
                     // If orchestrator is not available, use the last assignment results
                     this.LOG.warn(`Failed to fetch from orchestrator for ${agent.id}, using fallback`);
@@ -67,12 +67,12 @@ module.exports = class GoalAssignmentIntegration {
                     failureCount++;
                 }
             }
-            
+
             // Update system analytics
             await this._updateSystemAnalytics();
-            
+
             this.LOG.info(`Goal sync completed: ${successCount} success, ${failureCount} failures`);
-            
+
             return {
                 status: 'completed',
                 timestamp: new Date(),
@@ -80,19 +80,19 @@ module.exports = class GoalAssignmentIntegration {
                 failureCount,
                 totalAgents: agents.length
             };
-            
+
         } catch (error) {
             this.LOG.error('Failed to sync agent goals', { error: error.message });
             throw error;
         }
     }
-    
+
     /**
      * Sync individual agent data to CAP database
      */
     async _syncAgentToCAP(agent, goalsData) {
         const srv = await cds.connect.to('GoalManagementService');
-        
+
         // Upsert agent
         await srv.run(UPSERT.into('Agents').entries({
             agentId: agent.id,
@@ -102,7 +102,7 @@ module.exports = class GoalAssignmentIntegration {
             lastSeen: new Date(),
             capabilities: goalsData.capabilities || []
         }));
-        
+
         // Sync goals
         if (goalsData.goals && goalsData.goals.primary_objectives) {
             for (const goal of goalsData.goals.primary_objectives) {
@@ -124,12 +124,12 @@ module.exports = class GoalAssignmentIntegration {
                     assignedVia: 'automated',
                     trackingFrequency: 'daily'
                 }));
-                
+
                 // Sync measurable targets
                 if (goal.measurable) {
                     // Delete existing measurable targets
                     await srv.run(DELETE.from('MeasurableTargets').where({ goal_ID: goal.goal_id }));
-                    
+
                     // Insert new measurable targets
                     const measurableEntries = Object.entries(goal.measurable).map(([metric, target]) => ({
                         goal_ID: goal.goal_id,
@@ -140,10 +140,10 @@ module.exports = class GoalAssignmentIntegration {
                         progressPercent: 0,
                         achieved: false
                     }));
-                    
+
                     await srv.run(INSERT.into('MeasurableTargets').entries(measurableEntries));
                 }
-                
+
                 // Create initial progress entry
                 await srv.run(INSERT.into('GoalProgress').entries({
                     goal_ID: goal.goal_id,
@@ -153,7 +153,7 @@ module.exports = class GoalAssignmentIntegration {
                     reportedBy: 'system',
                     notes: 'Goal synchronized from orchestrator'
                 }));
-                
+
                 // Create goal activity
                 await srv.run(INSERT.into('GoalActivity').entries({
                     goal_ID: goal.goal_id,
@@ -169,7 +169,7 @@ module.exports = class GoalAssignmentIntegration {
             }
         }
     }
-    
+
     /**
      * Fallback sync from assignment results file
      */
@@ -177,17 +177,17 @@ module.exports = class GoalAssignmentIntegration {
         try {
             const fs = require('fs').promises;
             const path = require('path');
-            
+
             // Find the latest assignment results file
             const resultsDir = path.join(__dirname, '../../a2aAgents/backend/app/a2a/agents/orchestratorAgent/active');
             const files = await fs.readdir(resultsDir);
             const resultFiles = files.filter(f => f.startsWith('goal_assignment_results_')).sort().reverse();
-            
+
             if (resultFiles.length > 0) {
                 const latestFile = path.join(resultsDir, resultFiles[0]);
                 const content = await fs.readFile(latestFile, 'utf8');
                 const results = JSON.parse(content);
-                
+
                 if (results.assignments && results.assignments[agent.id]) {
                     const assignment = results.assignments[agent.id];
                     if (assignment.status === 'success' && assignment.goals) {
@@ -197,7 +197,7 @@ module.exports = class GoalAssignmentIntegration {
                                 primary_objectives: assignment.goals
                             }
                         };
-                        
+
                         await this._syncAgentToCAP(agent, goalsData);
                         this.LOG.info(`Synced ${agent.id} from assignment results file`);
                     }
@@ -207,30 +207,30 @@ module.exports = class GoalAssignmentIntegration {
             this.LOG.error(`Failed to sync from assignment results for ${agent.id}`, { error: error.message });
         }
     }
-    
+
     /**
      * Update system-wide analytics
      */
     async _updateSystemAnalytics() {
         const srv = await cds.connect.to('GoalManagementService');
-        
+
         // Get current statistics
         const agents = await srv.run(SELECT.from('Agents'));
         const goals = await srv.run(SELECT.from('Goals').where({ status: 'active' }));
         const completedGoals = await srv.run(SELECT.from('Goals').where({ status: 'completed' }));
         const milestones = await srv.run(SELECT.from('Milestones'));
-        
+
         // Calculate metrics
         const totalProgress = goals.reduce((sum, g) => sum + (g.overallProgress || 0), 0);
         const averageProgress = goals.length > 0 ? totalProgress / goals.length : 0;
         const agentsAbove50 = new Set(goals.filter(g => g.overallProgress >= 50).map(g => g.agent_agentId)).size;
-        
+
         // Determine system health
         let systemHealth = 'good';
         if (averageProgress < 25) systemHealth = 'poor';
         else if (averageProgress < 50) systemHealth = 'fair';
         else if (averageProgress >= 75) systemHealth = 'excellent';
-        
+
         // Store analytics
         await srv.run(INSERT.into('SystemAnalytics').entries({
             timestamp: new Date(),
@@ -250,7 +250,7 @@ module.exports = class GoalAssignmentIntegration {
             })
         }));
     }
-    
+
     /**
      * Get metric unit based on metric name
      */
@@ -288,10 +288,10 @@ module.exports = class GoalAssignmentIntegration {
             'avg_deployment_time': 'min',
             'convergence_speed': 'epochs'
         };
-        
+
         return unitMap[metricName] || '';
     }
-    
+
     /**
      * Analytics helper methods
      */
@@ -307,21 +307,21 @@ module.exports = class GoalAssignmentIntegration {
             }
             breakdown[goal.agent_agentId].totalGoals++;
             breakdown[goal.agent_agentId].averageProgress += goal.overallProgress || 0;
-            breakdown[goal.agent_agentId].goalTypes[goal.goalType] = 
+            breakdown[goal.agent_agentId].goalTypes[goal.goalType] =
                 (breakdown[goal.agent_agentId].goalTypes[goal.goalType] || 0) + 1;
         });
-        
+
         // Calculate averages
         Object.keys(breakdown).forEach(agentId => {
             if (breakdown[agentId].totalGoals > 0) {
-                breakdown[agentId].averageProgress = 
+                breakdown[agentId].averageProgress =
                     breakdown[agentId].averageProgress / breakdown[agentId].totalGoals;
             }
         });
-        
+
         return breakdown;
     }
-    
+
     _getGoalTypeDistribution(goals) {
         const distribution = {};
         goals.forEach(goal => {
@@ -329,7 +329,7 @@ module.exports = class GoalAssignmentIntegration {
         });
         return distribution;
     }
-    
+
     _getPriorityDistribution(goals) {
         const distribution = {
             critical: 0,
@@ -344,7 +344,7 @@ module.exports = class GoalAssignmentIntegration {
         });
         return distribution;
     }
-    
+
     _getProgressDistribution(goals) {
         const bins = {
             '0-25': 0,
@@ -352,7 +352,7 @@ module.exports = class GoalAssignmentIntegration {
             '51-75': 0,
             '76-100': 0
         };
-        
+
         goals.forEach(goal => {
             const progress = goal.overallProgress || 0;
             if (progress <= 25) bins['0-25']++;
@@ -360,16 +360,16 @@ module.exports = class GoalAssignmentIntegration {
             else if (progress <= 75) bins['51-75']++;
             else bins['76-100']++;
         });
-        
+
         return bins;
     }
-    
+
     /**
      * Create collaborative goals based on agent profiles
      */
     async createCollaborativeGoals() {
         const srv = await cds.connect.to('GoalManagementService');
-        
+
         const collaborativeConfigs = [
             {
                 title: 'End-to-End Data Pipeline Optimization',
@@ -419,7 +419,7 @@ module.exports = class GoalAssignmentIntegration {
                 targetDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) // 60 days
             }
         ];
-        
+
         for (const config of collaborativeConfigs) {
             try {
                 // Create collaborative goal
@@ -431,7 +431,7 @@ module.exports = class GoalAssignmentIntegration {
                     coordinator_agentId: config.participants.find(p => p.role === 'leader').agentId,
                     targetDate: config.targetDate
                 }));
-                
+
                 // Add participants
                 for (const participant of config.participants) {
                     await srv.run(INSERT.into('CollaborativeParticipants').entries({
@@ -443,9 +443,9 @@ module.exports = class GoalAssignmentIntegration {
                         responsibilities: `${participant.role} responsibilities for ${config.title}`
                     }));
                 }
-                
+
                 this.LOG.info(`Created collaborative goal: ${config.title}`);
-                
+
             } catch (error) {
                 this.LOG.error(`Failed to create collaborative goal: ${config.title}`, { error: error.message });
             }

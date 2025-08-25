@@ -56,14 +56,14 @@ class AuthSessionManager {
         try {
             // Fetch user from database (example implementation)
             const user = await this.getUserFromDatabase(username);
-            
+
             if (!user) {
                 return { success: false, error: 'Invalid credentials' };
             }
 
             // Verify password
             const isValid = await bcrypt.compare(password, user.passwordHash);
-            
+
             if (!isValid) {
                 return { success: false, error: 'Invalid credentials' };
             }
@@ -186,14 +186,14 @@ class AuthSessionManager {
     async validateAccessToken(token) {
         try {
             const decoded = jwt.verify(token, this.jwtSecret);
-            
+
             if (decoded.type !== 'access') {
                 throw new Error('Invalid token type');
             }
 
             // Check if session exists
             const session = await this.getSession(decoded.sessionId);
-            
+
             if (!session) {
                 throw new Error('Session not found');
             }
@@ -222,14 +222,14 @@ class AuthSessionManager {
     async refreshAccessToken(refreshToken) {
         try {
             const decoded = jwt.verify(refreshToken, this.jwtRefreshSecret);
-            
+
             if (decoded.type !== 'refresh') {
                 throw new Error('Invalid token type');
             }
 
             // Check if refresh token exists in Redis
             const tokenData = await this.redis.get(`${this.refreshTokenPrefix}${refreshToken}`);
-            
+
             if (!tokenData) {
                 throw new Error('Refresh token not found');
             }
@@ -238,7 +238,7 @@ class AuthSessionManager {
 
             // Get user data
             const user = await this.getUserById(userId);
-            
+
             if (!user) {
                 throw new Error('User not found');
             }
@@ -276,10 +276,10 @@ class AuthSessionManager {
      */
     async updateSessionActivity(sessionId) {
         const session = await this.getSession(sessionId);
-        
+
         if (session) {
             session.lastActivity = new Date().toISOString();
-            
+
             await this.redis.setex(
                 `${this.sessionPrefix}${sessionId}`,
                 this.sessionTimeout,
@@ -313,14 +313,14 @@ class AuthSessionManager {
      */
     async removeSession(sessionId) {
         const session = await this.getSession(sessionId);
-        
+
         if (session) {
             // Remove session
             await this.redis.del(`${this.sessionPrefix}${sessionId}`);
-            
+
             // Remove from user sessions
             await this.redis.srem(`${this.userSessionPrefix}${session.userId}`, sessionId);
-            
+
             // Remove refresh token
             if (session.refreshToken) {
                 await this.redis.del(`${this.refreshTokenPrefix}${session.refreshToken}`);
@@ -333,11 +333,11 @@ class AuthSessionManager {
      */
     async removeOldestSession(userId) {
         const sessions = await this.getUserActiveSessions(userId);
-        
+
         if (sessions.length > 0) {
             // Sort by creation date
             sessions.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            
+
             // Remove oldest
             await this.removeSession(sessions[0].sessionId);
         }
@@ -363,11 +363,11 @@ class AuthSessionManager {
      */
     detectDevice(userAgent) {
         if (!userAgent) return 'unknown';
-        
+
         if (/mobile/i.test(userAgent)) return 'mobile';
         if (/tablet/i.test(userAgent)) return 'tablet';
         if (/bot/i.test(userAgent)) return 'bot';
-        
+
         return 'desktop';
     }
 
@@ -414,14 +414,14 @@ class AuthSessionManager {
     middleware() {
         return async (req, res, next) => {
             const token = this.extractToken(req);
-            
+
             if (!token) {
                 req.auth = { authenticated: false };
                 return next();
             }
 
             const validation = await this.validateAccessToken(token);
-            
+
             if (validation.valid) {
                 req.auth = {
                     authenticated: true,
@@ -496,7 +496,7 @@ class AuthSessionManager {
     async cleanupExpiredSessions() {
         // This would run as a periodic job
         logger.info('🧹 Cleaning up expired sessions...');
-        
+
         // Redis automatically expires keys, but we can do additional cleanup
         // of user session references here if needed
     }

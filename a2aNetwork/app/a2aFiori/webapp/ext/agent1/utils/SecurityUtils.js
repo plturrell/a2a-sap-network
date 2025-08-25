@@ -237,11 +237,11 @@ sap.ui.define([], () => {
             try {
                 // Use Function constructor instead of eval for better security
                 const wrappedScript = `
-                    return (function(value, row, context, Math, String, Number, Array, Object, Date, 
+                    return (function(value, row, context, Math, String, Number, Array, Object, Date,
                                      parseInt, parseFloat, isNaN, isFinite, encodeURIComponent, decodeURIComponent) {
                         "use strict";
                         ${script}
-                    })(value, row, context, Math, String, Number, Array, Object, Date, 
+                    })(value, row, context, Math, String, Number, Array, Object, Date,
                        parseInt, parseFloat, isNaN, isFinite, encodeURIComponent, decodeURIComponent);
                 `;
 

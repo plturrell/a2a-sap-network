@@ -16,15 +16,15 @@ class BaseService {
         }
 
         this.startupTime = new Date();
-        
+
         if (this._validateConfiguration) {
             await this._validateConfiguration();
         }
-        
+
         if (this._initializeComponents) {
             await this._initializeComponents();
         }
-        
+
         this.initialized = true;
         this.logger.info(`${this.serviceName} initialized successfully`);
         return this;
@@ -63,7 +63,7 @@ class BaseService {
             context,
             timestamp: new Date().toISOString()
         };
-        
+
         this.logger.error('Service error:', errorInfo);
         throw error;
     }

@@ -40,7 +40,7 @@ class Registry extends EventEmitter {
       retryAttempts: config.retryAttempts || 3,
       retryDelay: config.retryDelay || 1000
     };
-    
+
     this.agents = new Map();
     this.heartbeatTimer = null;
     this.isConnected = false;
@@ -52,7 +52,7 @@ class Registry extends EventEmitter {
   async register(agentInfo) {
     try {
       const response = await this.makeRequest('POST', '/api/agents/register', agentInfo);
-      
+
       this.agents.set(agentInfo.id, {
         ...agentInfo,
         registeredAt: new Date().toISOString(),
@@ -61,10 +61,10 @@ class Registry extends EventEmitter {
 
       // Start heartbeat for this agent
       this.startHeartbeat(agentInfo.id);
-      
+
       logger.info(`Agent '${agentInfo.name}' registered with registry`);
       this.emit('agent:registered', agentInfo);
-      
+
       return response.data;
     } catch (error) {
       logger.error(`Failed to register agent '${agentInfo.name}':`, error.message);
@@ -78,13 +78,13 @@ class Registry extends EventEmitter {
   async unregister(agentId) {
     try {
       await this.makeRequest('DELETE', `/api/agents/${agentId}`);
-      
+
       this.agents.delete(agentId);
       this.stopHeartbeat(agentId);
-      
+
       logger.info(`Agent '${agentId}' unregistered from registry`);
       this.emit('agent:unregistered', agentId);
-      
+
       return true;
     } catch (error) {
       logger.error(`Failed to unregister agent '${agentId}':`, error.message);
@@ -103,10 +103,10 @@ class Registry extends EventEmitter {
       });
 
       const response = await this.makeRequest('GET', `/api/agents/discover?${queryParams}`);
-      
+
       logger.debug(`Discovered ${response.data.length} agents with capability '${capability}'`);
       this.emit('agents:discovered', { capability, agents: response.data });
-      
+
       return response.data;
     } catch (error) {
       logger.error(`Failed to discover agents with capability '${capability}':`, error.message);
@@ -188,7 +188,7 @@ class Registry extends EventEmitter {
 
       agent.lastHeartbeat = new Date().toISOString();
       this.emit('heartbeat:sent', agentId);
-      
+
       return true;
     } catch (error) {
       logger.error(`Failed to send heartbeat for agent '${agentId}':`, error.message);
@@ -208,7 +208,7 @@ class Registry extends EventEmitter {
         logger.error(`Heartbeat failed for agent '${agentId}':`, error.message);
       }
     }, this.config.heartbeatInterval);
-    
+
     activeIntervals.set(`heartbeat_${agentId}`, intervalId);
 
     if (!this.heartbeatTimer) {
@@ -232,7 +232,7 @@ class Registry extends EventEmitter {
    */
   async makeRequest(method, endpoint, data = null) {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
         const config = {
@@ -254,18 +254,18 @@ class Registry extends EventEmitter {
         }
 
         const response = await axios(config);
-        
+
         // Mark as connected on successful request
         if (!this.isConnected) {
           this.isConnected = true;
           this.emit('connected');
         }
-        
+
         return response;
-        
+
       } catch (error) {
         lastError = error;
-        
+
         // Mark as disconnected on network errors
         if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
           if (this.isConnected) {
@@ -336,7 +336,7 @@ class Registry extends EventEmitter {
    */
   async shutdown() {
     logger.info('Shutting down registry client...');
-    
+
     // Stop all heartbeats
     if (this.heartbeatTimer) {
       for (const [agentId, intervalId] of this.heartbeatTimer.entries()) {

@@ -9,7 +9,7 @@ class BlockchainEventAdapter {
         this.connections = new Map();
         this.logger = options.logger || console;
     }
-    
+
     on(event, handler) {
         if (event === 'connection' || event === 'blockchain-connection') {
             // Handle new connections via blockchain
@@ -25,7 +25,7 @@ class BlockchainEventAdapter {
             });
         }
     }
-    
+
     async sendToSubscriber(subscriberId, data) {
         try {
             await this.eventStream.publishEvent('message', {
@@ -53,11 +53,11 @@ class BlockchainEventClient extends BlockchainEventAdapter {
         super();
         this.readyState = 1; // OPEN - for compatibility
     }
-    
+
     send(data) {
         this.publishEvent('message', { data });
     }
-    
+
     close() {
         this.eventStream.disconnect();
         this.readyState = 3; // CLOSED

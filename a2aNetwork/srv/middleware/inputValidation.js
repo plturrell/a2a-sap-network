@@ -2,7 +2,7 @@
  * @fileoverview Input Validation Middleware
  * @since 1.0.0
  * @module inputValidation
- * 
+ *
  * Comprehensive input validation middleware using Joi for schema validation
  * Provides validation schemas for all A2A Network API endpoints
  */
@@ -59,55 +59,55 @@ const validationSchemas = {
             'network_analytics', 'network_health'
         ).required()
     }),
-    
+
     'GET:/api/v1/Agents': Joi.object({
         id: Joi.string().valid(
             'agent_visualization', 'dashboard_test', 'agent_marketplace'
         ).required()
     }),
-    
+
     'GET:/api/v1/Services': Joi.object({
         id: Joi.string().valid(
             'service_marketplace', 'dashboard_test'
         ).required()
     }),
-    
+
     'GET:/api/v1/Notifications': Joi.object({
         id: Joi.string().valid(
             'notification_center', 'dashboard_test'
         ).optional()
     }),
-    
+
     'GET:/api/v1/blockchain/stats': Joi.object({
         id: Joi.string().valid(
             'blockchain_dashboard', 'dashboard_test'
         ).required()
     }),
-    
+
     'GET:/odata/v4/blockchain/BlockchainStats': Joi.object({
         id: Joi.string().valid(
             'blockchain_dashboard', 'dashboard_test'
         ).required()
     }),
-    
+
     'GET:/api/v1/notifications/count': Joi.object({
         id: Joi.string().valid(
             'notification_center', 'dashboard_test'
         ).optional()
     }),
-    
+
     'GET:/api/v1/network/analytics': Joi.object({
         id: Joi.string().valid(
             'network_analytics', 'dashboard_test'
         ).optional()
     }),
-    
+
     'GET:/api/v1/network/health': Joi.object({
         id: Joi.string().valid(
             'network_health', 'dashboard_test'
         ).optional()
     }),
-    
+
     'GET:/api/v1/metrics/current': Joi.object({}).allow({}),
     'GET:/api/v1/metrics/performance': Joi.object({}).allow({}),
     'GET:/api/v1/operations/status': Joi.object({}).allow({}),
@@ -297,7 +297,7 @@ const validationSchemas = {
 function validateInput(schemaKey) {
     return (req, res, next) => {
         const log = cds.log('input-validation');
-        
+
         // Log request details for debugging (development only)
         if (req.path.includes('launchpad') || req.originalUrl.includes('launchpad')) {
             log.debug('Launchpad request validation', {
@@ -307,11 +307,11 @@ function validateInput(schemaKey) {
                 schemaKey: schemaKey
             });
         }
-        
+
         // Skip validation for tile API endpoints that need to return real backend data
         const tileApiEndpoints = [
             '/api/v1/NetworkStats',
-            '/api/v1/Agents', 
+            '/api/v1/Agents',
             '/api/v1/Services',  // Added for diagnostic test page
             '/api/v1/Notifications',  // Added for diagnostic test page
             '/api/v1/network/Agents',  // Added for launchpad
@@ -322,7 +322,7 @@ function validateInput(schemaKey) {
             '/api/v1/notifications/count',
             '/api/v1/network/health'
         ];
-        
+
         // Skip validation for static file paths (HTML, CSS, JS, images, etc.)
         const staticFilePaths = [
             '/app/',
@@ -332,27 +332,27 @@ function validateInput(schemaKey) {
             '/shells/',
             '/common/'
         ];
-        
+
         // Check if the request path matches any tile API endpoint (handles query parameters)
         const matchedTileEndpoint = tileApiEndpoints.find(endpoint => req.path.startsWith(endpoint));
         if (matchedTileEndpoint) {
-            log.debug('Skipping validation for tile API endpoint', { 
+            log.debug('Skipping validation for tile API endpoint', {
                 path: req.path,
-                matchedEndpoint: matchedTileEndpoint 
+                matchedEndpoint: matchedTileEndpoint
             });
             return next();
         }
-        
+
         // Skip validation for static file requests
         const matchedStaticPath = staticFilePaths.find(staticPath => req.path.startsWith(staticPath));
         if (matchedStaticPath) {
-            log.debug('Skipping validation for static file request', { 
+            log.debug('Skipping validation for static file request', {
                 path: req.path,
-                matchedPath: matchedStaticPath 
+                matchedPath: matchedStaticPath
             });
             return next();
         }
-        
+
         // Debug validation proceeding for launchpad
         if (req.path.includes('launchpad') || req.originalUrl.includes('launchpad')) {
             log.debug('Validation proceeding for launchpad', {
@@ -360,11 +360,11 @@ function validateInput(schemaKey) {
                 pathStartsWithApp: req.path.startsWith('/app/')
             });
         }
-        
+
         // Get schema based on method and path or direct key
         const routeKey = `${req.method}:${req.path}`;
         const schema = validationSchemas[routeKey] || validationSchemas[schemaKey];
-        
+
         // Debug logging for diagnostic endpoints
         if (req.path.includes('/api/v1/Services') || req.path.includes('/api/v1/Notifications')) {
             log.debug('Diagnostic endpoint validation', {
@@ -374,7 +374,7 @@ function validateInput(schemaKey) {
                 hasSchema: !!schema
             });
         }
-        
+
         if (!schema) {
             log.debug('No validation schema found for route', { route: routeKey, schemaKey });
             return next(); // Skip validation if no schema defined
@@ -382,7 +382,7 @@ function validateInput(schemaKey) {
 
         // Validate request body for POST/PUT, query params for GET
         const dataToValidate = ['POST', 'PUT', 'PATCH'].includes(req.method) ? req.body : req.query;
-        
+
         // First, check for edge cases and security threats
         const edgeValidation = validateEdgeCases(dataToValidate);
         if (!edgeValidation.isValid) {
@@ -390,7 +390,7 @@ function validateInput(schemaKey) {
                 route: routeKey,
                 errors: edgeValidation.errors
             });
-            
+
             return res.status(400).json({
                 error: 'Invalid input detected',
                 code: 'SECURITY_VALIDATION_ERROR',
@@ -400,7 +400,7 @@ function validateInput(schemaKey) {
                 }))
             });
         }
-        
+
         const { error, value } = schema.validate(dataToValidate, {
             abortEarly: false, // Return all validation errors
             stripUnknown: true, // Remove unknown fields
@@ -447,29 +447,29 @@ function validateInput(schemaKey) {
  */
 function validateEdgeCases(data) {
     const errors = [];
-    
+
     function checkValue(value, path = '') {
         if (typeof value === 'string') {
             // Check for extremely long strings (potential DoS)
             if (value.length > 100000) {
                 errors.push(`String too long at ${path}: ${value.length} characters`);
             }
-            
+
             // Check for null bytes (potential injection)
             if (value.includes('\0')) {
                 errors.push(`Null byte detected at ${path}`);
             }
-            
+
             // Check for binary data masquerading as text
             if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(value)) {
                 errors.push(`Binary/control characters detected at ${path}`);
             }
-            
+
             // Check for potential path traversal
             if (value.includes('../') || value.includes('..\\')) {
                 errors.push(`Path traversal attempt detected at ${path}`);
             }
-            
+
             // Check for script tags or potential XSS
             if (/<script|javascript:|data:|vbscript:/i.test(value)) {
                 errors.push(`Potential XSS detected at ${path}`);
@@ -479,7 +479,7 @@ function validateEdgeCases(data) {
             if (value.hasOwnProperty('__proto__') || value.hasOwnProperty('constructor') || value.hasOwnProperty('prototype')) {
                 errors.push(`Prototype pollution attempt detected at ${path}`);
             }
-            
+
             // Check for circular references (potential DoS)
             try {
                 JSON.stringify(value);
@@ -488,7 +488,7 @@ function validateEdgeCases(data) {
                     errors.push(`Circular reference detected at ${path}`);
                 }
             }
-            
+
             // Recursively check nested objects/arrays
             Object.keys(value).forEach(key => {
                 checkValue(value[key], path ? `${path}.${key}` : key);
@@ -500,9 +500,9 @@ function validateEdgeCases(data) {
             }
         }
     }
-    
+
     checkValue(data);
-    
+
     return {
         isValid: errors.length === 0,
         errors: errors
@@ -520,7 +520,7 @@ function validateEntity(entityType, operation) {
         const log = cds.log('entity-validation');
         const schemaPath = `${entityType}.${operation}`;
         const schema = validationSchemas[schemaPath];
-        
+
         if (!schema) {
             log.debug('No validation schema found for entity', { entityType, operation });
             return;

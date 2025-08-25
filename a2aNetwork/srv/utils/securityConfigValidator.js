@@ -35,7 +35,7 @@ const SECURITY_REQUIREMENTS = {
             'NODE_ENV'
         ]
     },
-    
+
     // Minimum key lengths
     KEY_LENGTHS: {
         SESSION_SECRET: 64,
@@ -44,7 +44,7 @@ const SECURITY_REQUIREMENTS = {
         DATABASE_ENCRYPTION_KEY: 32,
         API_KEY: 32
     },
-    
+
     // Password requirements
     PASSWORD_REQUIREMENTS: {
         minLength: 12,
@@ -53,7 +53,7 @@ const SECURITY_REQUIREMENTS = {
         requireNumbers: true,
         requireSpecialChars: true
     },
-    
+
     // Security headers that must be present
     REQUIRED_HEADERS: [
         'Strict-Transport-Security',
@@ -63,7 +63,7 @@ const SECURITY_REQUIREMENTS = {
         'Content-Security-Policy',
         'Referrer-Policy'
     ],
-    
+
     // Blocked file patterns
     DANGEROUS_FILES: [
         '.env',
@@ -77,7 +77,7 @@ const SECURITY_REQUIREMENTS = {
         '.pfx',
         '.key'
     ],
-    
+
     // Vulnerable dependencies to check
     VULNERABLE_PACKAGES: {
         'jsonwebtoken': '<9.0.0',
@@ -97,7 +97,7 @@ class SecurityConfigValidator {
         this.info = [];
         this.log = cds.log('security-validator');
     }
-    
+
     /**
      * Run complete security validation
      */
@@ -105,41 +105,41 @@ class SecurityConfigValidator {
         this.errors = [];
         this.warnings = [];
         this.info = [];
-        
+
         const startTime = Date.now();
-        
+
         try {
             // 1. Environment configuration
             this.validateEnvironmentVariables();
-            
+
             // 2. Cryptographic keys
             this.validateCryptographicKeys();
-            
+
             // 3. File system security
             await this.validateFileSystemSecurity();
-            
+
             // 4. Dependencies
             await this.validateDependencies();
-            
+
             // 5. SSL/TLS configuration
             this.validateSSLConfiguration();
-            
+
             // 6. Authentication configuration
             this.validateAuthConfiguration();
-            
+
             // 7. Database security
             this.validateDatabaseSecurity();
-            
+
             // 8. API security
             this.validateAPISecurity();
-            
+
             // 9. Production readiness
             if (process.env.NODE_ENV === 'production') {
                 this.validateProductionReadiness();
             }
-            
+
             const duration = Date.now() - startTime;
-            
+
             return {
                 valid: this.errors.length === 0,
                 errors: this.errors,
@@ -154,7 +154,7 @@ class SecurityConfigValidator {
                 message: `Security validation failed: ${error.message}`,
                 severity: 'CRITICAL'
             });
-            
+
             return {
                 valid: false,
                 errors: this.errors,
@@ -165,14 +165,14 @@ class SecurityConfigValidator {
             };
         }
     }
-    
+
     /**
      * Validate environment variables
      */
     validateEnvironmentVariables() {
         const env = process.env.NODE_ENV || 'development';
         const required = SECURITY_REQUIREMENTS.REQUIRED_ENV_VARS[env] || [];
-        
+
         // Check required variables
         for (const varName of required) {
             if (!process.env[varName]) {
@@ -184,7 +184,7 @@ class SecurityConfigValidator {
                 });
             }
         }
-        
+
         // Check for insecure values
         if (process.env.SESSION_SECRET === 'dev-secret' && env === 'production') {
             this.errors.push({
@@ -194,7 +194,7 @@ class SecurityConfigValidator {
                 severity: 'CRITICAL'
             });
         }
-        
+
         // Validate CORS origins
         const allowedOrigins = process.env.ALLOWED_ORIGINS;
         if (allowedOrigins && allowedOrigins.includes('*') && env === 'production') {
@@ -204,7 +204,7 @@ class SecurityConfigValidator {
                 severity: 'HIGH'
             });
         }
-        
+
         // Check for development flags in production
         if (env === 'production') {
             const devFlags = [
@@ -213,7 +213,7 @@ class SecurityConfigValidator {
                 'SKIP_AUTH',
                 'DEBUG'
             ];
-            
+
             for (const flag of devFlags) {
                 if (process.env[flag] === 'true') {
                     this.errors.push({
@@ -226,7 +226,7 @@ class SecurityConfigValidator {
             }
         }
     }
-    
+
     /**
      * Validate cryptographic keys
      */
@@ -243,20 +243,20 @@ class SecurityConfigValidator {
                 });
             }
         }
-        
+
         // Check JWT configuration
         if (process.env.JWT_PRIVATE_KEY && process.env.JWT_PUBLIC_KEY) {
             try {
                 // Validate RSA key pair
                 const privateKey = process.env.JWT_PRIVATE_KEY;
                 const publicKey = process.env.JWT_PUBLIC_KEY;
-                
+
                 // Test sign and verify
                 const testPayload = { test: true };
                 const jwt = require('jsonwebtoken');
                 const token = jwt.sign(testPayload, privateKey, { algorithm: 'RS256' });
                 jwt.verify(token, publicKey, { algorithms: ['RS256'] });
-                
+
                 this.info.push({
                     category: 'JWT_CONFIG',
                     message: 'JWT RSA key pair validated successfully'
@@ -269,7 +269,7 @@ class SecurityConfigValidator {
                 });
             }
         }
-        
+
         // Check for weak keys
         const weakPatterns = [
             /^0+$/,
@@ -278,13 +278,13 @@ class SecurityConfigValidator {
             /password/i,
             /secret/i
         ];
-        
+
         const keysToCheck = [
             'SESSION_SECRET',
             'CONFIG_ENCRYPTION_KEY',
             'MASTER_KEY_SECRET'
         ];
-        
+
         for (const keyName of keysToCheck) {
             const keyValue = process.env[keyName];
             if (keyValue) {
@@ -301,24 +301,24 @@ class SecurityConfigValidator {
             }
         }
     }
-    
+
     /**
      * Validate file system security
      */
     async validateFileSystemSecurity() {
         const projectRoot = process.cwd();
-        
+
         // Check for exposed sensitive files
         for (const dangerousFile of SECURITY_REQUIREMENTS.DANGEROUS_FILES) {
             const fullPath = path.join(projectRoot, dangerousFile);
-            
+
             try {
                 const stats = await fs.promises.stat(fullPath);
                 if (stats.isFile()) {
                     // Check if file is in .gitignore
                     const gitignorePath = path.join(projectRoot, '.gitignore');
                     const gitignoreContent = await fs.promises.readFile(gitignorePath, 'utf8');
-                    
+
                     if (!gitignoreContent.includes(dangerousFile)) {
                         this.errors.push({
                             category: 'FILE_SECURITY',
@@ -339,20 +339,20 @@ class SecurityConfigValidator {
                 // File doesn't exist - good
             }
         }
-        
+
         // Check file permissions
         const criticalFiles = [
             'srv/server.js',
             'srv/middleware/auth.js',
             'srv/middleware/security.js'
         ];
-        
+
         for (const file of criticalFiles) {
             const fullPath = path.join(projectRoot, file);
             try {
                 const stats = await fs.promises.stat(fullPath);
                 const mode = stats.mode & parseInt('777', 8);
-                
+
                 if (mode & parseInt('002', 8)) {
                     this.warnings.push({
                         category: 'FILE_PERMISSIONS',
@@ -366,7 +366,7 @@ class SecurityConfigValidator {
             }
         }
     }
-    
+
     /**
      * Validate dependencies
      */
@@ -374,12 +374,12 @@ class SecurityConfigValidator {
         try {
             const packageJsonPath = path.join(process.cwd(), 'package.json');
             const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-            
+
             const allDeps = {
                 ...packageJson.dependencies,
                 ...packageJson.devDependencies
             };
-            
+
             // Check for vulnerable versions
             for (const [pkg, versionReq] of Object.entries(SECURITY_REQUIREMENTS.VULNERABLE_PACKAGES)) {
                 if (allDeps[pkg]) {
@@ -395,7 +395,7 @@ class SecurityConfigValidator {
                     }
                 }
             }
-            
+
             // Check for suspicious packages
             const suspiciousPatterns = [
                 /typosquat/i,
@@ -403,7 +403,7 @@ class SecurityConfigValidator {
                 /backdoor/i,
                 /node-ipc/  // Known compromised package
             ];
-            
+
             for (const [pkg, version] of Object.entries(allDeps)) {
                 for (const pattern of suspiciousPatterns) {
                     if (pattern.test(pkg)) {
@@ -424,7 +424,7 @@ class SecurityConfigValidator {
             });
         }
     }
-    
+
     /**
      * Validate SSL/TLS configuration
      */
@@ -438,7 +438,7 @@ class SecurityConfigValidator {
                     severity: 'HIGH'
                 });
             }
-            
+
             // Check TLS version
             if (process.env.TLS_MIN_VERSION && process.env.TLS_MIN_VERSION < '1.2') {
                 this.errors.push({
@@ -449,7 +449,7 @@ class SecurityConfigValidator {
             }
         }
     }
-    
+
     /**
      * Validate authentication configuration
      */
@@ -463,7 +463,7 @@ class SecurityConfigValidator {
                 severity: 'MEDIUM'
             });
         }
-        
+
         // Check session timeout
         const sessionTimeout = parseInt(process.env.SESSION_TIMEOUT || '3600000');
         if (sessionTimeout > 86400000) { // 24 hours
@@ -473,7 +473,7 @@ class SecurityConfigValidator {
                 severity: 'MEDIUM'
             });
         }
-        
+
         // Check account lockout
         if (!process.env.LOCKOUT_THRESHOLD) {
             this.warnings.push({
@@ -483,7 +483,7 @@ class SecurityConfigValidator {
             });
         }
     }
-    
+
     /**
      * Validate database security
      */
@@ -496,7 +496,7 @@ class SecurityConfigValidator {
                 severity: 'HIGH'
             });
         }
-        
+
         // Check connection string security
         const dbUrl = process.env.DATABASE_URL;
         if (dbUrl) {
@@ -508,7 +508,7 @@ class SecurityConfigValidator {
                     severity: 'HIGH'
                 });
             }
-            
+
             // Check for SSL/TLS
             if (process.env.NODE_ENV === 'production' && !dbUrl.includes('ssl=true')) {
                 this.warnings.push({
@@ -519,7 +519,7 @@ class SecurityConfigValidator {
             }
         }
     }
-    
+
     /**
      * Validate API security
      */
@@ -532,7 +532,7 @@ class SecurityConfigValidator {
                 severity: 'MEDIUM'
             });
         }
-        
+
         // Check API versioning
         if (!process.env.API_VERSION) {
             this.info.push({
@@ -541,7 +541,7 @@ class SecurityConfigValidator {
             });
         }
     }
-    
+
     /**
      * Validate production readiness
      */
@@ -554,7 +554,7 @@ class SecurityConfigValidator {
                 severity: 'MEDIUM'
             });
         }
-        
+
         // Check error handling
         if (!process.env.ERROR_REPORTING_URL) {
             this.warnings.push({
@@ -563,7 +563,7 @@ class SecurityConfigValidator {
                 severity: 'LOW'
             });
         }
-        
+
         // Check backup configuration
         if (!process.env.BACKUP_ENABLED) {
             this.warnings.push({
@@ -572,14 +572,14 @@ class SecurityConfigValidator {
                 severity: 'MEDIUM'
             });
         }
-        
+
         // Check security headers
         this.info.push({
             category: 'PRODUCTION',
             message: 'Ensure all required security headers are configured in production'
         });
     }
-    
+
     /**
      * Generate security report
      */
@@ -598,16 +598,16 @@ class SecurityConfigValidator {
             info: validationResult.info,
             recommendations: this.generateRecommendations(validationResult)
         };
-        
+
         return report;
     }
-    
+
     /**
      * Generate recommendations based on findings
      */
     generateRecommendations(validationResult) {
         const recommendations = [];
-        
+
         if (validationResult.errors.some(e => e.category === 'ENV_CONFIG')) {
             recommendations.push({
                 priority: 'HIGH',
@@ -615,7 +615,7 @@ class SecurityConfigValidator {
                 documentation: 'https://docs.a2a-network.com/security/env-config'
             });
         }
-        
+
         if (validationResult.errors.some(e => e.category === 'CRYPTO_CONFIG')) {
             recommendations.push({
                 priority: 'CRITICAL',
@@ -623,7 +623,7 @@ class SecurityConfigValidator {
                 documentation: 'https://docs.a2a-network.com/security/crypto-keys'
             });
         }
-        
+
         if (validationResult.warnings.some(w => w.category === 'AUTH_CONFIG')) {
             recommendations.push({
                 priority: 'MEDIUM',
@@ -631,7 +631,7 @@ class SecurityConfigValidator {
                 documentation: 'https://docs.a2a-network.com/security/auth-config'
             });
         }
-        
+
         return recommendations;
     }
 }
@@ -643,11 +643,11 @@ module.exports = {
         const validator = new SecurityConfigValidator();
         const result = await validator.runValidation();
         const report = validator.generateReport(result);
-        
+
         // Log results
         if (!result.valid) {
             cds.log('security').error('Security validation failed', report);
-            
+
             // Exit in production if validation fails
             if (process.env.NODE_ENV === 'production') {
                 process.exit(1);
@@ -655,7 +655,7 @@ module.exports = {
         } else {
             cds.log('security').info('Security validation passed', report.summary);
         }
-        
+
         return report;
     },
     SECURITY_REQUIREMENTS

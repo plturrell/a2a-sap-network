@@ -11,7 +11,7 @@ class Agent7Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent7Adapter();
-        
+
         // Entity references
         const {
             RegisteredAgents,
@@ -63,7 +63,7 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { agentData } = req.data;
                 const result = await this.adapter.registerAgent(agentData);
-                
+
                 // Create agent record
                 const agent = await INSERT.into(RegisteredAgents).entries({
                     ID: uuidv4(),
@@ -80,7 +80,7 @@ class Agent7Service extends cds.ApplicationService {
                     priority: 5,
                     registrationDate: new Date()
                 });
-                
+
                 // Emit registration event
                 await this.emit('AgentRegistered', {
                     agentId: agent.ID,
@@ -88,7 +88,7 @@ class Agent7Service extends cds.ApplicationService {
                     agentType: agentData.agentType,
                     timestamp: new Date()
                 });
-                
+
                 return `Agent ${agentData.agentName} registered successfully`;
             } catch (error) {
                 req.error(500, `Failed to register agent: ${error.message}`);
@@ -99,18 +99,18 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { status, reason } = req.data;
-                
+
                 const oldAgent = await SELECT.one.from(RegisteredAgents).where({ ID });
                 const result = await this.adapter.updateAgentStatus(ID, status, reason);
-                
+
                 // Update agent status
                 await UPDATE(RegisteredAgents)
-                    .set({ 
+                    .set({
                         status,
                         modifiedAt: new Date()
                     })
                     .where({ ID });
-                
+
                 // Emit status change event
                 await this.emit('AgentStatusChanged', {
                     agentId: ID,
@@ -119,7 +119,7 @@ class Agent7Service extends cds.ApplicationService {
                     reason,
                     timestamp: new Date()
                 });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to update agent status: ${error.message}`);
@@ -130,7 +130,7 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const healthCheck = await this.adapter.performHealthCheck(ID);
-                
+
                 // Create health check record
                 await INSERT.into(AgentHealthChecks).entries({
                     ID: uuidv4(),
@@ -145,16 +145,16 @@ class Agent7Service extends cds.ApplicationService {
                     alertTriggered: healthCheck.alertTriggered,
                     recommendations: JSON.stringify(healthCheck.recommendations)
                 });
-                
+
                 // Update agent health status
                 await UPDATE(RegisteredAgents)
-                    .set({ 
+                    .set({
                         healthStatus: healthCheck.status,
                         lastHealthCheck: new Date(),
                         responseTime: healthCheck.responseTime
                     })
                     .where({ ID });
-                
+
                 if (healthCheck.status === 'FAIL' || healthCheck.status === 'ERROR') {
                     await this.emit('HealthCheckFailed', {
                         agentId: ID,
@@ -164,7 +164,7 @@ class Agent7Service extends cds.ApplicationService {
                         timestamp: new Date()
                     });
                 }
-                
+
                 return `Health check completed: ${healthCheck.status}`;
             } catch (error) {
                 req.error(500, `Failed to perform health check: ${error.message}`);
@@ -175,17 +175,17 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { configuration, restartRequired } = req.data;
-                
+
                 const result = await this.adapter.updateAgentConfiguration(ID, configuration, restartRequired);
-                
+
                 // Update agent configuration
                 await UPDATE(RegisteredAgents)
-                    .set({ 
+                    .set({
                         configuration: JSON.stringify(configuration),
                         modifiedAt: new Date()
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to update configuration: ${error.message}`);
@@ -196,18 +196,18 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { reason, gracefulShutdown } = req.data;
-                
+
                 const result = await this.adapter.deactivateAgent(ID, reason, gracefulShutdown);
-                
+
                 // Update agent status
                 await UPDATE(RegisteredAgents)
-                    .set({ 
+                    .set({
                         status: 'INACTIVE',
                         deactivationDate: new Date(),
                         modifiedAt: new Date()
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to deactivate agent: ${error.message}`);
@@ -218,9 +218,9 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { taskData } = req.data;
-                
+
                 const result = await this.adapter.scheduleTask(ID, taskData);
-                
+
                 // Create management task
                 await INSERT.into(ManagementTasks).entries({
                     ID: uuidv4(),
@@ -234,7 +234,7 @@ class Agent7Service extends cds.ApplicationService {
                     scheduledTime: taskData.scheduledTime,
                     createdAt: new Date()
                 });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to schedule task: ${error.message}`);
@@ -245,9 +245,9 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { workloadData } = req.data;
-                
+
                 const result = await this.adapter.assignWorkload(ID, workloadData);
-                
+
                 // Create workload management task
                 await INSERT.into(ManagementTasks).entries({
                     ID: uuidv4(),
@@ -260,7 +260,7 @@ class Agent7Service extends cds.ApplicationService {
                     scheduleType: 'IMMEDIATE',
                     createdAt: new Date()
                 });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to assign workload: ${error.message}`);
@@ -290,15 +290,15 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.executeTask(ID);
-                
+
                 // Update task status
                 await UPDATE(ManagementTasks)
-                    .set({ 
+                    .set({
                         status: 'RUNNING',
                         startTime: new Date()
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to execute task: ${error.message}`);
@@ -309,11 +309,11 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.pauseTask(ID);
-                
+
                 await UPDATE(ManagementTasks)
                     .set({ status: 'PAUSED' })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to pause task: ${error.message}`);
@@ -324,11 +324,11 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.resumeTask(ID);
-                
+
                 await UPDATE(ManagementTasks)
                     .set({ status: 'RUNNING' })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to resume task: ${error.message}`);
@@ -340,15 +340,15 @@ class Agent7Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { reason } = req.data;
                 const result = await this.adapter.cancelTask(ID, reason);
-                
+
                 await UPDATE(ManagementTasks)
-                    .set({ 
+                    .set({
                         status: 'CANCELLED',
                         endTime: new Date(),
                         errorMessage: reason
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to cancel task: ${error.message}`);
@@ -369,14 +369,14 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.activateCoordination(ID);
-                
+
                 await UPDATE(AgentCoordination)
-                    .set({ 
+                    .set({
                         status: 'ACTIVE',
                         lastExecution: new Date()
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to activate coordination: ${error.message}`);
@@ -397,14 +397,14 @@ class Agent7Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.executeBulkOperation(ID);
-                
+
                 await UPDATE(BulkOperations)
-                    .set({ 
+                    .set({
                         status: 'EXECUTING',
                         startTime: new Date()
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to execute bulk operation: ${error.message}`);

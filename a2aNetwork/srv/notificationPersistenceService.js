@@ -88,7 +88,7 @@ class NotificationPersistenceService {
 
     async getNotifications(userId, options = {}) {
         const { Notifications, NotificationActions } = this.entities;
-        
+
         try {
             let query = SELECT.from(Notifications)
                 .where({ userId: userId });
@@ -141,11 +141,11 @@ class NotificationPersistenceService {
 
     async markAsRead(userId, notificationId) {
         const { Notifications } = this.entities;
-        
+
         try {
             const result = await this.db.run(
                 UPDATE(Notifications)
-                    .set({ 
+                    .set({
                         status: 'read',
                         readAt: new Date().toISOString()
                     })
@@ -161,11 +161,11 @@ class NotificationPersistenceService {
 
     async markAllAsRead(userId) {
         const { Notifications } = this.entities;
-        
+
         try {
             const result = await this.db.run(
                 UPDATE(Notifications)
-                    .set({ 
+                    .set({
                         status: 'read',
                         readAt: new Date().toISOString()
                     })
@@ -181,11 +181,11 @@ class NotificationPersistenceService {
 
     async dismissNotification(userId, notificationId) {
         const { Notifications } = this.entities;
-        
+
         try {
             const result = await this.db.run(
                 UPDATE(Notifications)
-                    .set({ 
+                    .set({
                         status: 'dismissed',
                         dismissedAt: new Date().toISOString()
                     })
@@ -202,7 +202,7 @@ class NotificationPersistenceService {
     async deleteNotification(userId, notificationId) {
         const { Notifications, NotificationActions } = this.entities;
         const tx = this.db.transaction();
-        
+
         try {
             // Delete actions first
             await tx.run(
@@ -225,7 +225,7 @@ class NotificationPersistenceService {
 
     async getUserPreferences(userId) {
         const { NotificationPreferences } = this.entities;
-        
+
         try {
             const preferences = await this.db.run(
                 SELECT.one.from(NotificationPreferences).where({ userId: userId })
@@ -249,10 +249,10 @@ class NotificationPersistenceService {
 
     async updateUserPreferences(userId, preferences) {
         const { NotificationPreferences } = this.entities;
-        
+
         try {
             const existing = await this.getUserPreferences(userId);
-            
+
             if (preferences.deviceInfo) {
                 preferences.deviceInfo = JSON.stringify(preferences.deviceInfo);
             }
@@ -282,7 +282,7 @@ class NotificationPersistenceService {
 
     async createDefaultPreferences(userId) {
         const { NotificationPreferences } = this.entities;
-        
+
         const defaultPreferences = {
             ID: uuidv4(),
             userId: userId,
@@ -310,7 +310,7 @@ class NotificationPersistenceService {
 
     async logDelivery(notificationId, channel, status, attemptNumber, errorMessage = null) {
         const { NotificationDeliveryLog } = this.entities;
-        
+
         try {
             await this.db.run(
                 INSERT.into(NotificationDeliveryLog).entries({
@@ -339,7 +339,7 @@ class NotificationPersistenceService {
 
     async deliverNotification(notificationId, attemptNumber = 1) {
         const { Notifications } = this.entities;
-        
+
         try {
             const notification = await this.db.run(
                 SELECT.one.from(Notifications).where({ ID: notificationId })
@@ -388,7 +388,7 @@ class NotificationPersistenceService {
                 // Mark as delivered
                 await this.db.run(
                     UPDATE(Notifications)
-                        .set({ 
+                        .set({
                             deliveryStatus: 'delivered',
                             lastDeliveryAt: new Date().toISOString()
                         })
@@ -397,10 +397,10 @@ class NotificationPersistenceService {
             } else if (attemptNumber < this.retryConfig.maxAttempts) {
                 // Schedule retry
                 const delay = this.calculateRetryDelay(attemptNumber);
-                
+
                 await this.db.run(
                     UPDATE(Notifications)
-                        .set({ 
+                        .set({
                             deliveryStatus: 'retrying',
                             deliveryAttempts: attemptNumber
                         })
@@ -412,7 +412,7 @@ class NotificationPersistenceService {
                 // Mark as failed after max attempts
                 await this.db.run(
                     UPDATE(Notifications)
-                        .set({ 
+                        .set({
                             deliveryStatus: 'failed',
                             deliveryAttempts: attemptNumber
                         })
@@ -474,7 +474,7 @@ class NotificationPersistenceService {
 
         const [startHour, startMin] = preferences.quietHoursStart.split(':').map(Number);
         const [endHour, endMin] = preferences.quietHoursEnd.split(':').map(Number);
-        
+
         const quietStart = startHour * 60 + startMin;
         const quietEnd = endHour * 60 + endMin;
 
@@ -490,7 +490,7 @@ class NotificationPersistenceService {
         const now = new Date();
         const userTime = this.convertToUserTimezone(now, preferences.timezone);
         const [endHour, endMin] = preferences.quietHoursEnd.split(':').map(Number);
-        
+
         const endTime = new Date(userTime);
         endTime.setHours(endHour, endMin, 0, 0);
 
@@ -512,17 +512,17 @@ class NotificationPersistenceService {
             this.retryConfig.baseDelay * Math.pow(2, attemptNumber - 1),
             this.retryConfig.maxDelay
         );
-        
+
         // Add jitter to prevent thundering herd
         const jitter = Math.random() * 0.3 * exponentialDelay;
-        
+
         return exponentialDelay + jitter;
     }
 
     async cleanupExpiredNotifications() {
         const { Notifications, NotificationActions, NotificationDeliveryLog } = this.entities;
         const tx = this.db.transaction();
-        
+
         try {
             // Find expired notifications
             const expired = await tx.run(
@@ -563,7 +563,7 @@ class NotificationPersistenceService {
 
     async getNotificationStats(userId) {
         const { Notifications } = this.entities;
-        
+
         try {
             const stats = await this.db.run(
                 SELECT.from(Notifications)

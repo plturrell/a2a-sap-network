@@ -3,15 +3,15 @@
 /**
  * Agent 5 UI Security & SAP Standards Scanner
  * Comprehensive security audit for QA Validation Agent UI
- * 
+ *
  * Tests:
  * - Critical Security Validation (6 checks)
- * - SAP Fiori Elements Standards (5 checks) 
+ * - SAP Fiori Elements Standards (5 checks)
  * - UI5 Development Standards (5 checks)
  * - QA Testing Specific Security (4 checks)
  * - Enterprise Compliance (4 checks)
  * - Performance & Accessibility (5 checks)
- * 
+ *
  * Total: 29 security and standards checks
  */
 
@@ -37,7 +37,7 @@ class Agent5SecurityScanner {
     check(description, testResult, isWarning = false) {
         const status = testResult ? '✅' : (isWarning ? '⚠️ ' : '❌');
         console.log(`${status} ${description}`);
-        
+
         if (testResult) {
             this.passedChecks++;
         } else if (isWarning) {
@@ -260,7 +260,7 @@ class Agent5SecurityScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
-                const hasValidation = content.includes('validate') || 
+                const hasValidation = content.includes('validate') ||
                                     content.includes('sanitize') ||
                                     content.includes('encodeXML');
                 if (hasValidation) return true;
@@ -288,12 +288,12 @@ class Agent5SecurityScanner {
                 const hasSecureBinding = content.includes('formatter:') ||
                                        content.includes('path:') ||
                                        content.includes('htmlSafe="false"');
-                
+
                 // Check for dangerous patterns
                 const hasDangerousBinding = content.includes('{= ') ||
                                           content.includes('innerHTML') ||
                                           content.includes('html}');
-                
+
                 if (hasDangerousBinding && !hasSecureBinding) {
                     return false;
                 }
@@ -358,9 +358,9 @@ class Agent5SecurityScanner {
                                         manifestObj['sap.ui5'] &&
                                         manifestObj['sap.fe'] &&
                                         manifestObj['sap.fiori'];
-            
+
             const hasQAValidationRoutes = JSON.stringify(manifestObj).includes('QAValidation');
-            
+
             return hasRequiredStructure && hasQAValidationRoutes;
         } catch (e) {
             return false;
@@ -399,7 +399,7 @@ class Agent5SecurityScanner {
                 const hasProperStructure = content.includes('xmlns') &&
                                          content.includes('sap.m') &&
                                          (content.includes('Dialog') || content.includes('Panel'));
-                
+
                 if (!hasProperStructure) {
                     return false;
                 }
@@ -415,9 +415,9 @@ class Agent5SecurityScanner {
         try {
             const manifestObj = JSON.parse(manifest);
             const dataSources = manifestObj['sap.app']?.dataSources;
-            
-            return dataSources && 
-                   dataSources.mainService && 
+
+            return dataSources &&
+                   dataSources.mainService &&
                    dataSources.mainService.type === 'OData' &&
                    dataSources.mainService.settings?.odataVersion === '4.0';
         } catch (e) {
@@ -432,9 +432,9 @@ class Agent5SecurityScanner {
         try {
             const manifestObj = JSON.parse(manifest);
             const routing = manifestObj['sap.ui5']?.routing;
-            
-            return routing && 
-                   routing.routes && 
+
+            return routing &&
+                   routing.routes &&
                    Array.isArray(routing.routes) &&
                    routing.routes.length > 0;
         } catch (e) {
@@ -449,9 +449,9 @@ class Agent5SecurityScanner {
         try {
             const manifestObj = JSON.parse(manifest);
             const dependencies = manifestObj['sap.ui5']?.dependencies;
-            
-            return dependencies && 
-                   dependencies.libs && 
+
+            return dependencies &&
+                   dependencies.libs &&
                    dependencies.libs['sap.m'] !== undefined &&
                    dependencies.libs['sap.ui.core'] !== undefined;
         } catch (e) {
@@ -461,7 +461,7 @@ class Agent5SecurityScanner {
 
     validateEventHandlers() {
         const controllers = [
-            'controller/ListReportExt.controller.js', 
+            'controller/ListReportExt.controller.js',
             'controller/ObjectPageExt.controller.js'
         ];
 
@@ -487,7 +487,7 @@ class Agent5SecurityScanner {
             if (content) {
                 const hasSecureBinding = content.includes('{') && content.includes('}');
                 const hasUnsafeHTML = content.includes('innerHTML') || content.includes('<script');
-                
+
                 if (hasUnsafeHTML) return false;
                 if (hasSecureBinding) return true;
             }
@@ -497,18 +497,18 @@ class Agent5SecurityScanner {
 
     validateI18nImplementation() {
         const i18nFile = this.readFile(path.join(this.basePath, 'i18n/i18n.properties'));
-        
+
         if (!i18nFile) return false;
 
         // Check for comprehensive i18n coverage for QA validation terms
-        const hasLabels = i18nFile.includes('title=') && 
+        const hasLabels = i18nFile.includes('title=') &&
                          (i18nFile.includes('label=') || i18nFile.includes('Label='));
-        const hasMessages = i18nFile.includes('message.') || 
+        const hasMessages = i18nFile.includes('message.') ||
                            i18nFile.includes('error.');
-        const hasQATerms = i18nFile.includes('test') && 
+        const hasQATerms = i18nFile.includes('test') &&
                           i18nFile.includes('validation') &&
                           i18nFile.includes('quality');
-        
+
         return hasLabels && hasMessages && hasQATerms;
     }
 
@@ -755,7 +755,7 @@ class Agent5SecurityScanner {
     generateReport() {
         const totalChecks = this.passedChecks + this.failedChecks;
         const compliance = Math.round((this.passedChecks / totalChecks) * 100);
-        
+
         console.log(`\n${  '='.repeat(60)}`);
         console.log('📊 AGENT 5 UI SECURITY & STANDARDS REPORT');
         console.log('='.repeat(60));

@@ -50,7 +50,7 @@ const AGENTS = {
         privateKey: process.env.AGENT0_PRIVATE_KEY || "0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a", // Anvil account #4
         description: "Agent 0 - Creates and manages data products from raw data sources"
     },
-    
+
     dataStandardizationAgent: {
         name: "Data Standardization Agent",
         endpoint: "http://localhost:8001",
@@ -64,7 +64,7 @@ const AGENTS = {
         privateKey: process.env.AGENT1_PRIVATE_KEY || "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba", // Anvil account #5
         description: "Agent 1 - Standardizes data formats and ensures consistency"
     },
-    
+
     aiPreparationAgent: {
         name: "AI Preparation Agent",
         endpoint: "http://localhost:8002",
@@ -78,7 +78,7 @@ const AGENTS = {
         privateKey: process.env.AGENT2_PRIVATE_KEY || "0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e", // Anvil account #6
         description: "Agent 2 - Prepares data for AI/ML model consumption"
     },
-    
+
     vectorProcessingAgent: {
         name: "Vector Processing Agent",
         endpoint: "http://localhost:8003",
@@ -92,7 +92,7 @@ const AGENTS = {
         privateKey: process.env.AGENT3_PRIVATE_KEY || "0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356", // Anvil account #7
         description: "Agent 3 - Processes and manages vector embeddings"
     },
-    
+
     calculationValidationAgent: {
         name: "Calculation Validation Agent",
         endpoint: "http://localhost:8004",
@@ -106,7 +106,7 @@ const AGENTS = {
         privateKey: process.env.AGENT4_PRIVATE_KEY || "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97", // Anvil account #8
         description: "Agent 4 - Validates calculations and mathematical operations"
     },
-    
+
     qaValidationAgent: {
         name: "QA Validation Agent",
         endpoint: "http://localhost:8005",
@@ -120,14 +120,14 @@ const AGENTS = {
         privateKey: process.env.AGENT5_PRIVATE_KEY || "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6", // Anvil account #9
         description: "Agent 5 - Performs quality assurance and validation checks"
     },
-    
+
     // Management & Control Agents
     qualityControlManager: {
         name: "Quality Control Manager Agent",
         endpoint: "http://localhost:8009",
         capabilities: [
             "quality_assessment",
-            "routing_decision", 
+            "routing_decision",
             "improvement_recommendations",
             "agent_registry",
             "message_routing",
@@ -137,7 +137,7 @@ const AGENTS = {
         privateKey: process.env.QC_AGENT_PRIVATE_KEY || "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", // Anvil account #1
         description: "Agent 6 - Manages quality control and routing decisions"
     },
-    
+
     agentManager: {
         name: "Agent Manager Agent",
         endpoint: "http://localhost:8010",
@@ -151,7 +151,7 @@ const AGENTS = {
         privateKey: process.env.AGENT_MANAGER_PRIVATE_KEY || "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6", // Anvil account #3
         description: "Central agent that manages other agents in the network"
     },
-    
+
     // Specialized Agents
     reasoningAgent: {
         name: "Reasoning Agent",
@@ -166,7 +166,7 @@ const AGENTS = {
         privateKey: process.env.REASONING_PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // Anvil account #0 (admin)
         description: "Advanced reasoning and decision-making agent"
     },
-    
+
     calculationAgent: {
         name: "Calculation Agent",
         endpoint: "http://localhost:8012",
@@ -180,7 +180,7 @@ const AGENTS = {
         privateKey: process.env.CALC_PRIVATE_KEY || "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", // Share with QC for now
         description: "Performs complex calculations and mathematical operations"
     },
-    
+
     sqlAgent: {
         name: "SQL Agent",
         endpoint: "http://localhost:8013",
@@ -194,7 +194,7 @@ const AGENTS = {
         privateKey: process.env.SQL_PRIVATE_KEY || "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a", // Share with DM for now
         description: "Handles SQL operations and database interactions"
     },
-    
+
     dataManager: {
         name: "Data Manager Agent",
         endpoint: "http://localhost:8001",
@@ -209,7 +209,7 @@ const AGENTS = {
         privateKey: process.env.DM_AGENT_PRIVATE_KEY || "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a", // Anvil account #2
         description: "Centralized data storage and retrieval agent"
     },
-    
+
     catalogManager: {
         name: "Catalog Manager Agent",
         endpoint: "http://localhost:8014",
@@ -223,7 +223,7 @@ const AGENTS = {
         privateKey: process.env.CATALOG_PRIVATE_KEY || "0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a", // Share with agent0
         description: "Manages service catalogs and resource discovery"
     },
-    
+
     agentBuilder: {
         name: "Agent Builder Agent",
         endpoint: "http://localhost:8015",
@@ -237,7 +237,7 @@ const AGENTS = {
         privateKey: process.env.BUILDER_PRIVATE_KEY || "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba", // Share with agent1
         description: "Creates and deploys new agents dynamically"
     },
-    
+
     embeddingFineTuner: {
         name: "Embedding Fine-Tuner Agent",
         endpoint: "http://localhost:8016",
@@ -251,7 +251,7 @@ const AGENTS = {
         privateKey: process.env.EMBEDDING_PRIVATE_KEY || "0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e", // Share with agent2
         description: "Fine-tunes and optimizes embedding models"
     },
-    
+
     orchestratorAgent: {
         name: "Orchestrator Agent",
         endpoint: "http://localhost:8017",
@@ -269,40 +269,40 @@ const AGENTS = {
 
 async function main() {
     console.log("🚀 Starting A2A Agent Blockchain Registration");
-    
+
     try {
         // Initialize provider and contracts
         const provider = new ethers.JsonRpcProvider(process.env.A2A_RPC_URL || "http://localhost:8545");
-        
+
         // Get contract addresses
         const agentRegistryAddress = process.env.A2A_AGENT_REGISTRY_ADDRESS;
         const messageRouterAddress = process.env.A2A_MESSAGE_ROUTER_ADDRESS;
-        
+
         if (!agentRegistryAddress || !messageRouterAddress) {
             throw new Error("Contract addresses not configured. Please set A2A_AGENT_REGISTRY_ADDRESS and A2A_MESSAGE_ROUTER_ADDRESS");
         }
-        
+
         console.log(`📄 Agent Registry: ${agentRegistryAddress}`);
         console.log(`📄 Message Router: ${messageRouterAddress}`);
-        
+
         // Register each agent
         for (const [agentType, config] of Object.entries(AGENTS)) {
             console.log(`\n🔧 Registering ${config.name}...`);
-            
+
             // Create wallet for agent
             const wallet = new ethers.Wallet(config.privateKey, provider);
             console.log(`🔑 Agent address: ${wallet.address}`);
-            
+
             // Create contract instances
             const registryABI = loadAgentRegistryABI();
             const agentRegistry = new ethers.Contract(agentRegistryAddress, registryABI, wallet);
             const messageRouter = new ethers.Contract(messageRouterAddress, MESSAGE_ROUTER_ABI, wallet);
-            
+
             // Check if already registered
             try {
                 const existingAgent = await agentRegistry.getAgent(wallet.address);
                 const isRegistered = existingAgent.owner !== '0x0000000000000000000000000000000000000000';
-                
+
                 if (isRegistered) {
                     console.log(`✅ ${config.name} is already registered`);
                     console.log(`   Name: ${existingAgent.name}`);
@@ -315,19 +315,19 @@ async function main() {
                 // Agent not found, proceed with registration
                 console.log(`📝 ${config.name} not yet registered, proceeding...`);
             }
-            
+
             // Convert capabilities to bytes32
             const capabilityHashes = config.capabilities.map(cap => ethers.id(cap));
-            
+
             // Estimate gas for registration
             const gasEstimate = await agentRegistry.registerAgent.estimateGas(
                 config.name,
                 config.endpoint,
                 capabilityHashes
             );
-            
+
             console.log(`⛽ Estimated gas: ${gasEstimate.toString()}`);
-            
+
             // Register agent
             console.log(`📝 Registering agent on blockchain...`);
             const tx = await agentRegistry.registerAgent(
@@ -338,13 +338,13 @@ async function main() {
                     gasLimit: gasEstimate * BigInt(120) / BigInt(100) // Add 20% buffer
                 }
             );
-            
+
             console.log(`⏳ Transaction hash: ${tx.hash}`);
-            
+
             // Wait for confirmation
             const receipt = await tx.wait();
             console.log(`✅ Registration confirmed in block ${receipt.blockNumber}`);
-            
+
             // Parse registration event
             const registrationEvent = receipt.logs.find(log => {
                 try {
@@ -354,7 +354,7 @@ async function main() {
                     return false;
                 }
             });
-            
+
             if (registrationEvent) {
                 const decoded = agentRegistry.interface.parseLog(registrationEvent);
                 console.log(`🎉 Agent registered successfully!`);
@@ -369,7 +369,7 @@ async function main() {
                     }
                 }
             }
-            
+
             // Verify registration
             const agentInfo = await agentRegistry.getAgent(wallet.address);
             console.log(`\n📊 Agent Info:`);
@@ -377,7 +377,7 @@ async function main() {
             console.log(`   Endpoint: ${agentInfo.endpoint}`);
             console.log(`   Reputation: ${agentInfo.reputation}`);
             console.log(`   Active: ${agentInfo.active}`);
-            
+
             // Save agent configuration for future use
             const agentConfig = {
                 agentType,
@@ -390,41 +390,41 @@ async function main() {
                 registrationBlock: receipt.blockNumber,
                 registeredAt: new Date().toISOString()
             };
-            
+
             const configPath = path.join(__dirname, `../data/agents/${agentType}.json`);
             fs.mkdirSync(path.dirname(configPath), { recursive: true });
             await fs.writeFile(configPath, JSON.stringify(agentConfig));
             console.log(`💾 Agent config saved to ${configPath}`);
         }
-        
+
         // Display summary
         console.log(`\n📈 Registration Summary:`);
         const registryABI = loadAgentRegistryABI();
         const agentRegistry = new ethers.Contract(
-            agentRegistryAddress, 
-            registryABI, 
+            agentRegistryAddress,
+            registryABI,
             new ethers.Wallet(AGENTS.qualityControlManager.privateKey, provider)
         );
-        
+
         const totalAgents = await agentRegistry.getActiveAgentsCount();
         console.log(`   Total active agents: ${totalAgents}`);
-        
+
         console.log(`\n🎯 Next Steps:`);
         console.log(`   1. Start Quality Control Manager: cd a2aAgents/backend/app/a2a/agents/agent6QualityControl/active && python qualityControlManagerAgent.py`);
         console.log(`   2. Start Data Manager: cd a2aAgents/backend/services/dataManager && python src/server.py`);
         console.log(`   3. Test blockchain communication between agents`);
         console.log(`   4. Verify reputation tracking and trust verification`);
-        
+
     } catch (error) {
         console.error(`❌ Registration failed:`, error);
-        
+
         if (error.code === 'CALL_EXCEPTION') {
             console.error(`Contract call failed. Check:`)
             console.error(`- Contract addresses are correct`);
             console.error(`- Network is running and accessible`);
             console.error(`- Agent has sufficient ETH for gas`);
         }
-        
+
         process.exit(1);
     }
 }
@@ -442,16 +442,16 @@ async function stringToBytes32(str) {
 // Test blockchain connectivity
 async function testConnectivity() {
     console.log("🔍 Testing blockchain connectivity...");
-    
+
     try {
         const provider = new ethers.JsonRpcProvider(process.env.A2A_RPC_URL || "http://localhost:8545");
-        
+
         const network = await provider.getNetwork();
         console.log(`🌐 Connected to network: ${network.name} (chainId: ${network.chainId})`);
-        
+
         const blockNumber = await provider.getBlockNumber();
         console.log(`📦 Latest block: ${blockNumber}`);
-        
+
         return true;
     } catch (error) {
         console.error(`❌ Connectivity test failed:`, error.message);

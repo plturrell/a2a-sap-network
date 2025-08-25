@@ -18,10 +18,10 @@ class DatabaseMigrator {
     async initialize() {
         try {
             log.debug('🔌 Connecting to database...');
-            
+
             // Connect to database based on environment
             const env = process.env.NODE_ENV || 'development';
-            
+
             if (env === 'production') {
                 // Use HANA connection for production
                 this.db = await cds.connect.to('db');
@@ -37,7 +37,7 @@ class DatabaseMigrator {
 
             // Ensure migrations table exists
             await this.ensureMigrationsTable();
-            
+
         } catch (error) {
             console.error('❌ Database connection failed:', error);
             throw error;
@@ -53,7 +53,7 @@ class DatabaseMigrator {
                 execution_time INTEGER
             )
         `;
-        
+
         await this.db.run(createMigrationsTable);
         log.info('📋 Migration tracking table ready');
     }
@@ -84,29 +84,29 @@ class DatabaseMigrator {
 
     async runMigration(migration) {
         const startTime = Date.now();
-        
+
         try {
             log.debug(`🚀 Running migration: ${migration.version}`);
-            
+
             const migrationModule = require(migration.path);
-            
+
             // Execute the up migration
             if (typeof migrationModule.up === 'function') {
                 await migrationModule.up(this.db);
             } else {
                 throw new Error(`Migration ${migration.version} missing 'up' function`);
             }
-            
+
             const executionTime = Date.now() - startTime;
-            
+
             // Record the migration as applied
             await this.db.run(
                 'INSERT INTO schema_migrations (version, execution_time) VALUES (?, ?)',
                 [migration.version, executionTime]
             );
-            
+
             log.debug(`✅ Migration ${migration.version} completed in ${executionTime}ms`);
-            
+
         } catch (error) {
             console.error(`❌ Migration ${migration.version} failed:`, error);
             throw error;
@@ -115,52 +115,52 @@ class DatabaseMigrator {
 
     async migrate() {
         log.debug('🏗️  Starting database migration...');
-        
+
         const appliedMigrations = await this.getAppliedMigrations();
         const allMigrations = await this.getAllMigrations();
-        
+
         const pendingMigrations = allMigrations.filter(
             migration => !appliedMigrations.includes(migration.version)
         );
-        
+
         if (pendingMigrations.length === 0) {
             log.debug('✨ Database is up to date');
             return;
         }
-        
+
         log.debug(`📊 Found ${pendingMigrations.length} pending migration(s)`);
-        
+
         for (const migration of pendingMigrations) {
             await this.runMigration(migration);
         }
-        
+
         log.debug('🎉 All migrations completed successfully');
     }
 
     async rollback(targetVersion) {
         log.debug(`🔄 Rolling back to version: ${targetVersion}`);
-        
+
         const appliedMigrations = await this.getAppliedMigrations();
         const migrationsToRollback = appliedMigrations
             .filter(version => version > targetVersion)
             .reverse(); // Rollback in reverse order
-        
+
         for (const version of migrationsToRollback) {
             const migrationPath = path.join(this.migrationsDir, `${version}.js`);
-            
+
             try {
                 const migrationModule = require(migrationPath);
-                
+
                 if (typeof migrationModule.down === 'function') {
                     log.debug(`🔄 Rolling back: ${version}`);
                     await migrationModule.down(this.db);
-                    
+
                     // Remove from migrations table
                     await this.db.run(
                         'DELETE FROM schema_migrations WHERE version = ?',
                         [version]
                     );
-                    
+
                     log.debug(`✅ Rolled back: ${version}`);
                 } else {
                     console.warn(`⚠️  Migration ${version} has no 'down' function`);
@@ -170,27 +170,27 @@ class DatabaseMigrator {
                 throw error;
             }
         }
-        
+
         log.debug('🎉 Rollback completed');
     }
 
     async status() {
         log.debug('📊 Migration Status:');
-        
+
         const appliedMigrations = await this.getAppliedMigrations();
         const allMigrations = await this.getAllMigrations();
-        
+
         if (allMigrations.length === 0) {
             log.debug('  No migrations found');
             return;
         }
-        
+
         for (const migration of allMigrations) {
             const isApplied = appliedMigrations.includes(migration.version);
             const status = isApplied ? '✅ Applied' : '⏳ Pending';
             log.debug(`  ${migration.version}: ${status}`);
         }
-        
+
         const pending = allMigrations.length - appliedMigrations.length;
         log.debug(`\n📈 Summary: ${appliedMigrations.length} applied, ${pending} pending`);
     }
@@ -206,19 +206,19 @@ class DatabaseMigrator {
 // CLI Interface
 async function main() {
     const migrator = new DatabaseMigrator();
-    
+
     try {
         await migrator.initialize();
-        
+
         const command = process.argv[2];
         const argument = process.argv[3];
-        
+
         switch (command) {
             case 'up':
             case 'migrate':
                 await migrator.migrate();
                 break;
-                
+
             case 'down':
             case 'rollback':
                 if (!argument) {
@@ -227,11 +227,11 @@ async function main() {
                 }
                 await migrator.rollback(argument);
                 break;
-                
+
             case 'status':
                 await migrator.status();
                 break;
-                
+
             default:
                 log.debug(`
 A2A Network Database Migrator
@@ -248,7 +248,7 @@ Examples:
                 `);
                 break;
         }
-        
+
     } catch (error) {
         console.error('💥 Migration failed:', error);
         process.exit(1);

@@ -21,7 +21,7 @@ const { SecurityManager } = require('./SecurityManager');
 class Agent extends EventEmitter {
   constructor(config) {
     super();
-    
+
     this.config = this.validateConfig(config);
     this.id = this.config.id || uuidv4();
     this.services = new Map();
@@ -34,14 +34,14 @@ class Agent extends EventEmitter {
       uptime: 0,
       lastActivity: null
     };
-    
+
     // Initialize components
     this.registry = new Registry(this.config.registry);
     this.blockchain = this.config.blockchain?.enabled ? new Blockchain(this.config.blockchain) : null;
     this.messageRouter = new MessageRouter(this);
     this.healthMonitor = new HealthMonitor(this);
     this.security = new SecurityManager(this.config.security);
-    
+
     this.startTime = Date.now();
     this.setupEventHandlers();
   }
@@ -87,18 +87,18 @@ class Agent extends EventEmitter {
   setupEventHandlers() {
     this.on('message', this.handleMessage.bind(this));
     this.on('error', this.handleError.bind(this));
-    
+
     // Metrics tracking
     this.on('service:called', () => {
       this.metrics.servicesExecuted++;
       this.metrics.lastActivity = Date.now();
     });
-    
+
     this.on('message:received', () => {
       this.metrics.messagesReceived++;
       this.metrics.lastActivity = Date.now();
     });
-    
+
     this.on('message:sent', () => {
       this.metrics.messagesSent++;
       this.metrics.lastActivity = Date.now();
@@ -125,7 +125,7 @@ class Agent extends EventEmitter {
 
     this.services.set(name, serviceConfig);
     logger.info(`Service '${name}' added to agent '${this.config.name}'`);
-    
+
     return this;
   }
 
@@ -136,7 +136,7 @@ class Agent extends EventEmitter {
     if (typeof middleware !== 'function') {
       throw new Error('Middleware must be a function');
     }
-    
+
     this.middleware.push(middleware);
     return this;
   }
@@ -182,9 +182,9 @@ class Agent extends EventEmitter {
       this.status = 'running';
       this.emit('status:changed', 'running');
       this.emit('started');
-      
+
       logger.info(`Agent '${this.config.name}' started successfully on port ${this.config.port}`);
-      
+
       return this;
     } catch (error) {
       this.status = 'error';
@@ -219,9 +219,9 @@ class Agent extends EventEmitter {
       this.status = 'stopped';
       this.emit('status:changed', 'stopped');
       this.emit('stopped');
-      
+
       logger.info(`Agent '${this.config.name}' stopped successfully`);
-      
+
       return this;
     } catch (error) {
       this.emit('error', error);
@@ -257,8 +257,8 @@ class Agent extends EventEmitter {
 
       // Execute service with timeout
       const result = await this.executeWithTimeout(
-        service.handler, 
-        context.data, 
+        service.handler,
+        context.data,
         service.timeout
       );
 
@@ -284,7 +284,7 @@ class Agent extends EventEmitter {
 
       // Send message via message router
       const response = await this.messageRouter.sendMessage(targetAgent, message, options);
-      
+
       this.emit('message:sent', { target: targetAgentId, message, response });
       return response;
 
@@ -390,7 +390,7 @@ class Agent extends EventEmitter {
    */
   handleError(error) {
     logger.error(`Agent '${this.config.name}' error:`, error);
-    
+
     // Update status if critical error
     if (this.status === 'running') {
       this.status = 'degraded';

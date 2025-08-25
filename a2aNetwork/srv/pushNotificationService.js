@@ -15,7 +15,7 @@ class PushNotificationService {
             privateKey: process.env.VAPID_PRIVATE_KEY
         };
         this.vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@a2a-network.com';
-        
+
         this.initialize();
     }
 
@@ -66,7 +66,7 @@ class PushNotificationService {
             };
 
             const result = await webpush.sendNotification(subscription, payload, pushOptions);
-            
+
             this.logger.debug('Push notification sent successfully:', {
                 statusCode: result.statusCode,
                 headers: result.headers
@@ -79,7 +79,7 @@ class PushNotificationService {
             };
         } catch (error) {
             this.logger.error('Failed to send push notification:', error);
-            
+
             // Handle different error scenarios
             if (error.statusCode === 410 || error.statusCode === 404) {
                 // Subscription is no longer valid
@@ -183,7 +183,7 @@ class PushNotificationService {
         try {
             // Parse the subscription from the stored token
             const subscription = this.parseSubscription(userPreferences.pushToken, userPreferences.deviceInfo);
-            
+
             // Create notification payload
             const payload = this.createNotificationPayload(notification, {
                 clickUrl: this.generateNotificationUrl(notification),
@@ -265,7 +265,7 @@ class PushNotificationService {
             'success': '/icons/success-icon-192.png',
             'system': '/icons/system-icon-192.png'
         };
-        
+
         return iconMap[type] || '/icons/notification-icon-192.png';
     }
 
@@ -339,7 +339,7 @@ class PushNotificationService {
     async sendBatchNotifications(notifications) {
         const results = [];
         const batchSize = 100; // Process in batches to avoid overwhelming the push service
-        
+
         for (let i = 0; i < notifications.length; i += batchSize) {
             const batch = notifications.slice(i, i + batchSize);
             const batchPromises = batch.map(async (notificationData) => {
@@ -405,9 +405,9 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('push', function(event) {
     logger.info('Push message received:', { event: event });
-    
+
     let notificationData = {};
-    
+
     if (event.data) {
         try {
             notificationData = event.data.json();
@@ -420,7 +420,7 @@ self.addEventListener('push', function(event) {
             };
         }
     }
-    
+
     const notificationOptions = {
         body: notificationData.body,
         icon: notificationData.icon || '/icons/notification-icon-192.png',
@@ -435,7 +435,7 @@ self.addEventListener('push', function(event) {
         data: notificationData.data || {},
         vibrate: notificationData.vibrate
     };
-    
+
     event.waitUntil(
         self.registration.showNotification(notificationData.title || 'Notification', notificationOptions)
     );
@@ -443,12 +443,12 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
     logger.info('Notification clicked:', { event: event });
-    
+
     event.notification.close();
-    
+
     const notificationData = event.notification.data || {};
     let targetUrl = '/notifications';
-    
+
     if (event.action === 'view' || !event.action) {
         if (notificationData.url) {
             targetUrl = notificationData.url;
@@ -459,7 +459,7 @@ self.addEventListener('notificationclick', function(event) {
         // Handle dismiss action
         return;
     }
-    
+
     event.waitUntil(
         clients.matchAll({
             type: 'window',
@@ -472,7 +472,7 @@ self.addEventListener('notificationclick', function(event) {
                     return client.focus();
                 }
             }
-            
+
             // If no existing window, open a new one
             if (clients.openWindow) {
                 return clients.openWindow(targetUrl);
@@ -510,7 +510,7 @@ self.addEventListener('notificationclose', function(event) {
             testPushNotification: async (req, res) => {
                 try {
                     const { subscription } = req.body;
-                    
+
                     if (!subscription || !subscription.endpoint) {
                         return res.status(400).json({
                             success: false,
@@ -527,7 +527,7 @@ self.addEventListener('notificationclose', function(event) {
                     });
 
                     const result = await this.sendPushNotification(subscription, testPayload);
-                    
+
                     res.json(result);
                 } catch (error) {
                     this.logger.error('Test push notification failed:', error);
@@ -543,7 +543,7 @@ self.addEventListener('notificationclose', function(event) {
             validateSubscription: async (req, res) => {
                 try {
                     const { subscription } = req.body;
-                    
+
                     if (!subscription) {
                         return res.status(400).json({
                             success: false,
@@ -552,7 +552,7 @@ self.addEventListener('notificationclose', function(event) {
                     }
 
                     const isValid = await this.validateSubscription(subscription);
-                    
+
                     res.json({
                         success: true,
                         valid: isValid

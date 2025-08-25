@@ -2,7 +2,7 @@
  * @fileoverview Environment Variable Validation Middleware
  * @since 1.0.0
  * @module env-validation
- * 
+ *
  * Validates required environment variables on server startup
  * to prevent runtime failures due to missing configuration
  */
@@ -44,22 +44,22 @@ const ENV_DEFAULTS = {
 function validateEnvironment() {
   const nodeEnv = process.env.NODE_ENV || 'development';
   const log = cds.log('env-validation');
-  
+
   const requiredVars = [
     ...ENV_REQUIREMENTS.common,
     ...(ENV_REQUIREMENTS[nodeEnv] || [])
   ];
-  
+
   const missingVars = [];
   const warnings = [];
-  
+
   // Check required variables
   for (const envVar of requiredVars) {
     if (!process.env[envVar]) {
       missingVars.push(envVar);
     }
   }
-  
+
   // Set defaults for optional variables
   for (const [envVar, defaultValue] of Object.entries(ENV_DEFAULTS)) {
     if (!process.env[envVar]) {
@@ -67,24 +67,24 @@ function validateEnvironment() {
       warnings.push(`${envVar} not set, using default: ${defaultValue}`);
     }
   }
-  
+
   // Environment-specific validations
   if (nodeEnv === 'production') {
     // Production-specific checks
     if (process.env.USE_DEVELOPMENT_AUTH === 'true') {
       warnings.push('WARNING: Development auth enabled in production environment');
     }
-    
+
     if (!process.env.HTTPS_ENABLED) {
       warnings.push('WARNING: HTTPS not explicitly enabled in production');
     }
   }
-  
+
   // Log results
   if (warnings.length > 0) {
     warnings.forEach(warning => log.warn(warning));
   }
-  
+
   if (missingVars.length > 0) {
     log.error('Missing required environment variables:', missingVars);
     return {
@@ -93,7 +93,7 @@ function validateEnvironment() {
       warnings
     };
   }
-  
+
   log.info(`Environment validation passed for ${nodeEnv} mode`);
   return {
     valid: true,
@@ -107,7 +107,7 @@ function validateEnvironment() {
  */
 function initializeEnvironmentValidation() {
   const result = validateEnvironment();
-  
+
   if (!result.valid) {
     const error = new Error(
       `Environment validation failed. Missing required variables: ${result.missing.join(', ')}`
@@ -115,7 +115,7 @@ function initializeEnvironmentValidation() {
     error.code = 'ENV_VALIDATION_FAILED';
     throw error;
   }
-  
+
   return result;
 }
 
@@ -128,11 +128,11 @@ function initializeEnvironmentValidation() {
  */
 function getEnvVar(name, defaultValue = undefined, required = false) {
   const value = process.env[name];
-  
+
   if (required && !value) {
     throw new Error(`Required environment variable ${name} is not set`);
   }
-  
+
   return value || defaultValue;
 }
 
@@ -145,13 +145,13 @@ function getEnvVar(name, defaultValue = undefined, required = false) {
 function getEnvInt(name, defaultValue = 0) {
   const value = process.env[name];
   if (!value) return defaultValue;
-  
+
   const parsed = parseInt(value, 10);
   if (isNaN(parsed)) {
     cds.log('env-validation').warn(`Invalid integer value for ${name}: ${value}, using default: ${defaultValue}`);
     return defaultValue;
   }
-  
+
   return parsed;
 }
 
@@ -164,7 +164,7 @@ function getEnvInt(name, defaultValue = 0) {
 function getEnvBool(name, defaultValue = false) {
   const value = process.env[name];
   if (!value) return defaultValue;
-  
+
   return value.toLowerCase() === 'true' || value === '1';
 }
 

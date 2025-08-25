@@ -49,7 +49,7 @@ sap.ui.define([], () => {
                     }
                 }
             },
-            
+
             // SAP Icons Font
             'SAP-icons': {
                 name: 'SAP-icons',
@@ -65,7 +65,7 @@ sap.ui.define([], () => {
                     }
                 }
             },
-            
+
             // SAP Icons TNT (Technical Icons)
             'SAP-icons-TNT': {
                 name: 'SAP-icons-TNT',
@@ -80,7 +80,7 @@ sap.ui.define([], () => {
                     }
                 }
             },
-            
+
             // SAP Icons Business Suite
             'BusinessSuiteInAppSymbols': {
                 name: 'BusinessSuiteInAppSymbols',
@@ -124,7 +124,7 @@ sap.ui.define([], () => {
          */
         generateFontFaceRules: function() {
             let css = '';
-            
+
             Object.values(this.fonts).forEach(font => {
                 Object.values(font.weights).forEach(weight => {
                     css += `
@@ -137,7 +137,7 @@ sap.ui.define([], () => {
 }`;
                 });
             });
-            
+
             return css;
         },
 
@@ -147,7 +147,7 @@ sap.ui.define([], () => {
          */
         _generateSrcString: function(urls) {
             const sources = [];
-            
+
             if (urls.woff2) {
                 sources.push(`url("${urls.woff2}") format("woff2")`);
             }
@@ -157,7 +157,7 @@ sap.ui.define([], () => {
             if (urls.ttf) {
                 sources.push(`url("${urls.ttf}") format("truetype")`);
             }
-            
+
             return sources.join(',\n         ');
         },
 
@@ -167,12 +167,12 @@ sap.ui.define([], () => {
         initialize: function() {
             // Preload critical fonts
             this.preloadFonts();
-            
+
             // Add font-face rules
             const style = document.createElement('style');
             style.textContent = this.generateFontFaceRules();
             document.head.appendChild(style);
-            
+
             // Monitor font loading
             if ('fonts' in document) {
                 document.fonts.ready.then(() => {
@@ -211,7 +211,7 @@ sap.ui.define([], () => {
         cacheFontsForOffline: function() {
             if ('caches' in window) {
                 const fontUrls = [];
-                
+
                 Object.values(this.fonts).forEach(font => {
                     Object.values(font.weights).forEach(weight => {
                         if (weight.urls.woff2) {
@@ -219,7 +219,7 @@ sap.ui.define([], () => {
                         }
                     });
                 });
-                
+
                 caches.open('sap-fonts-v1').then(cache => {
                     cache.addAll(fontUrls).then(() => {
                         console.log('Fonts cached for offline use');

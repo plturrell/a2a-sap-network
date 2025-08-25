@@ -21,7 +21,7 @@ const securityPatterns = {
         unsafeFormulaExecution: /\.(formula|expression)\s*\)/g,
         mathExpressionInjection: /parse.*Formula|execute.*Expression/gi
     },
-    
+
     // Formula Injection Vulnerabilities
     formulaInjection: {
         directFormulaEval: /eval.*formula|execute.*expression/gi,
@@ -30,21 +30,21 @@ const securityPatterns = {
         unsafeMathParsing: /parse.*\(.*formula.*\)/gi,
         scriptInFormula: /<script|javascript:|on\w+=/gi
     },
-    
+
     // CSRF Vulnerabilities (Exclude calls within SecurityUtils wrapper)
     csrf: {
         unprotectedAjaxCall: /\$\.ajax\s*\(\s*\{[^}]*(?!.*beforeSend)/g,
         missingSecurityHeaders: /fetch\s*\([^)]*\)(?!.*headers.*csrf)/gi,
         directODataCall: /getModel\(\)\.callFunction(?!.*SecurityUtils)/g
     },
-    
+
     // Authentication/Authorization Issues
     auth: {
         missingAuthCheck: /on(Execute|Run|Optimize|Validate|Create|Delete|Update)[^{]*\{(?![^}]*checkAuth)/g,
         hardcodedCredentials: /(password|token|key)\s*[:=]\s*["'][^"']+["']/gi,
         exposedAPIKeys: /(api[_-]?key|secret)\s*[:=]\s*["'][^"']+["']/gi
     },
-    
+
     // Input Validation Issues
     validation: {
         missingFormulaValidation: /formula.*value.*(?!.*validate)/gi,
@@ -53,7 +53,7 @@ const securityPatterns = {
         missingBoundaryChecks: /parse.*number.*(?!.*isFinite)/gi,
         noOverflowProtection: /Math\.(pow|exp).*(?!.*MAX_SAFE_INTEGER)/g
     },
-    
+
     // Insecure Communications
     insecure: {
         httpEndpoints: /http:\/\/(?!localhost|127\.0\.0\.1)/g,
@@ -61,7 +61,7 @@ const securityPatterns = {
         hardcodedURLs: /(http|ws)s?:\/\/[^/]+/g,
         insecureEventSource: /new\s+EventSource\s*\(\s*["']http:/g
     },
-    
+
     // Error Handling Issues
     errorHandling: {
         exposedErrors: /catch.*\{[^}]*message[^}]*show/g,
@@ -69,7 +69,7 @@ const securityPatterns = {
         unhandledPromises: /\.then\s*\([^)]*\)\s*(?!\.catch)/g,
         missingErrorBoundaries: /calculation.*(?!.*try.*catch)/gi
     },
-    
+
     // Data Exposure
     dataExposure: {
         sensitiveDataInLogs: /console\.(log|info|debug).*\(.*(password|token|key|secret|formula)/gi,
@@ -77,7 +77,7 @@ const securityPatterns = {
         unencryptedStorage: /sessionStorage\.setItem.*(?!.*encrypt)/g,
         exposedInternalData: /return.*\{.*internal.*:/gi
     },
-    
+
     // Resource Management
     resources: {
         memoryLeaks: /addEventListener.*(?!.*removeEventListener)/g,
@@ -85,7 +85,7 @@ const securityPatterns = {
         infiniteLoops: /while\s*\(.*true.*\)|for\s*\(.*;\s*;\s*\)/g,
         unboundedCalculations: /calculate.*recursive.*(?!.*limit)/gi
     },
-    
+
     // SAP Fiori Specific
     sapFiori: {
         missingResourceBundle: /getText\s*\([^)]*\)(?!.*getResourceBundle)/g,
@@ -104,13 +104,13 @@ const specificAgent10Checks = {
         missingOverflowDetection: /calculate.*(?!.*MAX_SAFE_INTEGER|isFinite)/gi,
         insecureStatisticalAnalysis: /statistical.*analysis.*(?!.*sanitize.*input)/gi
     },
-    
+
     webSocketSecurity: {
         unencryptedWebSocket: /new\s+WebSocket\s*\(\s*['"]ws:/g,
         missingWebSocketAuth: /WebSocket.*(?!.*auth.*token)/g,
         noWebSocketValidation: /ws\.onmessage.*(?!.*validate.*data)/g
     },
-    
+
     eventSourceSecurity: {
         unencryptedEventSource: /new\s+EventSource\s*\(\s*['"]http:/g,
         missingEventValidation: /addEventListener.*(?!.*validate.*event\.data)/g
@@ -121,7 +121,7 @@ function scanFile(filePath, fileName) {
     const vulnerabilities = [];
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
-    
+
     // Check all security patterns
     Object.entries(securityPatterns).forEach(([category, patterns]) => {
         Object.entries(patterns).forEach(([name, pattern]) => {
@@ -141,7 +141,7 @@ function scanFile(filePath, fileName) {
             }
         });
     });
-    
+
     // Agent 10 specific checks
     if (fileName.includes('controller') || fileName.includes('utils')) {
         Object.entries(specificAgent10Checks).forEach(([category, patterns]) => {
@@ -163,18 +163,18 @@ function scanFile(filePath, fileName) {
             });
         });
     }
-    
+
     return vulnerabilities;
 }
 
 function getSeverity(category, name) {
     const criticalPatterns = ['evalUsage', 'functionConstructor', 'directHtmlInjection', 'directODataCall'];
     const highPatterns = ['xss', 'csrf', 'auth', 'validation', 'insecure', 'formulaInjection', 'webSocketSecurity', 'eventSourceSecurity'];
-    
+
     // Reduce severity for common false positives
     if (name === 'scriptInFormula' && category === 'formulaInjection') return 'MEDIUM';
     if (name === 'missingWebSocketAuth' || name === 'missingEventValidation') return 'MEDIUM';
-    
+
     if (criticalPatterns.includes(name)) return 'CRITICAL';
     if (highPatterns.some(p => category.includes(p))) return 'HIGH';
     return 'MEDIUM';
@@ -209,7 +209,7 @@ function getSecurityMessage(category, name) {
             hardcodedURLs: 'Hardcoded URLs should be configurable'
         }
     };
-    
+
     return messages[category]?.[name] || `Security issue: ${category} - ${name}`;
 }
 
@@ -238,7 +238,7 @@ function getFixSuggestion(category, name) {
             httpEndpoints: 'Use HTTPS for all external endpoints'
         }
     };
-    
+
     return fixes[category]?.[name] || 'Review and fix the security issue';
 }
 
@@ -259,7 +259,7 @@ function getAgent10Message(category, name) {
             missingEventValidation: 'Server-sent events not validated'
         }
     };
-    
+
     return messages[category]?.[name] || `Agent 10 specific issue: ${category}`;
 }
 
@@ -280,27 +280,27 @@ function getAgent10Fix(category, name) {
             missingEventValidation: 'Validate all server-sent event data'
         }
     };
-    
+
     return fixes[category]?.[name] || 'Implement security best practices';
 }
 
 function scanDirectory(dir) {
     const results = [];
     const files = fs.readdirSync(dir, { withFileTypes: true });
-    
+
     files.forEach(file => {
         const fullPath = path.join(dir, file.name);
         if (file.isDirectory() && !file.name.startsWith('.')) {
             results.push(...scanDirectory(fullPath));
-        } else if (file.isFile() && 
-                  (file.name.endsWith('.js') || 
-                   file.name.endsWith('.xml') || 
+        } else if (file.isFile() &&
+                  (file.name.endsWith('.js') ||
+                   file.name.endsWith('.xml') ||
                    file.name.endsWith('.json'))) {
             const vulnerabilities = scanFile(fullPath, path.relative(AGENT10_PATH, fullPath));
             results.push(...vulnerabilities);
         }
     });
-    
+
     return results;
 }
 
@@ -317,20 +317,20 @@ function generateReport(vulnerabilities) {
         byFile: {},
         details: vulnerabilities
     };
-    
+
     // Group by type
     vulnerabilities.forEach(vuln => {
         if (!report.byType[vuln.type]) {
             report.byType[vuln.type] = [];
         }
         report.byType[vuln.type].push(vuln);
-        
+
         if (!report.byFile[vuln.file]) {
             report.byFile[vuln.file] = [];
         }
         report.byFile[vuln.file].push(vuln);
     });
-    
+
     return report;
 }
 
@@ -338,7 +338,7 @@ function generateReport(vulnerabilities) {
 function checkSAPCompliance(dir) {
     const issues = [];
     const requiredFiles = ['manifest.json', 'i18n/i18n.properties'];
-    
+
     requiredFiles.forEach(file => {
         const filePath = path.join(dir, file);
         if (!fs.existsSync(filePath)) {
@@ -349,12 +349,12 @@ function checkSAPCompliance(dir) {
             });
         }
     });
-    
+
     // Check manifest.json structure
     const manifestPath = path.join(dir, 'manifest.json');
     if (fs.existsSync(manifestPath)) {
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        
+
         // Check for security-related configurations
         if (!manifest['sap.app']?.crossNavigation) {
             issues.push({
@@ -363,7 +363,7 @@ function checkSAPCompliance(dir) {
                 severity: 'MEDIUM'
             });
         }
-        
+
         if (!manifest['sap.ui5']?.dependencies?.minUI5Version) {
             issues.push({
                 type: 'compliance',
@@ -372,7 +372,7 @@ function checkSAPCompliance(dir) {
             });
         }
     }
-    
+
     return issues;
 }
 
@@ -383,15 +383,15 @@ try {
     const vulnerabilities = scanDirectory(AGENT10_PATH);
     const complianceIssues = checkSAPCompliance(AGENT10_PATH);
     const allIssues = [...vulnerabilities, ...complianceIssues];
-    
+
     const report = generateReport(allIssues);
-    
+
     // Save detailed report
     fs.writeFileSync(
         path.join(__dirname, 'agent10-security-report.json'),
         JSON.stringify(report, null, 2)
     );
-    
+
     // Print summary
     console.log('Security Scan Summary for Agent 10 (Calculation Agent):');
     console.log('=' . repeat(60));
@@ -404,20 +404,20 @@ try {
     Object.entries(report.byType).forEach(([type, issues]) => {
         console.log(`  - ${type}: ${issues.length}`);
     });
-    
+
     console.log('\nCritical Issues:');
     allIssues.filter(v => v.severity === 'CRITICAL').forEach(vuln => {
         console.log(`  - ${vuln.file}:${vuln.line} - ${vuln.message}`);
     });
-    
+
     console.log('\nAgent 10 Specific Issues:');
     allIssues.filter(v => ['calculationSecurity', 'webSocketSecurity', 'eventSourceSecurity'].includes(v.type))
         .forEach(vuln => {
             console.log(`  - ${vuln.file}:${vuln.line} - ${vuln.message}`);
         });
-    
+
     console.log('\nReport saved to: agent10-security-report.json');
-    
+
 } catch (error) {
     console.error('Error during security scan:', error);
     process.exit(1);

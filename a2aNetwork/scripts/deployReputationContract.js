@@ -24,31 +24,31 @@ async function main() {
         // Get the contract factory
         console.log('📦 Getting contract factory...');
         const ReputationExchange = await ethers.getContractFactory('ReputationExchange');
-        
+
         // Deploy the contract
         console.log('🏗️  Deploying ReputationExchange contract...');
         const reputationExchange = await ReputationExchange.deploy();
-        
+
         // Wait for deployment
         console.log('⏳ Waiting for deployment confirmation...');
         await reputationExchange.deployed();
-        
+
         console.log('✅ ReputationExchange deployed successfully!');
         console.log('📍 Contract address:', reputationExchange.address);
         console.log('🔗 Transaction hash:', reputationExchange.deployTransaction.hash);
-        
+
         // Verify contract constants
         console.log('\n🔍 Verifying contract constants:');
         console.log('   MAX_REPUTATION:', await reputationExchange.MAX_REPUTATION());
         console.log('   DEFAULT_REPUTATION:', await reputationExchange.DEFAULT_REPUTATION());
         console.log('   DAILY_ENDORSEMENT_LIMIT:', await reputationExchange.DAILY_ENDORSEMENT_LIMIT());
-        
+
         // Unpause the contract (it starts paused for security)
         console.log('\n🔓 Unpausing contract...');
         const unpauseTx = await reputationExchange.unpause();
         await unpauseTx.wait();
         console.log('✅ Contract unpaused successfully');
-        
+
         // Save deployment info
         const deploymentInfo = {
             contractAddress: reputationExchange.address,
@@ -68,17 +68,17 @@ async function main() {
                 RECIPROCAL_COOLDOWN: (await reputationExchange.RECIPROCAL_COOLDOWN()).toString()
             }
         };
-        
+
         const deploymentsDir = path.join(__dirname, '../deployments');
         if (!fs.existsSync(deploymentsDir)) {
             fs.mkdirSync(deploymentsDir, { recursive: true });
         }
-        
+
         const deploymentFile = path.join(deploymentsDir, `reputation-exchange-${hre.network.name}.json`);
         await fs.writeFile(deploymentFile, JSON.stringify(deploymentInfo));
-        
+
         console.log('\n💾 Deployment info saved to:', deploymentFile);
-        
+
         // Generate configuration for A2A Network integration
         const configTemplate = {
             blockchain: {
@@ -90,12 +90,12 @@ async function main() {
                 }
             }
         };
-        
+
         const configFile = path.join(__dirname, '../config/blockchain-reputation.json');
         await fs.writeFile(configFile, JSON.stringify(configTemplate));
-        
+
         console.log('⚙️  Configuration saved to:', configFile);
-        
+
         // Print integration instructions
         console.log('\n📝 Integration Instructions:');
         console.log('   1. Update your .env file with:');
@@ -103,24 +103,24 @@ async function main() {
         console.log('   2. Copy the ABI from artifacts/contracts/ReputationExchange.sol/ReputationExchange.json');
         console.log('   3. Update blockchain service configuration');
         console.log('   4. Test the integration with sample endorsements');
-        
+
         // Register some sample agents for testing
         if (hre.network.name === 'localhost' || hre.network.name === 'hardhat') {
             console.log('\n🧪 Registering sample agents for testing...');
-            
+
             const sampleAgents = [
-                { 
+                {
                     address: '0x1234567890123456789012345678901234567890',
                     name: 'Agent Alpha',
                     endpoint: 'http://localhost:8001'
                 },
                 {
-                    address: '0x0987654321098765432109876543210987654321', 
+                    address: '0x0987654321098765432109876543210987654321',
                     name: 'Agent Beta',
                     endpoint: 'http://localhost:8002'
                 }
             ];
-            
+
             for (const agent of sampleAgents) {
                 const tx = await reputationExchange.registerAgent(
                     agent.address,
@@ -131,9 +131,9 @@ async function main() {
                 console.log(`   ✅ Registered ${agent.name} (${agent.address})`);
             }
         }
-        
+
         console.log('\n🎉 Deployment completed successfully!\n');
-        
+
     } catch (error) {
         console.error('❌ Deployment failed:', error);
         process.exit(1);

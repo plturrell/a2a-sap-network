@@ -2,7 +2,7 @@
  * @fileoverview CAP-specific Fact Transformer for advanced Glean analysis
  * @module capFactTransformer
  * @since 1.0.0
- * 
+ *
  * Transforms advanced CAP/CDS parsing results into comprehensive Glean facts
  * with support for all CAP patterns and enterprise features
  */
@@ -38,16 +38,16 @@ class CAPFactTransformer {
             'src.CDSFunction': [],
             'src.CDSEvent': [],
             'src.CDSProjection': [],
-            
+
             // CAP Service Implementation facts
             'src.CAPServiceHandler': [],
             'src.CAPEventHandler': [],
             'src.CAPMiddleware': [],
-            
+
             // Cross-reference facts
             'src.CDSXRef': [],
             'src.CDSDependency': [],
-            
+
             // Analysis facts
             'src.CAPComplexity': [],
             'src.CAPBestPractice': [],
@@ -57,7 +57,7 @@ class CAPFactTransformer {
 
         // Create CDS file fact
         this.createCDSFileFact(parseResult, filePath, content, factBatches);
-        
+
         // Process all symbols
         parseResult.symbols.forEach(symbol => {
             this.processAdvancedSymbol(symbol, parseResult, factBatches);
@@ -65,7 +65,7 @@ class CAPFactTransformer {
 
         // Analyze CAP patterns and best practices
         this.analyzeCAPPatterns(parseResult, content, factBatches);
-        
+
         // Generate cross-references
         this.generateCDSCrossReferences(parseResult, factBatches);
 
@@ -75,7 +75,7 @@ class CAPFactTransformer {
     createCDSFileFact(parseResult, filePath, content, factBatches) {
         const lines = content.split('\n').length;
         const checksum = crypto.createHash('sha256').update(content).digest('hex');
-        
+
         // Count different symbol types
         const symbolCounts = parseResult.symbols.reduce((counts, symbol) => {
             counts[symbol.type] = (counts[symbol.type] || 0) + 1;
@@ -527,7 +527,7 @@ class CAPFactTransformer {
     analyzeComplexityPatterns(parseResult, factBatches) {
         const entities = parseResult.symbols.filter(s => s.type === 'entity');
         const services = parseResult.symbols.filter(s => s.type === 'service');
-        
+
         // High complexity entities
         entities.forEach(entity => {
             const complexity = this.calculateEntityComplexity(entity);
@@ -603,9 +603,9 @@ class CAPFactTransformer {
         // Check for missing authorization annotations
         const services = parseResult.symbols.filter(s => s.type === 'service');
         services.forEach(service => {
-            const hasAuth = service.annotations && 
+            const hasAuth = service.annotations &&
                 service.annotations.some(a => a.name.includes('requires') || a.name.includes('restrict'));
-            
+
             if (!hasAuth) {
                 factBatches['src.CAPSecurity'].push({
                     id: this.generateFactId(),
@@ -631,9 +631,9 @@ class CAPFactTransformer {
         // Check for potential N+1 query problems
         const entities = parseResult.symbols.filter(s => s.type === 'entity');
         entities.forEach(entity => {
-            const manyAssociations = entity.associations ? 
+            const manyAssociations = entity.associations ?
                 entity.associations.filter(a => a.cardinality === 'many').length : 0;
-            
+
             if (manyAssociations > 3) {
                 factBatches['src.CAPPerformance'].push({
                     id: this.generateFactId(),
@@ -684,7 +684,7 @@ class CAPFactTransformer {
     // Helper methods
     calculateEntityComplexity(entity) {
         let complexity = 1;
-        
+
         if (entity.fields) complexity += entity.fields.length;
         if (entity.associations) complexity += entity.associations.length * 2;
         if (entity.compositions) complexity += entity.compositions.length * 2;
@@ -692,20 +692,20 @@ class CAPFactTransformer {
         if (entity.inheritance && entity.inheritance.customAspects) {
             complexity += entity.inheritance.customAspects.length;
         }
-        
+
         return complexity;
     }
 
     calculateViewComplexity(view) {
         let complexity = 1;
-        
+
         if (view.columns) complexity += view.columns.length;
         if (view.selectClause) {
             const joinCount = (view.selectClause.match(/join/gi) || []).length;
             const whereCount = (view.selectClause.match(/where/gi) || []).length;
             complexity += joinCount * 2 + whereCount;
         }
-        
+
         return complexity;
     }
 

@@ -41,7 +41,7 @@ class CodebaseIndexer {
             'warning': '⚠️',
             'debug': '🔍'
         }[level] || '📋';
-        
+
         if (level !== 'debug' || this.verbose) {
             console.log(`${prefix} [${timestamp}] ${message}`);
         }
@@ -52,7 +52,7 @@ class CodebaseIndexer {
             this.log('🚀 Starting A2A Network codebase indexing with SCIP', 'info');
             this.log(`Languages to index: ${this.languages.join(', ')}`, 'info');
             this.log(`Workspace root: ${this.workspaceRoot}`, 'debug');
-            
+
             if (this.dryRun) {
                 this.log('Running in dry-run mode - no facts will be uploaded', 'warning');
             }
@@ -69,7 +69,7 @@ class CodebaseIndexer {
             // Index the project
             this.log('Starting SCIP indexing...', 'info');
             const scipResults = await this.scipIndexer.indexProject(this.languages);
-            
+
             this.log(`SCIP indexing completed:`, 'success');
             this.log(`  - Documents indexed: ${scipResults.documentCount}`, 'info');
             this.log(`  - Symbols found: ${scipResults.symbolCount}`, 'info');
@@ -78,7 +78,7 @@ class CodebaseIndexer {
             // Transform to Glean facts
             this.log('Transforming SCIP data to Glean facts...', 'info');
             const gleanFacts = this.factTransformer.transformSCIPToGlean(scipResults.scipIndex);
-            
+
             // Count total facts
             const totalFacts = Object.values(gleanFacts).reduce((sum, facts) => sum + facts.length, 0);
             this.log(`Generated ${totalFacts} Glean facts across ${Object.keys(gleanFacts).length} predicates`, 'success');
@@ -106,7 +106,7 @@ class CodebaseIndexer {
             await this.saveReport(report);
 
             this.log('✨ Indexing completed successfully!', 'success');
-            
+
             return {
                 success: true,
                 documentsIndexed: scipResults.documentCount,
@@ -139,9 +139,9 @@ class CodebaseIndexer {
     async uploadFactsToGlean(gleanFactBatches) {
         for (const [predicate, facts] of Object.entries(gleanFactBatches)) {
             if (facts.length === 0) continue;
-            
+
             this.log(`Uploading ${facts.length} facts for predicate ${predicate}`, 'info');
-            
+
             try {
                 const response = await blockchainClient.sendMessage(`${this.gleanUrl}/api/v1/facts`, {
                     method: 'POST',
@@ -160,9 +160,9 @@ class CodebaseIndexer {
                     const errorText = await response.text();
                     throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
-                
+
                 this.log(`Successfully uploaded ${facts.length} ${predicate} facts`, 'debug');
-                
+
             } catch (error) {
                 this.log(`Failed to upload ${predicate} facts: ${error.message}`, 'error');
                 throw error;
@@ -189,7 +189,7 @@ class CodebaseIndexer {
 
     generateSummaryReport(scipResults, gleanFacts, totalFacts) {
         const timestamp = new Date().toISOString();
-        
+
         return {
             indexing_summary: {
                 timestamp,
@@ -220,7 +220,7 @@ class CodebaseIndexer {
         const fs = require('fs').promises;
         const timestamp = Date.now();
         const reportFile = path.join(this.workspaceRoot, `indexing-report-${timestamp}.json`);
-        
+
         await fs.writeFile(reportFile, JSON.stringify(report, null, 2));
         this.log(`Report saved to: ${reportFile}`, 'info');
     }

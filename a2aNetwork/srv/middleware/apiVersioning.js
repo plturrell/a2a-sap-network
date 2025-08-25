@@ -29,7 +29,7 @@ const API_CONFIG = {
     supportedVersions: ['1.0.0', '1.1.0', '2.0.0'],
     currentVersion: '2.0.0',
     defaultVersion: '1.0.0',
-    
+
     // Version deprecation timeline
     deprecationSchedule: {
         '1.0.0': {
@@ -51,7 +51,7 @@ const API_CONFIG = {
             migrationPath: null
         }
     },
-    
+
     // Version-specific feature flags
     featureFlags: {
         '1.0.0': {
@@ -125,12 +125,12 @@ class APIVersionManager {
         this.tracer = trace ? trace.getTracer('api-versioning', '1.0.0') : null;
         this.versionMetrics = new Map();
         this.deprecationWarnings = new Map();
-        
+
         // Initialize metrics tracking
         this.initializeMetrics();
-        
+
         this.intervals = new Map(); // Track intervals for cleanup
-        
+
         // Start cleanup and reporting intervals
         this.startMaintenanceTasks();
     }
@@ -157,32 +157,32 @@ class APIVersionManager {
     extractVersion(req) {
         // Priority order for version detection:
         // 1. Header: API-Version
-        // 2. Header: Accept-Version  
+        // 2. Header: Accept-Version
         // 3. Query parameter: version
         // 4. URL path: /api/v{version}/
         // 5. Content-Type: application/vnd.a2a.v{version}+json
         // 6. Default version
-        
+
         let version = null;
-        
+
         // Method 1: API-Version header (recommended)
         version = req.headers['api-version'] || req.headers['x-api-version'];
         if (version && this.isValidVersion(version)) {
             return this.normalizeVersion(version);
         }
-        
+
         // Method 2: Accept-Version header
         version = req.headers['accept-version'];
         if (version && this.isValidVersion(version)) {
             return this.normalizeVersion(version);
         }
-        
+
         // Method 3: Query parameter
         version = req.query.version;
         if (version && this.isValidVersion(version)) {
             return this.normalizeVersion(version);
         }
-        
+
         // Method 4: URL path extraction
         const pathMatch = req.path.match(/\/api\/v?(\d+\.?\d*\.?\d*)\//);
         if (pathMatch) {
@@ -191,7 +191,7 @@ class APIVersionManager {
                 return this.normalizeVersion(version);
             }
         }
-        
+
         // Method 5: Content-Type header
         const contentType = req.headers['content-type'];
         if (contentType) {
@@ -203,7 +203,7 @@ class APIVersionManager {
                 }
             }
         }
-        
+
         // Default version
         return API_CONFIG.defaultVersion;
     }
@@ -222,13 +222,13 @@ class APIVersionManager {
      */
     normalizeVersion(version) {
         if (!version) return API_CONFIG.defaultVersion;
-        
+
         // Handle short versions like "1" or "1.1"
         const parts = version.split('.');
         while (parts.length < 3) {
             parts.push('0');
         }
-        
+
         return parts.join('.');
     }
 
@@ -238,7 +238,7 @@ class APIVersionManager {
     getVersionInfo(version) {
         const deprecation = API_CONFIG.deprecationSchedule[version];
         const features = API_CONFIG.featureFlags[version];
-        
+
         return {
             version,
             status: deprecation?.status || 'unknown',
@@ -257,11 +257,11 @@ class APIVersionManager {
      */
     checkDeprecation(version, req, res) {
         const versionInfo = this.getVersionInfo(version);
-        
+
         if (versionInfo.isDeprecated || versionInfo.sunsetDate) {
             const warningKey = `${version}-${req.ip}-${req.headers['user-agent'] || 'unknown'}`;
             const warningHash = crypto.createHash('md5').update(warningKey).digest('hex');
-            
+
             // Add deprecation headers
             res.set({
                 'API-Deprecated': 'true',
@@ -269,11 +269,11 @@ class APIVersionManager {
                 'API-Migration-Path': versionInfo.migrationPath || '',
                 'Warning': `299 - "API version ${version} is deprecated. Migrate to ${versionInfo.migrationPath || API_CONFIG.currentVersion}"`
             });
-            
+
             // Log deprecation warning (rate limited per client)
             if (!this.deprecationWarnings.has(warningHash)) {
                 this.deprecationWarnings.set(warningHash, Date.now());
-                
+
                 this.log.warn('Deprecated API version used', {
                     version,
                     endpoint: req.path,
@@ -282,7 +282,7 @@ class APIVersionManager {
                     sunsetDate: versionInfo.sunsetDate,
                     migrationPath: versionInfo.migrationPath
                 });
-                
+
                 // Emit metric event for monitoring
                 if (this.tracer) {
                     const span = this.tracer.startSpan('api.deprecation.warning');
@@ -295,7 +295,7 @@ class APIVersionManager {
                 }
             }
         }
-        
+
         return versionInfo;
     }
 
@@ -304,7 +304,7 @@ class APIVersionManager {
      */
     transformRequest(req, version) {
         const versionInfo = this.getVersionInfo(version);
-        
+
         // Apply version-specific request transformations
         if (version === '1.0.0') {
             // Legacy compatibility transformations
@@ -313,12 +313,12 @@ class APIVersionManager {
             // V1.1 specific transformations
             this.applyV11RequestTransforms(req);
         }
-        
+
         // Add version context
         req.apiVersion = version;
         req.apiFeatures = versionInfo.features;
         req.apiVersionInfo = versionInfo;
-        
+
         return req;
     }
 
@@ -327,13 +327,13 @@ class APIVersionManager {
      */
     transformResponse(data, version, req) {
         if (!data) return data;
-        
+
         if (version === '1.0.0') {
             return this.applyLegacyResponseTransforms(data, req);
         } else if (version === '1.1.0') {
             return this.applyV11ResponseTransforms(data, req);
         }
-        
+
         // Default: no transformation for current version
         return data;
     }
@@ -349,7 +349,7 @@ class APIVersionManager {
                 req.body.networkSettings.rpcUrl = req.body.networkSettings.rpcEndpoint;
                 delete req.body.networkSettings.rpcEndpoint;
             }
-            
+
             // Legacy date format handling
             this.convertDateFormatsForLegacy(req.body);
         }
@@ -373,27 +373,27 @@ class APIVersionManager {
      */
     applyLegacyResponseTransforms(data, req) {
         if (typeof data !== 'object' || data === null) return data;
-        
+
         // Remove fields not available in v1.0.0
         const transformed = { ...data };
-        
+
         // Remove v2.0+ specific fields
         if (transformed.advancedMetrics) {
             delete transformed.advancedMetrics;
         }
-        
+
         if (transformed.eventStream) {
             delete transformed.eventStream;
         }
-        
+
         // Convert timestamp formats for legacy compatibility
         this.convertTimestampsForLegacy(transformed);
-        
+
         // Add legacy compatibility fields
         if (req.path.includes('/settings/network')) {
             transformed.legacyMode = true;
         }
-        
+
         return transformed;
     }
 
@@ -402,18 +402,18 @@ class APIVersionManager {
      */
     applyV11ResponseTransforms(data, req) {
         if (typeof data !== 'object' || data === null) return data;
-        
+
         const transformed = { ...data };
-        
+
         // Remove v2.0+ specific fields
         if (transformed.bulkOperations) {
             delete transformed.bulkOperations;
         }
-        
+
         if (transformed.eventStream) {
             delete transformed.eventStream;
         }
-        
+
         return transformed;
     }
 
@@ -422,7 +422,7 @@ class APIVersionManager {
      */
     convertDateFormatsForLegacy(obj) {
         if (!obj || typeof obj !== 'object') return;
-        
+
         for (const [key, value] of Object.entries(obj)) {
             if (typeof value === 'string' && this.isISODateString(value)) {
                 // Convert ISO 8601 to legacy format (Unix timestamp)
@@ -438,7 +438,7 @@ class APIVersionManager {
      */
     convertTimestampsForLegacy(obj) {
         if (!obj || typeof obj !== 'object') return;
-        
+
         for (const [key, value] of Object.entries(obj)) {
             if (key.includes('timestamp') || key.includes('Date') || key.includes('Time')) {
                 if (typeof value === 'string' && this.isISODateString(value)) {
@@ -463,32 +463,32 @@ class APIVersionManager {
     recordVersionUsage(version, req, responseTime, error = null) {
         const metrics = this.versionMetrics.get(version);
         if (!metrics) return;
-        
+
         metrics.requests++;
         metrics.lastUsed = new Date();
-        
+
         // Track unique clients
         const clientId = `${req.ip  }-${  req.headers['user-agent'] || 'unknown'}`;
         metrics.uniqueClients.add(clientId);
-        
+
         // Track endpoint usage
         const endpoint = req.path;
         if (!metrics.endpoints.has(endpoint)) {
             metrics.endpoints.set(endpoint, { requests: 0, errors: 0 });
         }
         metrics.endpoints.get(endpoint).requests++;
-        
+
         // Record errors
         if (error) {
             metrics.errors++;
             metrics.endpoints.get(endpoint).errors++;
         }
-        
+
         // Update average response time
         if (responseTime) {
             const alpha = 0.1;
-            metrics.avgResponseTime = metrics.avgResponseTime === 0 
-                ? responseTime 
+            metrics.avgResponseTime = metrics.avgResponseTime === 0
+                ? responseTime
                 : (alpha * responseTime) + ((1 - alpha) * metrics.avgResponseTime);
         }
     }
@@ -498,10 +498,10 @@ class APIVersionManager {
      */
     getVersionAnalytics() {
         const analytics = {};
-        
+
         for (const [version, metrics] of this.versionMetrics.entries()) {
             const versionInfo = this.getVersionInfo(version);
-            
+
             analytics[version] = {
                 version,
                 status: versionInfo.status,
@@ -520,7 +520,7 @@ class APIVersionManager {
                 }
             };
         }
-        
+
         return {
             versions: analytics,
             summary: {
@@ -555,14 +555,14 @@ class APIVersionManager {
     getMostUsedVersion(analytics) {
         let maxRequests = 0;
         let mostUsed = null;
-        
+
         for (const [version, stats] of Object.entries(analytics)) {
             if (stats.requests > maxRequests) {
                 maxRequests = stats.requests;
                 mostUsed = version;
             }
         }
-        
+
         return mostUsed;
     }
 
@@ -572,13 +572,13 @@ class APIVersionManager {
     generateMigrationRecommendations() {
         const recommendations = [];
         const analytics = this.getVersionAnalytics();
-        
+
         for (const [version, stats] of Object.entries(analytics.versions)) {
             if (stats.deprecationInfo.isDeprecated && stats.requests > 0) {
-                const daysUntilSunset = stats.deprecationInfo.sunsetDate 
+                const daysUntilSunset = stats.deprecationInfo.sunsetDate
                     ? Math.ceil((new Date(stats.deprecationInfo.sunsetDate) - new Date()) / (1000 * 60 * 60 * 24))
                     : null;
-                
+
                 recommendations.push({
                     priority: daysUntilSunset && daysUntilSunset < 90 ? 'high' : 'medium',
                     version,
@@ -591,7 +591,7 @@ class APIVersionManager {
                 });
             }
         }
-        
+
         return recommendations.sort((a, b) => {
             if (a.priority === 'high' && b.priority !== 'high') return -1;
             if (b.priority === 'high' && a.priority !== 'high') return 1;
@@ -613,7 +613,7 @@ class APIVersionManager {
             }
         }, 60 * 60 * 1000);
         this.intervals.set('deprecation_cleanup', cleanupInterval);
-        
+
         // Generate daily analytics report
         const reportInterval = setInterval(() => {
             this.generateDailyReport();
@@ -627,7 +627,7 @@ class APIVersionManager {
     generateDailyReport() {
         const analytics = this.getVersionAnalytics();
         const recommendations = this.generateMigrationRecommendations();
-        
+
         this.log.info('Daily API Version Analytics Report', {
             summary: analytics.summary,
             deprecatedVersionUsage: Object.values(analytics.versions)
@@ -653,10 +653,10 @@ const versionManager = new APIVersionManager();
 function apiVersioningMiddleware() {
     return (req, res, next) => {
         const startTime = Date.now();
-        
+
         // Extract and validate API version
         const version = versionManager.extractVersion(req);
-        
+
         if (!versionManager.isValidVersion(version)) {
             return res.status(400).json({
                 error: 'Unsupported API version',
@@ -665,10 +665,10 @@ function apiVersioningMiddleware() {
                 currentVersion: API_CONFIG.currentVersion
             });
         }
-        
+
         // Check for deprecation and add warnings
         const versionInfo = versionManager.checkDeprecation(version, req, res);
-        
+
         // Check if version is sunset (no longer supported)
         if (versionInfo.sunsetDate && new Date() > new Date(versionInfo.sunsetDate)) {
             return res.status(410).json({
@@ -678,31 +678,31 @@ function apiVersioningMiddleware() {
                 currentVersion: API_CONFIG.currentVersion
             });
         }
-        
+
         // Transform request based on version
         versionManager.transformRequest(req, version);
-        
+
         // Add version headers to response
         res.set({
             'API-Version': version,
             'API-Current-Version': API_CONFIG.currentVersion,
             'API-Supported-Versions': API_CONFIG.supportedVersions.join(', ')
         });
-        
+
         // Intercept response to apply version-specific transformations
         const originalJson = res.json;
         res.json = function(data) {
             const transformedData = versionManager.transformResponse(data, version, req);
             return originalJson.call(this, transformedData);
         };
-        
+
         // Record metrics when response finishes
         res.on('finish', () => {
             const responseTime = Date.now() - startTime;
             const error = res.statusCode >= 400 ? { status: res.statusCode } : null;
             versionManager.recordVersionUsage(version, req, responseTime, error);
         });
-        
+
         next();
     };
 }
@@ -717,7 +717,7 @@ const versionRoutes = {
     getVersionInfo: (req, res) => {
         const version = req.params.version || versionManager.extractVersion(req);
         const versionInfo = versionManager.getVersionInfo(version);
-        
+
         res.json({
             version: versionInfo.version,
             status: versionInfo.status,
@@ -731,7 +731,7 @@ const versionRoutes = {
             breakingChanges: BREAKING_CHANGES[version] || null
         });
     },
-    
+
     /**
      * Get all supported versions
      */
@@ -743,7 +743,7 @@ const versionRoutes = {
             versionsInfo: API_CONFIG.supportedVersions.map(v => versionManager.getVersionInfo(v))
         });
     },
-    
+
     /**
      * Get version analytics (admin only)
      */
@@ -751,35 +751,35 @@ const versionRoutes = {
         if (!req.user || !req.user.is('admin')) {
             return res.status(403).json({ error: 'Admin access required' });
         }
-        
+
         const analytics = versionManager.getVersionAnalytics();
         const recommendations = versionManager.generateMigrationRecommendations();
-        
+
         res.json({
             ...analytics,
             recommendations
         });
     },
-    
+
     /**
      * Get migration guide for specific version
      */
     getMigrationGuide: (req, res) => {
         const fromVersion = req.params.from;
         const toVersion = req.params.to || API_CONFIG.currentVersion;
-        
+
         if (!versionManager.isValidVersion(fromVersion)) {
             return res.status(400).json({ error: 'Invalid source version' });
         }
-        
+
         if (!versionManager.isValidVersion(toVersion)) {
             return res.status(400).json({ error: 'Invalid target version' });
         }
-        
+
         const breakingChanges = BREAKING_CHANGES[toVersion];
         const fromVersionInfo = versionManager.getVersionInfo(fromVersion);
         const toVersionInfo = versionManager.getVersionInfo(toVersion);
-        
+
         res.json({
             migrationPath: {
                 from: fromVersion,
@@ -796,21 +796,21 @@ const versionRoutes = {
             recommendedSteps: this.generateMigrationSteps(fromVersion, toVersion)
         });
     },
-    
+
     /**
      * Calculate migration effort
      */
     calculateMigrationEffort(fromVersion, toVersion) {
         const breakingChanges = BREAKING_CHANGES[toVersion]?.changes || [];
         const majorVersionDiff = semver.major(toVersion) - semver.major(fromVersion);
-        
+
         let effort = 'low';
         if (majorVersionDiff > 0 || breakingChanges.length > 5) {
             effort = 'high';
         } else if (breakingChanges.length > 2) {
             effort = 'medium';
         }
-        
+
         return {
             level: effort,
             breakingChangesCount: breakingChanges.length,
@@ -818,7 +818,7 @@ const versionRoutes = {
             estimatedHours: breakingChanges.length * 2 + (majorVersionDiff * 8)
         };
     },
-    
+
     /**
      * Generate migration steps
      */
@@ -828,7 +828,7 @@ const versionRoutes = {
             'Update API version headers in client applications',
             'Test endpoint compatibility in staging environment'
         ];
-        
+
         const breakingChanges = BREAKING_CHANGES[toVersion];
         if (breakingChanges) {
             breakingChanges.changes.forEach(change => {
@@ -841,19 +841,19 @@ const versionRoutes = {
                 }
             });
         }
-        
+
         steps.push('Deploy changes to production');
         steps.push('Monitor for errors and performance impacts');
-        
+
         return steps;
     },
-    
+
     /**
      * Get feature differences between versions
      */
     getFeatureDifferences(oldFeatures, newFeatures, type) {
         const differences = [];
-        
+
         if (type === 'removed') {
             for (const [key, value] of Object.entries(oldFeatures)) {
                 if (!(key in newFeatures) || (!newFeatures[key] && value)) {
@@ -873,7 +873,7 @@ const versionRoutes = {
                 }
             }
         }
-        
+
         return differences;
     }
 };

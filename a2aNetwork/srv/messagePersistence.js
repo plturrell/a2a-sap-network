@@ -18,10 +18,10 @@ const crypto = require('crypto');
  * Provides reliable message storage, archiving, and retrieval
  */
 class MessagePersistenceService extends cds.Service {
-    
+
     async init() {
         this.log = cds.log('message-persistence');
-        
+
         // Initialize Redis for high-performance message caching
         this.redis = new Redis({
             host: process.env.REDIS_HOST || 'localhost',
@@ -36,7 +36,7 @@ class MessagePersistenceService extends cds.Service {
         // Database entities
         const { Messages, MessageArchive, MessageMetrics } = cds.entities('a2a.messaging');
         this.entities = { Messages, MessageArchive, MessageMetrics };
-        
+
         // Message retention settings
         this.config = {
             redisRetentionHours: 24,        // Keep in Redis for 24 hours
@@ -48,10 +48,10 @@ class MessagePersistenceService extends cds.Service {
 
         // Initialize cleanup tasks
         this._initializeCleanupTasks();
-        
+
         // Register handlers
         this._registerHandlers();
-        
+
         this.log.info('Message Persistence Service initialized');
         return super.init();
     }
@@ -63,11 +63,11 @@ class MessagePersistenceService extends cds.Service {
         this.on('searchMessages', this._searchMessages.bind(this));
         this.on('archiveMessages', this._archiveMessages.bind(this));
         this.on('getMessageHistory', this._getMessageHistory.bind(this));
-        
+
         // Bulk operations
         this.on('persistBulkMessages', this._persistBulkMessages.bind(this));
         this.on('retrieveBulkMessages', this._retrieveBulkMessages.bind(this));
-        
+
         // Analytics
         this.on('getMessageMetrics', this._getMessageMetrics.bind(this));
         this.on('getStorageStats', this._getStorageStats.bind(this));
@@ -78,7 +78,7 @@ class MessagePersistenceService extends cds.Service {
      */
     async _persistMessage(req) {
         const { messageId, content, metadata, priority = 'normal', ttl } = req.data;
-        
+
         try {
             const timestamp = new Date().toISOString();
             const messageData = {
@@ -98,25 +98,25 @@ class MessagePersistenceService extends cds.Service {
 
             // Store in Redis for fast access
             await this._storeInRedis(messageId, messageData);
-            
+
             // Store in database for persistence
             await this._storeInDatabase(messageData);
-            
+
             // Update metrics
             await this._updateMessageMetrics('persisted', priority);
-            
-            this.log.info(`Message persisted: ${messageId}`, { 
-                size: content.length, 
-                compressed: messageData.metadata.compressed 
+
+            this.log.info(`Message persisted: ${messageId}`, {
+                size: content.length,
+                compressed: messageData.metadata.compressed
             });
-            
+
             return {
                 success: true,
                 messageId,
                 location: 'redis+db',
                 ttl: messageData.ttl
             };
-            
+
         } catch (error) {
             this.log.error(`Failed to persist message ${messageId}:`, error);
             throw new Error(`Message persistence failed: ${error.message}`);
@@ -128,15 +128,15 @@ class MessagePersistenceService extends cds.Service {
      */
     async _retrieveMessage(req) {
         const { messageId, includeMetadata = true } = req.data;
-        
+
         try {
             // Try Redis first (fastest)
             let message = await this._retrieveFromRedis(messageId);
-            
+
             if (!message) {
                 // Fallback to database
                 message = await this._retrieveFromDatabase(messageId);
-                
+
                 if (message) {
                     // Cache back to Redis for future access
                     await this._storeInRedis(messageId, message, 3600); // 1 hour cache
@@ -159,15 +159,15 @@ class MessagePersistenceService extends cds.Service {
 
             // Update access metrics
             await this._updateMessageMetrics('retrieved', message.priority);
-            
+
             return {
                 success: true,
-                message: includeMetadata ? message : { 
-                    messageId: message.messageId, 
-                    content: message.content 
+                message: includeMetadata ? message : {
+                    messageId: message.messageId,
+                    content: message.content
                 }
             };
-            
+
         } catch (error) {
             this.log.error(`Failed to retrieve message ${messageId}:`, error);
             throw new Error(`Message retrieval failed: ${error.message}`);
@@ -178,49 +178,49 @@ class MessagePersistenceService extends cds.Service {
      * Search messages with full-text search and filtering
      */
     async _searchMessages(req) {
-        const { 
-            query, 
-            filters = {}, 
-            sortBy = 'createdAt', 
+        const {
+            query,
+            filters = {},
+            sortBy = 'createdAt',
             sortOrder = 'desc',
-            limit = 50, 
-            offset = 0 
+            limit = 50,
+            offset = 0
         } = req.data;
-        
+
         try {
             const { Messages } = this.entities;
-            
+
             // Build search query
             let searchQuery = SELECT.from(Messages);
-            
+
             // Add text search with parameterized query
             if (query) {
                 const sanitizedQuery = query.replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
-                searchQuery = searchQuery.where("content LIKE ? OR metadata LIKE ?", 
+                searchQuery = searchQuery.where("content LIKE ? OR metadata LIKE ?",
                     [`%${sanitizedQuery}%`, `%${sanitizedQuery}%`]);
             }
-            
+
             // Add filters
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined) {
                     searchQuery = searchQuery.and({ [key]: value });
                 }
             });
-            
+
             // Add sorting and pagination
             searchQuery = searchQuery
                 .orderBy(`${sortBy} ${sortOrder}`)
                 .limit(limit, offset);
-            
+
             const messages = await searchQuery;
-            
+
             // Get total count for pagination
             const countQuery = SELECT.from(Messages).columns('COUNT(*) as total');
             if (query) {
                 countQuery.where(`content LIKE '%${query}%' OR metadata LIKE '%${query}%'`);
             }
             const [{ total }] = await countQuery;
-            
+
             return {
                 success: true,
                 messages,
@@ -231,7 +231,7 @@ class MessagePersistenceService extends cds.Service {
                     pages: Math.ceil(total / limit)
                 }
             };
-            
+
         } catch (error) {
             this.log.error('Message search failed:', error);
             throw new Error(`Message search failed: ${error.message}`);
@@ -243,25 +243,25 @@ class MessagePersistenceService extends cds.Service {
      */
     async _archiveMessages(req) {
         const { olderThanDays = 90, batchSize = 100 } = req.data;
-        
+
         try {
             const { Messages, MessageArchive } = this.entities;
             const cutoffDate = new Date(Date.now() - (olderThanDays * 24 * 60 * 60 * 1000));
-            
+
             let archived = 0;
             let hasMore = true;
-            
+
             while (hasMore) {
                 // Get batch of old messages
                 const messages = await SELECT.from(Messages)
                     .where({ createdAt: { '<': cutoffDate } })
                     .limit(batchSize);
-                
+
                 if (messages.length === 0) {
                     hasMore = false;
                     break;
                 }
-                
+
                 // Compress and archive messages
                 const archiveData = messages.map(msg => ({
                     messageId: msg.messageId,
@@ -275,30 +275,30 @@ class MessagePersistenceService extends cds.Service {
                     archivedAt: new Date(),
                     originalCreatedAt: msg.createdAt
                 }));
-                
+
                 // Insert into archive
                 await INSERT.into(MessageArchive).entries(archiveData);
-                
+
                 // Remove from active storage
                 const messageIds = messages.map(m => m.messageId);
                 await DELETE.from(Messages).where({ messageId: { in: messageIds } });
-                
+
                 // Remove from Redis
                 await this._removeFromRedis(messageIds);
-                
+
                 archived += messages.length;
-                
+
                 this.log.info(`Archived batch: ${messages.length} messages`);
             }
-            
+
             await this._updateMessageMetrics('archived', null, archived);
-            
+
             return {
                 success: true,
                 archivedCount: archived,
                 cutoffDate: cutoffDate.toISOString()
             };
-            
+
         } catch (error) {
             this.log.error('Message archiving failed:', error);
             throw new Error(`Message archiving failed: ${error.message}`);
@@ -309,19 +309,19 @@ class MessagePersistenceService extends cds.Service {
      * Get message history for an agent or conversation
      */
     async _getMessageHistory(req) {
-        const { 
-            agentId, 
-            conversationId, 
-            startDate, 
-            endDate, 
-            limit = 100 
+        const {
+            agentId,
+            conversationId,
+            startDate,
+            endDate,
+            limit = 100
         } = req.data;
-        
+
         try {
             const { Messages } = this.entities;
-            
+
             let query = SELECT.from(Messages);
-            
+
             if (agentId) {
                 query = query.where({
                     or: [
@@ -330,29 +330,29 @@ class MessagePersistenceService extends cds.Service {
                     ]
                 });
             }
-            
+
             if (conversationId) {
                 query = query.and({ 'metadata.conversationId': conversationId });
             }
-            
+
             if (startDate) {
                 query = query.and({ createdAt: { '>=': new Date(startDate) } });
             }
-            
+
             if (endDate) {
                 query = query.and({ createdAt: { '<=': new Date(endDate) } });
             }
-            
+
             const messages = await query
                 .orderBy('createdAt asc')
                 .limit(limit);
-            
+
             return {
                 success: true,
                 messages,
                 count: messages.length
             };
-            
+
         } catch (error) {
             this.log.error('Failed to get message history:', error);
             throw new Error(`Message history retrieval failed: ${error.message}`);
@@ -363,9 +363,9 @@ class MessagePersistenceService extends cds.Service {
     async _storeInRedis(messageId, messageData, customTTL = null) {
         const ttl = customTTL || this.config.redisRetentionHours * 3600;
         const key = `message:${messageId}`;
-        
+
         await this.redis.setex(key, ttl, JSON.stringify(messageData));
-        
+
         // Store in priority queue if high priority
         if (messageData.priority === 'high' || messageData.priority === 'critical') {
             await this.redis.zadd('priority_messages', Date.now(), messageId);
@@ -402,7 +402,7 @@ class MessagePersistenceService extends cds.Service {
     async _retrieveFromArchive(messageId) {
         const { MessageArchive } = this.entities;
         const archived = await SELECT.from(MessageArchive).where({ messageId });
-        
+
         if (archived[0]) {
             return {
                 ...JSON.parse(this._decompress(archived[0].compressedContent)),
@@ -410,7 +410,7 @@ class MessagePersistenceService extends cds.Service {
                 archivedAt: archived[0].archivedAt
             };
         }
-        
+
         return null;
     }
 
@@ -463,7 +463,7 @@ module.exports.shutdown = shutdown;
     async _updateMessageMetrics(operation, priority, count = 1) {
         const { MessageMetrics } = this.entities;
         const date = new Date().toISOString().split('T')[0];
-        
+
         await UPSERT.into(MessageMetrics).entries({
             date,
             operation,
@@ -479,21 +479,21 @@ module.exports.shutdown = shutdown;
             try {
                 const expiredKeys = await this.redis.keys('message:*');
                 const pipeline = this.redis.pipeline();
-                
+
                 for (const key of expiredKeys) {
                     const ttl = await this.redis.ttl(key);
                     if (ttl <= 0) {
                         pipeline.del(key);
                     }
                 }
-                
+
                 await pipeline.exec();
                 this.log.debug(`Cleaned up ${expiredKeys.length} expired Redis keys`);
             } catch (error) {
                 this.log.error('Redis cleanup failed:', error);
             }
-        }, 3600000); // 1 hour
-        
+        }, 3600000)); // 1 hour
+
         // Archive old messages daily
         activeIntervals.set('interval_495', setInterval(async () => {
             try {
@@ -501,7 +501,7 @@ module.exports.shutdown = shutdown;
             } catch (error) {
                 this.log.error('Automated archiving failed:', error);
             }
-        }, 24 * 3600000); // 24 hours
+        }, 24 * 3600000)); // 24 hours
     }
 
     /**
@@ -510,17 +510,17 @@ module.exports.shutdown = shutdown;
     async _getStorageStats() {
         try {
             const { Messages, MessageArchive } = this.entities;
-            
+
             // Active messages count
             const [activeCount] = await SELECT.from(Messages).columns('COUNT(*) as count');
-            
+
             // Archived messages count
             const [archivedCount] = await SELECT.from(MessageArchive).columns('COUNT(*) as count');
-            
+
             // Redis stats
             const redisInfo = await this.redis.info('memory');
             const redisKeyCount = await this.redis.dbsize();
-            
+
             return {
                 success: true,
                 stats: {
@@ -531,7 +531,7 @@ module.exports.shutdown = shutdown;
                     lastUpdated: new Date().toISOString()
                 }
             };
-            
+
         } catch (error) {
             this.log.error('Failed to get storage stats:', error);
             throw new Error(`Storage stats retrieval failed: ${error.message}`);

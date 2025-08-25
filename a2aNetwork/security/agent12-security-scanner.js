@@ -2,7 +2,7 @@
 
 /**
  * Agent 12 (Catalog Manager Agent) Security Scanner
- * 
+ *
  * Comprehensive security vulnerability scanner specifically designed for
  * Agent 12's catalog management functionality including service discovery,
  * resource registry, metadata management, and search capabilities.
@@ -19,7 +19,7 @@ class Agent12SecurityScanner {
         this.info = [];
         this.scannedFiles = 0;
         this.startTime = performance.now();
-        
+
         // Agent 12 specific security patterns for catalog management
         this.catalogSecurityPatterns = {
             // SQL injection risks in catalog queries
@@ -31,7 +31,7 @@ class Agent12SecurityScanner {
                 /oModel\.read\([^)]*\+[^)]*['"]/gi,
                 /oModel\.create\([^)]*\+[^)]*['"]/gi
             ],
-            
+
             // Catalog-specific XSS patterns
             catalogXSS: [
                 /innerHTML\s*=\s*.*entryName/gi,
@@ -45,7 +45,7 @@ class Agent12SecurityScanner {
                 /setText\s*\(.*entry\..*\)/gi,
                 /setHtml\s*\(.*entry\..*\)/gi
             ],
-            
+
             // Insecure WebSocket/EventSource for catalog updates
             insecureConnections: [
                 /new\s+WebSocket\s*\(\s*["']ws:\/\//gi,
@@ -55,7 +55,7 @@ class Agent12SecurityScanner {
                 /ws:\/\/.*catalog.*updates/gi,
                 /http:\/\/.*catalog.*stream/gi
             ],
-            
+
             // Missing CSRF protection in catalog operations
             csrfMissing: [
                 /callFunction\s*\(\s*["']\/RegisterResource/gi,
@@ -68,7 +68,7 @@ class Agent12SecurityScanner {
                 /callFunction\s*\(\s*["']\/ValidateCatalogEntries/gi,
                 /callFunction\s*\(\s*["']\/PublishCatalogEntries/gi
             ],
-            
+
             // Catalog URL validation risks
             urlValidation: [
                 /resourceUrl.*=.*input/gi,
@@ -79,7 +79,7 @@ class Agent12SecurityScanner {
                 /location\.href\s*=.*resourceUrl/gi,
                 /window\.open\s*\(.*resourceUrl/gi
             ],
-            
+
             // Metadata injection risks
             metadataInjection: [
                 /metadataValue.*innerHTML/gi,
@@ -89,7 +89,7 @@ class Agent12SecurityScanner {
                 /Function\s*\(.*metadata/gi,
                 /new\s+Function\s*\(.*metadata/gi
             ],
-            
+
             // Resource discovery security risks
             discoveryRisks: [
                 /fetch\s*\(.*resourceUrl/gi,
@@ -98,7 +98,7 @@ class Agent12SecurityScanner {
                 /import\s*\(.*resourceUrl/gi,
                 /require\s*\(.*resourceUrl/gi
             ],
-            
+
             // Search query injection
             searchInjection: [
                 /search.*\+.*input/gi,
@@ -108,7 +108,7 @@ class Agent12SecurityScanner {
                 /match\s*\(.*input.*\)/gi,
                 /RegExp\s*\(.*input/gi
             ],
-            
+
             // Registry synchronization security
             registrySync: [
                 /sync.*registry.*http:/gi,
@@ -116,7 +116,7 @@ class Agent12SecurityScanner {
                 /external.*registry.*fetch/gi,
                 /registry.*connection.*insecure/gi
             ],
-            
+
             // Catalog export/import security
             catalogDataSecurity: [
                 /eval\s*\(.*import/gi,
@@ -126,7 +126,7 @@ class Agent12SecurityScanner {
                 /outerHTML\s*=.*import/gi
             ]
         };
-        
+
         this.sensitiveOperations = [
             'RegisterResource', 'ValidateEntry', 'PublishEntry', 'IndexResource',
             'DiscoverDependencies', 'SyncRegistryEntry', 'StartResourceDiscovery',
@@ -134,7 +134,7 @@ class Agent12SecurityScanner {
             'GetDiscoveryMethods', 'GetRegistryConfigurations', 'GetServiceCategories',
             'GetSearchIndexes', 'GetMetadataProperties'
         ];
-        
+
         this.catalogPatterns = [
             'entryName', 'resourceUrl', 'metadataValue', 'metadataKey', 'tags',
             'keywords', 'description', 'category', 'provider', 'version',
@@ -145,7 +145,7 @@ class Agent12SecurityScanner {
     async scanDirectory(dirPath) {
         console.log('\n🔍 Starting Agent 12 Catalog Manager Security Scan...');
         console.log(`📂 Scanning directory: ${dirPath}\n`);
-        
+
         try {
             await this.scanFiles(dirPath);
             this.generateReport();
@@ -157,10 +157,10 @@ class Agent12SecurityScanner {
 
     async scanFiles(dirPath) {
         const files = fs.readdirSync(dirPath, { withFileTypes: true });
-        
+
         for (const file of files) {
             const fullPath = path.join(dirPath, file.name);
-            
+
             if (file.isDirectory()) {
                 await this.scanFiles(fullPath);
             } else if (this.isJavaScriptFile(file.name)) {
@@ -170,8 +170,8 @@ class Agent12SecurityScanner {
     }
 
     isJavaScriptFile(filename) {
-        return /\.(js|ts)$/.test(filename) && 
-               !filename.includes('.min.') && 
+        return /\.(js|ts)$/.test(filename) &&
+               !filename.includes('.min.') &&
                !filename.includes('test') &&
                !filename.includes('spec');
     }
@@ -199,7 +199,7 @@ class Agent12SecurityScanner {
         this.scanSearchInjection(content, relativePath);
         this.scanRegistrySync(content, relativePath);
         this.scanCatalogDataSecurity(content, relativePath);
-        
+
         // General security scans
         this.scanGeneralSecurity(content, relativePath);
         this.scanInputValidation(content, relativePath);
@@ -215,11 +215,11 @@ class Agent12SecurityScanner {
             'RegistryManager', 'CategoryManager', 'SearchManager', 'catalog/updates',
             'catalog/stream', 'CatalogUtils'
         ];
-        
-        const checkAgent12Indicator = (indicator) => 
+
+        const checkAgent12Indicator = (indicator) =>
             content.toLowerCase().includes(indicator.toLowerCase()) ||
             filePath.toLowerCase().includes(indicator.toLowerCase());
-        
+
         return agent12Indicators.some(checkAgent12Indicator);
     }
 
@@ -297,8 +297,8 @@ class Agent12SecurityScanner {
                     // Check if CSRF token is present in the context
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
-                    
-                    if (!functionBlock.includes('securityToken') && 
+
+                    if (!functionBlock.includes('securityToken') &&
                         !functionBlock.includes('X-CSRF-Token') &&
                         !functionBlock.includes('SecurityUtils.secureCallFunction')) {
                         this.vulnerabilities.push({
@@ -535,9 +535,9 @@ class Agent12SecurityScanner {
     scanAuthenticationChecks(content, filePath) {
         const checkSensitiveOp = (op) => content.includes(op);
         const sensitiveOps = this.sensitiveOperations.filter(checkSensitiveOp);
-        
+
         const processSensitiveOp = (op) => {
-            if (!content.includes('checkAuth') && !content.includes('isAuthenticated') && 
+            if (!content.includes('checkAuth') && !content.includes('isAuthenticated') &&
                 !content.includes('SecurityUtils.checkCatalogAuth')) {
                 this.warnings.push({
                     type: 'MISSING_AUTH_CHECK',
@@ -625,7 +625,7 @@ class Agent12SecurityScanner {
 
         // Catalog-specific findings
         console.log('\n🗂️  CATALOG-SPECIFIC SECURITY FINDINGS:');
-        
+
         const catalogIssues = {
             'SQL_INJECTION': this.vulnerabilities.filter(v => v.type.includes('SQL_INJECTION')).length,
             'XSS': this.vulnerabilities.filter(v => v.type.includes('XSS')).length,
@@ -645,7 +645,7 @@ class Agent12SecurityScanner {
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:');
-            
+
             const processSeverityLevel = (severity) => {
                 const issues = this.vulnerabilities.filter(v => v.severity === severity);
                 if (issues.length > 0) {
@@ -669,12 +669,12 @@ class Agent12SecurityScanner {
         console.log('   - Add SecurityUtils.validateCatalogEntry() for all entries');
         console.log('   - Use SecurityUtils.secureCallFunction() for catalog operations');
         console.log('   - Implement SecurityUtils.sanitizeCatalogData() for metadata');
-        
+
         console.log('\n2. 🛡️  Enhance catalog-specific security');
         console.log('   - Validate all resource URLs with SecurityUtils.validateResourceURL()');
         console.log('   - Sanitize search queries with SecurityUtils.sanitizeSearchQuery()');
         console.log('   - Secure registry synchronization operations');
-        
+
         console.log('\n3. 🔒 Secure catalog communications');
         console.log('   - Upgrade WebSocket to WSS for catalog updates');
         console.log('   - Use HTTPS for EventSource catalog streams');

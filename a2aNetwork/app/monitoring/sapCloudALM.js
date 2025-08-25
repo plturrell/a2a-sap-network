@@ -8,7 +8,7 @@ const EventEmitter = require('events');
 class SAPCloudALMService extends EventEmitter {
     constructor() {
         super();
-        
+
         this.config = {
             serviceUrl: process.env.SAP_CLOUD_ALM_URL,
             clientId: process.env.SAP_CLOUD_ALM_CLIENT_ID,
@@ -17,13 +17,13 @@ class SAPCloudALMService extends EventEmitter {
             applicationId: process.env.SAP_CLOUD_ALM_APP_ID || 'a2a-network-launchpad',
             enabled: process.env.ENABLE_SAP_CLOUD_ALM === 'true'
         \n        this.intervals = new Map(); // Track intervals for cleanup};
-        
+
         this.authToken = null;
         this.tokenExpiry = null;
         this.isConnected = false;
         this.retryAttempts = 0;
         this.maxRetries = 3;
-        
+
         // Metrics collection
         this.metrics = {
             applicationHealth: {},
@@ -32,7 +32,7 @@ class SAPCloudALMService extends EventEmitter {
             userActivity: {},
             businessMetrics: {}
         };
-        
+
         // Event queues for offline support
         this.eventQueue = [];
         this.maxQueueSize = 1000;
@@ -54,15 +54,15 @@ class SAPCloudALMService extends EventEmitter {
             await this.authenticate();
             await this.registerApplication();
             this.startPeriodicReporting();
-            
+
             // console.log('✅ SAP Cloud ALM integration initialized');
             // console.log(`   Application ID: ${this.config.applicationId}`);
             // console.log(`   Tenant ID: ${this.config.tenantId}`);
             // console.log(`   Service URL: ${this.config.serviceUrl}`);
-            
+
             this.isConnected = true;
             this.emit('connected');
-            
+
         } catch (error) {
             console.error('❌ Failed to initialize SAP Cloud ALM:', error.message);
             this.initializeMockMode();
@@ -72,7 +72,7 @@ class SAPCloudALMService extends EventEmitter {
     initializeMockMode() {
         // console.log('📊 SAP Cloud ALM running in mock mode');
         this.isConnected = false;
-        
+
         // Start collecting metrics locally
         this.intervals.set('interval_77', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
             this.collectLocalMetrics();
@@ -89,7 +89,7 @@ class SAPCloudALMService extends EventEmitter {
 
         try {
             const response = await this.makeRequest('POST', '/oauth/token', authData);
-            
+
             if (response.access_token) {
                 this.authToken = response.access_token;
                 this.tokenExpiry = Date.now() + (response.expires_in * 1000);
@@ -189,7 +189,7 @@ class SAPCloudALMService extends EventEmitter {
                         componentId: 'backend-api',
                         status: 'UP',
                         responseTime: process.uptime(),
-                        details: { 
+                        details: {
                             memory: process.memoryUsage(),
                             cpu: process.cpuUsage()
                         }
@@ -210,10 +210,10 @@ class SAPCloudALMService extends EventEmitter {
             };
 
             await this.makeRequest('POST', '/api/v1/health', healthData);
-            
+
             // Store locally as well
             this.metrics.applicationHealth = healthData;
-            
+
         } catch (error) {
             console.warn('Failed to report health to SAP Cloud ALM:', error.message);
             this.queueEvent('health', healthData);
@@ -418,7 +418,7 @@ class SAPCloudALMService extends EventEmitter {
         }
 
         const batch = this.eventQueue.splice(0, 10); // Process 10 events at a time
-        
+
         for (const event of batch) {
             try {
                 const endpoint = this.getEndpointForEventType(event.type);
@@ -453,7 +453,7 @@ class SAPCloudALMService extends EventEmitter {
         };
 
         this.metrics.local = metrics;
-        
+
         // Store in local file for debugging
         if (process.env.NODE_ENV === 'development') {
             this.writeLocalMetrics(metrics);
@@ -463,16 +463,16 @@ class SAPCloudALMService extends EventEmitter {
     writeLocalMetrics(metrics) {
         const fs = require('fs');
         const path = require('path');
-        
+
         try {
             const metricsDir = './logs/metrics';
             if (!fs.existsSync(metricsDir)) {
                 fs.mkdirSync(metricsDir, { recursive: true });
             }
-            
+
             const filename = path.join(metricsDir, `metrics-${new Date().toISOString().split('T')[0]}.json`);
             const logEntry = JSON.stringify(metrics) + '\n';
-            
+
             fs.appendFileSync(filename, logEntry);
         } catch (error) {
             console.warn('Failed to write local metrics:', error.message);
@@ -514,15 +514,15 @@ class SAPCloudALMService extends EventEmitter {
 
             const req = https.request(options, (res) => {
                 let responseData = '';
-                
+
                 res.on('data', (chunk) => {
                     responseData += chunk;
                 });
-                
+
                 res.on('end', () => {
                     try {
                         const parsedData = responseData ? JSON.parse(responseData) : {};
-                        
+
                         if (res.statusCode >= 200 && res.statusCode < 300) {
                             resolve(parsedData);
                         } else {
@@ -541,7 +541,7 @@ class SAPCloudALMService extends EventEmitter {
             if (postData) {
                 req.write(postData);
             }
-            
+
             req.end();
         });
     }
@@ -571,10 +571,10 @@ class SAPCloudALMService extends EventEmitter {
     middleware() {
         return (req, res, next) => {
             const start = Date.now();
-            
+
             res.on('finish', () => {
                 const duration = Date.now() - start;
-                
+
                 // Report performance metric
                 this.reportEvent('HTTP_REQUEST', {
                     method: req.method,
@@ -595,13 +595,13 @@ class SAPCloudALMService extends EventEmitter {
         try {
             // Process remaining events
             await this.processEventQueue();
-            
+
             // Report shutdown event
             await this.reportEvent('APPLICATION_SHUTDOWN', {
                 uptime: process.uptime(),
                 timestamp: new Date().toISOString()
             }, 'INFO');
-            
+
             // console.log('✅ SAP Cloud ALM service shut down successfully');
         } catch (error) {
             console.error('❌ Error shutting down SAP Cloud ALM service:', error.message);

@@ -19,7 +19,7 @@ sap.ui.define([
             const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
-            
+
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 MessageToast.show('Please select at least one alert to acknowledge');
                 return;
@@ -47,7 +47,7 @@ sap.ui.define([
             const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
-            
+
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 MessageToast.show('Please select at least one alert to resolve');
                 return;
@@ -80,7 +80,7 @@ sap.ui.define([
             const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
-            
+
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 MessageToast.show('Please select at least one alert to escalate');
                 return;
@@ -120,7 +120,7 @@ sap.ui.define([
          */
         _getSelectedContexts: function (oEvent) {
             let aContexts = [];
-            
+
             // Try to get from event source (button press)
             if (oEvent.getSource) {
                 const oSource = oEvent.getSource();
@@ -129,7 +129,7 @@ sap.ui.define([
                     aContexts = [oBindingContext];
                 }
             }
-            
+
             // Fallback to table selection
             if (aContexts.length === 0) {
                 const oTable = this.getView().byId('fe::table::SecurityAlerts::LineItem');
@@ -137,7 +137,7 @@ sap.ui.define([
                     aContexts = oTable.getSelectedContexts();
                 }
             }
-            
+
             return aContexts;
         },
 
@@ -147,23 +147,23 @@ sap.ui.define([
         _performBatchAcknowledge: function (aContexts, oModel) {
             const that = this;
             const aPromises = [];
-            
+
             aContexts.forEach(oContext => {
                 const sPath = oContext.getPath();
                 const oData = oContext.getObject();
-                
+
                 // Skip if already acknowledged or resolved
                 if (oData.status === 'ACKNOWLEDGED' || oData.status === 'RESOLVED') {
                     return;
                 }
-                
+
                 // Prepare update data
                 const oUpdateData = {
                     status: 'ACKNOWLEDGED',
                     acknowledgedBy: this._getCurrentUser(),
                     acknowledgedAt: new Date().toISOString()
                 };
-                
+
                 // Create promise for OData update
                 const oPromise = new Promise((resolve, reject) => {
                     oModel.update(sPath, oUpdateData, {
@@ -175,20 +175,20 @@ sap.ui.define([
                         }
                     });
                 });
-                
+
                 aPromises.push(oPromise);
             });
-            
+
             // Execute batch operation
             Promise.allSettled(aPromises).then(results => {
                 const successCount = results.filter(r => r.status === 'fulfilled').length;
                 const failCount = results.filter(r => r.status === 'rejected').length;
-                
+
                 if (successCount > 0) {
                     MessageToast.show(`${successCount} alert(s) acknowledged successfully`);
                     oModel.refresh();
                 }
-                
+
                 if (failCount > 0) {
                     MessageBox.error(`Failed to acknowledge ${failCount} alert(s). Please try again.`);
                 }
@@ -201,16 +201,16 @@ sap.ui.define([
         _performBatchResolve: function (aContexts, oModel, sResolution) {
             const that = this;
             const aPromises = [];
-            
+
             aContexts.forEach(oContext => {
                 const sPath = oContext.getPath();
                 const oData = oContext.getObject();
-                
+
                 // Skip if already resolved
                 if (oData.status === 'RESOLVED') {
                     return;
                 }
-                
+
                 // Prepare update data
                 const oUpdateData = {
                     status: 'RESOLVED',
@@ -218,13 +218,13 @@ sap.ui.define([
                     resolvedAt: new Date().toISOString(),
                     resolution: sResolution
                 };
-                
+
                 // Auto-acknowledge if not already acknowledged
                 if (oData.status === 'ACTIVE') {
                     oUpdateData.acknowledgedBy = this._getCurrentUser();
                     oUpdateData.acknowledgedAt = new Date().toISOString();
                 }
-                
+
                 // Create promise for OData update
                 const oPromise = new Promise((resolve, reject) => {
                     oModel.update(sPath, oUpdateData, {
@@ -236,20 +236,20 @@ sap.ui.define([
                         }
                     });
                 });
-                
+
                 aPromises.push(oPromise);
             });
-            
+
             // Execute batch operation
             Promise.allSettled(aPromises).then(results => {
                 const successCount = results.filter(r => r.status === 'fulfilled').length;
                 const failCount = results.filter(r => r.status === 'rejected').length;
-                
+
                 if (successCount > 0) {
                     MessageToast.show(`${successCount} alert(s) resolved successfully`);
                     oModel.refresh();
                 }
-                
+
                 if (failCount > 0) {
                     MessageBox.error(`Failed to resolve ${failCount} alert(s). Please try again.`);
                 }
@@ -262,23 +262,23 @@ sap.ui.define([
         _performBatchEscalate: function (aContexts, oModel, sEscalationReason) {
             const that = this;
             const aPromises = [];
-            
+
             aContexts.forEach(oContext => {
                 const sPath = oContext.getPath();
                 const oData = oContext.getObject();
-                
+
                 // Skip if already at highest priority or resolved
                 if (oData.priority <= 1 || oData.status === 'RESOLVED') {
                     return;
                 }
-                
+
                 // Prepare update data - increase priority (lower number = higher priority)
                 const oUpdateData = {
                     priority: Math.max(1, oData.priority - 1),
                     modifiedAt: new Date().toISOString(),
                     modifiedBy: this._getCurrentUser()
                 };
-                
+
                 // Add escalation to recommended actions
                 let aRecommendedActions = [];
                 try {
@@ -286,16 +286,16 @@ sap.ui.define([
                 } catch (e) {
                     aRecommendedActions = [];
                 }
-                
+
                 aRecommendedActions.unshift({
                     action: 'ESCALATED',
                     timestamp: new Date().toISOString(),
                     user: this._getCurrentUser(),
                     reason: sEscalationReason
                 });
-                
+
                 oUpdateData.recommendedActions = JSON.stringify(aRecommendedActions);
-                
+
                 // Create promise for OData update
                 const oPromise = new Promise((resolve, reject) => {
                     oModel.update(sPath, oUpdateData, {
@@ -307,20 +307,20 @@ sap.ui.define([
                         }
                     });
                 });
-                
+
                 aPromises.push(oPromise);
             });
-            
+
             // Execute batch operation
             Promise.allSettled(aPromises).then(results => {
                 const successCount = results.filter(r => r.status === 'fulfilled').length;
                 const failCount = results.filter(r => r.status === 'rejected').length;
-                
+
                 if (successCount > 0) {
                     MessageToast.show(`${successCount} alert(s) escalated successfully`);
                     oModel.refresh();
                 }
-                
+
                 if (failCount > 0) {
                     MessageBox.error(`Failed to escalate ${failCount} alert(s). Please try again.`);
                 }

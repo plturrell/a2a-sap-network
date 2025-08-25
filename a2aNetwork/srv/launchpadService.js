@@ -2,7 +2,7 @@
  * @fileoverview SAP Fiori Launchpad Service - CAP Implementation
  * @since 1.0.0
  * @module launchpadService
- * 
+ *
  * CAP service handlers for SAP Fiori Launchpad tile data
  * Replaces Express.js server with proper SAP CAP architecture
  * 100% Real Data - No Fallbacks
@@ -37,24 +37,24 @@ async function checkAgentHealth(port) {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
+
         // Get both health and metrics from agent
         const [healthResponse, metricsResponse] = await Promise.all([
-            fetch(`http://localhost:${port}/health`, { 
+            fetch(`http://localhost:${port}/health`, {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            fetch(`http://localhost:${port}/metrics`, { 
+            fetch(`http://localhost:${port}/metrics`, {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
         ]);
-        
+
         clearTimeout(timeoutId);
-        
+
         if (healthResponse && healthResponse.ok) {
             const healthData = await healthResponse.json();
-            
+
             // Try to get additional metrics if available
             let metricsData = {};
             if (metricsResponse && metricsResponse.ok) {
@@ -64,35 +64,35 @@ async function checkAgentHealth(port) {
                     LOG.warn(`Agent ${port} metrics endpoint error:`, e.message);
                 }
             }
-            
+
             return {
                 status: 'healthy',
                 agent_id: healthData.agent_id,
                 name: healthData.name,
                 version: healthData.version,
-                
+
                 // Core task metrics (required)
                 active_tasks: healthData.active_tasks || 0,
                 total_tasks: healthData.total_tasks || 0,
-                
+
                 // Capability metrics (required)
                 skills: healthData.skills || 0,
                 handlers: healthData.handlers || 0,
                 mcp_tools: healthData.mcp_tools || 0,
                 mcp_resources: healthData.mcp_resources || 0,
-                
+
                 // Performance metrics (from metrics endpoint or health)
                 cpu_usage: metricsData.cpu_percent || healthData.cpu_percent || null,
                 memory_usage: metricsData.memory_percent || healthData.memory_percent || null,
                 uptime_seconds: metricsData.uptime_seconds || healthData.uptime_seconds || null,
-                
+
                 // Business metrics (from metrics endpoint)
                 success_rate: metricsData.success_rate || null,
                 avg_response_time_ms: metricsData.avg_response_time_ms || null,
                 processed_today: metricsData.processed_today || null,
                 error_rate: metricsData.error_rate || null,
                 queue_depth: metricsData.queue_depth || null,
-                
+
                 timestamp: healthData.timestamp,
                 port: port
             };
@@ -111,7 +111,7 @@ async function checkBlockchainHealth() {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
+
         // Check multiple blockchain endpoints for comprehensive data
         const [statusResponse, trustResponse, agentsResponse] = await Promise.all([
             fetch('http://localhost:8082/blockchain/status', {
@@ -127,16 +127,16 @@ async function checkBlockchainHealth() {
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
         ]);
-        
+
         clearTimeout(timeoutId);
-        
+
         if (statusResponse && statusResponse.ok) {
             const statusData = await statusResponse.json();
-            
+
             // Get additional real data if endpoints available
             let trustData = {};
             let agentsData = {};
-            
+
             if (trustResponse && trustResponse.ok) {
                 try {
                     trustData = await trustResponse.json();
@@ -144,7 +144,7 @@ async function checkBlockchainHealth() {
                     LOG.warn('Trust scores endpoint error:', e.message);
                 }
             }
-            
+
             if (agentsResponse && agentsResponse.ok) {
                 try {
                     agentsData = await agentsResponse.json();
@@ -152,22 +152,22 @@ async function checkBlockchainHealth() {
                     LOG.warn('Agents registry endpoint error:', e.message);
                 }
             }
-            
+
             return {
                 status: 'healthy',
                 network: statusData.network,
                 contracts: statusData.contracts,
                 agents: statusData.agents,
                 trust_integration: statusData.trust_integration,
-                
+
                 // Additional real metrics
                 trust_scores: trustData.trust_scores || null,
                 registered_agents: agentsData.agents || null,
                 total_agents_on_chain: agentsData.total || 0,
-                avg_trust_score: trustData.trust_scores ? 
-                    Object.values(trustData.trust_scores).reduce((sum, agent) => sum + agent.trust_score, 0) / 
+                avg_trust_score: trustData.trust_scores ?
+                    Object.values(trustData.trust_scores).reduce((sum, agent) => sum + agent.trust_score, 0) /
                     Object.keys(trustData.trust_scores).length : null,
-                
+
                 timestamp: statusData.timestamp
             };
         }
@@ -193,11 +193,11 @@ async function checkMcpHealth() {
                 } : null;
             })
         );
-        
+
         const healthyMcpAgents = healthChecks.filter(h => h !== null);
         const totalMcpTools = healthyMcpAgents.reduce((sum, agent) => sum + agent.mcp_tools, 0);
         const totalMcpResources = healthyMcpAgents.reduce((sum, agent) => sum + agent.mcp_resources, 0);
-        
+
         return {
             status: healthyMcpAgents.length > 0 ? 'healthy' : 'offline',
             total_tools: totalMcpTools,
@@ -214,25 +214,25 @@ async function checkMcpHealth() {
  * CAP Service Handler for Launchpad Actions
  */
 module.exports = function() {
-    
+
     // Individual Agent Status Handler
     this.on('getAgentStatus', async (req) => {
         const { agentId } = req.data;
         const agent = AGENT_METADATA[agentId];
-        
+
         if (!agent) {
             req.error(404, 'AGENT_NOT_FOUND', `Agent ${agentId} not found`);
             return;
         }
-        
+
         try {
             const health = await checkAgentHealth(agent.port);
-            
+
             if (health.status === 'healthy') {
                 // Determine number state based on real metrics
                 let numberState = 'Neutral';
                 let stateArrow = 'None';
-                
+
                 if (health.success_rate !== null) {
                     if (health.success_rate >= 95) {
                         numberState = 'Positive';
@@ -248,19 +248,19 @@ module.exports = function() {
                     numberState = 'Positive';
                     stateArrow = 'Up';
                 }
-                
+
                 // Build subtitle with real performance data
                 let subtitle = `${health.total_tasks} total tasks`;
                 if (health.success_rate !== null) {
                     subtitle += `, ${health.success_rate.toFixed(1)}% success`;
                 }
-                
-                // Build info with real metrics  
+
+                // Build info with real metrics
                 let info = `${health.skills} skills, ${health.mcp_tools} MCP tools`;
                 if (health.avg_response_time_ms !== null) {
                     info += `, ${health.avg_response_time_ms}ms avg`;
                 }
-                
+
                 return {
                     d: {
                         title: health.name || agent.name,
@@ -270,13 +270,13 @@ module.exports = function() {
                         subtitle: subtitle,
                         stateArrow: stateArrow,
                         info: info,
-                        
+
                         // Real status data
                         status: health.status,
                         agent_id: health.agent_id,
                         version: health.version,
                         port: agent.port,
-                        
+
                         // Comprehensive capabilities from real endpoints
                         capabilities: {
                             skills: health.skills,
@@ -284,7 +284,7 @@ module.exports = function() {
                             mcp_tools: health.mcp_tools,
                             mcp_resources: health.mcp_resources
                         },
-                        
+
                         // Real performance metrics (only if available)
                         performance: {
                             cpu_usage: health.cpu_usage,
@@ -296,7 +296,7 @@ module.exports = function() {
                             error_rate: health.error_rate,
                             queue_depth: health.queue_depth
                         },
-                        
+
                         timestamp: health.timestamp
                     }
                 };
@@ -323,7 +323,7 @@ module.exports = function() {
             req.error(500, 'HEALTH_CHECK_FAILED', `Failed to check agent status: ${error.message}`);
         }
     });
-    
+
     // Network Stats Handler
     this.on('getNetworkStats', async (req) => {
         const { id } = req.data;
@@ -335,9 +335,9 @@ module.exports = function() {
                     Promise.all(
                         Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
                             const health = await checkAgentHealth(agent.port);
-                            return { 
-                                id: parseInt(id), 
-                                name: health.name || agent.name, 
+                            return {
+                                id: parseInt(id),
+                                name: health.name || agent.name,
                                 status: health.status,
                                 active_tasks: health.active_tasks || 0,
                                 total_tasks: health.total_tasks || 0,
@@ -351,23 +351,23 @@ module.exports = function() {
                     // MCP health (aggregated from agents)
                     checkMcpHealth()
                 ]);
-                
+
                 const healthyAgents = healthChecks.filter(h => h.status === 'healthy');
                 const totalAgents = healthChecks.length;
                 const activeAgents = healthyAgents.length;
                 const agentHealthScore = Math.round((activeAgents / totalAgents) * 100);
-                
+
                 // Aggregate real metrics from running agents only
                 const totalActiveTasks = healthyAgents.reduce((sum, agent) => sum + agent.active_tasks, 0);
                 const totalSkills = healthyAgents.reduce((sum, agent) => sum + agent.skills, 0);
                 const totalMcpTools = healthyAgents.reduce((sum, agent) => sum + agent.mcp_tools, 0);
-                
+
                 // Calculate overall system health including blockchain and MCP
                 const blockchainScore = blockchainHealth.status === 'healthy' ? 100 : 0;
                 const mcpScore = mcpHealth.status === 'healthy' ? 100 : mcpHealth.status === 'offline' ? 0 : 50;
-                
+
                 const overallSystemHealth = Math.round((agentHealthScore + blockchainScore + mcpScore) / 3);
-                
+
                 return {
                     d: {
                         title: 'Network Overview',
@@ -385,15 +385,15 @@ module.exports = function() {
                             total_active_tasks: totalActiveTasks,
                             total_skills: totalSkills,
                             total_mcp_tools: totalMcpTools,
-                            
+
                             // Blockchain metrics (real data from registry)
                             blockchain_status: blockchainHealth.status,
                             blockchain_score: blockchainScore,
-                            
+
                             // MCP metrics (aggregated from healthy agents)
                             mcp_status: mcpHealth.status,
                             mcp_score: mcpScore,
-                            
+
                             // Overall system health
                             overall_system_health: overallSystemHealth
                         },
@@ -408,18 +408,18 @@ module.exports = function() {
             req.error(400, 'INVALID_ID', 'Invalid NetworkStats ID');
         }
     });
-    
+
     // Blockchain Stats Handler
     this.on('getBlockchainStats', async (req) => {
         const { id } = req.data;
         if (id === 'blockchain_dashboard') {
             try {
                 const blockchainHealth = await checkBlockchainHealth();
-                
+
                 if (blockchainHealth.status === 'healthy') {
                     const registeredAgents = blockchainHealth.total_agents_on_chain || 0;
                     const contractCount = Object.keys(blockchainHealth.contracts || {}).length;
-                    
+
                     return {
                         d: {
                             title: 'Blockchain Monitor',
@@ -463,7 +463,7 @@ module.exports = function() {
             req.error(400, 'INVALID_ID', 'Invalid BlockchainStats ID');
         }
     });
-    
+
     // Services Count Handler
     this.on('getServicesCount', async (req) => {
         try {
@@ -474,23 +474,23 @@ module.exports = function() {
                     return health.status === 'healthy' ? health : null;
                 })
             );
-            
+
             const healthyAgents = healthChecks.filter(h => h !== null);
-            
+
             // Aggregate service metrics from healthy agents
             const totalSkills = healthyAgents.reduce((sum, agent) => sum + (agent.skills || 0), 0);
             const totalHandlers = healthyAgents.reduce((sum, agent) => sum + (agent.handlers || 0), 0);
             const totalMcpTools = healthyAgents.reduce((sum, agent) => sum + (agent.mcp_tools || 0), 0);
             const totalMcpResources = healthyAgents.reduce((sum, agent) => sum + (agent.mcp_resources || 0), 0);
-            
+
             // Calculate total services (skills + handlers + MCP tools)
             const totalServices = totalSkills + totalHandlers + totalMcpTools;
-            
+
             // Provider health (agents that provide services)
             const activeProviders = healthyAgents.length;
             const totalProviders = Object.keys(AGENT_METADATA).length;
             const providerHealthPercentage = Math.round((activeProviders / totalProviders) * 100);
-            
+
             return {
                 d: {
                     title: 'Service Marketplace',
@@ -520,7 +520,7 @@ module.exports = function() {
             req.error(500, 'SERVICES_COUNT_FAILED', `Failed to fetch services count: ${error.message}`);
         }
     });
-    
+
     // Health Summary Handler
     this.on('getHealthSummary', async (req) => {
         try {
@@ -529,8 +529,8 @@ module.exports = function() {
                 Promise.all(
                     Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
                         const health = await checkAgentHealth(agent.port);
-                        return { 
-                            id: parseInt(id), 
+                        return {
+                            id: parseInt(id),
                             status: health.status,
                             cpu_usage: health.cpu_usage,
                             memory_usage: health.memory_usage,
@@ -542,31 +542,31 @@ module.exports = function() {
                 checkBlockchainHealth(),
                 checkMcpHealth()
             ]);
-            
+
             const healthyAgents = healthChecks.filter(h => h.status === 'healthy');
             const totalAgents = healthChecks.length;
-            
+
             // Calculate component health scores
             const agentsHealth = Math.round((healthyAgents.length / totalAgents) * 100);
             const blockchainHealth_score = blockchainHealth.status === 'healthy' ? 100 : 0;
             const mcpHealth_score = mcpHealth.status === 'healthy' ? 100 : mcpHealth.status === 'offline' ? 0 : 50;
             const apiHealth = 100; // APIs are working since we can make these calls
-            
+
             // Calculate system performance averages from healthy agents
             const validCpuUsages = healthyAgents.filter(a => a.cpu_usage !== null).map(a => a.cpu_usage);
             const validMemoryUsages = healthyAgents.filter(a => a.memory_usage !== null).map(a => a.memory_usage);
             const validErrorRates = healthyAgents.filter(a => a.error_rate !== null).map(a => a.error_rate);
-            
-            const avgCpuUsage = validCpuUsages.length > 0 ? 
+
+            const avgCpuUsage = validCpuUsages.length > 0 ?
                 validCpuUsages.reduce((sum, cpu) => sum + cpu, 0) / validCpuUsages.length : null;
-            const avgMemoryUsage = validMemoryUsages.length > 0 ? 
+            const avgMemoryUsage = validMemoryUsages.length > 0 ?
                 validMemoryUsages.reduce((sum, mem) => sum + mem, 0) / validMemoryUsages.length : null;
-            const avgErrorRate = validErrorRates.length > 0 ? 
+            const avgErrorRate = validErrorRates.length > 0 ?
                 validErrorRates.reduce((sum, err) => sum + err, 0) / validErrorRates.length : null;
-            
+
             // Overall system health
             const overallHealth = Math.round((agentsHealth + blockchainHealth_score + mcpHealth_score + apiHealth) / 4);
-            
+
             return {
                 d: {
                     title: 'System Health',
@@ -600,6 +600,6 @@ module.exports = function() {
             req.error(500, 'HEALTH_SUMMARY_FAILED', `Failed to fetch health summary: ${error.message}`);
         }
     });
-    
+
     LOG.info('SAP Fiori Launchpad service handlers registered - 100% Real Data');
 };

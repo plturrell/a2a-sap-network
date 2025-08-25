@@ -36,14 +36,14 @@ class AgentRatingService {
 
             // Get agent info from registry
             const agentInfo = await this.agentRegistryContract.methods.getAgent(agentId).call();
-            
+
             // Get reputation metrics
             const metrics = await this.reputationContract.methods.getAgentMetrics(agentId).call();
             const reputation = await this.reputationContract.methods.getAgentReputation(agentId).call();
-            
+
             // Calculate overall rating from reputation score (0-1000) to stars (0-5)
             const overallRating = (reputation.currentScore / 1000) * 5;
-            
+
             // Get rating distribution
             const ratingDistribution = await this._getRatingDistribution(agentId);
 
@@ -63,7 +63,7 @@ class AgentRatingService {
 
             // Cache for 5 minutes
             await cacheService.set(cacheKey, details, 300);
-            
+
             return details;
         } catch (error) {
             logger.error(`Error getting agent details for ${agentId}:`, error);
@@ -86,7 +86,7 @@ class AgentRatingService {
                 const review = await this.reputationContract.methods
                     .getReview(agentId, event.returnValues.reviewId)
                     .call();
-                
+
                 return {
                     id: event.returnValues.reviewId,
                     reviewerAddress: review.reviewer,
@@ -128,7 +128,7 @@ class AgentRatingService {
             // Validate inputs
             validateAddress(reviewerAddress);
             validateRating(reviewData.overallRating);
-            
+
             if (!reviewData.taskId) {
                 throw new Error('Task ID is required');
             }
@@ -241,7 +241,7 @@ class AgentRatingService {
         } catch (error) {
             // Reviewer might not be an agent
         }
-        
+
         // Return shortened address as fallback
         return `${address.substr(0, 6)}...${address.substr(-4)}`;
     }

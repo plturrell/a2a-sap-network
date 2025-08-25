@@ -8,13 +8,13 @@ window.A2A_SSO_Manager = {
     isAuthenticated: false,
     currentUser: null,
     authToken: null,
-    
+
     /**
      * Initialize SSO - Development mode bypass
      */
     init: function() {
         console.log('🔐 A2A SSO Manager initialized (Development Mode)');
-        
+
         // Development mode - bypass authentication
         if (window.A2A_CONFIG && window.A2A_CONFIG.development && window.A2A_CONFIG.development.enableDebug) {
             this.isAuthenticated = true;
@@ -27,11 +27,11 @@ window.A2A_SSO_Manager = {
             console.log('🚀 Development authentication active');
             return Promise.resolve(this.currentUser);
         }
-        
+
         // Production mode - check for existing session
         return this.checkSession();
     },
-    
+
     /**
      * Check existing session
      */
@@ -58,13 +58,13 @@ window.A2A_SSO_Manager = {
                     console.warn('Invalid auth token found', error);
                 }
             }
-            
+
             // No valid session found
             this.logout();
             reject(new Error('No valid session'));
         });
     },
-    
+
     /**
      * Login with credentials
      */
@@ -84,13 +84,13 @@ window.A2A_SSO_Manager = {
                 }, 500); // Simulate network delay
                 return;
             }
-            
+
             // Production login logic would go here
             // For now, reject to prevent unauthorized access
             reject(new Error('Production login not implemented'));
         });
     },
-    
+
     /**
      * Logout current user
      */
@@ -100,20 +100,20 @@ window.A2A_SSO_Manager = {
         this.authToken = null;
         localStorage.removeItem('a2a_auth_token');
         console.log('🚪 User logged out');
-        
+
         // Redirect to login if not in development mode
         if (!window.A2A_CONFIG || !window.A2A_CONFIG.development) {
             window.location.href = '/login.html';
         }
     },
-    
+
     /**
      * Get current user info
      */
     getCurrentUser: function() {
         return this.currentUser;
     },
-    
+
     /**
      * Check if user has specific role
      */
@@ -123,7 +123,7 @@ window.A2A_SSO_Manager = {
         }
         return this.currentUser.roles && this.currentUser.roles.includes(role);
     },
-    
+
     /**
      * Get authorization header for API requests
      */

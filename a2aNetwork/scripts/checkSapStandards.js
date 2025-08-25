@@ -126,10 +126,10 @@ let failed = 0;
 
 Object.entries(checks).forEach(([file, config]) => {
     console.log(`\nChecking ${file}:`);
-    
+
     try {
         const content = fs.readFileSync(path.join(__dirname, '..', config.path), 'utf-8');
-        
+
         config.checks.forEach(check => {
             try {
                 if (check.test(content)) {
@@ -158,11 +158,11 @@ console.log('\n\nNamespace Consistency Check:');
 try {
     const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../app/a2a-fiori/webapp/manifest.json'), 'utf-8'));
     const componentContent = fs.readFileSync(path.join(__dirname, '../app/a2a-fiori/webapp/Component.js'), 'utf-8');
-    
+
     const manifestId = manifest['sap.app'].id;
     const componentNameMatch = componentContent.match(/extend\("([^"]+)\.Component"/);
     const componentName = componentNameMatch ? componentNameMatch[1] : null;
-    
+
     if (manifestId === componentName) {
         console.log(`  ✓ Namespace consistent: ${manifestId}`);
     } else {

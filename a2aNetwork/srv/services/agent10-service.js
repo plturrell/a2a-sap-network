@@ -1,6 +1,6 @@
 /**
  * Agent 10 Service Implementation - Calculation Engine
- * Implements business logic for calculation tasks, statistical analysis, 
+ * Implements business logic for calculation tasks, statistical analysis,
  * formula evaluation, self-healing calculations, and error correction operations
  */
 
@@ -12,7 +12,7 @@ class Agent10Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent10Adapter();
-        
+
         // Entity references
         const {
             CalculationTasks,
@@ -34,7 +34,7 @@ class Agent10Service extends cds.ApplicationService {
         this.on('CREATE', 'CalculationTasks', async (req) => {
             try {
                 const task = await this.adapter.createCalculationTask(req.data);
-                
+
                 // Emit task creation event
                 await this.emit('CalculationStarted', {
                     taskId: task.ID,
@@ -43,7 +43,7 @@ class Agent10Service extends cds.ApplicationService {
                     method: task.calculationMethod,
                     timestamp: new Date()
                 });
-                
+
                 return task;
             } catch (error) {
                 req.error(500, `Failed to create calculation task: ${error.message}`);
@@ -72,16 +72,16 @@ class Agent10Service extends cds.ApplicationService {
             try {
                 const taskId = req.params[0];
                 const result = await this.adapter.startCalculation(taskId);
-                
+
                 // Update task status
                 await UPDATE(CalculationTasks)
-                    .set({ 
+                    .set({
                         status: 'PROCESSING',
                         startTime: new Date(),
                         progress: 0
                     })
                     .where({ ID: taskId });
-                
+
                 await this.emit('CalculationStarted', {
                     taskId,
                     taskName: result.taskName,
@@ -89,7 +89,7 @@ class Agent10Service extends cds.ApplicationService {
                     method: result.calculationMethod,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to start calculation: ${error.message}`);
@@ -100,11 +100,11 @@ class Agent10Service extends cds.ApplicationService {
             try {
                 const taskId = req.params[0];
                 const result = await this.adapter.pauseCalculation(taskId);
-                
+
                 await UPDATE(CalculationTasks)
                     .set({ status: 'PAUSED' })
                     .where({ ID: taskId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to pause calculation: ${error.message}`);
@@ -115,11 +115,11 @@ class Agent10Service extends cds.ApplicationService {
             try {
                 const taskId = req.params[0];
                 const result = await this.adapter.resumeCalculation(taskId);
-                
+
                 await UPDATE(CalculationTasks)
                     .set({ status: 'PROCESSING' })
                     .where({ ID: taskId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to resume calculation: ${error.message}`);
@@ -130,14 +130,14 @@ class Agent10Service extends cds.ApplicationService {
             try {
                 const taskId = req.params[0];
                 const result = await this.adapter.cancelCalculation(taskId);
-                
+
                 await UPDATE(CalculationTasks)
-                    .set({ 
+                    .set({
                         status: 'CANCELLED',
                         endTime: new Date()
                     })
                     .where({ ID: taskId });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to cancel calculation: ${error.message}`);
@@ -179,7 +179,7 @@ class Agent10Service extends cds.ApplicationService {
         this.on('performCalculation', async (req) => {
             try {
                 const { formula, inputData, calculationType, method, precision, enableSelfHealing } = req.data;
-                
+
                 // Create calculation task
                 const taskId = uuidv4();
                 const task = await INSERT.into(CalculationTasks).entries({
@@ -294,7 +294,7 @@ class Agent10Service extends cds.ApplicationService {
         this.on('performStatisticalAnalysis', async (req) => {
             try {
                 const { data, analysisType, confidenceLevel, options } = req.data;
-                
+
                 // Create calculation task for statistical analysis
                 const taskId = uuidv4();
                 await INSERT.into(CalculationTasks).entries({

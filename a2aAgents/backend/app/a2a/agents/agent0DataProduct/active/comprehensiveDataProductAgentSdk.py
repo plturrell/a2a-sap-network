@@ -41,7 +41,6 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-# from sklearn.metrics.pairwise import cosine_similarity  # Unused
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 

@@ -6,7 +6,7 @@
 const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 
 class RealSystemEventConnector extends EventEmitter {
     constructor() {
@@ -17,12 +17,12 @@ class RealSystemEventConnector extends EventEmitter {
         this.retryAttempts = new Map();
         this.maxRetries = 5;
         this.retryDelay = 5000;
-        
+
         // Agent health monitoring
         this.previousAgentStatuses = null;
         this.lastSystemEvents = [];
         this.healthMonitorInterval = null;
-        
+
         // Real service endpoints
         this.services = {
             registry: {
@@ -53,13 +53,13 @@ class RealSystemEventConnector extends EventEmitter {
 
             // Connect to agent registry
             await this.connectToAgentRegistry();
-            
+
             // Connect to blockchain service
             await this.connectToBlockchainService();
-            
+
             // Connect to security monitoring
             await this.connectToSecurityMonitoring();
-            
+
             // Connect to metrics service
             await this.connectToMetricsService();
 
@@ -81,12 +81,12 @@ class RealSystemEventConnector extends EventEmitter {
                 timeout: 5000,
                 headers: { 'Accept': 'application/json' }
             });
-            
+
             this.logger.info(`✅ Connected to agent registry HTTP API (${response.data.agents?.length || 0} agents)`);
 
             // Connect to registry WebSocket for real-time agent events
             const registryWs = new BlockchainEventClient(`${this.services.registry.ws}/agents`);
-            
+
             registryWs.on('open', () => {
                 this.logger.info('✅ Connected to agent registry WebSocket');
                 this.connections.set('registry', registryWs);
@@ -123,17 +123,17 @@ class RealSystemEventConnector extends EventEmitter {
             const response = await blockchainClient.sendMessage(`${this.services.blockchain.http}/status`, {
                 timeout: 5000
             });
-            
+
             this.logger.info(`✅ Connected to blockchain service (Network: ${response.data.network}, Block: ${response.data.blockNumber})`);
 
             // Connect to blockchain WebSocket for transaction events
             const blockchainWs = new BlockchainEventClient(this.services.blockchain.ws);
-            
+
             blockchainWs.on('open', () => {
                 this.logger.info('✅ Connected to blockchain events WebSocket');
                 this.connections.set('blockchain', blockchainWs);
                 this.retryAttempts.delete('blockchain');
-                
+
                 // Subscribe to transaction events
                 blockchainWs.send(JSON.stringify({
                     type: 'subscribe',
@@ -171,7 +171,7 @@ class RealSystemEventConnector extends EventEmitter {
             const response = await blockchainClient.sendMessage(`${this.services.security.http}/health`, {
                 timeout: 5000
             });
-            
+
             this.logger.info('✅ Connected to security monitoring system');
 
             // Poll security events (since no WebSocket available)
@@ -187,12 +187,12 @@ class RealSystemEventConnector extends EventEmitter {
         try {
             // Connect to metrics WebSocket
             const metricsWs = new BlockchainEventClient(this.services.metrics.ws);
-            
+
             metricsWs.on('open', () => {
                 this.logger.info('✅ Connected to metrics service WebSocket');
                 this.connections.set('metrics', metricsWs);
                 this.retryAttempts.delete('metrics');
-                
+
                 // Subscribe to agent performance events
                 metricsWs.send(JSON.stringify({
                     type: 'subscribe',
@@ -369,7 +369,7 @@ class RealSystemEventConnector extends EventEmitter {
                     response.data.events.forEach(event => {
                         this.handleSecurityEvent(event);
                     });
-                    
+
                     this.logger.debug(`📡 Polled ${response.data.events.length} security events`);
                 }
             } catch (error) {
@@ -379,7 +379,7 @@ class RealSystemEventConnector extends EventEmitter {
 
         // Start polling
         setInterval(poll, pollInterval);
-        
+
         // Initial poll
         setTimeout(poll, 1000);
     }
@@ -406,7 +406,7 @@ class RealSystemEventConnector extends EventEmitter {
 
     scheduleReconnect(serviceName, reconnectFn) {
         const attempts = this.retryAttempts.get(serviceName) || 0;
-        
+
         if (attempts >= this.maxRetries) {
             this.logger.error(`Max reconnection attempts reached for ${serviceName}`);
             return;
@@ -427,12 +427,12 @@ class RealSystemEventConnector extends EventEmitter {
     // Real agent health monitoring using existing monitoring services
     async startAgentHealthMonitoring() {
         this.logger.info('🔍 Starting continuous agent health monitoring...');
-        
+
         // Monitor every 30 seconds
         this.healthMonitorInterval = setInterval(async () => {
             await this.checkAgentHealth();
         }, 30000);
-        
+
         // Initial check
         await this.checkAgentHealth();
     }
@@ -444,9 +444,9 @@ class RealSystemEventConnector extends EventEmitter {
                 this.getAgentStatusesFromMonitoringService(),
                 this.getAgentStatusesFromSystemHealth()
             ]);
-            
+
             let currentStatuses = [];
-            
+
             // Use monitoring service data if available, fallback to system health
             if (monitoringData.status === 'fulfilled' && monitoringData.value.length > 0) {
                 currentStatuses = monitoringData.value;
@@ -458,13 +458,13 @@ class RealSystemEventConnector extends EventEmitter {
                 this.logger.warn('⚠️ No agent health data available from either service');
                 return;
             }
-            
+
             // Detect crashes and recoveries
             await this.detectAgentStateChanges(currentStatuses);
-            
+
             // Store for next comparison
             this.previousAgentStatuses = JSON.parse(JSON.stringify(currentStatuses));
-            
+
         } catch (error) {
             this.logger.error('❌ Failed to check agent health:', error);
         }
@@ -476,7 +476,7 @@ class RealSystemEventConnector extends EventEmitter {
                 timeout: 10000,
                 headers: { 'Accept': 'application/json' }
             });
-            
+
             if (response.data && response.data.agents) {
                 return response.data.agents.map(agent => ({
                     agentId: agent.id,
@@ -504,10 +504,10 @@ class RealSystemEventConnector extends EventEmitter {
                 timeout: 10000,
                 headers: { 'Accept': 'application/json' }
             });
-            
+
             if (response.data && response.data.services) {
                 const agentStatuses = [];
-                
+
                 // Process agent services from system health
                 if (response.data.services.agent) {
                     Object.entries(response.data.services.agent).forEach(([name, service]) => {
@@ -516,7 +516,7 @@ class RealSystemEventConnector extends EventEmitter {
                             name: name,
                             status: this.mapSystemHealthStatus(service.status),
                             lastActivity: new Date().toISOString(),
-                            healthScore: service.status === 'healthy' ? 100 : 
+                            healthScore: service.status === 'healthy' ? 100 :
                                        service.status === 'degraded' ? 50 : 0,
                             responseTime: service.response_time_ms,
                             error: service.error,
@@ -526,7 +526,7 @@ class RealSystemEventConnector extends EventEmitter {
                         });
                     });
                 }
-                
+
                 return agentStatuses;
             }
             return [];
@@ -554,16 +554,16 @@ class RealSystemEventConnector extends EventEmitter {
 
     async detectAgentStateChanges(currentStatuses) {
         if (!this.previousAgentStatuses) return;
-        
+
         for (const current of currentStatuses) {
             const previous = this.previousAgentStatuses.find(p => p.agentId === current.agentId);
-            
+
             if (previous && previous.status !== current.status) {
                 // Agent status changed!
-                
-                if (previous.status === 'running' && 
+
+                if (previous.status === 'running' &&
                     (current.status === 'down' || current.status === 'unknown')) {
-                    
+
                     // AGENT CRASH DETECTED
                     const crashEvent = {
                         type: 'agent_crash',
@@ -585,16 +585,16 @@ class RealSystemEventConnector extends EventEmitter {
                             error: current.error
                         }
                     };
-                    
+
                     this.logger.error(`🚨 AGENT CRASH DETECTED: ${current.name} (${current.agentId}) - ${previous.status} → ${current.status}`);
-                    
+
                     // Emit crash event
                     this.emit('agent.crashed', crashEvent);
                     this.lastSystemEvents.push(crashEvent);
-                    
-                } else if ((previous.status === 'down' || previous.status === 'unknown') && 
+
+                } else if ((previous.status === 'down' || previous.status === 'unknown') &&
                           current.status === 'running') {
-                    
+
                     // AGENT RECOVERY DETECTED
                     const recoveryEvent = {
                         type: 'agent_recovery',
@@ -613,15 +613,15 @@ class RealSystemEventConnector extends EventEmitter {
                             responseTime: current.responseTime
                         }
                     };
-                    
+
                     this.logger.info(`✅ AGENT RECOVERY: ${current.name} (${current.agentId}) - ${previous.status} → ${current.status}`);
-                    
+
                     // Emit recovery event
                     this.emit('agent.recovered', recoveryEvent);
                     this.lastSystemEvents.push(recoveryEvent);
-                    
+
                 } else if (previous.status === 'running' && current.status === 'degraded') {
-                    
+
                     // AGENT DEGRADATION DETECTED
                     const degradationEvent = {
                         type: 'agent_degraded',
@@ -640,16 +640,16 @@ class RealSystemEventConnector extends EventEmitter {
                             responseTime: current.responseTime
                         }
                     };
-                    
+
                     this.logger.warn(`⚠️ AGENT DEGRADED: ${current.name} (${current.agentId}) - Health score: ${current.healthScore}`);
-                    
+
                     // Emit degradation event
                     this.emit('agent.degraded', degradationEvent);
                     this.lastSystemEvents.push(degradationEvent);
                 }
             }
         }
-        
+
         // Keep only last 100 events to prevent memory growth
         if (this.lastSystemEvents.length > 100) {
             this.lastSystemEvents = this.lastSystemEvents.slice(-100);
@@ -658,11 +658,11 @@ class RealSystemEventConnector extends EventEmitter {
 
     calculateDowntime(lastActivity) {
         if (!lastActivity) return 'unknown';
-        
+
         const now = new Date();
         const lastSeen = new Date(lastActivity);
         const downtime = Math.floor((now - lastSeen) / 1000); // seconds
-        
+
         if (downtime < 60) return `${downtime}s`;
         if (downtime < 3600) return `${Math.floor(downtime / 60)}m`;
         return `${Math.floor(downtime / 3600)}h`;
@@ -685,7 +685,7 @@ class RealSystemEventConnector extends EventEmitter {
                     type: agent.type
                 }));
             }
-            
+
             // Fallback to immediate check
             const currentStatuses = await this.getAgentStatusesFromMonitoringService();
             if (currentStatuses.length > 0) {
@@ -701,7 +701,7 @@ class RealSystemEventConnector extends EventEmitter {
                     type: agent.type
                 }));
             }
-            
+
             return [];
         } catch (error) {
             this.logger.error('Failed to get real agent statuses:', error);
@@ -779,7 +779,7 @@ class RealSystemEventConnector extends EventEmitter {
             try {
                 const connection = this.connections.get(serviceName);
                 const wsConnected = connection && connection.readyState === WebSocket.OPEN;
-                
+
                 // Try HTTP health check
                 let httpHealthy = false;
                 try {

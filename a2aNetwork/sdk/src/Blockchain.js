@@ -31,19 +31,19 @@ class Blockchain {
     try {
       // Create provider
       this.provider = new ethers.JsonRpcProvider(this.config.rpcUrl);
-      
+
       // Create wallet
       this.wallet = new ethers.Wallet(this.config.privateKey, this.provider);
-      
+
       // Test connection
       await this.testConnection();
-      
+
       // Load contracts
       await this.loadContracts();
-      
+
       this.isConnected = true;
       logger.info(`Connected to blockchain network: ${this.config.network}`);
-      
+
     } catch (error) {
       logger.error('Failed to initialize blockchain connection:', error.message);
       throw error;
@@ -57,14 +57,14 @@ class Blockchain {
     try {
       const network = await this.provider.getNetwork();
       const balance = await this.provider.getBalance(this.wallet.address);
-      
+
       logger.info('Blockchain connection established:', {
         network: network.name,
         chainId: network.chainId.toString(),
         address: this.wallet.address,
         balance: ethers.formatEther(balance)
       });
-      
+
       return true;
     } catch (error) {
       throw new Error(`Blockchain connection test failed: ${error.message}`);
@@ -101,7 +101,7 @@ class Blockchain {
             contractConfig.abi,
             this.wallet
           );
-          
+
           this.contracts.set(contractConfig.name, contract);
           logger.info(`Contract '${contractConfig.name}' loaded at ${contractConfig.address}`);
         } catch (error) {
@@ -136,7 +136,7 @@ class Blockchain {
       );
 
       const receipt = await tx.wait(this.config.confirmations);
-      
+
       logger.info(`Agent '${agentInfo.name}' registered on blockchain:`, {
         txHash: receipt.hash,
         blockNumber: receipt.blockNumber,
@@ -172,7 +172,7 @@ class Blockchain {
       });
 
       const receipt = await tx.wait(this.config.confirmations);
-      
+
       logger.info(`Agent '${agentId}' unregistered from blockchain:`, {
         txHash: receipt.hash,
         gasUsed: receipt.gasUsed.toString()
@@ -211,7 +211,7 @@ class Blockchain {
       );
 
       const receipt = await tx.wait(this.config.confirmations);
-      
+
       logger.info(`Reputation updated for agent '${agentId}':`, {
         score,
         txHash: receipt.hash,
@@ -241,7 +241,7 @@ class Blockchain {
       }
 
       const reputation = await reputationSystem.getReputation(agentId);
-      
+
       return {
         agentId,
         score: Number(reputation.score) / 100, // Convert from basis points
@@ -279,14 +279,14 @@ class Blockchain {
       );
 
       const receipt = await tx.wait(this.config.confirmations);
-      
+
       // Get service ID from event logs
       const serviceCreatedEvent = receipt.logs.find(
         log => log.fragment?.name === 'ServiceCreated'
       );
-      
+
       const serviceId = serviceCreatedEvent ? serviceCreatedEvent.args[0] : null;
-      
+
       logger.info(`Service offering '${serviceInfo.name}' created:`, {
         serviceId: serviceId?.toString(),
         txHash: receipt.hash,
@@ -318,7 +318,7 @@ class Blockchain {
 
       // Get service details to determine price
       const service = await marketplace.getService(serviceId);
-      
+
       const tx = await marketplace.purchaseService(serviceId, agentId, {
         value: service.price,
         gasLimit: this.config.gasLimit,
@@ -326,7 +326,7 @@ class Blockchain {
       });
 
       const receipt = await tx.wait(this.config.confirmations);
-      
+
       logger.info(`Service '${serviceId}' purchased:`, {
         buyer: agentId,
         txHash: receipt.hash,

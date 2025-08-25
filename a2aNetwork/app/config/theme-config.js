@@ -153,18 +153,18 @@ sap.ui.define([
         initialize: function() {
             // Detect user preference
             const userTheme = this._detectUserPreference();
-            
+
             // Apply theme
             this.applyTheme(userTheme);
-            
+
             // Setup theme monitoring
             this._setupThemeMonitoring();
-            
+
             // Load custom CSS if enabled
             if (this.customization.customCSS.enabled) {
                 this._loadCustomCSS();
             }
-            
+
             Log.info('Theme system initialized', { theme: userTheme });
         },
 
@@ -190,10 +190,10 @@ sap.ui.define([
 
             // Update CSS custom properties
             this._updateCSSCustomProperties(themeId);
-            
+
             // Trigger theme change event
             this._fireThemeChanged(themeId);
-            
+
             Log.info('Theme applied', { theme: themeId });
         },
 
@@ -304,7 +304,7 @@ sap.ui.define([
             if (!theme) return;
 
             const root = document.documentElement;
-            
+
             // Update color properties
             if (theme.colors) {
                 Object.entries(theme.colors).forEach(([key, value]) => {

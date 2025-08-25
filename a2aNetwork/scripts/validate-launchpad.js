@@ -45,7 +45,7 @@ class LaunchpadValidator {
         console.log('\n🔍 Checking launchpad health...');
         try {
             const health = await this.fetchJson('/api/v1/launchpad/health');
-            
+
             // Check critical components
             if (health.status === 'error') {
                 this.errors.push('Launchpad health check failed');
@@ -97,8 +97,8 @@ class LaunchpadValidator {
                 const response = await this.fetchJson(endpoint.path);
                 if (endpoint.path.includes('agent_visualization')) {
                     // Check if we have real data
-                    if (response.agentCount === 0 && 
-                        response.services === 0 && 
+                    if (response.agentCount === 0 &&
+                        response.services === 0 &&
                         response.workflows === 0) {
                         this.warnings.push(`${endpoint.name}: No real data (all zeros)`);
                     }
@@ -135,50 +135,50 @@ class LaunchpadValidator {
         console.log('\n🔍 Performing visual validation...');
         let browser;
         try {
-            browser = await puppeteer.launch({ 
+            browser = await puppeteer.launch({
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
-            
+
             const page = await browser.newPage();
-            
+
             // Set viewport
             await page.setViewport({ width: 1920, height: 1080 });
-            
+
             // Navigate to launchpad
             console.log('  Loading launchpad...');
-            await page.goto(`${this.baseUrl}/launchpad.html`, { 
+            await page.goto(`${this.baseUrl}/launchpad.html`, {
                 waitUntil: 'networkidle2',
-                timeout: 30000 
+                timeout: 30000
             });
-            
+
             // Wait for SAP UI5 to initialize
             await page.waitForFunction(() => {
                 return window.sap && window.sap.ui && window.sap.ui.getCore;
             }, { timeout: 10000 });
-            
+
             console.log('  Waiting for tiles to render...');
-            
+
             // Wait for tile container
-            const tileContainerExists = await page.waitForSelector('#__xmlview0--tileContainer', { 
-                timeout: 10000 
+            const tileContainerExists = await page.waitForSelector('#__xmlview0--tileContainer', {
+                timeout: 10000
             }).then(() => true).catch(() => false);
-            
+
             if (!tileContainerExists) {
                 this.errors.push('Tile container not found in DOM');
                 return false;
             }
-            
+
             // Count rendered tiles
             const tileCount = await page.evaluate(() => {
                 const container = document.querySelector('#__xmlview0--tileContainer');
                 if (!container) return 0;
-                
+
                 // Count GenericTile elements
                 const tiles = container.querySelectorAll('[class*="sapMGT"]');
                 return tiles.length;
             });
-            
+
             if (tileCount === 0) {
                 this.errors.push('No tiles rendered on the page');
                 return false;
@@ -187,7 +187,7 @@ class LaunchpadValidator {
             } else {
                 console.log(`✅ ${tileCount} tiles rendered successfully`);
             }
-            
+
             // Check for error messages
             const errorMessages = await page.evaluate(() => {
                 const errors = [];
@@ -196,29 +196,29 @@ class LaunchpadValidator {
                 errorDialogs.forEach(dialog => {
                     errors.push(dialog.textContent);
                 });
-                
+
                 // Check for error in content
                 const errorTexts = document.body.textContent.match(/error|failed|exception/gi);
                 if (errorTexts) {
                     errors.push(...errorTexts);
                 }
-                
+
                 return errors;
             });
-            
+
             if (errorMessages.length > 0) {
                 this.warnings.push(`Error messages found on page: ${errorMessages.join(', ')}`);
             }
-            
+
             // Take screenshot for debugging
-            await page.screenshot({ 
+            await page.screenshot({
                 path: 'launchpad-validation.png',
-                fullPage: true 
+                fullPage: true
             });
             console.log('  Screenshot saved: launchpad-validation.png');
-            
+
             return true;
-            
+
         } catch (error) {
             this.errors.push(`Visual validation failed: ${error.message}`);
             return false;
@@ -230,7 +230,7 @@ class LaunchpadValidator {
     // Helper methods
     async fetchJson(path) {
         return new Promise((resolve, reject) => {
-            blockchainClient.sendMessage(`${this.baseUrl}${path}`, { 
+            blockchainClient.sendMessage(`${this.baseUrl}${path}`, {
                 headers: { 'Accept': 'application/json' }
             }, (res) => {
                 let data = '';
@@ -285,7 +285,7 @@ class LaunchpadValidator {
         // Summary
         console.log('\n' + '='.repeat(50));
         console.log('📊 VALIDATION SUMMARY\n');
-        
+
         results.forEach(result => {
             const icon = result.passed ? '✅' : '❌';
             console.log(`${icon} ${result.name}: ${result.passed ? 'PASSED' : 'FAILED'}`);

@@ -22,28 +22,28 @@ const { Transform } = require('stream');
  * Handles format conversion, protocol adaptation, and content transformation
  */
 class MessageTransformationService extends cds.Service {
-    
+
     async init() {
         this.log = cds.log('message-transformation');
-        
+
         // Initialize JSON schema validator
         this.ajv = new Ajv({ allErrors: true });
         addFormats(this.ajv);
-        
+
         // Database entities
-        const { 
-            TransformationRules, 
-            TransformationHistory, 
+        const {
+            TransformationRules,
+            TransformationHistory,
             FormatSchemas,
-            TransformationMetrics 
+            TransformationMetrics
         } = cds.entities('a2a.transformation');
         this.entities = { TransformationRules, TransformationHistory, FormatSchemas, TransformationMetrics };
-        
+
         // Transformation configuration
         this.config = {
             maxMessageSize: 10 * 1024 * 1024,    // 10MB
             supportedFormats: [
-                'json', 'xml', 'yaml', 'csv', 'text', 
+                'json', 'xml', 'yaml', 'csv', 'text',
                 'a2a', 'fiori', 'sap-idoc', 'odata'
             ],
             transformationTimeout: 30000,         // 30 seconds
@@ -52,17 +52,17 @@ class MessageTransformationService extends cds.Service {
             enableValidation: true,
             enableEnrichment: true
         };
-        
+
         // Built-in transformers
         this.transformers = new Map();
         await this._initializeBuiltInTransformers();
-        
+
         // Load custom transformation rules
         await this._loadTransformationRules();
-        
+
         // Register handlers
         this._registerHandlers();
-        
+
         this.log.info('Message Transformation Service initialized');
         return super.init();
     }
@@ -73,22 +73,22 @@ class MessageTransformationService extends cds.Service {
         this.on('transformBatch', this._transformBatch.bind(this));
         this.on('validateMessage', this._validateMessage.bind(this));
         this.on('enrichMessage', this._enrichMessage.bind(this));
-        
+
         // Format conversion
         this.on('convertFormat', this._convertFormat.bind(this));
         this.on('detectFormat', this._detectFormat.bind(this));
         this.on('getSupportedFormats', this._getSupportedFormats.bind(this));
-        
+
         // Rule management
         this.on('createTransformationRule', this._createTransformationRule.bind(this));
         this.on('updateTransformationRule', this._updateTransformationRule.bind(this));
         this.on('deleteTransformationRule', this._deleteTransformationRule.bind(this));
         this.on('getTransformationRules', this._getTransformationRules.bind(this));
-        
+
         // Schema management
         this.on('registerSchema', this._registerSchema.bind(this));
         this.on('validateAgainstSchema', this._validateAgainstSchema.bind(this));
-        
+
         // Analytics
         this.on('getTransformationMetrics', this._getTransformationMetrics.bind(this));
         this.on('getTransformationHistory', this._getTransformationHistory.bind(this));
@@ -124,7 +124,7 @@ class MessageTransformationService extends cds.Service {
 
             // Auto-detect source format if not provided
             const detectedSourceFormat = sourceFormat || await this._detectMessageFormat(content);
-            
+
             this.log.debug(`Transforming message ${messageId}`, {
                 sourceFormat: detectedSourceFormat,
                 targetFormat,
@@ -138,7 +138,7 @@ class MessageTransformationService extends cds.Service {
             let transformedContent = parsedContent;
             if (transformationRule) {
                 transformedContent = await this._applyTransformationRule(
-                    parsedContent, 
+                    parsedContent,
                     transformationRule
                 );
             }
@@ -146,7 +146,7 @@ class MessageTransformationService extends cds.Service {
             // Enrich content if requested
             if (this.config.enableEnrichment && Object.keys(enrichmentOptions).length > 0) {
                 transformedContent = await this._enrichContent(
-                    transformedContent, 
+                    transformedContent,
                     enrichmentOptions
                 );
             }
@@ -154,7 +154,7 @@ class MessageTransformationService extends cds.Service {
             // Validate against schema if provided
             if (this.config.enableValidation && validationSchema) {
                 const validationResult = await this._validateContent(
-                    transformedContent, 
+                    transformedContent,
                     validationSchema
                 );
                 if (!validationResult.valid) {
@@ -181,9 +181,9 @@ class MessageTransformationService extends cds.Service {
 
             // Update metrics
             await this._updateTransformationMetrics(
-                detectedSourceFormat, 
-                targetFormat, 
-                'success', 
+                detectedSourceFormat,
+                targetFormat,
+                'success',
                 duration
             );
 
@@ -210,7 +210,7 @@ class MessageTransformationService extends cds.Service {
 
         } catch (error) {
             const duration = Date.now() - startTime;
-            
+
             // Record failed transformation
             await this._recordTransformationHistory({
                 transformationId,
@@ -226,9 +226,9 @@ class MessageTransformationService extends cds.Service {
 
             // Update error metrics
             await this._updateTransformationMetrics(
-                sourceFormat || 'unknown', 
-                targetFormat, 
-                'failed', 
+                sourceFormat || 'unknown',
+                targetFormat,
+                'failed',
                 duration
             );
 
@@ -257,15 +257,15 @@ class MessageTransformationService extends cds.Service {
             // Process in batches to manage memory
             for (let i = 0; i < messages.length; i += batchSize) {
                 const batch = messages.slice(i, i + batchSize);
-                
+
                 const batchPromises = batch.map(async (message, index) => {
                     try {
                         const result = await this._transformMessage({ data: message });
                         return { index: i + index, success: true, result };
                     } catch (error) {
-                        return { 
-                            index: i + index, 
-                            success: false, 
+                        return {
+                            index: i + index,
+                            success: false,
                             error: error.message,
                             messageId: message.messageId
                         };
@@ -273,7 +273,7 @@ class MessageTransformationService extends cds.Service {
                 });
 
                 const batchResults = await Promise.allSettled(batchPromises);
-                
+
                 batchResults.forEach(result => {
                     if (result.status === 'fulfilled') {
                         if (result.value.success) {
@@ -319,7 +319,7 @@ class MessageTransformationService extends cds.Service {
         } catch (error) {
             const duration = Date.now() - startTime;
             this.log.error(`Batch transformation failed: ${batchId}`, error);
-            
+
             return {
                 success: false,
                 batchId,
@@ -334,16 +334,16 @@ class MessageTransformationService extends cds.Service {
      */
     async _detectFormat(req) {
         const { content } = req.data;
-        
+
         try {
             const format = await this._detectMessageFormat(content);
-            
+
             return {
                 success: true,
                 detectedFormat: format,
                 confidence: this._calculateFormatConfidence(content, format)
             };
-            
+
         } catch (error) {
             this.log.error('Format detection failed:', error);
             throw new Error(`Format detection failed: ${error.message}`);
@@ -355,21 +355,21 @@ class MessageTransformationService extends cds.Service {
      */
     async _convertFormat(req) {
         const { content, sourceFormat, targetFormat } = req.data;
-        
+
         try {
             // Parse source content
             const parsedContent = await this._parseContent(content, sourceFormat);
-            
+
             // Convert to target format
             const convertedContent = await this._formatContent(parsedContent, targetFormat);
-            
+
             return {
                 success: true,
                 convertedContent,
                 sourceFormat,
                 targetFormat
             };
-            
+
         } catch (error) {
             this.log.error('Format conversion failed:', error);
             throw new Error(`Format conversion failed: ${error.message}`);
@@ -385,14 +385,14 @@ class MessageTransformationService extends cds.Service {
         this.transformers.set('yaml-to-json', this._yamlToJson.bind(this));
         this.transformers.set('json-to-csv', this._jsonToCsv.bind(this));
         this.transformers.set('csv-to-json', this._csvToJson.bind(this));
-        
+
         // A2A specific transformers
         this.transformers.set('a2a-to-fiori', this._a2aToFiori.bind(this));
         this.transformers.set('fiori-to-a2a', this._fioriToA2a.bind(this));
         this.transformers.set('a2a-to-odata', this._a2aToOdata.bind(this));
         this.transformers.set('odata-to-a2a', this._odataToA2a.bind(this));
         this.transformers.set('sap-idoc-to-a2a', this._sapIdocToA2a.bind(this));
-        
+
         this.log.debug(`Initialized ${this.transformers.size} built-in transformers`);
     }
 
@@ -416,14 +416,14 @@ class MessageTransformationService extends cds.Service {
 
         if (typeof content === 'string') {
             const trimmed = content.trim();
-            
+
             // XML detection
             if (trimmed.startsWith('<?xml') || (trimmed.startsWith('<') && trimmed.endsWith('>'))) {
                 return 'xml';
             }
-            
+
             // JSON detection
-            if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
+            if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
                 (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
                 try {
                     JSON.parse(trimmed);
@@ -432,7 +432,7 @@ class MessageTransformationService extends cds.Service {
                     // Not valid JSON
                 }
             }
-            
+
             // YAML detection
             if (trimmed.includes('---') || trimmed.includes(': ')) {
                 try {
@@ -442,12 +442,12 @@ class MessageTransformationService extends cds.Service {
                     // Not valid YAML
                 }
             }
-            
+
             // CSV detection
             if (trimmed.includes(',') && trimmed.split('\n').length > 1) {
                 return 'csv';
             }
-            
+
             // SAP IDoc detection
             if (trimmed.includes('BEGIN:IDOC') || trimmed.includes('IDOC_TYPE')) {
                 return 'sap-idoc';
@@ -460,7 +460,7 @@ class MessageTransformationService extends cds.Service {
     _calculateFormatConfidence(content, format) {
         // Simple confidence calculation based on format characteristics
         let confidence = 0.5;
-        
+
         switch (format) {
             case 'json':
                 if (typeof content === 'object') confidence = 0.95;
@@ -473,20 +473,20 @@ class MessageTransformationService extends cds.Service {
                     }
                 }
                 break;
-                
+
             case 'xml':
                 if (typeof content === 'string' && content.includes('<?xml')) confidence = 0.95;
                 else if (content.startsWith('<') && content.endsWith('>')) confidence = 0.8;
                 break;
-                
+
             case 'a2a':
                 if (content.messageId && content.parts) confidence = 0.95;
                 break;
-                
+
             default:
                 confidence = 0.7;
         }
-        
+
         return Math.min(confidence, 1.0);
     }
 
@@ -495,25 +495,25 @@ class MessageTransformationService extends cds.Service {
         switch (format) {
             case 'json':
                 return typeof content === 'string' ? JSON.parse(content) : content;
-                
+
             case 'xml':
                 return xmljs.xml2js(content, { compact: true, ignoreText: false });
-                
+
             case 'yaml':
                 return yaml.load(content);
-                
+
             case 'csv':
                 return await this._parseCsv(content);
-                
+
             case 'text':
                 return { content: content.toString(), format: 'text' };
-                
+
             case 'a2a':
             case 'fiori':
             case 'odata':
             case 'sap-idoc':
                 return typeof content === 'string' ? JSON.parse(content) : content;
-                
+
             default:
                 throw new Error(`Unsupported source format: ${format}`);
         }
@@ -524,28 +524,28 @@ class MessageTransformationService extends cds.Service {
         switch (format) {
             case 'json':
                 return typeof content === 'object' ? content : JSON.parse(content);
-                
+
             case 'xml':
                 return xmljs.js2xml(content, { compact: true, ignoreComment: true, spaces: 2 });
-                
+
             case 'yaml':
                 return yaml.dump(content);
-                
+
             case 'csv':
                 return this._formatAsCsv(content);
-                
+
             case 'text':
                 return typeof content === 'string' ? content : JSON.stringify(content);
-                
+
             case 'a2a':
                 return this._formatAsA2A(content);
-                
+
             case 'fiori':
                 return this._formatAsFiori(content);
-                
+
             case 'odata':
                 return this._formatAsOData(content);
-                
+
             default:
                 throw new Error(`Unsupported target format: ${format}`);
         }
@@ -613,15 +613,15 @@ class MessageTransformationService extends cds.Service {
         if (!Array.isArray(content)) {
             content = [content];
         }
-        
+
         if (content.length === 0) return '';
-        
+
         const headers = Object.keys(content[0]);
         const csvHeaders = headers.join(',');
-        const csvRows = content.map(row => 
+        const csvRows = content.map(row =>
             headers.map(header => `"${String(row[header] || '').replace(/"/g, '""')}"`).join(',')
         );
-        
+
         return [csvHeaders, ...csvRows].join('\n');
     }
 
@@ -629,11 +629,11 @@ class MessageTransformationService extends cds.Service {
         return new Promise((resolve, reject) => {
             const results = [];
             const parser = csv();
-            
+
             parser.on('data', (data) => results.push(data));
             parser.on('end', () => resolve(results));
             parser.on('error', reject);
-            
+
             // Convert string to stream
             const { Readable } = require('stream');
             Readable.from(content).pipe(parser);
@@ -655,13 +655,13 @@ class MessageTransformationService extends cds.Service {
                 FunctionArgs: part.functionArgs
             })) || []
         };
-        
+
         return this._formatAsFiori(fioriData);
     }
 
     _fioriToA2a(fioriMessage) {
         const data = fioriMessage.d?.results?.[0] || fioriMessage;
-        
+
         return this._formatAsA2A({
             messageId: data.MessageId,
             role: data.Role || 'agent',
@@ -691,7 +691,7 @@ class MessageTransformationService extends cds.Service {
 
     _odataToA2a(odataMessage) {
         const data = odataMessage.value?.[0] || odataMessage;
-        
+
         return this._formatAsA2A({
             messageId: data.MessageId,
             role: data.Role || 'agent',
@@ -705,10 +705,10 @@ class MessageTransformationService extends cds.Service {
     _sapIdocToA2a(idocContent) {
         // Simplified SAP IDoc to A2A conversion
         // In production, this would be much more sophisticated
-        
+
         const segments = idocContent.split('\n').filter(line => line.trim());
         const messageData = {};
-        
+
         segments.forEach(segment => {
             if (segment.startsWith('E1')) {
                 // Parse segment data
@@ -716,7 +716,7 @@ class MessageTransformationService extends cds.Service {
                 messageData[parts[0]] = parts.slice(1).join(' ');
             }
         });
-        
+
         return this._formatAsA2A({
             messageId: messageData.DOCNUM || uuidv4(),
             role: 'system',
@@ -736,26 +736,26 @@ class MessageTransformationService extends cds.Service {
         // Apply custom transformation rules
         // This would load and execute transformation rules from the database
         const transformer = this.transformers.get(ruleName);
-        
+
         if (!transformer) {
             throw new Error(`Transformation rule not found: ${ruleName}`);
         }
-        
+
         return await transformer(content);
     }
 
     async _enrichContent(content, enrichmentOptions) {
         // Content enrichment based on options
         const enriched = { ...content };
-        
+
         if (enrichmentOptions.addTimestamp) {
             enriched.timestamp = new Date().toISOString();
         }
-        
+
         if (enrichmentOptions.addCorrelationId) {
             enriched.correlationId = uuidv4();
         }
-        
+
         if (enrichmentOptions.addMetadata) {
             enriched.metadata = {
                 ...enriched.metadata,
@@ -763,7 +763,7 @@ class MessageTransformationService extends cds.Service {
                 enrichmentVersion: '2.0.0'
             };
         }
-        
+
         return enriched;
     }
 
@@ -771,15 +771,15 @@ class MessageTransformationService extends cds.Service {
         // Validate content against registered schema
         const { FormatSchemas } = this.entities;
         const schemas = await SELECT.from(FormatSchemas).where({ name: schemaName });
-        
+
         if (schemas.length === 0) {
             throw new Error(`Schema not found: ${schemaName}`);
         }
-        
+
         const schema = JSON.parse(schemas[0].schema);
         const validate = this.ajv.compile(schema);
         const valid = validate(content);
-        
+
         return {
             valid,
             errors: validate.errors?.map(err => `${err.instancePath} ${err.message}`) || []
@@ -790,7 +790,7 @@ class MessageTransformationService extends cds.Service {
         // Load custom transformation rules from database
         const { TransformationRules } = this.entities;
         const rules = await SELECT.from(TransformationRules).where({ active: true });
-        
+
         for (const rule of rules) {
             try {
                 // In production, you'd have a secure way to load and execute transformation logic
@@ -804,7 +804,7 @@ class MessageTransformationService extends cds.Service {
 
     async _recordTransformationHistory(historyData) {
         const { TransformationHistory } = this.entities;
-        
+
         await INSERT.into(TransformationHistory).entries({
             ...historyData,
             createdAt: new Date()
@@ -814,7 +814,7 @@ class MessageTransformationService extends cds.Service {
     async _updateTransformationMetrics(sourceFormat, targetFormat, status, duration) {
         const { TransformationMetrics } = this.entities;
         const date = new Date().toISOString().split('T')[0];
-        
+
         await UPSERT.into(TransformationMetrics).entries({
             date,
             sourceFormat,

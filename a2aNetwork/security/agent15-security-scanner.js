@@ -19,7 +19,7 @@ class Agent15SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // Orchestrator-specific vulnerability patterns
         this.orchestratorPatterns = {
             // Workflow execution vulnerabilities
@@ -40,7 +40,7 @@ class Agent15SecurityScanner {
                 message: 'Potential workflow injection vulnerability',
                 impact: 'Could allow malicious workflow execution and system compromise'
             },
-            
+
             // Agent coordination vulnerabilities
             AGENT_HIJACKING: {
                 patterns: [
@@ -55,7 +55,7 @@ class Agent15SecurityScanner {
                 message: 'Potential agent hijacking vulnerability',
                 impact: 'Could allow unauthorized agent control or task redirection'
             },
-            
+
             // Task queue manipulation
             QUEUE_POISONING: {
                 patterns: [
@@ -69,7 +69,7 @@ class Agent15SecurityScanner {
                 message: 'Task queue poisoning vulnerability',
                 impact: 'Could allow injection of malicious tasks into execution queue'
             },
-            
+
             // Event bus vulnerabilities
             EVENT_INJECTION: {
                 patterns: [
@@ -83,7 +83,7 @@ class Agent15SecurityScanner {
                 message: 'Event injection vulnerability',
                 impact: 'Could allow broadcasting of malicious events to agent network'
             },
-            
+
             // Pipeline vulnerabilities
             PIPELINE_MANIPULATION: {
                 patterns: [
@@ -97,7 +97,7 @@ class Agent15SecurityScanner {
                 message: 'Pipeline manipulation vulnerability',
                 impact: 'Could allow injection of malicious steps into execution pipeline'
             },
-            
+
             // Consensus vulnerabilities
             CONSENSUS_BYPASS: {
                 patterns: [
@@ -111,7 +111,7 @@ class Agent15SecurityScanner {
                 message: 'Consensus mechanism bypass',
                 impact: 'Could allow bypassing of multi-agent consensus requirements'
             },
-            
+
             // Circuit breaker vulnerabilities
             CIRCUIT_BREAKER_BYPASS: {
                 patterns: [
@@ -127,29 +127,29 @@ class Agent15SecurityScanner {
             }
         };
     }
-    
+
     scanFile(filePath) {
         console.log(`🔎 Scanning: ${filePath}`);
         this.filesScanned++;
-        
+
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const lines = content.split('\n');
-            
+
             // Check for general OWASP vulnerabilities
             this.checkOWASPVulnerabilities(content, filePath, lines);
-            
+
             // Check for orchestrator-specific vulnerabilities
             this.checkOrchestratorVulnerabilities(content, filePath, lines);
-            
+
             // Check for SAP Fiori specific issues
             this.checkSAPFioriCompliance(content, filePath, lines);
-            
+
         } catch (error) {
             console.error(`❌ Error scanning ${filePath}: ${error.message}`);
         }
     }
-    
+
     checkOWASPVulnerabilities(content, filePath, lines) {
         // XSS vulnerabilities
         const xssPatterns = [
@@ -158,7 +158,7 @@ class Agent15SecurityScanner {
             { pattern: /\.html\s*\([^)]*\$\{/gi, type: 'XSS', message: 'Potential XSS via jQuery html()' },
             { pattern: /dangerouslySetInnerHTML/gi, type: 'XSS', message: 'Potential XSS via React dangerouslySetInnerHTML' }
         ];
-        
+
         const processXSSPattern = ({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
@@ -176,7 +176,7 @@ class Agent15SecurityScanner {
             }
         };
         xssPatterns.forEach(processXSSPattern);
-        
+
         // CSRF vulnerabilities
         const csrfPatterns = [
             /\$\.ajax\s*\(\s*\{[^}]*type\s*:\s*["']POST["']/gi,
@@ -185,13 +185,13 @@ class Agent15SecurityScanner {
             /\.delete\s*\(/gi,
             /fetch\s*\([^,]+,\s*\{[^}]*method\s*:\s*["'](POST|PUT|DELETE)["']/gi
         ];
-        
+
         const processCSRFPattern = (pattern) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 // Check if CSRF token is present nearby or using SecurityUtils
                 const surroundingCode = content.substring(Math.max(0, match.index - 200), match.index + 200);
-                if (!surroundingCode.includes('X-CSRF-Token') && 
+                if (!surroundingCode.includes('X-CSRF-Token') &&
                     !surroundingCode.includes('csrf') &&
                     !surroundingCode.includes('SecurityUtils.secureCallFunction') &&
                     !surroundingCode.includes('refreshSecurityToken')) {
@@ -210,21 +210,21 @@ class Agent15SecurityScanner {
             }
         };
         csrfPatterns.forEach(processCSRFPattern);
-        
+
         // Insecure connections
         const insecurePatterns = [
             { pattern: /http:\/\//gi, type: 'INSECURE_CONNECTION', message: 'Insecure HTTP connection' },
             { pattern: /ws:\/\//gi, type: 'INSECURE_WEBSOCKET', message: 'Insecure WebSocket connection' }
         ];
-        
+
         const processInsecurePattern = ({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
                 // Skip comments, strings, examples, and security-fixed code
-                if (!code.includes('//') && !code.includes('example') && 
-                    !code.includes('SecurityUtils.createSecure') && 
+                if (!code.includes('//') && !code.includes('example') &&
+                    !code.includes('SecurityUtils.createSecure') &&
                     !code.includes('wss://') && !code.includes('https://')) {
                     this.addVulnerability({
                         type: type,
@@ -241,7 +241,7 @@ class Agent15SecurityScanner {
         };
         insecurePatterns.forEach(processInsecurePattern);
     }
-    
+
     checkOrchestratorVulnerabilities(content, filePath, lines) {
         const processVulnerabilityType = ([vulnType, config]) => {
             const processPattern = (pattern) => {
@@ -249,12 +249,12 @@ class Agent15SecurityScanner {
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
                     const code = lines[lineNumber - 1]?.trim() || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(code, vulnType, filePath)) {
                         continue;
                     }
-                    
+
                     this.addVulnerability({
                         type: config.category,
                         severity: config.severity,
@@ -271,7 +271,7 @@ class Agent15SecurityScanner {
         };
         Object.entries(this.orchestratorPatterns).forEach(processVulnerabilityType);
     }
-    
+
     isFalsePositive(code, vulnType, filePath) {
         // Skip legitimate uses that are not security vulnerabilities
         const falsePositivePatterns = {
@@ -294,27 +294,27 @@ class Agent15SecurityScanner {
                 /sanitized/gi  // Sanitization operations
             ]
         };
-        
+
         if (falsePositivePatterns[vulnType]) {
             const testPattern = (pattern) => pattern.test(code);
             return falsePositivePatterns[vulnType].some(testPattern);
         }
-        
+
         // General false positive checks
         if (filePath.includes('SecurityUtils.js')) {
             // SecurityUtils file contains security functions that may trigger patterns
-            return code.includes('sanitized') || code.includes('validation') || 
+            return code.includes('sanitized') || code.includes('validation') ||
                    code.includes('SecurityUtils') || code.includes('_sanitize');
         }
-        
+
         // Skip comments and documentation
         if (code.includes('//') || code.includes('/*') || code.includes('*')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     getOrchestratorFix(vulnType) {
         const fixes = {
             WORKFLOW_INJECTION: 'Use predefined workflow templates and validate all workflow configurations',
@@ -327,7 +327,7 @@ class Agent15SecurityScanner {
         };
         return fixes[vulnType] || 'Implement proper validation and security controls';
     }
-    
+
     checkSAPFioriCompliance(content, filePath, lines) {
         // Check for missing i18n
         if (filePath.includes('.controller.js')) {
@@ -336,7 +336,7 @@ class Agent15SecurityScanner {
                 { pattern: /MessageBox\.\w+\s*\(\s*["'][^"']+["']/gi, message: 'Hardcoded message in MessageBox' },
                 { pattern: /setText\s*\(\s*["'][^"']+["']\s*\)/gi, message: 'Hardcoded text in UI element' }
             ];
-            
+
             const processI18nPattern = ({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -355,7 +355,7 @@ class Agent15SecurityScanner {
             };
             i18nPatterns.forEach(processI18nPattern);
         }
-        
+
         // Check for missing security headers in manifest
         if (filePath.includes('manifest.json')) {
             const requiredHeaders = [
@@ -363,7 +363,7 @@ class Agent15SecurityScanner {
                 'X-Frame-Options',
                 'X-Content-Type-Options'
             ];
-            
+
             const checkRequiredHeader = (header) => {
                 if (!content.includes(header)) {
                     this.addVulnerability({
@@ -381,32 +381,32 @@ class Agent15SecurityScanner {
             requiredHeaders.forEach(checkRequiredHeader);
         }
     }
-    
+
     getLineNumber(content, index) {
         const lines = content.substring(0, index).split('\n');
         return lines.length;
     }
-    
+
     addVulnerability(vuln) {
         // Avoid duplicates
-        const isDuplicate = (v) => 
-            v.file === vuln.file && 
-            v.line === vuln.line && 
+        const isDuplicate = (v) =>
+            v.file === vuln.file &&
+            v.line === vuln.line &&
             v.type === vuln.type;
         const exists = this.vulnerabilities.some(isDuplicate);
-        
+
         if (!exists) {
             this.vulnerabilities.push(vuln);
         }
     }
-    
+
     scanDirectory(dirPath) {
         const files = fs.readdirSync(dirPath);
-        
+
         const processFile = (file) => {
             const fullPath = path.join(dirPath, file);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
                 this.scanDirectory(fullPath);
             } else if (stat.isFile() && this.shouldScanFile(file)) {
@@ -415,13 +415,13 @@ class Agent15SecurityScanner {
         };
         files.forEach(processFile);
     }
-    
+
     shouldScanFile(filename) {
         const extensions = ['.js', '.xml', '.json', '.html'];
         const matchesExtension = (ext) => filename.endsWith(ext);
         return extensions.some(matchesExtension);
     }
-    
+
     generateReport() {
         const scanDuration = (Date.now() - this.scanStartTime) / 1000;
         const isCritical = (v) => v.severity === this.severityLevels.CRITICAL;
@@ -429,17 +429,17 @@ class Agent15SecurityScanner {
         const isMedium = (v) => v.severity === this.severityLevels.MEDIUM;
         const isLow = (v) => v.severity === this.severityLevels.LOW;
         const isWarning = (v) => v.severity === this.severityLevels.WARNING;
-        
+
         const criticalCount = this.vulnerabilities.filter(isCritical).length;
         const highCount = this.vulnerabilities.filter(isHigh).length;
         const mediumCount = this.vulnerabilities.filter(isMedium).length;
         const lowCount = this.vulnerabilities.filter(isLow).length;
         const warningCount = this.vulnerabilities.filter(isWarning).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🔒 AGENT 15 ORCHESTRATOR SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
@@ -448,12 +448,12 @@ class Agent15SecurityScanner {
         console.log(`   Medium Issues: ${mediumCount}`);
         console.log(`   Low Issues: ${lowCount}`);
         console.log(`   Warnings: ${warningCount}`);
-        
+
         // Calculate security score
         const totalIssues = criticalCount * 10 + highCount * 5 + mediumCount * 2 + lowCount;
         const maxScore = 100;
         const score = Math.max(0, maxScore - totalIssues);
-        
+
         console.log(`\n🎯 ORCHESTRATION SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
             console.log('   Status: ✅ EXCELLENT - Well secured');
@@ -464,7 +464,7 @@ class Agent15SecurityScanner {
         } else {
             console.log('   Status: ❌ POOR - Significant security improvements needed');
         }
-        
+
         // Orchestrator-specific findings
         const isOrchestratorIssue = (v) => v.type.startsWith('ORCHESTRATION_');
         const orchestratorIssues = this.vulnerabilities.filter(isOrchestratorIssue);
@@ -475,20 +475,20 @@ class Agent15SecurityScanner {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
             };
             orchestratorIssues.forEach(countIssueTypes);
-            
+
             const logIssueCount = ([type, count]) => {
                 console.log(`   ${type.replace('ORCHESTRATION_', '')}: ${count} issues`);
             };
             Object.entries(issueCounts).forEach(logIssueCount);
         }
-        
+
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:\n');
-            
+
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
-            
+
             const processSeverityLevel = (severity) => {
                 const matchesSeverity = (v) => v.severity === severity;
                 const sevVulns = this.vulnerabilities.filter(matchesSeverity);
@@ -507,45 +507,45 @@ class Agent15SecurityScanner {
             };
             severityOrder.forEach(processSeverityLevel);
         }
-        
+
         // Orchestrator security recommendations
         console.log('💡 AGENT 15 ORCHESTRATOR SECURITY RECOMMENDATIONS:\n');
         console.log('1. 🔐 Implement workflow validation');
         console.log('   - Validate all workflow configurations before execution');
         console.log('   - Use predefined workflow templates where possible');
         console.log('   - Implement workflow signing for integrity');
-        
+
         console.log('\n2. 🛡️  Secure agent coordination');
         console.log('   - Authenticate all agent-to-agent communications');
         console.log('   - Implement agent capability verification');
         console.log('   - Use secure channels for task distribution');
-        
+
         console.log('\n3. 🔒 Protect execution pipelines');
         console.log('   - Validate pipeline steps before execution');
         console.log('   - Implement step isolation and sandboxing');
         console.log('   - Monitor pipeline execution for anomalies');
-        
+
         console.log('\n4. ⚡ Implement resilience patterns');
         console.log('   - Enforce circuit breakers at system level');
         console.log('   - Implement proper retry and backoff strategies');
         console.log('   - Monitor consensus mechanisms for manipulation');
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('Scan completed. Address critical and high severity issues first.');
         console.log('='.repeat(80));
     }
-    
+
     run(targetPath) {
         console.log('🔍 Starting Agent 15 Orchestrator Security Scan...');
         console.log(`📂 Scanning directory: ${targetPath}\n`);
-        
+
         if (fs.existsSync(targetPath)) {
             if (fs.statSync(targetPath).isDirectory()) {
                 this.scanDirectory(targetPath);
             } else {
                 this.scanFile(targetPath);
             }
-            
+
             this.generateReport();
         } else {
             console.error(`❌ Path not found: ${targetPath}`);

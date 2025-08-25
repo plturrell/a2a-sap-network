@@ -10,15 +10,15 @@ window.A2A_CONFIG = {
     // Authentication - development mode
     jwtSecret: '', // Not used in frontend
     apiBaseUrl: '/api/auth',
-    
+
     // SAML Configuration - development defaults
     saml: {
         entityId: window.location.origin,
         idpUrl: '',
         trustedIssuers: []
     },
-    
-    // OAuth2 Configuration - development defaults  
+
+    // OAuth2 Configuration - development defaults
     oauth2: {
         clientId: '',
         clientSecret: '', // Never expose in frontend
@@ -26,7 +26,7 @@ window.A2A_CONFIG = {
         tokenUrl: '',
         userinfoUrl: ''
     },
-    
+
     // API Endpoints
     api: {
         base: '/api',
@@ -39,14 +39,14 @@ window.A2A_CONFIG = {
             notifications: '/api/v1/notifications'
         }
     },
-    
+
     // WebSocket Configuration
     websocket: {
         url: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,
         reconnectInterval: 5000,
         maxReconnectAttempts: 10
     },
-    
+
     // UI Configuration
     ui: {
         defaultTheme: 'sap_horizon',
@@ -55,14 +55,14 @@ window.A2A_CONFIG = {
         pageSize: 20,
         refreshInterval: 30000
     },
-    
+
     // Development flags
     development: {
         enableDebug: true,
         mockData: false,
         logLevel: 'info'
     },
-    
+
     // Feature flags
     features: {
         realtimeNotifications: true,

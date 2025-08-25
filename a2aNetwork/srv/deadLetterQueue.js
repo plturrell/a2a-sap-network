@@ -36,11 +36,11 @@ module.exports.shutdown = shutdown;
  * Handles failed messages with intelligent retry and recovery mechanisms
  */
 class DeadLetterQueueService extends cds.Service {
-    
+
     async init() {
         this.log = cds.log('dead-letter-queue');
         this.eventEmitter = new EventEmitter();
-        
+
         // Initialize Redis for DLQ operations
         this.redis = new Redis({
             host: process.env.REDIS_HOST || 'localhost',
@@ -53,14 +53,14 @@ class DeadLetterQueueService extends cds.Service {
         });
 
         // Database entities
-        const { 
-            FailedMessages, 
-            RetryPolicies, 
+        const {
+            FailedMessages,
+            RetryPolicies,
             PoisonMessages,
-            FailureAnalytics 
+            FailureAnalytics
         } = cds.entities('a2a.dlq');
         this.entities = { FailedMessages, RetryPolicies, PoisonMessages, FailureAnalytics };
-        
+
         // DLQ Configuration
         this.config = {
             defaultRetryPolicy: {
@@ -82,14 +82,14 @@ class DeadLetterQueueService extends cds.Service {
 
         // Initialize retry policies
         await this._initializeRetryPolicies();
-        
+
         // Start background processors
         this._startRetryProcessor();
         this._startAnalyticsProcessor();
-        
+
         // Register handlers
         this._registerHandlers();
-        
+
         this.log.info('Dead Letter Queue Service initialized');
         return super.init();
     }
@@ -100,17 +100,17 @@ class DeadLetterQueueService extends cds.Service {
         this.on('retryMessage', this._retryMessage.bind(this));
         this.on('retryBatch', this._retryBatch.bind(this));
         this.on('markAsPoison', this._markAsPoison.bind(this));
-        
+
         // Query operations
         this.on('getFailedMessages', this._getFailedMessages.bind(this));
         this.on('getPoisonMessages', this._getPoisonMessages.bind(this));
         this.on('getFailureAnalytics', this._getFailureAnalytics.bind(this));
-        
+
         // Management operations
         this.on('updateRetryPolicy', this._updateRetryPolicy.bind(this));
         this.on('purgeOldMessages', this._purgeOldMessages.bind(this));
         this.on('reprocessPoisonMessage', this._reprocessPoisonMessage.bind(this));
-        
+
         // Health and monitoring
         this.on('getDLQHealth', this._getDLQHealth.bind(this));
         this.on('getDLQStats', this._getDLQStats.bind(this));
@@ -120,10 +120,10 @@ class DeadLetterQueueService extends cds.Service {
      * Add message to dead letter queue
      */
     async _addToDeadLetter(req) {
-        const { 
-            messageId, 
-            originalMessage, 
-            failureReason, 
+        const {
+            messageId,
+            originalMessage,
+            failureReason,
             failureDetails,
             retryCount = 0,
             lastAttemptAt,
@@ -155,19 +155,19 @@ class DeadLetterQueueService extends cds.Service {
             // Store in database
             const { FailedMessages } = this.entities;
             await INSERT.into(FailedMessages).entries(dlqEntry);
-            
+
             // Add to Redis retry queue with sorted set for time-based processing
             const retryAt = dlqEntry.nextRetryAt ? dlqEntry.nextRetryAt.getTime() : Date.now() + 60000;
             await this.redis.zadd('retry_queue', retryAt, dlqEntry.dlqId);
-            
+
             // Check if message should be marked as poison
             if (dlqEntry.poisonScore >= this.config.poisonThreshold) {
                 await this._markMessageAsPoison(dlqEntry);
             }
-            
+
             // Update analytics
             await this._updateFailureAnalytics(failureReason, agentId, messageType);
-            
+
             // Emit event for monitoring
             this.eventEmitter.emit('messageAddedToDLQ', {
                 messageId,
@@ -175,20 +175,20 @@ class DeadLetterQueueService extends cds.Service {
                 retryCount,
                 agentId
             });
-            
+
             this.log.warn(`Message added to DLQ: ${messageId}`, {
                 reason: failureReason,
                 retryCount,
                 nextRetry: dlqEntry.nextRetryAt
             });
-            
+
             return {
                 success: true,
                 dlqId: dlqEntry.dlqId,
                 nextRetryAt: dlqEntry.nextRetryAt,
                 status: dlqEntry.status
             };
-            
+
         } catch (error) {
             this.log.error(`Failed to add message to DLQ: ${messageId}`, error);
             throw new Error(`DLQ addition failed: ${error.message}`);
@@ -200,57 +200,57 @@ class DeadLetterQueueService extends cds.Service {
      */
     async _retryMessage(req) {
         const { dlqId, forceRetry = false } = req.data;
-        
+
         try {
             const { FailedMessages } = this.entities;
             const [failedMessage] = await SELECT.from(FailedMessages).where({ dlqId });
-            
+
             if (!failedMessage) {
                 return { success: false, error: 'Message not found in DLQ' };
             }
-            
+
             if (failedMessage.status === 'poison' && !forceRetry) {
                 return { success: false, error: 'Message marked as poison - use forceRetry to override' };
             }
-            
+
             // Check if ready for retry
             if (!forceRetry && failedMessage.nextRetryAt > new Date()) {
-                return { 
-                    success: false, 
+                return {
+                    success: false,
                     error: 'Message not ready for retry',
                     nextRetryAt: failedMessage.nextRetryAt
                 };
             }
-            
+
             // Attempt to reprocess the message
             const originalMessage = JSON.parse(failedMessage.originalMessage);
             const retryResult = await this._attemptMessageReprocessing(
-                originalMessage, 
+                originalMessage,
                 failedMessage.agentId,
                 failedMessage.messageType
             );
-            
+
             if (retryResult.success) {
                 // Remove from DLQ on successful retry
                 await DELETE.from(FailedMessages).where({ dlqId });
                 await this.redis.zrem('retry_queue', dlqId);
-                
+
                 this.log.info(`Message successfully retried: ${failedMessage.messageId}`);
-                
+
                 // Update analytics
                 await this._updateRetryAnalytics(failedMessage.agentId, true);
-                
+
                 return {
                     success: true,
                     messageId: failedMessage.messageId,
                     result: retryResult.result
                 };
-                
+
             } else {
                 // Update retry count and schedule next retry
                 const newRetryCount = failedMessage.retryCount + 1;
                 const nextRetryAt = this._calculateNextRetry(newRetryCount, failedMessage.messageType);
-                
+
                 let newStatus = 'pending_retry';
                 if (newRetryCount >= failedMessage.maxRetries) {
                     newStatus = 'exhausted';
@@ -259,7 +259,7 @@ class DeadLetterQueueService extends cds.Service {
                         retryCount: newRetryCount
                     });
                 }
-                
+
                 await UPDATE(FailedMessages)
                     .set({
                         retryCount: newRetryCount,
@@ -269,16 +269,16 @@ class DeadLetterQueueService extends cds.Service {
                         status: newStatus
                     })
                     .where({ dlqId });
-                
+
                 if (newStatus === 'pending_retry') {
                     await this.redis.zadd('retry_queue', nextRetryAt.getTime(), dlqId);
                 } else {
                     await this.redis.zrem('retry_queue', dlqId);
                 }
-                
+
                 // Update analytics
                 await this._updateRetryAnalytics(failedMessage.agentId, false);
-                
+
                 return {
                     success: false,
                     messageId: failedMessage.messageId,
@@ -288,7 +288,7 @@ class DeadLetterQueueService extends cds.Service {
                     status: newStatus
                 };
             }
-            
+
         } catch (error) {
             this.log.error(`Failed to retry message: ${dlqId}`, error);
             throw new Error(`Message retry failed: ${error.message}`);
@@ -308,39 +308,39 @@ class DeadLetterQueueService extends cds.Service {
             limit = 50,
             offset = 0
         } = req.data;
-        
+
         try {
             const { FailedMessages } = this.entities;
-            
+
             let query = SELECT.from(FailedMessages);
-            
+
             if (status !== 'all') {
                 query = query.where({ status });
             }
-            
+
             if (agentId) {
                 query = query.and({ agentId });
             }
-            
+
             if (messageType) {
                 query = query.and({ messageType });
             }
-            
+
             if (startDate) {
                 query = query.and({ addedAt: { '>=': new Date(startDate) } });
             }
-            
+
             if (endDate) {
                 query = query.and({ addedAt: { '<=': new Date(endDate) } });
             }
-            
+
             const messages = await query
                 .orderBy('addedAt desc')
                 .limit(limit, offset);
-            
+
             // Get total count
             const [{ total }] = await SELECT.from(FailedMessages).columns('COUNT(*) as total');
-            
+
             return {
                 success: true,
                 messages: messages.map(msg => ({
@@ -355,7 +355,7 @@ class DeadLetterQueueService extends cds.Service {
                     pages: Math.ceil(total / limit)
                 }
             };
-            
+
         } catch (error) {
             this.log.error('Failed to get DLQ messages:', error);
             throw new Error(`Failed to retrieve DLQ messages: ${error.message}`);
@@ -371,15 +371,15 @@ class DeadLetterQueueService extends cds.Service {
                 // Get messages ready for retry
                 const currentTime = Date.now();
                 const readyMessages = await this.redis.zrangebyscore(
-                    'retry_queue', '-inf', 
-                    currentTime, 
+                    'retry_queue', '-inf',
+                    currentTime,
                     'LIMIT', 0, this.config.batchProcessSize
                 );
-                
+
                 if (readyMessages.length === 0) return;
-                
+
                 this.log.debug(`Processing ${readyMessages.length} messages for retry`);
-                
+
                 // Process each message
                 const retryPromises = readyMessages.map(async (dlqId) => {
                     try {
@@ -388,9 +388,9 @@ class DeadLetterQueueService extends cds.Service {
                         this.log.error(`Retry processor failed for ${dlqId}:`, error);
                     }
                 });
-                
+
                 await Promise.allSettled(retryPromises);
-                
+
             } catch (error) {
                 this.log.error('Retry processor error:', error);
             }
@@ -405,7 +405,7 @@ class DeadLetterQueueService extends cds.Service {
             try {
                 // Generate failure rate alerts
                 const stats = await this._getDLQStats({ data: {} });
-                
+
                 if (stats.failureRate > this.config.alertThresholds.highFailureRate) {
                     this.eventEmitter.emit('highFailureRateAlert', {
                         failureRate: stats.failureRate,
@@ -413,7 +413,7 @@ class DeadLetterQueueService extends cds.Service {
                         timestamp: new Date()
                     });
                 }
-                
+
                 if (stats.poisonMessageCount > this.config.alertThresholds.poisonMessageCount) {
                     this.eventEmitter.emit('highPoisonMessageAlert', {
                         count: stats.poisonMessageCount,
@@ -421,7 +421,7 @@ class DeadLetterQueueService extends cds.Service {
                         timestamp: new Date()
                     });
                 }
-                
+
             } catch (error) {
                 this.log.error('Analytics processor error:', error);
             }
@@ -433,19 +433,19 @@ class DeadLetterQueueService extends cds.Service {
         try {
             // This would integrate with your message processing system
             // For now, we'll simulate the reprocessing
-            
+
             // Get the appropriate service/handler based on messageType
             const processingResult = await this._callMessageHandler(
-                originalMessage, 
-                agentId, 
+                originalMessage,
+                agentId,
                 messageType
             );
-            
+
             return { success: true, result: processingResult };
-            
+
         } catch (error) {
-            return { 
-                success: false, 
+            return {
+                success: false,
                 error: {
                     message: error.message,
                     stack: error.stack,
@@ -458,7 +458,7 @@ class DeadLetterQueueService extends cds.Service {
     async _callMessageHandler(message, agentId, messageType) {
         // Integration point with your message processing system
         // This should call the appropriate service method based on messageType
-        
+
         switch (messageType) {
             case 'agent_communication':
                 return await this._processAgentMessage(message, agentId);
@@ -489,40 +489,40 @@ class DeadLetterQueueService extends cds.Service {
 
     _calculateNextRetry(retryCount, messageType) {
         const policy = this.config.defaultRetryPolicy;
-        
+
         if (retryCount >= policy.maxRetries) {
             return null; // No more retries
         }
-        
+
         // Exponential backoff with jitter
         let delay = Math.min(
             policy.initialDelay * Math.pow(policy.backoffMultiplier, retryCount),
             policy.maxDelay
         );
-        
+
         // Add jitter to prevent thundering herd
         const jitter = Math.random() * policy.jitterMax;
         delay += jitter;
-        
+
         return new Date(Date.now() + delay);
     }
 
     _calculatePoisonScore(failureReason, retryCount) {
         let score = retryCount;
-        
+
         // Increase score based on failure type
         if (failureReason.includes('timeout')) score += 1;
         if (failureReason.includes('connection')) score += 1;
         if (failureReason.includes('parse') || failureReason.includes('format')) score += 2;
         if (failureReason.includes('auth') || failureReason.includes('permission')) score += 3;
-        
+
         return score;
     }
 
     async _markMessageAsPoison(failedMessage) {
         try {
             const { PoisonMessages } = this.entities;
-            
+
             await INSERT.into(PoisonMessages).entries({
                 poisonId: uuidv4(),
                 originalDlqId: failedMessage.dlqId,
@@ -534,16 +534,16 @@ class DeadLetterQueueService extends cds.Service {
                 messageType: failedMessage.messageType,
                 totalRetries: failedMessage.retryCount
             });
-            
+
             // Update original message status
             const { FailedMessages } = this.entities;
             await UPDATE(FailedMessages)
                 .set({ status: 'poison' })
                 .where({ dlqId: failedMessage.dlqId });
-            
+
             // Remove from retry queue
             await this.redis.zrem('retry_queue', failedMessage.dlqId);
-            
+
             this.log.error(`Message marked as poison: ${failedMessage.messageId}`, {
                 retryCount: failedMessage.retryCount,
                 poisonScore: failedMessage.poisonScore
@@ -562,14 +562,14 @@ class DeadLetterQueueService extends cds.Service {
             .where({ messageType, agentId })
             .or({ messageType, agentId: null })
             .orderBy('agentId desc'); // Prefer agent-specific policies
-        
+
         return policies[0]?.maxRetries || this.config.defaultRetryPolicy.maxRetries;
     }
 
     async _initializeRetryPolicies() {
         // Initialize default retry policies for different message types
         const { RetryPolicies } = this.entities;
-        
+
         const defaultPolicies = [
             {
                 messageType: 'agent_communication',
@@ -593,7 +593,7 @@ class DeadLetterQueueService extends cds.Service {
                 backoffMultiplier: 3
             }
         ];
-        
+
         for (const policy of defaultPolicies) {
             await UPSERT.into(RetryPolicies).entries({
                 policyId: uuidv4(),
@@ -606,7 +606,7 @@ class DeadLetterQueueService extends cds.Service {
     async _updateFailureAnalytics(failureReason, agentId, messageType) {
         const { FailureAnalytics } = this.entities;
         const date = new Date().toISOString().split('T')[0];
-        
+
         await UPSERT.into(FailureAnalytics).entries({
             date,
             failureReason,
@@ -620,7 +620,7 @@ class DeadLetterQueueService extends cds.Service {
     async _updateRetryAnalytics(agentId, success) {
         const { FailureAnalytics } = this.entities;
         const date = new Date().toISOString().split('T')[0];
-        
+
         await UPSERT.into(FailureAnalytics).entries({
             date,
             failureReason: success ? 'retry_success' : 'retry_failed',
@@ -637,26 +637,26 @@ class DeadLetterQueueService extends cds.Service {
     async _getDLQStats() {
         try {
             const { FailedMessages, PoisonMessages } = this.entities;
-            
+
             // Count messages by status
             const statusCounts = await SELECT.from(FailedMessages)
                 .columns('status', 'COUNT(*) as count')
                 .groupBy('status');
-            
+
             // Poison message count
             const [poisonCount] = await SELECT.from(PoisonMessages).columns('COUNT(*) as count');
-            
+
             // Recent failure rate (last 24 hours)
             const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
             const [recentFailures] = await SELECT.from(FailedMessages)
                 .columns('COUNT(*) as count')
                 .where({ addedAt: { '>=': yesterday } });
-            
+
             // Calculate failure rate (simplified)
             const totalRecentMessages = 0; // Real message metrics should be used here
-            const failureRate = totalRecentMessages > 0 ? 
+            const failureRate = totalRecentMessages > 0 ?
                 recentFailures.count / totalRecentMessages : 0;
-            
+
             return {
                 success: true,
                 stats: {
@@ -670,7 +670,7 @@ class DeadLetterQueueService extends cds.Service {
                     lastUpdated: new Date().toISOString()
                 }
             };
-            
+
         } catch (error) {
             this.log.error('Failed to get DLQ stats:', error);
             throw new Error(`DLQ stats retrieval failed: ${error.message}`);

@@ -9,32 +9,32 @@ sap.ui.define([
      * Handles CSRF tokens, authentication, and authorization
      */
     return BaseObject.extend('a2a.network.launchpad.services.SecurityService', {
-        
+
         _csrfToken: null,
         _csrfTokenExpiry: null,
         _authToken: null,
         _userRoles: [],
         _authorizationCache: new Map(),
-        
+
         constructor: function() {
             BaseObject.prototype.constructor.apply(this, arguments);
             this._initializeSecurityContext();
         },
-        
+
         /**
          * Initialize security context on startup
          */
         _initializeSecurityContext: function() {
             // Fetch CSRF token immediately
             this.fetchCSRFToken();
-            
+
             // Setup token refresh interval (every 25 minutes for 30-minute tokens)
             setInterval(this.fetchCSRFToken.bind(this), 25 * 60 * 1000);
-            
+
             // Initialize user context
             this._initializeUserContext();
         },
-        
+
         /**
          * Fetch CSRF token from server
          * @returns {Promise<string>} CSRF token
@@ -67,7 +67,7 @@ sap.ui.define([
                 });
             });
         },
-        
+
         /**
          * Fallback CSRF token fetch for non-NetWeaver environments
          */
@@ -84,7 +84,7 @@ sap.ui.define([
                 return this._csrfToken;
             });
         },
-        
+
         /**
          * Get current CSRF token, fetching new one if expired
          * @returns {Promise<string>} Valid CSRF token
@@ -95,7 +95,7 @@ sap.ui.define([
             }
             return this.fetchCSRFToken();
         },
-        
+
         /**
          * Initialize user context and roles
          */
@@ -104,15 +104,15 @@ sap.ui.define([
                 try {
                     const userInfoService = sap.ushell.Container.getService('UserInfo');
                     const user = userInfoService.getUser();
-                    
+
                     // Get user ID and roles
                     this._userId = user.getId();
                     this._userFullName = user.getFullName();
                     this._userEmail = user.getEmail();
-                    
+
                     // Fetch user roles from backend
                     this._fetchUserRoles();
-                    
+
                     // Get authentication token
                     if (user.getAccessToken) {
                         this._authToken = user.getAccessToken();
@@ -125,7 +125,7 @@ sap.ui.define([
                 this._initializeUserContextFallback();
             }
         },
-        
+
         /**
          * Fallback user context initialization
          */
@@ -149,7 +149,7 @@ sap.ui.define([
                 }
             });
         },
-        
+
         /**
          * Fetch user roles from backend
          */
@@ -165,9 +165,9 @@ sap.ui.define([
                     if (data && data.userRoles) {
                         this._userRoles = data.userRoles;
                         // Check for standard SAP roles
-                        this._hasSAPUI2User = this._userRoles.includes('SAP_UI2_USER_700') || 
+                        this._hasSAPUI2User = this._userRoles.includes('SAP_UI2_USER_700') ||
                                              this._userRoles.includes('SAP_UI2_USER_750');
-                        this._hasSAPUI2Admin = this._userRoles.includes('SAP_UI2_ADMIN_700') || 
+                        this._hasSAPUI2Admin = this._userRoles.includes('SAP_UI2_ADMIN_700') ||
                                               this._userRoles.includes('SAP_UI2_ADMIN_750');
                     }
                 },
@@ -178,7 +178,7 @@ sap.ui.define([
                 }
             });
         },
-        
+
         /**
          * Fallback role fetching
          */
@@ -194,7 +194,7 @@ sap.ui.define([
                 }
             });
         },
-        
+
         /**
          * Check authorization for specific object
          * @param {string} authObject - Authorization object (e.g., "S_SERVICE")
@@ -204,12 +204,12 @@ sap.ui.define([
          */
         checkAuthorization: function(authObject, authField, authValue) {
             const cacheKey = `${authObject}:${authField}:${authValue}`;
-            
+
             // Check cache first
             if (this._authorizationCache.has(cacheKey)) {
                 return Promise.resolve(this._authorizationCache.get(cacheKey));
             }
-            
+
             // For NetWeaver environments
             if (window.location.pathname.indexOf('/sap/bc/') !== -1) {
                 return new Promise((resolve) => {
@@ -243,7 +243,7 @@ sap.ui.define([
                 return Promise.resolve(authorized);
             }
         },
-        
+
         /**
          * Local authorization check based on roles
          */
@@ -262,16 +262,16 @@ sap.ui.define([
                     }
                 }
             };
-            
+
             if (authMap[authObject] && authMap[authObject][authField]) {
-                return authMap[authObject][authField][authValue] || 
+                return authMap[authObject][authField][authValue] ||
                        authMap[authObject][authField]['*'] || false;
             }
-            
+
             // Default allow for development
             return true;
         },
-        
+
         /**
          * Get secure headers for AJAX requests
          * @returns {Promise<Object>} Headers object with security tokens
@@ -282,15 +282,15 @@ sap.ui.define([
                     'X-CSRF-Token': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 };
-                
+
                 if (this._authToken) {
                     headers['Authorization'] = `Bearer ${  this._authToken}`;
                 }
-                
+
                 return headers;
             });
         },
-        
+
         /**
          * Secure AJAX wrapper with automatic CSRF token handling
          * @param {Object} settings - jQuery AJAX settings
@@ -299,7 +299,7 @@ sap.ui.define([
         secureAjax: function(settings) {
             return this.getSecureHeaders().then(headers => {
                 settings.headers = Object.assign({}, settings.headers, headers);
-                
+
                 // Add error handler for 403 CSRF token errors
                 const originalError = settings.error;
                 settings.error = (jqXHR, textStatus, errorThrown) => {
@@ -310,16 +310,16 @@ sap.ui.define([
                             return this.secureAjax(settings);
                         });
                     }
-                    
+
                     if (originalError) {
                         originalError(jqXHR, textStatus, errorThrown);
                     }
                 };
-                
+
                 return jQuery.ajax(settings);
             });
         },
-        
+
         /**
          * Check if user has specific role
          * @param {string} role - Role to check
@@ -328,7 +328,7 @@ sap.ui.define([
         hasRole: function(role) {
             return this._userRoles.includes(role);
         },
-        
+
         /**
          * Get user information
          * @returns {Object} User info
@@ -342,7 +342,7 @@ sap.ui.define([
                 isAuthenticated: !!this._authToken
             };
         },
-        
+
         /**
          * Get authentication token for WebSocket connections
          * @returns {string} Auth token

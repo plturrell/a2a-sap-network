@@ -23,7 +23,7 @@ service SecurityMonitoringService @(path: '/security') {
             else 0
         end as severityLevel : Integer,
         
-        case status
+        case eventType
             when 'BLOCKED' then 'Error'
             when 'ALLOWED' then 'Success' 
             when 'REVIEWED' then 'Information'
@@ -91,9 +91,9 @@ service SecurityMonitoringService @(path: '/security') {
         case status
             when 'ACTIVE' then
                 case priority
-                    when 1 then seconds_between(detectedAt, $now) > 3600   // 1 hour for critical
-                    when 2 then seconds_between(detectedAt, $now) > 14400  // 4 hours for high
-                    when 3 then seconds_between(detectedAt, $now) > 86400  // 24 hours for medium
+                    when 1 then (seconds_between(detectedAt, current_timestamp) > 3600)   // 1 hour for critical
+                    when 2 then (seconds_between(detectedAt, current_timestamp) > 14400)  // 4 hours for high
+                    when 3 then (seconds_between(detectedAt, current_timestamp) > 86400)  // 24 hours for medium
                     else false
                 end
             else false
@@ -119,18 +119,18 @@ service SecurityMonitoringService @(path: '/security') {
     @readonly  
     entity SecurityMetrics as projection on securityAudit.SecurityMetrics {
         *,
-        case complianceScore
-            when >= 95.0 then 'Success'
-            when >= 85.0 then 'Warning'
+        case 
+            when complianceScore >= 95.0 then 'Success'
+            when complianceScore >= 85.0 then 'Warning'
             else 'Error' 
         end as complianceCriticality : String(20),
         
         totalEvents + criticalEvents + highEvents as totalSecurityEvents : Integer,
         
-        case avgThreatScore
-            when >= 70.0 then 'Error'      // High threat
-            when >= 40.0 then 'Warning'    // Medium threat  
-            when >= 20.0 then 'Success'    // Low threat
+        case 
+            when avgThreatScore >= 70.0 then 'Error'      // High threat
+            when avgThreatScore >= 40.0 then 'Warning'    // Medium threat  
+            when avgThreatScore >= 20.0 then 'Success'    // Low threat
             else 'Information'             // Minimal threat
         end as threatLevelCriticality : String(20)
     };
@@ -175,17 +175,17 @@ service SecurityMonitoringService @(path: '/security') {
     @readonly
     entity UserSecurityProfiles as projection on securityAudit.UserSecurityProfile {
         *,
-        case riskScore
-            when >= 80 then 'Error'      // High risk
-            when >= 60 then 'Warning'    // Medium risk
-            when >= 40 then 'Success'    // Low risk  
+        case 
+            when riskScore >= 80 then 'Error'      // High risk
+            when riskScore >= 60 then 'Warning'    // Medium risk
+            when riskScore >= 40 then 'Success'    // Low risk  
             else 'Information'           // Minimal risk
         end as riskCriticality : String(20),
         
-        case trustScore
-            when >= 80 then 'Success'    // High trust
-            when >= 60 then 'Information' // Medium trust
-            when >= 40 then 'Warning'    // Low trust
+        case 
+            when trustScore >= 80 then 'Success'    // High trust
+            when trustScore >= 60 then 'Information' // Medium trust
+            when trustScore >= 40 then 'Warning'    // Low trust
             else 'Error'                 // Very low trust
         end as trustCriticality : String(20),
         

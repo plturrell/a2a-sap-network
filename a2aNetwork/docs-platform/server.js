@@ -149,10 +149,10 @@ app.get('/api/docs/:category/:section', async (req, res) => {
     const { category, section } = req.params;
     const filePath = path.join(__dirname, 'content', category, `${section}.md`);
     const content = await fs.readFile(filePath, 'utf8');
-    
+
     // Parse front matter and content
     const parsed = parseMarkdownWithMeta(content);
-    
+
     res.json({
       content: md.render(parsed.content),
       meta: parsed.meta,

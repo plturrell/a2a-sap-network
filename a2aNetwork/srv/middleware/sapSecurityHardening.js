@@ -17,7 +17,7 @@ class SecurityHardening {
       'hana.ondemand.com',
       'cfapps.sap.hana.ondemand.com'
     ];
-    
+
     this.sensitiveFields = [
       'password', 'token', 'secret', 'key', 'credential',
       'authorization', 'x-api-key', 'client_secret'
@@ -39,7 +39,7 @@ class SecurityHardening {
             '\'unsafe-inline\'',
             '\'unsafe-eval\'',
             (req, res) => `'nonce-${res.locals.nonce}'`,
-            'https://ui5.sap.com', 
+            'https://ui5.sap.com',
             'https://*.sap.com',
             'https://sapui5.hana.ondemand.com'
           ],
@@ -76,7 +76,7 @@ class SecurityHardening {
 
       // Feature Policy / Permissions Policy
       permittedCrossDomainPolicies: false,
-      
+
       // Custom SAP security headers
       customHeaders: {
         'X-SAP-Security-Level': 'Enterprise',
@@ -170,29 +170,29 @@ class SecurityHardening {
         // Skip validation for static file requests - SAP Enterprise Standard
         const staticFilePaths = ['/common/', '/a2aAgents/', '/a2aFiori/', '/shells/', '/app/a2a-fiori/'];
         const isStaticFileRequest = staticFilePaths.some(path => req.path.startsWith(path));
-        
+
         // Skip validation for tile API endpoints that need to return real backend data
         const tileApiEndpoints = [
           '/api/v1/NetworkStats',
           '/api/v1/Agents',
           '/api/v1/Services',  // Added for diagnostic test page
           '/api/v1/Notifications',  // Added for diagnostic test page
-          '/api/v1/network/Agents',  // Added for launchpad 
+          '/api/v1/network/Agents',  // Added for launchpad
           '/odata/v4/blockchain/BlockchainStats',
           '/api/v1/network/analytics',
           '/api/v1/notifications/count',
           '/api/v1/network/health'
         ];
         const isTileApiRequest = tileApiEndpoints.includes(req.path) || tileApiEndpoints.some(endpoint => req.path.startsWith(endpoint));
-        
+
         // Debug logging for diagnostic test endpoints
         if (req.path.includes('/api/v1/Services') || req.path.includes('/api/v1/Notifications') || req.path.includes('network/Agents')) {
           // Removed console.log for security - debug info: path, url, method, endpoints
         }
-        
+
         // Input validation is now enabled
         // Skip validation only for static files and tile API endpoints
-        
+
         if (isStaticFileRequest || isTileApiRequest) {
           // Allow static files and tile API endpoints to pass through without validation
           return next();
@@ -216,7 +216,7 @@ class SecurityHardening {
           severity: 'high',
           details: { error: error.message, path: req.path }
         };
-        
+
         res.status(400).json({
           error: {
             code: 'INVALID_INPUT',
@@ -234,7 +234,7 @@ class SecurityHardening {
     if (Array.isArray(obj)) {
       return obj.map(item => this.sanitizeObject(item));
     }
-    
+
     if (obj !== null && typeof obj === 'object') {
       const sanitized = {};
       for (const [key, value] of Object.entries(obj)) {
@@ -246,7 +246,7 @@ class SecurityHardening {
       }
       return sanitized;
     }
-    
+
     return obj;
   }
 
@@ -290,44 +290,44 @@ class SecurityHardening {
       /(\b(WAITFOR|DELAY|SLEEP|BENCHMARK)\b)/gi,
       /(\b(XP_|SP_)\w+)/gi,
       /(@@\w+|USER\(\)|VERSION\(\)|DATABASE\(\))/gi,
-      
+
       // XSS patterns
       /(<script[^>]*>.*?<\/script>)/gi,
       /javascript\s*:/gi,
       /(on\w+\s*=)/gi,
       /(<iframe|<object|<embed|<link|<meta)/gi,
-      
+
       // Command injection patterns
       /(\||&|;|\$\(|\`)/g,
       /(cmd|powershell|bash|sh)\s/gi,
       /(wget|curl|nc|netcat|telnet)/gi,
-      
+
       // Path traversal patterns
       /(\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e%5c)/gi,
-      
+
       // LDAP injection patterns
       /(\*\)|&\(|!\(|\|\()/g,
-      
+
       // NoSQL injection patterns
       /(\$where|\$ne|\$gt|\$lt|\$regex|\$in)/gi,
-      
+
       // XML/XXE patterns
       /(<!DOCTYPE|<!ENTITY|SYSTEM|PUBLIC)/gi,
-      
+
       // Template injection patterns
       /(\{\{.*\}\}|\${.*}|<%.*%>)/g
     ];
 
-    const checkString = JSON.stringify(req.body || {}) + JSON.stringify(req.query || {}) + 
+    const checkString = JSON.stringify(req.body || {}) + JSON.stringify(req.query || {}) +
                        JSON.stringify(req.params || {}) + (req.get('User-Agent') || '');
-    
+
     for (const pattern of suspiciousPatterns) {
       if (pattern.test(checkString)) {
         const matches = checkString.match(pattern);
         throw new Error(`Potential injection attack detected: ${matches?.[0]?.substring(0, 50)}...`);
       }
     }
-    
+
     // Check for suspicious encoding
     const decodedString = decodeURIComponent(checkString);
     if (decodedString !== checkString) {
@@ -378,7 +378,7 @@ class SecurityHardening {
           severity: 'medium',
           details: { timestamp: requestTime, current: now }
         };
-        
+
         return res.status(401).json({
           error: {
             code: 'INVALID_TIMESTAMP',
@@ -394,7 +394,7 @@ class SecurityHardening {
           severity: 'high',
           details: { path: req.path }
         };
-        
+
         return res.status(401).json({
           error: {
             code: 'INVALID_SIGNATURE',
@@ -418,7 +418,7 @@ class SecurityHardening {
         throw new Error('REQUEST_SIGNING_SECRET environment variable is required for production');
       }
       const expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-      
+
       return crypto.timingSafeEqual(
         Buffer.from(signature, 'hex'),
         Buffer.from(expectedSignature, 'hex')
@@ -436,7 +436,7 @@ class SecurityHardening {
       // Use event-based response handling instead of overriding res.json to avoid OpenTelemetry conflicts
       const originalJson = res.json;
       let responseData = null;
-      
+
       res.json = function(data) {
         // Filter sensitive data from responses
         const filteredData = this.filterSensitiveData(data);
@@ -455,7 +455,7 @@ class SecurityHardening {
     if (Array.isArray(data)) {
       return data.map(item => this.filterSensitiveData(item));
     }
-    
+
     if (data !== null && typeof data === 'object') {
       const filtered = {};
       for (const [key, value] of Object.entries(data)) {
@@ -467,7 +467,7 @@ class SecurityHardening {
       }
       return filtered;
     }
-    
+
     return data;
   }
 
@@ -488,7 +488,7 @@ class SecurityHardening {
       optionsSuccessStatus: 200,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: [
-        'Origin', 'X-Requested-With', 'Content-Type', 'Accept', 
+        'Origin', 'X-Requested-With', 'Content-Type', 'Accept',
         'Authorization', 'X-Correlation-ID', 'X-Signature', 'X-Timestamp'
       ],
       exposedHeaders: ['X-Total-Count', 'X-Cache-Status']

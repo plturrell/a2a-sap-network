@@ -166,13 +166,13 @@ class SecurityValidator {
         }
 
         console.log(`\n${  '='.repeat(60)}`);
-        
+
         if (this.errors.length === 0) {
             console.log('🎉 SECURITY VALIDATION PASSED - READY FOR DEPLOYMENT');
         } else {
             console.log('🚨 SECURITY VALIDATION FAILED - FIX ISSUES BEFORE DEPLOYMENT');
         }
-        
+
         console.log('='.repeat(60));
     }
 }

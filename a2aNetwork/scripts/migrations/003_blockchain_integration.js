@@ -128,8 +128,8 @@ async function up(db) {
 
     for (const stat of initialStats) {
         await db.run(`
-            INSERT OR IGNORE INTO NetworkStatistics 
-            (ID, metric_name, metric_value, data_type, category) 
+            INSERT OR IGNORE INTO NetworkStatistics
+            (ID, metric_name, metric_value, data_type, category)
             VALUES (?, ?, ?, ?, ?)
         `, [
             require('crypto').randomUUID(),

@@ -25,10 +25,10 @@ sap.ui.define([
             this.initializeStandardPatterns();
             // Initialize security service
             this._securityService = new SecurityService();
-            
+
             // Initialize system status model
             this._initializeSystemModels();
-            
+
             // Check authorization before proceeding
             this._checkUserAuthorization().then(function() {
                 const oI18nModel = this.getOwnerComponent().getModel("i18n");
@@ -48,7 +48,7 @@ sap.ui.define([
 
                 // Initialize AI-powered personalization
                 this._initializePersonalizationAI();
-                
+
                 this._initializeDataConnection();
                 this._setupConnectionHealthCheck();
             }.bind(this)).catch(function(error) {
@@ -67,7 +67,7 @@ sap.ui.define([
                 alertCount: 0
             });
             this.getView().setModel(systemModel, "system");
-            
+
             // Notifications model with enhanced structure
             const notificationsModel = new JSONModel({
                 items: [],
@@ -76,7 +76,7 @@ sap.ui.define([
                 hasUnread: false
             });
             this.getView().setModel(notificationsModel, "notifications");
-            
+
             // User model
             const userModel = new JSONModel({
                 name: "User",
@@ -85,7 +85,7 @@ sap.ui.define([
                 isAuthenticated: false
             });
             this.getView().setModel(userModel, "user");
-            
+
             // Update page state for launchpad
             this.updatePageState({
                 pageTitle: "A2A Network Launchpad",
@@ -119,10 +119,10 @@ sap.ui.define([
             try {
                 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
                 const host = window.location.host;
-                
+
                 // Get authentication token if available
                 const token = this._getAuthToken();
-                
+
                 // In development mode, WebSocket might work without token
                 let wsUrl = `${protocol}//${host}/ws`;
                 if (token) {
@@ -130,10 +130,10 @@ sap.ui.define([
                 } else {
                     Log.info("Connecting to WebSocket without authentication token (development mode)");
                 }
-                
+
                 this._websocket = new WebSocket(wsUrl);
                 this._setupWebSocketHandlers();
-                
+
             } catch (error) {
                 Log.error("Failed to initialize WebSocket", error);
                 this._scheduleReconnect();
@@ -152,16 +152,16 @@ sap.ui.define([
                 Log.info("WebSocket connected successfully");
                 this._reconnectAttempts = 0;
                 this._clearReconnectTimer();
-                
+
                 if (this._websocket.readyState === WebSocket.OPEN) {
                     const token = this._getAuthToken();
-                    this._websocket.send(JSON.stringify({ 
-                        type: "subscribe", 
+                    this._websocket.send(JSON.stringify({
+                        type: "subscribe",
                         topics: ["agents", "tiles", "notifications"],
                         auth: token
                     }));
                 }
-                
+
                 MessageToast.show(this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("websocketConnected") || "Real-time updates connected");
             }.bind(this);
 
@@ -182,7 +182,7 @@ sap.ui.define([
             this._websocket.onclose = function(event) {
                 Log.warning("WebSocket connection closed", { code: event.code, reason: event.reason });
                 this._websocket = null;
-                
+
                 if (!event.wasClean) {
                     this._scheduleReconnect();
                 }
@@ -209,18 +209,18 @@ sap.ui.define([
 
         _scheduleReconnect: function() {
             if (this._reconnectTimer) return;
-            
+
             if (this._reconnectAttempts >= this._maxReconnectAttempts) {
                 Log.error("Maximum WebSocket reconnection attempts reached");
                 MessageToast.show(this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("websocketReconnectFailed") || "Real-time connection failed. Using periodic updates.");
                 return;
             }
-            
+
             this._reconnectAttempts++;
             const delay = Math.min(this._reconnectDelay * Math.pow(2, this._reconnectAttempts - 1), 30000);
-            
+
             Log.info(`Scheduling WebSocket reconnection attempt ${this._reconnectAttempts} in ${delay}ms`);
-            
+
             const handleReconnectTimeout = function() {
                 this._reconnectTimer = null;
                 this._initializeWebSocket();
@@ -238,9 +238,9 @@ sap.ui.define([
         _setupConnectionHealthCheck: function() {
             const performConnectionHealthCheck = function() {
                 if (this._websocket && this._websocket.readyState === WebSocket.OPEN) {
-                    const timeSinceLastUpdate = this._lastDataUpdate ? 
+                    const timeSinceLastUpdate = this._lastDataUpdate ?
                         (new Date() - this._lastDataUpdate) / 1000 : Infinity;
-                    
+
                     if (timeSinceLastUpdate > 60) {
                         Log.warning("No WebSocket data received for 60 seconds, sending ping");
                         try {
@@ -287,20 +287,20 @@ sap.ui.define([
         _addNotification: function(notification) {
             const oNotificationsModel = this.getView().getModel("notifications");
             const aItems = oNotificationsModel.getProperty("/items") || [];
-            
+
             aItems.unshift({
                 title: notification.title || "System Notification",
                 description: notification.description || notification.message,
                 icon: notification.icon || "sap-icon://message-information",
                 timestamp: new Date()
             });
-            
+
             if (aItems.length > 10) {
                 aItems.length = 10;
             }
-            
+
             oNotificationsModel.setProperty("/items", aItems);
-            
+
             const oTilesModel = this.getView().getModel("launchpad");
             const aTiles = oTilesModel.getProperty("/tiles");
             const notificationTile = aTiles.find(tile => tile.info === "notifications");
@@ -322,7 +322,7 @@ sap.ui.define([
                 aiRecommendations: userProfile.aiRecommendations || {}
             });
             this.getView().setModel(personalizationModel, "personalization");
-            
+
             if (!this._oPersonalizationDialog) {
                 const handlePersonalizationDialogLoad = function (oDialog) {
                     this.getView().addDependent(oDialog);
@@ -342,34 +342,34 @@ sap.ui.define([
 
         onApplyPersonalization: function() {
             const personalizationData = this.getView().getModel("personalization").getData();
-            
+
             // Apply theme
             if (personalizationData.selectedTheme) {
                 sap.ui.getCore().applyTheme(personalizationData.selectedTheme);
             }
-            
+
             // Apply content density
             if (personalizationData.contentDensity) {
                 document.body.classList.toggle("sapUiSizeCompact", personalizationData.contentDensity === "compact");
                 document.body.classList.toggle("sapUiSizeCozy", personalizationData.contentDensity === "cozy");
             }
-            
+
             // Apply dashboard layout
             if (personalizationData.dashboardLayout) {
                 this._applyDashboardLayout(personalizationData.dashboardLayout);
             }
-            
+
             // Apply widget preferences
             if (personalizationData.widgetPreferences) {
                 this._applyWidgetPreferences(personalizationData.widgetPreferences);
             }
-            
+
             // Save personalization profile
             this._savePersonalizationProfile(personalizationData);
-            
+
             // Record user interaction for AI learning
             this._recordPersonalizationInteraction(personalizationData);
-            
+
             this.handleStandardSuccess("Personalization settings applied successfully");
             this.onClosePersonalization();
         },
@@ -433,7 +433,7 @@ sap.ui.define([
         onToggleFullScreen: function() {
             const launchpadPage = this.byId("launchpadPage");
             const isFullScreen = document.fullscreenElement;
-            
+
             if (!isFullScreen) {
                 launchpadPage.getDomRef().requestFullscreen();
             } else {
@@ -445,7 +445,7 @@ sap.ui.define([
             const tile = event.getSource();
             const agentId = tile.data("agentId");
             const status = tile.data("status");
-            
+
             if (status === "active") {
                 this._navigateToAgent(agentId);
             } else {
@@ -479,11 +479,11 @@ sap.ui.define([
         onNotificationPress: function(event) {
             const bindingContext = event.getSource().getBindingContext("notifications");
             const notification = bindingContext.getObject();
-            
+
             // Mark as read
             notification.read = true;
             this._updateNotificationCounts();
-            
+
             // Handle notification action
             if (notification.actionUrl) {
                 window.open(notification.actionUrl, "_blank");
@@ -495,7 +495,7 @@ sap.ui.define([
             const bindingContext = listItem.getBindingContext("notifications");
             const notifications = this.getView().getModel("notifications").getProperty("/items");
             const index = notifications.indexOf(bindingContext.getObject());
-            
+
             if (index > -1) {
                 notifications.splice(index, 1);
                 this.getView().getModel("notifications").setProperty("/items", notifications);
@@ -549,7 +549,7 @@ sap.ui.define([
         _updateNotificationCounts: function() {
             const notifications = this.getView().getModel("notifications").getProperty("/items");
             const unreadCount = notifications.filter(n => !n.read).length;
-            
+
             this.getView().getModel("notifications").setData({
                 items: notifications,
                 itemsCount: notifications.length,
@@ -567,29 +567,29 @@ sap.ui.define([
                 this._intervals.forEach(clearIntervalById);
                 this._intervals = [];
             }
-            
+
             // Clean up WebSocket connection
             if (this._websocket) {
                 this._websocket.close(1000, "Controller destroyed");
                 this._websocket = null;
             }
-            
+
             // Clear reconnection timer
             this._clearReconnectTimer();
-            
+
             // Clear health check interval
             if (this._connectionHealthCheckInterval) {
                 clearInterval(this._connectionHealthCheckInterval);
                 this._connectionHealthCheckInterval = null;
             }
-            
+
             // Clear personalization tracking
             if (this._timeTrackingInterval) {
                 clearInterval(this._timeTrackingInterval);
                 this._timeTrackingInterval = null;
             }
         },
-        
+
         // AI-Powered Personalization Functions
         _initializePersonalizationAI: function() {
             // Initialize user behavior tracking
@@ -601,29 +601,29 @@ sap.ui.define([
                 timeSpent: {},
                 navigationPatterns: []
             };
-            
+
             // Load existing personalization profile
             this._loadPersonalizationProfile();
-            
+
             // Start behavior tracking
             this._startBehaviorTracking();
-            
+
             // Apply existing personalization
             this._applyStoredPersonalization();
         },
-        
+
         _getUserPersonalizationProfile: function() {
             const userId = this._getCurrentUserId();
             const storedProfile = localStorage.getItem(`a2a_personalization_${userId}`);
-            
+
             if (storedProfile) {
                 return JSON.parse(storedProfile);
             }
-            
+
             // Generate AI recommendations for new users
             return this._generateInitialRecommendations();
         },
-        
+
         _generateInitialRecommendations: function() {
             // AI-powered initial recommendations based on multiple factors
             const currentHour = new Date().getHours();
@@ -631,7 +631,7 @@ sap.ui.define([
             const deviceType = this._detectDeviceType();
             const browserInfo = this._getBrowserInfo();
             const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            
+
             // Prepare context for ML model
             const contextFeatures = {
                 hour: currentHour,
@@ -646,12 +646,12 @@ sap.ui.define([
                 language: sap.ui.getCore().getConfiguration().getLanguage(),
                 isFirstVisit: !localStorage.getItem('a2a_visited_before')
             };
-            
+
             // Mark user as visited
             localStorage.setItem('a2a_visited_before', 'true');
-            
+
             // Get AI-powered recommendations
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, _reject) => {
                 this._securityService.secureAjax({
                     url: '/api/v1/ai/personalization/initial',
                     method: 'POST',
@@ -675,9 +675,9 @@ sap.ui.define([
                         }
                     });
                 }.bind(this));
-            }.bind(this));
+            });
         },
-        
+
         _startBehaviorTracking: function() {
             // Track tile interactions
             const tiles = this.byId("tileContainer");
@@ -687,21 +687,21 @@ sap.ui.define([
                     this._recordTileInteraction(tileInfo);
                 }.bind(this));
             }
-            
+
             // Track time spent on different sections
             this._startTimeTracking();
-            
+
             // Track navigation patterns
             this._trackNavigationPatterns();
         },
-        
+
         _recordTileInteraction: function(tileInfo) {
             const timestamp = Date.now();
-            
+
             // Update tile click count
-            this._userBehavior.tileClicks[tileInfo] = 
+            this._userBehavior.tileClicks[tileInfo] =
                 (this._userBehavior.tileClicks[tileInfo] || 0) + 1;
-            
+
             // Record interaction
             this._userBehavior.interactions.push({
                 type: "tile_click",
@@ -709,23 +709,23 @@ sap.ui.define([
                 timestamp: timestamp,
                 sessionTime: timestamp - this._userBehavior.sessionStart
             });
-            
+
             // Trigger personalization update if enough data
-            if (this._userBehavior.interactions.length > 0 && 
+            if (this._userBehavior.interactions.length > 0 &&
                 this._userBehavior.interactions.length % 10 === 0) {
                 this._updatePersonalizationRecommendations();
             }
         },
-        
+
         _startTimeTracking: function() {
             this._timeTrackingInterval = setInterval(function() {
                 // Track time spent in current view
                 const currentView = "launchpad";
-                this._userBehavior.timeSpent[currentView] = 
+                this._userBehavior.timeSpent[currentView] =
                     (this._userBehavior.timeSpent[currentView] || 0) + 5000; // 5 seconds
             }.bind(this), 5000);
         },
-        
+
         _trackNavigationPatterns: function() {
             const router = this.getOwnerComponent().getRouter();
             router.attachRouteMatched(function(event) {
@@ -736,39 +736,39 @@ sap.ui.define([
                 });
             }.bind(this));
         },
-        
+
         _updatePersonalizationRecommendations: function() {
             // Analyze user behavior patterns
             const recommendations = this._analyzeUserBehavior();
-            
+
             // Update personalization model
             const personalModel = this.getView().getModel("personalization");
             if (personalModel) {
                 personalModel.setProperty("/aiRecommendations", recommendations);
             }
-            
+
             // Show recommendations to user (non-intrusive)
             this._showPersonalizationSuggestions(recommendations);
         },
-        
+
         _analyzeUserBehavior: function() {
             const behavior = this._userBehavior;
             const recommendations = {};
-            
+
             // Prepare data for ML analysis
             const mlFeatures = this._extractMLFeatures(behavior);
-            
+
             // Get AI recommendations from backend
             this._getMLRecommendations(mlFeatures).then(function(aiRecommendations) {
                 // Apply AI-powered recommendations
                 Object.assign(recommendations, aiRecommendations);
-                
+
                 // Update personalization model with AI recommendations
                 const personalModel = this.getView().getModel("personalization");
                 if (personalModel) {
                     personalModel.setProperty("/aiRecommendations", recommendations);
                 }
-                
+
                 // Show AI-powered suggestions
                 this._showPersonalizationSuggestions(recommendations);
             }.bind(this)).catch(function(error) {
@@ -779,27 +779,27 @@ sap.ui.define([
                 recommendations.suggestedDensity = this._predictDensityPreference(behavior);
                 return recommendations;
             }.bind(this));
-            
+
             return recommendations;
         },
-        
+
         _calculateAvgInteractionGap: function() {
             const interactions = this._userBehavior.interactions;
             if (interactions.length < 2) return 0;
-            
+
             const gaps = [];
             for (let i = 1; i < interactions.length; i++) {
                 gaps.push(interactions[i].timestamp - interactions[i-1].timestamp);
             }
-            
+
             return gaps.reduce((a, b) => a + b, 0) / gaps.length;
         },
-        
+
         _showPersonalizationSuggestions: function(recommendations) {
             // Show subtle, non-intrusive suggestions
-            if (recommendations.suggestedTheme && 
+            if (recommendations.suggestedTheme &&
                 recommendations.suggestedTheme !== this._getCurrentTheme()) {
-                
+
                 // Show a discrete notification about theme recommendation
                 setTimeout(function() {
                     MessageToast.show(
@@ -809,12 +809,12 @@ sap.ui.define([
                 }, 5000);
             }
         },
-        
+
         _applyDashboardLayout: function(layoutType) {
             // Apply different dashboard layouts based on AI recommendations
             const tileContainer = this.byId("tileContainer");
             if (!tileContainer) return;
-            
+
             switch (layoutType) {
                 case "detailed":
                     // Show all tiles with detailed information
@@ -833,31 +833,31 @@ sap.ui.define([
                     break;
             }
         },
-        
-        _showDetailedLayout: function(tileContainer) {
+
+        _showDetailedLayout: function(_tileContainer) {
             // Show all tiles with expanded information (would need access to tiles)
             Log.info("Applied detailed dashboard layout");
         },
-        
-        _showSimplifiedLayout: function(tileContainer) {
+
+        _showSimplifiedLayout: function(_tileContainer) {
             // Hide less important tiles, show key ones in compact form
-            const priorityTiles = this._userBehavior.tileClicks ? 
+            const priorityTiles = this._userBehavior.tileClicks ?
                 Object.keys(this._userBehavior.tileClicks) : [];
-            
+
             Log.info("Applied simplified dashboard layout with priority tiles: " + priorityTiles.join(", "));
         },
-        
+
         _applyWidgetPreferences: function(preferences) {
             // Apply widget-specific preferences
             if (preferences.hiddenWidgets && preferences.hiddenWidgets.length > 0) {
                 Log.info("Hidden widgets: " + preferences.hiddenWidgets.join(", "));
             }
-            
+
             if (preferences.priorityWidgets && preferences.priorityWidgets.length > 0) {
                 Log.info("Priority widgets: " + preferences.priorityWidgets.join(", "));
             }
         },
-        
+
         _savePersonalizationProfile: function(personalizationData) {
             const userId = this._getCurrentUserId();
             const profile = {
@@ -865,17 +865,17 @@ sap.ui.define([
                 lastUpdated: Date.now(),
                 userBehavior: this._userBehavior
             };
-            
+
             localStorage.setItem(`a2a_personalization_${userId}`, JSON.stringify(profile));
-            
+
             // Also send to backend for cross-device sync
             this._syncPersonalizationToBackend(profile);
         },
-        
+
         _loadPersonalizationProfile: function() {
             const userId = this._getCurrentUserId();
             const storedProfile = localStorage.getItem(`a2a_personalization_${userId}`);
-            
+
             if (storedProfile) {
                 const profile = JSON.parse(storedProfile);
                 if (profile.userBehavior) {
@@ -883,22 +883,22 @@ sap.ui.define([
                 }
             }
         },
-        
+
         _applyStoredPersonalization: function() {
             const profile = this._getUserPersonalizationProfile();
-            
+
             // Apply theme
-            if (profile.preferredTheme && 
+            if (profile.preferredTheme &&
                 profile.preferredTheme !== sap.ui.getCore().getConfiguration().getTheme()) {
                 sap.ui.getCore().applyTheme(profile.preferredTheme);
             }
-            
+
             // Apply density
             if (profile.preferredDensity) {
                 document.body.classList.toggle("sapUiSizeCompact", profile.preferredDensity === "compact");
                 document.body.classList.toggle("sapUiSizeCozy", profile.preferredDensity === "cozy");
             }
-            
+
             // Apply layout
             if (profile.dashboardLayout) {
                 setTimeout(function() {
@@ -906,7 +906,7 @@ sap.ui.define([
                 }.bind(this), 1000);
             }
         },
-        
+
         _recordPersonalizationInteraction: function(personalizationData) {
             // Record this personalization change for AI learning
             this._userBehavior.interactions.push({
@@ -916,7 +916,7 @@ sap.ui.define([
                 sessionTime: Date.now() - this._userBehavior.sessionStart
             });
         },
-        
+
         _syncPersonalizationToBackend: function(profile) {
             // Send personalization data to backend for analysis and cross-device sync
             this._securityService.secureAjax({
@@ -932,16 +932,16 @@ sap.ui.define([
                 Log.warning("Failed to sync personalization to backend", error);
             });
         },
-        
+
         _getCurrentUserId: function() {
             // Get current user ID (simplified)
             return "user_" + (new Date().getTime() % 10000);
         },
-        
+
         _getCurrentTheme: function() {
             return sap.ui.getCore().getConfiguration().getTheme();
         },
-        
+
         _getUserRole: function() {
             // Determine user role from authentication context
             const userModel = this.getView().getModel("user");
@@ -949,16 +949,16 @@ sap.ui.define([
                 const role = userModel.getProperty("/role");
                 if (role) return role;
             }
-            
+
             // Check security service for user info
             const userInfo = this._securityService.getUserInfo();
             if (userInfo && userInfo.role) {
                 return userInfo.role;
             }
-            
+
             return "user"; // Default role
         },
-        
+
         // New AI-powered helper functions
         _extractMLFeatures: function(behavior) {
             // Extract features for ML model
@@ -968,18 +968,18 @@ sap.ui.define([
                 avgInteractionGap: this._calculateAvgInteractionGap(),
                 mostActiveHour: this._getMostActiveHour(behavior),
                 dayOfWeek: new Date().getDay(),
-                
+
                 // Interaction features
                 totalInteractions: behavior.interactions.length,
                 tileClickDistribution: this._getTileClickDistribution(behavior),
                 navigationDepth: behavior.navigationPatterns.length,
                 uniqueTilesClicked: Object.keys(behavior.tileClicks).length,
-                
+
                 // Usage pattern features
                 clicksPerMinute: this._calculateClicksPerMinute(behavior),
                 timeSpentDistribution: this._getTimeSpentDistribution(behavior),
                 interactionTypes: this._getInteractionTypeDistribution(behavior),
-                
+
                 // Device and context features
                 deviceType: this._detectDeviceType(),
                 screenResolution: window.screen.width + 'x' + window.screen.height,
@@ -987,10 +987,10 @@ sap.ui.define([
                 currentTheme: this._getCurrentTheme(),
                 currentDensity: this._getCurrentDensity()
             };
-            
+
             return features;
         },
-        
+
         _getMLRecommendations: function(features) {
             // Get ML-powered recommendations from backend
             return this._securityService.secureAjax({
@@ -1004,23 +1004,23 @@ sap.ui.define([
                 contentType: 'application/json'
             });
         },
-        
+
         _getTopUsedTiles: function(behavior) {
             return Object.entries(behavior.tileClicks || {})
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 5)
                 .map(([tile]) => tile);
         },
-        
+
         _predictThemePreference: function(behavior) {
-            const interactionTimes = behavior.interactions.map(i => 
+            const interactionTimes = behavior.interactions.map(i =>
                 new Date(i.timestamp).getHours()
             );
-            
+
             if (interactionTimes.length === 0) {
                 return this._getCurrentTheme();
             }
-            
+
             // Calculate weighted average of interaction times
             const recentWeight = 0.7;
             const historicalWeight = 0.3;
@@ -1028,7 +1028,7 @@ sap.ui.define([
             const avgRecentHour = recentInteractions.reduce((a, b) => a + b, 0) / recentInteractions.length;
             const avgHistoricalHour = interactionTimes.reduce((a, b) => a + b, 0) / interactionTimes.length;
             const weightedAvgHour = (avgRecentHour * recentWeight) + (avgHistoricalHour * historicalWeight);
-            
+
             // ML-inspired theme selection
             if (weightedAvgHour >= 20 || weightedAvgHour <= 5) {
                 return "sap_horizon_dark";
@@ -1038,31 +1038,31 @@ sap.ui.define([
                 return "sap_horizon";
             }
         },
-        
+
         _predictDensityPreference: function(behavior) {
             const clicksPerMinute = this._calculateClicksPerMinute(behavior);
             const avgInteractionGap = this._calculateAvgInteractionGap();
             const deviceType = this._detectDeviceType();
-            
+
             // ML-inspired density selection
             if (deviceType === "mobile" || deviceType === "tablet") {
                 return "cozy";
             }
-            
+
             if (clicksPerMinute > 10 || avgInteractionGap < 1500) {
                 return "compact"; // Power user
             }
-            
+
             return "cozy"; // Default for casual users
         },
-        
+
         _getMostActiveHour: function(behavior) {
             const hourCounts = {};
             behavior.interactions.forEach(i => {
                 const hour = new Date(i.timestamp).getHours();
                 hourCounts[hour] = (hourCounts[hour] || 0) + 1;
             });
-            
+
             let maxHour = 12;
             let maxCount = 0;
             Object.entries(hourCounts).forEach(([hour, count]) => {
@@ -1071,50 +1071,50 @@ sap.ui.define([
                     maxHour = parseInt(hour);
                 }
             });
-            
+
             return maxHour;
         },
-        
+
         _getTileClickDistribution: function(behavior) {
             const total = Object.values(behavior.tileClicks || {}).reduce((a, b) => a + b, 0);
             const distribution = {};
-            
+
             Object.entries(behavior.tileClicks || {}).forEach(([tile, count]) => {
                 distribution[tile] = total > 0 ? count / total : 0;
             });
-            
+
             return distribution;
         },
-        
+
         _calculateClicksPerMinute: function(behavior) {
             const sessionMinutes = (Date.now() - behavior.sessionStart) / 60000;
             return sessionMinutes > 0 ? behavior.interactions.length / sessionMinutes : 0;
         },
-        
+
         _getTimeSpentDistribution: function(behavior) {
             const total = Object.values(behavior.timeSpent || {}).reduce((a, b) => a + b, 0);
             const distribution = {};
-            
+
             Object.entries(behavior.timeSpent || {}).forEach(([section, time]) => {
                 distribution[section] = total > 0 ? time / total : 0;
             });
-            
+
             return distribution;
         },
-        
+
         _getInteractionTypeDistribution: function(behavior) {
             const typeCounts = {};
             behavior.interactions.forEach(i => {
                 typeCounts[i.type] = (typeCounts[i.type] || 0) + 1;
             });
-            
+
             return typeCounts;
         },
-        
+
         _detectDeviceType: function() {
             const width = window.screen.width;
             const userAgent = navigator.userAgent.toLowerCase();
-            
+
             if (/mobile|android|iphone|ipod/.test(userAgent) || width < 768) {
                 return "mobile";
             } else if (/ipad|tablet/.test(userAgent) || (width >= 768 && width < 1024)) {
@@ -1123,12 +1123,12 @@ sap.ui.define([
                 return "desktop";
             }
         },
-        
+
         _getBrowserInfo: function() {
             const userAgent = navigator.userAgent;
             let browserName = "Unknown";
             let browserVersion = "";
-            
+
             if (userAgent.indexOf("Chrome") > -1) {
                 browserName = "Chrome";
                 browserVersion = userAgent.match(/Chrome\/([\d.]+)/)?.[1] || "";
@@ -1142,17 +1142,17 @@ sap.ui.define([
                 browserName = "Edge";
                 browserVersion = userAgent.match(/Edge\/([\d.]+)/)?.[1] || "";
             }
-            
+
             return { name: browserName, version: browserVersion };
         },
-        
+
         _getCurrentDensity: function() {
             if (document.body.classList.contains("sapUiSizeCompact")) {
                 return "compact";
             }
             return "cozy";
         },
-        
+
         _intelligentThemeSelection: function(context) {
             // ML-inspired theme selection based on context
             const score = (
@@ -1160,12 +1160,12 @@ sap.ui.define([
                 (context.deviceType === "mobile" ? 1 : 0) +
                 (context.screenWidth < 1920 ? 1 : 0)
             );
-            
+
             if (score >= 3) return "sap_horizon_dark";
             if (score >= 2) return "sap_horizon_hcb";
             return "sap_horizon";
         },
-        
+
         _intelligentDensitySelection: function(context) {
             // ML-inspired density selection
             const score = (
@@ -1173,10 +1173,10 @@ sap.ui.define([
                 (context.screenWidth >= 1920 ? 2 : 0) +
                 (context.userRole === "admin" || context.userRole === "power_user" ? 1 : 0)
             );
-            
+
             return score >= 3 ? "compact" : "cozy";
         },
-        
+
         _intelligentLayoutSelection: function(context) {
             // ML-inspired layout selection
             if (context.userRole === "admin" || context.userRole === "manager") {
@@ -1188,7 +1188,7 @@ sap.ui.define([
             }
             return "customized";
         },
-        
+
         _intelligentWidgetSelection: function(context) {
             // ML-inspired widget arrangement
             const baseWidgets = ["agentCount", "performance", "notifications"];
@@ -1198,15 +1198,15 @@ sap.ui.define([
                 developer: ["services", "workflows", "notifications"],
                 user: ["notifications", "agentCount", "performance"]
             };
-            
+
             const priorityWidgets = [
                 ...baseWidgets,
                 ...(roleWidgets[context.userRole] || roleWidgets.user)
             ];
-            
+
             // Remove duplicates and limit to top 5
             const uniqueWidgets = [...new Set(priorityWidgets)].slice(0, 5);
-            
+
             return {
                 priorityWidgets: uniqueWidgets,
                 hiddenWidgets: [],

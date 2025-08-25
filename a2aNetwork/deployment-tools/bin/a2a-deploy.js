@@ -27,14 +27,14 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue('\n🚀 A2A Production Deployment\n'));
-      
+
       const deployer = getDeployer(options.platform);
       const result = await deployer.deploy(options);
-      
+
       console.log(chalk.green('\n✅ Deployment completed successfully!'));
       console.log(chalk.cyan('Deployment details:'));
       console.log(JSON.stringify(result, null, 2));
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Deployment failed:'), error.message);
       process.exit(1);
@@ -52,16 +52,16 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue('\n🔨 Building A2A agents...\n'));
-      
+
       const builder = new DockerBuilder();
       const result = await builder.build(options);
-      
+
       console.log(chalk.green('\n✅ Build completed successfully!'));
       console.log(chalk.cyan('Build artifacts:'));
       result.artifacts.forEach(artifact => {
         console.log(`  - ${artifact.type}: ${artifact.location}`);
       });
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Build failed:'), error.message);
       process.exit(1);
@@ -77,10 +77,10 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue('\n🔍 Validating deployment configuration...\n'));
-      
+
       const validator = new ConfigValidator();
       const result = await validator.validate(options);
-      
+
       if (result.valid) {
         console.log(chalk.green('✅ Configuration is valid!'));
       } else {
@@ -88,7 +88,7 @@ program
         result.errors.forEach(error => {
           console.log(chalk.red(`  - ${error}`));
         });
-        
+
         if (result.warnings.length > 0) {
           console.log(chalk.yellow('\n⚠️  Warnings:'));
           result.warnings.forEach(warning => {
@@ -97,7 +97,7 @@ program
         }
         process.exit(1);
       }
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Validation failed:'), error.message);
       process.exit(1);
@@ -114,9 +114,9 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue('\n📊 Monitoring A2A deployment...\n'));
-      
+
       const monitor = new DeploymentMonitor();
-      
+
       if (options.watch) {
         await monitor.watch(options);
       } else {
@@ -124,7 +124,7 @@ program
         console.log(chalk.cyan('Deployment Status:'));
         console.log(JSON.stringify(status, null, 2));
       }
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Monitoring failed:'), error.message);
       process.exit(1);
@@ -142,14 +142,14 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue('\n⏪ Rolling back A2A deployment...\n'));
-      
+
       const deployer = getDeployer('k8s'); // Default to k8s for rollback
       const result = await deployer.rollback(options);
-      
+
       console.log(chalk.green('✅ Rollback completed successfully!'));
       console.log(chalk.cyan('Rollback details:'));
       console.log(JSON.stringify(result, null, 2));
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Rollback failed:'), error.message);
       process.exit(1);
@@ -166,14 +166,14 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue(`\n📈 Scaling A2A deployment to ${options.replicas} replicas...\n`));
-      
+
       const deployer = getDeployer('k8s');
       const result = await deployer.scale(options);
-      
+
       console.log(chalk.green('✅ Scaling completed successfully!'));
       console.log(chalk.cyan('Scale result:'));
       console.log(JSON.stringify(result, null, 2));
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Scaling failed:'), error.message);
       process.exit(1);
@@ -191,10 +191,10 @@ program
   .action(async (options) => {
     try {
       console.log(chalk.blue('\n📋 Fetching A2A deployment logs...\n'));
-      
+
       const monitor = new DeploymentMonitor();
       await monitor.getLogs(options);
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Failed to fetch logs:'), error.message);
       process.exit(1);
@@ -211,16 +211,16 @@ program
     try {
       const monitor = new DeploymentMonitor();
       const status = await monitor.getOverallStatus(options);
-      
+
       if (options.output === 'json') {
         console.log(JSON.stringify(status, null, 2));
       } else {
         console.log(chalk.blue('\n📊 A2A Deployment Status\n'));
-        
+
         status.deployments.forEach(deployment => {
-          const statusColor = deployment.status === 'healthy' ? chalk.green : 
+          const statusColor = deployment.status === 'healthy' ? chalk.green :
                              deployment.status === 'degraded' ? chalk.yellow : chalk.red;
-          
+
           console.log(`${statusColor('●')} ${deployment.name} (${deployment.environment})`);
           console.log(`  Status: ${statusColor(deployment.status)}`);
           console.log(`  Replicas: ${deployment.replicas.ready}/${deployment.replicas.desired}`);
@@ -229,7 +229,7 @@ program
           console.log();
         });
       }
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Failed to get status:'), error.message);
       process.exit(1);

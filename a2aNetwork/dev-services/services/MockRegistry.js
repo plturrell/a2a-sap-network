@@ -13,7 +13,7 @@ class DevRegistry extends Registry {
       timeout: 10000,
       heartbeatInterval: 15000
     });
-    
+
     this.localAgents = new Map();
     this.healthy = false;
   }
@@ -49,7 +49,7 @@ class DevRegistry extends Registry {
     try {
       // Register with real registry first
       const result = await super.register(agentInfo);
-      
+
       // Also track locally for development features
       this.localAgents.set(agentInfo.id, {
         ...agentInfo,
@@ -59,11 +59,11 @@ class DevRegistry extends Registry {
 
       logger.info(`Agent '${agentInfo.name}' registered in dev registry`);
       return result;
-      
+
     } catch (error) {
       // If real registry fails, still track locally
       logger.warn(`Real registry registration failed, using local-only mode: ${error.message}`);
-      
+
       this.localAgents.set(agentInfo.id, {
         ...agentInfo,
         registeredAt: new Date().toISOString(),
@@ -85,11 +85,11 @@ class DevRegistry extends Registry {
     try {
       // Try real registry first
       const realAgents = await super.discover(capability);
-      
+
       // Add local agents
       const localAgents = Array.from(this.localAgents.values())
-        .filter(agent => 
-          capability === '*' || 
+        .filter(agent =>
+          capability === '*' ||
           agent.capabilities?.includes(capability)
         );
 
@@ -103,14 +103,14 @@ class DevRegistry extends Registry {
       }, []);
 
       return uniqueAgents;
-      
+
     } catch (error) {
       logger.warn(`Real registry discovery failed, using local-only: ${error.message}`);
-      
+
       // Return only local agents
       return Array.from(this.localAgents.values())
-        .filter(agent => 
-          capability === '*' || 
+        .filter(agent =>
+          capability === '*' ||
           agent.capabilities?.includes(capability)
         );
     }
@@ -123,7 +123,7 @@ class DevRegistry extends Registry {
     try {
       const realAgents = await super.getAllAgents();
       const localAgents = Array.from(this.localAgents.values());
-      
+
       // Combine and deduplicate
       const allAgents = [...realAgents, ...localAgents];
       return allAgents.reduce((acc, agent) => {
@@ -132,7 +132,7 @@ class DevRegistry extends Registry {
         }
         return acc;
       }, []);
-      
+
     } catch (error) {
       logger.warn(`Could not fetch real agents, returning local only: ${error.message}`);
       return Array.from(this.localAgents.values());
@@ -172,7 +172,7 @@ class DevRegistry extends Registry {
 
     this.localAgents.set(testAgent.id, testAgent);
     logger.info(`Test agent '${testAgent.name}' created`);
-    
+
     return testAgent;
   }
 
@@ -196,7 +196,7 @@ class DevRegistry extends Registry {
    */
   getDevStats() {
     const localAgents = Array.from(this.localAgents.values());
-    
+
     return {
       totalAgents: localAgents.length,
       testAgents: localAgents.filter(a => a.isTest).length,

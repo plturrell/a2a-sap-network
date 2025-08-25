@@ -13,7 +13,7 @@ sap.ui.define([], () => {
             }
 
             const oDate = date instanceof Date ? date : new Date(date);
-            
+
             if (isNaN(oDate.getTime())) {
                 return '';
             }
@@ -37,7 +37,7 @@ sap.ui.define([], () => {
             }
 
             const oDate = date instanceof Date ? date : new Date(date);
-            
+
             if (isNaN(oDate.getTime())) {
                 return '';
             }

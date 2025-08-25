@@ -39,9 +39,9 @@ class A2AWebSocketDataService extends EventEmitter {
             services: { count: 0, active: 0, utilization: 0 },
             network: { health: 0, latency: 0, throughput: 0 },
             blockchain: { blocks: 0, transactions: 0, gasPrice: 0 },
-            analytics: { 
-                requests: 0, 
-                errors: 0, 
+            analytics: {
+                requests: 0,
+                errors: 0,
                 responseTime: 0,
                 successRate: 0
             }
@@ -79,7 +79,7 @@ class A2AWebSocketDataService extends EventEmitter {
                     else resolve(rows[0] || { total: 0, active: 0 });
                 };
                 this.db.all(
-                    `SELECT 
+                    `SELECT
                         COUNT(*) as total,
                         SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active
                      FROM a2a_network_Agents`,
@@ -95,7 +95,7 @@ class A2AWebSocketDataService extends EventEmitter {
                     else resolve(rows[0] || { total: 0, active: 0 });
                 };
                 this.db.all(
-                    `SELECT 
+                    `SELECT
                         COUNT(*) as total,
                         SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active
                      FROM a2a_network_Services`,
@@ -165,7 +165,7 @@ class A2AWebSocketDataService extends EventEmitter {
             // Use port manager to handle port conflicts
             const killConflicts = process.env.NODE_ENV === 'development';
             this.port = await portManager.allocatePortSafely('realtime', 4006, killConflicts);
-            
+
             if (!this.port) {
                 logger.warn('⚠️  Real-time WebSocket disabled due to port allocation failure');
                 return;
@@ -181,10 +181,10 @@ class A2AWebSocketDataService extends EventEmitter {
                         'https://*.sap.com',
                         'https://*.ondemand.com'
                     ];
-                    
+
                     // Allow same-origin requests
                     if (!origin) return true;
-                    
+
                     // Check against allowed origins
                     return allowedOrigins.some(allowed => {
                         if (allowed.includes('*')) {
@@ -200,16 +200,16 @@ class A2AWebSocketDataService extends EventEmitter {
                 const clientId = this.generateClientId();
                 const clientIP = req.connection.remoteAddress;
                 const userAgent = req.headers['user-agent'];
-                
+
                 // Rate limiting for WebSocket connections
                 if (!this._checkConnectionRateLimit(clientIP)) {
                     logger.warn(`WebSocket rate limit exceeded for IP: ${clientIP}`);
                     ws.close(1008, 'Rate limit exceeded');
                     return;
                 }
-                
+
                 logger.info(`📡 Real-time client connected: ${clientId} from IP: ${clientIP}`);
-                
+
                 this.clients.set(clientId, {
                     ws,
                     subscriptions: new Set(),
@@ -236,34 +236,34 @@ class A2AWebSocketDataService extends EventEmitter {
                     try {
                         const client = this.clients.get(clientId);
                         if (!client) return;
-                        
+
                         // Message rate limiting
                         client.messageCount++;
                         const now = Date.now();
                         const connectionAge = now - client.connectionTime;
                         const messageRate = client.messageCount / (connectionAge / 1000); // messages per second
-                        
+
                         if (messageRate > 10) { // Max 10 messages per second
                             logger.warn(`Message rate limit exceeded for client ${clientId}`);
                             ws.close(1008, 'Message rate limit exceeded');
                             return;
                         }
-                        
+
                         // Validate message size
                         if (message.length > 8192) { // 8KB max message size
                             logger.warn(`Message too large from client ${clientId}`);
                             ws.close(1009, 'Message too large');
                             return;
                         }
-                        
+
                         const data = JSON.parse(message);
-                        
+
                         // Validate message structure
                         if (typeof data !== 'object' || !data.action) {
                             logger.warn(`Invalid message structure from client ${clientId}`);
                             return;
                         }
-                        
+
                         this.handleClientMessage(clientId, data);
                     } catch (error) {
                         logger.error(`Invalid WebSocket message from ${clientId}:`, error);
@@ -295,7 +295,7 @@ class A2AWebSocketDataService extends EventEmitter {
                 };
                 ws.on('pong', handleWebSocketPong);
             };
-            
+
             this.wsServer.on('blockchain-connection', handleWebSocketConnection);
 
             logger.info(`📡 Real-time WebSocket server started on port ${this.port}`);
@@ -408,7 +408,7 @@ class A2AWebSocketDataService extends EventEmitter {
     startDataStreaming() {
         // Clean up existing intervals first
         this.stopDataStreaming();
-        
+
         // Update metrics from database every 5 seconds
         const updateMetricsFromDatabase = () => {
             this.updateMetricsFromDatabase();
@@ -442,7 +442,7 @@ class A2AWebSocketDataService extends EventEmitter {
         };
         this.intervals.set('health', setInterval(performHealthCheck, 30000));
     }
-    
+
     stopDataStreaming() {
         // Clear all intervals
         const clearNamedInterval = (intervalId, name) => {
@@ -452,20 +452,20 @@ class A2AWebSocketDataService extends EventEmitter {
         this.intervals.forEach(clearNamedInterval);
         this.intervals.clear();
     }
-    
+
     shutdown() {
         logger.info('Shutting down WebSocket data service...');
-        
+
         // Stop all data streaming
         this.stopDataStreaming();
-        
+
         // Close all client connections
         const closeClientConnection = (ws, clientId) => {
             ws.close(1001, 'Server shutting down');
         };
         this.clients.forEach(closeClientConnection);
         this.clients.clear();
-        
+
         // Close WebSocket server
         if (this.wsServer) {
             const handleServerClose = () => {
@@ -473,12 +473,12 @@ class A2AWebSocketDataService extends EventEmitter {
             };
             this.wsServer.close(handleServerClose);
         }
-        
+
         // Close database connection
         if (this.db) {
             this.db.close();
         }
-        
+
         logger.info('WebSocket data service shutdown complete');
     }
 
@@ -487,7 +487,7 @@ class A2AWebSocketDataService extends EventEmitter {
             // Fetch real metrics from monitoring service
             const agentMetrics = await this.fetchAgentMetrics();
             const serviceMetrics = await this.fetchServiceMetrics();
-            
+
             this.metrics.agents = agentMetrics;
             this.metrics.services = serviceMetrics;
 
@@ -500,7 +500,7 @@ class A2AWebSocketDataService extends EventEmitter {
             // Keep existing values on error
         }
     }
-    
+
     async fetchAgentMetrics() {
         // Fetch real agent metrics from A2A network
         try {
@@ -519,7 +519,7 @@ class A2AWebSocketDataService extends EventEmitter {
         }
         return this.metrics.agents;
     }
-    
+
     async fetchServiceMetrics() {
         // Fetch real service metrics from A2A network
         try {
@@ -549,7 +549,7 @@ class A2AWebSocketDataService extends EventEmitter {
             logger.error('Failed to update analytics data:', error);
         }
     }
-    
+
     async fetchAnalyticsMetrics() {
         try {
             // Fetch from monitoring service or Prometheus
@@ -559,15 +559,15 @@ class A2AWebSocketDataService extends EventEmitter {
                 const data = await response.json();
                 // Parse Prometheus response format
                 const requests = data.data?.result?.[0]?.value?.[1] || this.metrics.analytics.requests;
-                
+
                 // Fetch error rate
                 const errorResponse = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_errors_total`);
                 const errorData = await errorResponse.json();
                 const errors = errorData.data?.result?.[0]?.value?.[1] || this.metrics.analytics.errors;
-                
+
                 // Calculate success rate
                 const successRate = requests > 0 ? ((requests - errors) / requests * 100) : 100;
-                
+
                 return {
                     requests: parseInt(requests),
                     errors: parseInt(errors),
@@ -580,7 +580,7 @@ class A2AWebSocketDataService extends EventEmitter {
         }
         return this.metrics.analytics;
     }
-    
+
     async fetchResponseTime() {
         try {
             const monitoringUrl = process.env.MONITORING_SERVICE_URL || 'http://localhost:9090';
@@ -605,7 +605,7 @@ class A2AWebSocketDataService extends EventEmitter {
             logger.error('Failed to update network metrics:', error);
         }
     }
-    
+
     async fetchNetworkMetrics() {
         try {
             // Fetch from network monitoring service
@@ -629,13 +629,13 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Subscribe to real event bus (Redis/MQTT/WebSocket)
             const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
-            
+
             // In production, connect to actual event streaming service
             logger.info('Attempting to connect to real-time event bus:', eventBusUrl);
-            
+
             // For now, we'll implement a proper event listener when event bus is available
             // This replaces the simulated random events
-            
+
         } catch (error) {
             logger.error('Failed to connect to real-time event bus:', error);
             // No fallback to simulated events - fail properly
@@ -671,23 +671,23 @@ class A2AWebSocketDataService extends EventEmitter {
         const now = Date.now();
         const windowMs = 60000; // 1 minute
         const maxConnections = 20; // Max 20 connections per IP per minute
-        
+
         if (!this.connectionAttempts) {
             this.connectionAttempts = new Map();
         }
-        
+
         if (!this.connectionAttempts.has(clientIP)) {
             this.connectionAttempts.set(clientIP, []);
         }
-        
+
         const attempts = this.connectionAttempts.get(clientIP);
         // Remove attempts outside the time window
         const validAttempts = attempts.filter(timestamp => now - timestamp < windowMs);
-        
+
         if (validAttempts.length >= maxConnections) {
             return false;
         }
-        
+
         validAttempts.push(now);
         this.connectionAttempts.set(clientIP, validAttempts);
         return true;
@@ -699,7 +699,7 @@ class A2AWebSocketDataService extends EventEmitter {
             // Fetch real historical analytics from time-series database
             const analyticsUrl = process.env.ANALYTICS_DB_URL || 'http://localhost:8086'; // InfluxDB
             const response = await fetch(`${analyticsUrl}/api/v1/analytics/timeseries?hours=24`);
-            
+
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -717,7 +717,7 @@ class A2AWebSocketDataService extends EventEmitter {
         } catch (error) {
             logger.error('Failed to fetch real analytics data:', error);
         }
-        
+
         // Return current metrics only - no simulated historical data
         return {
             timeSeries: [],

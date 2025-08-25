@@ -4,7 +4,6 @@ Production-ready client for Perplexity API integration with real-time informatio
 """
 
 import os
-import asyncio
 import logging
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass

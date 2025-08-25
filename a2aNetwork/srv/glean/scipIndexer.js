@@ -2,7 +2,7 @@
  * @fileoverview SCIP-based indexer for generating Glean-compatible facts
  * @module scipIndexer
  * @since 1.0.0
- * 
+ *
  * Implements SCIP (SCIP Code Intelligence Protocol) indexing to generate
  * proper Glean facts for code intelligence queries
  */
@@ -32,10 +32,10 @@ class SCIPIndexer {
     async initialize() {
         // Check if SCIP is available
         await this.ensureSCIPAvailable();
-        
+
         // Initialize language servers for SCIP generation
         await this.initializeLanguageServers();
-        
+
         // console.log('SCIP indexer initialized successfully');
     }
 
@@ -109,10 +109,10 @@ class SCIPIndexer {
 
     async indexProject(languages = ['typescript', 'javascript', 'python', 'solidity', 'cds']) {
         // console.log(`Starting SCIP indexing for languages: ${languages.join(', ')}`);
-        
+
         // Try to use real SCIP indexers first
         const scipIndex = await this.generateRealSCIPIndex(languages);
-        
+
         return {
             scipIndex: scipIndex,
             documentCount: scipIndex.documents ? scipIndex.documents.length : 0,
@@ -155,7 +155,7 @@ class SCIPIndexer {
         for (const language of languages) {
             // console.log(`Fallback indexing ${language} files...`);
             const langResults = await this.indexLanguage(language);
-            
+
             // Merge SCIP results
             if (langResults.scip.documents) {
                 scipIndex.documents.push(...langResults.scip.documents);
@@ -184,7 +184,7 @@ class SCIPIndexer {
 
         for (const file of files) {
             // console.log(`Processing ${file}...`);
-            
+
             if (typeof server.command === 'function') {
                 // Custom indexer (e.g., Solidity)
                 const result = await server.command(file);
@@ -207,13 +207,13 @@ class SCIPIndexer {
     async findFilesForLanguage(language) {
         const server = this.languageServers.get(language);
         const files = [];
-        
+
         await this.walkDirectory(this.workspaceRoot, (filePath) => {
             const ext = path.extname(filePath);
             if (server.extensions.includes(ext)) {
                 // Skip node_modules and other unwanted directories
-                if (!filePath.includes('node_modules') && 
-                    !filePath.includes('.git') && 
+                if (!filePath.includes('node_modules') &&
+                    !filePath.includes('.git') &&
                     !filePath.includes('dist') &&
                     !filePath.includes('build')) {
                     files.push(filePath);
@@ -227,10 +227,10 @@ class SCIPIndexer {
     async walkDirectory(dir, callback) {
         try {
             const entries = await fs.readdir(dir, { withFileTypes: true });
-            
+
             for (const entry of entries) {
                 const fullPath = path.join(dir, entry.name);
-                
+
                 if (entry.isDirectory()) {
                     if (!entry.name.startsWith('.') && entry.name !== 'node_modules') {
                         await this.walkDirectory(fullPath, callback);
@@ -251,7 +251,7 @@ class SCIPIndexer {
 
         // Generate SCIP document using language server
         const scipDoc = await this.generateSCIPDocument(server, filePath, fileContent);
-        
+
         // Convert SCIP to Glean facts
         const gleanFacts = this.scipToGleanFacts(scipDoc, relativeFile);
 
@@ -266,7 +266,7 @@ class SCIPIndexer {
         // For this implementation, we'll parse the content directly
         const symbols = [];
         const occurrences = [];
-        
+
         const document = {
             relative_path: path.relative(this.workspaceRoot, filePath),
             occurrences: [],
@@ -286,7 +286,7 @@ class SCIPIndexer {
     async parseTypeScript(filePath, content, document) {
         try {
             // console.log(`Attempting AST parsing for ${filePath}`);
-            
+
             // Use Babel parser for all files as it handles both JS and TS
             const ast = babelParser.parse(content, {
                 sourceType: 'module',
@@ -309,14 +309,14 @@ class SCIPIndexer {
             // console.log('Babel parser succeeded');
 
             let symbolCounter = 0;
-            
+
             // Traverse AST to extract symbols
             const walker = {
                 ImportDeclaration: (node) => {
                     try {
                         const symbolId = `import_${symbolCounter++}`;
                         const range = this.nodeToRange(node, content);
-                        
+
                         document.symbols.push({
                             symbol: symbolId,
                             definition: {
@@ -336,13 +336,13 @@ class SCIPIndexer {
                         console.warn(`Error processing import declaration: ${err.message}`);
                     }
                 },
-                
+
                 FunctionDeclaration: (node) => {
                     try {
                         if (node.id) {
                             const symbolId = `function_${symbolCounter++}`;
                             const range = this.nodeToRange(node, content);
-                            
+
                             document.symbols.push({
                                 symbol: symbolId,
                                 definition: {
@@ -365,13 +365,13 @@ class SCIPIndexer {
                         console.warn(`Error processing function declaration: ${err.message}`);
                     }
                 },
-                
+
                 ClassDeclaration: (node) => {
                     try {
                         if (node.id) {
                             const symbolId = `class_${symbolCounter++}`;
                             const range = this.nodeToRange(node, content);
-                            
+
                             document.symbols.push({
                                 symbol: symbolId,
                                 definition: {
@@ -380,7 +380,7 @@ class SCIPIndexer {
                                 },
                                 name: node.id.name,
                                 superClass: node.superClass ? (node.superClass.name || 'unknown') : null,
-                                methods: (node.body && node.body.body) ? 
+                                methods: (node.body && node.body.body) ?
                                     node.body.body
                                         .filter(member => member.type === 'MethodDefinition')
                                         .map(method => method.key ? method.key.name : 'unknown') : []
@@ -396,7 +396,7 @@ class SCIPIndexer {
                         console.warn(`Error processing class declaration: ${err.message}`);
                     }
                 },
-                
+
                 VariableDeclaration: (node) => {
                     try {
                         if (node.declarations) {
@@ -404,7 +404,7 @@ class SCIPIndexer {
                                 if (declarator.id && declarator.id.type === 'Identifier') {
                                     const symbolId = `variable_${symbolCounter++}`;
                                     const range = this.nodeToRange(declarator, content);
-                                    
+
                                     document.symbols.push({
                                         symbol: symbolId,
                                         definition: {
@@ -429,12 +429,12 @@ class SCIPIndexer {
                         console.warn(`Error processing variable declaration: ${err.message}`);
                     }
                 },
-                
+
                 MethodDefinition: (node) => {
                     try {
                         const symbolId = `method_${symbolCounter++}`;
                         const range = this.nodeToRange(node, content);
-                        
+
                         document.symbols.push({
                             symbol: symbolId,
                             definition: {
@@ -488,7 +488,7 @@ class SCIPIndexer {
         while ((match = importRegex.exec(content)) !== null) {
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -504,7 +504,7 @@ class SCIPIndexer {
             const functionName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -520,7 +520,7 @@ class SCIPIndexer {
             const className = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -550,7 +550,7 @@ class SCIPIndexer {
         while ((match = pragmaRegex.exec(content)) !== null) {
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -566,7 +566,7 @@ class SCIPIndexer {
             const contractName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -582,7 +582,7 @@ class SCIPIndexer {
             const functionName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -598,7 +598,7 @@ class SCIPIndexer {
             const eventName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `local ${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -677,7 +677,7 @@ class SCIPIndexer {
                     enhanced_ast: !symbol.fallback
                 }
             });
-            
+
             // Add function-specific facts
             if (symbol.definition?.syntax_kind?.includes('Function') && symbol.params) {
                 facts.push({
@@ -696,7 +696,7 @@ class SCIPIndexer {
                     }
                 });
             }
-            
+
             // Add class-specific facts
             if (symbol.definition?.syntax_kind?.includes('Class') && symbol.methods) {
                 facts.push({
@@ -713,7 +713,7 @@ class SCIPIndexer {
                     }
                 });
             }
-            
+
             // Add import-specific facts
             if (symbol.definition?.syntax_kind?.includes('Import') && symbol.specifiers) {
                 facts.push({
@@ -739,28 +739,28 @@ class SCIPIndexer {
         try {
             const content = await fs.readFile(filePath, 'utf8');
             const relativePath = path.relative(this.workspaceRoot, filePath);
-            
+
             // console.log(`Processing CDS file: ${relativePath} (${content.length} chars)`);
-            
+
             // Use advanced CDS parser for comprehensive analysis
             const parseResult = this.advancedCDSParser.parseAdvancedCDSContent(content, relativePath);
-            
+
             // Add file reference to symbols
             parseResult.symbols.forEach(symbol => {
                 symbol.file = relativePath;
             });
-            
+
             // Generate comprehensive Glean facts using CAP fact transformer
             const gleanFacts = this.capFactTransformer.transformCAPToGlean(parseResult, relativePath, content);
-            
+
             // Convert to flat fact array for compatibility
             const flatFacts = [];
             Object.values(gleanFacts).forEach(factArray => {
                 flatFacts.push(...factArray);
             });
-            
+
             // console.log(`✅ CDS processing complete: ${parseResult.symbols.length} symbols, ${flatFacts.length} facts`);
-            
+
             return {
                 scip: {
                     relative_path: relativePath,
@@ -779,10 +779,10 @@ class SCIPIndexer {
                     factBatches: gleanFacts
                 }
             };
-            
+
         } catch (error) {
             console.error(`❌ Error processing CDS file ${filePath}:`, error.message);
-            
+
             // Provide graceful fallback with error information
             const relativePath = path.relative(this.workspaceRoot, filePath);
             return {
@@ -827,7 +827,7 @@ class SCIPIndexer {
             const namespaceName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `namespace_${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -846,7 +846,7 @@ class SCIPIndexer {
             const fromModule = match[2];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `using_${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -865,12 +865,12 @@ class SCIPIndexer {
             const entityName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `entity_${symbolCounter++}`;
-            
+
             // Extract entity body to find fields
             const entityStart = match.index;
             const entityBody = this.extractCDSBlock(content, entityStart);
             const fields = this.extractCDSFields(entityBody);
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -890,12 +890,12 @@ class SCIPIndexer {
             const serviceName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `service_${symbolCounter++}`;
-            
+
             // Extract service operations
             const serviceStart = match.index;
             const serviceBody = this.extractCDSBlock(content, serviceStart);
             const operations = this.extractServiceOperations(serviceBody);
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -916,7 +916,7 @@ class SCIPIndexer {
             const typeDefinition = match[2].trim();
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `type_${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -935,11 +935,11 @@ class SCIPIndexer {
             const aspectName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `aspect_${symbolCounter++}`;
-            
+
             const aspectStart = match.index;
             const aspectBody = this.extractCDSBlock(content, aspectStart);
             const fields = this.extractCDSFields(aspectBody);
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -960,7 +960,7 @@ class SCIPIndexer {
             const annotationName = match[1];
             const annotationValue = match[2] || '';
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             annotations.push({
                 name: annotationName,
                 value: annotationValue,
@@ -970,7 +970,7 @@ class SCIPIndexer {
 
         // Convert to Glean facts
         const gleanFacts = this.scipToGleanFacts(document, path.relative(this.workspaceRoot, filePath));
-        
+
         // Add CDS-specific facts
         gleanFacts.push(...this.generateCDSSpecificFacts(document, filePath, annotations));
 
@@ -984,7 +984,7 @@ class SCIPIndexer {
         let braceCount = 0;
         let i = startIndex;
         let foundOpenBrace = false;
-        
+
         // Find the opening brace
         while (i < content.length && !foundOpenBrace) {
             if (content[i] === '{') {
@@ -993,11 +993,11 @@ class SCIPIndexer {
             }
             i++;
         }
-        
+
         if (!foundOpenBrace) return '';
-        
+
         const blockStart = i;
-        
+
         // Find the matching closing brace
         while (i < content.length && braceCount > 0) {
             if (content[i] === '{') {
@@ -1007,7 +1007,7 @@ class SCIPIndexer {
             }
             i++;
         }
-        
+
         return content.substring(blockStart, i - 1);
     }
 
@@ -1016,11 +1016,11 @@ class SCIPIndexer {
         // Match field definitions like: fieldName : Type;
         const fieldRegex = /(\w+)\s*:\s*([^;]+);/g;
         let match;
-        
+
         while ((match = fieldRegex.exec(blockContent)) !== null) {
             const fieldName = match[1];
             const fieldType = match[2].trim();
-            
+
             fields.push({
                 name: fieldName,
                 type: fieldType,
@@ -1028,17 +1028,17 @@ class SCIPIndexer {
                 key: fieldType.includes('key') || blockContent.includes(`key ${fieldName}`)
             });
         }
-        
+
         return fields;
     }
 
     extractServiceOperations(serviceBody) {
         const operations = [];
-        
+
         // Extract entity exposure: entity EntityName as projection on db.Entity
         const entityRegex = /entity\s+(\w+)\s+as\s+([^;]+);/g;
         let match;
-        
+
         while ((match = entityRegex.exec(serviceBody)) !== null) {
             operations.push({
                 type: 'entity',
@@ -1046,10 +1046,10 @@ class SCIPIndexer {
                 definition: match[2].trim()
             });
         }
-        
+
         // Extract action/function definitions
         const actionRegex = /(action|function)\s+(\w+)\s*\(([^)]*)\)\s*(?:returns\s+([^;]+))?;/g;
-        
+
         while ((match = actionRegex.exec(serviceBody)) !== null) {
             operations.push({
                 type: match[1], // action or function
@@ -1058,14 +1058,14 @@ class SCIPIndexer {
                 returns: match[4] ? match[4].trim() : null
             });
         }
-        
+
         return operations;
     }
 
     generateCDSSpecificFacts(document, filePath, annotations) {
         const facts = [];
         const relativePath = path.relative(this.workspaceRoot, filePath);
-        
+
         // CDS File fact
         facts.push({
             id: crypto.randomUUID(),
@@ -1082,7 +1082,7 @@ class SCIPIndexer {
                 annotations: annotations.length
             }
         });
-        
+
         // Entity facts
         document.symbols.filter(s => s.type === 'entity').forEach(entity => {
             facts.push({
@@ -1100,7 +1100,7 @@ class SCIPIndexer {
                 }
             });
         });
-        
+
         // Service facts
         document.symbols.filter(s => s.type === 'service').forEach(service => {
             facts.push({
@@ -1118,7 +1118,7 @@ class SCIPIndexer {
                 }
             });
         });
-        
+
         // Annotation facts
         annotations.forEach(annotation => {
             facts.push({
@@ -1136,7 +1136,7 @@ class SCIPIndexer {
                 }
             });
         });
-        
+
         return facts;
     }
 
@@ -1160,17 +1160,17 @@ class SCIPIndexer {
         if (symbol.name) {
             return symbol.name;
         }
-        
+
         // Fallback to extracting from symbol ID
         if (symbol.definition && symbol.definition.range) {
             return symbol.symbol.replace(/^(local|import|function|class|variable|method)_\d+$/, 'symbol');
         }
         return symbol.symbol;
     }
-    
+
     extractEnhancedSymbolMetadata(symbol) {
         const metadata = {};
-        
+
         // Add type-specific metadata
         if (symbol.async !== undefined) metadata.async = symbol.async;
         if (symbol.generator !== undefined) metadata.generator = symbol.generator;
@@ -1179,14 +1179,14 @@ class SCIPIndexer {
         if (symbol.hasInit !== undefined) metadata.hasInit = symbol.hasInit;
         if (symbol.initType !== undefined) metadata.initType = symbol.initType;
         if (symbol.fallback !== undefined) metadata.fallback = symbol.fallback;
-        
+
         // Add parameter info for functions
         if (symbol.params) {
             metadata.parameterCount = symbol.params.length;
             metadata.hasDefaultParameters = symbol.params.some(p => p.hasDefault);
             metadata.hasRestParameters = symbol.params.some(p => p.isRest);
         }
-        
+
         // Add class info
         if (symbol.superClass) {
             metadata.extends = symbol.superClass;
@@ -1194,19 +1194,19 @@ class SCIPIndexer {
         if (symbol.methods) {
             metadata.methodCount = symbol.methods.length;
         }
-        
+
         // Add import info
         if (symbol.specifiers) {
             metadata.importSpecifiers = symbol.specifiers;
         }
-        
+
         return metadata;
     }
 
     getLineNumber(content, index) {
         return content.substring(0, index).split('\n').length - 1;
     }
-    
+
     nodeToRange(node, content) {
         if (node.loc) {
             return {
@@ -1220,25 +1220,25 @@ class SCIPIndexer {
                 }
             };
         }
-        
+
         // Fallback for nodes without location info
         return {
             start: { line: 0, character: 0 },
             end: { line: 0, character: 0 }
         };
     }
-    
+
     traverseESTreeNode(node, walker) {
         if (!node || typeof node !== 'object') return;
-        
+
         if (walker[node.type]) {
             walker[node.type](node);
         }
-        
+
         for (const key in node) {
             if (key === 'parent' || key === 'type' || key === 'loc' || key === 'range') continue;
             const child = node[key];
-            
+
             if (Array.isArray(child)) {
                 child.forEach(item => this.traverseESTreeNode(item, walker));
             } else if (child && typeof child === 'object' && child.type) {
@@ -1246,16 +1246,16 @@ class SCIPIndexer {
             }
         }
     }
-    
+
     extractParamInfo(param) {
         try {
             if (!param) return { name: 'unknown', type: 'unknown' };
-            
+
             if (param.type === 'Identifier') {
                 return { name: param.name || 'unknown', type: 'Identifier' };
             } else if (param.type === 'AssignmentPattern') {
-                return { 
-                    name: (param.left && param.left.name) || 'unknown', 
+                return {
+                    name: (param.left && param.left.name) || 'unknown',
                     type: 'AssignmentPattern',
                     hasDefault: true
                 };
@@ -1272,10 +1272,10 @@ class SCIPIndexer {
             return { name: 'unknown', type: 'error' };
         }
     }
-    
+
     async parseTypeScriptFallback(filePath, content, document) {
         // console.log(`Using fallback regex parsing for ${filePath}`);
-        
+
         const lines = content.split('\n');
         let symbolCounter = 0;
 
@@ -1285,7 +1285,7 @@ class SCIPIndexer {
         while ((match = importRegex.exec(content)) !== null) {
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `import_fallback_${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -1309,7 +1309,7 @@ class SCIPIndexer {
             const functionName = match[1] || match[2];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `function_fallback_${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -1333,7 +1333,7 @@ class SCIPIndexer {
             const className = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `class_fallback_${symbolCounter++}`;
-            
+
             document.symbols.push({
                 symbol: symbolId,
                 definition: {
@@ -1358,7 +1358,7 @@ class SCIPIndexer {
         const lineContent = lines[lineNumber] || '';
         const lineStartIndex = lines.slice(0, lineNumber).join('\n').length + (lineNumber > 0 ? 1 : 0);
         const characterOffset = startIndex - lineStartIndex;
-        
+
         return {
             start: {
                 line: lineNumber,

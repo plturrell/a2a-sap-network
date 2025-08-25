@@ -25,7 +25,7 @@ const config = require('./constants/config');
 module.exports = {
     // Main client
     A2AClient,
-    
+
     // Service managers
     AgentManager,
     MessageManager,
@@ -33,18 +33,18 @@ module.exports = {
     GovernanceManager,
     ScalabilityManager,
     ReputationManager,
-    
+
     // Utilities
     crypto,
     validation,
     formatting,
     errors,
-    
+
     // Constants
     networks,
     contracts,
     config,
-    
+
     // Version
     VERSION: '1.0.0'
 };

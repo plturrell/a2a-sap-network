@@ -15,7 +15,7 @@ const { SELECT, INSERT, UPDATE, DELETE, UPSERT } = cds.ql;
  * Handles all configuration management operations
  */
 module.exports = cds.service.impl(async function () {
-    
+
     const { NetworkSettings, SecuritySettings, ApplicationSettings, SettingsAuditLog, AutoSavedSettings } = this.entities;
 
     /**
@@ -77,7 +77,7 @@ module.exports = cds.service.impl(async function () {
                     .where({ ID: currentSettings.ID });
 
                 // Create audit log entry
-                await this._createAuditLog('NETWORK_SETTINGS', 'UPDATE', 
+                await this._createAuditLog('NETWORK_SETTINGS', 'UPDATE',
                     JSON.stringify(currentSettings), JSON.stringify(settings), userId);
             }
 
@@ -95,10 +95,10 @@ module.exports = cds.service.impl(async function () {
             };
 
             await INSERT.into(NetworkSettings).entries(newSettings);
-            
-            cds.log('config').info('Network settings updated', { 
-                version: newSettings.version, 
-                userId 
+
+            cds.log('config').info('Network settings updated', {
+                version: newSettings.version,
+                userId
             });
 
             return 'Network settings updated successfully';
@@ -182,10 +182,10 @@ module.exports = cds.service.impl(async function () {
             };
 
             await INSERT.into(SecuritySettings).entries(newSettings);
-            
-            cds.log('config').info('Security settings updated', { 
-                version: newSettings.version, 
-                userId 
+
+            cds.log('config').info('Security settings updated', {
+                version: newSettings.version,
+                userId
             });
 
             return 'Security settings updated successfully';
@@ -222,7 +222,7 @@ module.exports = cds.service.impl(async function () {
             };
 
             await INSERT.into(AutoSavedSettings).entries(autoSave);
-            
+
             cds.log('config').info('Settings auto-saved', { userId, version: autoSave.version });
 
             return 'Settings auto-saved successfully';

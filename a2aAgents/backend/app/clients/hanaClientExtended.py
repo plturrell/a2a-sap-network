@@ -9,17 +9,13 @@ import asyncio
 import logging
 import threading
 import time
-import json
 import hashlib
 from typing import Dict, Any, List, Optional, Union, Tuple, Callable
 from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
-from queue import Queue, Empty
-import signal
-import weakref
+from queue import Queue
 
 try:
     from hdbcli import dbapi
@@ -198,8 +194,7 @@ class QueryOptimizer:
 
         # Simple pattern matching for common optimization scenarios
         if "where" in query_lower:
-            # Extract potential index candidates
-            where_clause = query_lower.split("where")[1].split("order by")[0].split("group by")[0]
+            # Extract potential index candidates from WHERE clause
             # This is a simplified implementation - in production would use SQL parser
             suggestions.append("Consider index on WHERE clause columns")
 
@@ -372,7 +367,7 @@ class EnterpriseConnectionPool:
 
         except Exception as e:
             self.health_monitor.update_metrics("failed_connections",
-                                             self.health_monitor.health_metrics["failed_connections"] + 1)
+                                               self.health_monitor.health_metrics["failed_connections"] + 1)
             logger.error(f"Failed to create HANA connection: {e}")
             raise
 
@@ -429,7 +424,7 @@ class EnterpriseConnectionPool:
                     if connection_age > 300:  # 5 minutes
                         logger.warning(f"Long-running connection detected: {connection_age:.2f}s")
                         self.health_monitor.update_metrics("connection_leaks",
-                                                         self.health_monitor.health_metrics["connection_leaks"] + 1)
+                                                           self.health_monitor.health_metrics["connection_leaks"] + 1)
 
                     self.connections.put(conn)
 
@@ -612,7 +607,7 @@ class EnterpriseHanaClient:
         logger.info("Backup manager initialized (placeholder for production implementation)")
 
     async def execute_query(self, query: str, params: Optional[Tuple] = None,
-                           fetch_results: bool = True) -> Optional[List[Tuple]]:
+                            fetch_results: bool = True) -> Optional[List[Tuple]]:
         """Execute query with optimization and monitoring"""
         # Analyze query for optimization
         query_analysis = self.query_optimizer.analyze_query(query)
@@ -645,7 +640,7 @@ class EnterpriseHanaClient:
                 if execution_time > self.config.slow_query_threshold:
                     logger.warning(f"Slow query detected ({execution_time:.2f}s): {query[:100]}...")
                     self.pool.health_monitor.update_metrics("slow_queries",
-                        self.pool.health_monitor.health_metrics["slow_queries"] + 1)
+                                                               self.pool.health_monitor.health_metrics["slow_queries"] + 1)
 
                 return results
 
@@ -654,7 +649,7 @@ class EnterpriseHanaClient:
                 raise
 
     async def execute_transaction(self, operations: List[Tuple[str, Optional[Tuple]]],
-                                 isolation_level: Optional[str] = None):
+                                  isolation_level: Optional[str] = None):
         """Execute multiple operations in a transaction"""
         async with self.pool.get_connection() as conn:
             async with self.transaction_manager.transaction(conn, isolation_level) as txn_id:

@@ -22,7 +22,7 @@ class UnifiedNavigation {
         this.currentContext = {};
         this.breadcrumbs = [];
         this.navigationListeners = new Map();
-        
+
         this.initializeNavigation();
     }
 
@@ -33,7 +33,7 @@ class UnifiedNavigation {
         // Set up browser history management
         if (typeof window !== 'undefined') {
             window.addEventListener('popstate', this.handlePopState.bind(this));
-            
+
             // Override browser navigation
             const originalPushState = history.pushState;
             history.pushState = (...args) => {
@@ -55,7 +55,7 @@ class UnifiedNavigation {
      */
     async navigateToApplication(targetApp, context = {}, options = {}) {
         const startTime = Date.now();
-        
+
         try {
             // Validate target application
             if (!this.config.applications[targetApp]) {
@@ -85,7 +85,7 @@ class UnifiedNavigation {
 
             // Perform navigation
             const targetUrl = this.buildTargetUrl(targetApp, context, options);
-            
+
             if (options.newWindow) {
                 window.open(targetUrl, '_blank');
             } else {
@@ -271,7 +271,7 @@ class UnifiedNavigation {
      */
     validateParams(params) {
         const validated = {};
-        
+
         for (const [key, value] of Object.entries(params)) {
             // Validate key
             if (typeof key !== 'string' || key.length === 0 || key.length > 50) {
@@ -377,7 +377,7 @@ class UnifiedNavigation {
      */
     getCurrentApp() {
         if (typeof window === 'undefined') return 'unknown';
-        
+
         const path = window.location.pathname;
         for (const [appId, config] of Object.entries(this.config.applications)) {
             if (path.startsWith(config.url)) {
@@ -425,7 +425,7 @@ class UnifiedNavigation {
         try {
             const storage = this.getContextStorage();
             const savedContext = storage.getItem('a2a_navigation_context');
-            
+
             if (savedContext) {
                 this.currentContext = JSON.parse(savedContext);
             }
@@ -444,9 +444,9 @@ class UnifiedNavigation {
         if (!this.navigationListeners.has(event)) {
             this.navigationListeners.set(event, new Set());
         }
-        
+
         this.navigationListeners.get(event).add(callback);
-        
+
         // Return unsubscribe function
         return () => {
             const listeners = this.navigationListeners.get(event);
@@ -480,7 +480,7 @@ class UnifiedNavigation {
      */
     showTransitionLoader(targetApp) {
         if (typeof document === 'undefined') return;
-        
+
         // Create or update loader element
         let loader = document.getElementById('a2a-navigation-loader');
         if (!loader) {
@@ -504,7 +504,7 @@ class UnifiedNavigation {
      */
     hideTransitionLoader() {
         if (typeof document === 'undefined') return;
-        
+
         const loader = document.getElementById('a2a-navigation-loader');
         if (loader) {
             loader.style.display = 'none';

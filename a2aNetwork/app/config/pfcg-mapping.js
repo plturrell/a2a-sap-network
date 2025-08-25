@@ -97,7 +97,7 @@ sap.ui.define([], () => {
             },
             '/UI2/CHIP': {
                 'checkFunction': function(authValues, requestedChip) {
-                    return authValues.CHIP_ID && 
+                    return authValues.CHIP_ID &&
                            (authValues.CHIP_ID.includes('*') || authValues.CHIP_ID.includes(requestedChip));
                 }
             },

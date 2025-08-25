@@ -2,7 +2,7 @@
 
 /**
  * Agent 13 (Agent Builder Agent) Security Scanner
- * 
+ *
  * Comprehensive security vulnerability scanner specifically designed for
  * Agent 13's agent building functionality including code generation,
  * deployment management, template creation, and pipeline orchestration.
@@ -19,7 +19,7 @@ class Agent13SecurityScanner {
         this.info = [];
         this.scannedFiles = 0;
         this.startTime = performance.now();
-        
+
         // Agent 13 specific security patterns for agent building
         this.builderSecurityPatterns = {
             // Code injection risks in code generation
@@ -34,7 +34,7 @@ class Agent13SecurityScanner {
                 /require\s*\(\s*.*template/gi,
                 /import\s*\(\s*.*template/gi
             ],
-            
+
             // Template injection vulnerabilities
             templateInjection: [
                 /innerHTML\s*=\s*.*template/gi,
@@ -46,7 +46,7 @@ class Agent13SecurityScanner {
                 /template.*concat.*input/gi,
                 /replace\s*\(.*input.*template/gi
             ],
-            
+
             // Insecure WebSocket/EventSource for build monitoring
             insecureConnections: [
                 /new\s+WebSocket\s*\(\s*["']ws:\/\//gi,
@@ -56,7 +56,7 @@ class Agent13SecurityScanner {
                 /ws:\/\/.*builder.*updates/gi,
                 /http:\/\/.*builder.*stream/gi
             ],
-            
+
             // Missing CSRF protection in builder operations
             csrfMissing: [
                 /callFunction\s*\(\s*["']\/GenerateAgent/gi,
@@ -69,7 +69,7 @@ class Agent13SecurityScanner {
                 /callFunction\s*\(\s*["']\/GetDeploymentTargets/gi,
                 /callFunction\s*\(\s*["']\/GetBuildPipelines/gi
             ],
-            
+
             // Deployment configuration security risks
             deploymentRisks: [
                 /environment\s*=\s*.*input/gi,
@@ -81,7 +81,7 @@ class Agent13SecurityScanner {
                 /build.*command.*\+/gi,
                 /exec.*deploy.*\+/gi
             ],
-            
+
             // File system access vulnerabilities
             fileSystemRisks: [
                 /fs\.readFile\s*\(.*input/gi,
@@ -92,7 +92,7 @@ class Agent13SecurityScanner {
                 /process\.exec.*input/gi,
                 /child_process.*input/gi
             ],
-            
+
             // Repository and source code risks
             repositoryRisks: [
                 /git\s+clone.*input/gi,
@@ -103,7 +103,7 @@ class Agent13SecurityScanner {
                 /commit.*hash.*input/gi,
                 /tag.*name.*input/gi
             ],
-            
+
             // Configuration injection risks
             configInjection: [
                 /config.*\+.*input/gi,
@@ -113,7 +113,7 @@ class Agent13SecurityScanner {
                 /environment.*\[.*input/gi,
                 /process\.env\[.*input/gi
             ],
-            
+
             // Build pipeline security
             pipelineRisks: [
                 /pipeline.*exec.*input/gi,
@@ -123,7 +123,7 @@ class Agent13SecurityScanner {
                 /bash.*script.*input/gi,
                 /powershell.*script.*input/gi
             ],
-            
+
             // Agent deployment security
             agentDeploymentSecurity: [
                 /agent.*deploy.*http:/gi,
@@ -133,15 +133,15 @@ class Agent13SecurityScanner {
                 /agent.*config.*plaintext/gi
             ]
         };
-        
+
         this.sensitiveOperations = [
             'GenerateAgent', 'BuildAgent', 'DeployAgent', 'ValidateTemplate',
-            'CloneTemplate', 'StartBatchBuild', 'GetTemplateDetails', 
+            'CloneTemplate', 'StartBatchBuild', 'GetTemplateDetails',
             'GetDeploymentTargets', 'GetBuildPipelines', 'GetAgentComponents',
             'GetTestConfiguration', 'GetTestSuite', 'GetDeploymentOptions',
             'GetAgentConfiguration', 'GetBuilderStatistics'
         ];
-        
+
         this.builderPatterns = [
             'templateName', 'templateId', 'agentCode', 'deploymentConfig',
             'buildScript', 'pipelineConfig', 'repositoryUrl', 'branchName',
@@ -152,7 +152,7 @@ class Agent13SecurityScanner {
     async scanDirectory(dirPath) {
         console.log('\n🔍 Starting Agent 13 Agent Builder Security Scan...');
         console.log(`📂 Scanning directory: ${dirPath}\n`);
-        
+
         try {
             await this.scanFiles(dirPath);
             this.generateReport();
@@ -164,10 +164,10 @@ class Agent13SecurityScanner {
 
     async scanFiles(dirPath) {
         const files = fs.readdirSync(dirPath, { withFileTypes: true });
-        
+
         for (const file of files) {
             const fullPath = path.join(dirPath, file.name);
-            
+
             if (file.isDirectory()) {
                 await this.scanFiles(fullPath);
             } else if (this.isJavaScriptFile(file.name)) {
@@ -177,8 +177,8 @@ class Agent13SecurityScanner {
     }
 
     isJavaScriptFile(filename) {
-        return /\.(js|ts)$/.test(filename) && 
-               !filename.includes('.min.') && 
+        return /\.(js|ts)$/.test(filename) &&
+               !filename.includes('.min.') &&
                !filename.includes('test') &&
                !filename.includes('spec');
     }
@@ -206,7 +206,7 @@ class Agent13SecurityScanner {
         this.scanConfigInjection(content, relativePath);
         this.scanPipelineRisks(content, relativePath);
         this.scanAgentDeploymentSecurity(content, relativePath);
-        
+
         // General security scans
         this.scanGeneralSecurity(content, relativePath);
         this.scanInputValidation(content, relativePath);
@@ -221,11 +221,11 @@ class Agent13SecurityScanner {
             'CodeGenerator', 'DeploymentManager', 'PipelineManager', 'ComponentBuilder',
             'TestHarness', 'builder/updates', 'builder/stream', 'BuilderDashboard'
         ];
-        
-        const checkAgent13Indicator = (indicator) => 
+
+        const checkAgent13Indicator = (indicator) =>
             content.toLowerCase().includes(indicator.toLowerCase()) ||
             filePath.toLowerCase().includes(indicator.toLowerCase());
-        
+
         return agent13Indicators.some(checkAgent13Indicator);
     }
 
@@ -237,7 +237,7 @@ class Agent13SecurityScanner {
                     // Skip false positives - check if it's using SecurityUtils
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
-                    
+
                     if (!functionBlock.includes('SecurityUtils.secureCallFunction') &&
                         !functionBlock.includes('SecurityUtils.validateAgentCode') &&
                         !filePath.includes('SecurityUtils')) {
@@ -311,8 +311,8 @@ class Agent13SecurityScanner {
                     // Check if CSRF token is present in the context
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
-                    
-                    if (!functionBlock.includes('securityToken') && 
+
+                    if (!functionBlock.includes('securityToken') &&
                         !functionBlock.includes('X-CSRF-Token') &&
                         !functionBlock.includes('SecurityUtils.secureCallFunction')) {
                         this.vulnerabilities.push({
@@ -509,11 +509,11 @@ class Agent13SecurityScanner {
             if (matches) {
                 const processUnsafeFunctionMatch = (match) => {
                     // Skip if it's just the sap.ui.define function declaration
-                    if (match.toLowerCase().includes('function(') && 
+                    if (match.toLowerCase().includes('function(') &&
                         content.includes('sap.ui.define')) {
                         return;
                     }
-                    
+
                     this.vulnerabilities.push({
                         type: 'UNSAFE_FUNCTION',
                         severity: 'HIGH',
@@ -557,9 +557,9 @@ class Agent13SecurityScanner {
     scanAuthenticationChecks(content, filePath) {
         const checkSensitiveOp = (op) => content.includes(op);
         const sensitiveOps = this.sensitiveOperations.filter(checkSensitiveOp);
-        
+
         const processSensitiveOp = (op) => {
-            if (!content.includes('checkAuth') && !content.includes('isAuthenticated') && 
+            if (!content.includes('checkAuth') && !content.includes('isAuthenticated') &&
                 !content.includes('SecurityUtils.checkBuilderAuth')) {
                 this.warnings.push({
                     type: 'MISSING_AUTH_CHECK',
@@ -647,7 +647,7 @@ class Agent13SecurityScanner {
 
         // Builder-specific findings
         console.log('\n🏗️  BUILDER-SPECIFIC SECURITY FINDINGS:');
-        
+
         const builderIssues = {
             'CODE_INJECTION': this.vulnerabilities.filter(v => v.type.includes('CODE_INJECTION')).length,
             'TEMPLATE_INJECTION': this.vulnerabilities.filter(v => v.type.includes('TEMPLATE_INJECTION')).length,
@@ -668,7 +668,7 @@ class Agent13SecurityScanner {
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:');
-            
+
             const processSeverityLevel = (severity) => {
                 const issues = this.vulnerabilities.filter(v => v.severity === severity);
                 if (issues.length > 0) {
@@ -692,12 +692,12 @@ class Agent13SecurityScanner {
         console.log('   - Add SecurityUtils.validateAgentCode() for code generation');
         console.log('   - Use SecurityUtils.secureCallFunction() for builder operations');
         console.log('   - Implement SecurityUtils.sanitizeTemplate() for templates');
-        
+
         console.log('\n2. 🛡️  Enhance builder-specific security');
         console.log('   - Validate deployment configurations with SecurityUtils.validateDeploymentConfig()');
         console.log('   - Sanitize pipeline commands with SecurityUtils.validatePipelineCommand()');
         console.log('   - Secure file system access with path validation');
-        
+
         console.log('\n3. 🔒 Secure builder communications');
         console.log('   - Upgrade WebSocket to WSS for builder updates');
         console.log('   - Use HTTPS for EventSource builder streams');

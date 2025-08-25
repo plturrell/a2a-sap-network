@@ -44,12 +44,10 @@ annotate SecurityMonitoringService.SecurityAlerts with @(
         {
             $Type: 'UI.DataField',
             Value: severity,
-            Criticality: 
-                case severity
-                    when 'critical' then 1  // Red
-                    when 'high' then 2      // Orange
-                    when 'medium' then 3    // Yellow
-                    else 0                  // None
+            Criticality: {
+                $Type: 'UI.CriticalityType',
+                $Path: 'severityLevel'
+            },
             ![@UI.Importance]: #High
         },
         {
@@ -124,11 +122,7 @@ annotate SecurityMonitoringService.SecurityAlerts with @(
     UI.DataPoint #RiskScore: {
         Value: riskScore,
         Criticality: 
-            case riskScore
-                when >= 80 then 1   // Critical
-                when >= 60 then 2   // High
-                when >= 40 then 3   // Medium
-                else 0              // Low
+            1
         Title: 'Risk Score'
     },
 
@@ -334,10 +328,7 @@ annotate SecurityMonitoringService.SecurityMetrics with @(
             Value: criticalEvents,
             Criticality: 
                 case criticalEvents
-                    when > 10 then 1    // Critical - Red
-                    when > 5 then 2     // High - Orange  
-                    when > 0 then 3     // Medium - Yellow
-                    else 0              // None
+                    1
             ![@UI.Importance]: #High
         },
         {
@@ -549,12 +540,7 @@ annotate SecurityMonitoringService.SecurityDashboard with @(
 
     UI.DataPoint #ActiveAlerts: {
         Value: totalActiveAlerts,
-        Criticality:
-            case totalActiveAlerts
-                when > 20 then 1       // Critical
-                when > 10 then 2       // High
-                when > 5 then 3        // Medium
-                else 0,                 // Low
+        Criticality: 1,
         Title: 'Active Security Alerts'
     },
 

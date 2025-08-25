@@ -20,7 +20,7 @@ class Agent5SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // QA Validation-specific vulnerability patterns
         this.qaValidationPatterns = {
             // Test case injection attacks
@@ -46,7 +46,7 @@ class Agent5SecurityScanner {
                 message: 'Test case injection vulnerability detected',
                 impact: 'Could allow injection of malicious test cases leading to code execution, system compromise, or data exfiltration'
             },
-            
+
             // Validation rule bypass
             VALIDATION_BYPASS: {
                 patterns: [
@@ -68,7 +68,7 @@ class Agent5SecurityScanner {
                 message: 'QA validation bypass vulnerability',
                 impact: 'Could allow bypassing quality validation leading to release of untested or defective software'
             },
-            
+
             // Quality criteria manipulation
             QUALITY_MANIPULATION: {
                 patterns: [
@@ -90,7 +90,7 @@ class Agent5SecurityScanner {
                 message: 'Quality criteria manipulation vulnerability',
                 impact: 'Could allow manipulation of quality metrics leading to false quality assessments'
             },
-            
+
             // Test data tampering
             TEST_DATA_TAMPERING: {
                 patterns: [
@@ -112,7 +112,7 @@ class Agent5SecurityScanner {
                 message: 'Test data tampering vulnerability',
                 impact: 'Could allow unauthorized modification of test data leading to compromised test results'
             },
-            
+
             // QA workflow security issues
             WORKFLOW_SECURITY: {
                 patterns: [
@@ -134,7 +134,7 @@ class Agent5SecurityScanner {
                 message: 'QA workflow security vulnerability',
                 impact: 'Could allow bypassing critical workflow steps leading to unauthorized changes or approvals'
             },
-            
+
             // Report manipulation
             REPORT_MANIPULATION: {
                 patterns: [
@@ -158,7 +158,7 @@ class Agent5SecurityScanner {
                 message: 'Report manipulation vulnerability',
                 impact: 'Could allow unauthorized modification of QA reports leading to false quality assessments'
             },
-            
+
             // Testing framework vulnerabilities
             FRAMEWORK_VULNERABILITY: {
                 patterns: [
@@ -182,7 +182,7 @@ class Agent5SecurityScanner {
                 message: 'Testing framework vulnerability',
                 impact: 'Could allow exploitation of testing frameworks leading to system compromise or data theft'
             },
-            
+
             // Compliance validation bypass
             COMPLIANCE_BYPASS: {
                 patterns: [
@@ -206,7 +206,7 @@ class Agent5SecurityScanner {
                 message: 'Compliance validation bypass vulnerability',
                 impact: 'Could allow bypassing critical compliance checks leading to regulatory violations'
             },
-            
+
             // Test execution environment vulnerabilities
             EXECUTION_ENVIRONMENT: {
                 patterns: [
@@ -228,7 +228,7 @@ class Agent5SecurityScanner {
                 message: 'Test execution environment vulnerability',
                 impact: 'Could allow execution of tests in production environment leading to data corruption or service disruption'
             },
-            
+
             // Defect tracking manipulation
             DEFECT_MANIPULATION: {
                 patterns: [
@@ -253,7 +253,7 @@ class Agent5SecurityScanner {
                 impact: 'Could allow unauthorized modification of defect data leading to hidden bugs and quality issues'
             }
         };
-        
+
         // Standard OWASP Top 10 patterns (adapted for QA context)
         this.owaspPatterns = {
             // XSS in test data and reports
@@ -277,7 +277,7 @@ class Agent5SecurityScanner {
                 message: 'Cross-Site Scripting (XSS) vulnerability in QA data',
                 impact: 'Could allow execution of malicious scripts in QA interfaces, reports, or test descriptions'
             },
-            
+
             // SQL Injection in test queries
             SQL_INJECTION: {
                 patterns: [
@@ -299,7 +299,7 @@ class Agent5SecurityScanner {
                 message: 'SQL Injection vulnerability in QA data queries',
                 impact: 'Could allow unauthorized database access, data theft, or data manipulation'
             },
-            
+
             // CSRF in QA operations
             CSRF_VULNERABILITY: {
                 patterns: [
@@ -318,7 +318,7 @@ class Agent5SecurityScanner {
                 message: 'Cross-Site Request Forgery (CSRF) vulnerability in QA operations',
                 impact: 'Could allow unauthorized execution of QA operations like test runs, report generation, or defect creation'
             },
-            
+
             // Insecure connections
             INSECURE_CONNECTION: {
                 patterns: [
@@ -337,7 +337,7 @@ class Agent5SecurityScanner {
                 impact: 'Could expose QA data to man-in-the-middle attacks and eavesdropping'
             }
         };
-        
+
         // SAP Fiori compliance patterns
         this.fioriCompliancePatterns = {
             // i18n compliance for QA
@@ -354,7 +354,7 @@ class Agent5SecurityScanner {
                 impact: 'QA interface texts should be externalized for internationalization',
                 isPositive: true
             },
-            
+
             // Security headers in QA responses
             SECURITY_HEADERS: {
                 patterns: [
@@ -372,7 +372,7 @@ class Agent5SecurityScanner {
             }
         };
     }
-    
+
     /**
      * Main scan function
      */
@@ -380,26 +380,26 @@ class Agent5SecurityScanner {
         console.log('🔍 Starting Agent 5 (QA Validation) Security Scan...');
         console.log(`📂 Target Directory: ${targetDirectory}`);
         console.log(`⏰ Scan Started: ${new Date().toISOString()}\n`);
-        
+
         if (!fs.existsSync(targetDirectory)) {
             console.error(`❌ Target directory does not exist: ${targetDirectory}`);
             return;
         }
-        
+
         await this.scanDirectory(targetDirectory);
         this.generateReport();
     }
-    
+
     /**
      * Recursively scan directory
      */
     async scanDirectory(dirPath) {
         const items = fs.readdirSync(dirPath);
-        
+
         for (const item of items) {
             const fullPath = path.join(dirPath, item);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory()) {
                 // Skip common non-source directories
                 if (!['node_modules', '.git', 'dist', 'build', 'coverage'].includes(item)) {
@@ -414,7 +414,7 @@ class Agent5SecurityScanner {
             }
         }
     }
-    
+
     /**
      * Scan individual file
      */
@@ -422,24 +422,24 @@ class Agent5SecurityScanner {
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             this.filesScanned++;
-            
+
             // Scan for QA Validation-specific vulnerabilities
             this.scanPatterns(content, filePath, this.qaValidationPatterns);
-            
+
             // Scan for OWASP vulnerabilities
             this.scanPatterns(content, filePath, this.owaspPatterns);
-            
+
             // Scan for SAP Fiori compliance
             this.scanPatterns(content, filePath, this.fioriCompliancePatterns);
-            
+
             // Additional QA-specific checks
             this.scanForQASpecificIssues(content, filePath);
-            
+
         } catch (error) {
             console.error(`⚠️  Error scanning file ${filePath}: ${error.message}`);
         }
     }
-    
+
     /**
      * Scan for patterns in content
      */
@@ -452,12 +452,12 @@ class Agent5SecurityScanner {
                     const lineNumber = lines.length;
                     const matchedText = matches[0];
                     const lineContext = lines[lineNumber - 1] || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(matchedText, lineContext, patternName, filePath)) {
                         continue;
                     }
-                    
+
                     this.vulnerabilities.push({
                         file: filePath,
                         line: lineNumber,
@@ -474,7 +474,7 @@ class Agent5SecurityScanner {
             }
         }
     }
-    
+
     /**
      * Check if a pattern match is a false positive
      */
@@ -482,12 +482,12 @@ class Agent5SecurityScanner {
         // General false positive checks for SecurityUtils files
         if (filePath.includes('SecurityUtils.js')) {
             // SecurityUtils contains security patterns that may trigger false positives
-            return lineContext.includes('pattern') || lineContext.includes('message') || 
+            return lineContext.includes('pattern') || lineContext.includes('message') ||
                    lineContext.includes('dangerousPatterns') || lineContext.includes('test') ||
                    lineContext.includes('validateTestCase') || lineContext.includes('sanitize') ||
                    lineContext.includes('validation') || lineContext.includes('_validate');
         }
-        
+
         // Specific false positives by pattern type
         switch(patternName) {
             case 'TEST_CASE_INJECTION':
@@ -497,7 +497,7 @@ class Agent5SecurityScanner {
                     return true;
                 }
                 break;
-                
+
             case 'XSS_VULNERABILITY':
                 // Skip normal XML attributes and property names
                 if (matchedText.includes('ontentWidth=') || matchedText.includes('onAPI =') ||
@@ -507,23 +507,23 @@ class Agent5SecurityScanner {
                     return true;
                 }
                 // Skip legitimate WebSocket event handlers - specifically handle the pattern
-                if ((matchedText.includes('onerror =') || matchedText.includes('onclick =') || 
-                     matchedText.includes('onload =') || matchedText.includes('onblur =')) && 
+                if ((matchedText.includes('onerror =') || matchedText.includes('onclick =') ||
+                     matchedText.includes('onload =') || matchedText.includes('onblur =')) &&
                     (lineContext.includes('_ws.') || lineContext.includes('socket.') ||
                      lineContext.includes('WebSocket') || lineContext.includes('= function()'))) {
                     return true;
                 }
                 // Skip if it's in comments or property definitions
-                if (lineContext.includes('//') || lineContext.includes('*') || 
+                if (lineContext.includes('//') || lineContext.includes('*') ||
                     lineContext.includes('i18n>') || lineContext.includes('title="{i18n>')) {
                     return true;
                 }
                 break;
-                
+
             case 'I18N_COMPLIANCE':
                 // This is actually a positive pattern, so don't skip
                 return false;
-                
+
             case 'INSECURE_CONNECTION':
                 // Skip if it's just a placeholder or comment
                 if (lineContext.includes('placeholder=') || lineContext.includes('//') ||
@@ -532,16 +532,16 @@ class Agent5SecurityScanner {
                 }
                 break;
         }
-        
+
         // Skip comments and documentation
-        if (lineContext.includes('//') || lineContext.includes('/*') || 
+        if (lineContext.includes('//') || lineContext.includes('/*') ||
             lineContext.includes('*') || lineContext.includes('try {')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Scan for QA-specific security issues
      */
@@ -555,7 +555,7 @@ class Agent5SecurityScanner {
             /testCredentials\s*[:=]/gi,
             /qaPassword\s*[:=]/gi
         ];
-        
+
         credentialPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
@@ -563,14 +563,14 @@ class Agent5SecurityScanner {
                 const lineNumber = lines.length;
                 const lineContext = lines[lineNumber - 1] || '';
                 const matchedText = matches[0];
-                
+
                 // Skip false positives in SecurityUtils
-                if (filePath.includes('SecurityUtils.js') && 
+                if (filePath.includes('SecurityUtils.js') &&
                     (lineContext.includes('TOKEN=') || lineContext.includes('cookie.startsWith') ||
                      lineContext.includes('XSRF-TOKEN') || lineContext.includes('substring'))) {
                     return;
                 }
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -585,7 +585,7 @@ class Agent5SecurityScanner {
                 });
             }
         });
-        
+
         // Check for production data usage in tests
         const prodDataPatterns = [
             /productionData\s*[:=]\s*true/gi,
@@ -593,13 +593,13 @@ class Agent5SecurityScanner {
             /testEnvironment\s*[:=]\s*['"]production['"]/gi,
             /liveData\s*[:=]\s*true/gi
         ];
-        
+
         prodDataPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -614,7 +614,7 @@ class Agent5SecurityScanner {
                 });
             }
         });
-        
+
         // Check for unsafe test execution configurations
         const unsafeConfigPatterns = [
             /maxExecutionTime\s*[:=]\s*-1/gi,
@@ -624,13 +624,13 @@ class Agent5SecurityScanner {
             /allowUnsafeExecution\s*[:=]\s*true/gi,
             /parallelThreads\s*[:=]\s*[0-9]{3,}/gi
         ];
-        
+
         unsafeConfigPatterns.forEach(pattern => {
             const matches = content.match(pattern);
             if (matches) {
                 const lines = content.substring(0, content.indexOf(matches[0])).split('\n');
                 const lineNumber = lines.length;
-                
+
                 this.vulnerabilities.push({
                     file: filePath,
                     line: lineNumber,
@@ -646,7 +646,7 @@ class Agent5SecurityScanner {
             }
         });
     }
-    
+
     /**
      * Generate comprehensive security report
      */
@@ -657,11 +657,11 @@ class Agent5SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🛡️  AGENT 5 (QA VALIDATION) SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('📊 SCAN SUMMARY:');
         console.log(`   📂 Files Scanned: ${this.filesScanned}`);
         console.log(`   ⏱️  Scan Duration: ${(scanDuration / 1000).toFixed(2)}s`);
@@ -671,27 +671,27 @@ class Agent5SecurityScanner {
         console.log(`   🟡 Medium: ${mediumCount}`);
         console.log(`   🟢 Low: ${lowCount}`);
         console.log(`   ⚪ Warning: ${warningCount}`);
-        
+
         if (this.vulnerabilities.length > 0) {
             console.log('\n📋 VULNERABILITIES BY CATEGORY:');
             const byCategory = {};
             this.vulnerabilities.forEach(vuln => {
                 byCategory[vuln.category] = (byCategory[vuln.category] || 0) + 1;
             });
-            
+
             Object.entries(byCategory)
                 .sort(([,a], [,b]) => b - a)
                 .forEach(([category, count]) => {
                     console.log(`   • ${category}: ${count}`);
                 });
-            
+
             console.log('\n🔍 DETAILED FINDINGS:');
             console.log('-'.repeat(80));
-            
+
             // Sort by severity
             const severityOrder = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'WARNING': 4 };
             this.vulnerabilities.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
-            
+
             this.vulnerabilities.forEach((vuln, index) => {
                 const icon = this.getSeverityIcon(vuln.severity);
                 console.log(`\n${icon} [${vuln.severity}] ${vuln.category}`);
@@ -704,7 +704,7 @@ class Agent5SecurityScanner {
                 }
             });
         }
-        
+
         console.log('\n🏥 QA VALIDATION SECURITY RECOMMENDATIONS:');
         console.log('   1. 🔒 Implement input validation for all test case data');
         console.log('   2. 🛡️  Sanitize test descriptions and defect reports');
@@ -716,19 +716,19 @@ class Agent5SecurityScanner {
         console.log('   8. 🏭 Ensure test isolation from production environments');
         console.log('   9. 📋 Validate compliance check implementations');
         console.log('   10. 🧪 Secure test execution environments and frameworks');
-        
+
         this.saveReport();
-        
+
         console.log('\n✅ Scan completed successfully!');
         console.log('📄 Report saved to: agent5-security-report.json');
-        
+
         if (criticalCount > 0 || highCount > 0) {
             console.log(`\n⚠️  ${criticalCount + highCount} critical/high severity issues found!`);
             console.log('🔧 Please address these issues before deploying to production.');
             process.exit(1);
         }
     }
-    
+
     /**
      * Get severity icon
      */
@@ -742,7 +742,7 @@ class Agent5SecurityScanner {
         };
         return icons[severity] || '❓';
     }
-    
+
     /**
      * Save report to JSON file
      */
@@ -777,7 +777,7 @@ class Agent5SecurityScanner {
                 'Secure test execution environments and testing frameworks'
             ]
         };
-        
+
         fs.writeFileSync('agent5-security-report.json', JSON.stringify(report, null, 2));
     }
 }

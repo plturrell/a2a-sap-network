@@ -22,11 +22,11 @@ class EnhancedMcpCodeAnalysis extends BaseService {
      */
     async initializeService() {
         this.logger.info('Initializing Enhanced MCP Code Analysis Service');
-        
+
         await this.gleanService.initializeService();
         await this.graphAlgorithms.initializeService();
         await this.treeAlgorithms.initializeService();
-        
+
         this._registerMcpTools();
         this._registerMcpResources();
         this._registerMcpPrompts();
@@ -346,12 +346,12 @@ class EnhancedMcpCodeAnalysis extends BaseService {
     async _handleDependencyAnalysis(params) {
         try {
             const { projectPath, targetFile, analysisType, maxDepth } = params;
-            
+
             this.logger.info(`Analyzing dependencies for ${projectPath} with type ${analysisType}`);
-            
+
             // Build dependency graph from project
             const graph = await this._buildProjectDependencyGraph(projectPath, maxDepth);
-            
+
             const results = {
                 projectPath,
                 analysisType,
@@ -397,14 +397,14 @@ class EnhancedMcpCodeAnalysis extends BaseService {
                     // Perform all analyses
                     results.circularDependencies = this.graphAlgorithms.detectCycles(graph);
                     results.stronglyConnectedComponents = this.graphAlgorithms.findStronglyConnectedComponents(graph);
-                    
+
                     try {
                         results.buildOrder = this.graphAlgorithms.topologicalSort(graph);
                     } catch (error) {
                         results.buildOrder = null;
                         results.buildOrderError = error.message;
                     }
-                    
+
                     if (targetFile) {
                         const pathAnalysis = this.graphAlgorithms.dijkstra(graph, 'index.js');
                         results.targetFileAnalysis = {
@@ -437,13 +437,13 @@ class EnhancedMcpCodeAnalysis extends BaseService {
     async _handleComplexityAnalysis(params) {
         try {
             const { filePath, includeMetrics, functionFilter } = params;
-            
+
             this.logger.info(`Analyzing complexity for ${filePath}`);
-            
+
             // Parse file and build control flow graph
             const ast = await this._parseFileAST(filePath);
             const functions = this._extractFunctions(ast, functionFilter);
-            
+
             const results = {
                 filePath,
                 timestamp: new Date().toISOString(),
@@ -507,28 +507,28 @@ class EnhancedMcpCodeAnalysis extends BaseService {
     async _handleSmartSearch(params) {
         try {
             const { pattern, searchType, fuzzyThreshold, maxResults, includeContext } = params;
-            
+
             this.logger.info(`Performing ${searchType} search for pattern: ${pattern}`);
-            
+
             const searchResults = [];
-            
+
             switch (searchType) {
                 case 'exact':
                     // Use KMP algorithm for exact pattern matching
                     searchResults.push(...await this._performExactSearch(pattern, maxResults));
                     break;
-                    
+
                 case 'fuzzy':
                     // Use edit distance for fuzzy matching
                     searchResults.push(...await this._performFuzzySearch(pattern, fuzzyThreshold, maxResults));
                     break;
-                    
+
                 case 'semantic':
                     // Use code similarity with Glean integration
                     const semanticResults = await this.gleanService.findSimilarCode(pattern, fuzzyThreshold);
                     searchResults.push(...semanticResults.matches.slice(0, maxResults));
                     break;
-                    
+
                 case 'structural':
                     // Use tree structure matching
                     searchResults.push(...await this._performStructuralSearch(pattern, maxResults));

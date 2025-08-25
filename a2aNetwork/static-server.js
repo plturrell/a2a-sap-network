@@ -32,8 +32,8 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     server: 'static-file-server',
     port: PORT,
     timestamp: new Date().toISOString()

@@ -10,7 +10,7 @@ const EventEmitter = require('events');
 class SharedResourceManager extends EventEmitter {
     constructor(config) {
         super();
-        
+
         this.config = {
             syncInterval: config.syncInterval || 60000, // 60 seconds
             cacheExpiry: config.cacheExpiry || 300000, // 5 minutes
@@ -193,7 +193,7 @@ class SharedResourceManager extends EventEmitter {
             }
 
             report.overallHealth = this.calculateOverallHealth(report);
-            
+
             return report;
 
         } catch (error) {
@@ -326,15 +326,15 @@ class SharedResourceManager extends EventEmitter {
         switch (this.config.conflictResolution) {
             case 'last-writer-wins':
                 return incoming;
-            
+
             case 'merge':
                 return this.mergeConfigurations(existing, incoming);
-            
+
             case 'manual':
                 // Queue for manual resolution
                 await this.queueForManualResolution(conflictEntry);
                 return existing; // Keep existing until resolved
-            
+
             default:
                 return incoming;
         }
@@ -368,7 +368,7 @@ class SharedResourceManager extends EventEmitter {
      */
     deepMerge(target, source) {
         const output = { ...target };
-        
+
         if (this.isObject(target) && this.isObject(source)) {
             Object.keys(source).forEach(key => {
                 if (this.isObject(source[key])) {
@@ -382,7 +382,7 @@ class SharedResourceManager extends EventEmitter {
                 }
             });
         }
-        
+
         return output;
     }
 
@@ -406,13 +406,13 @@ class SharedResourceManager extends EventEmitter {
         switch (this.config.storageBackend) {
             case 'filesystem':
                 return this.storeAssetFilesystem(assetId, assetData, metadata);
-            
+
             case 's3':
                 return this.storeAssetS3(assetId, assetData, metadata);
-            
+
             case 'azure':
                 return this.storeAssetAzure(assetId, assetData, metadata);
-            
+
             default:
                 throw new Error(`Unknown storage backend: ${this.config.storageBackend}`);
         }
@@ -428,7 +428,7 @@ class SharedResourceManager extends EventEmitter {
     async storeAssetFilesystem(assetId, assetData, metadata) {
         const fs = require('fs').promises;
         const path = require('path');
-        
+
         const assetPath = path.join(
             this.config.assetStoragePath || './assets',
             metadata.type || 'misc',
@@ -437,7 +437,7 @@ class SharedResourceManager extends EventEmitter {
 
         await fs.mkdir(path.dirname(assetPath), { recursive: true });
         await fs.writeFile(assetPath, assetData);
-        
+
         return `file://${assetPath}`;
     }
 
@@ -678,7 +678,7 @@ class SharedResourceManager extends EventEmitter {
     async validateConfiguration(config) {
         if (!config.key || !config.value) return false;
         if (!config.metadata?.checksum) return false;
-        
+
         const currentChecksum = this.calculateChecksum(config.value);
         return currentChecksum === config.metadata.checksum;
     }
@@ -690,7 +690,7 @@ class SharedResourceManager extends EventEmitter {
      */
     async validateAsset(asset) {
         if (!asset.id || !asset.url) return false;
-        
+
         // Check if asset is accessible
         try {
             if (asset.url.startsWith('file://')) {
@@ -725,7 +725,7 @@ class SharedResourceManager extends EventEmitter {
         const configHealth = (report.configurations.valid / report.configurations.total) || 0;
         const assetHealth = (report.assets.valid / report.assets.total) || 0;
         const flagHealth = (report.featureFlags.valid / report.featureFlags.total) || 0;
-        
+
         return Math.round((configHealth + assetHealth + flagHealth) / 3 * 100);
     }
 

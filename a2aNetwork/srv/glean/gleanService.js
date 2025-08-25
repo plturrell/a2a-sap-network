@@ -19,13 +19,13 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     async initializeService() {
         await super.initializeService();
-        
+
         this.logger.info('Initializing Enhanced Glean Service');
-        
+
         // Initialize algorithm services
         await this.graphAlgorithms.initializeService();
         await this.treeAlgorithms.initializeService();
-        
+
         // Register enhanced actions
         this._registerEnhancedActions();
     }
@@ -90,24 +90,24 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     async analyzeDependencyCriticalPaths(projectId, targetFile) {
         this.logger.info(`Analyzing critical paths for ${targetFile} in project ${projectId}`);
-        
+
         // Build dependency graph from Glean facts
         const graph = await this._buildDependencyGraph(projectId);
-        
+
         // Find entry points (files with no incoming dependencies)
         const entryPoints = await this._findEntryPoints(graph);
-        
+
         const results = {
             criticalPaths: [],
             circularDependencies: [],
             buildOrder: [],
             dependencyMetrics: {}
         };
-        
+
         // Analyze paths from each entry point to target
         for (const entryPoint of entryPoints) {
             const pathAnalysis = this.graphAlgorithms.dijkstra(graph, entryPoint);
-            
+
             if (pathAnalysis.hasPath(targetFile)) {
                 results.criticalPaths.push({
                     from: entryPoint,
@@ -118,24 +118,24 @@ class EnhancedGleanService extends cds.ApplicationService {
                 });
             }
         }
-        
+
         // Find circular dependencies
         const cycles = this.graphAlgorithms.detectCycles(graph);
         results.circularDependencies = cycles.map(cycle => ({
             files: cycle,
             severity: this._calculateCycleSeverity(cycle, graph)
         }));
-        
+
         // Calculate optimal build order
         try {
             results.buildOrder = this.graphAlgorithms.topologicalSort(graph);
         } catch (error) {
             this.logger.warn('Cannot determine build order due to circular dependencies');
         }
-        
+
         // Calculate dependency metrics
         results.dependencyMetrics = await this._calculateDependencyMetrics(graph, targetFile);
-        
+
         return results;
     }
 
@@ -144,25 +144,25 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     async findSimilarCode(codeSnippet, threshold) {
         this.logger.info(`Finding code similar to snippet with threshold ${threshold}`);
-        
+
         // Get all indexed code files
         const indexedFiles = await this._getIndexedFiles();
         const similarities = [];
-        
+
         // Normalize the input snippet
         const normalizedSnippet = this._normalizeCode(codeSnippet);
-        
+
         for (const file of indexedFiles) {
             const fileContent = await this._readFileContent(file.path);
             const normalizedContent = this._normalizeCode(fileContent);
-            
+
             // Use sliding window for large files
             const windowSize = normalizedSnippet.length * 2;
             const windows = this._createSlidingWindows(normalizedContent, windowSize);
-            
+
             for (const window of windows) {
                 const similarity = this._calculateSimilarity(normalizedSnippet, window.content);
-                
+
                 if (similarity >= threshold) {
                     similarities.push({
                         file: file.path,
@@ -175,10 +175,10 @@ class EnhancedGleanService extends cds.ApplicationService {
                 }
             }
         }
-        
+
         // Sort by similarity score
         similarities.sort((a, b) => b.similarity - a.similarity);
-        
+
         return {
             query: codeSnippet,
             matches: similarities.slice(0, 50), // Limit results
@@ -195,13 +195,13 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     async navigateCodeHierarchy(rootPath, query) {
         this.logger.info(`Navigating code hierarchy from ${rootPath} with query: ${query}`);
-        
+
         // Build hierarchical code structure
         const codeTree = await this._buildCodeTree(rootPath);
-        
+
         // Apply query filters
         const queryResult = this._applyHierarchicalQuery(codeTree, query);
-        
+
         // Calculate metrics
         const metrics = {
             totalNodes: this.treeAlgorithms.getNodeCount(codeTree),
@@ -209,10 +209,10 @@ class EnhancedGleanService extends cds.ApplicationService {
             maxDepth: this.treeAlgorithms.getDepth(codeTree),
             matchedNodes: this.treeAlgorithms.getNodeCount(queryResult)
         };
-        
+
         // Get all paths for matched elements
         const matchedPaths = this.treeAlgorithms.getAllPaths(queryResult);
-        
+
         return {
             rootPath,
             query,
@@ -231,16 +231,16 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     async suggestRefactorings(filePath, analysisDepth) {
         this.logger.info(`Analyzing ${filePath} for refactoring suggestions with depth ${analysisDepth}`);
-        
+
         const suggestions = [];
-        
+
         // Parse file AST
         const ast = await this._parseFileAST(filePath);
         const codeStructure = this._astToTreeStructure(ast);
-        
+
         // Analyze code patterns
         const patterns = await this._analyzeCodePatterns(codeStructure);
-        
+
         // 1. Detect complex functions using cyclomatic complexity
         const complexFunctions = this._findComplexFunctions(codeStructure);
         for (const func of complexFunctions) {
@@ -253,7 +253,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 refactoring: this._generateExtractMethodRefactoring(func)
             });
         }
-        
+
         // 2. Find duplicate code patterns
         const duplicates = this._findDuplicatePatterns(codeStructure);
         for (const duplicate of duplicates) {
@@ -266,7 +266,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 refactoring: this._generateExtractCommonRefactoring(duplicate)
             });
         }
-        
+
         // 3. Analyze dependencies for better structure
         const dependencyIssues = await this._analyzeDependencyStructure(filePath, analysisDepth);
         for (const issue of dependencyIssues) {
@@ -278,7 +278,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 recommendation: issue.recommendation
             });
         }
-        
+
         // 4. Find inefficient patterns
         const inefficiencies = this._findInefficiencies(codeStructure);
         for (const inefficiency of inefficiencies) {
@@ -291,7 +291,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 refactoring: inefficiency.optimization
             });
         }
-        
+
         // Sort suggestions by severity and feasibility
         suggestions.sort((a, b) => {
             const severityOrder = { high: 3, medium: 2, low: 1 };
@@ -299,7 +299,7 @@ class EnhancedGleanService extends cds.ApplicationService {
             if (severityDiff !== 0) return severityDiff;
             return b.automated ? 1 : -1;
         });
-        
+
         return {
             file: filePath,
             totalSuggestions: suggestions.length,
@@ -315,22 +315,22 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     async _buildDependencyGraph(projectId) {
         const graph = this.graphAlgorithms.createGraph();
-        
+
         // Query Glean for all file dependencies
         const dependencies = await this.query({
             predicate: 'code.Dependency',
             projectId
         });
-        
+
         for (const dep of dependencies) {
             const fromFile = dep.facts.find(f => f.predicate === 'code.FileDefines')?.key;
             const toFile = dep.facts.find(f => f.predicate === 'code.FileUses')?.key;
-            
+
             if (fromFile && toFile) {
                 this.graphAlgorithms.addEdge(graph, fromFile, toFile, 1);
             }
         }
-        
+
         return graph;
     }
 
@@ -342,13 +342,13 @@ class EnhancedGleanService extends cds.ApplicationService {
         // Token-based similarity for better accuracy
         const tokens1 = this._tokenizeCode(code1);
         const tokens2 = this._tokenizeCode(code2);
-        
+
         // Calculate longest common subsequence
         const lcs = this._longestCommonSubsequence(tokens1, tokens2);
-        
+
         // Similarity score based on LCS length relative to both sequences
         const similarity = (2 * lcs.length) / (tokens1.length + tokens2.length);
-        
+
         return similarity;
     }
 
@@ -360,7 +360,7 @@ class EnhancedGleanService extends cds.ApplicationService {
         const m = arr1.length;
         const n = arr2.length;
         const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-        
+
         for (let i = 1; i <= m; i++) {
             for (let j = 1; j <= n; j++) {
                 if (arr1[i - 1] === arr2[j - 1]) {
@@ -370,7 +370,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 }
             }
         }
-        
+
         // Reconstruct the LCS
         const lcs = [];
         let i = m, j = n;
@@ -385,7 +385,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 j--;
             }
         }
-        
+
         return lcs;
     }
 
@@ -396,23 +396,23 @@ class EnhancedGleanService extends cds.ApplicationService {
     async _buildCodeTree(rootPath) {
         const files = await this._getFilesRecursively(rootPath);
         const tree = {};
-        
+
         for (const file of files) {
             const pathParts = file.relativePath.split('/');
             let current = tree;
-            
+
             for (let i = 0; i < pathParts.length - 1; i++) {
                 if (!current[pathParts[i]]) {
                     current[pathParts[i]] = {};
                 }
                 current = current[pathParts[i]];
             }
-            
+
             // Add file with metadata
             const fileName = pathParts[pathParts.length - 1];
             current[fileName] = await this._getFileMetadata(file.absolutePath);
         }
-        
+
         return tree;
     }
 
@@ -425,20 +425,20 @@ class EnhancedGleanService extends cds.ApplicationService {
         const queryParts = query.split(':');
         const pattern = queryParts[0];
         const filter = queryParts[1];
-        
+
         return this.treeAlgorithms.filterStructure((item, path) => {
             const pathString = path.join('/');
-            
+
             // Check pattern match
             if (pattern !== '*' && !this._matchesPattern(pathString, pattern)) {
                 return false;
             }
-            
+
             // Check filter if provided
             if (filter && item.type === 'file') {
                 return this._matchesFilter(item, filter);
             }
-            
+
             return true;
         }, codeTree);
     }
@@ -449,10 +449,10 @@ class EnhancedGleanService extends cds.ApplicationService {
      */
     _generateRefactoringExecutionPlan(suggestions) {
         const automatedSuggestions = suggestions.filter(s => s.automated);
-        
+
         // Build dependency graph for refactorings
         const graph = this.graphAlgorithms.createGraph();
-        
+
         // Add nodes for each refactoring
         automatedSuggestions.forEach((suggestion, index) => {
             this.graphAlgorithms.addNode(graph, `refactoring-${index}`, {
@@ -460,7 +460,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 estimatedTime: this._estimateRefactoringTime(suggestion)
             });
         });
-        
+
         // Add dependencies between refactorings
         for (let i = 0; i < automatedSuggestions.length; i++) {
             for (let j = i + 1; j < automatedSuggestions.length; j++) {
@@ -470,7 +470,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                 }
             }
         }
-        
+
         // Calculate execution order
         try {
             const executionOrder = this.graphAlgorithms.topologicalSort(graph);
@@ -480,7 +480,7 @@ class EnhancedGleanService extends cds.ApplicationService {
                     const index = parseInt(id.split('-')[1]);
                     return automatedSuggestions[index];
                 }),
-                estimatedTotalTime: automatedSuggestions.reduce((sum, s) => 
+                estimatedTotalTime: automatedSuggestions.reduce((sum, s) =>
                     sum + this._estimateRefactoringTime(s), 0
                 )
             };

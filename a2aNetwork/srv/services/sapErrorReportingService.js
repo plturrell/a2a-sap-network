@@ -1,9 +1,9 @@
 /**
  * Error Reporting Service
- * 
+ *
  * Centralized error reporting and monitoring service that integrates with
  * SAP Cloud ALM and other monitoring solutions for enterprise error tracking.
- * 
+ *
  * @author SAP SE
  * @since 1.0.0
  * @version 1.0.0
@@ -28,17 +28,17 @@ class ErrorReportingService {
             },
             recent: []
         };
-        
+
         this.alertThresholds = {
             critical: 1, // Alert immediately on critical errors
             high: 5,     // Alert after 5 high severity errors in 10 minutes
             medium: 10,  // Alert after 10 medium severity errors in 30 minutes
             errorRate: 0.05 // Alert if error rate exceeds 5%
         };
-        
+
         this.logger = loggingService.child('error-reporting');
         this.intervals = new Map(); // Track intervals for cleanup
-        
+
         // Clean up old errors every hour
         const cleanupInterval = setInterval(() => this._cleanupOldErrors(), 3600000);
         this.intervals.set('cleanup', cleanupInterval);
@@ -54,7 +54,7 @@ class ErrorReportingService {
         const errorId = uuidv4();
         const timestamp = new Date().toISOString();
         const severity = this._determineSeverity(error, context);
-        
+
         // Normalize error information
         const errorInfo = {
             id: errorId,
@@ -96,7 +96,7 @@ class ErrorReportingService {
 
         // Update statistics
         this._updateStats(errorInfo);
-        
+
         // Log the error
         this.logger.error(`Error reported: ${errorInfo.message}`, {
             errorId: errorInfo.id,
@@ -146,7 +146,7 @@ class ErrorReportingService {
 
         const error = new Error(errorData.message);
         error.stack = errorData.stack || `at ${errorData.filename}:${errorData.lineno}:${errorData.colno}`;
-        
+
         return this.reportError(error, context);
     }
 
@@ -167,24 +167,24 @@ class ErrorReportingService {
      */
     getRecentErrors(limit = 50, filters = {}) {
         let errors = Array.from(this.errorStore.values());
-        
+
         // Apply filters
         if (filters.severity) {
             errors = errors.filter(err => err.severity === filters.severity);
         }
-        
+
         if (filters.category) {
             errors = errors.filter(err => err.category === filters.category);
         }
-        
+
         if (filters.component) {
             errors = errors.filter(err => err.component === filters.component);
         }
-        
+
         if (filters.correlationId) {
             errors = errors.filter(err => err.correlationId === filters.correlationId);
         }
-        
+
         if (filters.since) {
             const sinceDate = new Date(filters.since);
             errors = errors.filter(err => new Date(err.lastSeen) > sinceDate);
@@ -192,7 +192,7 @@ class ErrorReportingService {
 
         // Sort by last seen (most recent first)
         errors.sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
-        
+
         return errors.slice(0, limit);
     }
 
@@ -209,7 +209,7 @@ class ErrorReportingService {
             '7d': 7 * 24 * 60 * 60 * 1000,
             '30d': 30 * 24 * 60 * 60 * 1000
         };
-        
+
         const cutoff = now - (timeframes[timeframe] || timeframes['24h']);
         const recentErrors = Array.from(this.errorStore.values())
             .filter(err => new Date(err.lastSeen).getTime() > cutoff);
@@ -255,7 +255,7 @@ class ErrorReportingService {
             error.resolvedBy = userId;
             error.resolvedAt = new Date().toISOString();
             error.resolution = resolution;
-            
+
             this.logger.info(`Error resolved: ${errorId}`, {
                 errorId,
                 resolvedBy: userId,
@@ -348,7 +348,7 @@ class ErrorReportingService {
         const message = error.message || '';
         const type = error.name || 'Error';
         const stackTop = error.stack ? error.stack.split('\n')[1] : '';
-        
+
         return require('crypto')
             .createHash('md5')
             .update(type + message + stackTop)
@@ -368,11 +368,11 @@ class ErrorReportingService {
     _updateStats(errorInfo) {
         this.errorStats.total++;
         this.errorStats.bySeverity[errorInfo.severity]++;
-        
-        this.errorStats.byCategory[errorInfo.category] = 
+
+        this.errorStats.byCategory[errorInfo.category] =
             (this.errorStats.byCategory[errorInfo.category] || 0) + 1;
-            
-        this.errorStats.byComponent[errorInfo.component] = 
+
+        this.errorStats.byComponent[errorInfo.component] =
             (this.errorStats.byComponent[errorInfo.component] || 0) + 1;
 
         // Keep recent errors for rate calculation
@@ -397,7 +397,7 @@ class ErrorReportingService {
         const recentWindow = Date.now() - 600000; // 10 minutes
         const recentErrors = this.errorStats.recent
             .filter(err => err.timestamp > recentWindow);
-            
+
         if (recentErrors.length > 50) { // If more than 50 errors in 10 minutes
             this._sendAlert('high-error-rate', {
                 count: recentErrors.length,
@@ -426,7 +426,7 @@ class ErrorReportingService {
         // - Sentry
         // - New Relic
         // - Datadog
-        
+
         if (process.env.SENTRY_DSN) {
             // Example Sentry integration
             // Sentry.captureException(error, { extra: errorInfo });
@@ -438,8 +438,8 @@ class ErrorReportingService {
         const intervals = this._getTimeIntervals(timeframe);
         const trends = intervals.map(interval => ({
             period: interval.label,
-            count: errors.filter(err => 
-                new Date(err.lastSeen).getTime() >= interval.start && 
+            count: errors.filter(err =>
+                new Date(err.lastSeen).getTime() >= interval.start &&
                 new Date(err.lastSeen).getTime() < interval.end
             ).length
         }));
@@ -450,7 +450,7 @@ class ErrorReportingService {
     _getTimeIntervals(timeframe) {
         const now = Date.now();
         const intervals = [];
-        
+
         if (timeframe === '1h') {
             // 12 intervals of 5 minutes each
             for (let i = 11; i >= 0; i--) {
@@ -474,30 +474,30 @@ class ErrorReportingService {
                 });
             }
         }
-        
+
         return intervals;
     }
 
     _parseBrowser(userAgent) {
         if (!userAgent) return 'Unknown';
-        
+
         if (userAgent.includes('Chrome')) return 'Chrome';
         if (userAgent.includes('Firefox')) return 'Firefox';
         if (userAgent.includes('Safari')) return 'Safari';
         if (userAgent.includes('Edge')) return 'Edge';
-        
+
         return 'Other';
     }
 
     _cleanupOldErrors() {
         const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7 days
-        
+
         for (const [id, error] of this.errorStore) {
             if (new Date(error.lastSeen).getTime() < cutoff) {
                 this.errorStore.delete(id);
             }
         }
-        
+
         this.logger.info('Cleaned up old errors', {
             category: 'maintenance',
             remainingErrors: this.errorStore.size

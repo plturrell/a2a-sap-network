@@ -182,7 +182,10 @@ class AdvancedQuestionDecomposer:
             scores[semantic_type] = score
 
         # Return highest scoring type, default to structural
-        return max(scores.items(), key=lambda x: x[1])[0] if max(scores.values()) > 0 else SemanticAnalysisType.STRUCTURAL
+        def get_score_value(item):
+            return item[1]
+        
+        return max(scores.items(), key=get_score_value)[0] if max(scores.values()) > 0 else SemanticAnalysisType.STRUCTURAL
 
     def _extract_semantic_entities(self, question: str, context: str = "") -> List[SemanticEntity]:
         """Extract semantic entities using spaCy NER"""
@@ -569,7 +572,10 @@ class AdvancedQuestionDecomposer:
                 q["importance_score"] = q["confidence"]
 
         # Sort by importance score
-        return sorted(questions, key=lambda x: x["importance_score"], reverse=True)
+        def get_importance_score(question):
+            return question["importance_score"]
+        
+        return sorted(questions, key=get_importance_score, reverse=True)
 
     def _build_decomposition_tree(self, root_question: str, sub_questions: List[Dict[str, Any]],
                                 max_depth: int) -> Dict[str, Any]:
@@ -820,7 +826,10 @@ class SemanticPatternAnalyzer:
         except Exception as e:
             logger.error(f"Semantic clustering failed: {e}")
 
-        return sorted(clusters, key=lambda x: x["similarity"], reverse=True)[:5]
+        def get_similarity_score(cluster):
+            return cluster["similarity"]
+        
+        return sorted(clusters, key=get_similarity_score, reverse=True)[:5]
 
     async def _extract_argument_patterns(self, text: str, context: str) -> List[Dict[str, Any]]:
         """Extract argument and reasoning patterns"""
@@ -887,7 +896,10 @@ class SemanticPatternAnalyzer:
 
         # Dominant pattern type
         if pattern_counts:
-            dominant_type = max(pattern_counts.items(), key=lambda x: x[1])
+            def get_pattern_count(item):
+                return item[1]
+            
+            dominant_type = max(pattern_counts.items(), key=get_pattern_count)
             insights.append(f"Dominant pattern type: {dominant_type[0]} ({dominant_type[1]} instances)")
 
         # Causal relationships

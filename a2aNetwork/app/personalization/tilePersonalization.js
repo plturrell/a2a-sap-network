@@ -14,7 +14,7 @@ class TilePersonalizationService {
 
     async initialize() {
         if (this.initialized) return;
-        
+
         try {
             if (this.isBTP) {
                 // CAP/HANA: Use proper CDS queries
@@ -23,7 +23,7 @@ class TilePersonalizationService {
                 // SQLite: Create tables directly
                 await this.initializeSQLiteTables();
             }
-            
+
             this.initialized = true;
             // console.log('✅ Tile personalization service initialized');
         } catch (error) {
@@ -82,12 +82,12 @@ class TilePersonalizationService {
 
                 // Insert default tile configurations
                 this.insertDefaultTileConfigurations();
-                
+
                 resolve();
             };
             this.db.serialize(serializeInitialization);
         };
-        
+
         return new Promise(handleInitializeSQLiteTables);
     }
 
@@ -109,7 +109,7 @@ class TilePersonalizationService {
                 UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `;
-        
+
         try {
             await this.db.run(createTileConfigEntity);
         } catch (error) {
@@ -124,7 +124,7 @@ class TilePersonalizationService {
             { groupId: 'a2a_home_group', tileId: 'agents_tile', position: 1, size: '1x1' },
             { groupId: 'a2a_home_group', tileId: 'blockchain_tile', position: 2, size: '1x1' },
             { groupId: 'a2a_home_group', tileId: 'marketplace_tile', position: 3, size: '1x1' },
-            
+
             // Operations Group Defaults
             { groupId: 'a2a_operations_group', tileId: 'operations_tile', position: 0, size: '1x1' },
             { groupId: 'a2a_operations_group', tileId: 'analytics_tile', position: 1, size: '2x1' },
@@ -134,8 +134,8 @@ class TilePersonalizationService {
 
         const insertDefaultConfig = function(config) {
             const id = `default-${config.groupId}-${config.tileId}`;
-            this.db.run(`INSERT OR REPLACE INTO user_tile_config 
-                (id, user_id, tile_id, group_id, position, size) 
+            this.db.run(`INSERT OR REPLACE INTO user_tile_config
+                (id, user_id, tile_id, group_id, position, size)
                 VALUES (?, 'default', ?, ?, ?, ?)`,
                 [id, config.tileId, config.groupId, config.position, config.size]);
         }.bind(this);
@@ -145,7 +145,7 @@ class TilePersonalizationService {
     // Get user's tile configuration
     async getUserTileConfig(userId) {
         if (!this.initialized) await this.initialize();
-        
+
         const handleGetUserTileConfig = function(resolve, reject) {
             if (this.isBTP) {
                 // HANA query
@@ -160,26 +160,26 @@ class TilePersonalizationService {
                     if (err) reject(err);
                     else resolve(rows || []);
                 };
-                this.db.all('SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position', 
+                this.db.all('SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position',
                     [userId], handleSQLiteResults);
             }
         }.bind(this);
-        
+
         return new Promise(handleGetUserTileConfig);
     }
 
     // Save user's tile configuration
     async saveUserTileConfig(userId, tileId, groupId, config) {
         if (!this.initialized) await this.initialize();
-        
+
         const id = `${userId}-${tileId}`;
         const now = new Date().toISOString();
-        
+
         const handleSaveUserTileConfig = (resolve, reject) => {
-            const query = `INSERT OR REPLACE INTO user_tile_config 
+            const query = `INSERT OR REPLACE INTO user_tile_config
                 (id, user_id, tile_id, group_id, position, is_visible, size, custom_title, refresh_interval, settings, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-            
+
             const values = [
                 id, userId, tileId, groupId,
                 config.position || 0,
@@ -207,14 +207,14 @@ class TilePersonalizationService {
                 this.db.run(query, values, handleSQLiteSave);
             }
         };
-        
+
         return new Promise(handleSaveUserTileConfig);
     }
 
     // Get user's group configuration
     async getUserGroupConfig(userId) {
         if (!this.initialized) await this.initialize();
-        
+
         const handleGetUserGroupConfig = (resolve, reject) => {
             if (this.isBTP) {
                 const handleHanaGroupResults = (results) => resolve(results);
@@ -226,26 +226,26 @@ class TilePersonalizationService {
                     if (err) reject(err);
                     else resolve(rows || []);
                 };
-                this.db.all('SELECT * FROM user_group_config WHERE user_id = ? ORDER BY position', 
+                this.db.all('SELECT * FROM user_group_config WHERE user_id = ? ORDER BY position',
                     [userId], handleSQLiteGroupResults);
             }
         };
-        
+
         return new Promise(handleGetUserGroupConfig);
     }
 
     // Save user's group configuration
     async saveUserGroupConfig(userId, groupId, config) {
         if (!this.initialized) await this.initialize();
-        
+
         const id = `${userId}-${groupId}`;
         const now = new Date().toISOString();
-        
+
         const handleSaveUserGroupConfig = (resolve, reject) => {
-            const query = `INSERT OR REPLACE INTO user_group_config 
+            const query = `INSERT OR REPLACE INTO user_group_config
                 (id, user_id, group_id, group_title, position, is_visible, is_collapsed, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-            
+
             const values = [
                 id, userId, groupId,
                 config.title || null,
@@ -264,14 +264,14 @@ class TilePersonalizationService {
                 });
             }
         };
-        
+
         return new Promise(handleSaveUserGroupConfig);
     }
 
     // Get user preferences
     async getUserPreferences(userId) {
         if (!this.initialized) await this.initialize();
-        
+
         return new Promise((resolve, reject) => {
             if (this.isBTP) {
                 this.db.run('SELECT * FROM A2A_USER_PREFERENCES WHERE USER_ID = ?', [userId])
@@ -298,15 +298,15 @@ class TilePersonalizationService {
     // Save user preferences
     async saveUserPreferences(userId, preferences) {
         if (!this.initialized) await this.initialize();
-        
+
         const id = `pref-${userId}`;
         const now = new Date().toISOString();
-        
+
         return new Promise((resolve, reject) => {
-            const query = `INSERT OR REPLACE INTO user_preferences 
+            const query = `INSERT OR REPLACE INTO user_preferences
                 (id, user_id, theme, layout_mode, tile_size_preference, auto_refresh, show_notifications, compact_mode, preferences_json, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-            
+
             const values = [
                 id, userId,
                 preferences.theme || 'sap_horizon',
@@ -333,7 +333,7 @@ class TilePersonalizationService {
     // Reset user configuration to defaults
     async resetUserConfiguration(userId) {
         if (!this.initialized) await this.initialize();
-        
+
         return new Promise((resolve, reject) => {
             if (this.isBTP) {
                 Promise.all([
@@ -357,7 +357,7 @@ class TilePersonalizationService {
     // Export user configuration
     async exportUserConfiguration(userId) {
         if (!this.initialized) await this.initialize();
-        
+
         try {
             const [tileConfig, groupConfig, preferences] = await Promise.all([
                 this.getUserTileConfig(userId),
@@ -380,7 +380,7 @@ class TilePersonalizationService {
     // Import user configuration
     async importUserConfiguration(userId, configData) {
         if (!this.initialized) await this.initialize();
-        
+
         try {
             // Validate configuration data
             if (!configData.tileConfiguration && !configData.groupConfiguration && !configData.userPreferences) {
@@ -436,18 +436,18 @@ class TilePersonalizationService {
     // Get analytics on tile usage
     async getTileUsageAnalytics() {
         if (!this.initialized) await this.initialize();
-        
+
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT 
+                SELECT
                     tile_id,
                     COUNT(*) as user_count,
                     AVG(position) as avg_position,
                     COUNT(CASE WHEN is_visible = 1 THEN 1 END) as visible_count,
                     COUNT(CASE WHEN is_visible = 0 THEN 1 END) as hidden_count
-                FROM user_tile_config 
+                FROM user_tile_config
                 WHERE user_id != 'default'
-                GROUP BY tile_id 
+                GROUP BY tile_id
                 ORDER BY user_count DESC
             `;
 

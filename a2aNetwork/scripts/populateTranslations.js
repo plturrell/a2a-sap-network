@@ -9,12 +9,12 @@ const path = require('path');
 
 async function populateTranslations() {
     log.info('🌍 Starting translation population...');
-    
+
     try {
         // Connect to database
         await cds.connect.to('db');
         const { Translations, Locales } = cds.entities('a2a.network.i18n');
-        
+
         // Define supported locales
         const locales = [
             { code: 'en', name: 'English', nativeName: 'English', isDefault: true, isRTL: false, currencyCode: 'USD', sortOrder: 1 },
@@ -31,14 +31,14 @@ async function populateTranslations() {
             { code: 'ar', name: 'Arabic', nativeName: 'العربية', isDefault: false, isRTL: true, currencyCode: 'SAR', sortOrder: 12 },
             { code: 'he', name: 'Hebrew', nativeName: 'עברית', isDefault: false, isRTL: true, currencyCode: 'ILS', sortOrder: 13 }
         ];
-        
+
         log.debug('📝 Inserting locale configurations...');
-        
+
         // Insert or update locales
         for (const locale of locales) {
             try {
                 const existing = await SELECT.one.from(Locales).where({ code: locale.code });
-                
+
                 if (existing) {
                     await UPDATE(Locales)
                         .set({
@@ -66,52 +66,52 @@ async function populateTranslations() {
                 console.error(`  ✗ Failed to process locale ${locale.code}:`, error.message);
             }
         }
-        
+
         // Load translations from locale files
         const localeDir = path.join(__dirname, '../srv/i18n/locales');
-        
+
         try {
             const localeFiles = await fs.readdir(localeDir);
             const jsonFiles = localeFiles.filter(file => file.endsWith('.json'));
-            
+
             log.debug(`📚 Loading translations from ${jsonFiles.length} files...`);
-            
+
             for (const file of jsonFiles) {
                 const locale = path.basename(file, '.json');
                 const filePath = path.join(localeDir, file);
-                
+
                 try {
                     const content = await fs.readFile(filePath, 'utf8');
                     const translations = JSON.parse(content);
-                    
+
                     await processTranslationFile(translations, locale, Translations);
                     log.debug(`  ✓ Processed translations for locale: ${locale}`);
                 } catch (error) {
                     console.error(`  ✗ Failed to process ${file}:`, error.message);
                 }
             }
-            
+
         } catch (error) {
             console.warn(`⚠️  Locale directory not found: ${localeDir}`);
             log.debug('💡 Creating minimal translations for available locales...');
-            
+
             // Create minimal translations for core locales
             const coreTranslations = {
                 'en': await createCoreTranslations('en'),
                 'de': await createCoreTranslations('de')
             };
-            
+
             for (const [locale, translations] of Object.entries(coreTranslations)) {
                 await processTranslationFile(translations, locale, Translations);
                 log.debug(`  ✓ Created core translations for: ${locale}`);
             }
         }
-        
+
         // Generate translation statistics
         await generateStatistics(Translations, Locales);
-        
+
         log.debug('🎉 Translation population completed successfully!');
-        
+
     } catch (error) {
         console.error('❌ Error populating translations:', error);
         process.exit(1);
@@ -126,23 +126,23 @@ async function processTranslationFile(translations, locale, Translations) {
     let inserted = 0;
     let updated = 0;
     let skipped = 0;
-    
+
     for (const [key, value] of Object.entries(flatTranslations)) {
         try {
             const [namespace, ...keyParts] = key.split('.');
             const translationKey = keyParts.join('.');
-            
+
             if (!namespace || !translationKey || !value) {
                 skipped++;
                 continue;
             }
-            
+
             const existing = await SELECT.one.from(Translations).where({
                 namespace,
                 key: translationKey,
                 locale
             });
-            
+
             if (existing) {
                 if (existing.value !== value.toString()) {
                     await UPDATE(Translations)
@@ -162,13 +162,13 @@ async function processTranslationFile(translations, locale, Translations) {
                 });
                 inserted++;
             }
-            
+
         } catch (error) {
             console.error(`    ✗ Failed to process key ${key}:`, error.message);
             skipped++;
         }
     }
-    
+
     log.debug(`    📊 ${locale}: ${inserted} inserted, ${updated} updated, ${skipped} skipped`);
 }
 
@@ -177,17 +177,17 @@ async function processTranslationFile(translations, locale, Translations) {
  */
 function flattenTranslations(obj, prefix = '') {
     const result = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
         const fullKey = prefix ? `${prefix}.${key}` : key;
-        
+
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             Object.assign(result, flattenTranslations(value, fullKey));
         } else {
             result[fullKey] = value;
         }
     }
-    
+
     return result;
 }
 
@@ -263,7 +263,7 @@ async function createCoreTranslations(locale) {
             }
         }
     };
-    
+
     return templates[locale] || templates['en'];
 }
 
@@ -272,37 +272,37 @@ async function createCoreTranslations(locale) {
  */
 async function generateStatistics(Translations, Locales) {
     log.debug('📈 Generating translation statistics...');
-    
+
     try {
         // Get total keys (from English)
         const totalKeys = await SELECT.count().from(Translations).where({ locale: 'en' });
-        
+
         // Get coverage by locale
         const locales = await SELECT.from(Locales).where({ isActive: true });
-        
+
         log.debug('\n📊 Translation Coverage Report:');
         log.debug('─'.repeat(50));
-        
+
         for (const locale of locales) {
             const translatedKeys = await SELECT.count().from(Translations).where({ locale: locale.code });
             const coverage = totalKeys > 0 ? Math.round((translatedKeys / totalKeys) * 100) : 0;
             const bar = '█'.repeat(Math.floor(coverage / 5)) + '░'.repeat(20 - Math.floor(coverage / 5));
-            
+
             log.debug(`${locale.code.padEnd(6)} │ ${bar} │ ${coverage}% (${translatedKeys}/${totalKeys})`);
         }
-        
+
         log.debug('─'.repeat(50));
-        
+
         // Missing translations report
         const missingCount = await SELECT.count().from(Translations).where({
             locale: { '!=': 'en' },
             value: ''
         });
-        
+
         if (missingCount > 0) {
             log.debug(`\n⚠️  ${missingCount} missing translations found`);
         }
-        
+
     } catch (error) {
         console.error('Failed to generate statistics:', error.message);
     }

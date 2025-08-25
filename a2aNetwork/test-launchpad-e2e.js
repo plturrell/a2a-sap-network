@@ -2,7 +2,7 @@
 
 /**
  * End-to-End Launchpad Test
- * 
+ *
  * Comprehensive test of the A2A Network Fiori Launchpad
  * Tests functionality, data loading, navigation, and user interactions
  */
@@ -62,7 +62,7 @@ class LaunchpadTester {
         });
 
         this.page = await this.browser.newPage();
-        
+
         // Set up console logging
         this.page.on('console', msg => {
             if (msg.type() === 'error') {
@@ -93,7 +93,7 @@ class LaunchpadTester {
             const response = await this.page.goto(`${TEST_CONFIG.baseUrl}/health`);
             const status = response.status();
             const text = await response.text();
-            
+
             if (status === 200 && text.includes('UP')) {
                 this.pass('Server health check');
             } else {
@@ -108,7 +108,7 @@ class LaunchpadTester {
         console.log('🎯 Testing launchpad loading...');
         try {
             const startTime = Date.now();
-            
+
             await this.page.goto(`${TEST_CONFIG.baseUrl}/app/fioriLaunchpad.html`, {
                 waitUntil: 'networkidle2',
                 timeout: TEST_CONFIG.timeout
@@ -119,7 +119,7 @@ class LaunchpadTester {
 
             // Wait for UI5 to load
             await this.page.waitForSelector('.sapUShellShell', { timeout: 15000 });
-            
+
             // Check if loading indicator disappears
             await this.page.waitForFunction(() => {
                 const loadingDiv = document.getElementById('loadingIndicator');
@@ -136,14 +136,14 @@ class LaunchpadTester {
 
     async testTileData() {
         console.log('📊 Testing tile data loading...');
-        
+
         const tileTests = [
             {
                 name: 'Overview Dashboard',
                 endpoint: '/api/v1/NetworkStats?id=overview_dashboard'
             },
             {
-                name: 'Agent Visualization', 
+                name: 'Agent Visualization',
                 endpoint: '/api/v1/Agents?id=agent_visualization'
             },
             {
@@ -160,7 +160,7 @@ class LaunchpadTester {
             try {
                 const response = await this.page.goto(`${TEST_CONFIG.baseUrl}${test.endpoint}`);
                 const data = await response.json();
-                
+
                 if (response.status() === 200 && data.id && data.data) {
                     this.pass(`Tile data: ${test.name}`);
                     console.log(`   ✅ ${test.name}: ${Object.keys(data.data).length} data points`);
@@ -205,7 +205,7 @@ class LaunchpadTester {
 
     async testResponsiveDesign() {
         console.log('📱 Testing responsive design...');
-        
+
         const viewports = [
             { width: 1920, height: 1080, name: 'Desktop' },
             { width: 768, height: 1024, name: 'Tablet' },
@@ -220,7 +220,7 @@ class LaunchpadTester {
                 });
 
                 // Check if page renders without layout issues
-                const bodyVisible = await this.page.$eval('body', el => 
+                const bodyVisible = await this.page.$eval('body', el =>
                     window.getComputedStyle(el).visibility === 'visible'
                 );
 
@@ -244,7 +244,7 @@ class LaunchpadTester {
         try {
             // Enable request interception to measure network performance
             await this.page.setRequestInterception(true);
-            
+
             const requests = [];
             this.page.on('request', request => {
                 requests.push({
@@ -284,7 +284,7 @@ class LaunchpadTester {
         try {
             // Test 404 page
             const response = await this.page.goto(`${TEST_CONFIG.baseUrl}/non-existent-page`);
-            
+
             if (response.status() === 404) {
                 this.pass('Error handling: 404 page');
             } else {
@@ -293,7 +293,7 @@ class LaunchpadTester {
 
             // Test invalid API endpoint
             const apiResponse = await this.page.goto(`${TEST_CONFIG.baseUrl}/api/v1/invalid-endpoint`);
-            
+
             if (apiResponse.status() >= 400) {
                 this.pass('Error handling: Invalid API endpoint');
             } else {

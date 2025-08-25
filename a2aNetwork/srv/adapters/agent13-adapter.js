@@ -23,7 +23,7 @@ class Agent13Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'AgentTemplate');
         } catch (error) {
             throw this._handleError(error);
@@ -36,7 +36,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTTemplateToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -49,7 +49,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates/${id}`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTTemplateToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -75,7 +75,7 @@ class Agent13Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'AgentBuild');
         } catch (error) {
             throw this._handleError(error);
@@ -88,7 +88,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTBuildToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -101,7 +101,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/builds/${id}`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTBuildToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -138,7 +138,7 @@ class Agent13Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'TemplateComponent');
         } catch (error) {
             throw this._handleError(error);
@@ -151,7 +151,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/components`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTComponentToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -164,7 +164,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/components/${id}`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTComponentToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -190,7 +190,7 @@ class Agent13Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'AgentDeployment');
         } catch (error) {
             throw this._handleError(error);
@@ -203,7 +203,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTDeploymentToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -216,7 +216,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployments/${id}`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTDeploymentToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -253,7 +253,7 @@ class Agent13Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'BuildPipeline');
         } catch (error) {
             throw this._handleError(error);
@@ -266,7 +266,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTPipelineToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -279,7 +279,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines/${id}`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTPipelineToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -306,7 +306,7 @@ class Agent13Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 isValid: response.data.is_valid,
                 errors: response.data.errors || [],
@@ -328,7 +328,7 @@ class Agent13Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 passed: response.data.passed || 0,
                 failed: response.data.failed || 0,
@@ -349,7 +349,7 @@ class Agent13Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 executionId: response.data.execution_id,
                 pipelineName: response.data.pipeline_name,
@@ -368,7 +368,7 @@ class Agent13Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return response.data;
         } catch (error) {
             throw this._handleError(error);
@@ -381,7 +381,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/statistics`, {
                 timeout: this.timeout
             });
-            
+
             return {
                 totalTemplates: response.data.total_templates || 0,
                 totalBuilds: response.data.total_builds || 0,
@@ -404,7 +404,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/templates/${templateId}/details`, {
                 timeout: this.timeout
             });
-            
+
             const data = response.data;
             return {
                 templateId: data.template_id,
@@ -432,7 +432,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/deployment-targets`, {
                 timeout: this.timeout
             });
-            
+
             const data = response.data;
             return {
                 environments: JSON.stringify(data.environments || []),
@@ -452,7 +452,7 @@ class Agent13Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/pipelines/info`, {
                 timeout: this.timeout
             });
-            
+
             const data = response.data;
             return {
                 pipelines: JSON.stringify(data.pipelines || []),
@@ -674,27 +674,27 @@ class Agent13Adapter {
     _convertODataToREST(query) {
         // Convert OData query parameters to REST API parameters
         const params = {};
-        
+
         if (query.$filter) {
             params.filter = query.$filter;
         }
-        
+
         if (query.$orderby) {
             params.sort = query.$orderby;
         }
-        
+
         if (query.$top) {
             params.limit = query.$top;
         }
-        
+
         if (query.$skip) {
             params.offset = query.$skip;
         }
-        
+
         if (query.$select) {
             params.fields = query.$select;
         }
-        
+
         return params;
     }
 
@@ -726,7 +726,7 @@ class Agent13Adapter {
         if (error.response) {
             const status = error.response.status;
             const message = error.response.data?.message || error.response.statusText || 'Unknown error';
-            
+
             if (status === 404) {
                 return new Error(`Resource not found: ${message}`);
             } else if (status === 400) {

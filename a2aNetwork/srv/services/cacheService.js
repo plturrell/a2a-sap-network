@@ -2,7 +2,7 @@
  * @fileoverview High-Performance Caching Service
  * @since 1.0.0
  * @module cacheService
- * 
+ *
  * Provides intelligent caching for frequently accessed data with TTL support
  */
 
@@ -18,17 +18,17 @@ class CacheService {
             evictions: 0,
             totalRequests: 0
         };
-        
+
         this.intervals = new Map(); // Track intervals for cleanup
-        
+
         // Default cache settings
         this.defaultTTL = 5 * 60 * 1000; // 5 minutes
         this.maxCacheSize = 1000;
         this.cleanupInterval = 60 * 1000; // 1 minute
-        
+
         // Start cleanup timer
         this.startCleanupTimer();
-        
+
         this.log = cds.log('cache-service');
     }
 
@@ -39,14 +39,14 @@ class CacheService {
      */
     get(key) {
         this.stats.totalRequests++;
-        
+
         const item = this.cache.get(key);
-        
+
         if (!item) {
             this.stats.misses++;
             return null;
         }
-        
+
         // Check if expired
         if (Date.now() > item.expiresAt) {
             this.cache.delete(key);
@@ -54,11 +54,11 @@ class CacheService {
             this.stats.evictions++;
             return null;
         }
-        
+
         // Update access time for LRU
         item.lastAccessed = Date.now();
         this.stats.hits++;
-        
+
         return item.value;
     }
 
@@ -73,7 +73,7 @@ class CacheService {
         if (this.cache.size >= this.maxCacheSize) {
             this.evictLRU();
         }
-        
+
         const expiresAt = Date.now() + ttl;
         const item = {
             value,
@@ -81,9 +81,9 @@ class CacheService {
             createdAt: Date.now(),
             lastAccessed: Date.now()
         };
-        
+
         this.cache.set(key, item);
-        
+
         this.log.debug(`Cached item: ${key}, expires at: ${new Date(expiresAt).toISOString()}`);
     }
 
@@ -94,18 +94,18 @@ class CacheService {
      */
     has(key) {
         const item = this.cache.get(key);
-        
+
         if (!item) {
             return false;
         }
-        
+
         // Check if expired
         if (Date.now() > item.expiresAt) {
             this.cache.delete(key);
             this.stats.evictions++;
             return false;
         }
-        
+
         return true;
     }
 
@@ -136,11 +136,11 @@ class CacheService {
      */
     async getOrSet(key, fn, ttl = this.defaultTTL) {
         let value = this.get(key);
-        
+
         if (value !== null) {
             return value;
         }
-        
+
         // Cache miss - compute value
         try {
             value = await fn();
@@ -158,14 +158,14 @@ class CacheService {
     evictLRU() {
         let oldestKey = null;
         let oldestTime = Date.now();
-        
+
         for (const [key, item] of this.cache.entries()) {
             if (item.lastAccessed < oldestTime) {
                 oldestTime = item.lastAccessed;
                 oldestKey = key;
             }
         }
-        
+
         if (oldestKey) {
             this.cache.delete(oldestKey);
             this.stats.evictions++;
@@ -179,18 +179,18 @@ class CacheService {
     cleanup() {
         const now = Date.now();
         const keysToDelete = [];
-        
+
         for (const [key, item] of this.cache.entries()) {
             if (now > item.expiresAt) {
                 keysToDelete.push(key);
             }
         }
-        
+
         for (const key of keysToDelete) {
             this.cache.delete(key);
             this.stats.evictions++;
         }
-        
+
         if (keysToDelete.length > 0) {
             this.log.debug(`Cleaned up ${keysToDelete.length} expired cache items`);
         }
@@ -202,21 +202,21 @@ class CacheService {
     startCleanupTimer() {
         // Stop existing timer first
         this.stopCleanupTimer();
-        
+
         this.cleanupIntervalId = this.intervals.set('interval_204', setInterval(() => {
             setImmediate(() => {
                 this.cleanup();
             });
         }, this.cleanupInterval));
     }
-    
+
     stopCleanupTimer() {
         if (this.cleanupIntervalId) {
             clearInterval(this.cleanupIntervalId);
             this.cleanupIntervalId = null;
         }
     }
-    
+
     shutdown() {
         this.stopCleanupTimer();
         this.cache.clear();
@@ -228,10 +228,10 @@ class CacheService {
      * @returns {object} Cache statistics
      */
     getStats() {
-        const hitRate = this.stats.totalRequests > 0 
+        const hitRate = this.stats.totalRequests > 0
             ? (this.stats.hits / this.stats.totalRequests * 100).toFixed(2)
             : 0;
-            
+
         return {
             ...this.stats,
             hitRate: `${hitRate}%`,
@@ -249,7 +249,7 @@ class CacheService {
         const itemCount = this.cache.size;
         const estimatedBytesPerItem = 1024; // Rough estimate
         const totalBytes = itemCount * estimatedBytesPerItem;
-        
+
         if (totalBytes < 1024) {
             return `${totalBytes} bytes`;
         } else if (totalBytes < 1024 * 1024) {
@@ -288,7 +288,7 @@ const globalCache = new CacheService();
 module.exports = {
     CacheService,
     cache: globalCache,
-    
+
     // Convenience methods
     get: (key) => globalCache.get(key),
     set: (key, value, ttl) => globalCache.set(key, value, ttl),

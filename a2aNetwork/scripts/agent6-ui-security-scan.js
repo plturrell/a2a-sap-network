@@ -12,7 +12,7 @@ class Agent6SecurityScanner {
         this.issues = [];
         this.passed = 0;
         this.total = 29; // Standard check count
-        
+
         this.securityChecks = {
             // Critical Security (8 checks)
             csrfProtection: false,
@@ -23,29 +23,29 @@ class Agent6SecurityScanner {
             memoryManagement: false,
             downloadSecurity: false,
             auditLogging: false,
-            
-            // SAP Standards (6 checks) 
+
+            // SAP Standards (6 checks)
             sapUi5Structure: false,
             i18nComprehensive: false,
             errorHandling: false,
             manifestCompliance: false,
             controllerExtensions: false,
             fragmentLoading: false,
-            
+
             // UI5 Development (5 checks)
             encodeXmlUsage: false,
             modelBinding: false,
             routerUsage: false,
             busyIndicators: false,
             messageHandling: false,
-            
+
             // Enterprise Compliance (5 checks)
             auditTrail: false,
             roleBasedAccess: false,
             dataPrivacy: false,
             businessContinuity: false,
             changeManagement: false,
-            
+
             // Performance (5 checks)
             lazyLoading: false,
             resourceOptimization: false,
@@ -58,13 +58,13 @@ class Agent6SecurityScanner {
     async scanAll() {
         console.log('🔍 Starting Agent 6 UI Security Scan - Quality Control Manager');
         console.log('═══════════════════════════════════════════════════');
-        
+
         try {
             await this.scanControllers();
             await this.scanManifest();
             await this.scanI18n();
             await this.scanFragments();
-            
+
             this.generateReport();
         } catch (error) {
             console.error('❌ Scan failed:', error.message);
@@ -89,7 +89,7 @@ class Agent6SecurityScanner {
     async analyzeController(content, fileName) {
         // 1. CSRF Protection Check
         if (!content.includes('X-CSRF-Token') && !content.includes('csrf')) {
-            this.addIssue('CRITICAL', 'CSRF Protection Missing', 
+            this.addIssue('CRITICAL', 'CSRF Protection Missing',
                 `${fileName} lacks CSRF token implementation for AJAX calls`);
         } else {
             this.securityChecks.csrfProtection = true;
@@ -97,11 +97,11 @@ class Agent6SecurityScanner {
         }
 
         // 2. Input Validation Check
-        const hasValidation = content.includes('validateInput') || 
+        const hasValidation = content.includes('validateInput') ||
                             content.includes('sanitize') ||
                             content.includes('escape');
         if (!hasValidation) {
-            this.addIssue('HIGH', 'Input Validation Missing', 
+            this.addIssue('HIGH', 'Input Validation Missing',
                 `${fileName} lacks proper input validation and sanitization`);
         } else {
             this.securityChecks.inputValidation = true;
@@ -109,11 +109,11 @@ class Agent6SecurityScanner {
         }
 
         // 3. XSS Protection Check
-        const hasXssProtection = content.includes('encodeXML') || 
+        const hasXssProtection = content.includes('encodeXML') ||
                                content.includes('encodeURL') ||
                                content.includes('encodeHTML');
         if (!hasXssProtection) {
-            this.addIssue('CRITICAL', 'XSS Protection Missing', 
+            this.addIssue('CRITICAL', 'XSS Protection Missing',
                 `${fileName} lacks XSS protection with encodeXML usage`);
         } else {
             this.securityChecks.xssProtection = true;
@@ -122,7 +122,7 @@ class Agent6SecurityScanner {
 
         // 4. Authentication Checks
         if (!content.includes('getUser') && !content.includes('hasRole')) {
-            this.addIssue('HIGH', 'Authentication Missing', 
+            this.addIssue('HIGH', 'Authentication Missing',
                 `${fileName} lacks user authentication and authorization checks`);
         } else {
             this.securityChecks.authenticationChecks = true;
@@ -132,7 +132,7 @@ class Agent6SecurityScanner {
         // 5. EventSource Security (specific to Agent 6's real-time monitoring)
         if (content.includes('EventSource')) {
             if (!content.includes('validateEventSourceUrl') || !content.includes('eventSource.close')) {
-                this.addIssue('HIGH', 'EventSource Security Risk', 
+                this.addIssue('HIGH', 'EventSource Security Risk',
                     `${fileName} EventSource implementation lacks URL validation and proper cleanup`);
             } else {
                 this.securityChecks.eventSourceSecurity = true;
@@ -145,7 +145,7 @@ class Agent6SecurityScanner {
 
         // 6. Memory Management (onExit)
         if (!content.includes('onExit') || !content.includes('destroy')) {
-            this.addIssue('MEDIUM', 'Memory Leak Risk', 
+            this.addIssue('MEDIUM', 'Memory Leak Risk',
                 `${fileName} lacks proper cleanup in onExit method`);
         } else {
             this.securityChecks.memoryManagement = true;
@@ -155,7 +155,7 @@ class Agent6SecurityScanner {
         // 7. Download Security
         if (content.includes('window.open') || content.includes('downloadUrl')) {
             if (!content.includes('validateDownloadUrl') || !content.includes('sanitizeFilename')) {
-                this.addIssue('HIGH', 'Download Security Risk', 
+                this.addIssue('HIGH', 'Download Security Risk',
                     `${fileName} file download lacks URL validation and filename sanitization`);
             } else {
                 this.securityChecks.downloadSecurity = true;
@@ -168,7 +168,7 @@ class Agent6SecurityScanner {
 
         // 8. Audit Logging
         if (!content.includes('auditLog') && !content.includes('logUserAction')) {
-            this.addIssue('MEDIUM', 'Audit Logging Missing', 
+            this.addIssue('MEDIUM', 'Audit Logging Missing',
                 `${fileName} lacks audit logging for quality control actions`);
         } else {
             this.securityChecks.auditLogging = true;
@@ -180,16 +180,16 @@ class Agent6SecurityScanner {
             this.securityChecks.sapUi5Structure = true;
             this.passed++;
         } else {
-            this.addIssue('HIGH', 'SAP UI5 Structure Violation', 
+            this.addIssue('HIGH', 'SAP UI5 Structure Violation',
                 `${fileName} doesn't follow SAP UI5 module definition standards`);
         }
 
         // 10. Error Handling
-        const hasProperErrorHandling = content.includes('catch') || 
+        const hasProperErrorHandling = content.includes('catch') ||
                                      content.includes('error:') ||
                                      content.includes('MessageBox.error');
         if (!hasProperErrorHandling) {
-            this.addIssue('MEDIUM', 'Error Handling Incomplete', 
+            this.addIssue('MEDIUM', 'Error Handling Incomplete',
                 `${fileName} lacks comprehensive error handling`);
         } else {
             this.securityChecks.errorHandling = true;
@@ -201,7 +201,7 @@ class Agent6SecurityScanner {
             this.securityChecks.controllerExtensions = true;
             this.passed++;
         } else {
-            this.addIssue('MEDIUM', 'Controller Extension Missing', 
+            this.addIssue('MEDIUM', 'Controller Extension Missing',
                 `${fileName} not properly extending ControllerExtension`);
         }
 
@@ -210,7 +210,7 @@ class Agent6SecurityScanner {
             this.securityChecks.fragmentLoading = true;
             this.passed++;
         } else {
-            this.addIssue('LOW', 'Fragment Loading Missing', 
+            this.addIssue('LOW', 'Fragment Loading Missing',
                 `${fileName} doesn't use proper fragment loading`);
         }
 
@@ -219,7 +219,7 @@ class Agent6SecurityScanner {
             this.securityChecks.modelBinding = true;
             this.passed++;
         } else {
-            this.addIssue('MEDIUM', 'Model Binding Issues', 
+            this.addIssue('MEDIUM', 'Model Binding Issues',
                 `${fileName} has improper model binding practices`);
         }
 
@@ -228,7 +228,7 @@ class Agent6SecurityScanner {
             this.securityChecks.routerUsage = true;
             this.passed++;
         } else {
-            this.addIssue('LOW', 'Router Usage Missing', 
+            this.addIssue('LOW', 'Router Usage Missing',
                 `${fileName} doesn't implement proper routing`);
         }
 
@@ -237,7 +237,7 @@ class Agent6SecurityScanner {
             this.securityChecks.busyIndicators = true;
             this.passed++;
         } else {
-            this.addIssue('LOW', 'Busy Indicators Missing', 
+            this.addIssue('LOW', 'Busy Indicators Missing',
                 `${fileName} lacks user feedback with busy indicators`);
         }
 
@@ -246,7 +246,7 @@ class Agent6SecurityScanner {
             this.securityChecks.messageHandling = true;
             this.passed++;
         } else {
-            this.addIssue('MEDIUM', 'Message Handling Missing', 
+            this.addIssue('MEDIUM', 'Message Handling Missing',
                 `${fileName} lacks proper user message handling`);
         }
 
@@ -276,7 +276,7 @@ class Agent6SecurityScanner {
                 this.securityChecks.manifestCompliance = true;
                 this.passed++;
             } else {
-                this.addIssue('MEDIUM', 'Manifest Compliance Issue', 
+                this.addIssue('MEDIUM', 'Manifest Compliance Issue',
                     'manifest.json missing required SAP UI5 dependencies');
             }
         }
@@ -286,22 +286,22 @@ class Agent6SecurityScanner {
         const i18nPath = path.join(this.agent6Path, 'i18n/i18n.properties');
         if (fs.existsSync(i18nPath)) {
             const content = fs.readFileSync(i18nPath, 'utf8');
-            
+
             // Check for comprehensive i18n coverage
             const requiredKeys = [
-                'agent.name', 'error.', 'message.', 'field.', 'action.', 
+                'agent.name', 'error.', 'message.', 'field.', 'action.',
                 'status.', 'dialog.', 'btn.', 'tooltip.'
             ];
-            
-            const hasComprehensiveI18n = requiredKeys.every(key => 
+
+            const hasComprehensiveI18n = requiredKeys.every(key =>
                 content.includes(key) || content.split('\n').some(line => line.startsWith(key))
             );
-            
+
             if (hasComprehensiveI18n) {
                 this.securityChecks.i18nComprehensive = true;
                 this.passed++;
             } else {
-                this.addIssue('LOW', 'I18n Coverage Incomplete', 
+                this.addIssue('LOW', 'I18n Coverage Incomplete',
                     'i18n.properties missing comprehensive text coverage');
             }
         }
@@ -321,44 +321,44 @@ class Agent6SecurityScanner {
 
     generateReport() {
         const compliancePercentage = Math.round((this.passed / this.total) * 100);
-        
+
         console.log('\n📊 AGENT 6 SECURITY SCAN RESULTS');
         console.log('═══════════════════════════════════════════════════');
         console.log('🎯 Agent: Quality Control Manager');
         console.log(`📈 Compliance Score: ${compliancePercentage}%`);
         console.log(`✅ Passed: ${this.passed}/${this.total}`);
         console.log(`❌ Issues Found: ${this.issues.length}`);
-        
+
         if (this.issues.length > 0) {
             console.log('\n🚨 SECURITY ISSUES IDENTIFIED:');
             console.log('─'.repeat(50));
-            
+
             const criticalIssues = this.issues.filter(i => i.severity === 'CRITICAL');
             const highIssues = this.issues.filter(i => i.severity === 'HIGH');
             const mediumIssues = this.issues.filter(i => i.severity === 'MEDIUM');
             const lowIssues = this.issues.filter(i => i.severity === 'LOW');
-            
+
             if (criticalIssues.length > 0) {
                 console.log(`\n🔴 CRITICAL (${criticalIssues.length}):`);
                 criticalIssues.forEach(issue => {
                     console.log(`   • ${issue.title}: ${issue.description}`);
                 });
             }
-            
+
             if (highIssues.length > 0) {
                 console.log(`\n🟠 HIGH (${highIssues.length}):`);
                 highIssues.forEach(issue => {
                     console.log(`   • ${issue.title}: ${issue.description}`);
                 });
             }
-            
+
             if (mediumIssues.length > 0) {
                 console.log(`\n🟡 MEDIUM (${mediumIssues.length}):`);
                 mediumIssues.forEach(issue => {
                     console.log(`   • ${issue.title}: ${issue.description}`);
                 });
             }
-            
+
             if (lowIssues.length > 0) {
                 console.log(`\n🔵 LOW (${lowIssues.length}):`);
                 lowIssues.forEach(issue => {
@@ -366,7 +366,7 @@ class Agent6SecurityScanner {
                 });
             }
         }
-        
+
         console.log('\n🎯 AGENT 6 SPECIFIC SECURITY AREAS:');
         console.log('─'.repeat(50));
         console.log('• Quality Control Actions Security');
@@ -377,7 +377,7 @@ class Agent6SecurityScanner {
         console.log('• Quality Report Generation Security');
         console.log('• Assessment Results Data Protection');
         console.log('• Batch Processing Security');
-        
+
         console.log('\n📋 NEXT STEPS:');
         console.log('─'.repeat(50));
         console.log('1. Implement CSRF token handling for all AJAX calls');
@@ -388,9 +388,9 @@ class Agent6SecurityScanner {
         console.log('6. Implement memory management with onExit cleanup');
         console.log('7. Validate file downloads and URLs');
         console.log('8. Add enterprise-grade compliance features');
-        
+
         console.log('\n═══════════════════════════════════════════════════');
-        
+
         if (compliancePercentage < 100) {
             console.log('❌ Agent 6 UI requires security enhancements to achieve 100% compliance');
             process.exit(1);

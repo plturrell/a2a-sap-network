@@ -19,7 +19,7 @@ class SecurityAuditor {
 
     log(level, category, message, details = null) {
         const entry = { level, category, message, details, timestamp: new Date() };
-        
+
         if (level === 'PASS') this.passed.push(entry);
         else if (level === 'WARN') this.warnings.push(entry);
         else if (level === 'FAIL') this.issues.push(entry);
@@ -31,11 +31,11 @@ class SecurityAuditor {
 
     async auditAuthentication() {
         console.log('\n🔐 Authentication Security Audit');
-        
+
         // Check XSUAA configuration
         try {
             const authMiddleware = await fs.readFile('srv/middleware/auth.js', 'utf8');
-            
+
             if (authMiddleware.includes('ENABLE_XSUAA_VALIDATION')) {
                 this.log('PASS', 'AUTH', 'Environment-based XSUAA validation implemented');
             } else {
@@ -61,7 +61,7 @@ class SecurityAuditor {
         // Check xs-security.json
         try {
             const xsSecurity = JSON.parse(await fs.readFile('xs-security.json', 'utf8'));
-            
+
             if (xsSecurity.scopes && xsSecurity.scopes.length > 0) {
                 this.log('PASS', 'AUTH', `${xsSecurity.scopes.length} security scopes defined`);
             } else {
@@ -87,13 +87,13 @@ class SecurityAuditor {
 
     async auditSecurityHeaders() {
         console.log('\n🛡️  Security Headers Audit');
-        
+
         try {
             const securityMiddleware = await fs.readFile('srv/middleware/security.js', 'utf8');
-            
+
             const securityHeaders = [
                 'X-Content-Type-Options',
-                'X-Frame-Options', 
+                'X-Frame-Options',
                 'X-XSS-Protection',
                 'Strict-Transport-Security',
                 'Content-Security-Policy'
@@ -120,10 +120,10 @@ class SecurityAuditor {
 
     async auditRateLimiting() {
         console.log('\n⏱️  Rate Limiting Audit');
-        
+
         try {
             const securityMiddleware = await fs.readFile('srv/middleware/security.js', 'utf8');
-            
+
             if (securityMiddleware.includes('express-rate-limit')) {
                 this.log('PASS', 'RATE_LIMIT', 'Express rate limiting configured');
             } else {
@@ -170,7 +170,7 @@ class SecurityAuditor {
         );
 
         console.log(`\n🔒 Overall Security Score: ${securityScore}%`);
-        
+
         if (securityScore >= 90) {
             console.log('🟢 Excellent security posture');
         } else if (securityScore >= 75) {
@@ -182,18 +182,18 @@ class SecurityAuditor {
         return {
             score: securityScore,
             passed: this.passed.length,
-            warnings: this.warnings.length, 
+            warnings: this.warnings.length,
             failed: this.issues.length
         };
     }
 
     async runFullAudit() {
         console.log('Starting comprehensive security audit...\n');
-        
+
         await this.auditAuthentication();
         await this.auditSecurityHeaders();
         await this.auditRateLimiting();
-        
+
         return this.generateReport();
     }
 }

@@ -27,7 +27,7 @@ module.exports.shutdown = shutdown;
 class UnifiedMonitoring extends EventEmitter {
     constructor(config) {
         super();
-        
+
         this.config = {
             metricsInterval: config.metricsInterval || 30000, // 30 seconds
             alertThresholds: config.alertThresholds || {},
@@ -45,7 +45,7 @@ class UnifiedMonitoring extends EventEmitter {
         this.correlations = new Map();
         this.metricStreams = new Map();
         this.alertRules = new Map();
-        
+
         this.initializeMonitoring();
     }
 
@@ -55,10 +55,10 @@ class UnifiedMonitoring extends EventEmitter {
     initializeMonitoring() {
         // Set up metric collection intervals
         this.startMetricCollection();
-        
+
         // Initialize alert rules
         this.initializeAlertRules();
-        
+
         // Set up event handlers
         this.on('metric-received', this.processMetric.bind(this));
         this.on('alert-triggered', this.handleAlert.bind(this));
@@ -94,19 +94,19 @@ class UnifiedMonitoring extends EventEmitter {
 
                 // Store metric
                 await this.storeMetric(metricEntry);
-                
+
                 // Process aggregations
                 await this.processAggregations(metricEntry);
-                
+
                 // Check alert conditions
                 await this.checkAlertConditions(metricEntry);
-                
+
                 processedMetrics.push(metricEntry);
             }
 
             // Update metric streams
             this.updateMetricStreams(source, processedMetrics);
-            
+
             // Emit metrics for real-time consumers
             this.emit('metrics-aggregated', {
                 source,
@@ -231,14 +231,14 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async storeMetric(metric) {
         const key = `${metric.source}:${metric.name}`;
-        
+
         if (!this.metrics.has(key)) {
             this.metrics.set(key, []);
         }
-        
+
         const timeSeries = this.metrics.get(key);
         timeSeries.push(metric);
-        
+
         // Maintain retention period
         const cutoff = Date.now() - this.config.retentionPeriod;
         const retained = timeSeries.filter(m => m.timestamp > cutoff);
@@ -258,7 +258,7 @@ class UnifiedMonitoring extends EventEmitter {
         for (const level of this.config.aggregationLevels) {
             const bucket = this.getAggregationBucket(metric.timestamp, level);
             const aggKey = `${metric.source}:${metric.name}:${level}:${bucket}`;
-            
+
             if (!this.metrics.has(aggKey)) {
                 this.metrics.set(aggKey, {
                     values: [],
@@ -268,7 +268,7 @@ class UnifiedMonitoring extends EventEmitter {
                     count: 0
                 });
             }
-            
+
             const agg = this.metrics.get(aggKey);
             agg.values.push(metric.value);
             agg.min = Math.min(agg.min, metric.value);
@@ -276,7 +276,7 @@ class UnifiedMonitoring extends EventEmitter {
             agg.sum += metric.value;
             agg.count++;
             agg.avg = agg.sum / agg.count;
-            
+
             // Calculate percentiles
             if (agg.values.length > 10) {
                 agg.p50 = this.calculatePercentile(agg.values, 50);
@@ -292,10 +292,10 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async checkAlertConditions(metric) {
         const rules = this.getAlertRulesForMetric(metric);
-        
+
         for (const rule of rules) {
             const triggered = await this.evaluateAlertRule(rule, metric);
-            
+
             if (triggered) {
                 await this.processAlerts({
                     name: rule.name,
@@ -318,22 +318,22 @@ class UnifiedMonitoring extends EventEmitter {
     async findAlertCorrelations(alert) {
         const correlations = [];
         const timeWindow = 300000; // 5 minutes
-        
+
         for (const [id, existingAlert] of this.alerts) {
             if (id === alert.id) continue;
-            
+
             // Time correlation
             const timeDiff = Math.abs(alert.timestamp - existingAlert.timestamp);
             if (timeDiff > timeWindow) continue;
-            
+
             // Source correlation
             const sourceScore = this.calculateSourceCorrelation(alert, existingAlert);
-            
+
             // Pattern correlation
             const patternScore = this.calculatePatternCorrelation(alert, existingAlert);
-            
+
             const totalScore = (sourceScore + patternScore) / 2;
-            
+
             if (totalScore > 0.7) {
                 correlations.push({
                     alertId: id,
@@ -342,7 +342,7 @@ class UnifiedMonitoring extends EventEmitter {
                 });
             }
         }
-        
+
         return correlations.sort((a, b) => b.score - a.score);
     }
 
@@ -356,7 +356,7 @@ class UnifiedMonitoring extends EventEmitter {
             return a.timestamp > Date.now() - 60000 && // Last minute
                    a.source === alert.source;
         });
-        
+
         return recentAlerts.length > 10;
     }
 
@@ -369,7 +369,7 @@ class UnifiedMonitoring extends EventEmitter {
         if (this.config.alertmanagerEndpoint) {
             await this.sendToAlertmanager(alert);
         }
-        
+
         // Internal routing based on severity
         switch (alert.severity) {
             case 'critical':
@@ -394,7 +394,7 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async generateHealthPanel(timeRange) {
         const healthMetrics = await this.calculatePlatformHealth(timeRange);
-        
+
         return {
             id: 'platform-health',
             type: 'gauge',
@@ -422,11 +422,11 @@ class UnifiedMonitoring extends EventEmitter {
     async generateApplicationStatusPanel() {
         const applications = ['network', 'agents', 'launchpad'];
         const statuses = {};
-        
+
         for (const app of applications) {
             statuses[app] = await this.getApplicationStatus(app);
         }
-        
+
         return {
             id: 'app-status',
             type: 'status',
@@ -442,7 +442,7 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async generatePerformancePanel(timeRange) {
         const performanceData = await this.getPerformanceMetrics(timeRange);
-        
+
         return {
             id: 'performance',
             type: 'timeseries',
@@ -476,7 +476,7 @@ class UnifiedMonitoring extends EventEmitter {
     async generateAlertSummaryPanel() {
         const activeAlerts = Array.from(this.alerts.values())
             .filter(a => a.status === 'active');
-        
+
         const summary = {
             total: activeAlerts.length,
             bySeverity: {
@@ -487,12 +487,12 @@ class UnifiedMonitoring extends EventEmitter {
             },
             bySource: {}
         };
-        
+
         // Group by source
         for (const alert of activeAlerts) {
             summary.bySource[alert.source] = (summary.bySource[alert.source] || 0) + 1;
         }
-        
+
         return {
             id: 'alert-summary',
             type: 'stats',
@@ -553,14 +553,14 @@ class UnifiedMonitoring extends EventEmitter {
      */
     getAlertRulesForMetric(metric) {
         const rules = [];
-        
+
         for (const [id, rule] of this.alertRules) {
-            if (metric.name === rule.metric || 
+            if (metric.name === rule.metric ||
                 metric.name.match(new RegExp(rule.metric))) {
                 rules.push(rule);
             }
         }
-        
+
         return rules;
     }
 
@@ -594,13 +594,13 @@ class UnifiedMonitoring extends EventEmitter {
     async evaluateRateCondition(rule, metric) {
         const key = `${metric.source}:${metric.name}`;
         const timeSeries = this.metrics.get(key) || [];
-        
+
         if (timeSeries.length < 2) return false;
-        
+
         const recentMetrics = timeSeries.slice(-10);
         const failures = recentMetrics.filter(m => m.value === 1).length;
         const rate = failures / recentMetrics.length;
-        
+
         return rate > rule.threshold;
     }
 
@@ -613,13 +613,13 @@ class UnifiedMonitoring extends EventEmitter {
     async evaluateAverageCondition(rule, metric) {
         const key = `${metric.source}:${metric.name}`;
         const timeSeries = this.metrics.get(key) || [];
-        
+
         if (timeSeries.length === 0) return false;
-        
+
         const recentMetrics = timeSeries.slice(-10);
         const sum = recentMetrics.reduce((acc, m) => acc + m.value, 0);
         const avg = sum / recentMetrics.length;
-        
+
         return avg > rule.threshold;
     }
 
@@ -634,11 +634,11 @@ class UnifiedMonitoring extends EventEmitter {
             agents: await this.calculateComponentHealth('agents', timeRange),
             launchpad: await this.calculateComponentHealth('launchpad', timeRange)
         };
-        
+
         health.overall = Math.round(
             (health.network + health.agents + health.launchpad) / 3
         );
-        
+
         return health;
     }
 
@@ -650,23 +650,23 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async calculateComponentHealth(component, timeRange) {
         const metrics = await this.getComponentMetrics(component, timeRange);
-        
+
         let score = 100;
-        
+
         // Deduct points for errors
         const errorRate = metrics.errorRate || 0;
         score -= errorRate * 20;
-        
+
         // Deduct points for slow response
         const avgResponseTime = metrics.avgResponseTime || 0;
         if (avgResponseTime > 1000) score -= 10;
         if (avgResponseTime > 3000) score -= 20;
-        
+
         // Deduct points for resource usage
         const cpuUsage = metrics.cpuUsage || 0;
         if (cpuUsage > 80) score -= 10;
         if (cpuUsage > 90) score -= 20;
-        
+
         return Math.max(0, Math.min(100, score));
     }
 
@@ -678,7 +678,7 @@ class UnifiedMonitoring extends EventEmitter {
     async getApplicationStatus(app) {
         const lastHeartbeat = await this.getLastHeartbeat(app);
         const isHealthy = Date.now() - lastHeartbeat < 60000; // 1 minute
-        
+
         return {
             status: isHealthy ? 'healthy' : 'unhealthy',
             lastHeartbeat,
@@ -702,7 +702,7 @@ class UnifiedMonitoring extends EventEmitter {
     async collectPlatformMetrics() {
         // Collect from each application
         const applications = ['network', 'agents', 'launchpad'];
-        
+
         for (const app of applications) {
             try {
                 const metrics = await this.collectApplicationMetrics(app);
@@ -711,7 +711,7 @@ class UnifiedMonitoring extends EventEmitter {
                 console.error(`Failed to collect metrics from ${app}:`, error);
             }
         }
-        
+
         // Emit collection complete event
         this.emit('metrics-collected', {
             timestamp: Date.now(),
@@ -757,7 +757,7 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async pushToPrometheus(metric) {
         if (!this.config.prometheusEndpoint) return;
-        
+
         try {
             const prometheusMetric = this.formatPrometheusMetric(metric);
             await blockchainClient.sendMessage(`${this.config.prometheusEndpoint}/metrics/job/a2a-platform`, {
@@ -779,7 +779,7 @@ class UnifiedMonitoring extends EventEmitter {
         const labels = Object.entries(metric.labels)
             .map(([k, v]) => `${k}="${v}"`)
             .join(',');
-        
+
         const labelsStr = labels ? `{${labels}}` : '';
         return `${metric.name}${labelsStr} ${metric.value} ${metric.timestamp}`;
     }
@@ -790,7 +790,7 @@ class UnifiedMonitoring extends EventEmitter {
      */
     async sendToAlertmanager(alert) {
         if (!this.config.alertmanagerEndpoint) return;
-        
+
         try {
             await blockchainClient.sendMessage(`${this.config.alertmanagerEndpoint}/api/v1/alerts`, {
                 method: 'POST',
@@ -833,7 +833,7 @@ class UnifiedMonitoring extends EventEmitter {
      */
     getAggregationBucket(timestamp, level) {
         const date = new Date(timestamp);
-        
+
         switch (level) {
             case '1m':
                 return Math.floor(timestamp / 60000);
@@ -857,10 +857,10 @@ class UnifiedMonitoring extends EventEmitter {
         if (!this.metricStreams.has(source)) {
             this.metricStreams.set(source, []);
         }
-        
+
         const stream = this.metricStreams.get(source);
         stream.push(...metrics);
-        
+
         // Keep only recent data
         const cutoff = Date.now() - 3600000; // 1 hour
         const filtered = stream.filter(m => m.timestamp > cutoff);
@@ -896,18 +896,18 @@ class UnifiedMonitoring extends EventEmitter {
      */
     calculateSourceCorrelation(alert1, alert2) {
         if (alert1.source === alert2.source) return 1;
-        
+
         // Check if sources are related
         const relatedSources = {
             'network': ['agents'],
             'agents': ['network'],
             'launchpad': ['network', 'agents']
         };
-        
+
         if (relatedSources[alert1.source]?.includes(alert2.source)) {
             return 0.5;
         }
-        
+
         return 0;
     }
 
@@ -920,13 +920,13 @@ class UnifiedMonitoring extends EventEmitter {
     calculatePatternCorrelation(alert1, alert2) {
         // Similar alert names
         if (alert1.name === alert2.name) return 1;
-        
+
         // Similar severity
         if (alert1.severity === alert2.severity) return 0.3;
-        
+
         // Similar metric patterns
         if (alert1.condition === alert2.condition) return 0.2;
-        
+
         return 0;
     }
 
@@ -1025,14 +1025,14 @@ class UnifiedMonitoring extends EventEmitter {
         const data = [];
         const points = 100;
         const now = Date.now();
-        
+
         for (let i = 0; i < points; i++) {
             data.push({
                 timestamp: now - (points - i) * 60000,
                 value: Math.floor(Math.random() * (max - min) + min)
             });
         }
-        
+
         return data;
     }
 
@@ -1135,7 +1135,7 @@ class UnifiedMonitoring extends EventEmitter {
      * @returns {boolean} Validation result
      */
     validateMetric(metric) {
-        return metric.name && 
+        return metric.name &&
                typeof metric.value === 'number' &&
                metric.timestamp &&
                metric.source;

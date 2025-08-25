@@ -22,7 +22,7 @@ class BlockchainBackupManager extends EventEmitter {
         this.compressionEnabled = options.compression !== false;
         this.retentionDays = options.retentionDays || 30;
         this.backupSchedule = options.backupSchedule || '0 2 * * *'; // 2 AM daily
-        
+
         this.contracts = new Map();
         this.backupHistory = [];
         this.isBackupRunning = false;
@@ -35,20 +35,20 @@ class BlockchainBackupManager extends EventEmitter {
         try {
             // Create backup directory
             await fs.mkdir(this.backupDir, { recursive: true });
-            
+
             // Load backup history
             await this.loadBackupHistory();
-            
+
             // Start scheduled backups if in production
             if (process.env.NODE_ENV === 'production') {
                 this.scheduleBackups();
             }
-            
+
             cds.log('blockchain-backup').info('Backup manager initialized', {
                 backupDir: this.backupDir,
                 retentionDays: this.retentionDays
             });
-            
+
         } catch (error) {
             cds.log('blockchain-backup').error('Failed to initialize backup manager:', error);
             throw error;
@@ -66,7 +66,7 @@ class BlockchainBackupManager extends EventEmitter {
             lastBackupBlock: startBlock,
             contract: new this.web3.eth.Contract(abi, address)
         });
-        
+
         cds.log('blockchain-backup').info('Contract registered for backup', {
             name,
             address,
@@ -85,7 +85,7 @@ class BlockchainBackupManager extends EventEmitter {
 
         this.isBackupRunning = true;
         const backupId = this.generateBackupId();
-        
+
         try {
             const currentBlock = await this.web3.eth.getBlockNumber();
             const backupData = {
@@ -105,22 +105,22 @@ class BlockchainBackupManager extends EventEmitter {
             // Backup each registered contract
             for (const [contractName, contractInfo] of this.contracts.entries()) {
                 cds.log('blockchain-backup').info('Backing up contract', { contractName });
-                
+
                 const contractBackup = await this.backupContract(
                     contractName,
                     contractInfo,
                     currentBlock
                 );
-                
+
                 backupData.contracts[contractName] = contractBackup;
-                
+
                 // Update last backup block
                 contractInfo.lastBackupBlock = currentBlock;
             }
 
             // Save backup to file
             const backupFile = await this.saveBackupToFile(backupData);
-            
+
             // Update backup history
             this.backupHistory.push({
                 id: backupId,
@@ -165,7 +165,7 @@ class BlockchainBackupManager extends EventEmitter {
      */
     async backupContract(contractName, contractInfo, toBlock) {
         const { contract, address, lastBackupBlock } = contractInfo;
-        
+
         const contractBackup = {
             address,
             fromBlock: lastBackupBlock,
@@ -188,7 +188,7 @@ class BlockchainBackupManager extends EventEmitter {
                 if (!contractBackup.events[eventType]) {
                     contractBackup.events[eventType] = [];
                 }
-                
+
                 contractBackup.events[eventType].push({
                     blockNumber: event.blockNumber,
                     transactionHash: event.transactionHash,
@@ -224,11 +224,11 @@ class BlockchainBackupManager extends EventEmitter {
      */
     async backupContractState(contract) {
         const state = {};
-        
+
         try {
             // This would read all public state variables
             // Implementation depends on specific contract ABI
-            
+
             // Example for common variables
             const commonMethods = [
                 'owner',
@@ -261,12 +261,12 @@ class BlockchainBackupManager extends EventEmitter {
      */
     async getContractTransactions(address, fromBlock, toBlock) {
         const transactions = [];
-        
+
         try {
             // Get all blocks in range and filter transactions
             for (let blockNum = fromBlock; blockNum <= toBlock; blockNum++) {
                 const block = await this.web3.eth.getBlock(blockNum, true);
-                
+
                 if (block && block.transactions) {
                     for (const tx of block.transactions) {
                         if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
@@ -299,21 +299,21 @@ class BlockchainBackupManager extends EventEmitter {
     async saveBackupToFile(backupData) {
         const filename = `backup-${backupData.id}.json`;
         const filepath = path.join(this.backupDir, filename);
-        
+
         try {
             let data = JSON.stringify(backupData, null, 2);
-            
+
             // Compress if enabled
             if (this.compressionEnabled) {
                 const zlib = require('zlib');
                 data = zlib.gzipSync(data);
             }
-            
+
             // Encrypt data
             const encryptedData = this.encryptData(data);
-            
+
             await fs.writeFile(filepath, encryptedData);
-            
+
             return filepath;
 
         } catch (error) {
@@ -328,16 +328,16 @@ class BlockchainBackupManager extends EventEmitter {
     async loadBackupFromFile(filepath) {
         try {
             const encryptedData = await fs.readFile(filepath);
-            
+
             // Decrypt data
             let data = this.decryptData(encryptedData);
-            
+
             // Decompress if needed
             if (this.compressionEnabled) {
                 const zlib = require('zlib');
                 data = zlib.gunzipSync(data);
             }
-            
+
             return JSON.parse(data.toString());
 
         } catch (error) {
@@ -357,7 +357,7 @@ class BlockchainBackupManager extends EventEmitter {
             }
 
             const backupData = await this.loadBackupFromFile(backupInfo.file);
-            
+
             cds.log('blockchain-backup').info('Starting restore process', {
                 backupId,
                 blockNumber: backupData.blockNumber
@@ -420,7 +420,7 @@ class BlockchainBackupManager extends EventEmitter {
         // 2. Identifying differences
         // 3. Recreating missing data in a local database
         // 4. Generating reports on state differences
-        
+
         cds.log('blockchain-backup').info('Restoring contract data', {
             contractName,
             events: Object.keys(contractBackup.events).length,
@@ -444,11 +444,11 @@ class BlockchainBackupManager extends EventEmitter {
         if (process.env.BACKUP_ENCRYPTION_KEY) {
             return Buffer.from(process.env.BACKUP_ENCRYPTION_KEY, 'hex');
         }
-        
+
         if (process.env.NODE_ENV === 'production') {
             throw new Error('BACKUP_ENCRYPTION_KEY environment variable required in production');
         }
-        
+
         // Development only
         cds.log('blockchain-backup').warn('Using temporary encryption key for development');
         return crypto.randomBytes(32);
@@ -460,12 +460,12 @@ class BlockchainBackupManager extends EventEmitter {
     encryptData(data) {
         const iv = crypto.randomBytes(16);
         const cipher = crypto.createCipherGCM('aes-256-gcm', this.encryptionKey, iv);
-        
+
         let encrypted = cipher.update(data, 'utf8', 'hex');
         encrypted += cipher.final('hex');
-        
+
         const authTag = cipher.getAuthTag();
-        
+
         return JSON.stringify({
             iv: iv.toString('hex'),
             authTag: authTag.toString('hex'),
@@ -480,13 +480,13 @@ class BlockchainBackupManager extends EventEmitter {
         const parsed = JSON.parse(encryptedData);
         const iv = Buffer.from(parsed.iv, 'hex');
         const authTag = Buffer.from(parsed.authTag, 'hex');
-        
+
         const decipher = crypto.createDecipherGCM('aes-256-gcm', this.encryptionKey, iv);
         decipher.setAuthTag(authTag);
-        
+
         let decrypted = decipher.update(parsed.data, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
-        
+
         return Buffer.from(decrypted, 'utf8');
     }
 
@@ -507,7 +507,7 @@ class BlockchainBackupManager extends EventEmitter {
      */
     async loadBackupHistory() {
         const historyFile = path.join(this.backupDir, 'backup-history.json');
-        
+
         try {
             const data = await fs.readFile(historyFile, 'utf8');
             this.backupHistory = JSON.parse(data);
@@ -522,7 +522,7 @@ class BlockchainBackupManager extends EventEmitter {
      */
     async saveBackupHistory() {
         const historyFile = path.join(this.backupDir, 'backup-history.json');
-        
+
         try {
             await fs.writeFile(
                 historyFile,
@@ -539,7 +539,7 @@ class BlockchainBackupManager extends EventEmitter {
     async cleanupOldBackups() {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - this.retentionDays);
-        
+
         const backupsToDelete = this.backupHistory.filter(
             backup => new Date(backup.timestamp) < cutoffDate
         );
@@ -547,18 +547,18 @@ class BlockchainBackupManager extends EventEmitter {
         for (const backup of backupsToDelete) {
             try {
                 await fs.unlink(backup.file);
-                
+
                 // Remove from history
                 const index = this.backupHistory.indexOf(backup);
                 if (index > -1) {
                     this.backupHistory.splice(index, 1);
                 }
-                
+
                 cds.log('blockchain-backup').info('Old backup deleted', {
                     id: backup.id,
                     file: backup.file
                 });
-                
+
             } catch (error) {
                 cds.log('blockchain-backup').warn('Failed to delete old backup:', error);
             }
@@ -570,7 +570,7 @@ class BlockchainBackupManager extends EventEmitter {
      */
     scheduleBackups() {
         const cron = require('node-cron');
-        
+
         cron.schedule(this.backupSchedule, async () => {
             try {
                 await this.performFullBackup();
@@ -578,7 +578,7 @@ class BlockchainBackupManager extends EventEmitter {
                 cds.log('blockchain-backup').error('Scheduled backup failed:', error);
             }
         });
-        
+
         cds.log('blockchain-backup').info('Backup schedule configured', {
             schedule: this.backupSchedule
         });
@@ -590,14 +590,14 @@ class BlockchainBackupManager extends EventEmitter {
     getBackupStats() {
         const totalSize = this.backupHistory.reduce((sum, backup) => sum + backup.size, 0);
         const avgSize = this.backupHistory.length > 0 ? totalSize / this.backupHistory.length : 0;
-        
+
         return {
             totalBackups: this.backupHistory.length,
             totalSize: totalSize,
             averageSize: avgSize,
-            oldestBackup: this.backupHistory.length > 0 ? 
+            oldestBackup: this.backupHistory.length > 0 ?
                 Math.min(...this.backupHistory.map(b => new Date(b.timestamp))) : null,
-            newestBackup: this.backupHistory.length > 0 ? 
+            newestBackup: this.backupHistory.length > 0 ?
                 Math.max(...this.backupHistory.map(b => new Date(b.timestamp))) : null,
             registeredContracts: this.contracts.size
         };

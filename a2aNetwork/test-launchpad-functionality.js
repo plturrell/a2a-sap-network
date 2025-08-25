@@ -27,11 +27,11 @@ async function testEndpoint(path, expectedFields = []) {
                 try {
                     const result = JSON.parse(data);
                     const status = res.statusCode;
-                    
+
                     // Check if expected fields exist
-                    const fieldsCheck = expectedFields.length === 0 ? true : 
+                    const fieldsCheck = expectedFields.length === 0 ? true :
                         expectedFields.every((field) => { return result.hasOwnProperty(field); });
-                    
+
                     resolve({
                         path,
                         status,
@@ -82,7 +82,7 @@ async function testEndpoint(path, expectedFields = []) {
 
 async function runLaunchpadTests() {
     console.log('🧪 Testing A2A Launchpad Functionality\n');
-    
+
     const tests = [
         // Agent endpoints
         {
@@ -90,35 +90,35 @@ async function runLaunchpadTests() {
             name: 'Agent Visualization Tile',
             expectedFields: ['id', 'title', 'data', 'status']
         },
-        
-        // Service endpoints  
+
+        // Service endpoints
         {
             path: '/api/v1/Services?id=service_marketplace',
             name: 'Service Marketplace Tile',
             expectedFields: ['id', 'title', 'data', 'status']
         },
-        
+
         // Network health
         {
             path: '/api/v1/network/health',
             name: 'Network Health',
             expectedFields: ['healthScore', 'status', 'components']
         },
-        
+
         // Notification count
         {
             path: '/api/v1/notifications/count',
             name: 'Notification Count',
             expectedFields: ['unreadCount', 'totalCount']
         },
-        
+
         // Settings endpoints
         {
             path: '/api/v1/settings/network',
             name: 'Network Settings',
             expectedFields: ['network', 'rpcUrl', 'chainId']
         },
-        
+
         // CDS Services
         {
             path: '/api/v1/network/Agents',
@@ -126,14 +126,14 @@ async function runLaunchpadTests() {
             expectedFields: ['value']
         }
     ];
-    
+
     const results = [];
-    
+
     for (const test of tests) {
         console.log(`Testing: ${test.name}`);
         const result = await testEndpoint(test.path, test.expectedFields);
         results.push({ ...result, name: test.name });
-        
+
         if (result.success && result.hasExpectedFields) {
             console.log(`✅ ${test.name} - PASSED`);
         } else {
@@ -148,26 +148,26 @@ async function runLaunchpadTests() {
         }
         console.log('');
     }
-    
+
     // Summary
     const passed = results.filter(r => r.success && r.hasExpectedFields).length;
     const total = results.length;
-    
+
     console.log('🏁 Test Summary');
     console.log('================');
     console.log(`Passed: ${passed}/${total}`);
     console.log(`Success Rate: ${Math.round((passed/total) * 100)}%`);
-    
+
     if (passed === total) {
         console.log('\n🎉 All tests passed! Launchpad functionality is working correctly.');
     } else {
         console.log('\n⚠️  Some tests failed. Check the details above.');
     }
-    
+
     // Show data samples for successful endpoints
     console.log('\n📊 Sample Data:');
     console.log('================');
-    
+
     results.forEach(result => {
         if (result.success && result.data && typeof result.data === 'object') {
             console.log(`\n${result.name}:`);
@@ -183,7 +183,7 @@ async function runLaunchpadTests() {
             }
         }
     });
-    
+
     return { passed, total, results };
 }
 

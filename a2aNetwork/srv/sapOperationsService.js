@@ -34,10 +34,10 @@ module.exports = class OperationsService extends BaseService {
         // Health check implementation
         this.on('getHealth', async (req) => {
             const health = monitoring.getHealthStatus();
-            
+
             // Get component health
             const components = await this._getComponentHealth();
-            
+
             return {
                 ID: cds.utils.uuid(),
                 status: health.status,
@@ -52,17 +52,17 @@ module.exports = class OperationsService extends BaseService {
         // Get metrics implementation
         this.on('getMetrics', async (req) => {
             const { startTime, endTime, metricNames, tags } = req.data;
-            
+
             // Get all current metrics
             const allMetrics = monitoring.getMetrics();
-            
+
             // Filter by time range and names
             const metrics = [];
             for (const [name, metric] of Object.entries(allMetrics)) {
                 if (metricNames && metricNames.length > 0 && !metricNames.includes(name)) {
                     continue;
                 }
-                
+
                 // Check if metric is within time range
                 const metricTime = new Date(metric.timestamp);
                 if (metricTime >= new Date(startTime) && metricTime <= new Date(endTime)) {
@@ -77,7 +77,7 @@ module.exports = class OperationsService extends BaseService {
                         }
                         if (!matchesTags) continue;
                     }
-                    
+
                     metrics.push({
                         name: name,
                         value: metric.value,
@@ -87,14 +87,14 @@ module.exports = class OperationsService extends BaseService {
                     });
                 }
             }
-            
+
             return metrics;
         });
 
         // Get logs implementation
         this.on('getLogs', async (req) => {
             const { startTime, endTime, level, logger, correlationId, limit = 100 } = req.data;
-            
+
             // Query real Application Logging Service
             try {
                 const loggingUrl = process.env.LOGGING_BACKEND_URL || 'http://localhost:9200'; // Elasticsearch
@@ -116,7 +116,7 @@ module.exports = class OperationsService extends BaseService {
                     size: limit,
                     sort: [{ '@timestamp': { order: 'desc' } }]
                 };
-                
+
                 if (level) {
                     query.query.bool.must.push({ term: { level: level } });
                 }
@@ -126,13 +126,13 @@ module.exports = class OperationsService extends BaseService {
                 if (correlationId) {
                     query.query.bool.must.push({ term: { correlationId: correlationId } });
                 }
-                
+
                 const response = await blockchainClient.sendMessage(`${loggingUrl}/logs-*/_search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(query)
                 });
-                
+
                 if (response.ok) {
                     const result = await response.json();
                     return result.hits.hits.map(hit => ({
@@ -150,7 +150,7 @@ module.exports = class OperationsService extends BaseService {
             } catch (error) {
                 cds.log('operations').error('Failed to fetch logs from backend:', error);
             }
-            
+
             // Return empty array - no fallback to mock data
             return [];
         });
@@ -158,7 +158,7 @@ module.exports = class OperationsService extends BaseService {
         // Get traces implementation
         this.on('getTraces', async (req) => {
             const { startTime, endTime, serviceName, operationName, minDuration, limit = 100 } = req.data;
-            
+
             // Query real distributed tracing backend (Jaeger, Zipkin, etc.)
             try {
                 const tracingUrl = process.env.TRACING_BACKEND_URL || 'http://localhost:16686'; // Jaeger
@@ -167,13 +167,13 @@ module.exports = class OperationsService extends BaseService {
                     end: endTime,
                     limit: limit.toString()
                 });
-                
+
                 if (serviceName) params.append('service', serviceName);
                 if (operationName) params.append('operation', operationName);
                 if (minDuration) params.append('minDuration', `${minDuration}ms`);
-                
+
                 const response = await blockchainClient.sendMessage(`${tracingUrl}/api/traces?${params}`);
-                
+
                 if (response.ok) {
                     const result = await response.json();
                     return result.data?.map(trace => ({
@@ -195,7 +195,7 @@ module.exports = class OperationsService extends BaseService {
             } catch (error) {
                 cds.log('operations').error('Failed to fetch traces from backend:', error);
             }
-            
+
             // Return empty array - no fallback to mock traces
             return [];
         });
@@ -203,7 +203,7 @@ module.exports = class OperationsService extends BaseService {
         // Get alerts
         this.on('READ', Alerts, async (req) => {
             const alerts = monitoring.getAlerts();
-            
+
             return alerts.map(alert => ({
                 ID: cds.utils.uuid(),
                 name: alert.name,
@@ -218,7 +218,7 @@ module.exports = class OperationsService extends BaseService {
         // Acknowledge alert
         this.on('acknowledgeAlert', async (req) => {
             const { alertId, message } = req.data;
-            
+
             // In production, update the alert in the database
             return {
                 ID: alertId,
@@ -232,14 +232,14 @@ module.exports = class OperationsService extends BaseService {
         // Resolve alert
         this.on('resolveAlert', async (req) => {
             const { alertId, resolution } = req.data;
-            
+
             // Clear from monitoring service
             const alerts = monitoring.getAlerts();
             const alert = alerts.find(a => a.ID === alertId);
             if (alert) {
                 monitoring.clearAlert(alert.name);
             }
-            
+
             return {
                 ID: alertId,
                 status: 'resolved',
@@ -252,12 +252,12 @@ module.exports = class OperationsService extends BaseService {
         // Update configuration
         this.on('updateConfiguration', async (req) => {
             const { name, value } = req.data;
-            
+
             // Validate configuration
             if (!this._validateConfiguration(name, value)) {
                 req.error(400, `Invalid configuration value for ${name}`);
             }
-            
+
             // In production, persist to database
             return {
                 name: name,
@@ -274,33 +274,33 @@ module.exports = class OperationsService extends BaseService {
         this.on('triggerHealthCheck', async (req) => {
             // Force refresh of all health metrics
             const health = monitoring.getHealthStatus();
-            
+
             // Trigger Cloud ALM sync
             await cloudALM.syncHealthStatus();
-            
+
             return health;
         });
 
         // Export to Cloud ALM
         this.on('exportToCloudALM', async (req) => {
             const { startTime, endTime } = req.data;
-            
+
             // Get metrics for time range
             const metrics = await this.getMetrics({
                 startTime,
                 endTime
             });
-            
+
             // Export to Cloud ALM
             let exported = 0;
             for (const metric of metrics) {
                 cloudALM.processMetric(metric);
                 exported++;
             }
-            
+
             // Trigger sync
             await cloudALM.syncMetrics();
-            
+
             return {
                 exported: exported,
                 status: 'success'
@@ -310,16 +310,16 @@ module.exports = class OperationsService extends BaseService {
         // Create alert rule
         this.on('createAlertRule', async (req) => {
             const { name, metricName, condition, threshold, severity, description } = req.data;
-            
+
             // In production, this would create a rule in the Alert Notification Service
             const ruleId = `rule-${Date.now()}`;
-            
+
             // Register rule with monitoring
             monitoring.on('metric', async (metric) => {
                 try {
                     if (metric.name === metricName) {
                         let shouldAlert = false;
-                        
+
                         switch (condition) {
                             case 'gt':
                                 shouldAlert = metric.value > threshold;
@@ -334,7 +334,7 @@ module.exports = class OperationsService extends BaseService {
                                 shouldAlert = metric.value !== threshold;
                                 break;
                         }
-                        
+
                         if (shouldAlert) {
                             await monitoring.triggerAlert(name, {
                                 severity: severity,
@@ -344,12 +344,12 @@ module.exports = class OperationsService extends BaseService {
                         }
                     }
                 } catch (error) {
-                    cds.log('operations-service').error('Alert rule execution failed', { 
-                        ruleId, metricName, error: error.message 
+                    cds.log('operations-service').error('Alert rule execution failed', {
+                        ruleId, metricName, error: error.message
                     });
                 }
             });
-            
+
             return {
                 ruleId: ruleId,
                 status: 'created'
@@ -361,7 +361,7 @@ module.exports = class OperationsService extends BaseService {
             const health = monitoring.getHealthStatus();
             const metrics = monitoring.getMetrics();
             const alerts = monitoring.getAlerts();
-            
+
             // Get recent logs (mock data)
             const recentLogs = [];
             for (let i = 0; i < 5; i++) {
@@ -373,10 +373,10 @@ module.exports = class OperationsService extends BaseService {
                     message: `Recent log entry ${i + 1}`
                 });
             }
-            
+
             // Get component status
             const components = await this._getComponentHealth();
-            
+
             return {
                 health: health,
                 metrics: {
@@ -446,7 +446,7 @@ module.exports = class OperationsService extends BaseService {
      */
     async _getComponentHealth() {
         const components = [];
-        
+
         // Backend health
         components.push({
             component: 'backend',
@@ -458,7 +458,7 @@ module.exports = class OperationsService extends BaseService {
                 memory: process.memoryUsage()
             })
         });
-        
+
         // Database health
         try {
             const db = await cds.connect.to('db');
@@ -477,7 +477,7 @@ module.exports = class OperationsService extends BaseService {
                 details: JSON.stringify({ error: error.message })
             });
         }
-        
+
         // Blockchain health
         try {
             const blockchain = await cds.connect.to('BlockchainService');
@@ -495,7 +495,7 @@ module.exports = class OperationsService extends BaseService {
                 details: JSON.stringify({ error: 'Service not available' })
             });
         }
-        
+
         return components;
     }
 
@@ -512,7 +512,7 @@ module.exports = class OperationsService extends BaseService {
             'http.request.count': 'count',
             'eventLoop.lag': 'ms'
         };
-        
+
         return units[metricName] || 'value';
     }
 
@@ -526,11 +526,11 @@ module.exports = class OperationsService extends BaseService {
             'alerts.enabled': (val) => typeof val === 'boolean',
             'logging.level': (val) => ['DEBUG', 'INFO', 'WARN', 'ERROR'].includes(val)
         };
-        
+
         if (validationRules[name]) {
             return validationRules[name](value);
         }
-        
+
         return true;
     }
 
@@ -555,7 +555,7 @@ module.exports = class OperationsService extends BaseService {
             'logging.level': 'Minimum log level to capture (DEBUG, INFO, WARN, ERROR)',
             'performance.maxResponseTime': 'Maximum acceptable response time (milliseconds)'
         };
-        
+
         return descriptions[name] || `Configuration setting: ${name}`;
     }
 };

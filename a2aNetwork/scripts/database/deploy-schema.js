@@ -17,7 +17,7 @@ class DirectDatabaseDeployer {
 
     async initialize() {
         console.log('🔌 Initializing SQLite database...');
-        
+
         // Ensure data directory exists
         const dataDir = path.dirname(this.dbPath);
         if (!fs.existsSync(dataDir)) {
@@ -275,7 +275,7 @@ class DirectDatabaseDeployer {
         // Record this initial schema creation
         const version = '001_initial_direct_schema';
         await this.executeSQL(`
-            INSERT OR REPLACE INTO schema_migrations (version, execution_time) 
+            INSERT OR REPLACE INTO schema_migrations (version, execution_time)
             VALUES ('${version}', 0)
         `, 'Record migration');
     }
@@ -304,8 +304,8 @@ class DirectDatabaseDeployer {
         for (const stat of stats) {
             const id = generateId();
             await this.executeSQL(`
-                INSERT OR REPLACE INTO NetworkStatistics 
-                (ID, metric_name, metric_value, data_type, category) 
+                INSERT OR REPLACE INTO NetworkStatistics
+                (ID, metric_name, metric_value, data_type, category)
                 VALUES ('${id}', '${stat.metric_name}', '${stat.metric_value}', '${stat.data_type}', '${stat.category}')
             `, `Seed ${stat.metric_name} statistic`);
         }
@@ -335,9 +335,9 @@ class DirectDatabaseDeployer {
 
         return new Promise((resolve, reject) => {
             const tables = [];
-            
+
             this.db.all(`
-                SELECT name FROM sqlite_master 
+                SELECT name FROM sqlite_master
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 ORDER BY name
             `, (err, rows) => {
@@ -349,7 +349,7 @@ class DirectDatabaseDeployer {
                         console.log(`  ✅ ${row.name}`);
                         tables.push(row.name);
                     });
-                    
+
                     console.log(`\n📈 Total tables: ${tables.length}`);
                     resolve(tables);
                 }
@@ -376,22 +376,22 @@ class DirectDatabaseDeployer {
 // CLI Interface
 async function main() {
     const deployer = new DirectDatabaseDeployer();
-    
+
     try {
         await deployer.initialize();
-        
+
         const command = process.argv[2] || 'deploy';
-        
+
         switch (command) {
             case 'deploy':
                 await deployer.deploySchema();
                 await deployer.getStatus();
                 break;
-                
+
             case 'status':
                 await deployer.getStatus();
                 break;
-                
+
             default:
                 console.log(`
 A2A Network Direct Database Deployer
@@ -406,7 +406,7 @@ Examples:
                 `);
                 break;
         }
-        
+
     } catch (error) {
         console.error('💥 Deployment failed:', error);
         process.exit(1);

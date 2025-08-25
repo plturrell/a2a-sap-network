@@ -66,7 +66,7 @@ class TreeAlgorithms extends BaseService {
             if (this.isLeaf(item)) {
                 return fn(item, path);
             } else if (Array.isArray(item)) {
-                return item.map((val, index) => 
+                return item.map((val, index) =>
                     mapRecursive(val, [...path, index])
                 );
             } else if (item instanceof Map) {
@@ -155,7 +155,7 @@ class TreeAlgorithms extends BaseService {
             if (this.isLeaf(item)) {
                 accumulator = fn(accumulator, item, path);
             } else if (Array.isArray(item)) {
-                item.forEach((val, index) => 
+                item.forEach((val, index) =>
                     reduceRecursive(val, [...path, index])
                 );
             } else if (item instanceof Map) {
@@ -252,10 +252,10 @@ class TreeAlgorithms extends BaseService {
 
         const result = deepClone(structure);
         let current = result;
-        
+
         for (let i = 0; i < path.length - 1; i++) {
             const key = path[i];
-            
+
             if (Array.isArray(current)) {
                 const index = typeof key === 'number' ? key : parseInt(key, 10);
                 if (!isNaN(index) && index >= 0 && index < current.length) {

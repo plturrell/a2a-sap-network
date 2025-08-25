@@ -13,17 +13,17 @@ sap.ui.define([
     'use strict';
 
     return Controller.extend('a2a.network.controller.NotificationCenter', {
-        
+
         onInit: function () {
             // Initialize models
             this.initializeModels();
-            
+
             // Initialize WebSocket connection
             this.initializeWebSocket();
-            
+
             // Load initial notifications
             this.loadNotifications();
-            
+
             // Set up auto-refresh
             this.setupAutoRefresh();
         },
@@ -70,7 +70,7 @@ sap.ui.define([
         initializeWebSocket: function () {
             const wsUrl = this.getWebSocketUrl();
             this.ws = new WebSocket(wsUrl);
-            
+
             this.ws.onopen = this.onWebSocketOpen.bind(this);
             this.ws.onmessage = this.onWebSocketMessage.bind(this);
             this.ws.onclose = this.onWebSocketClose.bind(this);
@@ -93,7 +93,7 @@ sap.ui.define([
             console.log('WebSocket connected');
             this.oNotificationModel.setProperty('/connectionStatus', 'connected');
             this.reconnectAttempts = 0;
-            
+
             // Authenticate
             const userId = this.getCurrentUserId();
             this.sendWebSocketMessage({
@@ -114,7 +114,7 @@ sap.ui.define([
         onWebSocketClose: function (event) {
             console.log('WebSocket disconnected:', event.code, event.reason);
             this.oNotificationModel.setProperty('/connectionStatus', 'disconnected');
-            
+
             // Attempt reconnection
             this.attemptReconnection();
         },
@@ -133,9 +133,9 @@ sap.ui.define([
 
             this.reconnectAttempts++;
             const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-            
+
             console.log(`Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`);
-            
+
             setTimeout(() => {
                 this.initializeWebSocket();
             }, delay);
@@ -147,46 +147,46 @@ sap.ui.define([
                     this.clientId = message.clientId;
                     this.reconnectToken = message.reconnectToken;
                     break;
-                    
+
                 case 'auth_success':
                     console.log('Authentication successful');
                     this.updateNotifications(message.notifications);
                     this.updateStats(message);
                     this.loadUserPreferences();
                     break;
-                    
+
                 case 'new_notification':
                     this.addNotification(message.notification);
                     this.showNotificationToast(message.notification);
                     break;
-                    
+
                 case 'notification_read':
                     this.markNotificationAsRead(message.notificationId);
                     break;
-                    
+
                 case 'all_notifications_read':
                     this.markAllNotificationsAsRead();
                     break;
-                    
+
                 case 'notification_dismissed':
                     this.removeNotification(message.notificationId);
                     break;
-                    
+
                 case 'notifications':
                     this.updateNotifications(message.notifications);
                     this.updateStats(message.stats);
                     break;
-                    
+
                 case 'preferences_updated':
                     this.oSettingsModel.setData(message.preferences);
                     MessageToast.show('Preferences updated successfully');
                     break;
-                    
+
                 case 'error':
                     console.error('WebSocket error:', message.message);
                     MessageToast.show(`Error: ${  message.message}`);
                     break;
-                    
+
                 case 'pong':
                     // Handle ping response
                     break;
@@ -211,7 +211,7 @@ sap.ui.define([
         loadNotifications: function () {
             const filters = this.oFilterModel.getData();
             const pagination = this.oPaginationModel.getData();
-            
+
             this.sendWebSocketMessage({
                 type: 'get_notifications',
                 status: filters.status || undefined,
@@ -242,7 +242,7 @@ sap.ui.define([
             const notifications = this.oNotificationModel.getProperty('/notifications');
             notifications.unshift(notification);
             this.oNotificationModel.setProperty('/notifications', notifications);
-            
+
             // Update stats
             this.loadNotifications(); // Refresh to get updated stats
         },
@@ -328,7 +328,7 @@ sap.ui.define([
         onNotificationPress: function (oEvent) {
             const oContext = oEvent.getSource().getBindingContext('notificationModel');
             const notification = oContext.getObject();
-            
+
             // Mark as read if unread
             if (notification.status === 'unread') {
                 this.markNotificationRead(notification.ID);
@@ -364,7 +364,7 @@ sap.ui.define([
         onDelete: function (oEvent) {
             const oContext = oEvent.getSource().getBindingContext('notificationModel');
             const notification = oContext.getObject();
-            
+
             MessageBox.confirm('Delete this notification?', {
                 onOK: () => {
                     this.deleteNotification(notification.ID);
@@ -375,7 +375,7 @@ sap.ui.define([
         onActionPress: function (oEvent) {
             const actionType = oEvent.getSource().data('actionType');
             const target = oEvent.getSource().data('target');
-            
+
             switch (actionType) {
                 case 'navigate':
                     this.navigateToTarget(target);
@@ -417,11 +417,11 @@ sap.ui.define([
                 }).then((oDialog) => {
                     this.settingsDialog = oDialog;
                     this.getView().addDependent(oDialog);
-                    
+
                     // Load current settings
                     const currentSettings = this.oSettingsModel.getData() || {};
                     this.settingsDialog.getModel('settingsModel').setData(currentSettings);
-                    
+
                     oDialog.open();
                 });
             } else {
@@ -431,12 +431,12 @@ sap.ui.define([
 
         onSaveSettings: function () {
             const settings = this.oSettingsModel.getData();
-            
+
             this.sendWebSocketMessage({
                 type: 'update_preferences',
                 preferences: settings
             });
-            
+
             this.settingsDialog.close();
         },
 
@@ -539,13 +539,13 @@ sap.ui.define([
                 'success': 'sap-icon://sys-enter-2',
                 'system': 'sap-icon://system-exit-2'
             };
-            
+
             return iconMap[type] || 'sap-icon://notification-2';
         },
 
         formatNotificationColor: function (type, priority) {
             if (priority === 'critical') return 'Critical';
-            
+
             const colorMap = {
                 'info': 'Information',
                 'warning': 'Warning',
@@ -553,7 +553,7 @@ sap.ui.define([
                 'success': 'Success',
                 'system': 'Information'
             };
-            
+
             return colorMap[type] || 'Information';
         },
 
@@ -564,7 +564,7 @@ sap.ui.define([
                 'high': 'Warning',
                 'critical': 'Error'
             };
-            
+
             return stateMap[priority] || 'None';
         },
 
@@ -576,7 +576,7 @@ sap.ui.define([
                 'warning': 'Attention',
                 'danger': 'Reject'
             };
-            
+
             return typeMap[style] || 'Default';
         },
 

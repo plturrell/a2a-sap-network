@@ -2,7 +2,7 @@
  * @fileoverview SAP XSUAA Authentication Middleware
  * @since 1.0.0
  * @module auth
- * 
+ *
  * Authentication middleware implementing SAP XSUAA JWT validation,
  * Passport.js strategies, and session management for enterprise security
  */
@@ -43,7 +43,7 @@ if (process.env.NODE_ENV === 'production') {
   if (!IS_BTP_ENVIRONMENT && !ALLOW_NON_BTP_AUTH) {
     throw new Error('SECURITY ERROR: Production requires either BTP_ENVIRONMENT=true or explicit ALLOW_NON_BTP_AUTH=true');
   }
-  
+
   if (ALLOW_NON_BTP_AUTH && !process.env.JWT_SECRET) {
     throw new Error('SECURITY ERROR: JWT_SECRET must be set when using non-BTP authentication in production');
   }
@@ -57,13 +57,13 @@ if (ALLOW_NON_BTP_AUTH && process.env.NODE_ENV === 'production') {
 // XSUAA JWT validation middleware
 const validateJWT = function validateJWTMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No valid authorization header found' });
   }
-  
+
   const token = authHeader.substring(7);
-  
+
   // Non-BTP authentication for testing outside BTP network
   if (ALLOW_NON_BTP_AUTH && !IS_BTP_ENVIRONMENT) {
     try {
@@ -72,13 +72,13 @@ const validateJWT = function validateJWTMiddleware(req, res, next) {
       if (!jwtSecret) {
         throw new Error('JWT_SECRET required for non-BTP authentication');
       }
-      
+
       const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] });
-      
+
       if (!decoded.sub && !decoded.user_id && !decoded.id) {
         throw new Error('Token must contain user identifier');
       }
-      
+
       // Create user from verified token
       req.user = {
         id: decoded.sub || decoded.user_id || decoded.id,
@@ -92,36 +92,36 @@ const validateJWT = function validateJWTMiddleware(req, res, next) {
         sapRoles: decoded.sap_roles || decoded.roles || ['User'],
         isExternal: true // Flag for non-BTP context
       };
-      
+
       cds.log('auth').info(`Non-BTP authentication for user: ${req.user.id}`);
       return next();
-      
+
     } catch (error) {
       cds.log('auth').error('Non-BTP JWT validation failed:', error.message);
       return res.status(401).json({ error: 'Invalid JWT token', details: error.message });
     }
   }
-  
+
   // BTP XSUAA validation
   try {
     const xsuaaConfig = getXSUAAConfigHelper();
-    
+
     if (!xsuaaConfig) {
       throw new Error('XSUAA configuration not found');
     }
-    
+
     if (xsuaaConfig.isDevelopment) {
       // This should not happen since USE_DEVELOPMENT_AUTH should handle this case
       cds.log('auth').warn('Development XSUAA config in production validation path');
     }
-    
+
     // Validate JWT token with XSUAA
     xssec.createSecurityContext(token, xsuaaConfig.credentials, (error, securityContext) => {
       if (error) {
         cds.log('auth').error('JWT validation failed:', error);
         return res.status(401).json({ error: 'Invalid JWT token' });
       }
-      
+
       // Extract user information from security context
       const user = {
         id: securityContext.getLogonName() || securityContext.getUserName(),
@@ -133,14 +133,14 @@ const validateJWT = function validateJWTMiddleware(req, res, next) {
         tenant: securityContext.getSubdomain(),
         zoneId: securityContext.getZoneId()
       };
-      
+
       // Add SAP-specific role mappings
       user.sapRoles = [];
       if (securityContext.hasLocalScope('Admin')) user.sapRoles.push('Admin');
       if (securityContext.hasLocalScope('Developer')) user.sapRoles.push('Developer');
       if (securityContext.hasLocalScope('User')) user.sapRoles.push('User');
       if (securityContext.hasLocalScope('ServiceAccount')) user.sapRoles.push('ServiceAccount');
-      
+
       req.user = user;
       req.securityContext = securityContext;
       next();
@@ -157,24 +157,24 @@ const requireRole = function requireRoleFactory(role) {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    
+
     // Check SAP roles first, then fallback to regular roles
     const userRoles = req.user.sapRoles || req.user.roles || [];
-    
+
     if (!userRoles.includes(role)) {
       // Also check scopes for permission-based access
       const userScopes = req.user.scopes || [];
       const requiredScope = `${role.toLowerCase()}.access`;
-      
+
       if (!userScopes.includes(requiredScope)) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: `Role '${role}' or scope '${requiredScope}' required`,
           userRoles: userRoles,
           userScopes: userScopes
         });
       }
     }
-    
+
     next();
   };
 };
@@ -182,19 +182,19 @@ const requireRole = function requireRoleFactory(role) {
 // API key validation for service-to-service communication
 const validateAPIKey = function validateAPIKeyMiddleware(req, res, next) {
   const apiKey = req.headers['x-api-key'];
-  
+
   if (!apiKey) {
     return next(); // Continue to other auth methods
   }
-  
+
   // In production, validate against stored API keys
   const validApiKeys = process.env.VALID_API_KEYS?.split(',') || [];
-  
+
   if (validApiKeys.includes(apiKey)) {
     req.user = { id: 'api-client', roles: ['service-account'] };
     return next();
   }
-  
+
   return res.status(401).json({ error: 'Invalid API key' });
 };
 
@@ -219,21 +219,21 @@ function createDevelopmentUser() {
 const applyAuthMiddleware = function applyAuthMiddleware(app) {
   // Initialize passport
   app.use(passport.initialize());
-  
+
   // API key validation for service endpoints
   app.use('/api/v1/service/*', validateAPIKey);
-  
+
   // SECURITY FIX: Only allow development mode bypass in development environment
   if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV === 'development') {
     app.use('/api/v1/*', (req, res, next) => {
       const log = cds.log('auth-dev');
       log.warn(`🚀 DEVELOPMENT MODE: Bypassing authentication for ${req.originalUrl}`);
-      
+
       // Always assign development user
       req.user = createDevelopmentUser();
       return next();
     });
-    
+
     // Also bypass for OData endpoints
     app.use((req, res, next) => {
       if (req.originalUrl.includes('/odata/') || req.originalUrl.includes('/api/')) {
@@ -241,15 +241,15 @@ const applyAuthMiddleware = function applyAuthMiddleware(app) {
       }
       next();
     });
-    
+
     return; // Skip the normal auth setup
   }
-  
+
   // SECURITY CHECK: Prevent development auth in production
   if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV === 'production') {
     throw new Error('SECURITY ERROR: Development authentication cannot be enabled in production');
   }
-  
+
   // JWT validation for user endpoints
   const jwtValidationHandler = function(req, res, next) {
     const log = cds.log('auth-debug');
@@ -257,18 +257,18 @@ const applyAuthMiddleware = function applyAuthMiddleware(app) {
       originalUrl: req.originalUrl,
       query: req.query
     });
-    
+
     // Skip auth for health check and public endpoints
     if (req.path === '/health' || req.originalUrl.startsWith('/api/v1/public/')) {
       log.info(`Skipping auth for health/public endpoint: ${req.originalUrl}`);
       return next();
     }
-    
+
     // Skip auth for launchpad tile endpoints in development
     const launchpadEndpoints = [
       '/api/v1/Agents',
       '/api/v1/agents',
-      '/api/v1/Services', 
+      '/api/v1/Services',
       '/api/v1/services',
       '/api/v1/blockchain',
       '/api/v1/network',
@@ -276,7 +276,7 @@ const applyAuthMiddleware = function applyAuthMiddleware(app) {
       '/api/v1/notifications',
       '/api/v1/NetworkStats'
     ];
-    
+
     if (process.env.NODE_ENV === 'development' && launchpadEndpoints.some(path => req.originalUrl.startsWith(path))) {
       log.info(`Development mode: Skipping auth for launchpad endpoint: ${req.originalUrl}`);
       // Create a basic user for launchpad tile data access
@@ -294,7 +294,7 @@ const applyAuthMiddleware = function applyAuthMiddleware(app) {
       };
       return next();
     }
-    
+
     // SECURITY: All tile API endpoints must be authenticated in production
     // Only skip authentication for true health checks and public endpoints
     if (process.env.NODE_ENV === 'production') {
@@ -311,11 +311,11 @@ const applyAuthMiddleware = function applyAuthMiddleware(app) {
         return next();
       }
     }
-    
+
     log.info(`Applying JWT validation for: ${req.path}`);
     validateJWT(req, res, next);
   };
-  
+
   app.use('/api/v1/*', jwtValidationHandler);
 };
 
@@ -328,17 +328,17 @@ const getXSUAAConfig = () => {
 // Initialize XSUAA passport strategy
 const initializeXSUAAStrategy = () => {
   const initResult = initializeXSUAA();
-  
+
   if (!initResult.initialized) {
     cds.log('auth').warn('XSUAA not initialized:', initResult.error);
     return initResult;
   }
-  
+
   if (initResult.mode === 'development') {
     cds.log('auth').warn('XSUAA initialized in development mode:', initResult.warning);
     return initResult;
   }
-  
+
   try {
     const xsuaaConfig = getXSUAAConfigHelper();
     if (xsuaaConfig && !xsuaaConfig.isDevelopment) {

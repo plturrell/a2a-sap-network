@@ -99,10 +99,10 @@ sap.ui.define([
 
                 oModel.setProperty('/selectedAgent', oAgentDetails);
                 oModel.setProperty('/reviews', aReviews);
-                
+
                 // Update rating distribution chart
                 this._updateRatingDistribution(oAgentDetails.ratingDistribution);
-                
+
                 oModel.setProperty('/busy', false);
             }).catch((error) => {
                 MessageBox.error('Failed to load agent information');
@@ -306,7 +306,7 @@ sap.ui.define([
                 data: JSON.stringify(oReviewData),
                 success: function (data) {
                     MessageToast.show('Review submitted successfully!');
-                    
+
                     // Reset form
                     oModel.setProperty('/newReview', {
                         taskId: '',
@@ -316,12 +316,12 @@ sap.ui.define([
                         overallRating: 0,
                         comments: ''
                     });
-                    
+
                     // Reload reviews
                     this._loadAgentReviews(sAgentId).then((aReviews) => {
                         oModel.setProperty('/reviews', aReviews);
                     });
-                    
+
                     oModel.setProperty('/busy', false);
                 }.bind(this),
                 error: function (xhr) {
@@ -403,13 +403,13 @@ sap.ui.define([
         onRefreshData: function () {
             const oModel = this.getView().getModel();
             const oSelectedAgent = oModel.getProperty('/selectedAgent');
-            
+
             if (oSelectedAgent) {
                 this._selectAgent(oSelectedAgent.agentId);
             } else {
                 this._loadAgents();
             }
-            
+
             MessageToast.show('Data refreshed');
         },
 
@@ -428,21 +428,21 @@ sap.ui.define([
         onApplyReviewFilter: function () {
             const oTable = this.byId('reviewHistoryTable');
             const oBinding = oTable.getBinding('items');
-            
+
             if (oBinding) {
                 const aFilters = [];
-                
+
                 // Get filter values
                 const iMinRating = this.byId('filterMinRating').getValue();
                 const oDateFrom = this.byId('filterDateFrom').getDateValue();
                 const oDateTo = this.byId('filterDateTo').getDateValue();
                 const sStatus = this.byId('filterValidationStatus').getSelectedKey();
-                
+
                 // Apply rating filter
                 if (iMinRating > 0) {
                     aFilters.push(new sap.ui.model.Filter('overallRating', sap.ui.model.FilterOperator.GE, iMinRating));
                 }
-                
+
                 // Apply date filters
                 if (oDateFrom) {
                     aFilters.push(new sap.ui.model.Filter('timestamp', sap.ui.model.FilterOperator.GE, oDateFrom));
@@ -450,16 +450,16 @@ sap.ui.define([
                 if (oDateTo) {
                     aFilters.push(new sap.ui.model.Filter('timestamp', sap.ui.model.FilterOperator.LE, oDateTo));
                 }
-                
+
                 // Apply status filter
                 if (sStatus && sStatus !== 'all') {
-                    aFilters.push(new sap.ui.model.Filter('validationStatus', sap.ui.model.FilterOperator.EQ, 
+                    aFilters.push(new sap.ui.model.Filter('validationStatus', sap.ui.model.FilterOperator.EQ,
                         sStatus.charAt(0).toUpperCase() + sStatus.slice(1)));
                 }
-                
+
                 oBinding.filter(aFilters);
             }
-            
+
             this._oFilterDialog.close();
         },
 
@@ -471,7 +471,7 @@ sap.ui.define([
             const oReview = this._oReviewDetailDialog.getModel('reviewDetail').getData();
             const oModel = this.getView().getModel();
             const oSelectedAgent = oModel.getProperty('/selectedAgent');
-            
+
             MessageBox.confirm(
                 'Are you sure you want to validate this review? This action cannot be undone.',
                 {
@@ -494,17 +494,17 @@ sap.ui.define([
                 type: 'POST',
                 success: function (data) {
                     MessageToast.show('Review validated successfully!');
-                    
+
                     // Update review status in dialog
                     this._oReviewDetailDialog.getModel('reviewDetail').setProperty('/validationStatus', 'Validated');
-                    this._oReviewDetailDialog.getModel('reviewDetail').setProperty('/validatorCount', 
+                    this._oReviewDetailDialog.getModel('reviewDetail').setProperty('/validatorCount',
                         this._oReviewDetailDialog.getModel('reviewDetail').getProperty('/validatorCount') + 1);
-                    
+
                     // Reload reviews
                     this._loadAgentReviews(sAgentId).then((aReviews) => {
                         oModel.setProperty('/reviews', aReviews);
                     });
-                    
+
                     oModel.setProperty('/busy', false);
                 }.bind(this),
                 error: function (xhr) {

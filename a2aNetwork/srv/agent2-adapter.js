@@ -20,12 +20,12 @@ class Agent2Adapter {
     // Convert OData query to Agent 2 REST parameters
     convertODataQuery(odataQuery) {
         const params = {};
-        
+
         // Handle $select
         if (odataQuery.$select) {
             params.fields = odataQuery.$select;
         }
-        
+
         // Handle $filter
         if (odataQuery.$filter) {
             // Convert OData filter to simple query parameters
@@ -40,12 +40,12 @@ class Agent2Adapter {
                 if (modelType) params.model_type = modelType.toLowerCase();
             }
         }
-        
+
         // Handle $orderby
         if (odataQuery.$orderby) {
             params.sort = odataQuery.$orderby.replace(/ desc$/, ':desc').replace(/ asc$/, ':asc');
         }
-        
+
         // Handle $top and $skip
         if (odataQuery.$top) {
             params.limit = parseInt(odataQuery.$top);
@@ -53,7 +53,7 @@ class Agent2Adapter {
         if (odataQuery.$skip) {
             params.offset = parseInt(odataQuery.$skip);
         }
-        
+
         return params;
     }
 
@@ -261,7 +261,7 @@ class Agent2Adapter {
     async getTasks(odataQuery = {}) {
         const params = this.convertODataQuery(odataQuery);
         const restTasks = await this.callAgent2API('/tasks', 'GET', null, params);
-        
+
         // Handle both array and single object responses
         const tasksArray = Array.isArray(restTasks) ? restTasks : [restTasks];
         return tasksArray.map(task => this.convertTaskToOData(task));
@@ -296,14 +296,14 @@ class Agent2Adapter {
 
     async analyzeFeatures(taskId) {
         const result = await this.callAgent2API(`/tasks/${taskId}/analyze-features`, 'POST');
-        
+
         // Convert features to OData format
         if (result.features) {
-            result.features = result.features.map(feature => 
+            result.features = result.features.map(feature =>
                 this.convertFeatureToOData(feature, taskId)
             );
         }
-        
+
         return result;
     }
 
@@ -315,7 +315,7 @@ class Agent2Adapter {
             batch_size: config.batchSize,
             use_gpu: config.useGPU
         };
-        
+
         return await this.callAgent2API(`/tasks/${taskId}/generate-embeddings`, 'POST', restConfig);
     }
 
@@ -326,7 +326,7 @@ class Agent2Adapter {
             split_data: config.splitData,
             compression: config.compression
         };
-        
+
         return await this.callAgent2API(`/tasks/${taskId}/export`, 'POST', restConfig);
     }
 
@@ -337,7 +337,7 @@ class Agent2Adapter {
             timeout: config.timeout,
             early_stop: config.earlyStop
         };
-        
+
         return await this.callAgent2API(`/tasks/${taskId}/optimize`, 'POST', restConfig);
     }
 
@@ -351,7 +351,7 @@ class Agent2Adapter {
             parallel: config.parallel,
             gpu_acceleration: config.gpuAcceleration
         };
-        
+
         return await this.callAgent2API('/batch-prepare', 'POST', restConfig);
     }
 
@@ -366,7 +366,7 @@ class Agent2Adapter {
             include_ensemble: config.includeEnsemble,
             cross_validation: config.crossValidation
         };
-        
+
         return await this.callAgent2API('/automl', 'POST', restConfig);
     }
 

@@ -26,7 +26,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'QualityControlTask');
         } catch (error) {
             throw this._handleError(error);
@@ -46,7 +46,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -66,7 +66,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -93,10 +93,10 @@ class Agent6Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 assessmentId: data.assessment_id,
                 status: data.status,
@@ -123,7 +123,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 overallScore: data.overall_score,
                 details: {
@@ -164,7 +164,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -183,7 +183,7 @@ class Agent6Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.recommendations.map(rec => ({
                 agent: rec.agent,
                 confidence: rec.confidence,
@@ -205,10 +205,10 @@ class Agent6Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 overallScore: data.overall_score,
                 trustLevel: data.trust_level,
@@ -246,7 +246,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 bottlenecks: data.bottlenecks.map(b => ({
                     stage: b.stage,
@@ -279,7 +279,7 @@ class Agent6Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 workflowId: data.workflow_id,
                 analysisTime: data.analysis_time,
@@ -316,7 +316,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -341,7 +341,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'QualityMetric');
         } catch (error) {
             throw this._handleError(error);
@@ -361,7 +361,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'RoutingRule');
         } catch (error) {
             throw this._handleError(error);
@@ -379,7 +379,7 @@ class Agent6Adapter {
                 enabled: data.enabled,
                 metadata: data.metadata
             };
-            
+
             const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/quality-control/routing-rules`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -390,7 +390,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTRuleToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -410,7 +410,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'TrustVerification');
         } catch (error) {
             throw this._handleError(error);
@@ -430,7 +430,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'QualityGate');
         } catch (error) {
             throw this._handleError(error);
@@ -450,7 +450,7 @@ class Agent6Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'WorkflowOptimization');
         } catch (error) {
             throw this._handleError(error);
@@ -470,7 +470,7 @@ class Agent6Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             for await (const chunk of data) {
                 const lines = chunk.toString().split('\n').filter(line => line.trim());
                 for (const line of lines) {
@@ -494,13 +494,13 @@ class Agent6Adapter {
     // Utility methods
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$orderby) params.sort = query.$orderby.replace(/ desc/gi, '-').replace(/ asc/gi, '');
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$select) params.fields = query.$select;
-        
+
         return params;
     }
 
@@ -582,14 +582,14 @@ class Agent6Adapter {
             quality_gate: task.qualityGate,
             status: task.status?.toLowerCase()
         };
-        
+
         if (task.overallQuality !== undefined) restTask.overall_quality = task.overallQuality;
         if (task.trustScore !== undefined) restTask.trust_score = task.trustScore;
         if (task.routingDecision) restTask.routing_decision = task.routingDecision.toLowerCase();
         if (task.currentAgent) restTask.current_agent = task.currentAgent;
         if (task.targetAgent) restTask.target_agent = task.targetAgent;
         if (task.metadata) restTask.metadata = JSON.parse(task.metadata);
-        
+
         return restTask;
     }
 
@@ -687,7 +687,7 @@ class Agent6Adapter {
 
     _convertCriteriaToREST(criteria) {
         if (!criteria) return {};
-        
+
         return {
             accuracy_weight: criteria.accuracyWeight || 20,
             completeness_weight: criteria.completenessWeight || 20,
@@ -702,7 +702,7 @@ class Agent6Adapter {
         if (error.response) {
             const status = error.response.status;
             const message = error.data?.message || error.message;
-            
+
             switch (status) {
                 case 400:
                     return new Error(`Bad Request: ${message}`);

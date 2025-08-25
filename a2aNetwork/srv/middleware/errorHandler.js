@@ -17,26 +17,26 @@ class ErrorHandler {
             AUTH_INVALID_TOKEN: { code: 'AUTH_001', status: 401, message: 'Invalid authentication token' },
             AUTH_TOKEN_EXPIRED: { code: 'AUTH_002', status: 401, message: 'Authentication token expired' },
             AUTH_INSUFFICIENT_PERMISSIONS: { code: 'AUTH_003', status: 403, message: 'Insufficient permissions' },
-            
+
             // Validation Errors
             VALIDATION_INVALID_INPUT: { code: 'VAL_001', status: 400, message: 'Invalid input parameters' },
             VALIDATION_MISSING_FIELD: { code: 'VAL_002', status: 400, message: 'Required field missing' },
             VALIDATION_INVALID_FORMAT: { code: 'VAL_003', status: 400, message: 'Invalid data format' },
-            
+
             // Business Logic Errors
             BUSINESS_RULE_VIOLATION: { code: 'BUS_001', status: 422, message: 'Business rule violation' },
             BUSINESS_WORKFLOW_ERROR: { code: 'BUS_002', status: 422, message: 'Workflow execution error' },
-            
+
             // Database Errors
             DB_CONNECTION_ERROR: { code: 'DB_001', status: 503, message: 'Database connection error' },
             DB_QUERY_ERROR: { code: 'DB_002', status: 500, message: 'Database query error' },
             DB_CONSTRAINT_VIOLATION: { code: 'DB_003', status: 409, message: 'Database constraint violation' },
-            
+
             // External Service Errors
             EXT_SERVICE_UNAVAILABLE: { code: 'EXT_001', status: 503, message: 'External service unavailable' },
             EXT_SERVICE_TIMEOUT: { code: 'EXT_002', status: 504, message: 'External service timeout' },
             EXT_BLOCKCHAIN_ERROR: { code: 'EXT_003', status: 502, message: 'Blockchain service error' },
-            
+
             // System Errors
             SYS_INTERNAL_ERROR: { code: 'SYS_001', status: 500, message: 'Internal system error' },
             SYS_CONFIG_ERROR: { code: 'SYS_002', status: 500, message: 'System configuration error' },
@@ -53,7 +53,7 @@ class ErrorHandler {
 
         // Classify error
         const errorInfo = this.classifyError(error);
-        
+
         // Add error to trace
         const errorId = addError(traceId, error, {
             component: 'error-handler',
@@ -96,35 +96,35 @@ class ErrorHandler {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
             return this.errorCodes.EXT_SERVICE_UNAVAILABLE;
         }
-        
+
         if (error.code === 'ETIMEOUT') {
             return this.errorCodes.EXT_SERVICE_TIMEOUT;
         }
-        
+
         if (error.message && error.message.includes('HANA')) {
             return this.errorCodes.DB_CONNECTION_ERROR;
         }
-        
+
         if (error.statusCode === 401) {
             return this.errorCodes.AUTH_INVALID_TOKEN;
         }
-        
+
         if (error.statusCode === 403) {
             return this.errorCodes.AUTH_INSUFFICIENT_PERMISSIONS;
         }
-        
+
         if (error.statusCode === 400) {
             return this.errorCodes.VALIDATION_INVALID_INPUT;
         }
-        
+
         if (error.name === 'ValidationError') {
             return this.errorCodes.VALIDATION_INVALID_INPUT;
         }
-        
+
         if (error.name === 'SequelizeConstraintError') {
             return this.errorCodes.DB_CONSTRAINT_VIOLATION;
         }
-        
+
         // Default to internal error
         return this.errorCodes.SYS_INTERNAL_ERROR;
     }
@@ -172,7 +172,7 @@ class ErrorHandler {
         const log = cds.log('cds-error');
 
         let errorInfo;
-        
+
         if (error.code === 'UNIQUE_CONSTRAINT') {
             errorInfo = this.errorCodes.DB_CONSTRAINT_VIOLATION;
         } else if (error.code === 'NOT_FOUND') {
@@ -209,7 +209,7 @@ class ErrorHandler {
         const log = cds.log('database-error');
 
         let errorInfo;
-        
+
         if (error.code === 'ECONNREFUSED') {
             errorInfo = this.errorCodes.DB_CONNECTION_ERROR;
         } else if (error.name === 'SequelizeConnectionError') {
@@ -295,12 +295,12 @@ const errorHandler = new ErrorHandler();
 module.exports = {
     ErrorHandler,
     errorHandler,
-    
+
     // Middleware function
     handleError: (error, req, res, next) => errorHandler.handleError(error, req, res, next),
     handleCDSError: (error, req) => errorHandler.handleCDSError(error, req),
     handleDatabaseError: (error, req, operation) => errorHandler.handleDatabaseError(error, req, operation),
     handleBlockchainError: (error, req, operation) => errorHandler.handleBlockchainError(error, req, operation),
-    createTracedError: (message, code, statusCode, req, context) => 
+    createTracedError: (message, code, statusCode, req, context) =>
         errorHandler.createTracedError(message, code, statusCode, req, context)
 };

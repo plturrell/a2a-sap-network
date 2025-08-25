@@ -21,7 +21,7 @@ class EnhancedNotificationService extends EventEmitter {
         this.reconnectWindow = 5000; // 5 seconds for client to reconnect
         this.eventBusClient = null;
         this.intervals = new Map();
-        
+
         this.initialize().catch(error => {
             this.logger.error('Failed to initialize enhanced notification service:', error);
         });
@@ -31,16 +31,16 @@ class EnhancedNotificationService extends EventEmitter {
         try {
             // Initialize persistence service
             await this.persistenceService.init();
-            
+
             // Initialize WebSocket server
             await this.initializeBlockchainEventServer();
-            
+
             // Connect to event bus
             await this.connectToEventBus();
-            
+
             // Start background tasks
             this.startBackgroundTasks();
-            
+
             this.logger.info('Enhanced notification service initialized successfully');
         } catch (error) {
             this.logger.error('Initialization error:', error);
@@ -52,7 +52,7 @@ class EnhancedNotificationService extends EventEmitter {
         try {
             const killConflicts = process.env.NODE_ENV === 'development';
             this.port = await portManager.allocatePortSafely('enhanced-notifications', 4006, killConflicts);
-            
+
             if (!this.port) {
                 this.logger.warn('⚠️  WebSocket notifications disabled due to port allocation failure');
                 return;
@@ -86,7 +86,7 @@ class EnhancedNotificationService extends EventEmitter {
         };
 
         this.clients.set(clientId, clientInfo);
-        
+
         // Send connection acknowledgment
         this.sendToClient(clientInfo, {
             type: 'connection',
@@ -160,7 +160,7 @@ class EnhancedNotificationService extends EventEmitter {
 
         // Load user preferences
         const preferences = await this.persistenceService.getUserPreferences(data.userId);
-        
+
         // Send recent notifications
         const notifications = await this.persistenceService.getNotifications(data.userId, {
             limit: 20,
@@ -190,7 +190,7 @@ class EnhancedNotificationService extends EventEmitter {
         // Find previous client session
         let oldClient = null;
         for (const [id, client] of this.clients) {
-            if (client.reconnectToken === data.reconnectToken && 
+            if (client.reconnectToken === data.reconnectToken &&
                 client.userId === data.userId &&
                 client.id !== clientInfo.id) {
                 oldClient = client;
@@ -231,7 +231,7 @@ class EnhancedNotificationService extends EventEmitter {
         }
 
         clientInfo.subscribedCategories = [...new Set([...clientInfo.subscribedCategories, ...data.categories])];
-        
+
         this.sendToClient(clientInfo, {
             type: 'subscribe_success',
             categories: clientInfo.subscribedCategories
@@ -247,7 +247,7 @@ class EnhancedNotificationService extends EventEmitter {
         clientInfo.subscribedCategories = clientInfo.subscribedCategories.filter(
             cat => !data.categories.includes(cat)
         );
-        
+
         this.sendToClient(clientInfo, {
             type: 'unsubscribe_success',
             categories: clientInfo.subscribedCategories
@@ -262,7 +262,7 @@ class EnhancedNotificationService extends EventEmitter {
 
         try {
             const success = await this.persistenceService.markAsRead(clientInfo.userId, data.notificationId);
-            
+
             if (success) {
                 // Broadcast to all user's clients
                 this.broadcastToUser(clientInfo.userId, {
@@ -283,7 +283,7 @@ class EnhancedNotificationService extends EventEmitter {
 
         try {
             const count = await this.persistenceService.markAllAsRead(clientInfo.userId);
-            
+
             // Broadcast to all user's clients
             this.broadcastToUser(clientInfo.userId, {
                 type: 'all_notifications_read',
@@ -302,7 +302,7 @@ class EnhancedNotificationService extends EventEmitter {
 
         try {
             const success = await this.persistenceService.dismissNotification(clientInfo.userId, data.notificationId);
-            
+
             if (success) {
                 // Broadcast to all user's clients
                 this.broadcastToUser(clientInfo.userId, {
@@ -353,7 +353,7 @@ class EnhancedNotificationService extends EventEmitter {
 
         try {
             const updated = await this.persistenceService.updateUserPreferences(clientInfo.userId, data.preferences);
-            
+
             this.sendToClient(clientInfo, {
                 type: 'preferences_updated',
                 preferences: updated
@@ -365,12 +365,12 @@ class EnhancedNotificationService extends EventEmitter {
 
     handleDisconnect(clientInfo, code, reason) {
         this.logger.debug(`Client ${clientInfo.id} disconnected: ${code} - ${reason}`);
-        
+
         if (clientInfo.state === 'authenticated') {
             // Keep client info for reconnection window
             clientInfo.state = 'disconnected';
             clientInfo.disconnectTime = new Date();
-            
+
             // Schedule cleanup
             setTimeout(() => {
                 if (this.clients.has(clientInfo.id) && clientInfo.state === 'disconnected') {
@@ -417,7 +417,7 @@ class EnhancedNotificationService extends EventEmitter {
                 ...data,
                 queuedAt: new Date().toISOString()
             });
-            
+
             // Limit queue size
             if (clientInfo.messageQueue.length > 100) {
                 clientInfo.messageQueue = clientInfo.messageQueue.slice(-100);
@@ -429,7 +429,7 @@ class EnhancedNotificationService extends EventEmitter {
         if (clientInfo.messageQueue.length > 0) {
             const messages = [...clientInfo.messageQueue];
             clientInfo.messageQueue = [];
-            
+
             messages.forEach(msg => {
                 this.sendToClient(clientInfo, msg);
             });
@@ -455,7 +455,7 @@ class EnhancedNotificationService extends EventEmitter {
     async broadcastNotification(notification) {
         // Get user preferences to check if in-app is enabled
         const preferences = await this.persistenceService.getUserPreferences(notification.userId);
-        
+
         if (!preferences.inAppEnabled) {
             return;
         }
@@ -468,10 +468,10 @@ class EnhancedNotificationService extends EventEmitter {
 
         // Broadcast to all user's clients
         for (const [id, client] of this.clients) {
-            if (client.userId === notification.userId && 
+            if (client.userId === notification.userId &&
                 client.state === 'authenticated' &&
                 this.shouldSendToClient(client, notification)) {
-                
+
                 this.sendToClient(client, {
                     type: 'new_notification',
                     notification: notification
@@ -488,7 +488,7 @@ class EnhancedNotificationService extends EventEmitter {
             'success': preferences.successEnabled,
             'system': preferences.systemEnabled
         };
-        
+
         return typeMap[type] !== false;
     }
 
@@ -497,21 +497,21 @@ class EnhancedNotificationService extends EventEmitter {
         if (client.subscribedCategories.length === 0) {
             return true; // No filters, send all
         }
-        
+
         return client.subscribedCategories.includes(notification.category);
     }
 
     async connectToEventBus() {
         try {
             const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
-            
+
             this.eventBusClient = new BlockchainEventClient(eventBusUrl, {
                 perMessageDeflate: false
             });
 
             this.eventBusClient.on('open', () => {
                 this.logger.info('Connected to event bus');
-                
+
                 // Subscribe to relevant events
                 this.eventBusClient.send(JSON.stringify({
                     type: 'subscribe',
@@ -721,7 +721,7 @@ class EnhancedNotificationService extends EventEmitter {
                 try {
                     const { userId, notificationId } = req.params;
                     const success = await this.persistenceService.markAsRead(userId, notificationId);
-                    
+
                     if (success) {
                         this.broadcastToUser(userId, {
                             type: 'notification_read',
@@ -776,7 +776,7 @@ class EnhancedNotificationService extends EventEmitter {
 
     shutdown() {
         this.logger.info('Shutting down enhanced notification service...');
-        
+
         // Stop background tasks
         for (const [name, intervalId] of this.intervals) {
             clearInterval(intervalId);

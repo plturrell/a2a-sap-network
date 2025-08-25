@@ -27,7 +27,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CalculationTask');
         } catch (error) {
             throw this._handleError(error);
@@ -47,7 +47,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTCalculationTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -67,7 +67,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTCalculationTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -94,10 +94,10 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 taskName: data.task_name,
@@ -117,10 +117,10 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -138,10 +138,10 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -159,10 +159,10 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -187,7 +187,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 isValid: data.is_valid,
                 errors: data.errors,
@@ -215,7 +215,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 preview: data.preview,
                 steps: data.steps,
@@ -243,7 +243,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 downloadUrl: data.download_url,
                 fileName: data.file_name,
@@ -275,7 +275,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 result: data.result,
                 executionTime: data.execution_time,
@@ -308,7 +308,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 datasetName: data.dataset_name,
                 sampleSize: data.sample_size,
@@ -378,7 +378,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 result: data.result,
                 verification: data.verification,
@@ -398,7 +398,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.methods;
         } catch (error) {
             throw this._handleError(error);
@@ -412,7 +412,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.methods;
         } catch (error) {
             throw this._handleError(error);
@@ -426,7 +426,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.strategies;
         } catch (error) {
             throw this._handleError(error);
@@ -448,7 +448,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 currentPrecision: data.current_precision,
@@ -474,7 +474,7 @@ class Agent10Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 maxThreads: data.max_threads,
@@ -519,7 +519,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.metrics;
         } catch (error) {
             throw this._handleError(error);
@@ -533,10 +533,10 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 clearedItems: data.cleared_items,
@@ -550,13 +550,13 @@ class Agent10Adapter {
     // ===== CONVERSION UTILITIES =====
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$orderby) params.sort = query.$orderby;
         if (query.$search) params.search = query.$search;
-        
+
         return params;
     }
 
@@ -646,7 +646,7 @@ class Agent10Adapter {
             const status = error.response.status;
             const message = error.data?.message || error.response.statusText;
             const details = error.data?.details || null;
-            
+
             return new Error(`Agent 10 Error (${status}): ${message}${details ? ` - ${JSON.stringify(details)}` : ''}`);
         } else if (error.request) {
             return new Error('Agent 10 Connection Error: No response from calculation service');

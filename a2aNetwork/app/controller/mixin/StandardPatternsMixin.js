@@ -13,7 +13,7 @@ sap.ui.define([
      * Provides standardized methods for dialogs, forms, and interactions
      */
     return {
-        
+
         /**
          * Initialize standard patterns
          */
@@ -30,7 +30,7 @@ sap.ui.define([
                     secondaryButtonText: 'Cancel',
                     secondaryButtonPress: 'onCloseDialog'
                 }),
-                
+
                 pageState: new JSONModel({
                     pageId: '',
                     pageTitle: '',
@@ -50,7 +50,7 @@ sap.ui.define([
                     searchQuery: '',
                     viewMode: 'table'
                 }),
-                
+
                 actionState: new JSONModel({
                     primaryActionsVisible: true,
                     secondaryActionsVisible: true,
@@ -73,13 +73,13 @@ sap.ui.define([
                     deleteEnabled: false
                 })
             };
-            
+
             // Set models on view
             Object.keys(this._standardModels).forEach(modelName => {
                 this.getView().setModel(this._standardModels[modelName], modelName);
             });
         },
-        
+
         /**
          * Open standard dialog
          * @param {Object} config - Dialog configuration
@@ -96,7 +96,7 @@ sap.ui.define([
                 secondaryButtonText: config.secondaryButtonText || 'Cancel',
                 secondaryButtonPress: config.secondaryButtonPress || 'onCloseDialog'
             });
-            
+
             // Load and open dialog
             if (!this._standardDialog) {
                 Fragment.load({
@@ -111,7 +111,7 @@ sap.ui.define([
                 this._standardDialog.open();
             }
         },
-        
+
         /**
          * Close standard dialog
          */
@@ -120,7 +120,7 @@ sap.ui.define([
                 this._standardDialog.close();
             }
         },
-        
+
         /**
          * Dialog after close cleanup
          */
@@ -128,7 +128,7 @@ sap.ui.define([
             // Reset dialog state
             this._standardModels.dialogState.setData({});
         },
-        
+
         /**
          * Update page state
          * @param {Object} state - Page state updates
@@ -137,7 +137,7 @@ sap.ui.define([
             const currentData = this._standardModels.pageState.getData();
             this._standardModels.pageState.setData(Object.assign(currentData, state));
         },
-        
+
         /**
          * Update action state
          * @param {Object} state - Action state updates
@@ -146,7 +146,7 @@ sap.ui.define([
             const currentData = this._standardModels.actionState.getData();
             this._standardModels.actionState.setData(Object.assign(currentData, state));
         },
-        
+
         /**
          * Show status message
          * @param {string} message - Message text
@@ -158,7 +158,7 @@ sap.ui.define([
                 statusMessage: message,
                 statusType: type
             });
-            
+
             // Auto-hide after 5 seconds for success/info messages
             if (type === 'Success' || type === 'Information') {
                 setTimeout(() => {
@@ -166,17 +166,17 @@ sap.ui.define([
                 }, 5000);
             }
         },
-        
+
         /**
          * Standard error handler
          * @param {Error} error - Error object
          */
         handleStandardError: function(error) {
             Log.error('Standard error occurred', error);
-            
+
             const message = error.message || 'An unexpected error occurred';
             this.showStatusMessage(message, 'Error');
-            
+
             // Show error dialog for critical errors
             if (error.critical) {
                 MessageBox.error(message, {
@@ -185,7 +185,7 @@ sap.ui.define([
                 });
             }
         },
-        
+
         /**
          * Standard success handler
          * @param {string} message - Success message
@@ -194,7 +194,7 @@ sap.ui.define([
             this.showStatusMessage(message, 'Success');
             MessageToast.show(message);
         },
-        
+
         /**
          * Standard confirmation dialog
          * @param {Object} config - Confirmation configuration
@@ -211,7 +211,7 @@ sap.ui.define([
                 }
             });
         },
-        
+
         /**
          * Standard form validation
          * @param {Array} fields - Array of field configurations
@@ -220,24 +220,24 @@ sap.ui.define([
         validateStandardForm: function(fields) {
             const errors = [];
             const warnings = [];
-            
+
             fields.forEach(field => {
                 const value = field.getValue ? field.getValue() : field.value;
-                
+
                 // Required field validation
                 if (field.required && (!value || value.trim() === '')) {
                     errors.push({
                         field: field.name || field.id,
                         message: `${field.label || field.name} is required`
                     });
-                    
+
                     // Set error state on field
                     if (field.setValueState) {
                         field.setValueState('Error');
                         field.setValueStateText(`${field.label || field.name} is required`);
                     }
                 }
-                
+
                 // Custom validation
                 if (field.validate && typeof field.validate === 'function') {
                     const result = field.validate(value);
@@ -246,7 +246,7 @@ sap.ui.define([
                             field: field.name || field.id,
                             message: result.message
                         });
-                        
+
                         if (field.setValueState) {
                             field.setValueState('Error');
                             field.setValueStateText(result.message);
@@ -256,7 +256,7 @@ sap.ui.define([
                             field: field.name || field.id,
                             message: result.message
                         });
-                        
+
                         if (field.setValueState) {
                             field.setValueState('Warning');
                             field.setValueStateText(result.message);
@@ -269,14 +269,14 @@ sap.ui.define([
                     }
                 }
             });
-            
+
             return {
                 valid: errors.length === 0,
                 errors: errors,
                 warnings: warnings
             };
         },
-        
+
         /**
          * Clear form validation states
          * @param {Array} fields - Array of fields to clear
@@ -288,7 +288,7 @@ sap.ui.define([
                 }
             });
         },
-        
+
         /**
          * Standard search handler
          * @param {Object} event - Search event
@@ -298,7 +298,7 @@ sap.ui.define([
             this.updatePageState({ searchQuery: query });
             this._performSearch(query);
         },
-        
+
         /**
          * Standard live search handler
          * @param {Object} event - Live search event
@@ -306,14 +306,14 @@ sap.ui.define([
         onLiveSearch: function(event) {
             const query = event.getParameter('newValue');
             this.updatePageState({ searchQuery: query });
-            
+
             // Debounce live search
             clearTimeout(this._searchTimeout);
             this._searchTimeout = setTimeout(() => {
                 this._performSearch(query);
             }, 300);
         },
-        
+
         /**
          * Perform search (to be implemented by concrete controller)
          * @param {string} query - Search query
@@ -323,7 +323,7 @@ sap.ui.define([
             // Override in concrete controller
             Log.info('Search performed', { query: query });
         },
-        
+
         /**
          * Standard view mode change handler
          * @param {Object} event - View mode change event
@@ -333,7 +333,7 @@ sap.ui.define([
             this.updatePageState({ viewMode: viewMode });
             this._changeViewMode(viewMode);
         },
-        
+
         /**
          * Change view mode (to be implemented by concrete controller)
          * @param {string} viewMode - New view mode
@@ -353,15 +353,15 @@ sap.ui.define([
         _handleError: function(error, context = 'Application', showToUser = true) {
             const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
             const errorMessage = error?.message || error?.statusText || 'An unexpected error occurred';
-            
+
             // Log error for debugging
             Log.error(`[${context}] Error ${errorId}: ${errorMessage}`, error);
-            
+
             if (showToUser) {
                 // Show user-friendly error
                 const userMessage = this._sanitizeErrorMessage(errorMessage, context);
                 this.showStatusMessage(userMessage, 'Error');
-                
+
                 // Update page state to reflect error
                 this.updatePageState({
                     hasError: true,
@@ -370,7 +370,7 @@ sap.ui.define([
                     loading: false
                 });
             }
-            
+
             return errorId;
         },
 

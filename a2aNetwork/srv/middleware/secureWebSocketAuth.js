@@ -18,17 +18,17 @@ const WS_SECURITY_CONFIG = {
     MAX_CONNECTIONS_PER_IP: 10,
     MAX_CONNECTIONS_PER_USER: 5,
     CONNECTION_TIMEOUT: 300000, // 5 minutes
-    
+
     // Message limits
     MAX_MESSAGE_SIZE: 1048576, // 1MB
     MAX_MESSAGES_PER_MINUTE: 100,
     MAX_SUBSCRIPTIONS: 20,
-    
+
     // Authentication
     TOKEN_REFRESH_INTERVAL: 1800000, // 30 minutes
     HEARTBEAT_INTERVAL: 30000, // 30 seconds
     HEARTBEAT_TIMEOUT: 60000, // 60 seconds
-    
+
     // Security
     ALLOWED_EVENTS: [
         'subscribe',
@@ -37,7 +37,7 @@ const WS_SECURITY_CONFIG = {
         'refresh-token',
         'get-status'
     ],
-    
+
     BLOCKED_PAYLOAD_PATTERNS: [
         /<script/i,
         /javascript:/i,
@@ -57,24 +57,24 @@ class WebSocketSecurityManager {
         this.ipConnections = new Map();
         this.userConnections = new Map();
         this.suspiciousActivity = new Map();
-        
+
         // Rate limiters
         this.connectionLimiter = new RateLimiterMemory({
             points: 5, // 5 connections
             duration: 60 // per minute
         });
-        
+
         this.intervals = new Map(); // Track intervals for cleanup
-        
+
         this.messageLimiter = new RateLimiterMemory({
             points: WS_SECURITY_CONFIG.MAX_MESSAGES_PER_MINUTE,
             duration: 60
         });
-        
+
         // Start cleanup interval
         this.intervals.set('interval_73', setInterval(() => this.cleanup(), 60000)); // Every minute
     }
-    
+
     /**
      * Main authentication middleware for Socket.IO
      */
@@ -82,13 +82,13 @@ class WebSocketSecurityManager {
         return async (socket, next) => {
             try {
                 // Extract token
-                const token = socket.handshake.auth.token || 
+                const token = socket.handshake.auth.token ||
                              socket.handshake.headers.authorization?.substring(7);
-                
+
                 if (!token) {
                     return next(new Error('Authentication required'));
                 }
-                
+
                 // Validate origin
                 const origin = socket.handshake.headers.origin;
                 if (!this.isValidOrigin(origin)) {
@@ -98,36 +98,36 @@ class WebSocketSecurityManager {
                     });
                     return next(new Error('Invalid origin'));
                 }
-                
+
                 // Check connection limits
                 const ip = this.getClientIP(socket);
                 if (!await this.checkConnectionLimits(ip)) {
                     return next(new Error('Connection limit exceeded'));
                 }
-                
+
                 // Verify JWT (RS256 only)
                 const payload = await this.verifyToken(token, jwtPublicKey);
                 if (!payload) {
                     return next(new Error('Invalid token'));
                 }
-                
+
                 // Check user connection limits
                 if (!this.checkUserConnectionLimit(payload.user.id)) {
                     return next(new Error('User connection limit exceeded'));
                 }
-                
+
                 // Setup connection tracking
                 this.trackConnection(socket, payload.user, ip);
-                
+
                 // Attach user and security info
                 socket.user = payload.user;
                 socket.authTime = Date.now();
                 socket.lastActivity = Date.now();
                 socket.ip = ip;
-                
+
                 // Setup security handlers
                 this.setupSecurityHandlers(socket);
-                
+
                 next();
             } catch (error) {
                 cds.log('ws-security').error('WebSocket auth failed', error);
@@ -135,7 +135,7 @@ class WebSocketSecurityManager {
             }
         };
     }
-    
+
     /**
      * Verify JWT token with RS256
      */
@@ -146,35 +146,35 @@ class WebSocketSecurityManager {
             if (!decoded || decoded.header.alg !== 'RS256') {
                 throw new Error('Invalid token algorithm');
             }
-            
+
             // Verify with public key
             const payload = jwt.verify(token, publicKey, {
                 algorithms: ['RS256'],
                 clockTolerance: 30
             });
-            
+
             // Additional checks
             if (!payload.user || !payload.user.id) {
                 throw new Error('Invalid token payload');
             }
-            
+
             return payload;
         } catch (error) {
             return null;
         }
     }
-    
+
     /**
      * Setup security handlers for socket
      */
     setupSecurityHandlers(socket) {
         const originalEmit = socket.emit;
         const originalOn = socket.on;
-        
+
         // Wrap emit to validate outgoing messages
         socket.emit = function(...args) {
             const [event, data] = args;
-            
+
             // Validate event
             if (!this.validateOutgoingEvent(event, data)) {
                 cds.log('ws-security').warn('Blocked outgoing event', {
@@ -183,17 +183,17 @@ class WebSocketSecurityManager {
                 });
                 return;
             }
-            
+
             originalEmit.apply(socket, args);
         }.bind(this);
-        
+
         // Wrap on to validate incoming messages
         socket.on = function(event, handler) {
             const secureHandler = async (...args) => {
                 try {
                     // Rate limiting
                     await this.checkMessageRateLimit(socket);
-                    
+
                     // Validate event
                     if (!this.validateIncomingEvent(event, args[0], socket)) {
                         socket.emit('error', {
@@ -202,10 +202,10 @@ class WebSocketSecurityManager {
                         });
                         return;
                     }
-                    
+
                     // Update activity
                     socket.lastActivity = Date.now();
-                    
+
                     // Call original handler
                     handler(...args);
                 } catch (error) {
@@ -219,13 +219,13 @@ class WebSocketSecurityManager {
                     }
                 }
             };
-            
+
             originalOn.call(socket, event, secureHandler);
         }.bind(this);
-        
+
         // Setup heartbeat
         this.setupHeartbeat(socket);
-        
+
         // Setup token refresh
         socket.on('refresh-token', async (newToken) => {
             try {
@@ -241,13 +241,13 @@ class WebSocketSecurityManager {
             }
         });
     }
-    
+
     /**
      * Setup heartbeat monitoring
      */
     setupHeartbeat(socket) {
         let heartbeatTimeout;
-        
+
         const resetHeartbeat = () => {
             clearTimeout(heartbeatTimeout);
             heartbeatTimeout = setTimeout(() => {
@@ -258,14 +258,14 @@ class WebSocketSecurityManager {
                 socket.disconnect(true);
             }, WS_SECURITY_CONFIG.HEARTBEAT_TIMEOUT);
         };
-        
+
         socket.on('ping', () => {
             socket.emit('pong', { timestamp: Date.now() });
             resetHeartbeat();
         });
-        
+
         resetHeartbeat();
-        
+
         // Start heartbeat interval
         const heartbeatInterval = this.intervals.set('interval_268', setInterval(() => {
             if (socket.connected) {
@@ -275,44 +275,44 @@ class WebSocketSecurityManager {
                 clearTimeout(heartbeatTimeout);
             }
         }, WS_SECURITY_CONFIG.HEARTBEAT_INTERVAL);
-        
+
         socket.on('disconnect', () => {
             clearInterval(heartbeatInterval);
             clearTimeout(heartbeatTimeout);
         });
     }
-    
+
     /**
      * Validate incoming event
      */
     validateIncomingEvent(event, data, socket) {
         // Check if event is allowed
-        if (!WS_SECURITY_CONFIG.ALLOWED_EVENTS.includes(event) && 
+        if (!WS_SECURITY_CONFIG.ALLOWED_EVENTS.includes(event) &&
             !event.startsWith('authenticated:')) {
             this.recordSuspiciousActivity(socket, 'UNKNOWN_EVENT', { event });
             return false;
         }
-        
+
         // Check payload size
         const payloadSize = JSON.stringify(data || {}).length;
         if (payloadSize > WS_SECURITY_CONFIG.MAX_MESSAGE_SIZE) {
-            this.recordSuspiciousActivity(socket, 'OVERSIZED_PAYLOAD', { 
-                size: payloadSize 
+            this.recordSuspiciousActivity(socket, 'OVERSIZED_PAYLOAD', {
+                size: payloadSize
             });
             return false;
         }
-        
+
         // Check for malicious patterns
         const payloadStr = JSON.stringify(data);
         for (const pattern of WS_SECURITY_CONFIG.BLOCKED_PAYLOAD_PATTERNS) {
             if (pattern.test(payloadStr)) {
-                this.recordSuspiciousActivity(socket, 'MALICIOUS_PAYLOAD', { 
-                    pattern: pattern.source 
+                this.recordSuspiciousActivity(socket, 'MALICIOUS_PAYLOAD', {
+                    pattern: pattern.source
                 });
                 return false;
             }
         }
-        
+
         // Validate specific events
         switch (event) {
             case 'subscribe':
@@ -323,7 +323,7 @@ class WebSocketSecurityManager {
                 return true;
         }
     }
-    
+
     /**
      * Validate subscription request
      */
@@ -331,17 +331,17 @@ class WebSocketSecurityManager {
         if (!Array.isArray(topics)) {
             return false;
         }
-        
+
         // Check subscription limit
         const currentSubs = socket.subscriptions || new Set();
         if (currentSubs.size + topics.length > WS_SECURITY_CONFIG.MAX_SUBSCRIPTIONS) {
-            this.recordSuspiciousActivity(socket, 'SUBSCRIPTION_LIMIT', { 
+            this.recordSuspiciousActivity(socket, 'SUBSCRIPTION_LIMIT', {
                 requested: topics.length,
                 current: currentSubs.size
             });
             return false;
         }
-        
+
         // Validate topic names
         const validTopicPattern = /^[a-zA-Z0-9._-]+$/;
         for (const topic of topics) {
@@ -350,10 +350,10 @@ class WebSocketSecurityManager {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Track connection
      */
@@ -366,29 +366,29 @@ class WebSocketSecurityManager {
             connectedAt: Date.now(),
             lastActivity: Date.now()
         });
-        
+
         // Track by IP
         const ipSockets = this.ipConnections.get(ip) || new Set();
         ipSockets.add(socket.id);
         this.ipConnections.set(ip, ipSockets);
-        
+
         // Track by user
         const userSockets = this.userConnections.get(user.id) || new Set();
         userSockets.add(socket.id);
         this.userConnections.set(user.id, userSockets);
-        
+
         // Setup disconnect handler
         socket.on('disconnect', () => {
             this.removeConnection(socket.id, ip, user.id);
         });
     }
-    
+
     /**
      * Remove connection tracking
      */
     removeConnection(socketId, ip, userId) {
         this.connections.delete(socketId);
-        
+
         // Remove from IP tracking
         const ipSockets = this.ipConnections.get(ip);
         if (ipSockets) {
@@ -397,7 +397,7 @@ class WebSocketSecurityManager {
                 this.ipConnections.delete(ip);
             }
         }
-        
+
         // Remove from user tracking
         const userSockets = this.userConnections.get(userId);
         if (userSockets) {
@@ -407,7 +407,7 @@ class WebSocketSecurityManager {
             }
         }
     }
-    
+
     /**
      * Check connection limits
      */
@@ -415,19 +415,19 @@ class WebSocketSecurityManager {
         try {
             // Rate limit check
             await this.connectionLimiter.consume(ip);
-            
+
             // Absolute limit check
             const ipSockets = this.ipConnections.get(ip) || new Set();
             if (ipSockets.size >= WS_SECURITY_CONFIG.MAX_CONNECTIONS_PER_IP) {
                 return false;
             }
-            
+
             return true;
         } catch (error) {
             return false;
         }
     }
-    
+
     /**
      * Check message rate limit
      */
@@ -435,28 +435,28 @@ class WebSocketSecurityManager {
         const key = `${socket.ip}:${socket.user.id}`;
         await this.messageLimiter.consume(key);
     }
-    
+
     /**
      * Record suspicious activity
      */
     recordSuspiciousActivity(socket, type, details) {
         const key = `${socket.ip}:${socket.user.id}`;
         const activities = this.suspiciousActivity.get(key) || [];
-        
+
         activities.push({
             type,
             details,
             timestamp: Date.now(),
             socketId: socket.id
         });
-        
+
         this.suspiciousActivity.set(key, activities);
-        
+
         // Check if should disconnect
         const recentActivities = activities.filter(
             a => Date.now() - a.timestamp < 300000 // Last 5 minutes
         );
-        
+
         if (recentActivities.length > 10) {
             cds.log('ws-security').error('Disconnecting suspicious client', {
                 ip: socket.ip,
@@ -466,26 +466,26 @@ class WebSocketSecurityManager {
             socket.disconnect(true);
         }
     }
-    
+
     /**
      * Cleanup old connections and data
      */
     cleanup() {
         const now = Date.now();
-        
+
         // Clean up stale connections
         for (const [socketId, conn] of this.connections.entries()) {
             if (now - conn.lastActivity > WS_SECURITY_CONFIG.CONNECTION_TIMEOUT) {
                 conn.socket.disconnect(true);
             }
         }
-        
+
         // Clean up old suspicious activity records
         for (const [key, activities] of this.suspiciousActivity.entries()) {
             const filtered = activities.filter(
                 a => now - a.timestamp < 3600000 // Keep last hour
             );
-            
+
             if (filtered.length === 0) {
                 this.suspiciousActivity.delete(key);
             } else {
@@ -493,15 +493,15 @@ class WebSocketSecurityManager {
             }
         }
     }
-    
+
     /**
      * Get client IP address
      */
     getClientIP(socket) {
-        return socket.handshake.headers['x-forwarded-for']?.split(',')[0] || 
+        return socket.handshake.headers['x-forwarded-for']?.split(',')[0] ||
                socket.handshake.address;
     }
-    
+
     /**
      * Validate origin
      */
@@ -509,11 +509,11 @@ class WebSocketSecurityManager {
         if (process.env.NODE_ENV === 'development') {
             return true; // Allow all in development
         }
-        
+
         const allowedOrigins = process.env.WS_ALLOWED_ORIGINS?.split(',') || [];
         return allowedOrigins.includes(origin);
     }
-    
+
     /**
      * Log security event
      */
@@ -524,7 +524,7 @@ class WebSocketSecurityManager {
             timestamp: new Date()
         });
     }
-    
+
     /**
      * Get connection statistics
      */

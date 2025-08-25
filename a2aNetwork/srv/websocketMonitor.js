@@ -36,7 +36,7 @@ class WebSocketMonitor {
             messageCount: 0,
             lastActivity: new Date()
         });
-        
+
         this.updateDatabaseMetrics();
         // console.log(`🔌 WebSocket connected: ${socketId} (Total: ${this.connections.size})`);
     }
@@ -68,13 +68,13 @@ class WebSocketMonitor {
     getActiveConnections() {
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         let activeCount = 0;
-        
+
         for (const [, connection] of this.connections) {
             if (connection.lastActivity > fiveMinutesAgo) {
                 activeCount++;
             }
         }
-        
+
         return activeCount;
     }
 
@@ -82,16 +82,16 @@ class WebSocketMonitor {
     updateDatabaseMetrics() {
         const connectionCount = this.connections.size;
         const activeCount = this.getActiveConnections();
-        
+
         if (!this.db) return;
 
         // Update the WebSocket connections metric
         const updateSQL = `
-            UPDATE a2a_network_NetworkHealthMetrics 
-            SET metricValue = ?, 
+            UPDATE a2a_network_NetworkHealthMetrics
+            SET metricValue = ?,
                 lastCheckTime = ?,
                 modifiedAt = ?,
-                status = CASE 
+                status = CASE
                     WHEN ? >= thresholdCritical THEN 'critical'
                     WHEN ? >= thresholdWarning THEN 'warning'
                     ELSE 'healthy'
@@ -100,7 +100,7 @@ class WebSocketMonitor {
         `;
 
         const now = new Date().toISOString();
-        
+
         this.db.run(updateSQL, [
             connectionCount,
             now,

@@ -88,8 +88,8 @@ class Agent15Adapter extends BaseAdapter {
 
     async pauseWorkflow(workflowId) {
         try {
-            const response = await this.callPythonBackend('pause_workflow', { 
-                workflow_id: workflowId 
+            const response = await this.callPythonBackend('pause_workflow', {
+                workflow_id: workflowId
             });
             return { status: 'paused', workflow_id: workflowId };
         } catch (error) {
@@ -99,8 +99,8 @@ class Agent15Adapter extends BaseAdapter {
 
     async resumeWorkflow(workflowId) {
         try {
-            const response = await this.callPythonBackend('resume_workflow', { 
-                workflow_id: workflowId 
+            const response = await this.callPythonBackend('resume_workflow', {
+                workflow_id: workflowId
             });
             return { status: 'running', workflow_id: workflowId };
         } catch (error) {
@@ -110,8 +110,8 @@ class Agent15Adapter extends BaseAdapter {
 
     async cancelWorkflow(workflowId) {
         try {
-            const response = await this.callPythonBackend('cancel_workflow', { 
-                workflow_id: workflowId 
+            const response = await this.callPythonBackend('cancel_workflow', {
+                workflow_id: workflowId
             });
             return { status: 'cancelled', workflow_id: workflowId };
         } catch (error) {
@@ -122,8 +122,8 @@ class Agent15Adapter extends BaseAdapter {
     // ===== WORKFLOW MONITORING =====
     async getWorkflowStatus(workflowId) {
         try {
-            const response = await this.callPythonBackend('get_workflow_status', { 
-                workflow_id: workflowId 
+            const response = await this.callPythonBackend('get_workflow_status', {
+                workflow_id: workflowId
             });
             return this._transformStatusResponse(response);
         } catch (error) {
@@ -353,7 +353,7 @@ class Agent15Adapter extends BaseAdapter {
     // ===== TRANSFORMATION HELPERS =====
     _transformWorkflowsResponse(response) {
         if (!response.workflows) return [];
-        
+
         return response.workflows.map(workflow => ({
             ID: workflow.id,
             name: workflow.name,
@@ -404,29 +404,29 @@ class Agent15Adapter extends BaseAdapter {
 
     _buildFilters(query) {
         const filters = {};
-        
+
         if (query.status) filters.status = query.status;
         if (query.strategy) filters.strategy = query.strategy;
         if (query.created_after) filters.created_after = query.created_after;
         if (query.created_before) filters.created_before = query.created_before;
-        
+
         return filters;
     }
 
     async callPythonBackend(method, payload) {
         const fetch = require('node-fetch');
         const baseUrl = process.env.AGENT15_BASE_URL || 'http://localhost:8015';
-        
+
         try {
             let response;
-            
+
             switch (method) {
                 case 'list_workflows':
                     response = await fetch(`${baseUrl}/api/v1/workflows`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
                     return await response.json();
-                    
+
                 case 'create_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows`, {
                 method: 'POST',
@@ -435,7 +435,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'update_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
                 method: 'POST',
@@ -446,7 +446,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'delete_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
                 method: 'DELETE',
@@ -454,7 +454,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'execute_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/execute`, {
                 method: 'POST',
@@ -463,7 +463,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'pause_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/pause`, {
                 method: 'POST',
@@ -474,7 +474,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'resume_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/resume`, {
                 method: 'POST',
@@ -485,7 +485,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'cancel_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/cancel`, {
                 method: 'POST',
@@ -496,7 +496,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'get_workflow_status':
                     response = await fetch(`${baseUrl}/api/v1/workflows/status`, {
                 method: 'POST',
@@ -507,7 +507,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'get_execution_history':
                     response = await fetch(`${baseUrl}/api/v1/workflows/history`, {
                 method: 'POST',
@@ -522,7 +522,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'coordinate_agents':
                     response = await fetch(`${baseUrl}/api/v1/coordination/agents`, {
                 method: 'POST',
@@ -531,13 +531,13 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'list_workflow_templates':
                     response = await fetch(`${baseUrl}/api/v1/templates`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
                     return data;
-                    
+
                 case 'create_workflow_template':
                     response = await fetch(`${baseUrl}/api/v1/templates`, {
                 method: 'POST',
@@ -546,7 +546,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'create_workflow_from_template':
                     response = await fetch(`${baseUrl}/api/v1/templates/instantiate`, {
                 method: 'POST',
@@ -555,7 +555,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'get_orchestration_metrics':
                     response = await fetch(`${baseUrl}/api/v1/metrics`, {
                 method: 'POST',
@@ -569,7 +569,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'optimize_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/optimize`, {
                 method: 'POST',
@@ -578,7 +578,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'validate_workflow_definition':
                     response = await fetch(`${baseUrl}/api/v1/workflows/validate`, {
                 method: 'POST',
@@ -587,7 +587,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'bulk_execute_workflows':
                     response = await fetch(`${baseUrl}/api/v1/workflows/bulk-execute`, {
                 method: 'POST',
@@ -596,7 +596,7 @@ class Agent15Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 default:
                     throw new Error(`Unknown method: ${method}`);
             }

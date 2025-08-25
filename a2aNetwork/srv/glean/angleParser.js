@@ -2,7 +2,7 @@
  * @fileoverview Angle Query Language Parser for Glean
  * @module angleParser
  * @since 1.0.0
- * 
+ *
  * Implements a subset of Glean's Angle query language for code analysis
  * Parses Angle syntax and converts to executable queries against Glean facts
  */
@@ -26,7 +26,7 @@ class AngleParser {
     parseSchema(schemaText) {
         this.tokens = this.tokenize(schemaText);
         this.currentToken = 0;
-        
+
         const schema = {
             name: null,
             version: null,
@@ -42,7 +42,7 @@ class AngleParser {
                     case 'schema':
                         schema.name = statement.name;
                         schema.version = statement.version;
-                        
+
                         // Process nested statements from schema
                         if (statement.statements) {
                             statement.statements.forEach(nestedStatement => {
@@ -146,7 +146,7 @@ class AngleParser {
                     '+': 'PLUS', '-': 'MINUS', '*': 'STAR',
                     '/': 'SLASH', '.': 'DOT'
                 }[char];
-                
+
                 tokens.push({ type: tokenType, value: char });
                 i++;
                 continue;
@@ -157,7 +157,7 @@ class AngleParser {
                 const quote = char;
                 let value = '';
                 i++; // Skip opening quote
-                
+
                 while (i < source.length && source[i] !== quote) {
                     if (source[i] === '\\' && i + 1 < source.length) {
                         i++; // Skip escape character
@@ -171,7 +171,7 @@ class AngleParser {
                     }
                     i++;
                 }
-                
+
                 if (i < source.length) i++; // Skip closing quote
                 tokens.push({ type: 'STRING', value });
                 continue;
@@ -184,8 +184,8 @@ class AngleParser {
                     value += source[i];
                     i++;
                 }
-                tokens.push({ 
-                    type: value.includes('.') ? 'FLOAT' : 'INTEGER', 
+                tokens.push({
+                    type: value.includes('.') ? 'FLOAT' : 'INTEGER',
                     value: value.includes('.') ? parseFloat(value) : parseInt(value)
                 });
                 continue;
@@ -198,7 +198,7 @@ class AngleParser {
                     value += source[i];
                     i++;
                 }
-                
+
                 const type = keywords.has(value) ? 'KEYWORD' : 'IDENTIFIER';
                 tokens.push({ type, value });
                 continue;
@@ -221,7 +221,7 @@ class AngleParser {
         if (this.isAtEnd()) return null;
 
         const token = this.peek();
-        
+
         if (token.type === 'KEYWORD') {
             switch (token.value) {
                 case 'schema':
@@ -256,16 +256,16 @@ class AngleParser {
     parseSchemaDeclaration() {
         this.consume('KEYWORD', 'schema'); // 'schema'
         const name = this.consume('IDENTIFIER').value;
-        
+
         // Handle schema.version format
         let version = 1;
         if (this.check('DOT')) {
             this.advance(); // consume '.'
             version = this.consume('INTEGER').value;
         }
-        
+
         this.consume('LBRACE'); // '{'
-        
+
         // Parse schema body statements
         const statements = [];
         while (!this.check('RBRACE') && !this.isAtEnd()) {
@@ -274,9 +274,9 @@ class AngleParser {
                 statements.push(statement);
             }
         }
-        
+
         this.consume('RBRACE'); // '}'
-        
+
         return {
             type: 'schema',
             name,
@@ -292,9 +292,9 @@ class AngleParser {
         this.consume('KEYWORD', 'predicate'); // 'predicate'
         const name = this.consume('IDENTIFIER').value;
         this.consume('COLON'); // ':'
-        
+
         const fields = this.parseFieldList();
-        
+
         return {
             type: 'predicate',
             name,
@@ -309,9 +309,9 @@ class AngleParser {
         this.consume('KEYWORD', 'type'); // 'type'
         const name = this.consume('IDENTIFIER').value;
         this.consume('COLON'); // ':'
-        
+
         const definition = this.parseTypeDefinition();
-        
+
         return {
             type: 'type',
             name,
@@ -325,18 +325,18 @@ class AngleParser {
     parseFieldList() {
         this.consume('LBRACE'); // '{'
         const fields = [];
-        
+
         while (!this.check('RBRACE') && !this.isAtEnd()) {
             const field = this.parseField();
             if (field) {
                 fields.push(field);
             }
-            
+
             if (this.check('COMMA')) {
                 this.advance();
             }
         }
-        
+
         this.consume('RBRACE'); // '}'
         return fields;
     }
@@ -348,7 +348,7 @@ class AngleParser {
         const name = this.consume('IDENTIFIER').value;
         this.consume('COLON'); // ':'
         const fieldType = this.parseTypeExpression();
-        
+
         return {
             name,
             type: fieldType
@@ -364,36 +364,36 @@ class AngleParser {
             const innerType = this.parseTypeExpression();
             return { type: 'maybe', inner: innerType };
         }
-        
+
         if (this.check('LBRACKET')) {
             this.advance(); // '['
             const elementType = this.parseTypeExpression();
             this.consume('RBRACKET'); // ']'
             return { type: 'array', element: elementType };
         }
-        
+
         if (this.check('KEYWORD', 'enum')) {
             this.advance(); // 'enum'
             this.consume('LBRACE'); // '{'
             const values = [];
-            
+
             while (!this.check('RBRACE') && !this.isAtEnd()) {
                 values.push(this.consume('IDENTIFIER').value);
                 if (this.check('OR')) {
                     this.advance();
                 }
             }
-            
+
             this.consume('RBRACE'); // '}'
             return { type: 'enum', values };
         }
-        
+
         // Primitive types
         if (this.check('KEYWORD')) {
             const primitiveType = this.advance().value;
             return { type: 'primitive', name: primitiveType };
         }
-        
+
         // Custom type reference (could be keyword or identifier)
         let typeName;
         if (this.check('KEYWORD')) {
@@ -412,7 +412,7 @@ class AngleParser {
             // Struct type
             return this.parseFieldList();
         }
-        
+
         return this.parseTypeExpression();
     }
 
@@ -421,28 +421,28 @@ class AngleParser {
      */
     parseDerivedPredicate() {
         const name = this.consume('IDENTIFIER').value;
-        
+
         // Parameters
         this.consume('LPAREN'); // '('
         const parameters = [];
-        
+
         while (!this.check('RPAREN') && !this.isAtEnd()) {
             const param = this.parseParameter();
             parameters.push(param);
-            
+
             if (this.check('COMMA')) {
                 this.advance();
             }
         }
-        
+
         this.consume('RPAREN'); // ')'
         this.consume('COLON'); // ':'
-        
+
         const returnType = this.parseTypeExpression();
         this.consume('EQUALS'); // '='
-        
+
         const body = this.parseExpression();
-        
+
         return {
             type: 'derived',
             name,
@@ -459,7 +459,7 @@ class AngleParser {
         const name = this.consume('IDENTIFIER').value;
         this.consume('COLON'); // ':'
         const paramType = this.parseTypeExpression();
-        
+
         return { name, type: paramType };
     }
 
@@ -469,28 +469,28 @@ class AngleParser {
     parseQueryStatement() {
         this.consume('KEYWORD', 'query'); // 'query'
         const name = this.consume('IDENTIFIER').value;
-        
+
         // Parameters
         this.consume('LPAREN'); // '('
         const parameters = [];
-        
+
         while (!this.check('RPAREN') && !this.isAtEnd()) {
             const param = this.parseParameter();
             parameters.push(param);
-            
+
             if (this.check('COMMA')) {
                 this.advance();
             }
         }
-        
+
         this.consume('RPAREN'); // ')'
         this.consume('COLON'); // ':'
-        
+
         const returnType = this.parseTypeExpression();
         this.consume('EQUALS'); // '='
-        
+
         const body = this.parseExpression();
-        
+
         return {
             type: 'query',
             name,
@@ -512,7 +512,7 @@ class AngleParser {
      */
     parseOrExpression() {
         let left = this.parseAndExpression();
-        
+
         while (this.check('OR') || this.check('OPERATOR', '||')) {
             const operator = this.advance().value;
             const right = this.parseAndExpression();
@@ -523,7 +523,7 @@ class AngleParser {
                 right
             };
         }
-        
+
         return left;
     }
 
@@ -532,7 +532,7 @@ class AngleParser {
      */
     parseAndExpression() {
         let left = this.parseComparisonExpression();
-        
+
         while (this.check('AND') || this.check('OPERATOR', '&&')) {
             const operator = this.advance().value;
             const right = this.parseComparisonExpression();
@@ -543,7 +543,7 @@ class AngleParser {
                 right
             };
         }
-        
+
         return left;
     }
 
@@ -552,7 +552,7 @@ class AngleParser {
      */
     parseComparisonExpression() {
         let left = this.parsePrimaryExpression();
-        
+
         while (this.checkAny(['EQUALS', 'LT', 'GT', 'OPERATOR'])) {
             const operator = this.advance().value;
             const right = this.parsePrimaryExpression();
@@ -563,7 +563,7 @@ class AngleParser {
                 right
             };
         }
-        
+
         return left;
     }
 
@@ -573,26 +573,26 @@ class AngleParser {
     parsePrimaryExpression() {
         if (this.check('IDENTIFIER')) {
             let name = this.advance().value;
-            
+
             // Handle dotted identifiers (e.g., src.File)
             while (this.check('DOT')) {
                 this.advance(); // consume '.'
                 const nextPart = this.consume('IDENTIFIER').value;
                 name += `.${  nextPart}`;
             }
-            
+
             // Function call or predicate reference
             if (this.check('LBRACE')) {
                 return this.parsePredicateReference(name);
             }
-            
+
             // Simple identifier
             return {
                 type: 'identifier',
                 name
             };
         }
-        
+
         if (this.check('STRING')) {
             return {
                 type: 'literal',
@@ -600,7 +600,7 @@ class AngleParser {
                 dataType: 'string'
             };
         }
-        
+
         if (this.check('INTEGER')) {
             return {
                 type: 'literal',
@@ -608,7 +608,7 @@ class AngleParser {
                 dataType: 'integer'
             };
         }
-        
+
         if (this.check('FLOAT')) {
             return {
                 type: 'literal',
@@ -616,7 +616,7 @@ class AngleParser {
                 dataType: 'float'
             };
         }
-        
+
         if (this.check('KEYWORD', 'true') || this.check('KEYWORD', 'false')) {
             return {
                 type: 'literal',
@@ -624,14 +624,14 @@ class AngleParser {
                 dataType: 'boolean'
             };
         }
-        
+
         if (this.check('LPAREN')) {
             this.advance(); // '('
             const expr = this.parseExpression();
             this.consume('RPAREN'); // ')'
             return expr;
         }
-        
+
         throw new Error(`Unexpected token: ${JSON.stringify(this.peek())}`);
     }
 
@@ -641,25 +641,25 @@ class AngleParser {
     parsePredicateReference(predicateName) {
         this.consume('LBRACE'); // '{'
         const bindings = [];
-        
+
         while (!this.check('RBRACE') && !this.isAtEnd()) {
             const binding = this.parseBinding();
             bindings.push(binding);
-            
+
             if (this.check('COMMA')) {
                 this.advance();
             }
         }
-        
+
         this.consume('RBRACE'); // '}'
-        
+
         // Check for where clause
         let whereClause = null;
         if (this.check('KEYWORD', 'where')) {
             this.advance(); // 'where'
             whereClause = this.parseExpression();
         }
-        
+
         return {
             type: 'predicate_ref',
             predicate: predicateName,
@@ -673,20 +673,20 @@ class AngleParser {
      */
     parseBinding() {
         let field = this.consume('IDENTIFIER').value;
-        
+
         // Handle dotted field names (e.g., value.language)
         while (this.check('DOT')) {
             this.advance(); // consume '.'
             const nextPart = this.consume('IDENTIFIER').value;
             field += `.${  nextPart}`;
         }
-        
+
         if (this.check('EQUALS')) {
             this.advance(); // '='
             const value = this.parseExpression();
             return { type: 'assignment', field, value };
         }
-        
+
         return { type: 'extraction', field };
     }
 
@@ -720,7 +720,7 @@ class AngleParser {
         if (this.check(type, value)) {
             return this.advance();
         }
-        
+
         const expected = value ? `${type}('${value}')` : type;
         throw new Error(`Expected ${expected}, got ${JSON.stringify(this.peek())}`);
     }
@@ -756,7 +756,7 @@ class AngleQueryExecutor {
         if (query.type === 'query') {
             return this.executeQueryBody(query.body, query.parameters);
         }
-        
+
         throw new Error(`Cannot execute query of type: ${query.type}`);
     }
 
@@ -774,19 +774,19 @@ class AngleQueryExecutor {
         switch (expr.type) {
             case 'predicate_ref':
                 return this.evaluatePredicateReference(expr, bindings);
-            
+
             case 'binary':
                 return this.evaluateBinaryExpression(expr, bindings);
-            
+
             case 'comparison':
                 return this.evaluateComparison(expr, bindings);
-            
+
             case 'identifier':
                 return bindings.get(expr.name) || expr.name;
-            
+
             case 'literal':
                 return expr.value;
-            
+
             default:
                 throw new Error(`Unknown expression type: ${expr.type}`);
         }
@@ -795,19 +795,19 @@ class AngleQueryExecutor {
     evaluatePredicateReference(expr, bindings) {
         const predicateName = expr.predicate;
         const facts = this.factDb[predicateName] || [];
-        
+
         const results = [];
-        
+
         for (const fact of facts) {
             const factBindings = new Map(bindings);
             let matches = true;
-            
+
             // Try to match bindings
             for (const binding of expr.bindings) {
                 if (binding.type === 'assignment') {
                     const expectedValue = this.evaluateExpression(binding.value, factBindings);
                     const actualValue = this.getFactValue(fact, binding.field);
-                    
+
                     if (actualValue !== expectedValue) {
                         matches = false;
                         break;
@@ -817,24 +817,24 @@ class AngleQueryExecutor {
                     factBindings.set(binding.field, value);
                 }
             }
-            
+
             // Apply where clause if present
             if (matches && expr.where) {
                 matches = this.evaluateExpression(expr.where, factBindings);
             }
-            
+
             if (matches) {
                 results.push(this.createResult(fact, factBindings));
             }
         }
-        
+
         return results;
     }
 
     evaluateBinaryExpression(expr, bindings) {
         const left = this.evaluateExpression(expr.left, bindings);
         const right = this.evaluateExpression(expr.right, bindings);
-        
+
         switch (expr.operator) {
             case 'and':
                 return left && right;
@@ -848,7 +848,7 @@ class AngleQueryExecutor {
     evaluateComparison(expr, bindings) {
         const left = this.evaluateExpression(expr.left, bindings);
         const right = this.evaluateExpression(expr.right, bindings);
-        
+
         switch (expr.operator) {
             case '=':
             case '==':
@@ -872,7 +872,7 @@ class AngleQueryExecutor {
         // Navigate nested field paths (e.g., "value.name")
         const path = field.split('.');
         let current = fact;
-        
+
         for (const segment of path) {
             if (current && typeof current === 'object') {
                 current = current[segment];
@@ -880,20 +880,20 @@ class AngleQueryExecutor {
                 return undefined;
             }
         }
-        
+
         return current;
     }
 
     createResult(fact, bindings) {
         const result = { ...fact };
-        
+
         // Add bound variables to result
         for (const [key, value] of bindings) {
             if (!result.hasOwnProperty(key)) {
                 result[key] = value;
             }
         }
-        
+
         return result;
     }
 }

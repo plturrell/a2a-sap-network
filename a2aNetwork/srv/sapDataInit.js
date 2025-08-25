@@ -4,7 +4,7 @@ const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
  * @fileoverview SAP Data Initialization Service
  * @since 1.0.0
  * @module sapDataInit
- * 
+ *
  * Data initialization service for A2A Network using CAP framework
  * to properly initialize master data, reference data, and sample records
  * for development and testing environments
@@ -12,12 +12,12 @@ const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 
 module.exports = async (srv) => {
     const { Agents, Services, Capabilities, Workflows } = srv.entities;
-    
+
     // Only initialize in development
     if (process.env.NODE_ENV !== 'production') {
         srv.on('listening', async () => {
             const db = await cds.connect.to('db');
-            
+
             try {
                 // Check if data already exists
                 const agentCount = await SELECT.one`count(*) as count`.from(Agents);
@@ -25,15 +25,15 @@ module.exports = async (srv) => {
                     cds.log('service').info('Sample data already exists, skipping initialization');
                     return;
                 }
-                
+
                 // Only initialize sample data in development environment
                 if (process.env.NODE_ENV === 'production') {
                     cds.log('service').info('Skipping sample data initialization in production');
                     return;
                 }
-                
+
                 cds.log('service').info('Initializing sample data for development...');
-                
+
                 // Create sample agents
                 const agents = await INSERT.into(Agents).entries([
                     {
@@ -61,9 +61,9 @@ module.exports = async (srv) => {
                         address: '0x3333333333333333333333333333333333333333'
                     }
                 ]);
-                
+
                 cds.log('service').info(`Created ${agents.length} sample agents`);
-                
+
                 // Create sample capabilities
                 await INSERT.into(Capabilities).entries([
                     {
@@ -82,9 +82,9 @@ module.exports = async (srv) => {
                         category: 'SECURITY'
                     }
                 ]);
-                
+
                 cds.log('service').info('Created sample capabilities');
-                
+
                 // Create sample workflows
                 await INSERT.into(Workflows).entries([
                     {
@@ -100,10 +100,10 @@ module.exports = async (srv) => {
                         isActive: true
                     }
                 ]);
-                
+
                 cds.log('service').info('Created sample workflows');
                 cds.log('service').info('✅ Sample data initialization completed!');
-                
+
             } catch (error) {
                 cds.log('service').error('Error initializing data:', error);
             }

@@ -18,7 +18,7 @@ let allPassed = true;
 function addCheck(name, passed, details = '') {
     checks.push({ name, passed, details });
     if (!passed) allPassed = false;
-    
+
     const status = passed ? '✅' : '❌';
     console.log(`${status} ${name}${details ? `: ${  details}` : ''}`);
 }
@@ -34,9 +34,9 @@ function checkNoLocalhostReferences() {
         'app/a2aFiori/webapp/controller/settings.controller.js',
         'app/a2aFiori/webapp/controller/ogs.controller.js'
     ];
-    
+
     let hasLocalhost = false;
-    
+
     jsFiles.forEach(file => {
         const fullPath = path.join(__dirname, '..', file);
         if (fs.existsSync(fullPath)) {
@@ -47,7 +47,7 @@ function checkNoLocalhostReferences() {
             }
         }
     });
-    
+
     if (!hasLocalhost) {
         addCheck('No localhost references in code', true);
     }
@@ -109,7 +109,7 @@ if (fs.existsSync(securityServicePath)) {
     const hasCSRF = content.includes('fetchCSRFToken');
     const hasAuth = content.includes('checkAuthorization');
     const hasSecureAjax = content.includes('secureAjax');
-    
+
     addCheck('CSRF token implementation', hasCSRF);
     addCheck('Authorization checking', hasAuth);
     addCheck('Secure AJAX wrapper', hasSecureAjax);
@@ -144,7 +144,7 @@ if (fs.existsSync(launchpadControllerPath)) {
     const content = fs.readFileSync(launchpadControllerPath, 'utf8');
     const usesStandardPatterns = content.includes('StandardPatternsMixin');
     const usesSecurityService = content.includes('SecurityService');
-    
+
     addCheck('Launchpad uses standard patterns', usesStandardPatterns);
     addCheck('Launchpad uses security service', usesSecurityService);
 }

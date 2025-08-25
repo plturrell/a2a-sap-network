@@ -19,7 +19,7 @@ class Agent3SecurityScanner {
         };
         this.scanStartTime = Date.now();
         this.filesScanned = 0;
-        
+
         // Vector Processing-specific vulnerability patterns
         this.vectorProcessingPatterns = {
             // Vector injection attacks
@@ -39,7 +39,7 @@ class Agent3SecurityScanner {
                 message: 'Potential vector injection vulnerability',
                 impact: 'Could allow injection of malicious vectors affecting similarity calculations and search results'
             },
-            
+
             // Dimension manipulation vulnerabilities
             DIMENSION_MANIPULATION: {
                 patterns: [
@@ -57,7 +57,7 @@ class Agent3SecurityScanner {
                 message: 'Vector dimension manipulation vulnerability',
                 impact: 'Could allow manipulation of vector dimensions causing calculation errors and system instability'
             },
-            
+
             // Embedding poisoning vulnerabilities
             EMBEDDING_POISONING: {
                 patterns: [
@@ -75,7 +75,7 @@ class Agent3SecurityScanner {
                 message: 'Embedding poisoning vulnerability',
                 impact: 'Could allow poisoning of embedding models affecting all vector operations and similarity searches'
             },
-            
+
             // Vector database security vulnerabilities
             VECTOR_DB_SECURITY: {
                 patterns: [
@@ -93,7 +93,7 @@ class Agent3SecurityScanner {
                 message: 'Vector database security vulnerability',
                 impact: 'Could allow unauthorized access to vector databases exposing sensitive embedding data'
             },
-            
+
             // Similarity calculation bypass vulnerabilities
             SIMILARITY_BYPASS: {
                 patterns: [
@@ -111,7 +111,7 @@ class Agent3SecurityScanner {
                 message: 'Similarity calculation bypass vulnerability',
                 impact: 'Could allow bypassing similarity calculations returning inaccurate or malicious results'
             },
-            
+
             // Index manipulation vulnerabilities
             INDEX_MANIPULATION: {
                 patterns: [
@@ -129,7 +129,7 @@ class Agent3SecurityScanner {
                 message: 'Vector index manipulation vulnerability',
                 impact: 'Could allow manipulation of vector indexes affecting search performance and accuracy'
             },
-            
+
             // Vector search vulnerabilities
             VECTOR_SEARCH_VULN: {
                 patterns: [
@@ -147,7 +147,7 @@ class Agent3SecurityScanner {
                 message: 'Vector search vulnerability',
                 impact: 'Could allow unauthorized vector search operations or manipulation of search results'
             },
-            
+
             // Clustering manipulation vulnerabilities
             CLUSTERING_MANIPULATION: {
                 patterns: [
@@ -165,7 +165,7 @@ class Agent3SecurityScanner {
                 message: 'Clustering manipulation vulnerability',
                 impact: 'Could allow manipulation of clustering algorithms affecting data analysis and insights'
             },
-            
+
             // 3D Visualization security vulnerabilities
             VISUALIZATION_SECURITY: {
                 patterns: [
@@ -183,7 +183,7 @@ class Agent3SecurityScanner {
                 message: '3D Visualization security vulnerability',
                 impact: 'Could allow injection of malicious content into 3D visualization affecting user experience'
             },
-            
+
             // Vector export/import vulnerabilities
             VECTOR_EXPORT_VULN: {
                 patterns: [
@@ -201,7 +201,7 @@ class Agent3SecurityScanner {
                 message: 'Vector export vulnerability',
                 impact: 'Could allow unauthorized export of sensitive vector data and embeddings'
             },
-            
+
             // Vector metadata manipulation
             METADATA_MANIPULATION: {
                 patterns: [
@@ -219,7 +219,7 @@ class Agent3SecurityScanner {
                 message: 'Vector metadata manipulation vulnerability',
                 impact: 'Could allow manipulation of vector metadata affecting search and classification results'
             },
-            
+
             // Collection management vulnerabilities
             COLLECTION_MANIPULATION: {
                 patterns: [
@@ -239,29 +239,29 @@ class Agent3SecurityScanner {
             }
         };
     }
-    
+
     scanFile(filePath) {
         console.log(`🔎 Scanning: ${filePath}`);
         this.filesScanned++;
-        
+
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const lines = content.split('\n');
-            
+
             // Check for general OWASP vulnerabilities
             this.checkOWASPVulnerabilities(content, filePath, lines);
-            
+
             // Check for vector processing-specific vulnerabilities
             this.checkVectorProcessingVulnerabilities(content, filePath, lines);
-            
+
             // Check for SAP Fiori specific issues
             this.checkSAPFioriCompliance(content, filePath, lines);
-            
+
         } catch (error) {
             console.error(`❌ Error scanning ${filePath}: ${error.message}`);
         }
     }
-    
+
     checkOWASPVulnerabilities(content, filePath, lines) {
         // XSS vulnerabilities
         const xssPatterns = [
@@ -271,13 +271,13 @@ class Agent3SecurityScanner {
             { pattern: /dangerouslySetInnerHTML/gi, type: 'XSS', message: 'Potential XSS via React dangerouslySetInnerHTML' },
             { pattern: /\.setText\s*\([^)]*\+/gi, type: 'XSS', message: 'Potential XSS via dynamic text setting' }
         ];
-        
+
         xssPatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
-                
+
                 // Skip if properly sanitized
                 if (!code.includes('encodeXML') && !code.includes('sanitizeHTML') && !code.includes('escapeRegExp')) {
                     this.addVulnerability({
@@ -293,7 +293,7 @@ class Agent3SecurityScanner {
                 }
             }
         });
-        
+
         // CSRF vulnerabilities
         const csrfPatterns = [
             /\$\.ajax\s*\(\s*\{[^}]*type\s*:\s*["']POST["']/gi,
@@ -302,13 +302,13 @@ class Agent3SecurityScanner {
             /\.delete\s*\(/gi,
             /fetch\s*\([^,]+,\s*\{[^}]*method\s*:\s*["'](POST|PUT|DELETE)["']/gi
         ];
-        
+
         csrfPatterns.forEach(pattern => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 // Check if CSRF token is present nearby
                 const surroundingCode = content.substring(Math.max(0, match.index - 200), match.index + 200);
-                if (!surroundingCode.includes('X-CSRF-Token') && 
+                if (!surroundingCode.includes('X-CSRF-Token') &&
                     !surroundingCode.includes('csrf') &&
                     !surroundingCode.includes('_getCSRFToken') &&
                     !surroundingCode.includes('_csrfToken')) {
@@ -326,20 +326,20 @@ class Agent3SecurityScanner {
                 }
             }
         });
-        
+
         // Insecure connections
         const insecurePatterns = [
             { pattern: /http:\/\//gi, type: 'INSECURE_CONNECTION', message: 'Insecure HTTP connection' },
             { pattern: /ws:\/\//gi, type: 'INSECURE_WEBSOCKET', message: 'Insecure WebSocket connection' }
         ];
-        
+
         insecurePatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const code = lines[lineNumber - 1]?.trim() || '';
                 // Skip comments, examples, and already secured code
-                if (!code.includes('//') && !code.includes('example') && 
+                if (!code.includes('//') && !code.includes('example') &&
                     !code.includes('wss://') && !code.includes('https://')) {
                     this.addVulnerability({
                         type: type,
@@ -354,7 +354,7 @@ class Agent3SecurityScanner {
                 }
             }
         });
-        
+
         // Input validation vulnerabilities specific to vector contexts
         const inputValidationPatterns = [
             { pattern: /eval\s*\(/gi, type: 'CODE_INJECTION', message: 'Code injection via eval()' },
@@ -362,7 +362,7 @@ class Agent3SecurityScanner {
             { pattern: /setTimeout\s*\([^)]*\+/gi, type: 'CODE_INJECTION', message: 'Potential code injection in setTimeout' },
             { pattern: /setInterval\s*\([^)]*\+/gi, type: 'CODE_INJECTION', message: 'Potential code injection in setInterval' }
         ];
-        
+
         inputValidationPatterns.forEach(({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
@@ -380,7 +380,7 @@ class Agent3SecurityScanner {
             }
         });
     }
-    
+
     checkVectorProcessingVulnerabilities(content, filePath, lines) {
         Object.entries(this.vectorProcessingPatterns).forEach(([vulnType, config]) => {
             config.patterns.forEach(pattern => {
@@ -388,12 +388,12 @@ class Agent3SecurityScanner {
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
                     const code = lines[lineNumber - 1]?.trim() || '';
-                    
+
                     // Skip false positives
                     if (this.isFalsePositive(code, vulnType, filePath)) {
                         continue;
                     }
-                    
+
                     this.addVulnerability({
                         type: config.category,
                         severity: config.severity,
@@ -408,7 +408,7 @@ class Agent3SecurityScanner {
             });
         });
     }
-    
+
     isFalsePositive(code, vulnType, filePath) {
         // Skip legitimate uses that are not security vulnerabilities
         const falsePositivePatterns = {
@@ -438,34 +438,34 @@ class Agent3SecurityScanner {
                 /sanitized/gi  // Sanitization operations
             ]
         };
-        
+
         if (falsePositivePatterns[vulnType]) {
             const patterns = falsePositivePatterns[vulnType];
             if (patterns.some(pattern => pattern.test(code))) {
                 return true;
             }
         }
-        
+
         // General false positive checks
         if (filePath.includes('SecurityUtils.js') || filePath.includes('security')) {
             // Security files contain security functions that may trigger patterns
-            return code.includes('sanitized') || code.includes('validation') || 
+            return code.includes('sanitized') || code.includes('validation') ||
                    code.includes('_sanitize') || code.includes('_validate');
         }
-        
+
         // Skip comments and documentation
         if (code.includes('//') || code.includes('/*') || code.includes('*')) {
             return true;
         }
-        
+
         // Skip console.log and debug statements
         if (code.includes('console.log') || code.includes('console.error')) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     getVectorProcessingFix(vulnType) {
         const fixes = {
             VECTOR_INJECTION: 'Validate and sanitize all vector input data, use parameterized queries for vector operations',
@@ -483,7 +483,7 @@ class Agent3SecurityScanner {
         };
         return fixes[vulnType] || 'Implement proper validation and security controls for vector processing operations';
     }
-    
+
     checkSAPFioriCompliance(content, filePath, lines) {
         // Check for missing i18n
         if (filePath.includes('.controller.js')) {
@@ -493,7 +493,7 @@ class Agent3SecurityScanner {
                 { pattern: /setText\s*\(\s*["'][^"']+["']\s*\)/gi, message: 'Hardcoded text in UI element' },
                 { pattern: /headerText\s*:\s*["'][^"']+["']/gi, message: 'Hardcoded header text' }
             ];
-            
+
             i18nPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -515,7 +515,7 @@ class Agent3SecurityScanner {
                 }
             });
         }
-        
+
         // Check for missing security headers in manifest
         if (filePath.includes('manifest.json')) {
             const requiredHeaders = [
@@ -523,7 +523,7 @@ class Agent3SecurityScanner {
                 'X-Frame-Options',
                 'X-Content-Type-Options'
             ];
-            
+
             requiredHeaders.forEach(header => {
                 if (!content.includes(header)) {
                     this.addVulnerability({
@@ -539,7 +539,7 @@ class Agent3SecurityScanner {
                 }
             });
         }
-        
+
         // Check for vector-specific accessibility issues
         if (filePath.includes('.controller.js') || filePath.includes('.fragment.xml')) {
             const accessibilityPatterns = [
@@ -548,7 +548,7 @@ class Agent3SecurityScanner {
                 { pattern: /setBusy\s*\(\s*true\s*\)/gi, message: 'Loading state accessibility: Consider announcing vector processing status changes' },
                 { pattern: /3D.*visualization/gi, message: '3D visualization accessibility: Missing alternative text descriptions' }
             ];
-            
+
             accessibilityPatterns.forEach(({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
@@ -569,14 +569,14 @@ class Agent3SecurityScanner {
                 }
             });
         }
-        
+
         // Check for vector processing performance issues
         const performancePatterns = [
             { pattern: /_animationFrameId\s*=\s*requestAnimationFrame/gi, message: 'Animation frame management: Potential memory leak in 3D visualization' },
             { pattern: /WebSocket.*ws:/gi, message: 'WebSocket security: Use secure WebSocket connections (wss://)' },
             { pattern: /setTimeout.*\d{4,}/gi, message: 'Long timeout detected: May affect vector processing responsiveness' }
         ];
-        
+
         performancePatterns.forEach(({ pattern, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
@@ -595,32 +595,32 @@ class Agent3SecurityScanner {
             }
         });
     }
-    
+
     getLineNumber(content, index) {
         const lines = content.substring(0, index).split('\n');
         return lines.length;
     }
-    
+
     addVulnerability(vuln) {
         // Avoid duplicates
-        const exists = this.vulnerabilities.some(v => 
-            v.file === vuln.file && 
-            v.line === vuln.line && 
+        const exists = this.vulnerabilities.some(v =>
+            v.file === vuln.file &&
+            v.line === vuln.line &&
             v.type === vuln.type
         );
-        
+
         if (!exists) {
             this.vulnerabilities.push(vuln);
         }
     }
-    
+
     scanDirectory(dirPath) {
         const files = fs.readdirSync(dirPath);
-        
+
         files.forEach(file => {
             const fullPath = path.join(dirPath, file);
             const stat = fs.statSync(fullPath);
-            
+
             if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
                 this.scanDirectory(fullPath);
             } else if (stat.isFile() && this.shouldScanFile(file)) {
@@ -628,12 +628,12 @@ class Agent3SecurityScanner {
             }
         });
     }
-    
+
     shouldScanFile(filename) {
         const extensions = ['.js', '.xml', '.json', '.html', '.ts'];
         return extensions.some(ext => filename.endsWith(ext));
     }
-    
+
     generateReport() {
         const scanDuration = (Date.now() - this.scanStartTime) / 1000;
         const criticalCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.CRITICAL).length;
@@ -641,11 +641,11 @@ class Agent3SecurityScanner {
         const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
         const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
         const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('🧮 AGENT 3 VECTOR PROCESSING SECURITY SCAN REPORT');
         console.log('='.repeat(80));
-        
+
         console.log('\n📊 SUMMARY:');
         console.log(`   Files Scanned: ${this.filesScanned}`);
         console.log(`   Scan Duration: ${scanDuration.toFixed(2)}s`);
@@ -654,12 +654,12 @@ class Agent3SecurityScanner {
         console.log(`   Medium Issues: ${mediumCount}`);
         console.log(`   Low Issues: ${lowCount}`);
         console.log(`   Warnings: ${warningCount}`);
-        
+
         // Calculate security score
         const totalIssues = criticalCount * 10 + highCount * 5 + mediumCount * 2 + lowCount;
         const maxScore = 100;
         const score = Math.max(0, maxScore - totalIssues);
-        
+
         console.log(`\n🎯 VECTOR PROCESSING SECURITY SCORE: ${score}/100`);
         if (score >= 90) {
             console.log('   Status: ✅ EXCELLENT - Vector processing system is well secured');
@@ -670,10 +670,10 @@ class Agent3SecurityScanner {
         } else {
             console.log('   Status: ❌ POOR - Significant vector processing security improvements needed');
         }
-        
+
         // Vector-specific findings
-        const vectorIssues = this.vulnerabilities.filter(v => 
-            v.type.includes('VECTOR') || v.type.includes('EMBEDDING') || 
+        const vectorIssues = this.vulnerabilities.filter(v =>
+            v.type.includes('VECTOR') || v.type.includes('EMBEDDING') ||
             v.type.includes('SIMILARITY') || v.type.includes('INDEX') ||
             v.type.includes('CLUSTERING') || v.type.includes('VISUALIZATION'));
         if (vectorIssues.length > 0) {
@@ -682,19 +682,19 @@ class Agent3SecurityScanner {
             vectorIssues.forEach(issue => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
             });
-            
+
             Object.entries(issueCounts).forEach(([type, count]) => {
                 console.log(`   ${type}: ${count} issues`);
             });
         }
-        
+
         // List vulnerabilities by severity
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:\n');
-            
+
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
-            
+
             severityOrder.forEach(severity => {
                 const sevVulns = this.vulnerabilities.filter(v => v.severity === severity);
                 if (sevVulns.length > 0) {
@@ -710,7 +710,7 @@ class Agent3SecurityScanner {
                 }
             });
         }
-        
+
         // Vector processing security recommendations
         console.log('💡 AGENT 3 VECTOR PROCESSING SECURITY RECOMMENDATIONS:\n');
         console.log('1. 🛡️  Secure Vector Input Validation');
@@ -718,58 +718,58 @@ class Agent3SecurityScanner {
         console.log('   - Implement vector data type validation and bounds checking');
         console.log('   - Sanitize vector metadata and ensure schema compliance');
         console.log('   - Use cryptographic checksums to verify vector data integrity');
-        
+
         console.log('\n2. 🔒 Embedding Security Protection');
         console.log('   - Implement embedding poisoning detection mechanisms');
         console.log('   - Validate embedding models and their configurations');
         console.log('   - Monitor embedding generation for anomalous patterns');
         console.log('   - Implement differential privacy for sensitive embeddings');
-        
+
         console.log('\n3. 🔐 Vector Database Security');
         console.log('   - Use strong authentication for vector database connections');
         console.log('   - Implement proper authorization for vector operations');
         console.log('   - Encrypt vector data at rest and in transit');
         console.log('   - Monitor vector database access for unauthorized operations');
-        
+
         console.log('\n4. ⚡ Similarity Search Protection');
         console.log('   - Validate similarity thresholds and distance metrics');
         console.log('   - Implement rate limiting for similarity search operations');
         console.log('   - Protect against similarity calculation bypass attacks');
         console.log('   - Monitor search patterns for anomalous behavior');
-        
+
         console.log('\n5. 🔍 Vector Index Integrity');
         console.log('   - Implement index integrity validation and checksums');
         console.log('   - Protect index configurations from unauthorized changes');
         console.log('   - Monitor index operations for manipulation attempts');
         console.log('   - Use secure index storage with proper access controls');
-        
+
         console.log('\n6. 📊 Clustering and Analysis Security');
         console.log('   - Validate clustering parameters and algorithm configurations');
         console.log('   - Implement secure cluster analysis with privacy preservation');
         console.log('   - Monitor clustering results for data leakage');
         console.log('   - Use differential privacy in cluster analysis when needed');
-        
+
         console.log('\n7. 🎨 3D Visualization Security');
         console.log('   - Sanitize all 3D visualization data and configurations');
         console.log('   - Implement content security policies for WebGL content');
         console.log('   - Validate visualization parameters and scene configurations');
         console.log('   - Monitor 3D rendering for malicious content injection');
-        
+
         console.log('\n8. 📤 Vector Export Controls');
         console.log('   - Implement access controls for vector data exports');
         console.log('   - Validate export configurations and data inclusion policies');
         console.log('   - Use data classification and labeling for sensitive vectors');
         console.log('   - Audit all vector export operations for compliance');
-        
+
         console.log(`\n${  '='.repeat(80)}`);
         console.log('Vector Processing Security Scan completed. Address critical vector vulnerabilities first.');
         console.log('Focus on vector injection and embedding poisoning prevention.');
         console.log('='.repeat(80));
-        
+
         // Generate JSON report for further processing
         this.saveJSONReport();
     }
-    
+
     saveJSONReport() {
         const reportData = {
             agent: 'Agent3-VectorProcessing',
@@ -795,7 +795,7 @@ class Agent3SecurityScanner {
                 'Implement proper vector export access controls'
             ]
         };
-        
+
         try {
             fs.writeFileSync('agent3-security-report.json', JSON.stringify(reportData, null, 2));
             console.log('\n📄 Detailed report saved to: agent3-security-report.json');
@@ -803,18 +803,18 @@ class Agent3SecurityScanner {
             console.error('Failed to save JSON report:', error.message);
         }
     }
-    
+
     run(targetPath) {
         console.log('🔍 Starting Agent 3 Vector Processing Security Scan...');
         console.log(`📂 Scanning directory: ${targetPath}\n`);
-        
+
         if (fs.existsSync(targetPath)) {
             if (fs.statSync(targetPath).isDirectory()) {
                 this.scanDirectory(targetPath);
             } else {
                 this.scanFile(targetPath);
             }
-            
+
             this.generateReport();
         } else {
             console.error(`❌ Path not found: ${targetPath}`);

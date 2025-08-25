@@ -10,13 +10,13 @@ const crypto = require('crypto');
 class DisasterRecovery extends EventEmitter {
     constructor(config) {
         super();
-        
+
         this.config = {
             backupInterval: config.backupInterval || 3600000, // 1 hour
             healthCheckInterval: config.healthCheckInterval || 60000, // 1 minute
             rto: { // Recovery Time Objectives
                 critical: 14400000, // 4 hours
-                high: 7200000,      // 2 hours  
+                high: 7200000,      // 2 hours
                 medium: 3600000,    // 1 hour
                 low: 28800000       // 8 hours
             },
@@ -41,7 +41,7 @@ class DisasterRecovery extends EventEmitter {
         };
         this.healthChecks = new Map();
         this.recoveryQueue = [];
-        
+
         this.initializeDisasterRecovery();
     }
 
@@ -51,13 +51,13 @@ class DisasterRecovery extends EventEmitter {
     initializeDisasterRecovery() {
         // Start automated backup processes
         this.startAutomatedBackups();
-        
+
         // Initialize health monitoring
         this.startHealthMonitoring();
-        
+
         // Load recovery plans
         this.loadRecoveryPlans();
-        
+
         // Set up event handlers
         this.on('backup-complete', this.handleBackupComplete.bind(this));
         this.on('failover-initiated', this.handleFailoverInitiated.bind(this));
@@ -73,10 +73,10 @@ class DisasterRecovery extends EventEmitter {
     async initiateFailover(reason, options = {}) {
         const startTime = Date.now();
         const failoverId = this.generateFailoverId();
-        
+
         try {
             console.log(`[DR] Initiating failover: ${reason}`);
-            
+
             // Update failover state
             this.failoverState = {
                 active: true,
@@ -85,32 +85,32 @@ class DisasterRecovery extends EventEmitter {
                 startTime,
                 reason
             };
-            
+
             // Emit failover event
             this.emit('failover-initiated', this.failoverState);
-            
+
             // Step 1: Verify secondary site readiness
             const readiness = await this.verifySecondaryReadiness();
             if (!readiness.ready) {
                 throw new Error(`Secondary site not ready: ${readiness.issues.join(', ')}`);
             }
-            
+
             // Step 2: Stop primary site services gracefully
             if (!options.emergencyMode) {
                 await this.gracefulShutdown(this.config.primarySite);
             }
-            
+
             // Step 3: Activate secondary site
             await this.activateSecondarySite();
-            
+
             // Step 4: Redirect traffic
             await this.redirectTraffic(this.config.secondarySite);
-            
+
             // Step 5: Verify failover success
             const verification = await this.verifyFailover();
-            
+
             const duration = Date.now() - startTime;
-            
+
             return {
                 success: true,
                 failoverId,
@@ -120,13 +120,13 @@ class DisasterRecovery extends EventEmitter {
                 verification,
                 withinRTO: duration < this.config.rto.critical
             };
-            
+
         } catch (error) {
             console.error('[DR] Failover failed:', error);
-            
+
             // Attempt rollback
             await this.rollbackFailover(failoverId);
-            
+
             throw error;
         }
     }
@@ -144,38 +144,38 @@ class DisasterRecovery extends EventEmitter {
                 details: []
             }
         };
-        
+
         try {
             // Check all registered backups
             for (const [id, backup] of this.backupRegistry) {
                 const result = await this.validateSingleBackup(backup);
-                
+
                 if (result.valid) {
                     validation.backups.valid++;
                 } else {
                     validation.backups.invalid++;
                 }
-                
+
                 validation.backups.details.push({
                     id,
                     type: backup.type,
                     ...result
                 });
             }
-            
+
             // Validate backup integrity
             validation.integrity = await this.validateBackupIntegrity();
-            
+
             // Check backup age
             validation.freshness = await this.checkBackupFreshness();
-            
+
             // Verify restore capability
             validation.restoreCapability = await this.verifyRestoreCapability();
-            
+
             validation.overallStatus = this.calculateBackupHealth(validation);
-            
+
             return validation;
-            
+
         } catch (error) {
             console.error('[DR] Backup validation failed:', error);
             throw error;
@@ -191,48 +191,48 @@ class DisasterRecovery extends EventEmitter {
     async restoreServices(restorePoint, options = {}) {
         const restoreId = this.generateRestoreId();
         const startTime = Date.now();
-        
+
         try {
             console.log(`[DR] Starting service restoration to: ${restorePoint.timestamp}`);
-            
+
             // Create restore plan
             const plan = await this.createRestorePlan(restorePoint, options);
-            
+
             // Execute restore in order of dependencies
             const results = {
                 restoreId,
                 startTime,
                 services: []
             };
-            
+
             for (const step of plan.steps) {
                 const stepResult = await this.executeRestoreStep(step);
                 results.services.push(stepResult);
-                
+
                 if (!stepResult.success && step.critical) {
                     throw new Error(`Critical restore step failed: ${step.service}`);
                 }
             }
-            
+
             // Verify data consistency
             const consistency = await this.verifyDataConsistency(restorePoint);
             results.consistency = consistency;
-            
+
             // Run post-restore validation
             const validation = await this.postRestoreValidation();
             results.validation = validation;
-            
+
             results.duration = Date.now() - startTime;
             results.success = validation.allPassed;
-            
+
             return results;
-            
+
         } catch (error) {
             console.error('[DR] Service restoration failed:', error);
-            
+
             // Attempt to recover to previous state
             await this.recoverFromFailedRestore(restoreId);
-            
+
             throw error;
         }
     }
@@ -249,14 +249,14 @@ class DisasterRecovery extends EventEmitter {
             network: await this.checkNetworkConnectivity(),
             capacity: await this.checkResourceCapacity()
         };
-        
+
         const issues = [];
         Object.entries(checks).forEach(([check, result]) => {
             if (!result.passed) {
                 issues.push(`${check}: ${result.reason}`);
             }
         });
-        
+
         return {
             ready: issues.length === 0,
             checks,
@@ -270,19 +270,19 @@ class DisasterRecovery extends EventEmitter {
      */
     async gracefulShutdown(site) {
         console.log(`[DR] Initiating graceful shutdown of ${site}`);
-        
+
         // Stop accepting new requests
         await this.stopIncomingTraffic(site);
-        
+
         // Wait for in-flight requests to complete
         await this.drainConnections(site);
-        
+
         // Flush all caches and buffers
         await this.flushData(site);
-        
+
         // Stop services in dependency order
         await this.stopServices(site);
-        
+
         console.log(`[DR] Graceful shutdown of ${site} complete`);
     }
 
@@ -291,16 +291,16 @@ class DisasterRecovery extends EventEmitter {
      */
     async activateSecondarySite() {
         console.log('[DR] Activating secondary site');
-        
+
         // Start services in dependency order
         await this.startServices(this.config.secondarySite);
-        
+
         // Verify all services are running
         await this.verifyServices(this.config.secondarySite);
-        
+
         // Warm up caches
         await this.warmupCaches(this.config.secondarySite);
-        
+
         // Enable incoming traffic
         await this.enableTraffic(this.config.secondarySite);
     }
@@ -312,13 +312,13 @@ class DisasterRecovery extends EventEmitter {
     async redirectTraffic(targetSite) {
         // Update DNS records
         await this.updateDNS(targetSite);
-        
+
         // Update load balancer configuration
         await this.updateLoadBalancers(targetSite);
-        
+
         // Update CDN origin
         await this.updateCDN(targetSite);
-        
+
         // Notify external services
         await this.notifyExternalServices(targetSite);
     }
@@ -334,9 +334,9 @@ class DisasterRecovery extends EventEmitter {
             performance: await this.verifyPerformance(),
             connectivity: await this.verifyConnectivity()
         };
-        
+
         verification.success = Object.values(verification).every(v => v.passed);
-        
+
         return verification;
     }
 
@@ -349,7 +349,7 @@ class DisasterRecovery extends EventEmitter {
     async createBackup(type, target) {
         const backupId = this.generateBackupId();
         const startTime = Date.now();
-        
+
         try {
             const backup = {
                 id: backupId,
@@ -358,9 +358,9 @@ class DisasterRecovery extends EventEmitter {
                 startTime,
                 status: 'in-progress'
             };
-            
+
             this.backupRegistry.set(backupId, backup);
-            
+
             // Execute backup based on type
             let result;
             switch (type) {
@@ -379,27 +379,27 @@ class DisasterRecovery extends EventEmitter {
                 default:
                     throw new Error(`Unknown backup type: ${type}`);
             }
-            
+
             backup.endTime = Date.now();
             backup.duration = backup.endTime - startTime;
             backup.size = result.size;
             backup.location = result.location;
             backup.checksum = result.checksum;
             backup.status = 'completed';
-            
+
             this.emit('backup-complete', backup);
-            
+
             return backup;
-            
+
         } catch (error) {
             console.error(`[DR] Backup failed for ${type}:`, error);
-            
+
             const backup = this.backupRegistry.get(backupId);
             if (backup) {
                 backup.status = 'failed';
                 backup.error = error.message;
             }
-            
+
             throw error;
         }
     }
@@ -417,9 +417,9 @@ class DisasterRecovery extends EventEmitter {
             timestamp: Date.now(),
             data: 'database-snapshot'
         });
-        
+
         const location = await this.storeBackup('database', data);
-        
+
         return {
             size: Buffer.byteLength(data),
             location,
@@ -439,9 +439,9 @@ class DisasterRecovery extends EventEmitter {
             timestamp: Date.now(),
             state: 'application-state'
         });
-        
+
         const location = await this.storeBackup('application', data);
-        
+
         return {
             size: Buffer.byteLength(data),
             location,
@@ -461,9 +461,9 @@ class DisasterRecovery extends EventEmitter {
             timestamp: Date.now(),
             configs: 'all-configurations'
         });
-        
+
         const location = await this.storeBackup('configuration', data);
-        
+
         return {
             size: Buffer.byteLength(data),
             location,
@@ -482,9 +482,9 @@ class DisasterRecovery extends EventEmitter {
             this.backupApplication(target),
             this.backupConfiguration(target)
         ]);
-        
+
         const totalSize = backups.reduce((sum, b) => sum + b.size, 0);
-        
+
         return {
             size: totalSize,
             location: backups.map(b => b.location),
@@ -501,10 +501,10 @@ class DisasterRecovery extends EventEmitter {
     async storeBackup(type, data) {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `backup-${type}-${timestamp}.json`;
-        
+
         // Store in multiple backends for redundancy
         const locations = [];
-        
+
         for (const backend of this.config.storageBackends) {
             try {
                 const location = await this.storeToBackend(backend, filename, data);
@@ -513,11 +513,11 @@ class DisasterRecovery extends EventEmitter {
                 console.error(`[DR] Failed to store to ${backend}:`, error);
             }
         }
-        
+
         if (locations.length === 0) {
             throw new Error('Failed to store backup to any backend');
         }
-        
+
         return locations;
     }
 
@@ -568,15 +568,15 @@ function shutdown() {
 // Export cleanup function
 module.exports.shutdown = shutdown;
 
-        
+
         const backupPath = path.join(
             this.config.backupPath || './backups',
             filename
         );
-        
+
         await fs.mkdir(path.dirname(backupPath), { recursive: true });
         await fs.writeFile(backupPath, data);
-        
+
         return `file://${backupPath}`;
     }
 
@@ -594,7 +594,7 @@ module.exports.shutdown = shutdown;
                 { action: 'start-services', target: 'database' }
             ]
         });
-        
+
         // Application recovery plan
         this.recoveryPlans.set('application', {
             priority: 2,
@@ -605,7 +605,7 @@ module.exports.shutdown = shutdown;
                 { action: 'start-services', target: 'application' }
             ]
         });
-        
+
         // Network recovery plan
         this.recoveryPlans.set('network', {
             priority: 3,
@@ -630,7 +630,7 @@ module.exports.shutdown = shutdown;
                 console.error('[DR] Automated database backup failed:', error);
             }
         }, this.config.rpo.database);
-        
+
         // Application backups
         activeIntervals.set('interval_635', setInterval(async () => {
             try {
@@ -639,7 +639,7 @@ module.exports.shutdown = shutdown;
                 console.error('[DR] Automated application backup failed:', error);
             }
         }, this.config.rpo.application);
-        
+
         // Full backups
         activeIntervals.set('interval_644', setInterval(async () => {
             try {
@@ -669,10 +669,10 @@ module.exports.shutdown = shutdown;
             replication: await this.checkReplicationHealth(),
             backups: await this.checkBackupHealth()
         };
-        
+
         // Store health check results
         this.healthChecks.set(Date.now(), checks);
-        
+
         // Check if failover is needed
         if (!checks.primary.healthy && checks.secondary.healthy) {
             console.warn('[DR] Primary site unhealthy, considering failover');
@@ -692,10 +692,10 @@ module.exports.shutdown = shutdown;
                 infrastructure: await this.checkInfrastructureHealth(site),
                 performance: await this.checkPerformanceHealth(site)
             };
-            
+
             health.healthy = Object.values(health).every(h => h.healthy);
             health.timestamp = Date.now();
-            
+
             return health;
         } catch (error) {
             return {
@@ -718,23 +718,23 @@ module.exports.shutdown = shutdown;
             if (!exists) {
                 return { valid: false, reason: 'Backup file not found' };
             }
-            
+
             // Verify checksum
             const data = await this.readBackup(backup.location);
             const checksum = this.calculateChecksum(data);
             if (checksum !== backup.checksum) {
                 return { valid: false, reason: 'Checksum mismatch' };
             }
-            
+
             // Check backup age
             const age = Date.now() - backup.endTime;
             const maxAge = this.getMaxBackupAge(backup.type);
             if (age > maxAge) {
                 return { valid: false, reason: 'Backup too old' };
             }
-            
+
             return { valid: true };
-            
+
         } catch (error) {
             return { valid: false, reason: error.message };
         }
@@ -751,10 +751,10 @@ module.exports.shutdown = shutdown;
             restorePoint,
             steps: []
         };
-        
+
         // Determine what needs to be restored
         const components = options.components || ['database', 'application', 'network'];
-        
+
         // Build restore steps based on dependencies
         for (const component of components) {
             const componentPlan = this.recoveryPlans.get(component);
@@ -766,14 +766,14 @@ module.exports.shutdown = shutdown;
                 })));
             }
         }
-        
+
         // Sort by priority
         plan.steps.sort((a, b) => {
             const aPriority = this.recoveryPlans.get(a.component)?.priority || 999;
             const bPriority = this.recoveryPlans.get(b.component)?.priority || 999;
             return aPriority - bPriority;
         });
-        
+
         return plan;
     }
 
@@ -784,10 +784,10 @@ module.exports.shutdown = shutdown;
      */
     async executeRestoreStep(step) {
         const startTime = Date.now();
-        
+
         try {
             console.log(`[DR] Executing restore step: ${step.action} for ${step.target}`);
-            
+
             let result;
             switch (step.action) {
                 case 'stop-services':
@@ -814,7 +814,7 @@ module.exports.shutdown = shutdown;
                 default:
                     throw new Error(`Unknown restore action: ${step.action}`);
             }
-            
+
             return {
                 step: step.action,
                 target: step.target,
@@ -822,7 +822,7 @@ module.exports.shutdown = shutdown;
                 duration: Date.now() - startTime,
                 result
             };
-            
+
         } catch (error) {
             return {
                 step: step.action,
@@ -873,14 +873,14 @@ module.exports.shutdown = shutdown;
      */
     async rollbackFailover(failoverId) {
         console.error(`[DR] Rolling back failover ${failoverId}`);
-        
+
         try {
             // Reactivate primary site if possible
             await this.activatePrimarySite();
-            
+
             // Redirect traffic back
             await this.redirectTraffic(this.config.primarySite);
-            
+
             // Update failover state
             this.failoverState = {
                 active: false,
@@ -899,7 +899,7 @@ module.exports.shutdown = shutdown;
      */
     handleBackupComplete(backup) {
         console.log(`[DR] Backup completed: ${backup.id} (${backup.type})`);
-        
+
         // Clean up old backups
         this.cleanupOldBackups(backup.type);
     }
@@ -910,7 +910,7 @@ module.exports.shutdown = shutdown;
      */
     handleFailoverInitiated(state) {
         console.log(`[DR] Failover initiated to ${state.site}: ${state.reason}`);
-        
+
         // Notify monitoring systems
         this.notifyMonitoring('failover', state);
     }
@@ -921,7 +921,7 @@ module.exports.shutdown = shutdown;
      */
     handleRecoveryComplete(recovery) {
         console.log(`[DR] Recovery completed: ${recovery.restoreId}`);
-        
+
         // Update recovery metrics
         this.updateRecoveryMetrics(recovery);
     }
@@ -937,9 +937,9 @@ module.exports.shutdown = shutdown;
             configuration: 30 * 24 * 60 * 60 * 1000, // 30 days
             full: 30 * 24 * 60 * 60 * 1000 // 30 days
         };
-        
+
         const cutoff = Date.now() - (retention[type] || retention.full);
-        
+
         for (const [id, backup] of this.backupRegistry) {
             if (backup.type === type && backup.endTime < cutoff) {
                 this.deleteBackup(id);
@@ -954,7 +954,7 @@ module.exports.shutdown = shutdown;
     async deleteBackup(backupId) {
         const backup = this.backupRegistry.get(backupId);
         if (!backup) return;
-        
+
         try {
             // Delete from all storage locations
             if (Array.isArray(backup.location)) {
@@ -964,10 +964,10 @@ module.exports.shutdown = shutdown;
             } else {
                 await this.deleteFromStorage(backup.location);
             }
-            
+
             this.backupRegistry.delete(backupId);
             console.log(`[DR] Deleted old backup: ${backupId}`);
-            
+
         } catch (error) {
             console.error(`[DR] Failed to delete backup ${backupId}:`, error);
         }
@@ -999,14 +999,14 @@ module.exports.shutdown = shutdown;
             { name: 'user-authentication', test: () => this.testAuthentication() },
             { name: 'critical-workflows', test: () => this.testCriticalWorkflows() }
         ];
-        
+
         const results = await Promise.all(
             tests.map(async t => ({
                 name: t.name,
                 passed: await t.test()
             }))
         );
-        
+
         return {
             tests: results,
             allPassed: results.every(r => r.passed),
@@ -1026,7 +1026,7 @@ module.exports.shutdown = shutdown;
             configuration: 7 * 24 * 60 * 60 * 1000, // 7 days
             full: 48 * 60 * 60 * 1000 // 48 hours
         };
-        
+
         return ages[type] || ages.full;
     }
 
@@ -1036,9 +1036,9 @@ module.exports.shutdown = shutdown;
      * @returns {string} Health status
      */
     calculateBackupHealth(validation) {
-        const validRatio = validation.backups.valid / 
+        const validRatio = validation.backups.valid /
                           (validation.backups.valid + validation.backups.invalid);
-        
+
         if (validRatio === 1 && validation.integrity.passed) {
             return 'healthy';
         } else if (validRatio >= 0.8) {
@@ -1091,7 +1091,7 @@ module.exports.shutdown = shutdown;
      */
     async checkResourceCapacity() {
         // Placeholder implementation
-        return { 
+        return {
             passed: true,
             cpu: { available: 80, required: 50 },
             memory: { available: 64, required: 32 },
@@ -1143,7 +1143,7 @@ module.exports.shutdown = shutdown;
         const recentHealth = Array.from(this.healthChecks.values()).slice(-10);
         const primaryHealth = recentHealth.filter(h => h.primary?.healthy).length;
         const secondaryHealth = recentHealth.filter(h => h.secondary?.healthy).length;
-        
+
         return {
             backups: {
                 total: this.backupRegistry.size,
@@ -1172,11 +1172,11 @@ module.exports.shutdown = shutdown;
      */
     getBackupsByType() {
         const byType = {};
-        
+
         for (const backup of this.backupRegistry.values()) {
             byType[backup.type] = (byType[backup.type] || 0) + 1;
         }
-        
+
         return byType;
     }
 
@@ -1186,13 +1186,13 @@ module.exports.shutdown = shutdown;
      */
     getOldestBackup() {
         let oldest = null;
-        
+
         for (const backup of this.backupRegistry.values()) {
             if (!oldest || backup.endTime < oldest.endTime) {
                 oldest = backup;
             }
         }
-        
+
         return oldest;
     }
 

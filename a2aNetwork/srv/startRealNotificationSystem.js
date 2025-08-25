@@ -1,9 +1,9 @@
+#!/usr/bin/env node
+
 /**
  * A2A Protocol Compliance: WebSocket replaced with blockchain event streaming
  * All real-time communication now uses blockchain events instead of WebSockets
  */
-
-#!/usr/bin/env node
 
 /**
  * Startup Script for Real A2A Notification System
@@ -32,19 +32,19 @@ class RealNotificationSystemStarter {
     async start() {
         try {
             this.logger.info('🚀 Starting Real A2A Notification System...');
-            
+
             // Check environment configuration
             await this.checkEnvironment();
-            
+
             // Verify real services are running
             await this.verifyServices();
-            
+
             // Start notification system components
             await this.startComponents();
-            
+
             this.logger.info('✅ Real A2A Notification System is LIVE!');
             this.printServiceStatus();
-            
+
         } catch (error) {
             this.logger.error('❌ Failed to start notification system:', error.message);
             process.exit(1);
@@ -53,7 +53,7 @@ class RealNotificationSystemStarter {
 
     async checkEnvironment() {
         this.logger.info('🔧 Checking environment configuration...');
-        
+
         const requiredVars = {
             'A2A_REGISTRY_URL': process.env.A2A_REGISTRY_URL || 'http://localhost:8000',
             'A2A_REGISTRY_WS': process.env.A2A_REGISTRY_WS || 'blockchain://a2a-events',
@@ -80,17 +80,17 @@ class RealNotificationSystemStarter {
 
     async createEnvironmentFile(vars) {
         const envFile = path.join(__dirname, '..', '.env');
-        
+
         try {
             await fs.access(envFile);
             this.logger.info('✅ .env file exists');
         } catch {
             this.logger.info('📝 Creating .env file with default configuration...');
-            
+
             const envContent = Object.entries(vars)
                 .map(([key, value]) => `${key}=${value}`)
                 .join('\n');
-                
+
             await fs.writeFile(envFile, envContent + '\n');
             this.logger.info('✅ .env file created');
         }
@@ -98,10 +98,10 @@ class RealNotificationSystemStarter {
 
     async verifyServices() {
         this.logger.info('🔍 Verifying real A2A services...');
-        
-        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+
+        const { BlockchainClient } = require('../core/blockchain-client');
         const { BlockchainEventServer, BlockchainEventClient } = require('./blockchain-event-adapter');
-        
+
         const serviceChecks = [
             {
                 name: 'Agent Registry',
@@ -144,9 +144,9 @@ class RealNotificationSystemStarter {
         for (const service of serviceChecks) {
             try {
                 if (service.type === 'http') {
-                    const response = await blockchainClient.sendMessage(service.url, { 
+                    const response = await blockchainClient.sendMessage(service.url, {
                         timeout: 5000,
-                        validateStatus: status => status < 500 
+                        validateStatus: status => status < 500
                     });
                     this.logger.info(`✅ ${service.name}: Connected (${response.status})`);
                     this.services[service.name] = 'connected';
@@ -190,15 +190,15 @@ class RealNotificationSystemStarter {
 
     async startComponents() {
         this.logger.info('🎯 Starting notification system components...');
-        
+
         // Start the integrated notification service
         const IntegratedNotificationService = require('./integratedNotificationService');
         this.notificationService = new IntegratedNotificationService();
-        
+
         // Wait for initialization
         let attempts = 0;
         const maxAttempts = 30;
-        
+
         while (!this.notificationService.isInitialized && attempts < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
@@ -217,11 +217,11 @@ class RealNotificationSystemStarter {
     setupGracefulShutdown() {
         const shutdown = async (signal) => {
             this.logger.info(`\n🛑 Received ${signal}, shutting down gracefully...`);
-            
+
             if (this.notificationService) {
                 await this.notificationService.shutdown();
             }
-            
+
             this.logger.info('✅ Shutdown complete');
             process.exit(0);
         };
@@ -241,13 +241,13 @@ class RealNotificationSystemStarter {
     printServiceStatus() {
         this.logger.info('\n📊 Service Status:');
         this.logger.info('=====================================');
-        
+
         for (const [service, status] of Object.entries(this.services)) {
-            const emoji = status === 'connected' ? '✅' : 
+            const emoji = status === 'connected' ? '✅' :
                          status === 'accessible' ? '🔗' : '⚠️';
             this.logger.info(`${emoji} ${service}: ${status}`);
         }
-        
+
         this.logger.info('=====================================');
         this.logger.info('🎉 Real notification system is running!');
         this.logger.info('📱 WebSocket endpoints:');

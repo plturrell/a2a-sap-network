@@ -32,23 +32,23 @@ async function checkAgentHealth(port) {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
+
         const [healthResponse, metricsResponse] = await Promise.all([
-            fetch(`http://localhost:${port}/health`, { 
+            fetch(`http://localhost:${port}/health`, {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            fetch(`http://localhost:${port}/metrics`, { 
+            fetch(`http://localhost:${port}/metrics`, {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
         ]);
-        
+
         clearTimeout(timeoutId);
-        
+
         if (healthResponse && healthResponse.ok) {
             const healthData = await healthResponse.json();
-            
+
             let metricsData = {};
             if (metricsResponse && metricsResponse.ok) {
                 try {
@@ -57,7 +57,7 @@ async function checkAgentHealth(port) {
                     LOG.warn(`Agent ${port} metrics endpoint error:`, e.message);
                 }
             }
-            
+
             return {
                 status: 'healthy',
                 agent_id: healthData.agent_id,
@@ -95,14 +95,14 @@ async function checkBlockchainHealth() {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
+
         const statusResponse = await fetch('http://localhost:8082/blockchain/status', {
             signal: controller.signal,
             headers: { 'Accept': 'application/json' }
         }).catch(() => null);
-        
+
         clearTimeout(timeoutId);
-        
+
         if (statusResponse && statusResponse.ok) {
             const statusData = await statusResponse.json();
             return {
@@ -136,11 +136,11 @@ async function checkMcpHealth() {
                 } : null;
             })
         );
-        
+
         const healthyMcpAgents = healthChecks.filter(h => h !== null);
         const totalMcpTools = healthyMcpAgents.reduce((sum, agent) => sum + agent.mcp_tools, 0);
         const totalMcpResources = healthyMcpAgents.reduce((sum, agent) => sum + agent.mcp_resources, 0);
-        
+
         return {
             status: healthyMcpAgents.length > 0 ? 'healthy' : 'offline',
             total_tools: totalMcpTools,

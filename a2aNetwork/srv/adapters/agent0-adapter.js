@@ -22,7 +22,7 @@ class Agent0Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'DataProduct');
         } catch (error) {
             throw this._handleError(error);
@@ -35,7 +35,7 @@ class Agent0Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTProductToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -48,7 +48,7 @@ class Agent0Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTProductToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -71,7 +71,7 @@ class Agent0Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/dublin-core/generate`, {}, {
                 timeout: this.timeout
             });
-            
+
             return {
                 success: response.data.success,
                 message: response.data.message,
@@ -88,7 +88,7 @@ class Agent0Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/dublin-core`, restData, {
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTDublinCoreToOData(response.data);
         } catch (error) {
             throw this._handleError(error);
@@ -103,7 +103,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 isValid: response.data.is_valid,
                 validationResults: response.data.validation_results?.map(result => ({
@@ -127,7 +127,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 isValid: response.data.is_valid,
                 errors: response.data.errors?.map(error => ({
@@ -151,7 +151,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 overallScore: response.data.overall_score,
                 qualityDimensions: {
@@ -190,7 +190,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 success: response.data.success,
                 message: response.data.message,
@@ -210,7 +210,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 success: response.data.success,
                 message: response.data.message,
@@ -228,7 +228,7 @@ class Agent0Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${productId}/lineage`, {
                 timeout: this.timeout
             });
-            
+
             return {
                 productId: response.data.product_id,
                 lineageGraph: {
@@ -272,7 +272,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 versionId: response.data.version_id,
                 versionNumber: response.data.version_number,
@@ -293,7 +293,7 @@ class Agent0Adapter {
                 },
                 timeout: this.timeout
             });
-            
+
             return {
                 fromVersion: response.data.from_version,
                 toVersion: response.data.to_version,
@@ -325,7 +325,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 success: response.data.success,
                 message: response.data.message,
@@ -352,7 +352,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout
             });
-            
+
             return {
                 success: response.data.success,
                 downloadUrl: response.data.download_url,
@@ -373,7 +373,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout * 2 // Longer timeout for bulk operations
             });
-            
+
             return {
                 success: response.data.success,
                 message: response.data.message,
@@ -399,7 +399,7 @@ class Agent0Adapter {
             }, {
                 timeout: this.timeout * 2
             });
-            
+
             return {
                 validationId: response.data.validation_id,
                 results: response.data.results?.map(result => ({
@@ -426,7 +426,7 @@ class Agent0Adapter {
             const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/dashboard/metrics`, {
                 timeout: this.timeout
             });
-            
+
             return {
                 totalProducts: response.data.total_products || 0,
                 activeProducts: response.data.active_products || 0,
@@ -455,7 +455,7 @@ class Agent0Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'DublinCoreMetadata');
         } catch (error) {
             throw this._handleError(error);
@@ -470,7 +470,7 @@ class Agent0Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'IngestionSession');
         } catch (error) {
             throw this._handleError(error);
@@ -485,7 +485,7 @@ class Agent0Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'QualityAssessment');
         } catch (error) {
             throw this._handleError(error);
@@ -500,7 +500,7 @@ class Agent0Adapter {
                 params,
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTToOData(response.data, 'ProductTransformation');
         } catch (error) {
             throw this._handleError(error);
@@ -510,13 +510,13 @@ class Agent0Adapter {
     // Utility methods
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$orderby) params.sort = query.$orderby.replace(/ desc/gi, '-').replace(/ asc/gi, '');
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$select) params.fields = query.$select;
-        
+
         return params;
     }
 
@@ -599,7 +599,7 @@ class Agent0Adapter {
             product_type: product.productType?.toLowerCase(),
             status: product.status?.toLowerCase()
         };
-        
+
         if (product.dataSource) restProduct.data_source = product.dataSource;
         if (product.dataFormat) restProduct.data_format = product.dataFormat.toLowerCase();
         if (product.dataSizeMB !== undefined) restProduct.data_size_mb = product.dataSizeMB;
@@ -619,7 +619,7 @@ class Agent0Adapter {
         if (product.expiryDate) restProduct.expiry_date = product.expiryDate;
         if (product.processingPipeline) restProduct.processing_pipeline = product.processingPipeline;
         if (product.nextAgent) restProduct.next_agent = product.nextAgent;
-        
+
         return restProduct;
     }
 
@@ -728,7 +728,7 @@ class Agent0Adapter {
 
     _convertQualityCriteriaToREST(criteria) {
         if (!criteria) return {};
-        
+
         return {
             completeness_weight: criteria.completenessWeight || 20,
             accuracy_weight: criteria.accuracyWeight || 20,
@@ -742,14 +742,14 @@ class Agent0Adapter {
 
     _convertBulkUpdateToREST(updateData) {
         const restData = {};
-        
+
         if (updateData.status) restData.status = updateData.status.toLowerCase();
         if (updateData.category) restData.category = updateData.category;
         if (updateData.tags) restData.tags = updateData.tags;
         if (updateData.dataClassification) restData.data_classification = updateData.dataClassification.toLowerCase();
         if (updateData.retentionDays !== undefined) restData.retention_days = updateData.retentionDays;
         if (updateData.nextAgent) restData.next_agent = updateData.nextAgent;
-        
+
         return restData;
     }
 
@@ -757,7 +757,7 @@ class Agent0Adapter {
         if (error.response) {
             const status = error.response.status;
             const message = error.response.data?.message || error.message;
-            
+
             switch (status) {
                 case 400:
                     return new Error(`Bad Request: ${message}`);

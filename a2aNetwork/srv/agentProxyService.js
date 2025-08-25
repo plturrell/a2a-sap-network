@@ -10,7 +10,7 @@ const { BlockchainClient } = require('../core/blockchain-client');
  * Handles all agent proxy requests through CAP instead of Express routes
  */
 module.exports = cds.service.impl(async function() {
-    
+
     // Agent base URLs configuration
     const AGENT_URLS = {
         agent1: process.env.AGENT1_URL || 'http://localhost:5001',
@@ -29,17 +29,17 @@ module.exports = cds.service.impl(async function() {
         agent14: process.env.AGENT14_URL || 'http://localhost:5014',
         agent15: process.env.AGENT15_URL || 'http://localhost:5015'
     };
-    
+
     // Generic proxy handler
     this.on('proxyRequest', async (req) => {
         const { agentId, path, method, body, query } = req.data;
-        
+
         try {
             const agentUrl = AGENT_URLS[agentId];
             if (!agentUrl) {
                 throw new Error(`Unknown agent: ${agentId}`);
             }
-            
+
             const config = {
                 method: method || 'GET',
                 url: `${agentUrl}${path}`,
@@ -49,18 +49,18 @@ module.exports = cds.service.impl(async function() {
                     'X-Original-Host': req.headers.host
                 }
             };
-            
+
             if (body) {
                 config.data = JSON.parse(body);
             }
-            
+
             if (query) {
                 config.params = JSON.parse(query);
             }
-            
+
             const response = await axios(config);
             return JSON.stringify(response.data);
-            
+
         } catch (error) {
             console.error(`Proxy error for ${agentId}:`, error.message);
             if (error.response) {
@@ -70,27 +70,27 @@ module.exports = cds.service.impl(async function() {
             }
         }
     });
-    
+
     // Agent health check
     this.on('getAgentHealth', async (req) => {
         const { agentId } = req.data;
-        
+
         try {
             const agentUrl = AGENT_URLS[agentId];
             if (!agentUrl) {
                 throw new Error(`Unknown agent: ${agentId}`);
             }
-            
+
             const response = await blockchainClient.sendMessage(`${agentUrl}/health`, {
                 timeout: 5000
             });
-            
+
             return {
                 status: 'healthy',
                 timestamp: new Date(),
                 details: JSON.stringify(response.data)
             };
-            
+
         } catch (error) {
             return {
                 status: 'unhealthy',
@@ -99,11 +99,11 @@ module.exports = cds.service.impl(async function() {
             };
         }
     });
-    
+
     // Batch operations
     this.on('executeBatchOperation', async (req) => {
         const { agents, operation, parameters } = req.data;
-        
+
         const results = await Promise.all(
             agents.map(async (agentId) => {
                 try {
@@ -113,7 +113,7 @@ module.exports = cds.service.impl(async function() {
                         method: 'POST',
                         body: parameters
                     });
-                    
+
                     return {
                         agentId,
                         success: true,
@@ -130,31 +130,31 @@ module.exports = cds.service.impl(async function() {
                 }
             })
         );
-        
+
         return results;
     });
-    
+
     // WebSocket upgrade handler
     this.on('upgradeToWebSocket', async (req) => {
         const { agentId, endpoint } = req.data;
-        
+
         const agentUrl = AGENT_URLS[agentId];
         if (!agentUrl) {
             req.error(404, `Unknown agent: ${agentId}`);
         }
-        
+
         // Generate WebSocket URL
         const wsUrl = agentUrl.replace('http://', 'blockchain://').replace('https://', 'blockchains://');
-        
+
         // Generate temporary token for WebSocket authentication
         const token = Buffer.from(`${agentId}:${Date.now()}`).toString('base64');
-        
+
         return {
             wsUrl: `${wsUrl}${endpoint}`,
             token
         };
     });
-    
+
     // OData entity handlers for Agent1
     this.on('READ', 'Agent1Tasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -165,7 +165,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent2
     this.on('READ', 'Agent2Tasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -176,7 +176,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent3
     this.on('READ', 'Agent3Tasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -187,7 +187,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent4
     this.on('READ', 'Agent4Tasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -198,7 +198,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent5
     this.on('READ', 'Agent5Tasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -209,7 +209,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent6
     this.on('READ', 'Agent6Tasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -220,7 +220,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent7
     this.on('READ', 'Agent7RegisteredAgents', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -231,7 +231,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     this.on('READ', 'Agent7ManagementTasks', async (req) => {
         const response = await this.send('proxyRequest', {
             agentId: 'agent7',
@@ -241,7 +241,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     // OData entity handlers for Agent8
     this.on('READ', 'Agent8DataTasks', async (req) => {
         const response = await this.send('proxyRequest', {
@@ -252,7 +252,7 @@ module.exports = cds.service.impl(async function() {
         });
         return JSON.parse(response);
     });
-    
+
     this.on('READ', 'Agent8StorageBackends', async (req) => {
         const response = await this.send('proxyRequest', {
             agentId: 'agent8',

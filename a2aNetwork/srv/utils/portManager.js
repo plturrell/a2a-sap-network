@@ -25,14 +25,14 @@ class PortManager {
     async isPortAvailable(port) {
         return new Promise((resolve) => {
             const server = net.createServer();
-            
+
             server.listen(port, () => {
                 server.once('close', () => {
                     resolve(true);
                 });
                 server.close();
             });
-            
+
             server.on('error', () => {
                 resolve(false);
             });
@@ -44,20 +44,20 @@ class PortManager {
      */
     async findAvailablePort(serviceName, preferredPort = null, maxAttempts = 10) {
         const startPort = preferredPort || this.defaultPorts[serviceName] || 4005;
-        
+
         for (let i = 0; i < maxAttempts; i++) {
             const port = startPort + i;
             const available = await this.isPortAvailable(port);
-            
+
             if (available) {
                 this.allocatedPorts.set(serviceName, port);
                 this.log.info(`✅ Allocated port ${port} for service: ${serviceName}`);
                 return port;
             }
-            
+
             this.log.debug(`Port ${port} already in use, trying next...`);
         }
-        
+
         throw new Error(`Could not find available port for service: ${serviceName} (tried ${startPort}-${startPort + maxAttempts - 1})`);
     }
 
@@ -90,7 +90,7 @@ class PortManager {
 
         const { exec } = require('child_process');
         const portsArray = Array.isArray(ports) ? ports : [ports];
-        
+
         for (const port of portsArray) {
             try {
                 // Kill processes on macOS/Linux
@@ -102,10 +102,10 @@ class PortManager {
                         resolve();
                     });
                 });
-                
+
                 // Wait a moment for cleanup
                 await new Promise(resolve => setTimeout(resolve, 100));
-                
+
             } catch (error) {
                 this.log.debug(`No processes to kill on port ${port}`);
             }
@@ -119,7 +119,7 @@ class PortManager {
         try {
             // First, try the preferred port
             const targetPort = preferredPort || this.defaultPorts[serviceName];
-            
+
             if (targetPort && await this.isPortAvailable(targetPort)) {
                 this.allocatedPorts.set(serviceName, targetPort);
                 this.log.info(`✅ Allocated preferred port ${targetPort} for service: ${serviceName}`);
@@ -130,7 +130,7 @@ class PortManager {
             if (killConflicts && process.env.NODE_ENV === 'development') {
                 this.log.info(`🔧 Attempting to free port ${targetPort} for ${serviceName}...`);
                 await this.killPortProcesses(targetPort);
-                
+
                 // Check if port is now available
                 if (await this.isPortAvailable(targetPort)) {
                     this.allocatedPorts.set(serviceName, targetPort);
@@ -145,13 +145,13 @@ class PortManager {
 
         } catch (error) {
             this.log.error(`Failed to allocate port for ${serviceName}:`, error.message);
-            
+
             // Last resort: disable the service in development
             if (process.env.NODE_ENV === 'development') {
                 this.log.warn(`⚠️  Service ${serviceName} will be disabled due to port allocation failure`);
                 return null;
             }
-            
+
             throw error;
         }
     }
@@ -174,7 +174,7 @@ const portManager = new PortManager();
 module.exports = {
     PortManager,
     portManager,
-    
+
     // Helper functions
     findAvailablePort: (serviceName, preferredPort) => portManager.findAvailablePort(serviceName, preferredPort),
     allocatePortSafely: (serviceName, preferredPort, killConflicts) => portManager.allocatePortSafely(serviceName, preferredPort, killConflicts),

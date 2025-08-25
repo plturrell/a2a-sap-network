@@ -29,7 +29,7 @@ class SecureConfigManager {
         this.configMetadata = new Map();
         this.validators = new Map();
         this.changeListeners = new Set();
-        
+
         // Register default validators
         this.registerDefaultValidators();
     }
@@ -39,15 +39,15 @@ class SecureConfigManager {
      */
     getOrCreateEncryptionKey() {
         const keyEnv = process.env.CONFIG_ENCRYPTION_KEY;
-        
+
         if (keyEnv) {
             return Buffer.from(keyEnv, 'hex');
         }
-        
+
         if (process.env.NODE_ENV === 'production') {
             throw new Error('CONFIG_ENCRYPTION_KEY environment variable required in production');
         }
-        
+
         // Development only - generate temporary key
         cds.log('secure-config').warn('Using temporary encryption key for development');
         return crypto.randomBytes(32);
@@ -76,7 +76,7 @@ class SecureConfigManager {
      */
     getConfig(key, defaultValue = null) {
         const metadata = this.configMetadata.get(key);
-        
+
         if (metadata) {
             metadata.accessCount++;
         }
@@ -104,7 +104,7 @@ class SecureConfigManager {
      */
     setConfig(key, value, persistent = true) {
         const metadata = this.configMetadata.get(key);
-        
+
         // Validate value
         if (metadata?.validator) {
             const validation = metadata.validator(value);
@@ -115,10 +115,10 @@ class SecureConfigManager {
 
         // Encrypt based on security level
         const encryptedValue = this.encryptValue(value, metadata?.securityLevel);
-        
+
         // Update cache
         this.configCache.set(key, encryptedValue);
-        
+
         // Update metadata
         if (metadata) {
             metadata.lastUpdated = new Date();
@@ -132,9 +132,9 @@ class SecureConfigManager {
             this.persistConfig(key, encryptedValue);
         }
 
-        cds.log('secure-config').info('Configuration updated', { 
-            key, 
-            securityLevel: metadata?.securityLevel 
+        cds.log('secure-config').info('Configuration updated', {
+            key,
+            securityLevel: metadata?.securityLevel
         });
     }
 
@@ -147,7 +147,7 @@ class SecureConfigManager {
         }
 
         const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-        
+
         if (securityLevel === SecurityLevels.INTERNAL) {
             // Basic encryption for internal values
             return this.simpleEncrypt(stringValue);
@@ -197,12 +197,12 @@ class SecureConfigManager {
         if (!encryptedValue.startsWith('simple:')) {
             return encryptedValue; // Not encrypted
         }
-        
+
         const parts = encryptedValue.substring(7).split(':');
         if (parts.length !== 2) {
             throw new Error('Invalid encrypted value format');
         }
-        
+
         const iv = Buffer.from(parts[0], 'hex');
         const encrypted = parts[1];
         const decipher = crypto.createDecipheriv('aes-256-cbc', this.encryptionKey, iv);
@@ -217,12 +217,12 @@ class SecureConfigManager {
     strongEncrypt(value) {
         const iv = crypto.randomBytes(16);
         const cipher = crypto.createCipherGCM('aes-256-gcm', this.encryptionKey, iv);
-        
+
         let encrypted = cipher.update(value, 'utf8', 'hex');
         encrypted += cipher.final('hex');
-        
+
         const authTag = cipher.getAuthTag();
-        
+
         return `strong:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
     }
 
@@ -233,22 +233,22 @@ class SecureConfigManager {
         if (!encryptedValue.startsWith('strong:')) {
             return encryptedValue; // Not encrypted
         }
-        
+
         const parts = encryptedValue.substring(7).split(':');
         if (parts.length !== 3) {
             throw new Error('Invalid encrypted value format');
         }
-        
+
         const [ivHex, authTagHex, encrypted] = parts;
         const iv = Buffer.from(ivHex, 'hex');
         const authTag = Buffer.from(authTagHex, 'hex');
-        
+
         const decipher = crypto.createDecipherGCM('aes-256-gcm', this.encryptionKey, iv);
         decipher.setAuthTag(authTag);
-        
+
         let decrypted = decipher.update(encrypted, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
-        
+
         return decrypted;
     }
 
@@ -261,7 +261,7 @@ class SecureConfigManager {
         if (value === 'false') return false;
         if (/^\d+$/.test(value)) return parseInt(value);
         if (/^\d+\.\d+$/.test(value)) return parseFloat(value);
-        
+
         // Try to parse as JSON
         try {
             return JSON.parse(value);
@@ -324,12 +324,12 @@ class SecureConfigManager {
      */
     getDefaultValidator(key) {
         const lowerKey = key.toLowerCase();
-        
+
         if (lowerKey.includes('url')) return this.validators.get('url');
         if (lowerKey.includes('port')) return this.validators.get('port');
         if (lowerKey.includes('address') && lowerKey.includes('eth')) return this.validators.get('ethereum_address');
         if (lowerKey.includes('private_key') || lowerKey.includes('privatekey')) return this.validators.get('private_key');
-        
+
         return this.validators.get('non_empty_string');
     }
 
@@ -340,10 +340,10 @@ class SecureConfigManager {
         try {
             const configDir = path.join(process.cwd(), '.secure-config');
             await fs.mkdir(configDir, { recursive: true });
-            
+
             const configFile = path.join(configDir, `${key}.enc`);
             await fs.writeFile(configFile, encryptedValue, 'utf8');
-            
+
         } catch (error) {
             cds.log('secure-config').error('Failed to persist configuration', error);
         }
@@ -356,19 +356,19 @@ class SecureConfigManager {
         try {
             const configDir = path.join(process.cwd(), '.secure-config');
             const files = await fs.readdir(configDir);
-            
+
             for (const file of files) {
                 if (file.endsWith('.enc')) {
                     const key = file.replace('.enc', '');
                     const filePath = path.join(configDir, file);
                     const encryptedValue = await fs.readFile(filePath, 'utf8');
-                    
+
                     if (!this.configCache.has(key)) {
                         this.configCache.set(key, encryptedValue);
                     }
                 }
             }
-            
+
         } catch (error) {
             // Config directory doesn't exist or other error - this is fine
             cds.log('secure-config').debug('No persisted configuration found');
@@ -421,14 +421,14 @@ class SecureConfigManager {
      */
     validateAllConfigs() {
         const results = {};
-        
+
         for (const [key, metadata] of this.configMetadata.entries()) {
             if (metadata.validator) {
                 const value = this.getConfig(key);
                 results[key] = metadata.validator(value);
             }
         }
-        
+
         return results;
     }
 
@@ -442,21 +442,21 @@ class SecureConfigManager {
             configsWithValidators: 0,
             totalAccesses: 0
         };
-        
+
         for (const [key, metadata] of this.configMetadata.entries()) {
             // Count by security level
             const level = metadata.securityLevel;
             stats.configsBySecurityLevel[level] = (stats.configsBySecurityLevel[level] || 0) + 1;
-            
+
             // Count validators
             if (metadata.validator) {
                 stats.configsWithValidators++;
             }
-            
+
             // Sum access counts
             stats.totalAccesses += metadata.accessCount;
         }
-        
+
         return stats;
     }
 }
@@ -466,28 +466,28 @@ const globalConfigManager = new SecureConfigManager();
 
 // Initialize common blockchain configurations
 globalConfigManager.registerConfig(
-    'BLOCKCHAIN_RPC_URL', 
-    'http://localhost:8545', 
+    'BLOCKCHAIN_RPC_URL',
+    'http://localhost:8545',
     SecurityLevels.CONFIDENTIAL,
     globalConfigManager.validators.get('url')
 );
 
 globalConfigManager.registerConfig(
-    'BLOCKCHAIN_PRIVATE_KEY', 
-    null, 
+    'BLOCKCHAIN_PRIVATE_KEY',
+    null,
     SecurityLevels.SECRET,
     globalConfigManager.validators.get('private_key')
 );
 
 globalConfigManager.registerConfig(
-    'BLOCKCHAIN_GAS_LIMIT', 
-    500000, 
+    'BLOCKCHAIN_GAS_LIMIT',
+    500000,
     SecurityLevels.INTERNAL
 );
 
 globalConfigManager.registerConfig(
-    'BLOCKCHAIN_GAS_PRICE_GWEI', 
-    20, 
+    'BLOCKCHAIN_GAS_PRICE_GWEI',
+    20,
     SecurityLevels.INTERNAL
 );
 
@@ -501,7 +501,7 @@ module.exports = {
     SecurityLevels,
     getConfig: (key, defaultValue) => globalConfigManager.getConfig(key, defaultValue),
     setConfig: (key, value, persistent) => globalConfigManager.setConfig(key, value, persistent),
-    registerConfig: (key, defaultValue, securityLevel, validator) => 
+    registerConfig: (key, defaultValue, securityLevel, validator) =>
         globalConfigManager.registerConfig(key, defaultValue, securityLevel, validator),
     validateAllConfigs: () => globalConfigManager.validateAllConfigs(),
     getConfigStats: () => globalConfigManager.getConfigStats(),

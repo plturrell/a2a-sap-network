@@ -17,9 +17,9 @@ connection.connect(connOptions, (err) => {
         console.error('Connection failed:', err);
         process.exit(1);
     }
-    
+
     console.log('Successfully connected to HANA!');
-    
+
     // Create schema
     console.log('Creating schema A2A_DEV...');
     connection.exec('CREATE SCHEMA A2A_DEV', (err, result) => {
@@ -34,7 +34,7 @@ connection.connect(connOptions, (err) => {
         } else {
             console.log('Schema A2A_DEV created successfully');
         }
-        
+
         // Grant privileges
         console.log('Granting privileges...');
         connection.exec('GRANT ALL PRIVILEGES ON SCHEMA A2A_DEV TO DBADMIN WITH GRANT OPTION', (err, result) => {
@@ -43,7 +43,7 @@ connection.connect(connOptions, (err) => {
             } else {
                 console.log('Privileges granted successfully');
             }
-            
+
             connection.disconnect();
             console.log('Setup complete!');
             process.exit(0);

@@ -2,7 +2,7 @@
  * @fileoverview Global Error Handler Middleware
  * @since 1.0.0
  * @module error-handler
- * 
+ *
  * Provides standardized error handling across the A2A Network application
  * with proper logging, monitoring, and user-friendly error responses
  */
@@ -96,7 +96,7 @@ function createError(type, message, details = {}) {
  */
 function errorHandler(error, req, res, next) {
   const log = cds.log('error-handler');
-  
+
   // Convert to StandardError if not already
   let standardError;
   if (error instanceof StandardError) {
@@ -115,7 +115,7 @@ function errorHandler(error, req, res, next) {
       standardError = createError('INTERNAL', error.message || 'An unexpected error occurred');
     }
   }
-  
+
   // Log error appropriately
   const statusCode = standardError.statusCode || 500;
   if (statusCode >= 500) {
@@ -123,7 +123,7 @@ function errorHandler(error, req, res, next) {
   } else {
     log.warn('Client error:', standardError.message, { error: standardError });
   }
-  
+
   // Send response
   const clientError = {
     error: true,
@@ -131,7 +131,7 @@ function errorHandler(error, req, res, next) {
     message: standardError.message,
     timestamp: standardError.timestamp
   };
-  
+
   res.status(statusCode).json(clientError);
 }
 
@@ -142,7 +142,7 @@ function errorHandler(error, req, res, next) {
 function applyErrorHandling(app) {
   // Global error handler (must be last)
   app.use(errorHandler);
-  
+
   cds.log('error-handler').info('Global error handling middleware applied');
 }
 

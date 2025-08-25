@@ -21,7 +21,7 @@ class GrokSealAdapter extends BaseService {
         this.performanceMetrics = new Map();
         this.learningMemory = new Map();
         this.selfEditStrategies = new Set();
-    
+
         this.intervals = new Map(); // Track intervals for cleanup
 
     /**
@@ -29,17 +29,17 @@ class GrokSealAdapter extends BaseService {
      */
     async initializeService() {
         this.logger.info('Initializing Grok SEAL Adapter');
-        
+
         if (!this.grokApiKey) {
             throw new Error('XAI_API_KEY or GROK_API_KEY environment variable is required');
         }
 
         // Initialize adaptation strategies
         await this._initializeAdaptationStrategies();
-        
+
         // Load previous learning history
         await this._loadLearningHistory();
-        
+
         // Start continuous learning loop
         this._startContinuousLearning();
     }
@@ -49,9 +49,9 @@ class GrokSealAdapter extends BaseService {
      */
     async generateSelfEdits(analysisContext) {
         this.logger.info('Generating self-edits for code analysis improvement');
-        
+
         const adaptationPrompt = this._buildAdaptationPrompt(analysisContext);
-        
+
         try {
             const grokResponse = await this._callGrokApi({
                 model: 'grok-4',
@@ -71,10 +71,10 @@ class GrokSealAdapter extends BaseService {
             });
 
             const selfEdits = this._parseSelfEdits(grokResponse.choices[0].message.content);
-            
+
             // Store for reinforcement learning
             await this._storeSelfEdits(analysisContext, selfEdits);
-            
+
             return selfEdits;
         } catch (error) {
             this.logger.error('Failed to generate self-edits:', error);
@@ -87,19 +87,19 @@ class GrokSealAdapter extends BaseService {
      */
     async performSelfDirectedLearning(analysisResults, userFeedback = null) {
         this.logger.info('Performing self-directed learning from analysis results');
-        
+
         // Calculate performance metrics
         const performanceScore = this._calculatePerformanceScore(analysisResults, userFeedback);
-        
+
         // Generate learning strategy using Grok
         const learningStrategy = await this._generateLearningStrategy(analysisResults, performanceScore);
-        
+
         // Apply self-improvements
         const improvements = await this._applySelfImprovements(learningStrategy);
-        
+
         // Update adaptation history
         this._updateAdaptationHistory(analysisResults, learningStrategy, improvements);
-        
+
         return {
             performanceScore,
             learningStrategy,
@@ -113,9 +113,9 @@ class GrokSealAdapter extends BaseService {
      */
     async adaptToNewCodePatterns(codeExamples, patternContext) {
         this.logger.info(`Adapting to new code patterns: ${patternContext.type}`);
-        
+
         const fewShotPrompt = this._buildFewShotAdaptationPrompt(codeExamples, patternContext);
-        
+
         try {
             const grokResponse = await this._callGrokApi({
                 model: 'grok-4',
@@ -135,13 +135,13 @@ class GrokSealAdapter extends BaseService {
             });
 
             const adaptationPlan = this._parseAdaptationPlan(grokResponse.choices[0].message.content);
-            
+
             // Generate synthetic training data
             const syntheticData = await this._generateSyntheticTrainingData(codeExamples, adaptationPlan);
-            
+
             // Apply adaptation
             const adaptedCapabilities = await this._applyFewShotAdaptation(adaptationPlan, syntheticData);
-            
+
             return {
                 adaptationPlan,
                 syntheticDataGenerated: syntheticData.length,
@@ -159,18 +159,18 @@ class GrokSealAdapter extends BaseService {
      */
     async improveAnalysisQuality(currentAnalysis, targetMetrics) {
         this.logger.info('Improving code analysis quality through self-adaptation');
-        
+
         const improvementStrategy = await this._generateImprovementStrategy(currentAnalysis, targetMetrics);
-        
+
         // Use reinforcement learning approach
         const rlFeedback = await this._performReinforcementLearning(currentAnalysis, targetMetrics);
-        
+
         // Generate self-improvements
         const improvements = await this._generateQualityImprovements(improvementStrategy, rlFeedback);
-        
+
         // Validate improvements before applying
         const validationResults = await this._validateImprovements(improvements);
-        
+
         if (validationResults.isValid) {
             await this._applyQualityImprovements(improvements);
             return {
@@ -193,9 +193,9 @@ class GrokSealAdapter extends BaseService {
      */
     async generateDynamicAnalysisStrategy(codebaseProfile) {
         this.logger.info('Generating dynamic analysis strategy');
-        
+
         const strategyPrompt = this._buildStrategyGenerationPrompt(codebaseProfile);
-        
+
         try {
             const grokResponse = await this._callGrokApi({
                 model: 'grok-4',
@@ -215,10 +215,10 @@ class GrokSealAdapter extends BaseService {
             });
 
             const analysisStrategy = this._parseAnalysisStrategy(grokResponse.choices[0].message.content);
-            
+
             // Optimize strategy using historical performance data
             const optimizedStrategy = await this._optimizeStrategyWithHistory(analysisStrategy, codebaseProfile);
-            
+
             return {
                 strategy: optimizedStrategy,
                 reasoning: analysisStrategy.reasoning,
@@ -238,7 +238,7 @@ class GrokSealAdapter extends BaseService {
     _buildAdaptationPrompt(analysisContext) {
         const historyContext = this._getRelevantHistory(analysisContext);
         const performanceData = this._getPerformanceData(analysisContext);
-        
+
         return `
 CONTEXT: Code Analysis Self-Improvement Request
 CURRENT ANALYSIS: ${JSON.stringify(analysisContext.currentAnalysis, null, 2)}
@@ -311,13 +311,13 @@ Format response as structured JSON with clear adaptation steps.
                     model: requestData.model || 'grok-4',
                     stream: false // Grok 4 specific parameter
                 };
-                
+
                 // Remove unsupported parameters for Grok 4 reasoning model
                 delete grokRequestData.presence_penalty;
                 delete grokRequestData.frequency_penalty;
                 delete grokRequestData.stop;
                 delete grokRequestData.reasoning_effort;
-                
+
                 const response = await blockchainClient.sendMessage(
                     `${this.grokBaseUrl}/chat/completions`,
                     grokRequestData,
@@ -331,15 +331,15 @@ Format response as structured JSON with clear adaptation steps.
                         validateStatus: (status) => status < 500 // Don't throw on 4xx errors
                     }
                 );
-                
+
                 if (response.status >= 400) {
                     throw new Error(`xAI API error: ${response.status} - ${response.data?.error?.message || 'Unknown error'}`);
                 }
-                
+
                 return response.data;
             } catch (error) {
                 this.logger.warn(`xAI Grok API call attempt ${attempt} failed:`, error.message);
-                
+
                 if (attempt === retries) {
                     // Check if it's a rate limit error and suggest retry
                     if (error.response?.status === 429) {
@@ -347,7 +347,7 @@ Format response as structured JSON with clear adaptation steps.
                     }
                     throw new Error(`xAI Grok API call failed after ${retries} attempts: ${error.message}`);
                 }
-                
+
                 // Exponential backoff with jitter
                 const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -366,9 +366,9 @@ Format response as structured JSON with clear adaptation steps.
             if (!jsonMatch) {
                 throw new Error('No JSON found in Grok response');
             }
-            
+
             const parsedEdits = JSON.parse(jsonMatch[0]);
-            
+
             // Validate and structure self-edits
             return {
                 dataAugmentations: parsedEdits.dataAugmentations || [],
@@ -391,30 +391,30 @@ Format response as structured JSON with clear adaptation steps.
      */
     _calculatePerformanceScore(analysisResults, userFeedback) {
         let score = 0.5; // Base score
-        
+
         // Accuracy metrics
         if (analysisResults.accuracy) {
             score += analysisResults.accuracy * 0.3;
         }
-        
+
         // Completeness
         if (analysisResults.completeness) {
             score += analysisResults.completeness * 0.2;
         }
-        
+
         // User feedback
         if (userFeedback) {
             if (userFeedback.helpful) score += 0.2;
             if (userFeedback.accurate) score += 0.2;
             if (userFeedback.rating) score += (userFeedback.rating / 5) * 0.1;
         }
-        
+
         // Performance metrics
         if (analysisResults.executionTime) {
             const timeScore = Math.max(0, 1 - (analysisResults.executionTime / 10000)); // 10s baseline
             score += timeScore * 0.1;
         }
-        
+
         return Math.min(1.0, Math.max(0.0, score));
     }
 
@@ -444,7 +444,7 @@ Generate a structured learning strategy including:
 
 Format as actionable JSON strategy.
         `.trim();
-        
+
         try {
             const grokResponse = await this._callGrokApi({
                 model: 'grok-beta',
@@ -517,13 +517,13 @@ Format as actionable JSON strategy.
      */
     async _performContinuousLearning() {
         this.logger.info('Performing continuous learning iteration');
-        
+
         // Analyze recent performance data
         const recentPerformance = this._getRecentPerformanceData();
-        
+
         // Identify improvement opportunities
         const opportunities = this._identifyImprovementOpportunities(recentPerformance);
-        
+
         // Generate and apply micro-improvements
         for (const opportunity of opportunities) {
             try {
@@ -592,7 +592,7 @@ Focus on creating robust pattern recognition that generalizes well beyond the pr
      */
     async _applySelfEdits(selfEdits) {
         this.logger.info('Applying self-edits to configuration');
-        
+
         if (!this.adaptationConfig) {
             this.adaptationConfig = {
                 dataAugmentations: [],
@@ -600,7 +600,7 @@ Focus on creating robust pattern recognition that generalizes well beyond the pr
                 modelArchitecture: {}
             };
         }
-        
+
         // Apply data augmentations
         if (selfEdits.dataAugmentations) {
             this.adaptationConfig.dataAugmentations = [
@@ -608,7 +608,7 @@ Focus on creating robust pattern recognition that generalizes well beyond the pr
                 ...selfEdits.dataAugmentations
             ];
         }
-        
+
         // Apply hyperparameter updates
         if (selfEdits.hyperparameterUpdates) {
             this.adaptationConfig.hyperparameters = {
@@ -616,7 +616,7 @@ Focus on creating robust pattern recognition that generalizes well beyond the pr
                 ...selfEdits.hyperparameterUpdates
             };
         }
-        
+
         // Apply architecture changes
         if (selfEdits.modelArchitectureChanges) {
             this.adaptationConfig.modelArchitecture = {
@@ -624,7 +624,7 @@ Focus on creating robust pattern recognition that generalizes well beyond the pr
                 ...selfEdits.modelArchitectureChanges
             };
         }
-        
+
         return this.adaptationConfig;
     }
 

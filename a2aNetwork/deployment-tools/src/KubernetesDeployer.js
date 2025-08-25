@@ -29,60 +29,60 @@ class KubernetesDeployer {
 
   async deploy(options) {
     const spinner = ora('Preparing deployment...').start();
-    
+
     try {
       // Load deployment configuration
       const config = await this.loadDeploymentConfig(options.config);
-      
+
       // Validate configuration
       await this.validateConfig(config);
-      
+
       spinner.text = 'Creating namespace...';
       await this.ensureNamespace(config.namespace || 'a2a-system');
-      
+
       spinner.text = 'Deploying agents...';
       const deploymentResults = [];
-      
+
       for (const agent of config.agents) {
         const result = await this.deployAgent(agent, config);
         deploymentResults.push(result);
       }
-      
+
       spinner.text = 'Creating services...';
       const serviceResults = [];
-      
+
       for (const service of config.services || []) {
         const result = await this.createService(service, config);
         serviceResults.push(result);
       }
-      
+
       spinner.text = 'Setting up ingress...';
       const ingressResults = [];
-      
+
       if (config.ingress) {
         const result = await this.createIngress(config.ingress, config);
         ingressResults.push(result);
       }
-      
+
       spinner.text = 'Applying configurations...';
       const configResults = [];
-      
+
       if (config.configMaps) {
         for (const configMap of config.configMaps) {
           const result = await this.createConfigMap(configMap, config);
           configResults.push(result);
         }
       }
-      
+
       if (config.secrets) {
         for (const secret of config.secrets) {
           const result = await this.createSecret(secret, config);
           configResults.push(result);
         }
       }
-      
+
       spinner.succeed('Deployment completed successfully!');
-      
+
       return {
         deploymentId: uuidv4(),
         namespace: config.namespace || 'a2a-system',
@@ -92,7 +92,7 @@ class KubernetesDeployer {
         configs: configResults,
         timestamp: new Date().toISOString()
       };
-      
+
     } catch (error) {
       spinner.fail('Deployment failed');
       throw error;
@@ -101,10 +101,10 @@ class KubernetesDeployer {
 
   async deployAgent(agentConfig, globalConfig) {
     const namespace = globalConfig.namespace || 'a2a-system';
-    
+
     // Generate Kubernetes deployment manifest
     const deployment = this.generateDeployment(agentConfig, globalConfig);
-    
+
     try {
       // Try to update existing deployment
       await this.k8sApi.patchNamespacedDeployment(
@@ -118,18 +118,18 @@ class KubernetesDeployer {
         undefined,
         { headers: { 'Content-Type': 'application/strategic-merge-patch+json' } }
       );
-      
+
       return {
         name: agentConfig.name,
         action: 'updated',
         status: 'success'
       };
-      
+
     } catch (error) {
       if (error.response?.statusCode === 404) {
         // Create new deployment
         await this.k8sApi.createNamespacedDeployment(namespace, deployment);
-        
+
         return {
           name: agentConfig.name,
           action: 'created',
@@ -143,7 +143,7 @@ class KubernetesDeployer {
 
   generateDeployment(agentConfig, globalConfig) {
     const namespace = globalConfig.namespace || 'a2a-system';
-    
+
     return {
       apiVersion: 'apps/v1',
       kind: 'Deployment',
@@ -289,7 +289,7 @@ class KubernetesDeployer {
 
   async createService(serviceConfig, globalConfig) {
     const namespace = globalConfig.namespace || 'a2a-system';
-    
+
     const service = {
       apiVersion: 'v1',
       kind: 'Service',
@@ -338,7 +338,7 @@ class KubernetesDeployer {
           undefined,
           { headers: { 'Content-Type': 'application/strategic-merge-patch+json' } }
         );
-        
+
         return {
           name: serviceConfig.name,
           action: 'updated',
@@ -352,7 +352,7 @@ class KubernetesDeployer {
 
   async createIngress(ingressConfig, globalConfig) {
     const namespace = globalConfig.namespace || 'a2a-system';
-    
+
     const ingress = {
       apiVersion: 'networking.k8s.io/v1',
       kind: 'Ingress',
@@ -373,7 +373,7 @@ class KubernetesDeployer {
     try {
       const networkingApi = this.kc.makeApiClient(k8s.NetworkingV1Api);
       await networkingApi.createNamespacedIngress(namespace, ingress);
-      
+
       return {
         name: ingressConfig.name || 'a2a-ingress',
         action: 'created',
@@ -387,7 +387,7 @@ class KubernetesDeployer {
           namespace,
           ingress
         );
-        
+
         return {
           name: ingressConfig.name || 'a2a-ingress',
           action: 'updated',
@@ -401,7 +401,7 @@ class KubernetesDeployer {
 
   async createConfigMap(configMapConfig, globalConfig) {
     const namespace = globalConfig.namespace || 'a2a-system';
-    
+
     const configMap = {
       apiVersion: 'v1',
       kind: 'ConfigMap',
@@ -426,7 +426,7 @@ class KubernetesDeployer {
           namespace,
           configMap
         );
-        
+
         return {
           name: configMapConfig.name,
           action: 'updated',
@@ -440,13 +440,13 @@ class KubernetesDeployer {
 
   async createSecret(secretConfig, globalConfig) {
     const namespace = globalConfig.namespace || 'a2a-system';
-    
+
     // Encode secret data in base64
     const encodedData = {};
     for (const [key, value] of Object.entries(secretConfig.data || {})) {
       encodedData[key] = Buffer.from(value.toString()).toString('base64');
     }
-    
+
     const secret = {
       apiVersion: 'v1',
       kind: 'Secret',
@@ -472,7 +472,7 @@ class KubernetesDeployer {
           namespace,
           secret
         );
-        
+
         return {
           name: secretConfig.name,
           action: 'updated',
@@ -509,7 +509,7 @@ class KubernetesDeployer {
   async loadDeploymentConfig(configFile) {
     try {
       const configContent = await fs.readFile(configFile, 'utf8');
-      
+
       if (configFile.endsWith('.yaml') || configFile.endsWith('.yml')) {
         return yaml.load(configContent);
       } else if (configFile.endsWith('.json')) {
@@ -531,7 +531,7 @@ class KubernetesDeployer {
       if (!agent.name) {
         throw new Error('Each agent must have a "name" field');
       }
-      
+
       if (!agent.image && !agent.dockerfile) {
         throw new Error(`Agent "${agent.name}" must specify either "image" or "dockerfile"`);
       }
@@ -541,7 +541,7 @@ class KubernetesDeployer {
   async rollback(options) {
     const namespace = options.environment || 'a2a-system';
     const deploymentName = options.deployment;
-    
+
     if (!deploymentName) {
       throw new Error('Deployment name is required for rollback');
     }

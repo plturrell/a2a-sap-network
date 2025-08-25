@@ -2,7 +2,7 @@
 
 /**
  * Agent 14 (Embedding Fine-Tuner Agent) Security Scanner
- * 
+ *
  * Comprehensive security vulnerability scanner specifically designed for
  * Agent 14's embedding and ML model management functionality including
  * fine-tuning, model evaluation, hyperparameter optimization, and deployment.
@@ -19,7 +19,7 @@ class Agent14SecurityScanner {
         this.info = [];
         this.scannedFiles = 0;
         this.startTime = performance.now();
-        
+
         // Agent 14 specific security patterns for ML/embedding operations
         this.embeddingSecurityPatterns = {
             // ML model injection and manipulation (more specific patterns)
@@ -34,7 +34,7 @@ class Agent14SecurityScanner {
                 /tf\.keras\.models\.load_model.*model.*input/gi,
                 /model\.load_state_dict.*unsafe.*input/gi
             ],
-            
+
             // Model path traversal vulnerabilities
             modelPathTraversal: [
                 /model.*path.*\.\./gi,
@@ -46,7 +46,7 @@ class Agent14SecurityScanner {
                 /\.\.\/.*model/gi,
                 /\.\.\\.*model/gi
             ],
-            
+
             // Insecure WebSocket/EventSource for training monitoring
             insecureConnections: [
                 /new\s+WebSocket\s*\(\s*["']ws:\/\//gi,
@@ -56,7 +56,7 @@ class Agent14SecurityScanner {
                 /ws:\/\/.*embedding.*updates/gi,
                 /http:\/\/.*embedding.*stream/gi
             ],
-            
+
             // Missing CSRF protection in ML operations
             csrfMissing: [
                 /callFunction\s*\(\s*["']\/GetEmbeddingStatistics/gi,
@@ -69,7 +69,7 @@ class Agent14SecurityScanner {
                 /callFunction\s*\(\s*["']\/GetFineTuningOptions/gi,
                 /callFunction\s*\(\s*["']\/DeployModel/gi
             ],
-            
+
             // Hyperparameter injection risks
             hyperparameterInjection: [
                 /hyperparameter.*\+.*input/gi,
@@ -80,7 +80,7 @@ class Agent14SecurityScanner {
                 /optimizer.*config.*input/gi,
                 /scheduler.*config.*input/gi
             ],
-            
+
             // Training data poisoning risks
             dataPoisoningRisks: [
                 /training.*data.*load.*input/gi,
@@ -90,7 +90,7 @@ class Agent14SecurityScanner {
                 /training.*samples.*unsafe/gi,
                 /eval.*dataset.*input/gi
             ],
-            
+
             // Model serialization vulnerabilities
             serializationRisks: [
                 /pickle\.dumps.*model/gi,
@@ -101,7 +101,7 @@ class Agent14SecurityScanner {
                 /tf\.saved_model\.save.*input/gi,
                 /joblib\.dump.*model.*input/gi
             ],
-            
+
             // Vector database security
             vectorDbSecurity: [
                 /vector.*query.*\+.*input/gi,
@@ -111,7 +111,7 @@ class Agent14SecurityScanner {
                 /index.*query.*concat.*input/gi,
                 /embedding.*vector.*eval.*input/gi
             ],
-            
+
             // Model deployment security
             deploymentSecurity: [
                 /deploy.*model.*http:/gi,
@@ -120,7 +120,7 @@ class Agent14SecurityScanner {
                 /model.*api.*no.*auth/gi,
                 /inference.*endpoint.*http:/gi
             ],
-            
+
             // Benchmark manipulation risks
             benchmarkSecurity: [
                 /benchmark.*result.*eval.*input/gi,
@@ -130,7 +130,7 @@ class Agent14SecurityScanner {
                 /metric.*computation.*eval.*input/gi
             ]
         };
-        
+
         this.sensitiveOperations = [
             'GetEmbeddingStatistics', 'GetModelConfiguration', 'GetEvaluationMetrics',
             'GetAvailableBenchmarks', 'GetHyperparameterSpace', 'GetVectorDatabases',
@@ -138,7 +138,7 @@ class Agent14SecurityScanner {
             'GetOptimizationOptions', 'DeployModel', 'GetModelComparisons',
             'GetEmbeddingVisualization'
         ];
-        
+
         this.embeddingPatterns = [
             'modelName', 'modelId', 'modelPath', 'hyperparameters', 'trainingData',
             'datasetPath', 'checkpointPath', 'configData', 'vectorData', 'embeddingData',
@@ -149,7 +149,7 @@ class Agent14SecurityScanner {
     async scanDirectory(dirPath) {
         console.log('\n🔍 Starting Agent 14 Embedding Fine-Tuner Security Scan...');
         console.log(`📂 Scanning directory: ${dirPath}\n`);
-        
+
         try {
             await this.scanFiles(dirPath);
             this.generateReport();
@@ -161,10 +161,10 @@ class Agent14SecurityScanner {
 
     async scanFiles(dirPath) {
         const files = fs.readdirSync(dirPath, { withFileTypes: true });
-        
+
         for (const file of files) {
             const fullPath = path.join(dirPath, file.name);
-            
+
             if (file.isDirectory()) {
                 await this.scanFiles(fullPath);
             } else if (this.isJavaScriptFile(file.name)) {
@@ -174,8 +174,8 @@ class Agent14SecurityScanner {
     }
 
     isJavaScriptFile(filename) {
-        return /\.(js|ts)$/.test(filename) && 
-               !filename.includes('.min.') && 
+        return /\.(js|ts)$/.test(filename) &&
+               !filename.includes('.min.') &&
                !filename.includes('test') &&
                !filename.includes('spec') &&
                !filename.includes('SecurityUtils'); // Skip SecurityUtils to avoid false positives
@@ -204,7 +204,7 @@ class Agent14SecurityScanner {
         this.scanVectorDbSecurity(content, relativePath);
         this.scanDeploymentSecurity(content, relativePath);
         this.scanBenchmarkSecurity(content, relativePath);
-        
+
         // General security scans
         this.scanGeneralSecurity(content, relativePath);
         this.scanInputValidation(content, relativePath);
@@ -220,12 +220,12 @@ class Agent14SecurityScanner {
             'OptimizeModel', 'DeployModel', 'TestModel', 'CompareModels', 'ExportModel',
             'VisualizeEmbeddings', 'embedding/updates', 'embedding/stream'
         ];
-        
+
         const checkIndicator = function(indicator) {
             return content.toLowerCase().includes(indicator.toLowerCase()) ||
                 filePath.toLowerCase().includes(indicator.toLowerCase());
         };
-        
+
         return agent14Indicators.some(checkIndicator);
     }
 
@@ -303,8 +303,8 @@ class Agent14SecurityScanner {
                     // Check if CSRF token is present in the context
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
-                    
-                    if (!functionBlock.includes('securityToken') && 
+
+                    if (!functionBlock.includes('securityToken') &&
                         !functionBlock.includes('X-CSRF-Token') &&
                         !functionBlock.includes('SecurityUtils.secureCallFunction')) {
                         this.vulnerabilities.push({
@@ -501,11 +501,11 @@ class Agent14SecurityScanner {
             if (matches) {
                 const addUnsafeFunctionVulnerability = (match) => {
                     // Skip if it's just the sap.ui.define function declaration
-                    if (match.toLowerCase().includes('function(') && 
+                    if (match.toLowerCase().includes('function(') &&
                         content.includes('sap.ui.define')) {
                         return;
                     }
-                    
+
                     this.vulnerabilities.push({
                         type: 'UNSAFE_FUNCTION',
                         severity: 'HIGH',
@@ -549,9 +549,9 @@ class Agent14SecurityScanner {
     scanAuthenticationChecks(content, filePath) {
         const checkSensitiveOperation = function(op) { return content.includes(op); };
         const sensitiveOps = this.sensitiveOperations.filter(checkSensitiveOperation);
-        
+
         const checkAuthForOperation = (op) => {
-            if (!content.includes('checkAuth') && !content.includes('isAuthenticated') && 
+            if (!content.includes('checkAuth') && !content.includes('isAuthenticated') &&
                 !content.includes('SecurityUtils.checkEmbeddingAuth')) {
                 this.warnings.push({
                     type: 'MISSING_AUTH_CHECK',
@@ -610,7 +610,7 @@ class Agent14SecurityScanner {
         const isHigh = function(v) { return v.severity === 'HIGH'; };
         const isMedium = function(v) { return v.severity === 'MEDIUM'; };
         const isLow = function(v) { return v.severity === 'LOW'; };
-        
+
         const critical = this.vulnerabilities.filter(isCritical).length;
         const high = this.vulnerabilities.filter(isHigh).length;
         const medium = this.vulnerabilities.filter(isMedium).length;
@@ -644,7 +644,7 @@ class Agent14SecurityScanner {
 
         // Embedding-specific findings
         console.log('\n🤖 EMBEDDING-SPECIFIC SECURITY FINDINGS:');
-        
+
         const hasModelInjection = function(v) { return v.type.includes('MODEL_INJECTION'); };
         const hasPathTraversal = function(v) { return v.type.includes('PATH_TRAVERSAL'); };
         const hasCSRF = function(v) { return v.type.includes('CSRF'); };
@@ -652,7 +652,7 @@ class Agent14SecurityScanner {
         const hasSerializationRisk = function(v) { return v.type.includes('SERIALIZATION_RISK'); };
         const hasVectorDbSecurity = function(v) { return v.type.includes('VECTOR_DB_SECURITY'); };
         const hasInsecureConnection = function(v) { return v.type.includes('INSECURE'); };
-        
+
         const embeddingIssues = {
             'MODEL_INJECTION': this.vulnerabilities.filter(hasModelInjection).length,
             'PATH_TRAVERSAL': this.vulnerabilities.filter(hasPathTraversal).length,
@@ -673,7 +673,7 @@ class Agent14SecurityScanner {
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
             console.log('\n🚨 VULNERABILITIES FOUND:');
-            
+
             const logSeverityIssues = (severity) => {
                 const filterBySeverity = function(v) { return v.severity === severity; };
                 const issues = this.vulnerabilities.filter(filterBySeverity);
@@ -701,12 +701,12 @@ class Agent14SecurityScanner {
         console.log('   - Add SecurityUtils.validateModelPath() for model loading');
         console.log('   - Use SecurityUtils.secureCallFunction() for ML operations');
         console.log('   - Implement SecurityUtils.validateTrainingData() for data validation');
-        
+
         console.log('\n2. 🛡️  Enhance ML-specific security');
         console.log('   - Validate hyperparameters with SecurityUtils.validateHyperparameters()');
         console.log('   - Secure model serialization with SecurityUtils.secureModelSave()');
         console.log('   - Validate vector queries with SecurityUtils.validateVectorQuery()');
-        
+
         console.log('\n3. 🔒 Secure ML communications');
         console.log('   - Upgrade WebSocket to WSS for training monitoring');
         console.log('   - Use HTTPS for EventSource embedding streams');

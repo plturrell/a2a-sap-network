@@ -75,28 +75,28 @@ const FailureCategory = {
 class CircuitBreaker extends EventEmitter {
     constructor(options = {}) {
         super();
-        
+
         // Core configuration
         this.serviceName = options.serviceName || 'unknown';
         this.serviceType = options.serviceType || 'blockchain';
         this.priority = options.priority || ServicePriority.MEDIUM;
-        
+
         // Adaptive thresholds
         this.failureThreshold = options.failureThreshold || 5;
         this.successThreshold = options.successThreshold || 3;
         this.resetTimeout = options.resetTimeout || 60000; // 1 minute
         this.halfOpenMaxCalls = options.halfOpenMaxCalls || 3;
         this.monitoringPeriod = options.monitoringPeriod || 300000; // 5 minutes
-        
+
         // Performance-based thresholds
         this.slowCallThreshold = options.slowCallThreshold || 5000; // 5 seconds
         this.slowCallDurationThreshold = options.slowCallDurationThreshold || 10000; // 10 seconds
         this.performanceWindow = options.performanceWindow || 100; // Last 100 calls
-        
+
         // Bulkhead configuration
         this.maxConcurrentCalls = options.maxConcurrentCalls || 50;
         this.maxWaitDuration = options.maxWaitDuration || 30000; // 30 seconds
-        
+
         // State management
         this.state = CircuitState.CLOSED;
         this.previousState = null;
@@ -109,7 +109,7 @@ class CircuitBreaker extends EventEmitter {
         this.halfOpenCalls = 0;
         this.activeCalls = 0;
         this.waitingCalls = 0;
-        
+
         // Advanced metrics
         this.metrics = {
             totalRequests: 0,
@@ -127,33 +127,33 @@ class CircuitBreaker extends EventEmitter {
             concurrentCallsPeak: 0,
             bulkheadRejections: 0
         };
-        
+
         // Error tracking and categorization
         this.recentErrors = [];
         this.errorPatterns = new Map();
         this.performanceHistory = [];
-        
+
         // SAP enterprise features
         this.alertNotificationService = null;
         this.sapCloudSdkIntegration = null;
         this.tracer = trace ? trace.getTracer('circuit-breaker', '1.0.0') : null;
-        
+
         // Adaptive learning
         this.historicalData = {
             failureRates: [],
             recoveryTimes: [],
             patterns: new Map()
         };
-        
+
         // Initialize intervals tracking
         this.intervals = new Map();
-        
+
         // Initialize SAP integrations
         this.initializeSAPIntegrations();
-        
+
         // Start adaptive monitoring
         this.startAdaptiveMonitoring();
-        
+
         cds.log('circuit-breaker').info('Enterprise circuit breaker initialized', {
             serviceName: this.serviceName,
             serviceType: this.serviceType,
@@ -164,7 +164,7 @@ class CircuitBreaker extends EventEmitter {
             sapIntegration: !!this.sapCloudSdkIntegration
         });
     }
-    
+
     /**
      * Initialize SAP enterprise integrations
      */
@@ -177,17 +177,17 @@ class CircuitBreaker extends EventEmitter {
                     delay: this.resetTimeout,
                     maxAttempts: this.halfOpenMaxCalls
                 });
-                
+
                 cds.log('circuit-breaker').info('SAP Cloud SDK integration enabled');
             } catch (error) {
                 cds.log('circuit-breaker').warn('SAP Cloud SDK integration failed:', error);
             }
         }
-        
+
         // SAP BTP Alert Notification service
         this.initializeAlertNotification();
     }
-    
+
     /**
      * Initialize SAP BTP Alert Notification
      */
@@ -196,7 +196,7 @@ class CircuitBreaker extends EventEmitter {
             if (process.env.VCAP_SERVICES) {
                 const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
                 const alertService = vcapServices['alert-notification'];
-                
+
                 if (alertService && alertService[0]) {
                     this.alertNotificationService = alertService[0].credentials;
                     cds.log('circuit-breaker').info('SAP Alert Notification service configured');
@@ -206,7 +206,7 @@ class CircuitBreaker extends EventEmitter {
             cds.log('circuit-breaker').warn('Alert Notification service setup failed:', error);
         }
     }
-    
+
     /**
      * Stop adaptive monitoring
      */
@@ -218,24 +218,24 @@ class CircuitBreaker extends EventEmitter {
             this.intervals.clear();
         }
     }
-    
+
     /**
      * Start adaptive monitoring and learning
      */
     startAdaptiveMonitoring() {
         // Stop existing monitoring first
         this.stopAdaptiveMonitoring();
-        
+
         // Adaptive threshold adjustment
         this.intervals.set('adaptive', setInterval(() => {
             this.adjustAdaptiveThresholds();
         }, 300000)); // Every 5 minutes
-        
+
         // Performance pattern analysis
         this.intervals.set('performance', setInterval(() => {
             this.analyzePerformancePatterns();
         }, 600000)); // Every 10 minutes
-        
+
         // Historical data cleanup
         this.intervals.set('cleanup', setInterval(() => {
             this.cleanupHistoricalData();
@@ -248,7 +248,7 @@ class CircuitBreaker extends EventEmitter {
     async execute(operation, operationName = 'unknown', metadata = {}) {
         const startTime = Date.now();
         let span = null;
-        
+
         try {
             // Create OpenTelemetry span for observability
             if (this.tracer) {
@@ -261,26 +261,26 @@ class CircuitBreaker extends EventEmitter {
                     }
                 });
             }
-            
+
             this.metrics.totalRequests++;
-            
+
             // Enterprise bulkhead protection
             await this.enforceBasedOnPriority(operationName);
-            
+
             // Check circuit state with enhanced logic
             await this.checkCircuitState(operationName);
-            
+
             // Increment active calls for bulkhead
             this.activeCalls++;
             this.metrics.concurrentCallsPeak = Math.max(this.metrics.concurrentCallsPeak, this.activeCalls);
-            
+
             try {
                 // Execute with adaptive timeout and retry
                 const result = await this.executeWithAdaptiveProtection(operation, operationName, metadata);
-                
+
                 const duration = Date.now() - startTime;
                 this.onSuccess(operationName, duration);
-                
+
                 if (span) {
                     span.setAttributes({
                         'circuit.breaker.result': 'success',
@@ -288,13 +288,13 @@ class CircuitBreaker extends EventEmitter {
                     });
                     span.setStatus({ code: SpanStatusCode.OK });
                 }
-                
+
                 return result;
-                
+
             } catch (error) {
                 const duration = Date.now() - startTime;
                 this.onFailure(error, operationName, duration);
-                
+
                 if (span) {
                     span.recordException(error);
                     span.setAttributes({
@@ -304,19 +304,19 @@ class CircuitBreaker extends EventEmitter {
                     });
                     span.setStatus({ code: SpanStatusCode.ERROR });
                 }
-                
+
                 throw error;
             } finally {
                 this.activeCalls--;
             }
-            
+
         } finally {
             if (span) {
                 span.end();
             }
         }
     }
-    
+
     /**
      * Enforce bulkhead isolation based on service priority
      */
@@ -324,7 +324,7 @@ class CircuitBreaker extends EventEmitter {
         // High priority services get preferential treatment
         const priorityMultiplier = this.getPriorityMultiplier();
         const effectiveMaxCalls = Math.floor(this.maxConcurrentCalls * priorityMultiplier);
-        
+
         if (this.activeCalls >= effectiveMaxCalls) {
             // For critical services, wait briefly
             if (this.priority === ServicePriority.CRITICAL) {
@@ -334,7 +334,7 @@ class CircuitBreaker extends EventEmitter {
                 const error = new Error(`Bulkhead capacity exceeded for ${operationName} (${this.activeCalls}/${effectiveMaxCalls})`);
                 error.code = 'BULKHEAD_CAPACITY_EXCEEDED';
                 error.priority = this.priority;
-                
+
                 this.emit('bulkheadRejected', {
                     serviceName: this.serviceName,
                     operationName,
@@ -342,12 +342,12 @@ class CircuitBreaker extends EventEmitter {
                     maxCalls: effectiveMaxCalls,
                     priority: this.priority
                 });
-                
+
                 throw error;
             }
         }
     }
-    
+
     /**
      * Get priority multiplier for bulkhead allocation
      */
@@ -360,14 +360,14 @@ class CircuitBreaker extends EventEmitter {
             default: return 1.0;
         }
     }
-    
+
     /**
      * Wait for available slot in bulkhead
      */
     async waitForSlot(operationName) {
         const startWait = Date.now();
         this.waitingCalls++;
-        
+
         try {
             while (this.activeCalls >= this.maxConcurrentCalls) {
                 if (Date.now() - startWait > this.maxWaitDuration) {
@@ -375,14 +375,14 @@ class CircuitBreaker extends EventEmitter {
                     error.code = 'BULKHEAD_WAIT_TIMEOUT';
                     throw error;
                 }
-                
+
                 await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
             }
         } finally {
             this.waitingCalls--;
         }
     }
-    
+
     /**
      * Enhanced circuit state checking
      */
@@ -394,7 +394,7 @@ class CircuitBreaker extends EventEmitter {
             this.emit('callRejected', { operationName, state: this.state, reason: 'maintenance' });
             throw error;
         }
-        
+
         if (this.state === CircuitState.OPEN) {
             if (Date.now() < this.nextAttempt) {
                 const error = new Error(`Circuit breaker is OPEN for ${operationName}`);
@@ -404,11 +404,11 @@ class CircuitBreaker extends EventEmitter {
                 this.emit('callRejected', { operationName, state: this.state });
                 throw error;
             }
-            
+
             // Time to try half-open with intelligent probing
             await this.moveToHalfOpen('timeout_recovery');
         }
-        
+
         if (this.state === CircuitState.DEGRADED) {
             // In degraded mode, apply additional restrictions
             if (this.priority === ServicePriority.LOW) {
@@ -418,7 +418,7 @@ class CircuitBreaker extends EventEmitter {
                 throw error;
             }
         }
-        
+
         // Check half-open call limit with adaptive sizing
         if (this.state === CircuitState.HALF_OPEN) {
             const adaptiveMaxCalls = this.calculateAdaptiveHalfOpenCalls();
@@ -431,33 +431,33 @@ class CircuitBreaker extends EventEmitter {
             this.halfOpenCalls++;
         }
     }
-    
+
     /**
      * Calculate adaptive half-open call limit based on historical data
      */
     calculateAdaptiveHalfOpenCalls() {
         const recentFailureRate = this.calculateRecentFailureRate();
-        
+
         // More conservative with higher failure rates
         if (recentFailureRate > 0.5) return 1;
         if (recentFailureRate > 0.3) return 2;
         if (recentFailureRate > 0.1) return 3;
-        
+
         return this.halfOpenMaxCalls;
     }
-    
+
     /**
      * Execute with adaptive protection mechanisms
      */
     async executeWithAdaptiveProtection(operation, operationName, metadata) {
         // Calculate adaptive timeout based on historical performance
         const adaptiveTimeout = this.calculateAdaptiveTimeout();
-        
+
         // Apply intelligent retry if this is a retry attempt
         if (metadata.isRetry) {
             await this.applyIntelligentBackoff(metadata.retryAttempt);
         }
-        
+
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
                 this.metrics.totalTimeouts++;
@@ -475,13 +475,13 @@ class CircuitBreaker extends EventEmitter {
                 });
         });
     }
-    
+
     /**
      * Calculate adaptive timeout based on service performance
      */
     calculateAdaptiveTimeout() {
         const baseTimeout = 30000; // 30 seconds
-        
+
         // Adjust based on recent performance
         if (this.metrics.averageResponseTime > 0) {
             // Use 3x average response time, but within reasonable bounds
@@ -491,10 +491,10 @@ class CircuitBreaker extends EventEmitter {
             );
             return adaptiveTimeout;
         }
-        
+
         return baseTimeout;
     }
-    
+
     /**
      * Apply intelligent exponential backoff
      */
@@ -503,11 +503,11 @@ class CircuitBreaker extends EventEmitter {
         const baseDelay = 1000; // 1 second
         const maxDelay = 30000; // 30 seconds
         const jitterFactor = 0.1;
-        
+
         const exponentialDelay = Math.min(baseDelay * Math.pow(2, retryAttempt - 1), maxDelay);
         const jitter = exponentialDelay * jitterFactor * Math.random();
         const totalDelay = exponentialDelay + jitter;
-        
+
         await new Promise(resolve => setTimeout(resolve, totalDelay));
     }
 
@@ -516,7 +516,7 @@ class CircuitBreaker extends EventEmitter {
      */
     async executeWithTimeout(operation, operationName) {
         const timeout = 30000; // 30 seconds default timeout
-        
+
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {
                 reject(new Error(`Operation ${operationName} timed out after ${timeout}ms`));
@@ -542,21 +542,21 @@ class CircuitBreaker extends EventEmitter {
         this.successes++;
         this.metrics.totalSuccesses++;
         this.consecutiveSlowCalls = 0;
-        
+
         // Track response time metrics
         this.updateResponseTimeMetrics(duration);
-        
+
         // Check for slow calls
         if (duration > this.slowCallDurationThreshold) {
             this.metrics.totalSlowCalls++;
             this.consecutiveSlowCalls++;
-            
+
             // Consider moving to degraded state if too many slow calls
             if (this.consecutiveSlowCalls >= this.slowCallThreshold) {
                 this.moveToDegraded('performance_degradation');
             }
         }
-        
+
         // State transition logic
         if (this.state === CircuitState.HALF_OPEN) {
             // Successful call in half-open state - consider closing circuit
@@ -569,20 +569,20 @@ class CircuitBreaker extends EventEmitter {
                 this.moveToClosed('performance_recovered');
             }
         }
-        
+
         // Learn from successful patterns
         this.learnFromSuccess(operationName, duration);
-        
-        this.emit('callSucceeded', { 
+
+        this.emit('callSucceeded', {
             serviceName: this.serviceName,
-            operationName, 
+            operationName,
             state: this.state,
             successes: this.successes,
             duration,
             consecutiveSlowCalls: this.consecutiveSlowCalls
         });
     }
-    
+
     /**
      * Update response time metrics with percentile calculations
      */
@@ -592,32 +592,32 @@ class CircuitBreaker extends EventEmitter {
         this.metrics.averageResponseTime = this.metrics.averageResponseTime === 0
             ? duration
             : (alpha * duration) + ((1 - alpha) * this.metrics.averageResponseTime);
-        
+
         // Store for percentile calculations (keep last 1000 response times)
         this.metrics.responseTimes.push(duration);
         if (this.metrics.responseTimes.length > 1000) {
             this.metrics.responseTimes.shift();
         }
-        
+
         // Update percentiles every 100 requests for performance
         if (this.metrics.responseTimes.length % 100 === 0) {
             this.calculatePercentiles();
         }
     }
-    
+
     /**
      * Calculate response time percentiles
      */
     calculatePercentiles() {
         const sorted = [...this.metrics.responseTimes].sort((a, b) => a - b);
         const length = sorted.length;
-        
+
         if (length > 0) {
             this.metrics.p95ResponseTime = sorted[Math.floor(length * 0.95)];
             this.metrics.p99ResponseTime = sorted[Math.floor(length * 0.99)];
         }
     }
-    
+
     /**
      * Learn from successful operations for adaptive improvements
      */
@@ -630,12 +630,12 @@ class CircuitBreaker extends EventEmitter {
             state: this.state,
             success: true
         });
-        
+
         // Keep only recent history (last 1000 operations)
         if (this.performanceHistory.length > 1000) {
             this.performanceHistory.shift();
         }
-        
+
         // Update historical patterns for this operation
         const pattern = this.historicalData.patterns.get(operationName) || {
             successCount: 0,
@@ -643,11 +643,11 @@ class CircuitBreaker extends EventEmitter {
             avgDuration: 0,
             lastSuccess: null
         };
-        
+
         pattern.successCount++;
         pattern.avgDuration = ((pattern.avgDuration * (pattern.successCount - 1)) + duration) / pattern.successCount;
         pattern.lastSuccess = Date.now();
-        
+
         this.historicalData.patterns.set(operationName, pattern);
     }
 
@@ -659,14 +659,14 @@ class CircuitBreaker extends EventEmitter {
         this.successes = 0;
         this.metrics.totalFailures++;
         this.lastFailureTime = Date.now();
-        
+
         // Categorize the error for intelligent analysis
         const errorCategory = this.categorizeError(error);
-        
+
         // Update failure metrics by category
         const categoryCount = this.metrics.failuresByCategory.get(errorCategory) || 0;
         this.metrics.failuresByCategory.set(errorCategory, categoryCount + 1);
-        
+
         // Track recent errors with enhanced metadata
         const errorInfo = {
             error: error.message,
@@ -683,29 +683,29 @@ class CircuitBreaker extends EventEmitter {
                 activeCalls: this.activeCalls
             }
         };
-        
+
         this.recentErrors.push(errorInfo);
-        
+
         // Keep only recent errors (last 50 for better analysis)
         if (this.recentErrors.length > 50) {
             this.recentErrors.shift();
         }
-        
+
         // Analyze error patterns for adaptive behavior
         this.analyzeErrorPatterns(errorInfo);
-        
+
         // Learn from failure patterns
         this.learnFromFailure(operationName, errorInfo);
-        
+
         // State transition logic with enhanced decision making
         this.determineStateTransition(errorCategory, errorInfo);
-        
+
         // Send alert for critical errors
         this.sendAlertIfNecessary(errorInfo);
-        
-        this.emit('callFailed', { 
+
+        this.emit('callFailed', {
             serviceName: this.serviceName,
-            operationName, 
+            operationName,
             error: error.message,
             category: errorCategory,
             code: error.code,
@@ -714,62 +714,62 @@ class CircuitBreaker extends EventEmitter {
             duration: duration
         });
     }
-    
+
     /**
      * Categorize errors for intelligent handling
      */
     categorizeError(error) {
         const message = error.message.toLowerCase();
         const code = error.code || '';
-        
+
         // Timeout errors
         if (message.includes('timeout') || message.includes('timed out') || code === 'TIMEOUT') {
             return FailureCategory.TIMEOUT;
         }
-        
+
         // Connection errors
-        if (message.includes('connection') || message.includes('connect') || 
+        if (message.includes('connection') || message.includes('connect') ||
             code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'ETIMEDOUT') {
             return FailureCategory.CONNECTION;
         }
-        
+
         // Authentication errors
-        if (message.includes('auth') || message.includes('unauthorized') || 
+        if (message.includes('auth') || message.includes('unauthorized') ||
             code === 'UNAUTHORIZED' || error.status === 401) {
             return FailureCategory.AUTHENTICATION;
         }
-        
+
         // Authorization errors
-        if (message.includes('forbidden') || message.includes('access denied') || 
+        if (message.includes('forbidden') || message.includes('access denied') ||
             code === 'FORBIDDEN' || error.status === 403) {
             return FailureCategory.AUTHORIZATION;
         }
-        
+
         // Rate limiting
-        if (message.includes('rate limit') || message.includes('too many') || 
+        if (message.includes('rate limit') || message.includes('too many') ||
             code === 'RATE_LIMITED' || error.status === 429) {
             return FailureCategory.RATE_LIMIT;
         }
-        
+
         // Server errors
-        if (error.status >= 500 || message.includes('server error') || 
+        if (error.status >= 500 || message.includes('server error') ||
             message.includes('internal error')) {
             return FailureCategory.SERVER_ERROR;
         }
-        
+
         // Client errors
         if (error.status >= 400 && error.status < 500) {
             return FailureCategory.CLIENT_ERROR;
         }
-        
+
         // Network errors
         if (message.includes('network') || message.includes('dns') || code === 'ENETUNREACH') {
             return FailureCategory.NETWORK;
         }
-        
+
         return FailureCategory.UNKNOWN;
     }
-    
+
     /**
      * Analyze error patterns for adaptive behavior
      */
@@ -782,14 +782,14 @@ class CircuitBreaker extends EventEmitter {
             lastSeen: null,
             operations: new Set()
         };
-        
+
         pattern.count++;
         pattern.recentCount++;
         pattern.lastSeen = Date.now();
         pattern.operations.add(errorInfo.operationName);
-        
+
         this.errorPatterns.set(category, pattern);
-        
+
         // Reset recent count every 5 minutes
         if (!pattern.resetTimer) {
             pattern.resetTimer = setInterval(() => {
@@ -797,7 +797,7 @@ class CircuitBreaker extends EventEmitter {
             }, 300000);
         }
     }
-    
+
     /**
      * Learn from failure patterns for adaptive improvements
      */
@@ -812,7 +812,7 @@ class CircuitBreaker extends EventEmitter {
             category: errorInfo.category,
             error: errorInfo.error
         });
-        
+
         // Update historical patterns for this operation
         const pattern = this.historicalData.patterns.get(operationName) || {
             successCount: 0,
@@ -821,17 +821,17 @@ class CircuitBreaker extends EventEmitter {
             lastFailure: null,
             commonErrors: new Map()
         };
-        
+
         pattern.failureCount++;
         pattern.lastFailure = Date.now();
-        
+
         // Track common error types for this operation
         const errorCount = pattern.commonErrors.get(errorInfo.category) || 0;
         pattern.commonErrors.set(errorInfo.category, errorCount + 1);
-        
+
         this.historicalData.patterns.set(operationName, pattern);
     }
-    
+
     /**
      * Determine state transition based on error analysis
      */
@@ -845,7 +845,7 @@ class CircuitBreaker extends EventEmitter {
                     this.moveToOpen('rate_limit_protection');
                 }
                 break;
-                
+
             case FailureCategory.AUTHENTICATION:
             case FailureCategory.AUTHORIZATION:
                 // Auth errors shouldn't trigger circuit breaker unless systemic
@@ -853,27 +853,27 @@ class CircuitBreaker extends EventEmitter {
                     this.moveToOpen('authentication_system_failure');
                 }
                 break;
-                
+
             case FailureCategory.CONNECTION:
             case FailureCategory.NETWORK:
             case FailureCategory.TIMEOUT:
                 // Infrastructure issues should trigger normal circuit behavior
                 this.handleInfrastructureFailure();
                 break;
-                
+
             case FailureCategory.SERVER_ERROR:
                 // Server errors are more serious - lower threshold
                 if (this.failures >= Math.max(this.failureThreshold - 2, 2)) {
                     this.moveToOpen('server_error_pattern');
                 }
                 break;
-                
+
             default:
                 // Standard failure handling
                 this.handleStandardFailure();
         }
     }
-    
+
     /**
      * Handle infrastructure-related failures
      */
@@ -886,7 +886,7 @@ class CircuitBreaker extends EventEmitter {
             this.moveToOpen('infrastructure_failure');
         }
     }
-    
+
     /**
      * Handle standard failures
      */
@@ -899,7 +899,7 @@ class CircuitBreaker extends EventEmitter {
             this.moveToOpen('failure_threshold_exceeded');
         }
     }
-    
+
     /**
      * Send alert if necessary based on error severity
      */
@@ -910,7 +910,7 @@ class CircuitBreaker extends EventEmitter {
             this.failures >= this.failureThreshold ||
             this.state === CircuitState.OPEN
         );
-        
+
         if (shouldAlert && this.alertNotificationService) {
             try {
                 await this.sendSAPAlert({
@@ -926,7 +926,7 @@ class CircuitBreaker extends EventEmitter {
             }
         }
     }
-    
+
     /**
      * Calculate alert severity
      */
@@ -939,13 +939,13 @@ class CircuitBreaker extends EventEmitter {
         }
         return 'LOW';
     }
-    
+
     /**
      * Send alert to SAP Alert Notification service
      */
     async sendSAPAlert(alertData) {
         if (!this.alertNotificationService) return;
-        
+
         const alert = {
             eventType: 'circuit-breaker-alert',
             severity: alertData.severity,
@@ -967,7 +967,7 @@ class CircuitBreaker extends EventEmitter {
                 }
             }
         };
-        
+
         // In production, would send to actual SAP Alert Notification service
         cds.log('circuit-breaker').warn('SAP Alert would be sent:', alert);
     }
@@ -986,18 +986,18 @@ class CircuitBreaker extends EventEmitter {
         this.consecutiveSlowCalls = 0;
         this.metrics.stateChanges++;
         this.metrics.lastStateChange = Date.now();
-        
+
         // Learn from recovery time for adaptive behavior
         if (previousState === CircuitState.OPEN) {
             const recoveryTime = Date.now() - (this.lastFailureTime || Date.now());
             this.historicalData.recoveryTimes.push(recoveryTime);
-            
+
             // Keep only recent recovery times for analysis
             if (this.historicalData.recoveryTimes.length > 20) {
                 this.historicalData.recoveryTimes.shift();
             }
         }
-        
+
         cds.log('circuit-breaker').info('Circuit breaker moved to CLOSED', {
             serviceName: this.serviceName,
             previousState,
@@ -1005,7 +1005,7 @@ class CircuitBreaker extends EventEmitter {
             totalRequests: this.metrics.totalRequests,
             recoveryTime: previousState === CircuitState.OPEN ? Date.now() - this.lastFailureTime : null
         });
-        
+
         this.emit('stateChanged', {
             serviceName: this.serviceName,
             from: previousState,
@@ -1030,14 +1030,14 @@ class CircuitBreaker extends EventEmitter {
         this.halfOpenCalls = 0;
         this.metrics.stateChanges++;
         this.metrics.lastStateChange = Date.now();
-        
+
         cds.log('circuit-breaker').warn('Circuit breaker moved to OPEN', {
             previousState,
             failures: this.failures,
             resetTimeout: this.resetTimeout,
             nextAttempt: new Date(this.nextAttempt).toISOString()
         });
-        
+
         this.emit('stateChanged', {
             from: previousState,
             to: this.state,
@@ -1056,12 +1056,12 @@ class CircuitBreaker extends EventEmitter {
         this.successes = 0;
         this.metrics.stateChanges++;
         this.metrics.lastStateChange = Date.now();
-        
+
         cds.log('circuit-breaker').info('Circuit breaker moved to HALF_OPEN', {
             previousState,
             maxCalls: this.halfOpenMaxCalls
         });
-        
+
         this.emit('stateChanged', {
             from: previousState,
             to: this.state,
@@ -1091,7 +1091,7 @@ class CircuitBreaker extends EventEmitter {
     getHealthStatus() {
         const now = Date.now();
         const timeSinceLastFailure = this.lastFailureTime ? now - this.lastFailureTime : null;
-        
+
         return {
             healthy: this.state === CircuitState.CLOSED,
             state: this.state,
@@ -1115,7 +1115,7 @@ class CircuitBreaker extends EventEmitter {
     calculateUptime() {
         const totalTime = Date.now() - this.metrics.lastStateChange;
         if (totalTime === 0) return 100;
-        
+
         // This is simplified - in production, track actual downtime
         return this.state === CircuitState.OPEN ? 0 : 100;
     }
@@ -1125,7 +1125,7 @@ class CircuitBreaker extends EventEmitter {
      */
     reset() {
         cds.log('circuit-breaker').info('Circuit breaker manually reset');
-        
+
         this.state = CircuitState.CLOSED;
         this.failures = 0;
         this.successes = 0;
@@ -1133,7 +1133,7 @@ class CircuitBreaker extends EventEmitter {
         this.lastFailureTime = null;
         this.nextAttempt = Date.now();
         this.recentErrors = [];
-        
+
         this.emit('circuitReset', { timestamp: Date.now() });
     }
 
@@ -1144,22 +1144,22 @@ class CircuitBreaker extends EventEmitter {
         if (!Object.values(CircuitState).includes(state)) {
             throw new Error(`Invalid circuit state: ${state}`);
         }
-        
+
         const previousState = this.state;
         this.state = state;
-        
+
         cds.log('circuit-breaker').warn('Circuit breaker state forced', {
             from: previousState,
             to: state
         });
-        
+
         this.emit('stateForced', {
             from: previousState,
             to: state,
             timestamp: Date.now()
         });
     }
-    
+
     /**
      * Move circuit to DEGRADED state (new enterprise feature)
      */
@@ -1170,7 +1170,7 @@ class CircuitBreaker extends EventEmitter {
         this.stateChangeReason = reason;
         this.metrics.stateChanges++;
         this.metrics.lastStateChange = Date.now();
-        
+
         cds.log('circuit-breaker').warn('Circuit breaker moved to DEGRADED', {
             serviceName: this.serviceName,
             previousState,
@@ -1178,7 +1178,7 @@ class CircuitBreaker extends EventEmitter {
             consecutiveSlowCalls: this.consecutiveSlowCalls,
             averageResponseTime: this.metrics.averageResponseTime
         });
-        
+
         this.emit('stateChanged', {
             serviceName: this.serviceName,
             from: previousState,
@@ -1191,21 +1191,21 @@ class CircuitBreaker extends EventEmitter {
             }
         });
     }
-    
+
     /**
      * Calculate recent failure rate for adaptive behavior
      */
     calculateRecentFailureRate() {
-        const recentHistory = this.performanceHistory.filter(h => 
+        const recentHistory = this.performanceHistory.filter(h =>
             Date.now() - h.timestamp < 300000 // Last 5 minutes
         );
-        
+
         if (recentHistory.length === 0) return 0;
-        
+
         const failures = recentHistory.filter(h => !h.success).length;
         return failures / recentHistory.length;
     }
-    
+
     /**
      * Get comprehensive enterprise status
      */
@@ -1253,7 +1253,7 @@ class CircuitBreaker extends EventEmitter {
             }
         };
     }
-    
+
     /**
      * Force maintenance mode (FORCED_OPEN state)
      */
@@ -1264,13 +1264,13 @@ class CircuitBreaker extends EventEmitter {
         this.stateChangeReason = reason;
         this.metrics.stateChanges++;
         this.metrics.lastStateChange = Date.now();
-        
+
         cds.log('circuit-breaker').warn('Circuit breaker entered maintenance mode', {
             serviceName: this.serviceName,
             previousState,
             reason
         });
-        
+
         this.emit('maintenanceModeEntered', {
             serviceName: this.serviceName,
             previousState,
@@ -1278,7 +1278,7 @@ class CircuitBreaker extends EventEmitter {
             timestamp: Date.now()
         });
     }
-    
+
     /**
      * Exit maintenance mode
      */
@@ -1286,15 +1286,15 @@ class CircuitBreaker extends EventEmitter {
         if (this.state !== CircuitState.FORCED_OPEN) {
             throw new Error('Circuit breaker is not in maintenance mode');
         }
-        
+
         const previousState = this.state;
         this.moveToClosed('maintenance_completed');
-        
+
         cds.log('circuit-breaker').info('Circuit breaker exited maintenance mode', {
             serviceName: this.serviceName,
             previousState
         });
-        
+
         this.emit('maintenanceModeExited', {
             serviceName: this.serviceName,
             previousState,
@@ -1308,7 +1308,7 @@ class CircuitBreaker extends EventEmitter {
     getEnterpriseStatus() {
         const now = Date.now();
         const uptime = this.calculateUptime();
-        
+
         return {
             serviceName: this.serviceName,
             serviceType: this.serviceType,
@@ -1543,7 +1543,7 @@ class CircuitBreaker extends EventEmitter {
 
         // Clean up downtime history
         if (this.history.downtimes) {
-            this.history.downtimes = this.history.downtimes.filter(d => 
+            this.history.downtimes = this.history.downtimes.filter(d =>
                 (d.endTime || Date.now()) > oldDataThreshold
             );
         }
@@ -1565,7 +1565,7 @@ class CircuitBreakerRegistry {
             totalRequests: 0,
             totalFailures: 0
         };
-        
+
         // Start global monitoring
         this.startGlobalMonitoring();
     }
@@ -1579,21 +1579,21 @@ class CircuitBreakerRegistry {
             const enterpriseOptions = this.getEnterpriseDefaults(serviceName, options);
             const breaker = new CircuitBreaker(enterpriseOptions);
             this.breakers.set(serviceName, breaker);
-            
+
             // Set up enterprise monitoring
             this.setupEnterpriseMonitoring(serviceName, breaker);
             this.globalMetrics.totalBreakers++;
         }
-        
+
         return this.breakers.get(serviceName);
     }
-    
+
     /**
      * Get enterprise defaults based on service patterns
      */
     getEnterpriseDefaults(serviceName, options) {
         const defaults = { ...options, serviceName };
-        
+
         // SAP-specific service patterns
         if (serviceName.includes('sap') || serviceName.includes('s4hana')) {
             defaults.priority = ServicePriority.CRITICAL;
@@ -1608,7 +1608,7 @@ class CircuitBreakerRegistry {
             defaults.maxConcurrentCalls = 200;
             defaults.failureThreshold = 2;
         }
-        
+
         return defaults;
     }
 
@@ -1631,14 +1631,14 @@ class CircuitBreakerRegistry {
                 ...event
             });
         });
-        
+
         breaker.on('bulkheadRejected', (event) => {
             cds.log('circuit-monitor').warn('Bulkhead rejection', {
                 service: serviceName,
                 ...event
             });
         });
-        
+
         breaker.on('maintenanceModeEntered', (event) => {
             this.globalMetrics.maintenanceBreakers++;
             cds.log('circuit-monitor').info('Service entered maintenance mode', {
@@ -1647,7 +1647,7 @@ class CircuitBreakerRegistry {
             });
         });
     }
-    
+
     /**
      * Update global metrics
      */
@@ -1656,10 +1656,10 @@ class CircuitBreakerRegistry {
         this.globalMetrics.degradedBreakers = 0;
         this.globalMetrics.maintenanceBreakers = 0;
         this.globalMetrics.totalRequests = 0;
-        
+
         for (const breaker of this.breakers.values()) {
             this.globalMetrics.totalRequests += breaker.metrics.totalRequests;
-            
+
             switch (breaker.state) {
                 case CircuitState.OPEN:
                     this.globalMetrics.openBreakers++;
@@ -1673,7 +1673,7 @@ class CircuitBreakerRegistry {
             }
         }
     }
-    
+
     /**
      * Start global monitoring
      */
@@ -1683,19 +1683,19 @@ class CircuitBreakerRegistry {
             this.generateGlobalReport();
         }, 300000)); // Every 5 minutes
     }
-    
+
     stopAdaptiveMonitoring() {
         for (const [name, intervalId] of this.intervals) {
             clearInterval(intervalId);
         }
         this.intervals.clear();
     }
-    
+
     shutdown() {
         this.stopAdaptiveMonitoring();
         this.breakers.clear();
     }
-    
+
     /**
      * Generate global circuit breaker report
      */
@@ -1706,17 +1706,17 @@ class CircuitBreakerRegistry {
             criticalServices: this.getCriticalServiceStatus(),
             recommendations: this.generateRecommendations()
         };
-        
+
         cds.log('circuit-monitor').info('Global circuit breaker report', report);
         return report;
     }
-    
+
     /**
      * Get status of critical services
      */
     getCriticalServiceStatus() {
         const critical = [];
-        
+
         for (const [serviceName, breaker] of this.breakers.entries()) {
             if (breaker.priority === ServicePriority.CRITICAL) {
                 critical.push({
@@ -1728,24 +1728,24 @@ class CircuitBreakerRegistry {
                 });
             }
         }
-        
+
         return critical;
     }
-    
+
     /**
      * Generate enterprise recommendations
      */
     generateRecommendations() {
         const recommendations = [];
-        
+
         if (this.globalMetrics.openBreakers > 0) {
             recommendations.push('Investigate services with open circuit breakers');
         }
-        
+
         if (this.globalMetrics.degradedBreakers > this.globalMetrics.totalBreakers * 0.2) {
             recommendations.push('Multiple services showing performance degradation - check infrastructure');
         }
-        
+
         return recommendations;
     }
 

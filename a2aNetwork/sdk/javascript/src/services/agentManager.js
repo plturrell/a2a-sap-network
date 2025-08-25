@@ -29,7 +29,7 @@ class AgentManager {
         try {
             const contract = this.client.getContract('AgentRegistry');
             const signer = this.client.getSigner();
-            
+
             if (!signer) {
                 throw new A2AError(ErrorCode.NO_SIGNER, 'Signer required for registration');
             }
@@ -55,7 +55,7 @@ class AgentManager {
             );
 
             const receipt = await tx.wait();
-            
+
             // Extract agent ID from events
             const event = receipt.events?.find(e => e.event === 'AgentRegistered');
             const agentId = event?.args?.agentId;
@@ -85,7 +85,7 @@ class AgentManager {
         try {
             const contract = this.client.getContract('AgentRegistry');
             const signer = this.client.getSigner();
-            
+
             if (!signer) {
                 throw new A2AError(ErrorCode.NO_SIGNER, 'Signer required for update');
             }
@@ -93,7 +93,7 @@ class AgentManager {
             // Verify agent ownership
             const agent = await this.getAgent(agentId);
             const signerAddress = await signer.getAddress();
-            
+
             if (agent.owner.toLowerCase() !== signerAddress.toLowerCase()) {
                 throw new A2AError(ErrorCode.UNAUTHORIZED, 'Not authorized to update this agent');
             }
@@ -198,10 +198,10 @@ class AgentManager {
     async searchAgents(criteria = {}) {
         try {
             const contract = this.client.getContract('AIAgentMatcher');
-            
+
             if (criteria.skills && criteria.skills.length > 0) {
                 // Convert skills to bytes32
-                const skillBytes = criteria.skills.map(skill => 
+                const skillBytes = criteria.skills.map(skill =>
                     ethers.utils.formatBytes32String(skill)
                 );
 
@@ -216,9 +216,9 @@ class AgentManager {
                             // Find agent ID by owner address
                             const registryContract = this.client.getContract('AgentRegistry');
                             const agentIds = await registryContract.getAgentsByOwner(address);
-                            
+
                             if (agentIds.length === 0) return null;
-                            
+
                             const agent = await this.getAgent(agentIds[0].toString());
                             return {
                                 ...agent,
@@ -256,10 +256,10 @@ class AgentManager {
         try {
             const contract = this.client.getContract('AgentRegistry');
             const totalAgents = await contract.getTotalAgents();
-            
+
             const agentIds = [];
             const end = Math.min(offset + limit, totalAgents.toNumber());
-            
+
             for (let i = offset; i < end; i++) {
                 agentIds.push(i.toString());
             }
@@ -327,7 +327,7 @@ class AgentManager {
         try {
             const contract = this.client.getContract('AgentRegistry');
             const signer = this.client.getSigner();
-            
+
             if (!signer) {
                 throw new A2AError(ErrorCode.NO_SIGNER, 'Signer required');
             }
@@ -351,7 +351,7 @@ class AgentManager {
         try {
             const contract = this.client.getContract('AgentRegistry');
             const signer = this.client.getSigner();
-            
+
             if (!signer) {
                 throw new A2AError(ErrorCode.NO_SIGNER, 'Signer required');
             }
@@ -359,7 +359,7 @@ class AgentManager {
             // Verify ownership
             const agent = await this.getAgent(agentId);
             const signerAddress = await signer.getAddress();
-            
+
             if (agent.owner.toLowerCase() !== signerAddress.toLowerCase()) {
                 throw new A2AError(ErrorCode.UNAUTHORIZED, 'Not authorized to deregister this agent');
             }
@@ -429,7 +429,7 @@ class AgentManager {
      */
     parseCapabilities(capabilities) {
         const caps = {};
-        
+
         capabilities.forEach((cap) => {
             caps[cap.name] = cap.enabled;
         });

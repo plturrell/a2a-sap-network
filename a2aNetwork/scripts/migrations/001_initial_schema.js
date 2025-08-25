@@ -123,7 +123,7 @@ async function down(db) {
 
     const tables = [
         'PerformanceMetrics',
-        'Workflows', 
+        'Workflows',
         'Messages',
         'Capabilities',
         'Services',

@@ -22,7 +22,7 @@ class CacheMiddleware {
 
     this.memoryCache = new Map();
     this.maxMemoryCacheSize = 1000;
-    
+
     // Cache configuration by entity type
     this.cacheConfig = {
       'Agents': { ttl: 300, strategy: 'write-through' },           // 5 minutes
@@ -55,7 +55,7 @@ class CacheMiddleware {
     const self = this; // Preserve context for SAP enterprise standard approach
     return async (req, res, next) => {
       const startTime = performance.now();
-      
+
       // Skip caching for non-GET requests
       if (req.method !== 'GET') {
         return next();
@@ -67,46 +67,46 @@ class CacheMiddleware {
 
       try {
         const cachedData = await self.get(cacheKey);
-        
+
         if (cachedData) {
           const duration = performance.now() - startTime;
-          
+
           // Add cache headers
           res.set({
             'X-Cache-Status': 'HIT',
             'X-Cache-Duration': `${duration.toFixed(2)}ms`,
             'Cache-Control': `public, max-age=${config.ttl}`
           });
-          
+
           return res.json(cachedData);
         }
 
         // Cache miss - continue to handler
         res.set('X-Cache-Status', 'MISS');
-        
+
         // Use event-based response handling instead of overriding res.json to avoid OpenTelemetry conflicts
         let responseData = null;
-        
+
         // Capture response data using event listeners instead of method override
         res.on('finish', () => {
           // Cache successful responses only
           if (res.statusCode >= 200 && res.statusCode < 300 && responseData) {
             const cachePromise = self.set(cacheKey, responseData, config.ttl);
-            
+
             // Don't wait for cache write in write-behind strategy
             if (config.strategy === 'write-behind') {
-              cachePromise.catch(err => 
+              cachePromise.catch(err =>
                 cds.log('service').warn('Background cache write failed:', err.message)
               );
             } else {
               // For write-through, we can still respond immediately
-              cachePromise.catch(err => 
+              cachePromise.catch(err =>
                 cds.log('service').warn('Cache write failed:', err.message)
               );
             }
           }
         });
-        
+
         // Store original json method to capture data without overriding
         const originalJson = res.json;
         res.json = function(data) {
@@ -143,10 +143,10 @@ class CacheMiddleware {
         const data = await this.redis.get(key);
         if (data) {
           const parsed = JSON.parse(data);
-          
+
           // Store in memory cache for faster access
           this.setMemoryCache(key, parsed, 60); // 1 minute in memory
-          
+
           return parsed;
         }
       } catch (error) {
@@ -228,10 +228,10 @@ class CacheMiddleware {
     const baseKey = `a2a:${req.path}`;
     const queryParams = new URLSearchParams(req.query);
     queryParams.sort();
-    
+
     const paramsString = queryParams.toString();
     const userContext = req.user?.sub || 'anonymous';
-    
+
     return `${baseKey}:${userContext}:${Buffer.from(paramsString).toString('base64')}`;
   }
 
@@ -249,7 +249,7 @@ class CacheMiddleware {
   setupEventListeners() {
     // Listen for data changes to invalidate cache
     process.on('cache:invalidate', (pattern) => {
-      this.invalidate(pattern).catch(err => 
+      this.invalidate(pattern).catch(err =>
         cds.log('service').warn('Cache invalidation failed:', err.message)
       );
     });
@@ -295,7 +295,7 @@ class CacheMiddleware {
    */
   async warmUp() {
     cds.log('service').info('Starting cache warm-up...');
-    
+
     const warmUpData = [
       { key: 'a2a:/api/v1/TopAgents', ttl: 900 },
       { key: 'a2a:/api/v1/ActiveServices', ttl: 300 },
@@ -304,7 +304,7 @@ class CacheMiddleware {
 
     // This would typically fetch from the database and populate cache
     // Implementation depends on your data access layer
-    
+
     cds.log('service').info('Cache warm-up completed');
   }
 }

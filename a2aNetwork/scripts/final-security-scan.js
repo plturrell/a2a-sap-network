@@ -59,7 +59,7 @@ class FinalSecurityScanner {
 
         // 1. CRITICAL SECURITY CHECKS
         console.log('🔒 Critical Security Validation');
-        
+
         this.check(
             'No exposed private keys in .env files',
             !this.fileExists('.env.deployed'),
@@ -182,7 +182,7 @@ class FinalSecurityScanner {
     validateWebSocketAuth() {
         const wsAuth = this.readFile('srv/middleware/secureWebSocketAuth.js');
         const launchpadController = this.readFile('app/controller/Launchpad.controller.js');
-        
+
         if (!wsAuth && !launchpadController) return false;
 
         // Check either dedicated WS auth file or auth in controller
@@ -191,7 +191,7 @@ class FinalSecurityScanner {
             wsAuth.includes('RS256') &&
             wsAuth.includes('validateToken')
         );
-        
+
         const hasControllerAuth = launchpadController && (
             launchpadController.includes('_getAuthToken') &&
             launchpadController.includes('token=${encodeURIComponent(token)}')
@@ -229,7 +229,7 @@ class FinalSecurityScanner {
     validateUI5Patterns() {
         const standardDialog = this.readFile('app/fragment/StandardDialog.fragment.xml');
         const standardForm = this.readFile('app/fragment/StandardForm.fragment.xml');
-        
+
         return standardDialog && standardForm &&
                standardDialog.includes('beginButton') &&
                standardForm.includes('ResponsiveGridLayout');
@@ -329,7 +329,7 @@ class FinalSecurityScanner {
         if (!appManifest) return false;
 
         const manifest = JSON.parse(appManifest);
-        return manifest['sap.app'] && 
+        return manifest['sap.app'] &&
                manifest['sap.ui5'] &&
                manifest['sap.app'].id === 'a2a.fiori';
     }
@@ -348,7 +348,7 @@ class FinalSecurityScanner {
         console.log('='.repeat(60));
 
         const percentage = Math.round((this.results.score / this.results.maxScore) * 100);
-        
+
         console.log(`\n🎯 Overall Score: ${this.results.score}/${this.results.maxScore} (${percentage}%)`);
         console.log(`✅ Passed: ${this.results.passed.length}`);
         console.log(`❌ Failed: ${this.results.failed.length}`);
@@ -361,13 +361,13 @@ class FinalSecurityScanner {
 
         if (this.results.warnings.length > 0) {
             console.log('\n⚠️  WARNINGS:');
-            this.results.warnings.forEach(warning => 
+            this.results.warnings.forEach(warning =>
                 console.log(`  • ${warning.name}: ${warning.message}`)
             );
         }
 
         console.log(`\n${  '='.repeat(60)}`);
-        
+
         if (percentage >= 95) {
             console.log('🎉 ENTERPRISE DEPLOYMENT READY');
             console.log('✅ System meets all production security requirements');

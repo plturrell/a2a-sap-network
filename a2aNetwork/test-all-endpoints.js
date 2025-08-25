@@ -11,7 +11,7 @@ const endpoints = [
         expectedFields: ['id', 'title', 'data', 'status']
     },
     {
-        name: 'Service Marketplace', 
+        name: 'Service Marketplace',
         url: '/api/v1/Services?id=service_marketplace',
         expectedFields: ['id', 'title', 'data', 'status']
     },
@@ -54,7 +54,7 @@ async function testEndpoint(endpoint) {
                 try {
                     const result = JSON.parse(data);
                     const hasFields = endpoint.expectedFields.every(field => result.hasOwnProperty(field));
-                    
+
                     resolve({
                         name: endpoint.name,
                         status: res.statusCode,
@@ -102,28 +102,28 @@ async function testEndpoint(endpoint) {
 async function testAllEndpoints() {
     console.log('🚀 Testing ALL Launchpad Tile Endpoints\n');
     console.log('='*50);
-    
+
     const results = [];
     for (const endpoint of endpoints) {
         console.log(`Testing: ${endpoint.name}...`);
         const result = await testEndpoint(endpoint);
         results.push(result);
-        
+
         if (result.success) {
             console.log(`✅ ${result.name} - PASSED (${result.status})`);
         } else {
             console.log(`❌ ${result.name} - FAILED (${result.status}) - ${result.error}`);
         }
     }
-    
+
     const passed = results.filter(r => r.success).length;
     const total = results.length;
-    
+
     console.log('\n' + `${'='*50}`);
     console.log('🏁 FINAL RESULTS');
     console.log('='*50);
     console.log(`Passed: ${passed}/${total} (${Math.round(passed/total*100)}%)`);
-    
+
     if (passed === total) {
         console.log('\n🎉 ALL ENDPOINTS WORKING! Launchpad is 100% functional!');
         console.log('✅ Agent Visualization - Live data from database');
@@ -140,7 +140,7 @@ async function testAllEndpoints() {
             }
         });
     }
-    
+
     return { passed, total, results };
 }
 

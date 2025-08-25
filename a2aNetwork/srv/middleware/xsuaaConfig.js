@@ -2,7 +2,7 @@
  * @fileoverview XSUAA Configuration Helper
  * @since 1.0.0
  * @module xsuaaConfig
- * 
+ *
  * Provides robust XSUAA configuration with multiple fallback mechanisms
  * and proper validation for production environments
  */
@@ -17,17 +17,17 @@ const cds = require('@sap/cds');
  */
 const validateXSUAAConfig = (config) => {
     if (!config || !config.credentials) return false;
-    
+
     const required = ['clientid', 'clientsecret', 'url'];
     const credentials = config.credentials;
-    
+
     for (const field of required) {
         if (!credentials[field]) {
             cds.log('xsuaa').warn(`Missing required XSUAA field: ${field}`);
             return false;
         }
     }
-    
+
     return true;
 };
 
@@ -37,7 +37,7 @@ const validateXSUAAConfig = (config) => {
  */
 const getXSUAAConfig = () => {
     const log = cds.log('xsuaa');
-    
+
     try {
         // 1. Try CDS configuration first
         if (cds.env.requires?.auth?.credentials) {
@@ -50,13 +50,13 @@ const getXSUAAConfig = () => {
                 return cdsConfig;
             }
         }
-        
+
         // 2. Try VCAP_SERVICES (Cloud Foundry)
         if (process.env.VCAP_SERVICES) {
             try {
                 const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
                 const xsuaaService = vcapServices.xsuaa?.[0];
-                
+
                 if (xsuaaService?.credentials) {
                     const vcapConfig = {
                         credentials: xsuaaService.credentials,
@@ -71,7 +71,7 @@ const getXSUAAConfig = () => {
                 log.error('Failed to parse VCAP_SERVICES:', parseError.message);
             }
         }
-        
+
         // 3. Try environment variables (Kubernetes/Docker)
         if (process.env.XSUAA_CLIENT_ID && process.env.XSUAA_CLIENT_SECRET) {
             const envConfig = {
@@ -93,13 +93,13 @@ const getXSUAAConfig = () => {
                     credential_type: process.env.XSUAA_CREDENTIAL_TYPE
                 }
             };
-            
+
             if (validateXSUAAConfig(envConfig)) {
                 log.info('XSUAA configuration loaded from environment variables');
                 return envConfig;
             }
         }
-        
+
         // 4. Try xsenv service lookup
         try {
             xsenv.loadEnv();
@@ -117,7 +117,7 @@ const getXSUAAConfig = () => {
         } catch (xsenvError) {
             log.debug('xsenv service lookup failed:', xsenvError.message);
         }
-        
+
         // 5. Development fallback (only in non-production)
         if (process.env.NODE_ENV !== 'production' && process.env.USE_DEVELOPMENT_AUTH === 'true') {
             log.warn('No XSUAA configuration found - using development mode');
@@ -131,15 +131,15 @@ const getXSUAAConfig = () => {
                 }
             };
         }
-        
+
         // No configuration found
         if (process.env.NODE_ENV === 'production') {
             throw new Error('XSUAA configuration is required in production environment');
         }
-        
+
         log.warn('No XSUAA configuration found. Authentication will not work properly.');
         return null;
-        
+
     } catch (error) {
         log.error('Error loading XSUAA configuration:', error.message);
         if (process.env.NODE_ENV === 'production') {
@@ -155,17 +155,17 @@ const getXSUAAConfig = () => {
  */
 const initializeXSUAA = () => {
     const log = cds.log('xsuaa');
-    
+
     try {
         const config = getXSUAAConfig();
-        
+
         if (!config) {
             return {
                 initialized: false,
                 error: 'No XSUAA configuration available'
             };
         }
-        
+
         if (config.isDevelopment) {
             return {
                 initialized: true,
@@ -173,7 +173,7 @@ const initializeXSUAA = () => {
                 warning: 'Using development authentication mode'
             };
         }
-        
+
         return {
             initialized: true,
             mode: 'production',
@@ -181,7 +181,7 @@ const initializeXSUAA = () => {
             xsAppName: config.credentials.xsappname,
             tenantMode: config.credentials.tenantmode
         };
-        
+
     } catch (error) {
         log.error('Failed to initialize XSUAA:', error.message);
         return {

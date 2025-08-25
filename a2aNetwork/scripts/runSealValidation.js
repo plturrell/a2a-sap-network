@@ -22,7 +22,7 @@ console.log('');
 // Function to run tests
 async function runTests() {
     console.log('Running comprehensive SEAL validation tests...\n');
-    
+
     // Use npx to run mocha directly
     const testProcess = spawn('npx', [
         'mocha',
@@ -35,7 +35,7 @@ async function runTests() {
         stdio: 'inherit',
         env: process.env
     });
-    
+
     testProcess.on('close', (code) => {
         if (code === 0) {
             console.log('\n✅ All SEAL validation tests passed!');
@@ -45,7 +45,7 @@ async function runTests() {
             process.exit(code);
         }
     });
-    
+
     testProcess.on('error', (err) => {
         console.error('Failed to start test process:', err);
         process.exit(1);
@@ -92,41 +92,41 @@ function displaySummary() {
 // Alternative: Run a quick validation without full test suite
 async function runQuickValidation() {
     console.log('Running quick SEAL validation...\n');
-    
+
     try {
         // Load and test core components
         const SealConfiguration = require('../srv/seal/sealConfiguration');
         const GrokSealAdapter = require('../srv/seal/grokSealAdapter');
         const ReinforcementLearningEngine = require('../srv/seal/reinforcementLearningEngine');
-        
+
         const config = new SealConfiguration();
         const cfg = config.getConfiguration();
-        
+
         console.log('✅ Configuration loaded');
         console.log(`   Grok Model: ${cfg.grok.model}`);
         console.log(`   API URL: ${cfg.grok.baseUrl}`);
-        
+
         const rl = new ReinforcementLearningEngine();
         await rl.initializeService();
-        
+
         console.log('✅ RL Engine initialized');
         console.log(`   Q-table size: ${rl.qTable.size}`);
         console.log(`   Learning rate: ${rl.learningRate}`);
-        
+
         // Test Q-learning
         const state = { complexity: 0.7, accuracy: 0.6 };
         const actions = [{ type: 'test_a' }, { type: 'test_b' }];
-        
+
         const selection = await rl.selectAction(state, actions);
         console.log('✅ Action selection working');
         console.log(`   Selected: ${selection.action.type} (${selection.selectionReason})`);
-        
+
         // Test learning
         await rl.learnFromFeedback(state, selection.action, 0.8, state);
         console.log('✅ Q-Learning update successful');
-        
+
         console.log('\n🎯 Quick validation PASSED!\n');
-        
+
     } catch (error) {
         console.error('❌ Quick validation failed:', error.message);
         process.exit(1);

@@ -10,15 +10,15 @@ const { SELECT, INSERT, DELETE } = cds.ql;
 async function seedRealAgentData() {
     try {
         log.info('🚀 Starting Real Agent Database Seeding...');
-        
+
         // Connect to database
         const db = await cds.connect.to('db');
-        
+
         // Clear existing fake data
         log.debug('🧹 Clearing existing fake data...');
         await db.run(DELETE.from('a2a_network_AgentPerformance'));
         await db.run(DELETE.from('a2a_network_Agents'));
-        
+
         // Real agent data based on actual A2A network requirements
         const realAgents = [
             {
@@ -103,15 +103,15 @@ async function seedRealAgentData() {
                 country_code: 'US'
             }
         ];
-        
+
         log.debug('📝 Inserting real agent data...');
-        
+
         // Insert real agents
         for (const agentData of realAgents) {
             const agent = await db.run(
                 INSERT.into('a2a_network_Agents').entries(agentData)
             );
-            
+
             // Create real performance data for each agent
             const performanceData = {
                 ID: cds.utils.uuid(),
@@ -125,31 +125,31 @@ async function seedRealAgentData() {
                 trustScore: Math.round((agentData.reputation / 1000) * 5 * 100) / 100, // Convert to trust score
                 lastUpdated: new Date().toISOString()
             };
-            
+
             // Success rate will be calculated in the API layer from successfulTasks/totalTasks
-            
+
             await db.run(
                 INSERT.into('a2a_network_AgentPerformance').entries(performanceData)
             );
-            
+
             log.debug(`✅ Created agent: ${agentData.name} (${agentData.address})`);
         }
-        
+
         log.debug('🎉 Real Agent Database Seeding Complete!');
         log.debug(`📊 Total agents created: ${realAgents.length}`);
-        
+
         // Verify the data
         const agentCount = await db.run(
             SELECT.from('a2a_network_Agents').columns('count(*) as total')
         );
         log.debug(`✅ Verification: ${agentCount[0].total} agents in database`);
-        
+
         return {
             success: true,
             agentsCreated: realAgents.length,
             message: 'Real agent data seeding completed successfully'
         };
-        
+
     } catch (error) {
         console.error('❌ Error seeding real agent data:', error);
         throw error;

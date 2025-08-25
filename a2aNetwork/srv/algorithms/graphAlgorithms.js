@@ -37,17 +37,17 @@ class GraphAlgorithms extends BaseService {
         if (!nodeId) {
             throw new Error('Node ID is required');
         }
-        
+
         graph.nodes.add(nodeId);
         graph.metadata.set(nodeId, {
             ...metadata,
             addedAt: new Date().toISOString()
         });
-        
+
         if (!graph.edges.has(nodeId)) {
             graph.edges.set(nodeId, new Set());
         }
-        
+
         return graph;
     }
 
@@ -57,14 +57,14 @@ class GraphAlgorithms extends BaseService {
     addEdge(graph, fromNodeId, toNodeId, weight = 1) {
         this.addNode(graph, fromNodeId);
         this.addNode(graph, toNodeId);
-        
+
         graph.edges.get(fromNodeId).add(toNodeId);
-        
+
         if (!graph.weights.has(fromNodeId)) {
             graph.weights.set(fromNodeId, new Map());
         }
         graph.weights.get(fromNodeId).set(toNodeId, weight);
-        
+
         return graph;
     }
 
@@ -84,7 +84,7 @@ class GraphAlgorithms extends BaseService {
             visited.add(nodeId);
             visitOrder.push(nodeId);
             discovered.set(nodeId, ++time);
-            
+
             const neighbors = graph.edges.get(nodeId) || new Set();
             for (const neighbor of neighbors) {
                 if (!visited.has(neighbor)) {
@@ -92,7 +92,7 @@ class GraphAlgorithms extends BaseService {
                     dfsVisit(neighbor);
                 }
             }
-            
+
             finished.set(nodeId, ++time);
         };
 

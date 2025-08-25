@@ -127,7 +127,7 @@ async function seedRealAgents() {
     try {
         log.debug('🔄 Connecting to database...');
         const db = await cds.connect.to('db');
-        
+
         log.debug('🧹 Cleaning up existing agent data...');
         // Delete all existing agents to ensure clean state
         await db.run(DELETE.from('a2a.network.Agents'));
@@ -135,7 +135,7 @@ async function seedRealAgents() {
 
         log.debug('🌱 Seeding 15 real A2A agents...');
         let successCount = 0;
-        
+
         for (const agent of REAL_A2A_AGENTS) {
             try {
                 // Add required ID field
@@ -154,10 +154,10 @@ async function seedRealAgents() {
         log.debug('\n📊 Verification...');
         const totalCount = await db.run(SELECT.from('a2a.network.Agents').columns('count(*) as total'));
         const activeCount = await db.run(SELECT.from('a2a.network.Agents').columns('count(*) as total').where({ isActive: true }));
-        
+
         log.debug(`✅ Total agents in database: ${totalCount[0].total}`);
         log.debug(`✅ Active agents in database: ${activeCount[0].total}`);
-        
+
         if (totalCount[0].total === 10 && activeCount[0].total === 10) {
             log.info('🎉 SUCCESS: Exactly 10 real agents seeded and verified (including CalculationAgent)!');
         } else {
@@ -168,7 +168,7 @@ async function seedRealAgents() {
         // Test that our API endpoint returns the correct count
         log.debug('Database seeding complete. Test the API with:');
         log.debug('curl -s "http://localhost:4004/api/v1/NetworkStats?id=overview_dashboard" | jq \'.data.activeAgents\'');
-        
+
     } catch (error) {
         console.error('❌ Failed to seed real agents:', error);
         process.exit(1);

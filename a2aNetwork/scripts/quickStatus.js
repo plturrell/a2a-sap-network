@@ -23,7 +23,7 @@ class QuickStatusCheck {
             'error': '❌',
             'warning': '⚠️'
         }[type] || '📋';
-        
+
         console.log(`${prefix} ${message}`);
     }
 
@@ -51,9 +51,9 @@ class QuickStatusCheck {
                 let data = '';
                 res.on('data', chunk => data += chunk);
                 res.on('end', () => {
-                    resolve({ 
-                        name, 
-                        status: 'RESPONDING', 
+                    resolve({
+                        name,
+                        status: 'RESPONDING',
                         statusCode: res.statusCode,
                         hasData: data.length > 0,
                         isJSON: data.startsWith('{') || data.startsWith('[')
@@ -96,7 +96,7 @@ class QuickStatusCheck {
         const sapCapRunning = portChecks.find(p => p.name === 'SAP CAP Server' && p.status === 'RUNNING');
         if (sapCapRunning) {
             this.log('\n🔍 Testing API Endpoints:', 'info');
-            
+
             const apiChecks = await Promise.all([
                 this.checkAPI('http://localhost:4004/api/v1/Agents?id=agent_visualization', 'Agents API'),
                 this.checkAPI('http://localhost:4004/api/v1/Services?id=dashboard_test', 'Services API'),
@@ -108,7 +108,7 @@ class QuickStatusCheck {
                 this.results.status[result.name] = result;
                 if (result.status === 'RESPONDING') {
                     const dataInfo = result.isJSON ? 'JSON' : 'Text';
-                    this.log(`${result.name}: ${result.statusCode} - ${dataInfo} (${result.hasData ? 'Has Data' : 'Empty'})`, 
+                    this.log(`${result.name}: ${result.statusCode} - ${dataInfo} (${result.hasData ? 'Has Data' : 'Empty'})`,
                              result.statusCode < 400 ? 'success' : 'warning');
                 } else {
                     this.log(`${result.name}: ${result.status} - ${result.error}`, 'error');
@@ -119,10 +119,10 @@ class QuickStatusCheck {
         // Generate summary
         const runningServers = portChecks.filter(p => p.status === 'RUNNING').length;
         const totalServers = portChecks.length;
-        
+
         this.log('\n📊 SUMMARY:', 'info');
         this.log(`Servers Running: ${runningServers}/${totalServers}`, runningServers === totalServers ? 'success' : 'warning');
-        
+
         if (sapCapRunning) {
             this.log('Backend API: Available', 'success');
             this.results.summary = 'System operational - both servers running with API access';

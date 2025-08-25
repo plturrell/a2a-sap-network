@@ -67,8 +67,8 @@ class Agent14Adapter extends BaseAdapter {
 
     async stopFineTuning(jobId) {
         try {
-            const response = await this.callPythonBackend('stop_fine_tuning', { 
-                job_id: jobId 
+            const response = await this.callPythonBackend('stop_fine_tuning', {
+                job_id: jobId
             });
             return { status: 'stopped', job_id: jobId };
         } catch (error) {
@@ -79,8 +79,8 @@ class Agent14Adapter extends BaseAdapter {
     // ===== TRAINING MONITORING =====
     async getTrainingStatus(jobId) {
         try {
-            const response = await this.callPythonBackend('get_training_status', { 
-                job_id: jobId 
+            const response = await this.callPythonBackend('get_training_status', {
+                job_id: jobId
             });
             return this._transformStatusResponse(response);
         } catch (error) {
@@ -190,8 +190,8 @@ class Agent14Adapter extends BaseAdapter {
 
     async undeployModel(deploymentId) {
         try {
-            const response = await this.callPythonBackend('undeploy_model', { 
-                deployment_id: deploymentId 
+            const response = await this.callPythonBackend('undeploy_model', {
+                deployment_id: deploymentId
             });
             return { status: 'undeployed', deployment_id: deploymentId };
         } catch (error) {
@@ -330,7 +330,7 @@ class Agent14Adapter extends BaseAdapter {
     // ===== TRANSFORMATION HELPERS =====
     _transformModelsResponse(response) {
         if (!response.models) return [];
-        
+
         return response.models.map(model => ({
             ID: model.id,
             name: model.name,
@@ -377,22 +377,22 @@ class Agent14Adapter extends BaseAdapter {
 
     _buildFilters(query) {
         const filters = {};
-        
+
         if (query.status) filters.status = query.status;
         if (query.model_type) filters.model_type = query.model_type;
         if (query.created_after) filters.created_after = query.created_after;
         if (query.created_before) filters.created_before = query.created_before;
-        
+
         return filters;
     }
 
     async callPythonBackend(method, payload) {
         const fetch = require('node-fetch');
         const baseUrl = process.env.AGENT14_BASE_URL || 'http://localhost:8014';
-        
+
         try {
             let response;
-            
+
             switch (method) {
                 case 'list_embedding_models':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models?${new URLSearchParams({ filters: JSON.stringify(payload.filters || {}) })}`, {
@@ -401,7 +401,7 @@ class Agent14Adapter extends BaseAdapter {
                         timeout: this.timeout
                     });
                     return await response.json();
-                    
+
                 case 'create_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models`, {
                         method: 'POST',
@@ -410,7 +410,7 @@ class Agent14Adapter extends BaseAdapter {
                         timeout: this.timeout
                     });
                     return await response.json();
-                    
+
                 case 'start_fine_tuning':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/start`, {
                         method: 'POST',
@@ -419,7 +419,7 @@ class Agent14Adapter extends BaseAdapter {
                         timeout: this.timeout
                     });
                     return await response.json();
-                    
+
                 case 'stop_fine_tuning':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/stop`, {
                         method: 'POST',
@@ -430,7 +430,7 @@ class Agent14Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'get_training_status':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/status`, {
                 method: 'POST',
@@ -441,7 +441,7 @@ class Agent14Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'get_training_metrics':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/metrics`, {
                 method: 'POST',
@@ -450,7 +450,7 @@ class Agent14Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'evaluate_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/evaluate`, {
                 method: 'POST',
@@ -459,7 +459,7 @@ class Agent14Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'deploy_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/deploy`, {
                 method: 'POST',
@@ -468,7 +468,7 @@ class Agent14Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 case 'generate_embeddings':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/generate-embeddings`, {
                 method: 'POST',
@@ -480,7 +480,7 @@ class Agent14Adapter extends BaseAdapter {
                 timeout: this.timeout
             });
             return await response.json();
-                    
+
                 default:
                     throw new Error(`Unknown method: ${method}`);
             }

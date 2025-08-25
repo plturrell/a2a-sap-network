@@ -39,55 +39,55 @@ const MESSAGE_ROUTER_ABI = [
 
 async function deployContract(wallet, contractName, bytecode, abi, constructorArgs = []) {
     console.log(`\n🚀 Deploying ${contractName}...`);
-    
+
     // Create contract factory
     const contractFactory = new ethers.ContractFactory(abi, bytecode, wallet);
-    
+
     // Estimate gas
     const gasEstimate = await contractFactory.getDeployTransaction(...constructorArgs).estimateGas();
     console.log(`⛽ Estimated gas: ${gasEstimate.toString()}`);
-    
+
     // Deploy contract
     const contract = await contractFactory.deploy(...constructorArgs, {
         gasLimit: gasEstimate * BigInt(120) / BigInt(100) // Add 20% buffer
     });
-    
+
     console.log(`⏳ Transaction hash: ${contract.deploymentTransaction().hash}`);
-    
+
     // Wait for deployment
     await contract.waitForDeployment();
     const address = await contract.getAddress();
-    
+
     console.log(`✅ ${contractName} deployed at: ${address}`);
-    
+
     return { contract, address };
 }
 
 async function main() {
     console.log("🚀 Starting A2A Blockchain Contract Deployment");
-    
+
     try {
         // Initialize provider and wallet
         const provider = new ethers.JsonRpcProvider(process.env.A2A_RPC_URL || "http://localhost:8545");
         const privateKey = process.env.A2A_PRIVATE_KEY;
-        
+
         if (!privateKey) {
             throw new Error("A2A_PRIVATE_KEY environment variable is required");
         }
-        
+
         const wallet = new ethers.Wallet(privateKey, provider);
         console.log(`🔑 Deployer address: ${wallet.address}`);
-        
+
         // Check balance
         const balance = await provider.getBalance(wallet.address);
         console.log(`💰 Deployer balance: ${ethers.formatEther(balance)} ETH`);
-        
+
         if (balance === 0n) {
             throw new Error("Deployer account has no ETH. Please fund the account first.");
         }
-        
+
         const deployments = {};
-        
+
         // Deploy AgentRegistry
         const agentRegistry = await deployContract(
             wallet,
@@ -96,17 +96,17 @@ async function main() {
             AGENT_REGISTRY_ABI
         );
         deployments.AgentRegistry = agentRegistry.address;
-        
+
         // Deploy MessageRouter (with AgentRegistry address and 1 second message delay)
         const messageRouter = await deployContract(
             wallet,
-            "MessageRouter", 
+            "MessageRouter",
             MESSAGE_ROUTER_BYTECODE,
             MESSAGE_ROUTER_ABI,
             [agentRegistry.address, 1] // 1 second delay between messages
         );
         deployments.MessageRouter = messageRouter.address;
-        
+
         // Save deployment info
         const deploymentInfo = {
             network: process.env.A2A_NETWORK || "localhost",
@@ -128,19 +128,19 @@ async function main() {
                 }
             }
         };
-        
+
         // Save to file
         const deploymentPath = path.join(__dirname, '../data/deployments/latest.json');
         fs.mkdirSync(path.dirname(deploymentPath), { recursive: true });
         await fs.writeFile(deploymentPath, JSON.stringify(deploymentInfo));
-        
+
         console.log(`\n📄 Deployment Summary:`);
         console.log(`   Network: ${deploymentInfo.network} (${deploymentInfo.chainId})`);
         console.log(`   Deployer: ${deploymentInfo.deployer}`);
         console.log(`   AgentRegistry: ${agentRegistry.address}`);
         console.log(`   MessageRouter: ${messageRouter.address}`);
         console.log(`   Saved to: ${deploymentPath}`);
-        
+
         // Create environment file
         const envContent = `# A2A Blockchain Configuration - Generated ${new Date().toISOString()}
 A2A_RPC_URL=${process.env.A2A_RPC_URL || "http://localhost:8545"}
@@ -159,30 +159,30 @@ DM_AGENT_PRIVATE_KEY=${privateKey}
 # Blockchain Features
 BLOCKCHAIN_ENABLED=true
 `;
-        
+
         const envPath = path.join(__dirname, '../.env.deployed');
         await fs.writeFile(envPath, envContent);
-        
+
         console.log(`\n🔧 Environment Configuration:`);
         console.log(`   Generated: ${envPath}`);
         console.log(`   Copy to .env: cp ${envPath} .env`);
-        
+
         console.log(`\n🎯 Next Steps:`);
         console.log(`   1. Copy environment configuration: cp ${envPath} .env`);
         console.log(`   2. Register agents: node scripts/registerAgentsOnBlockchain.js`);
         console.log(`   3. Start agents with BLOCKCHAIN_ENABLED=true`);
-        
+
         return deploymentInfo;
-        
+
     } catch (error) {
         console.error(`❌ Deployment failed:`, error);
-        
+
         if (error.code === 'INSUFFICIENT_FUNDS') {
             console.error(`Insufficient funds. Please ensure the deployer account has enough ETH.`);
         } else if (error.code === 'NETWORK_ERROR') {
             console.error(`Network error. Please check the RPC URL and network connectivity.`);
         }
-        
+
         process.exit(1);
     }
 }
@@ -190,16 +190,16 @@ BLOCKCHAIN_ENABLED=true
 // Test connectivity
 async function testConnectivity() {
     console.log("🔍 Testing blockchain connectivity...");
-    
+
     try {
         const provider = new ethers.JsonRpcProvider(process.env.A2A_RPC_URL || "http://localhost:8545");
-        
+
         const network = await provider.getNetwork();
         console.log(`🌐 Connected to network: ${network.name} (chainId: ${network.chainId})`);
-        
+
         const blockNumber = await provider.getBlockNumber();
         console.log(`📦 Latest block: ${blockNumber}`);
-        
+
         return true;
     } catch (error) {
         console.error(`❌ Connectivity test failed:`, error.message);

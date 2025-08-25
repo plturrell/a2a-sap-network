@@ -308,7 +308,7 @@ class GrokClient:
             }
         ]
 
-        return await self.chat_completion_async(messages, temperature=0.4)
+        return await self.async_chat_completion(messages, temperature=0.4)
 
     def validate_financial_entities(self, entities: List[str]) -> GrokResponse:
         """Validate financial entities and suggest corrections"""

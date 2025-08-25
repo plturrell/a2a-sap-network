@@ -1,9 +1,9 @@
 /**
  * Health Check Service
- * 
+ *
  * Provides comprehensive health monitoring endpoints for the A2A Network application
  * following SAP enterprise standards for production monitoring.
- * 
+ *
  * @author SAP SE
  * @since 1.0.0
  * @version 1.0.0
@@ -32,10 +32,10 @@ class HealthService {
             memoryUsage: [],
             cpuUsage: []
         };
-        
+
         // Register default health checks
         this._registerDefaultChecks();
-        
+
         // Start metrics collection
         this._startMetricsCollection();
     }
@@ -62,20 +62,20 @@ class HealthService {
     _startMetricsCollection() {
         // Stop existing metrics collection first
         this._stopMetricsCollection();
-        
+
         // Collect metrics every 30 seconds
         this.metricsInterval = setInterval(() => {
             this._collectSystemMetrics();
         }, 30000);
     }
-    
+
     _stopMetricsCollection() {
         if (this.metricsInterval) {
             clearInterval(this.metricsInterval);
             this.metricsInterval = null;
         }
     }
-    
+
     shutdown() {
         this._stopMetricsCollection();
     }
@@ -87,7 +87,7 @@ class HealthService {
     _collectSystemMetrics() {
         const memUsage = process.memoryUsage();
         const cpuUsage = process.cpuUsage();
-        
+
         // Store memory usage (keep last 100 entries)
         this.metrics.memoryUsage.push({
             timestamp: Date.now(),
@@ -96,18 +96,18 @@ class HealthService {
             heapUsed: memUsage.heapUsed,
             external: memUsage.external
         });
-        
+
         if (this.metrics.memoryUsage.length > 100) {
             this.metrics.memoryUsage.shift();
         }
-        
+
         // Store CPU usage (keep last 100 entries)
         this.metrics.cpuUsage.push({
             timestamp: Date.now(),
             user: cpuUsage.user,
             system: cpuUsage.system
         });
-        
+
         if (this.metrics.cpuUsage.length > 100) {
             this.metrics.cpuUsage.shift();
         }
@@ -129,11 +129,11 @@ class HealthService {
      */
     recordRequest(statusCode, responseTime) {
         this.metrics.requests++;
-        
+
         if (statusCode >= 400) {
             this.metrics.errors++;
         }
-        
+
         // Group by status code ranges
         if (statusCode >= 200 && statusCode < 300) {
             this.metrics.responses['2xx']++;
@@ -144,13 +144,13 @@ class HealthService {
         } else if (statusCode >= 500) {
             this.metrics.responses['5xx']++;
         }
-        
+
         // Store response times (keep last 1000 entries)
         this.metrics.responseTimes.push({
             timestamp: Date.now(),
             duration: responseTime
         });
-        
+
         if (this.metrics.responseTimes.length > 1000) {
             this.metrics.responseTimes.shift();
         }
@@ -163,7 +163,7 @@ class HealthService {
     async getHealth() {
         const uptime = Date.now() - this.startTime;
         const memUsage = process.memoryUsage();
-        
+
         return {
             status: 'healthy',
             timestamp: new Date().toISOString(),
@@ -195,7 +195,7 @@ class HealthService {
         const basicHealth = await this.getHealth();
         const checkResults = {};
         let overallStatus = 'healthy';
-        
+
         // Run all registered health checks
         for (const [name, checkFn] of this.checks) {
             try {
@@ -203,7 +203,7 @@ class HealthService {
                     checkFn(),
                     new Promise((_, reject) => setTimeout(() => reject(new Error('Check timeout')), 5000))
                 ]);
-                
+
                 checkResults[name] = {
                     status: 'healthy',
                     ...result
@@ -217,9 +217,9 @@ class HealthService {
                 overallStatus = 'degraded';
             }
         }
-        
+
         const duration = performance.now() - startTime;
-        
+
         return {
             ...basicHealth,
             status: overallStatus,
@@ -236,11 +236,11 @@ class HealthService {
         const recentResponseTimes = this.metrics.responseTimes
             .filter(rt => Date.now() - rt.timestamp < 300000) // Last 5 minutes
             .map(rt => rt.duration);
-            
-        const avgResponseTime = recentResponseTimes.length > 0 
-            ? recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length 
+
+        const avgResponseTime = recentResponseTimes.length > 0
+            ? recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length
             : 0;
-            
+
         const p95ResponseTime = recentResponseTimes.length > 0
             ? this._percentile(recentResponseTimes, 0.95)
             : 0;
@@ -277,7 +277,7 @@ class HealthService {
         try {
             // Check critical dependencies
             const dbCheck = await this._checkDatabase();
-            
+
             return {
                 status: 'ready',
                 timestamp: new Date().toISOString(),
@@ -301,10 +301,10 @@ class HealthService {
     getLiveness() {
         const memUsage = process.memoryUsage();
         const heapUsedPercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-        
+
         // Consider unhealthy if heap usage is over 90%
         const isHealthy = heapUsedPercent < 90;
-        
+
         return {
             status: isHealthy ? 'alive' : 'unhealthy',
             timestamp: new Date().toISOString(),
@@ -314,7 +314,7 @@ class HealthService {
     }
 
     // Health check implementations
-    
+
     async _checkDatabase() {
         // Real database health check - using SQLite compatible query
         try {
@@ -322,7 +322,7 @@ class HealthService {
             const cds = require('@sap/cds');
             await cds.run('SELECT 1');
             const responseTime = Date.now() - start;
-            
+
             return {
                 connectionPool: 'active',
                 responseTime: responseTime,
@@ -338,7 +338,7 @@ class HealthService {
         const totalMem = os.totalmem();
         const freeMem = os.freemem();
         const usedPercent = ((totalMem - freeMem) / totalMem) * 100;
-        
+
         return {
             heapUsed: this._formatBytes(memUsage.heapUsed),
             heapTotal: this._formatBytes(memUsage.heapTotal),
@@ -368,13 +368,13 @@ class HealthService {
             { name: 'message-queue', url: process.env.REDIS_URL || 'redis://localhost:6379' },
             { name: 'cache-service', url: process.env.CACHE_SERVICE_URL || 'http://localhost:6379/ping' }
         ];
-        
+
         for (const service of externalServices) {
             try {
                 const start = Date.now();
                 const response = await blockchainClient.sendMessage(service.url, { timeout: 5000 });
                 const responseTime = Date.now() - start;
-                
+
                 services.push({
                     name: service.name,
                     status: response.ok ? 'healthy' : 'unhealthy',
@@ -389,7 +389,7 @@ class HealthService {
                 });
             }
         }
-        
+
         return { services };
     }
 
@@ -398,10 +398,10 @@ class HealthService {
      */
     async _checkSAPSystems() {
         const sapSystems = [];
-        
+
         // Check configured SAP destinations
         const destinations = this._getSAPDestinations();
-        
+
         for (const dest of destinations) {
             try {
                 const start = Date.now();
@@ -413,7 +413,7 @@ class HealthService {
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 const responseTime = Date.now() - start;
                 sapSystems.push({
                     name: dest.name,
@@ -431,7 +431,7 @@ class HealthService {
                 });
             }
         }
-        
+
         return { systems: sapSystems };
     }
 
@@ -445,7 +445,7 @@ class HealthService {
             connectivity: 'unknown',
             auditlog: 'unknown'
         };
-        
+
         try {
             // Check XSUAA service
             if (process.env.VCAP_SERVICES) {
@@ -459,7 +459,7 @@ class HealthService {
                 btpServices.xsuaa = process.env.XSUAA_CREDENTIALS ? 'configured' : 'not-configured';
                 btpServices.destination = process.env.DESTINATION_SERVICE_URL ? 'configured' : 'not-configured';
             }
-            
+
             return {
                 environment: process.env.NODE_ENV || 'development',
                 cloudFoundry: !!process.env.VCAP_APPLICATION,
@@ -548,13 +548,13 @@ class HealthService {
     }
 
     // Utility methods
-    
+
     _formatUptime(ms) {
         const seconds = Math.floor(ms / 1000);
         const minutes = Math.floor(seconds / 60);
         const hours = Math.floor(minutes / 60);
         const days = Math.floor(hours / 24);
-        
+
         if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
         if (hours > 0) return `${hours}h ${minutes % 60}m`;
         if (minutes > 0) return `${minutes}m ${seconds % 60}s`;

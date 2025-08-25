@@ -8,7 +8,7 @@ const wsService = new DevWebSocketService();
 cds.on('listening', async ({ server }) => {
     // Initialize WebSocket service with the HTTP server
     await wsService.initialize(server);
-    
+
     console.log(`🛠️  A2A Development Services (CAP) running on ${server.address().port}`);
     console.log('Services available:');
     console.log('  - DevServices OData: /dev-services');

@@ -39,7 +39,7 @@ class A2ANotificationService extends EventEmitter {
             // Use port manager to handle port conflicts
             const killConflicts = process.env.NODE_ENV === 'development';
             this.port = await portManager.allocatePortSafely('notifications', 4005, killConflicts);
-            
+
             if (!this.port) {
                 logger.warn('⚠️  WebSocket notifications disabled due to port allocation failure');
                 return;
@@ -55,7 +55,7 @@ class A2ANotificationService extends EventEmitter {
                 const recentNotifications = this.notifications
                     .slice(0, 10)
                     .map(n => ({ ...n, action: 'notification' }));
-                
+
                 blockchainClient.publishEvent(JSON.stringify({
                     action: 'initial_load',
                     notifications: recentNotifications
@@ -128,7 +128,7 @@ class A2ANotificationService extends EventEmitter {
         };
 
         this.notifications.unshift(notification);
-        
+
         // Keep only last 100 notifications
         if (this.notifications.length > 100) {
             this.notifications = this.notifications.slice(0, 100);
@@ -136,10 +136,10 @@ class A2ANotificationService extends EventEmitter {
 
         // Broadcast to all subscribers
         this.broadcastNotification(notification);
-        
+
         // Emit event for internal listeners
         this.emit('notification', notification);
-        
+
         logger.debug(`🔔 Created ${notification.priority} notification: ${title}`);
         return notification;
     }
@@ -153,8 +153,8 @@ class A2ANotificationService extends EventEmitter {
         this.subscribers.forEach(ws => {
             if (ws.readyState === WebSocket.OPEN) {
                 // Check if client is subscribed to this category
-                if (!ws.subscribedCategories || 
-                    ws.subscribedCategories.length === 0 || 
+                if (!ws.subscribedCategories ||
+                    ws.subscribedCategories.length === 0 ||
                     ws.subscribedCategories.includes(notification.category)) {
                     blockchainClient.publishEvent(message);
                 }
@@ -217,7 +217,7 @@ class A2ANotificationService extends EventEmitter {
     startPeriodicTasks() {
         // Stop existing tasks first
         this.stopPeriodicTasks();
-        
+
         // Simulate system notifications every 2 minutes
         this.intervals.set('systemNotifications', setInterval(() => {
             this.generateSystemNotifications();
@@ -228,7 +228,7 @@ class A2ANotificationService extends EventEmitter {
             this.cleanupOldNotifications();
         }, 3600000));
     }
-    
+
     stopPeriodicTasks() {
         for (const [name, intervalId] of this.intervals) {
             clearInterval(intervalId);
@@ -236,26 +236,26 @@ class A2ANotificationService extends EventEmitter {
         }
         this.intervals.clear();
     }
-    
+
     shutdown() {
         logger.info('Shutting down notification service...');
-        
+
         // Stop periodic tasks
         this.stopPeriodicTasks();
-        
+
         // Close all subscriber connections
         for (const ws of this.subscribers) {
             ws.close(1001, 'Server shutting down');
         }
         this.subscribers.clear();
-        
+
         // Close WebSocket server
         if (this.wsServer) {
             this.wsServer.close(() => {
                 logger.info('Notification WebSocket server closed');
             });
         }
-        
+
         logger.info('Notification service shutdown complete');
     }
 
@@ -266,10 +266,10 @@ class A2ANotificationService extends EventEmitter {
             // Subscribe to real system events from event bus
             const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
             logger.info('System notifications now listening for real events from:', eventBusUrl);
-            
+
             // In production, this would connect to the actual event streaming service
             // and create notifications based on real agent connections, transactions, etc.
-            
+
         } catch (error) {
             logger.error('Failed to connect to event bus for system notifications:', error);
             // No fallback to simulated notifications
@@ -279,7 +279,7 @@ class A2ANotificationService extends EventEmitter {
     async handleRealSystemEvent(eventType, eventData) {
         // Handle real system events and create appropriate notifications
         let notification = null;
-        
+
         switch (eventType) {
             case 'AGENT_CONNECTED':
                 notification = {
@@ -303,7 +303,7 @@ class A2ANotificationService extends EventEmitter {
                 };
                 break;
         }
-        
+
         if (notification) {
             this.createNotification(notification.type, notification.title, notification.message);
         }
@@ -314,7 +314,7 @@ class A2ANotificationService extends EventEmitter {
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
         const initialCount = this.notifications.length;
-        this.notifications = this.notifications.filter(n => 
+        this.notifications = this.notifications.filter(n =>
             new Date(n.timestamp) > oneWeekAgo
         );
 
@@ -348,7 +348,7 @@ class A2ANotificationService extends EventEmitter {
             // POST /api/v1/notifications
             createNotification: (req, res) => {
                 const { type, title, message, metadata } = req.body;
-                
+
                 if (!type || !title || !message) {
                     return res.status(400).json({
                         success: false,

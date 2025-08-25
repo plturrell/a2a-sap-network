@@ -2,7 +2,7 @@
  * @fileoverview Graceful Shutdown Middleware
  * @since 1.0.0
  * @module graceful-shutdown
- * 
+ *
  * Implements graceful shutdown patterns for the A2A Network server
  * to prevent data corruption and ensure clean resource cleanup
  */
@@ -30,7 +30,7 @@ class GracefulShutdownManager {
    */
   registerServer(server) {
     this.servers.add(server);
-    
+
     // Track connections
     server.on('blockchain-connection', (connection) => {
       this.connections.add(connection);
@@ -56,13 +56,13 @@ class GracefulShutdownManager {
     process.on('SIGTERM', () => this.shutdown('SIGTERM'));
     process.on('SIGINT', () => this.shutdown('SIGINT'));
     process.on('SIGUSR2', () => this.shutdown('SIGUSR2')); // nodemon restart
-    
+
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
       this.log.error('Uncaught exception:', error);
       this.shutdown('uncaughtException', 1);
     });
-    
+
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
       this.log.error('Unhandled promise rejection:', reason);
@@ -168,7 +168,7 @@ class GracefulShutdownManager {
       }
 
       this.log.info('Safe restart initiated');
-      
+
       // Perform graceful shutdown without exit
       await this.shutdown('restart', 0);
     };
@@ -207,11 +207,11 @@ function shutdownMiddleware(req, res, next) {
  */
 function initializeGracefulShutdown(app, server, io) {
   shutdownManager.initialize();
-  
+
   if (server) {
     shutdownManager.registerServer(server);
   }
-  
+
   if (io) {
     shutdownManager.registerService({
       cleanup: async () => {
@@ -224,10 +224,10 @@ function initializeGracefulShutdown(app, server, io) {
       }
     });
   }
-  
+
   // Add shutdown middleware to all routes
   app.use(shutdownMiddleware);
-  
+
   shutdownManager.log.info('Graceful shutdown initialized for application');
 }
 

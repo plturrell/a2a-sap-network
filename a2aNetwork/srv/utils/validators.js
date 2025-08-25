@@ -13,11 +13,11 @@ function validateAddress(address) {
     if (!address || typeof address !== 'string') {
         throw new Error('Address is required');
     }
-    
+
     if (!Web3.utils.isAddress(address)) {
         throw new Error('Invalid Ethereum address');
     }
-    
+
     return true;
 }
 
@@ -30,12 +30,12 @@ function validateRating(rating) {
     if (rating === undefined || rating === null) {
         throw new Error('Rating is required');
     }
-    
+
     const numRating = Number(rating);
     if (isNaN(numRating) || numRating < 1 || numRating > 5) {
         throw new Error('Rating must be between 1 and 5');
     }
-    
+
     return true;
 }
 
@@ -48,11 +48,11 @@ function validateTaskId(taskId) {
     if (!taskId || typeof taskId !== 'string') {
         throw new Error('Task ID is required');
     }
-    
+
     if (taskId.length < 1 || taskId.length > 100) {
         throw new Error('Task ID must be between 1 and 100 characters');
     }
-    
+
     return true;
 }
 
@@ -65,11 +65,11 @@ function validateComments(comments) {
     if (comments && typeof comments !== 'string') {
         throw new Error('Comments must be a string');
     }
-    
+
     if (comments && comments.length > 1000) {
         throw new Error('Comments must not exceed 1000 characters');
     }
-    
+
     return true;
 }
 
@@ -82,16 +82,16 @@ function validateStakeAmount(amount) {
     if (amount === undefined || amount === null) {
         return true; // Optional, use default
     }
-    
+
     const numAmount = Number(amount);
     if (isNaN(numAmount) || numAmount < 0) {
         throw new Error('Stake amount must be a positive number');
     }
-    
+
     if (numAmount > 10) {
         throw new Error('Stake amount cannot exceed 10 ETH');
     }
-    
+
     return true;
 }
 
@@ -107,14 +107,14 @@ function validatePagination(params) {
             throw new Error('Limit must be between 1 and 100');
         }
     }
-    
+
     if (params.offset !== undefined) {
         const offset = Number(params.offset);
         if (isNaN(offset) || offset < 0) {
             throw new Error('Offset must be a non-negative number');
         }
     }
-    
+
     return true;
 }
 

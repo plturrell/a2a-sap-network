@@ -26,7 +26,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'RegisteredAgent');
         } catch (error) {
             throw this._handleError(error);
@@ -46,7 +46,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTAgentToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -66,7 +66,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTAgentToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -105,7 +105,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -131,7 +131,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -148,10 +148,10 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 status: data.status?.toUpperCase(),
                 responseTime: data.response_time,
@@ -182,7 +182,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -207,7 +207,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -234,7 +234,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -262,7 +262,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -286,7 +286,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'ManagementTask');
         } catch (error) {
             throw this._handleError(error);
@@ -306,7 +306,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -320,10 +320,10 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -340,10 +340,10 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -360,10 +360,10 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -387,7 +387,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -410,7 +410,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'AgentCoordination');
         } catch (error) {
             throw this._handleError(error);
@@ -424,10 +424,10 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -450,7 +450,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'BulkOperation');
         } catch (error) {
             throw this._handleError(error);
@@ -464,10 +464,10 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -485,7 +485,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data.map(type => ({
                 type: type.type,
                 description: type.description,
@@ -504,7 +504,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 totalAgents: data.total_agents,
                 activeAgents: data.active_agents,
@@ -527,7 +527,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 agentId: data.agent_id,
                 status: data.status?.toUpperCase(),
@@ -554,7 +554,7 @@ class Agent7Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 agentId: data.agent_id,
                 metrics: data.metrics.map(metric => ({
@@ -578,7 +578,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 activeCoordinations: data.active_coordinations,
                 totalWorkflows: data.total_workflows,
@@ -603,7 +603,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 type: data.type,
                 capabilities: data.capabilities,
@@ -631,7 +631,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 valid: data.valid,
                 errors: data.errors,
@@ -650,7 +650,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return {
                 strategy: data.strategy,
                 distribution: data.distribution.map(item => ({
@@ -679,7 +679,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'AgentHealthCheck');
         } catch (error) {
             throw this._handleError(error);
@@ -698,7 +698,7 @@ class Agent7Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'AgentPerformanceMetric');
         } catch (error) {
             throw this._handleError(error);
@@ -708,13 +708,13 @@ class Agent7Adapter {
     // Utility methods
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$orderby) params.sort = query.$orderby.replace(/ desc/gi, '-').replace(/ asc/gi, '');
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$select) params.fields = query.$select;
-        
+
         return params;
     }
 
@@ -793,7 +793,7 @@ class Agent7Adapter {
             agent_version: agent.agentVersion,
             endpoint_url: agent.endpointUrl
         };
-        
+
         if (agent.status) restAgent.status = agent.status.toLowerCase();
         if (agent.healthStatus) restAgent.health_status = agent.healthStatus.toLowerCase();
         if (agent.capabilities) restAgent.capabilities = JSON.parse(agent.capabilities);
@@ -803,7 +803,7 @@ class Agent7Adapter {
         if (agent.priority !== undefined) restAgent.priority = agent.priority;
         if (agent.tags) restAgent.tags = JSON.parse(agent.tags);
         if (agent.notes) restAgent.notes = agent.notes;
-        
+
         return restAgent;
     }
 
@@ -842,14 +842,14 @@ class Agent7Adapter {
             task_type: task.taskType?.toLowerCase(),
             status: task.status?.toLowerCase()
         };
-        
+
         if (task.priority) restTask.priority = task.priority.toLowerCase();
         if (task.targetAgents) restTask.target_agents = JSON.parse(task.targetAgents);
         if (task.parameters) restTask.parameters = JSON.parse(task.parameters);
         if (task.scheduleType) restTask.schedule_type = task.scheduleType.toLowerCase();
         if (task.scheduledTime) restTask.scheduled_time = task.scheduledTime;
         if (task.recurrencePattern) restTask.recurrence_pattern = task.recurrencePattern;
-        
+
         return restTask;
     }
 
@@ -945,7 +945,7 @@ class Agent7Adapter {
         if (error.response) {
             const status = error.response.status;
             const message = error.data?.message || error.message;
-            
+
             switch (status) {
                 case 400:
                     return new Error(`Bad Request: ${message}`);

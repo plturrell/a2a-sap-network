@@ -13,13 +13,13 @@ class IntegratedNotificationService {
     constructor() {
         this.logger = cds.log('integrated-notifications');
         this.isInitialized = false;
-        
+
         // Initialize all services
         this.persistenceService = new NotificationPersistenceService();
         this.pushService = new PushNotificationService();
         this.eventBusService = new EventBusService();
         this.enhancedService = new EnhancedNotificationService();
-        
+
         this.setupIntegrations().catch(error => {
             this.logger.error('Failed to setup service integrations:', error);
         });
@@ -29,16 +29,16 @@ class IntegratedNotificationService {
         try {
             // Wait for persistence service to be ready
             await this.persistenceService.init();
-            
+
             // Connect enhanced service to persistence
             this.enhancedService.persistenceService = this.persistenceService;
-            
+
             // Connect push service to enhanced service
             this.enhancedService.pushService = this.pushService;
-            
+
             // Override delivery methods in enhanced service
             this.enhanceDeliveryMethods();
-            
+
             // Connect event bus to notification creation
             this.eventBusService.on('event', async (event) => {
                 try {
@@ -47,10 +47,10 @@ class IntegratedNotificationService {
                     this.logger.error('Failed to handle system event for notifications:', error);
                 }
             });
-            
+
             // Set up cross-service event handling
             this.setupCrossServiceEvents();
-            
+
             this.isInitialized = true;
             this.logger.info('Integrated notification service initialized successfully');
         } catch (error) {
@@ -178,7 +178,7 @@ class IntegratedNotificationService {
         try {
             // Create notification for system administrators
             const systemUsers = await this.getSystemAdminUsers();
-            
+
             for (const userId of systemUsers) {
                 await this.createUserNotification(userId, type, notificationData);
             }
@@ -214,7 +214,7 @@ class IntegratedNotificationService {
     async createSecurityNotification(securityData) {
         try {
             const affectedUsers = securityData.userId ? [securityData.userId] : await this.getSystemAdminUsers();
-            
+
             for (const userId of affectedUsers) {
                 await this.createUserNotification(userId, 'SECURITY_ALERT', {
                     title: 'Security Alert',
@@ -242,7 +242,7 @@ class IntegratedNotificationService {
             'SECURITY_ALERT': 'error',
             'PERFORMANCE_ALERT': 'warning'
         };
-        
+
         return typeMap[systemType] || 'info';
     }
 
@@ -255,7 +255,7 @@ class IntegratedNotificationService {
             'SECURITY_ALERT': 'critical',
             'PERFORMANCE_ALERT': 'high'
         };
-        
+
         return priorityMap[type] || 'medium';
     }
 
@@ -268,7 +268,7 @@ class IntegratedNotificationService {
             'SECURITY_ALERT': 'security',
             'PERFORMANCE_ALERT': 'system'
         };
-        
+
         return categoryMap[type] || 'general';
     }
 
@@ -305,7 +305,7 @@ class IntegratedNotificationService {
         }
 
         const success = await this.persistenceService.markAsRead(userId, notificationId);
-        
+
         if (success) {
             // Broadcast update via WebSocket
             this.enhancedService.broadcastToUser(userId, {

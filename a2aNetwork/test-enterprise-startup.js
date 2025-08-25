@@ -16,31 +16,31 @@ async function startEnterpriseServer() {
     try {
         // Load the enterprise server configuration
         const server = require('./srv/server');
-        
+
         console.log('Enterprise server module loaded successfully');
-        
+
         // Start server using SAP enterprise standard model discovery
         // Test with single service to isolate the conflict
         const serviceFiles = [
             'srv/a2aService.cds'
             // Start with just 1 service to test
         ];
-        
+
         console.log('Loading services:', serviceFiles);
-        
+
         // Use SAP enterprise standard programmatic startup
         // First load the CDS model, then serve specific services
         const model = await cds.load(serviceFiles);
         const app = await cds.serve(model)
             .to('sqlite')
             .at(4004);
-            
+
         console.log('SUCCESS: SAP CAP Enterprise Server started successfully');
         console.log('Server running at: http://localhost:4004');
         console.log('Launchpad available at: http://localhost:4004/launchpad.html');
-        
+
         return app;
-        
+
     } catch (error) {
         console.error('ERROR: SAP CAP Enterprise Server startup failed');
         console.error('Error:', error.message);

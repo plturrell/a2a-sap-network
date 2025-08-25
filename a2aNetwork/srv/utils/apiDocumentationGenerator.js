@@ -29,11 +29,11 @@ class APIDocumentationGenerator {
      */
     registerRoute(method, path, version, description, params = {}, responses = {}) {
         const routeKey = `${method}:${path}`;
-        
+
         if (!this.versionedRoutes.has(routeKey)) {
             this.versionedRoutes.set(routeKey, new Map());
         }
-        
+
         this.versionedRoutes.get(routeKey).set(version, {
             method,
             path,
@@ -278,7 +278,7 @@ class APIDocumentationGenerator {
             }
         };
 
-        // Operations endpoints  
+        // Operations endpoints
         paths['/api/v1/operations/status'] = {
             get: {
                 summary: 'Get operations status',
@@ -330,8 +330,8 @@ class APIDocumentationGenerator {
                 type: 'object',
                 properties: {
                     version: { type: 'string', example: '2.0.0' },
-                    status: { 
-                        type: 'string', 
+                    status: {
+                        type: 'string',
                         enum: ['current', 'supported', 'deprecated', 'sunset'],
                         example: 'current'
                     },
@@ -544,7 +544,7 @@ class APIDocumentationGenerator {
      */
     async generateMigrationGuides() {
         const guides = {};
-        
+
         for (const [version, changes] of Object.entries(BREAKING_CHANGES)) {
             guides[version] = {
                 targetVersion: version,
@@ -570,7 +570,7 @@ class APIDocumentationGenerator {
                 ]
             };
         }
-        
+
         return guides;
     }
 
@@ -622,7 +622,7 @@ class APIDocumentationGenerator {
                 estimated: '1-2 days'
             }
         ];
-        
+
         return steps;
     }
 
@@ -631,7 +631,7 @@ class APIDocumentationGenerator {
      */
     async generateHTMLDocumentation() {
         const openApiSpec = await this.generateDocumentation();
-        
+
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -691,7 +691,7 @@ class APIDocumentationGenerator {
     </script>
 </body>
 </html>`;
-        
+
         return html;
     }
 
@@ -701,21 +701,21 @@ class APIDocumentationGenerator {
     async saveDocumentation(outputDir = './docs/api') {
         try {
             await fs.mkdir(outputDir, { recursive: true });
-            
+
             // Generate and save OpenAPI spec
             const openApiSpec = await this.generateDocumentation();
             await fs.writeFile(
                 path.join(outputDir, 'openapi.json'),
                 JSON.stringify(openApiSpec, null, 2)
             );
-            
+
             // Generate and save HTML documentation
             const htmlDoc = await this.generateHTMLDocumentation();
             await fs.writeFile(
                 path.join(outputDir, 'index.html'),
                 htmlDoc
             );
-            
+
             // Generate version-specific docs
             for (const version of API_CONFIG.supportedVersions) {
                 const versionDoc = await this.generateVersionSpecificDocs(version);
@@ -724,10 +724,10 @@ class APIDocumentationGenerator {
                     JSON.stringify(versionDoc, null, 2)
                 );
             }
-            
+
             logger.info(`✅ API documentation generated in ${outputDir}`);
             return outputDir;
-            
+
         } catch (error) {
             logger.error('❌ Failed to save documentation:', { error: error });
             throw error;
@@ -741,7 +741,7 @@ class APIDocumentationGenerator {
         const baseDoc = await this.generateDocumentation();
         const versionInfo = API_CONFIG.deprecationSchedule[version];
         const features = API_CONFIG.featureFlags[version];
-        
+
         return {
             ...baseDoc,
             info: {

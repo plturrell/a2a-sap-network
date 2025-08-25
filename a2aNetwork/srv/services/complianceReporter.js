@@ -140,17 +140,17 @@ class ComplianceReporter {
         try {
             const reportId = this.generateReportId();
             const frameworkConfig = this.frameworks[framework];
-            
+
             if (!frameworkConfig) {
                 throw new Error(`Unsupported framework: ${framework}`);
             }
 
             // Gather audit data
             const auditData = await this.gatherAuditData(startDate, endDate);
-            
+
             // Analyze compliance
             const analysis = await this.analyzeCompliance(auditData, framework);
-            
+
             // Generate report data
             const reportData = {
                 id: reportId,
@@ -170,15 +170,15 @@ class ComplianceReporter {
 
             // Generate reports in requested formats
             const reports = {};
-            
+
             if (options.formats?.includes('pdf') || !options.formats) {
                 reports.pdf = await this.generatePDFReport(reportData);
             }
-            
+
             if (options.formats?.includes('excel')) {
                 reports.excel = await this.generateExcelReport(reportData);
             }
-            
+
             if (options.formats?.includes('json')) {
                 reports.json = await this.generateJSONReport(reportData);
             }
@@ -266,9 +266,9 @@ class ComplianceReporter {
         analysis.summary.implementedControls = controls.filter(c => c.status === 'IMPLEMENTED').length;
         analysis.summary.partiallyImplemented = controls.filter(c => c.status === 'PARTIAL').length;
         analysis.summary.notImplemented = controls.filter(c => c.status === 'NOT_IMPLEMENTED').length;
-        
+
         analysis.summary.complianceScore = Math.round(
-            (analysis.summary.implementedControls + analysis.summary.partiallyImplemented * 0.5) / 
+            (analysis.summary.implementedControls + analysis.summary.partiallyImplemented * 0.5) /
             analysis.summary.totalControls * 100
         );
 
@@ -329,7 +329,7 @@ class ComplianceReporter {
      */
     async assessPCIControls(auditData) {
         const controls = {};
-        
+
         for (let i = 1; i <= 12; i++) {
             const requirement = this.frameworks.PCI_DSS.requirements[i.toString()];
             controls[`PCI-${i}`] = {
@@ -467,7 +467,7 @@ class ComplianceReporter {
                         doc.addPage();
                         yPosition = 50;
                     }
-                    
+
                     doc.fontSize(12).text(`${id}: ${control.name}`, 50, yPosition);
                     doc.text(`Status: ${control.status}`, 70, yPosition + 15);
                     doc.text(`Description: ${control.description}`, 70, yPosition + 30);
@@ -485,7 +485,7 @@ class ComplianceReporter {
                             doc.addPage();
                             yPosition = 50;
                         }
-                        
+
                         doc.fontSize(12).text(`${index + 1}. ${rec.title}`, 50, yPosition);
                         doc.text(`Priority: ${rec.priority}`, 70, yPosition + 15);
                         doc.text(`Timeline: ${rec.timeline}`, 70, yPosition + 30);
@@ -526,7 +526,7 @@ class ComplianceReporter {
         // Controls sheet
         const controlsSheet = workbook.addWorksheet('Control Assessment');
         controlsSheet.addRow(['Control ID', 'Name', 'Status', 'Description', 'Evidence', 'Last Tested', 'Result']);
-        
+
         Object.entries(reportData.analysis.controlAssessment).forEach(([id, control]) => {
             controlsSheet.addRow([
                 id,
@@ -542,7 +542,7 @@ class ComplianceReporter {
         // Recommendations sheet
         const recSheet = workbook.addWorksheet('Recommendations');
         recSheet.addRow(['Priority', 'Control', 'Title', 'Description', 'Effort', 'Timeline', 'Owner']);
-        
+
         reportData.recommendations.forEach(rec => {
             recSheet.addRow([
                 rec.priority,
@@ -570,13 +570,13 @@ class ComplianceReporter {
      */
     async saveReports(reportId, reports) {
         await fs.mkdir(this.reportsDir, { recursive: true });
-        
+
         const savedFiles = {};
 
         for (const [format, buffer] of Object.entries(reports)) {
             const filename = `compliance-report-${reportId}.${format === 'excel' ? 'xlsx' : format}`;
             const filepath = path.join(this.reportsDir, filename);
-            
+
             await fs.writeFile(filepath, buffer);
             savedFiles[format] = filepath;
         }

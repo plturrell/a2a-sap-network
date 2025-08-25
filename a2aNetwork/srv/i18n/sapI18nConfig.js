@@ -43,80 +43,80 @@ function initializeI18n(app) {
             'no',       // Norwegian
             'fi'        // Finnish
         ],
-        
+
         // Default locale
         defaultLocale: 'en',
-        
+
         // Directory for translation files
         directory: path.join(__dirname, 'locales'),
-        
+
         // Object notation for nested translations
         objectNotation: true,
-        
+
         // Update files on missing translations (dev only)
         updateFiles: process.env.NODE_ENV === 'development',
-        
+
         // Sync files on startup
         syncFiles: true,
-        
+
         // Cookie name for locale persistence
         cookie: 'a2a-locale',
-        
+
         // Query parameter for locale switching
         queryParameter: 'locale',
-        
+
         // Register global helper
         register: global,
-        
+
         // Preserve locale on redirect
         preserveLegacyCase: true,
-        
+
         // Auto reload in development
         autoReload: process.env.NODE_ENV === 'development',
-        
+
         // Indent JSON files
         indent: '  ',
-        
+
         // Extension of json files
         extension: '.json',
-        
+
         // Prefix for missing translations
         prefix: '[MISSING_TRANSLATION]',
-        
+
         // Enable debug logging in development
         logDebugFn: function (msg) {
             if (process.env.NODE_ENV === 'development') {
                 cds.log('service').info('i18n:', msg);
             }
         },
-        
+
         // Log warnings for missing translations
         logWarnFn: function (msg) {
             cds.log('service').warn('i18n warning:', msg);
         },
-        
+
         // Log errors
         logErrorFn: function (msg) {
             cds.log('service').error('i18n error:', msg);
         },
-        
+
         // Missing key handler
         missingKeyFn: function(locale, value) {
             cds.log('service').error(`Missing translation: ${value} for locale: ${locale}`);
             return value;
         }
     });
-    
+
     // Initialize i18n middleware
     app.use(i18n.init);
-    
+
     // Custom middleware to handle SAP-specific locale formats
     app.use((req, res, next) => {
         // Check for SAP user locale from JWT token
         if (req.user && req.user.locale) {
             req.setLocale(normalizeLocale(req.user.locale));
         }
-        
+
         // Check Accept-Language header
         else if (req.headers['accept-language']) {
             const locale = parseAcceptLanguage(req.headers['accept-language']);
@@ -124,16 +124,16 @@ function initializeI18n(app) {
                 req.setLocale(locale);
             }
         }
-        
+
         // Check for locale in query params or cookies
         else if (req.query.locale) {
             req.setLocale(normalizeLocale(req.query.locale));
         }
-        
+
         // Set locale in response for client
         res.locals.locale = req.getLocale();
         res.locals.locales = i18n.getLocales();
-        
+
         next();
     });
 }
@@ -145,10 +145,10 @@ function initializeI18n(app) {
  */
 function normalizeLocale(locale) {
     if (!locale) return 'en';
-    
+
     // Convert to lowercase and replace underscores
     locale = locale.toLowerCase().replace('_', '-');
-    
+
     // Map SAP language codes to standard codes
     const sapToStandard = {
         '1': 'zh',      // Chinese
@@ -164,24 +164,24 @@ function normalizeLocale(locale) {
         'd': 'de',      // German
         'f': 'fr'       // French
     };
-    
+
     if (sapToStandard[locale]) {
         return sapToStandard[locale];
     }
-    
+
     // Handle regional variants
     if (locale.includes('-')) {
         const [lang, region] = locale.split('-');
-        
+
         // Special cases for Chinese
         if (lang === 'zh' && ['hk', 'tw', 'mo'].includes(region)) {
             return 'zh-TW';
         }
-        
+
         // Return base language if exact match not found
         return i18n.getLocales().includes(locale) ? locale : lang;
     }
-    
+
     return locale;
 }
 
@@ -201,20 +201,20 @@ function parseAcceptLanguage(acceptLanguage) {
             };
         })
         .sort((a, b) => b.quality - a.quality);
-    
+
     // Find first supported locale
     for (const lang of languages) {
         if (i18n.getLocales().includes(lang.locale)) {
             return lang.locale;
         }
-        
+
         // Try base language
         const baseLocale = lang.locale.split('-')[0];
         if (i18n.getLocales().includes(baseLocale)) {
             return baseLocale;
         }
     }
-    
+
     return null;
 }
 
@@ -249,9 +249,9 @@ function formatCurrency(amount, currency = 'EUR', locale = 'en') {
         'ja': 'ja-JP',
         'ko': 'ko-KR'
     };
-    
+
     const formatLocale = localeMap[locale] || 'en-US';
-    
+
     return new Intl.NumberFormat(formatLocale, {
         style: 'currency',
         currency: currency
@@ -278,16 +278,16 @@ function formatDate(date, locale = 'en', format = 'medium') {
         'ja': 'ja-JP',
         'ko': 'ko-KR'
     };
-    
+
     const formatLocale = localeMap[locale] || 'en-US';
-    
+
     const options = {
         short: { dateStyle: 'short' },
         medium: { dateStyle: 'medium' },
         long: { dateStyle: 'long' },
         full: { dateStyle: 'full' }
     };
-    
+
     return new Intl.DateTimeFormat(formatLocale, options[format] || options.medium).format(date);
 }
 
@@ -311,9 +311,9 @@ function formatNumber(number, locale = 'en', decimals = 2) {
         'ja': 'ja-JP',
         'ko': 'ko-KR'
     };
-    
+
     const formatLocale = localeMap[locale] || 'en-US';
-    
+
     return new Intl.NumberFormat(formatLocale, {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals

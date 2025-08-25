@@ -2,7 +2,7 @@
  * @fileoverview Advanced SAP CAP CDS Parser for comprehensive code analysis
  * @module advancedCDSParser
  * @since 1.0.0
- * 
+ *
  * Provides deep analysis of CDS files including annotations, views, projections,
  * compositions, associations, and advanced CAP patterns
  */
@@ -58,12 +58,12 @@ class AdvancedCDSParser {
     parseNamespace(content, result) {
         const namespaceRegex = /namespace\s+([\w\.]+)\s*;/g;
         let match;
-        
+
         while ((match = namespaceRegex.exec(content)) !== null) {
             const namespaceName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
             const symbolId = `namespace_${this.symbolCounter++}`;
-            
+
             result.metadata.namespace = namespaceName;
             result.symbols.push({
                 symbol: symbolId,
@@ -95,7 +95,7 @@ class AdvancedCDSParser {
             while ((match = pattern.exec(content)) !== null) {
                 const lineNumber = this.getLineNumber(content, match.index);
                 const symbolId = `import_${this.symbolCounter++}`;
-                
+
                 const importData = {
                     symbol: symbolId,
                     definition: {
@@ -452,18 +452,18 @@ class AdvancedCDSParser {
     // Helper methods
     parseInheritance(inheritance) {
         if (!inheritance) return null;
-        
+
         const aspects = [];
         const managed = inheritance.includes('managed');
         const cuid = inheritance.includes('cuid');
-        
+
         if (managed) aspects.push('managed');
         if (cuid) aspects.push('cuid');
-        
+
         // Parse custom aspects
         const customAspects = inheritance.replace(/managed|cuid/g, '').split(',')
             .map(aspect => aspect.trim()).filter(aspect => aspect);
-        
+
         return {
             managed,
             cuid,
@@ -567,11 +567,11 @@ class AdvancedCDSParser {
 
     parseEntityAspects(inheritance) {
         if (!inheritance) return [];
-        
+
         const aspectNames = inheritance.split(',')
             .map(aspect => aspect.trim())
             .filter(aspect => aspect && !['managed', 'cuid'].includes(aspect));
-        
+
         return aspectNames;
     }
 
@@ -641,7 +641,7 @@ class AdvancedCDSParser {
         while ((match = annotationRegex.exec(serviceDeclaration)) !== null) {
             const annotationContent = match[1];
             const pathMatch = annotationContent.match(/path\s*:\s*['"]([^'"]+)['"]/);
-            
+
             if (pathMatch) {
                 annotations.push({
                     name: 'path',
@@ -670,7 +670,7 @@ class AdvancedCDSParser {
 
     parseActionParameters(parameters) {
         if (!parameters.trim()) return [];
-        
+
         return parameters.split(',').map(param => {
             const parts = param.trim().split(':');
             return {
@@ -682,7 +682,7 @@ class AdvancedCDSParser {
 
     extractBaseType(typeDefinition) {
         if (!typeDefinition) return null;
-        
+
         const baseTypeMatch = typeDefinition.match(/^([\w]+)/);
         return baseTypeMatch ? baseTypeMatch[1] : null;
     }
@@ -694,7 +694,7 @@ class AdvancedCDSParser {
         const associationCount = (content.match(/Association\s+to/g) || []).length;
         const compositionCount = (content.match(/Composition\s+of/g) || []).length;
         const annotationCount = (content.match(/@[\w\.]+/g) || []).length;
-        
+
         return entityCount * 2 + serviceCount * 3 + associationCount + compositionCount + Math.floor(annotationCount / 5);
     }
 

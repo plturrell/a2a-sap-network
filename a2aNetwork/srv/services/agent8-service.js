@@ -11,7 +11,7 @@ class Agent8Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent8Adapter();
-        
+
         // Entity references
         const {
             DataTasks,
@@ -66,23 +66,23 @@ class Agent8Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { parameters } = req.data;
                 const result = await this.adapter.executeTask(ID, parameters);
-                
+
                 // Update task status
                 await UPDATE(DataTasks)
-                    .set({ 
+                    .set({
                         status: 'RUNNING',
                         startTime: new Date(),
                         progress: 0
                     })
                     .where({ ID });
-                
+
                 // Emit task execution event
                 await this.emit('DataTaskStarted', {
                     taskId: ID,
                     taskType: result.taskType,
                     timestamp: new Date()
                 });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to execute data task: ${error.message}`);
@@ -93,11 +93,11 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.pauseTask(ID);
-                
+
                 await UPDATE(DataTasks)
                     .set({ status: 'PAUSED' })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to pause data task: ${error.message}`);
@@ -108,11 +108,11 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.resumeTask(ID);
-                
+
                 await UPDATE(DataTasks)
                     .set({ status: 'RUNNING' })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to resume data task: ${error.message}`);
@@ -124,15 +124,15 @@ class Agent8Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { reason } = req.data;
                 const result = await this.adapter.cancelTask(ID, reason);
-                
+
                 await UPDATE(DataTasks)
-                    .set({ 
+                    .set({
                         status: 'CANCELLED',
                         endTime: new Date(),
                         errorMessage: reason
                     })
                     .where({ ID });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to cancel data task: ${error.message}`);
@@ -143,16 +143,16 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const validation = await this.adapter.validateTask(ID);
-                
+
                 // Update task validation status
                 await UPDATE(DataTasks)
-                    .set({ 
+                    .set({
                         validationStatus: validation.status,
                         validationMessage: validation.message,
                         modifiedAt: new Date()
                     })
                     .where({ ID });
-                
+
                 return validation;
             } catch (error) {
                 req.error(500, `Failed to validate data task: ${error.message}`);
@@ -163,16 +163,16 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const progress = await this.adapter.getTaskProgress(ID);
-                
+
                 // Update progress in database
                 await UPDATE(DataTasks)
-                    .set({ 
+                    .set({
                         progress: progress.percentage,
                         processedRecords: progress.processedRecords,
                         estimatedCompletion: progress.estimatedCompletion
                     })
                     .where({ ID });
-                
+
                 return progress;
             } catch (error) {
                 req.error(500, `Failed to get task progress: ${error.message}`);
@@ -213,17 +213,17 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const healthCheck = await this.adapter.performBackendHealthCheck(ID);
-                
+
                 // Update backend health status
                 await UPDATE(StorageBackends)
-                    .set({ 
+                    .set({
                         healthStatus: healthCheck.status,
                         lastHealthCheck: new Date(),
                         responseTime: healthCheck.responseTime,
                         errorRate: healthCheck.errorRate
                     })
                     .where({ ID });
-                
+
                 if (healthCheck.status === 'UNHEALTHY' || healthCheck.status === 'ERROR') {
                     await this.emit('StorageBackendUnhealthy', {
                         backendId: ID,
@@ -232,7 +232,7 @@ class Agent8Service extends cds.ApplicationService {
                         timestamp: new Date()
                     });
                 }
-                
+
                 return healthCheck;
             } catch (error) {
                 req.error(500, `Failed to perform health check: ${error.message}`);
@@ -244,7 +244,7 @@ class Agent8Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { optimizationType } = req.data;
                 const result = await this.adapter.optimizeStorage(ID, optimizationType);
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to optimize storage: ${error.message}`);
@@ -274,7 +274,7 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.clearCache(ID);
-                
+
                 // Log cache operation
                 await INSERT.into(CacheOperations).entries({
                     ID: uuidv4(),
@@ -284,7 +284,7 @@ class Agent8Service extends cds.ApplicationService {
                     executionTime: new Date(),
                     details: JSON.stringify(result.details)
                 });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to clear cache: ${error.message}`);
@@ -296,7 +296,7 @@ class Agent8Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { dataKeys } = req.data;
                 const result = await this.adapter.warmupCache(ID, dataKeys);
-                
+
                 // Log cache operation
                 await INSERT.into(CacheOperations).entries({
                     ID: uuidv4(),
@@ -304,12 +304,12 @@ class Agent8Service extends cds.ApplicationService {
                     operationType: 'WARMUP',
                     result: 'SUCCESS',
                     executionTime: new Date(),
-                    details: JSON.stringify({ 
+                    details: JSON.stringify({
                         keysWarmed: dataKeys?.length || 0,
-                        ...result.details 
+                        ...result.details
                     })
                 });
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to warmup cache: ${error.message}`);
@@ -350,7 +350,7 @@ class Agent8Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { targetDataset, backupCurrent } = req.data;
                 const result = await this.adapter.restoreVersion(ID, targetDataset, backupCurrent);
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to restore version: ${error.message}`);
@@ -392,7 +392,7 @@ class Agent8Service extends cds.ApplicationService {
                 const { ID } = req.params[0];
                 const { targetLocation, verifyIntegrity } = req.data;
                 const result = await this.adapter.restoreBackup(ID, targetLocation, verifyIntegrity);
-                
+
                 return result.message;
             } catch (error) {
                 req.error(500, `Failed to restore backup: ${error.message}`);
@@ -403,16 +403,16 @@ class Agent8Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const verification = await this.adapter.verifyBackup(ID);
-                
+
                 // Update backup verification status
                 await UPDATE(DataBackups)
-                    .set({ 
+                    .set({
                         verificationStatus: verification.status,
                         lastVerification: new Date(),
                         integrityScore: verification.integrityScore
                     })
                     .where({ ID });
-                
+
                 return verification;
             } catch (error) {
                 req.error(500, `Failed to verify backup: ${error.message}`);

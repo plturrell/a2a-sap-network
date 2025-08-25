@@ -17,16 +17,16 @@ const { v4: uuidv4 } = require('uuid');
  * Handles event publishing, subscriptions, and real-time updates
  */
 module.exports = class MessagingService extends cds.Service {
-    
+
     async init() {
         const { Agents, Services, Workflows, NetworkStats } = cds.entities('a2a.network');
-        
+
         // Store active subscriptions
         this.subscriptions = new Map();
-        
+
         // Initialize event handlers
         this._setupEventHandlers();
-        
+
         // Action implementations
         this.on('publishAgentEvent', this._publishAgentEvent);
         this.on('publishServiceEvent', this._publishServiceEvent);
@@ -36,7 +36,7 @@ module.exports = class MessagingService extends cds.Service {
         this.on('unsubscribe', this._unsubscribe);
         this.on('getQueueStatus', this._getQueueStatus);
         this.on('retryFailedMessages', this._retryFailedMessages);
-        
+
         // Connect to Enterprise Messaging if available
         try {
             this.messaging = await cds.connect.to('messaging');
@@ -44,14 +44,14 @@ module.exports = class MessagingService extends cds.Service {
         } catch (e) {
             this.log.warn('Enterprise Messaging not available, using in-memory events');
         }
-        
+
         return super.init();
     }
-    
+
     _setupEventHandlers() {
         // Listen to database changes and emit corresponding events
         const { Agents, Services, Workflows, AgentPerformance } = cds.entities('a2a.network');
-        
+
         // Agent events
         this.after('CREATE', Agents, async (agent) => {
             await this.emit('AgentRegistered', {
@@ -61,7 +61,7 @@ module.exports = class MessagingService extends cds.Service {
                 timestamp: new Date()
             });
         });
-        
+
         this.after('UPDATE', Agents, async (agent) => {
             if (agent.isActive === false) {
                 await this.emit('AgentDeactivated', {
@@ -71,7 +71,7 @@ module.exports = class MessagingService extends cds.Service {
                 });
             }
         });
-        
+
         // Service events
         this.after('CREATE', Services, async (service) => {
             await this.emit('ServiceCreated', {
@@ -83,7 +83,7 @@ module.exports = class MessagingService extends cds.Service {
                 timestamp: new Date()
             });
         });
-        
+
         // Performance monitoring
         this.after('UPDATE', AgentPerformance, async (performance, req) => {
             const oldData = req._.odataReq?.getPreviousData?.();
@@ -98,88 +98,88 @@ module.exports = class MessagingService extends cds.Service {
             }
         });
     }
-    
+
     async _publishAgentEvent(req) {
         try {
             const { eventType, payload } = req.data;
             const event = JSON.parse(payload);
-            
+
             await this.emit(eventType, {
                 ...event,
                 timestamp: new Date()
             });
-            
+
             // Publish to external messaging if available
             if (this.messaging) {
                 await this.messaging.emit(`a2a.agent.${eventType}`, event);
             }
-            
+
             return `Event ${eventType} published successfully`;
         } catch (error) {
             this.log.error('Failed to publish agent event:', error);
             throw new Error(`Failed to publish agent event: ${error.message}`);
         }
     }
-    
+
     async _publishServiceEvent(req) {
         const { eventType, payload } = req.data;
         const event = JSON.parse(payload);
-        
+
         await this.emit(eventType, {
             ...event,
             timestamp: new Date()
         });
-        
+
         if (this.messaging) {
             await this.messaging.emit(`a2a.service.${eventType}`, event);
         }
-        
+
         return `Event ${eventType} published successfully`;
     }
-    
+
     async _publishWorkflowEvent(req) {
         const { eventType, payload } = req.data;
         const event = JSON.parse(payload);
-        
+
         await this.emit(eventType, {
             ...event,
             timestamp: new Date()
         });
-        
+
         if (this.messaging) {
             await this.messaging.emit(`a2a.workflow.${eventType}`, event);
         }
-        
+
         return `Event ${eventType} published successfully`;
     }
-    
+
     async _publishNetworkEvent(req) {
         const { eventType, payload } = req.data;
         const event = JSON.parse(payload);
-        
+
         await this.emit(eventType, {
             ...event,
             timestamp: new Date()
         });
-        
+
         if (this.messaging) {
             await this.messaging.emit(`a2a.network.${eventType}`, event);
         }
-        
+
         return `Event ${eventType} published successfully`;
     }
-    
+
     async _subscribe(req) {
         const { topics } = req.data;
         const subscriptionId = uuidv4();
-        
+
         // Store subscription
         this.subscriptions.set(subscriptionId, {
             topics,
             createdAt: new Date(),
             messageCount: 0
         });
-        
+
         // Subscribe to external messaging topics if available
         if (this.messaging) {
             for (const topic of topics) {
@@ -195,20 +195,20 @@ module.exports = class MessagingService extends cds.Service {
                 });
             }
         }
-        
+
         return {
             subscriptionId,
             topics,
             status: 'active'
         };
     }
-    
+
     async _unsubscribe(req) {
         const { subscriptionId } = req.data;
-        
+
         if (this.subscriptions.has(subscriptionId)) {
             this.subscriptions.delete(subscriptionId);
-            
+
             // Clean up WebSocket room
             if (cds.io) {
                 const sockets = await cds.io.in(subscriptionId).fetchSockets();
@@ -216,13 +216,13 @@ module.exports = class MessagingService extends cds.Service {
                     socket.leave(subscriptionId);
                 }
             }
-            
+
             return true;
         }
-        
+
         return false;
     }
-    
+
     async _getQueueStatus(req) {
         try {
             // Get real queue metrics from Redis or message queue service
@@ -230,64 +230,64 @@ module.exports = class MessagingService extends cds.Service {
             if (!redisClient) {
                 throw new Error('Redis client not available for queue metrics');
             }
-            
+
             // Get real metrics from Redis
             const [pending, processed, failed] = await Promise.all([
                 redisClient.llen('message_queue:pending'),
                 redisClient.get('queue_stats:processed_today') || '0',
                 redisClient.get('queue_stats:failed_today') || '0'
             ]);
-            
+
             const stats = {
                 pendingMessages: parseInt(pending) || 0,
                 processedToday: parseInt(processed) || 0,
                 failedToday: parseInt(failed) || 0,
                 queueHealth: 'healthy'
             };
-            
+
             // Calculate real health status
             if (stats.failedToday > 50) {
                 stats.queueHealth = 'degraded';
             } else if (stats.pendingMessages > 500) {
                 stats.queueHealth = 'warning';
             }
-            
+
             return stats;
         } catch (error) {
             this.logger.error('Failed to retrieve real queue status:', error);
             throw new Error(`Queue status unavailable: ${error.message}`);
         }
     }
-    
+
     async _retryFailedMessages(req) {
         const { since } = req.data;
-        
+
         try {
             // Get real failed messages from dead letter queue
             const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
             if (!redisClient) {
                 throw new Error('Redis client not available for retry operations');
             }
-            
+
             // Get failed messages from dead letter queue
             const failedMessages = await redisClient.lrange('message_queue:failed', 0, -1);
             let retriedCount = 0;
             let successCount = 0;
             let failedCount = 0;
-            
+
             for (const messageStr of failedMessages) {
                 try {
                     const message = JSON.parse(messageStr);
-                    
+
                     // Check if message should be retried based on timestamp
                     if (since && new Date(message.failedAt) < new Date(since)) {
                         continue;
                     }
-                    
+
                     // Attempt to reprocess the message
                     retriedCount++;
                     const success = await this._reprocessMessage(message);
-                    
+
                     if (success) {
                         successCount++;
                         // Remove from failed queue
@@ -300,7 +300,7 @@ module.exports = class MessagingService extends cds.Service {
                     failedCount++;
                 }
             }
-            
+
             return {
                 retriedCount,
                 successCount,
@@ -311,45 +311,45 @@ module.exports = class MessagingService extends cds.Service {
             throw new Error(`Message retry failed: ${error.message}`);
         }
     }
-    
+
     async _reprocessMessage(message) {
         try {
             // Implement actual message reprocessing logic
             // This would depend on your message processing pipeline
-            
+
             // Example: Send message back to processing queue
             const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
             await redisClient.rpush('message_queue:pending', JSON.stringify(message));
-            
+
             // Update retry count
             message.retryCount = (message.retryCount || 0) + 1;
             message.retriedAt = new Date().toISOString();
-            
+
             return true; // Return true if successfully queued for reprocessing
         } catch (error) {
             this.logger.error('Failed to reprocess message:', error);
             return false;
         }
     }
-    
+
     // Helper method to broadcast events via WebSocket
     async broadcastEvent(eventType, data) {
         if (cds.io) {
             cds.io.emit(eventType, data);
         }
-        
+
         // Also emit through CAP events
         await this.emit(eventType, data);
     }
-    
+
     // Monitor network health and emit alerts
     async monitorNetworkHealth() {
         const { NetworkStats } = cds.entities('a2a.network');
-        
+
         const [latest] = await SELECT.from(NetworkStats)
             .orderBy('validFrom desc')
             .limit(1);
-        
+
         if (latest && latest.networkLoad > 0.8) {
             await this.emit('NetworkLoadHigh', {
                 currentLoad: latest.networkLoad,

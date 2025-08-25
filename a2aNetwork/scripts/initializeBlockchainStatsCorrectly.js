@@ -33,7 +33,7 @@ const blockchainStats = {
 
 // Insert blockchain stats
 db.run(`
-    INSERT OR REPLACE INTO BlockchainService_BlockchainStats 
+    INSERT OR REPLACE INTO BlockchainService_BlockchainStats
     (ID, blockHeight, gasPrice, networkStatus, totalTransactions, averageBlockTime, timestamp)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 `, [
@@ -54,7 +54,7 @@ db.run(`
         console.log(`   - Network Status: ${blockchainStats.networkStatus}`);
         console.log(`   - Total Transactions: ${blockchainStats.totalTransactions}`);
         console.log(`   - Average Block Time: ${blockchainStats.averageBlockTime}s`);
-        
+
         // Verify the data was inserted
         db.get('SELECT * FROM BlockchainService_BlockchainStats ORDER BY timestamp DESC LIMIT 1', (err, row) => {
             if (err) {

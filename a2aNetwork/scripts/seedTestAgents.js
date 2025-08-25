@@ -8,14 +8,14 @@ const { SELECT, INSERT, DELETE } = cds.ql;
 async function seedTestAgents() {
     try {
         log.debug('🚀 Seeding test agents...');
-        
+
         // Load model and connect to database
         await cds.load('*');
         const db = await cds.connect.to('db');
-        
+
         // Use table name directly for SQLite
         const agentTableName = 'a2a_network_Agents';
-        
+
         // Create 15 test agents
         const agents = [];
         for (let i = 1; i <= 15; i++) {
@@ -30,14 +30,14 @@ async function seedTestAgents() {
                 modifiedAt: new Date().toISOString()
             });
         }
-        
+
         // Clear existing agents first - use raw SQL for SQLite
         await db.run(`DELETE FROM ${agentTableName}`);
         log.debug('🧹 Cleared existing agents');
-        
+
         // Insert new agents using raw SQL
         const insertSQL = `INSERT INTO ${agentTableName} (ID, address, name, endpoint, reputation, isActive, createdAt, modifiedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-        
+
         for (const agent of agents) {
             await db.run(insertSQL, [
                 agent.ID,
@@ -50,15 +50,15 @@ async function seedTestAgents() {
                 agent.modifiedAt
             ]);
         }
-        
+
         log.info(`✅ Successfully seeded ${agents.length} test agents`);
-        
+
         // Verify the count
         const countResult = await db.run(`SELECT COUNT(*) as total FROM ${agentTableName}`);
         log.debug(`📊 Total agents in database: ${countResult[0]?.total || 0}`);
-        
+
         process.exit(0);
-        
+
     } catch (error) {
         console.error('❌ Error seeding test agents:', error);
         process.exit(1);

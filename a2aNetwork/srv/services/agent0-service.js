@@ -15,7 +15,7 @@ class Agent0Service extends cds.ApplicationService {
         const db = await cds.connect.to('db');
         this.adapter = new Agent0Adapter();
         this.logger = LoggerFactory.createAgentLogger('0', process.env.NODE_ENV || 'development');
-        
+
         // Entity references
         const {
             DataProducts,
@@ -45,7 +45,7 @@ class Agent0Service extends cds.ApplicationService {
                 }
 
                 const product = await this.adapter.createDataProduct(req.data);
-                
+
                 // Auto-generate Dublin Core metadata if not provided
                 if (!req.data.dublinCoreMetadata) {
                     try {
@@ -84,7 +84,7 @@ class Agent0Service extends cds.ApplicationService {
         const handleUpdateDataProducts = async (req) => {
             try {
                 const product = await this.adapter.updateDataProduct(req.params[0], req.data);
-                
+
                 // Emit event
                 await this.emit('DataProductUpdated', {
                     productId: req.params[0],
@@ -102,7 +102,7 @@ class Agent0Service extends cds.ApplicationService {
         const handleDeleteDataProducts = async (req) => {
             try {
                 await this.adapter.deleteDataProduct(req.params[0]);
-                
+
                 // Emit event
                 await this.emit('DataProductDeleted', {
                     productId: req.params[0],
@@ -120,10 +120,10 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.generateDublinCore(ID);
-                
+
                 // Update or create Dublin Core metadata in database
                 const existingDC = await SELECT.one.from(DublinCoreMetadata).where({ dataProduct_ID: ID });
-                
+
                 if (existingDC) {
                     await UPDATE(DublinCoreMetadata)
                         .set(result.metadata)
@@ -138,7 +138,7 @@ class Agent0Service extends cds.ApplicationService {
 
                 // Update product's last modified timestamp
                 await UPDATE(DataProducts)
-                    .set({ 
+                    .set({
                         modifiedAt: new Date(),
                         modifiedBy: req.user.id
                     })
@@ -162,9 +162,9 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const dublinCoreData = req.data;
-                
+
                 const result = await this.adapter.updateDublinCore(ID, dublinCoreData);
-                
+
                 // Update database
                 await UPDATE(DublinCoreMetadata)
                     .set(result)
@@ -189,12 +189,12 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const validationOptions = req.data || {};
-                
+
                 const result = await this.adapter.validateMetadata(ID, validationOptions);
-                
+
                 // Update product validation status
                 await UPDATE(DataProducts)
-                    .set({ 
+                    .set({
                         qualityScore: result.overallScore,
                         modifiedAt: new Date()
                     })
@@ -219,9 +219,9 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const schemaData = req.data;
-                
+
                 const result = await this.adapter.validateSchema(ID, schemaData);
-                
+
                 // Emit event
                 await this.emit('SchemaValidated', {
                     productId: ID,
@@ -242,9 +242,9 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const assessmentCriteria = req.data || {};
-                
+
                 const result = await this.adapter.assessQuality(ID, assessmentCriteria);
-                
+
                 // Create quality assessment record
                 await INSERT.into(QualityAssessments).entries({
                     ID: uuidv4(),
@@ -265,7 +265,7 @@ class Agent0Service extends cds.ApplicationService {
 
                 // Update product quality score
                 await UPDATE(DataProducts)
-                    .set({ 
+                    .set({
                         qualityScore: result.overallScore,
                         modifiedAt: new Date()
                     })
@@ -291,7 +291,7 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const publishOptions = req.data || {};
-                
+
                 // Check if Dublin Core metadata exists and is complete
                 const dublinCore = await SELECT.one.from(DublinCoreMetadata).where({ dataProduct_ID: ID });
                 if (!dublinCore || !dublinCore.title || !dublinCore.creator) {
@@ -300,10 +300,10 @@ class Agent0Service extends cds.ApplicationService {
                 }
 
                 const result = await this.adapter.publishProduct(ID, publishOptions);
-                
+
                 // Update product status
                 await UPDATE(DataProducts)
-                    .set({ 
+                    .set({
                         status: 'ACTIVE',
                         modifiedAt: new Date()
                     })
@@ -329,12 +329,12 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { reason } = req.data;
-                
+
                 const result = await this.adapter.archiveProduct(ID, reason);
-                
+
                 // Update product status
                 await UPDATE(DataProducts)
-                    .set({ 
+                    .set({
                         status: 'ARCHIVED',
                         modifiedAt: new Date()
                     })
@@ -370,9 +370,9 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const versionData = req.data;
-                
+
                 const result = await this.adapter.createVersion(ID, versionData);
-                
+
                 // Emit event
                 await this.emit('DataProductVersionCreated', {
                     productId: ID,
@@ -392,7 +392,7 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { ID } = req.params[0];
                 const { fromVersion, toVersion } = req.data;
-                
+
                 const comparison = await this.adapter.compareVersions(ID, fromVersion, toVersion);
                 return comparison;
             } catch (error) {
@@ -414,7 +414,7 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const importData = req.data;
                 const result = await this.adapter.importMetadata(importData);
-                
+
                 // Emit event
                 await this.emit('MetadataImported', {
                     importedCount: result.importedCount,
@@ -434,7 +434,7 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { format, includePrivate } = req.data;
                 const result = await this.adapter.exportCatalog(format, includePrivate);
-                
+
                 // Emit event
                 await this.emit('CatalogExported', {
                     exportId: result.exportId,
@@ -453,7 +453,7 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { productIds, updateData } = req.data;
                 const result = await this.adapter.bulkUpdateProducts(productIds, updateData);
-                
+
                 // Update modified timestamps in database
                 await UPDATE(DataProducts)
                     .set({ modifiedAt: new Date() })
@@ -478,12 +478,12 @@ class Agent0Service extends cds.ApplicationService {
             try {
                 const { productIds, validationType } = req.data;
                 const result = await this.adapter.batchValidateProducts(productIds, validationType);
-                
+
                 // Update quality scores in database for valid products
                 for (const validationResult of result.results) {
                     if (validationResult.isValid && validationResult.score !== undefined) {
                         await UPDATE(DataProducts)
-                            .set({ 
+                            .set({
                                 qualityScore: validationResult.score,
                                 modifiedAt: new Date()
                             })
@@ -549,16 +549,16 @@ class Agent0Service extends cds.ApplicationService {
         // Stream handler for real-time data product updates
         this.on('streamProductUpdates', async function* (req) {
             const { productId } = req.data;
-            
+
             // Simulate real-time updates - in production, this would connect to actual streams
             const updateInterval = 5000; // 5 seconds
             let counter = 0;
-            
+
             while (counter < 10) { // Limit for demo purposes
                 try {
                     // Get latest product data
                     const product = await SELECT.one.from(DataProducts).where({ ID: productId });
-                    
+
                     if (product) {
                         yield {
                             productId,
@@ -570,7 +570,7 @@ class Agent0Service extends cds.ApplicationService {
                             updateNumber: counter + 1
                         };
                     }
-                    
+
                     await new Promise(resolve => setTimeout(resolve, updateInterval));
                     counter++;
                 } catch (error) {

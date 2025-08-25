@@ -17,7 +17,7 @@ const crypto = require('crypto');
 class MessageQueueService extends EventEmitter {
     constructor() {
         super();
-        
+
         // RabbitMQ configuration
         this.config = {
             url: process.env.RABBITMQ_URL || 'amqp://localhost',
@@ -60,7 +60,7 @@ class MessageQueueService extends EventEmitter {
         this.channel = null;
         this.consumers = new Map();
         this.publishers = new Map();
-        
+
         // Monitoring
         this.stats = {
             messagesPublished: 0,
@@ -80,15 +80,15 @@ class MessageQueueService extends EventEmitter {
     async connect() {
         try {
             logger.info('🐰 Connecting to RabbitMQ...');
-            
+
             this.connection = await amqp.connect(this.config.url);
-            
+
             // Handle connection events
             this.connection.on('error', (err) => {
                 logger.error('RabbitMQ connection error:', { err: err });
                 this.handleConnectionError();
             });
-            
+
             this.connection.on('close', () => {
                 logger.info('RabbitMQ connection closed');
                 this.handleConnectionClose();
@@ -210,7 +210,7 @@ class MessageQueueService extends EventEmitter {
         // Delayed message support
         if (options.delay) {
             publishOptions.headers['x-delay'] = options.delay;
-            
+
             return this.channel.publish(
                 this.exchanges.delayed,
                 queue,
@@ -274,7 +274,7 @@ class MessageQueueService extends EventEmitter {
 
             } catch (error) {
                 logger.error(`Error processing message from ${queue}:`, { error: error });
-                
+
                 // Handle retry logic
                 await this.handleMessageError(msg, error, queue);
             }
@@ -298,7 +298,7 @@ class MessageQueueService extends EventEmitter {
         });
 
         logger.info(`📨 Subscribed to queue: ${queue} (${consumerId})`);
-        
+
         return consumerId;
     }
 
@@ -313,12 +313,12 @@ class MessageQueueService extends EventEmitter {
         if (retryCount <= maxRetries) {
             // Retry with exponential backoff
             const delay = Math.min(1000 * Math.pow(2, retryCount), 60000);
-            
+
             logger.info(`Retrying message (attempt ${retryCount}/${maxRetries}) after ${delay}ms`);
-            
+
             // Update retry count
             headers['x-retry-count'] = retryCount;
-            
+
             // Republish with delay
             setTimeout(() => {
                 this.channel.sendToQueue(
@@ -329,20 +329,20 @@ class MessageQueueService extends EventEmitter {
                         headers
                     }
                 );
-                
+
                 // Acknowledge original message
                 this.channel.ack(msg);
                 this.stats.messagesRetried++;
-                
+
             }, delay);
-            
+
         } else {
             // Max retries exceeded - send to DLQ
             logger.error(`Message failed after ${maxRetries} retries, sending to DLQ`);
-            
+
             this.channel.reject(msg, false);
             this.stats.messagesFailed++;
-            
+
             this.emit('message:failed', {
                 queue,
                 messageId: msg.properties.messageId,
@@ -356,7 +356,7 @@ class MessageQueueService extends EventEmitter {
      */
     async unsubscribe(consumerId) {
         const consumer = this.consumers.get(consumerId);
-        
+
         if (consumer && this.channel) {
             await this.channel.cancel(consumer.tag);
             this.consumers.delete(consumerId);
@@ -386,7 +386,7 @@ class MessageQueueService extends EventEmitter {
      */
     scheduleReconnect() {
         logger.info(`Reconnecting in ${this.config.reconnectDelay}ms...`);
-        
+
         setTimeout(() => {
             this.connect();
         }, this.config.reconnectDelay);
@@ -401,7 +401,7 @@ class MessageQueueService extends EventEmitter {
         }
 
         const queueInfo = await this.channel.checkQueue(queueName);
-        
+
         return {
             messages: queueInfo.messageCount,
             consumers: queueInfo.consumerCount,
@@ -419,7 +419,7 @@ class MessageQueueService extends EventEmitter {
 
         const result = await this.channel.purgeQueue(queueName);
         logger.info(`🗑️ Purged ${result.messageCount} messages from ${queueName}`);
-        
+
         return result.messageCount;
     }
 
@@ -442,7 +442,7 @@ class MessageQueueService extends EventEmitter {
      */
     async shutdown() {
         logger.info('📪 Shutting down message queue service...');
-        
+
         // Cancel all consumers
         for (const [consumerId, consumer] of this.consumers) {
             await this.unsubscribe(consumerId);
@@ -452,7 +452,7 @@ class MessageQueueService extends EventEmitter {
         if (this.channel) {
             await this.channel.close();
         }
-        
+
         if (this.connection) {
             await this.connection.close();
         }

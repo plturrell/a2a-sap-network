@@ -21,7 +21,7 @@ class SecurityMiddleware {
         try {
             // Initialize security monitoring service
             this.securityMonitor = new SecurityMonitoringService();
-            
+
             // Listen for security events
             this.securityMonitor.on('ipBlocked', (data) => {
                 this.blockedIPs.add(data.ipAddress);
@@ -29,14 +29,14 @@ class SecurityMiddleware {
                     this.blockedIPs.delete(data.ipAddress);
                 }, data.duration);
             });
-            
+
             this.securityMonitor.on('userQuarantined', (data) => {
                 this.quarantinedUsers.add(data.userId);
                 setTimeout(() => {
                     this.quarantinedUsers.delete(data.userId);
                 }, data.duration);
             });
-            
+
             this.log.info('Security middleware initialized successfully');
         } catch (error) {
             this.log.error('Failed to initialize security middleware:', error);
@@ -52,7 +52,7 @@ class SecurityMiddleware {
             const startTime = Date.now();
             const clientIP = this.getClientIP(req);
             const userAgent = req.get('User-Agent') || 'unknown';
-            
+
             // Check if IP is blocked
             if (this.blockedIPs.has(clientIP)) {
                 this.log.warn(`Blocked IP attempted access: ${clientIP}`);
@@ -61,7 +61,7 @@ class SecurityMiddleware {
                     code: 'IP_BLOCKED'
                 });
             }
-            
+
             // Check if user is quarantined
             if (req.user && this.quarantinedUsers.has(req.user.id)) {
                 this.log.warn(`Quarantined user attempted access: ${req.user.id}`);
@@ -70,10 +70,10 @@ class SecurityMiddleware {
                     code: 'USER_QUARANTINED'
                 });
             }
-            
+
             // Monitor request for security issues
             this.monitorRequest(req, clientIP, userAgent, startTime);
-            
+
             // Intercept response to monitor status codes
             const originalSend = res.send;
             res.send = function(data) {
@@ -81,7 +81,7 @@ class SecurityMiddleware {
                 this.monitorResponse(req, res, responseTime, data);
                 return originalSend.call(this, data);
             }.bind(this);
-            
+
             next();
         };
     }
@@ -102,10 +102,10 @@ class SecurityMiddleware {
             userId: req.user?.id || null,
             timestamp: new Date().toISOString()
         };
-        
+
         // Detect suspicious patterns in request
         const threats = this.detectRequestThreats(requestData);
-        
+
         if (threats.length > 0) {
             threats.forEach(threat => {
                 this.securityMonitor.reportSecurityEvent({
@@ -125,7 +125,7 @@ class SecurityMiddleware {
                 });
             });
         }
-        
+
         // Store request metadata for response analysis
         req._securityContext = {
             startTime,
@@ -141,7 +141,7 @@ class SecurityMiddleware {
     monitorResponse(req, res, responseTime, responseData) {
         const context = req._securityContext || {};
         const statusCode = res.statusCode;
-        
+
         // Monitor for security-related status codes
         if (this.isSecurityRelevantStatus(statusCode)) {
             const eventData = {
@@ -161,10 +161,10 @@ class SecurityMiddleware {
                     requestThreats: context.threats || 0
                 }
             };
-            
+
             this.securityMonitor.reportSecurityEvent(eventData);
         }
-        
+
         // Monitor response time for potential DoS attacks
         if (responseTime > 5000 && context.threats > 0) {
             this.securityMonitor.reportSecurityEvent({
@@ -186,7 +186,7 @@ class SecurityMiddleware {
     detectRequestThreats(requestData) {
         const threats = [];
         const content = JSON.stringify(requestData).toLowerCase();
-        
+
         // SQL Injection detection
         const sqlPatterns = [
             /union.*select/i,
@@ -197,7 +197,7 @@ class SecurityMiddleware {
             /'.*or.*'.*=/i,
             /admin'--/i
         ];
-        
+
         sqlPatterns.forEach(pattern => {
             if (pattern.test(content)) {
                 threats.push({
@@ -209,7 +209,7 @@ class SecurityMiddleware {
                 });
             }
         });
-        
+
         // XSS detection
         const xssPatterns = [
             /<script.*>/i,
@@ -219,7 +219,7 @@ class SecurityMiddleware {
             /<object/i,
             /expression\s*\(/i
         ];
-        
+
         xssPatterns.forEach(pattern => {
             if (pattern.test(content)) {
                 threats.push({
@@ -231,7 +231,7 @@ class SecurityMiddleware {
                 });
             }
         });
-        
+
         // Command injection detection
         const cmdPatterns = [
             /;\s*(cat|ls|pwd|whoami|id|uname)/i,
@@ -241,7 +241,7 @@ class SecurityMiddleware {
             /&&.*rm/i,
             /\|\|\s*rm/i
         ];
-        
+
         cmdPatterns.forEach(pattern => {
             if (pattern.test(content)) {
                 threats.push({
@@ -253,17 +253,17 @@ class SecurityMiddleware {
                 });
             }
         });
-        
+
         // Path traversal detection
         const pathTraversalPatterns = [
             /\.\.\//,
-            /\.\.\\\/,
+            /\.\.\\\\/,
             /%2e%2e%2f/i,
             /%2e%2e%5c/i,
             /\.\.%2f/i,
             /\.\.%5c/i
         ];
-        
+
         pathTraversalPatterns.forEach(pattern => {
             if (pattern.test(content)) {
                 threats.push({
@@ -275,7 +275,7 @@ class SecurityMiddleware {
                 });
             }
         });
-        
+
         // Suspicious user agents
         const maliciousUserAgents = [
             /sqlmap/i,
@@ -286,7 +286,7 @@ class SecurityMiddleware {
             /havij/i,
             /masscan/i
         ];
-        
+
         maliciousUserAgents.forEach(pattern => {
             if (pattern.test(requestData.userAgent)) {
                 threats.push({
@@ -298,7 +298,7 @@ class SecurityMiddleware {
                 });
             }
         });
-        
+
         // Rate limiting check
         const rateLimitKey = `${requestData.ipAddress}:${requestData.path}`;
         const rateLimitCheck = this.checkRateLimit(rateLimitKey);
@@ -311,7 +311,7 @@ class SecurityMiddleware {
                 count: rateLimitCheck.count
             });
         }
-        
+
         return threats;
     }
 
@@ -320,16 +320,16 @@ class SecurityMiddleware {
      */
     checkRateLimit(key, maxRequests = 100, windowMs = 60000) {
         const now = Date.now();
-        
+
         if (!this.rateLimiters.has(key)) {
             this.rateLimiters.set(key, []);
         }
-        
+
         const requests = this.rateLimiters.get(key);
-        
+
         // Remove old requests outside the window
         const validRequests = requests.filter(timestamp => now - timestamp < windowMs);
-        
+
         // Check if limit exceeded
         if (validRequests.length >= maxRequests) {
             return {
@@ -338,11 +338,11 @@ class SecurityMiddleware {
                 window: windowMs
             };
         }
-        
+
         // Add current request
         validRequests.push(now);
         this.rateLimiters.set(key, validRequests);
-        
+
         return {
             allowed: true,
             count: validRequests.length,
@@ -405,13 +405,13 @@ class SecurityMiddleware {
     sanitizeHeaders(headers) {
         const sanitized = { ...headers };
         const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key', 'x-auth-token'];
-        
+
         sensitiveHeaders.forEach(header => {
             if (sanitized[header]) {
                 sanitized[header] = '[REDACTED]';
             }
         });
-        
+
         return sanitized;
     }
 
@@ -420,7 +420,7 @@ class SecurityMiddleware {
      */
     sanitizeRequestData(requestData) {
         const sanitized = { ...requestData };
-        
+
         // Remove sensitive fields
         if (sanitized.body) {
             const sensitiveFields = ['password', 'token', 'secret', 'key', 'auth'];
@@ -430,7 +430,7 @@ class SecurityMiddleware {
                 }
             });
         }
-        
+
         return sanitized;
     }
 
@@ -484,7 +484,7 @@ class SecurityMiddleware {
     authenticationFailure() {
         return (req, res, next) => {
             const originalStatus = res.status;
-            
+
             res.status = function(code) {
                 if (code === 401 || code === 403) {
                     this.reportSecurityEvent({
@@ -502,7 +502,7 @@ class SecurityMiddleware {
                 }
                 return originalStatus.call(this, code);
             }.bind(this);
-            
+
             next();
         };
     }
@@ -516,10 +516,10 @@ class SecurityMiddleware {
             if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
                 return next();
             }
-            
+
             const token = req.headers['x-csrf-token'] || req.body._csrf;
             const sessionToken = req.session?.csrfToken;
-            
+
             if (!token || !sessionToken || token !== sessionToken) {
                 this.reportSecurityEvent({
                     severity: 'high',
@@ -532,13 +532,13 @@ class SecurityMiddleware {
                     endpoint: req.originalUrl,
                     method: req.method
                 });
-                
+
                 return res.status(403).json({
                     error: 'CSRF token validation failed',
                     code: 'CSRF_TOKEN_INVALID'
                 });
             }
-            
+
             next();
         };
     }
@@ -557,7 +557,7 @@ class SecurityMiddleware {
                 userAgent: req.get('User-Agent'),
                 ipAddress: this.getClientIP(req)
             });
-            
+
             // Block requests with critical threats
             const criticalThreats = threats.filter(t => t.severity === 'critical');
             if (criticalThreats.length > 0) {
@@ -573,13 +573,13 @@ class SecurityMiddleware {
                     method: req.method,
                     metadata: { threats: criticalThreats }
                 });
-                
+
                 return res.status(400).json({
                     error: 'Input validation failed',
                     code: 'INVALID_INPUT_DETECTED'
                 });
             }
-            
+
             next();
         };
     }

@@ -18,7 +18,7 @@ class A2ATelemetry {
         this.serviceVersion = process.env.npm_package_version || '1.0.0';
         this.environment = process.env.NODE_ENV || 'development';
         this.isBTP = process.env.BTP_ENVIRONMENT === 'true';
-        
+
         this.sdk = null;
         this.tracer = null;
         this.meter = null;
@@ -74,7 +74,7 @@ class A2ATelemetry {
             });
 
             this.sdk.start();
-            
+
             // Initialize tracer and meter
             this.tracer = trace.getTracer(this.serviceName, this.serviceVersion);
             this.meter = metrics.getMeter(this.serviceName, this.serviceVersion);
@@ -141,9 +141,9 @@ class A2ATelemetry {
                     port: 9090,
                     preventServerStart: false
                 });
-                
+
                 // console.log('🔍 Prometheus metrics available at: http://localhost:9090/metrics');
-                
+
                 return new PeriodicExportingMetricReader({
                     exporter: prometheusExporter,
                     exportIntervalMillis: 15000
@@ -203,7 +203,7 @@ class A2ATelemetry {
     middleware() {
         return (req, res, next) => {
             const start = Date.now();
-            
+
             // Create span for request
             const span = this.tracer?.startSpan(`${req.method} ${req.path}`, {
                 attributes: {
@@ -220,7 +220,7 @@ class A2ATelemetry {
 
             res.on('finish', () => {
                 const duration = (Date.now() - start) / 1000;
-                
+
                 // Update span with response info
                 span?.setAttributes({
                     'http.status_code': res.statusCode,

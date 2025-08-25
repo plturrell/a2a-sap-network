@@ -59,7 +59,7 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
         try {
             await this.gleanModule.initialize();
             this.results.enhancedDiagnostics.gleanEnabled = this.gleanModule.isAvailable;
-            
+
             if (this.gleanModule.isAvailable) {
                 this.log('✅ Glean code intelligence service is available', 'success');
             } else {
@@ -73,24 +73,24 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
 
     async runEnhancedDiagnostics() {
         this.log('🔍 Running enhanced code intelligence diagnostics...', 'info');
-        
+
         try {
             // Run code analysis
             await this.runTest('Code Health Analysis', async () => {
                 const codeAnalysis = await this.gleanModule.runCodeDiagnostics();
                 this.results.enhancedDiagnostics.codeIntelligence = codeAnalysis;
-                
+
                 // Log summary
                 if (codeAnalysis.codeHealth) {
-                    this.log(`Code Health Score: ${codeAnalysis.codeHealth.score}/100`, 
+                    this.log(`Code Health Score: ${codeAnalysis.codeHealth.score}/100`,
                              codeAnalysis.codeHealth.score > 80 ? 'success' : 'warning');
                 }
-                
+
                 if (codeAnalysis.security) {
-                    this.log(`Security Issues: ${codeAnalysis.security.totalIssues} found`, 
+                    this.log(`Security Issues: ${codeAnalysis.security.totalIssues} found`,
                              codeAnalysis.security.totalIssues === 0 ? 'success' : 'warning');
                 }
-                
+
                 return codeAnalysis;
             });
 
@@ -103,7 +103,7 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
                 ];
 
                 const componentAnalysis = {};
-                
+
                 for (const component of criticalComponents) {
                     try {
                         const analysis = await this.gleanModule.gleanService.send({
@@ -111,14 +111,14 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
                             data: { componentPath: component }
                         });
                         componentAnalysis[component] = analysis;
-                        
-                        this.log(`${component}: Complexity ${analysis.complexity.cyclomaticComplexity}`, 
+
+                        this.log(`${component}: Complexity ${analysis.complexity.cyclomaticComplexity}`,
                                  analysis.complexity.cyclomaticComplexity < 20 ? 'success' : 'warning');
                     } catch (error) {
                         componentAnalysis[component] = { error: error.message };
                     }
                 }
-                
+
                 this.results.enhancedDiagnostics.componentAnalysis = componentAnalysis;
                 return componentAnalysis;
             });
@@ -146,13 +146,13 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
 
         // Validate SAP integration patterns
         validation.sapIntegration = await this.validateSAPPatterns();
-        
+
         // Validate blockchain integration
         validation.blockchainIntegration = await this.validateBlockchainPatterns();
-        
+
         // Validate agent communication
         validation.agentCommunication = await this.validateAgentPatterns();
-        
+
         // Validate security implementation
         validation.securityPatterns = await this.validateSecurityImplementation();
 
@@ -330,7 +330,7 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
         // Add enhanced diagnostics summary
         if (this.results.enhancedDiagnostics.gleanEnabled && this.results.enhancedDiagnostics.codeIntelligence) {
             const codeAnalysis = this.results.enhancedDiagnostics.codeIntelligence;
-            
+
             this.results.summary.codeHealthScore = codeAnalysis.codeHealth?.score || 0;
             this.results.summary.securityIssues = codeAnalysis.security?.totalIssues || 0;
             this.results.summary.criticalSecurityIssues = codeAnalysis.security?.critical?.length || 0;
@@ -345,11 +345,11 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
 
     async generateReports() {
         const timestamp = Date.now();
-        
+
         // Save main diagnostic results
         const mainReportFile = `/Users/apple/projects/a2a/enhanced-diagnostic-results-${timestamp}.json`;
         await require('fs').promises.writeFile(
-            mainReportFile, 
+            mainReportFile,
             JSON.stringify(this.results, null, 2)
         );
         this.log(`📄 Enhanced diagnostic results saved to: ${mainReportFile}`, 'info');
@@ -373,7 +373,7 @@ class EnhancedA2ADiagnosticTool extends A2ADiagnosticTool {
 
     async generateExecutiveSummary() {
         const report = await this.gleanModule.generateDetailedReport();
-        
+
         return `# A2A Network Diagnostic Executive Summary
 
 Generated: ${new Date().toISOString()}
@@ -401,7 +401,7 @@ ${this.formatArchitectureValidation()}
 ${this.formatTopRecommendations()}
 
 ### Action Items
-${report.actionItems ? report.actionItems.map(item => 
+${report.actionItems ? report.actionItems.map(item =>
     `- **[${item.priority}]** ${item.task} (${item.category}) - ${item.deadline}`
 ).join('\n') : 'No critical action items'}
 
@@ -421,7 +421,7 @@ ${report.actionItems ? report.actionItems.map(item =>
         if (!analysis || !analysis.codeHealth) return 'No code analysis data available';
 
         const findings = [];
-        
+
         if (analysis.codeHealth.topIssues) {
             findings.push('#### Top Code Issues');
             analysis.codeHealth.topIssues.slice(0, 5).forEach(issue => {
@@ -444,19 +444,19 @@ ${report.actionItems ? report.actionItems.map(item =>
         if (!validation) return 'Architecture validation not performed';
 
         const results = [];
-        
+
         results.push('| Component | Status |');
         results.push('|-----------|--------|');
-        
+
         // SAP Integration
         results.push(`| SAP CDS Services | ${validation.sapIntegration?.cdsServices ? '✅' : '❌'} |`);
         results.push(`| XSUAA Authentication | ${validation.sapIntegration?.xsuaaAuth ? '✅' : '❌'} |`);
         results.push(`| SAP Logging | ${validation.sapIntegration?.sapLogging ? '✅' : '❌'} |`);
-        
+
         // Blockchain
         results.push(`| Web3 Integration | ${validation.blockchainIntegration?.web3Integration ? '✅' : '❌'} |`);
         results.push(`| Smart Contracts | ${validation.blockchainIntegration?.smartContracts ? '✅' : '❌'} |`);
-        
+
         // Security
         results.push(`| Authentication | ${validation.securityPatterns?.authentication ? '✅' : '❌'} |`);
         results.push(`| Input Validation | ${validation.securityPatterns?.inputValidation ? '✅' : '❌'} |`);
@@ -468,14 +468,14 @@ ${report.actionItems ? report.actionItems.map(item =>
         const recommendations = this.results.summary.recommendations || [];
         if (recommendations.length === 0) return 'No specific recommendations';
 
-        return recommendations.slice(0, 5).map(rec => 
+        return recommendations.slice(0, 5).map(rec =>
             `- **${rec.priority.toUpperCase()}**: ${rec.action} (${rec.category}) - ${rec.impact}`
         ).join('\n');
     }
 
     generateActionItemsReport() {
         const items = this.gleanModule.generateActionItems();
-        
+
         return `# A2A Network - Diagnostic Action Items
 
 Generated: ${new Date().toISOString()}
@@ -483,17 +483,17 @@ Generated: ${new Date().toISOString()}
 ## Priority Breakdown
 
 ### P0 - Critical (Immediate Action Required)
-${items.filter(i => i.priority === 'P0').map(i => 
+${items.filter(i => i.priority === 'P0').map(i =>
     `- [ ] ${i.task}\n  - Category: ${i.category}\n  - Assignee: ${i.assignee}\n  - Deadline: ${i.deadline}`
 ).join('\n\n') || 'No critical items'}
 
 ### P1 - High Priority (This Week)
-${items.filter(i => i.priority === 'P1').map(i => 
+${items.filter(i => i.priority === 'P1').map(i =>
     `- [ ] ${i.task}\n  - Category: ${i.category}\n  - Assignee: ${i.assignee}\n  - Deadline: ${i.deadline}`
 ).join('\n\n') || 'No high priority items'}
 
 ### P2 - Medium Priority (Next Sprint)
-${items.filter(i => i.priority === 'P2').map(i => 
+${items.filter(i => i.priority === 'P2').map(i =>
     `- [ ] ${i.task}\n  - Category: ${i.category}\n  - Assignee: ${i.assignee}\n  - Deadline: ${i.deadline}`
 ).join('\n\n') || 'No medium priority items'}
 
@@ -513,11 +513,11 @@ ${items.filter(i => i.priority === 'P2').map(i =>
             'P1': 8,  // hours
             'P2': 16  // hours
         };
-        
-        const totalHours = items.reduce((sum, item) => 
+
+        const totalHours = items.reduce((sum, item) =>
             sum + (effortMap[item.priority] || 8), 0
         );
-        
+
         return `${totalHours} hours (${Math.ceil(totalHours / 8)} days)`;
     }
 }

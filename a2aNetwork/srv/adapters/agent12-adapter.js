@@ -27,7 +27,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CatalogEntry');
         } catch (error) {
             throw this._handleError(error);
@@ -47,7 +47,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTCatalogEntryToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -67,7 +67,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTCatalogEntryToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -95,10 +95,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 entryName: data.entry_name,
@@ -123,7 +123,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 entryName: data.entry_name,
@@ -148,7 +148,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success
             };
@@ -164,10 +164,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success
             };
@@ -183,10 +183,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout * 2 // Longer timeout for documentation generation
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 documentationUrl: data.documentation_url,
                 content: data.content
@@ -203,10 +203,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 isValid: data.is_valid,
                 errors: data.errors,
@@ -224,10 +224,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return this._convertRESTCatalogEntryToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -248,7 +248,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 downloadUrl: data.download_url,
                 content: data.content,
@@ -272,7 +272,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CatalogDependency');
         } catch (error) {
             throw this._handleError(error);
@@ -292,7 +292,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTDependencyToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -325,7 +325,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CatalogReview');
         } catch (error) {
             throw this._handleError(error);
@@ -345,7 +345,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTReviewToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -359,10 +359,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success
             };
@@ -385,7 +385,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success
             };
@@ -408,7 +408,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success
             };
@@ -430,7 +430,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CatalogMetadata');
         } catch (error) {
             throw this._handleError(error);
@@ -450,7 +450,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTMetadataToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -470,7 +470,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTMetadataToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -503,7 +503,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'CatalogSearch');
         } catch (error) {
             throw this._handleError(error);
@@ -523,7 +523,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTSearchToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -543,7 +543,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'Registry');
         } catch (error) {
             throw this._handleError(error);
@@ -557,7 +557,7 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return this._convertRESTRegistryToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -577,7 +577,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTRegistryToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -597,7 +597,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTRegistryToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -611,10 +611,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout * 3 // Longer timeout for sync operations
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 entriesProcessed: data.entries_processed,
@@ -635,10 +635,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message,
@@ -656,10 +656,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -683,7 +683,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 downloadUrl: data.download_url,
                 content: data.content,
@@ -703,10 +703,10 @@ class Agent12Adapter {
                 data: data.data
             }),
                 timeout: this.timeout * 2
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 entriesImported: data.entries_imported
@@ -736,9 +736,9 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
-                catalogEntries: data.catalog_entries?.map(entry => 
+                catalogEntries: data.catalog_entries?.map(entry =>
                     this._convertRESTCatalogEntryToOData(entry)) || [],
                 totalCount: data.total_count,
                 searchTime: data.search_time,
@@ -764,7 +764,7 @@ class Agent12Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 services: data.services,
@@ -793,7 +793,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 serviceId: data.service_id,
                 message: data.message
@@ -819,7 +819,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 success: data.success,
                 serviceName: data.service_name,
@@ -846,7 +846,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 analysis: data.analysis,
                 dependencies: data.dependencies,
@@ -873,7 +873,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 isValid: data.is_valid,
                 errors: data.errors,
@@ -901,7 +901,7 @@ class Agent12Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 reportUrl: data.report_url,
                 content: data.content,
@@ -928,7 +928,7 @@ class Agent12Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 imported: data.imported,
@@ -956,7 +956,7 @@ class Agent12Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 downloadUrl: data.download_url,
                 content: data.content,
@@ -983,7 +983,7 @@ class Agent12Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 synced: data.synced,
@@ -1001,10 +1001,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout * 2
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 message: data.message
@@ -1030,7 +1030,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 recommendations: data.recommendations
             };
@@ -1046,10 +1046,10 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout * 5
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 message: data.message,
                 entriesProcessed: data.entries_processed
@@ -1076,7 +1076,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 categoryId: data.category_id,
                 message: data.message
@@ -1103,7 +1103,7 @@ class Agent12Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 message: data.message,
                 newVersion: data.new_version
@@ -1116,13 +1116,13 @@ class Agent12Adapter {
     // ===== CONVERSION UTILITIES =====
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$orderby) params.sort = query.$orderby;
         if (query.$search) params.search = query.$search;
-        
+
         return params;
     }
 
@@ -1397,7 +1397,7 @@ class Agent12Adapter {
             const status = error.response.status;
             const message = error.data?.message || error.response.statusText;
             const details = error.data?.details || null;
-            
+
             return new Error(`Agent 12 Error (${status}): ${message}${details ? ` - ${JSON.stringify(details)}` : ''}`);
         } else if (error.request) {
             return new Error('Agent 12 Connection Error: No response from catalog service');

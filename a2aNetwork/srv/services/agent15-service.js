@@ -15,7 +15,7 @@ class Agent15Service extends cds.ApplicationService {
     async init() {
         const db = await cds.connect.to('db');
         this.adapter = new Agent15Adapter();
-        
+
         // Entity references
         const {
             Workflows,
@@ -39,7 +39,7 @@ class Agent15Service extends cds.ApplicationService {
         this.on('CREATE', 'Workflows', async (req) => {
             try {
                 const workflow = await this.adapter.createWorkflow(req.data);
-                
+
                 // Emit workflow creation event
                 await this.emit('WorkflowCreated', {
                     workflowId: workflow.ID,
@@ -48,7 +48,7 @@ class Agent15Service extends cds.ApplicationService {
                     taskCount: workflow.tasks?.length || 0,
                     timestamp: new Date()
                 });
-                
+
                 return workflow;
             } catch (error) {
                 req.error(500, `Failed to create workflow: ${error.message}`);
@@ -77,7 +77,7 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowId, executionContext } = req.data;
                 const execution = await this.adapter.executeWorkflow(workflowId, executionContext);
-                
+
                 // Create execution record
                 const executionRecord = await INSERT.into(WorkflowExecutions).entries({
                     ID: uuidv4(),
@@ -88,14 +88,14 @@ class Agent15Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     createdBy: req.user.id
                 });
-                
+
                 await this.emit('WorkflowExecutionStarted', {
                     workflowId,
                     executionId: executionRecord.ID,
                     strategy: execution.strategy,
                     timestamp: new Date()
                 });
-                
+
                 return {
                     executionId: executionRecord.ID,
                     status: execution.status,
@@ -110,17 +110,17 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowId } = req.data;
                 const result = await this.adapter.pauseWorkflow(workflowId);
-                
+
                 // Update execution status
                 await UPDATE(WorkflowExecutions)
                     .set({ status: 'PAUSED', updatedAt: new Date() })
                     .where({ workflowId: workflowId, status: 'RUNNING' });
-                
+
                 await this.emit('WorkflowPaused', {
                     workflowId,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to pause workflow: ${error.message}`);
@@ -131,17 +131,17 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowId } = req.data;
                 const result = await this.adapter.resumeWorkflow(workflowId);
-                
+
                 // Update execution status
                 await UPDATE(WorkflowExecutions)
                     .set({ status: 'RUNNING', updatedAt: new Date() })
                     .where({ workflowId: workflowId, status: 'PAUSED' });
-                
+
                 await this.emit('WorkflowResumed', {
                     workflowId,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to resume workflow: ${error.message}`);
@@ -152,21 +152,21 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowId } = req.data;
                 const result = await this.adapter.cancelWorkflow(workflowId);
-                
+
                 // Update execution status
                 await UPDATE(WorkflowExecutions)
-                    .set({ 
-                        status: 'CANCELLED', 
+                    .set({
+                        status: 'CANCELLED',
                         endTime: new Date(),
-                        updatedAt: new Date() 
+                        updatedAt: new Date()
                     })
                     .where({ workflowId: workflowId, status: { in: ['RUNNING', 'PAUSED'] } });
-                
+
                 await this.emit('WorkflowCancelled', {
                     workflowId,
                     timestamp: new Date()
                 });
-                
+
                 return result;
             } catch (error) {
                 req.error(500, `Failed to cancel workflow: ${error.message}`);
@@ -199,7 +199,7 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { coordinationPlan, agents, objective } = req.data;
                 const coordination = await this.adapter.coordinateAgents(coordinationPlan, agents, objective);
-                
+
                 // Create coordination session record
                 const sessionRecord = await INSERT.into(AgentCoordinationSessions).entries({
                     ID: coordination.coordination_id,
@@ -211,14 +211,14 @@ class Agent15Service extends cds.ApplicationService {
                     createdAt: new Date(),
                     createdBy: req.user.id
                 });
-                
+
                 await this.emit('AgentCoordinationStarted', {
                     coordinationId: coordination.coordination_id,
                     agents: agents,
                     objective: objective,
                     timestamp: new Date()
                 });
-                
+
                 return coordination;
             } catch (error) {
                 req.error(500, `Failed to coordinate agents: ${error.message}`);
@@ -238,13 +238,13 @@ class Agent15Service extends cds.ApplicationService {
         this.on('CREATE', 'WorkflowTemplates', async (req) => {
             try {
                 const template = await this.adapter.createWorkflowTemplate(req.data);
-                
+
                 await this.emit('WorkflowTemplateCreated', {
                     templateId: template.ID,
                     templateName: template.name,
                     timestamp: new Date()
                 });
-                
+
                 return template;
             } catch (error) {
                 req.error(500, `Failed to create workflow template: ${error.message}`);
@@ -255,18 +255,18 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { templateId, workflowName, parameters } = req.data;
                 const workflow = await this.adapter.createWorkflowFromTemplate(
-                    templateId, 
-                    workflowName, 
+                    templateId,
+                    workflowName,
                     parameters
                 );
-                
+
                 await this.emit('WorkflowCreatedFromTemplate', {
                     workflowId: workflow.workflow_id,
                     templateId: templateId,
                     workflowName: workflowName,
                     timestamp: new Date()
                 });
-                
+
                 return workflow;
             } catch (error) {
                 req.error(500, `Failed to create workflow from template: ${error.message}`);
@@ -299,14 +299,14 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowId, optimizationCriteria } = req.data;
                 const optimization = await this.adapter.optimizeWorkflow(workflowId, optimizationCriteria);
-                
+
                 await this.emit('WorkflowOptimized', {
                     workflowId,
                     optimizationCriteria,
                     improvements: optimization.improvements,
                     timestamp: new Date()
                 });
-                
+
                 return optimization;
             } catch (error) {
                 req.error(500, `Failed to optimize workflow: ${error.message}`);
@@ -339,13 +339,13 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowIds, executionContext } = req.data;
                 const results = await this.adapter.bulkExecuteWorkflows(workflowIds, executionContext);
-                
+
                 await this.emit('BulkWorkflowExecutionStarted', {
                     workflowCount: workflowIds.length,
                     workflowIds: workflowIds,
                     timestamp: new Date()
                 });
-                
+
                 return results;
             } catch (error) {
                 req.error(500, `Failed to bulk execute workflows: ${error.message}`);
@@ -357,13 +357,13 @@ class Agent15Service extends cds.ApplicationService {
             try {
                 const { workflowId, taskIds } = req.data;
                 const results = await this.adapter.retryFailedTasks(workflowId, taskIds);
-                
+
                 await this.emit('TasksRetried', {
                     workflowId,
                     taskIds: taskIds,
                     timestamp: new Date()
                 });
-                
+
                 return results;
             } catch (error) {
                 req.error(500, `Failed to retry failed tasks: ${error.message}`);
@@ -386,7 +386,7 @@ class Agent15Service extends cds.ApplicationService {
                 timestamp: new Date(),
                 createdAt: new Date()
             };
-            
+
             await INSERT.into('OrchestrationMetrics').entries(metricsData);
         } catch (error) {
             logger.error('Failed to update execution metrics:', { error: error });

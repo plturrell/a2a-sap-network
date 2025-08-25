@@ -2,7 +2,7 @@
  * @fileoverview SAP A2A Network Core Service Implementation
  * @since 1.0.0
  * @module sapA2AService
- * 
+ *
  * Core service implementation for Agent-to-Agent Network operations including
  * agent management, service marketplace, workflow execution, and blockchain integration
  * following SAP enterprise architecture patterns
@@ -30,7 +30,7 @@ const $agentManager = Symbol('agentManager')
 
 /**
  * A2A Network Service - Enterprise Agent Coordination
- * 
+ *
  * Following SAP internal code patterns and standards
  */
 class A2AService extends BaseApplicationService {
@@ -64,7 +64,7 @@ class A2AService extends BaseApplicationService {
     this.on('calculateReputation', req => this._calculateReputation(req))
     this.on('deployContract', req => this._deployContract(req))
     this.on('syncBlockchain', req => this._syncBlockchain(req))
-    
+
     // SAP Fiori Launchpad tile data handlers - Real data only
     require('./launchpadService').call(this)
 
@@ -72,10 +72,10 @@ class A2AService extends BaseApplicationService {
     this[$workflowExecutor] = new WorkflowExecutor()
     this[$agentManager] = new AgentManager()
     this[$reputationService] = new ReputationService()
-    
+
     // Initialize reputation service handlers
     this._initializeReputationHandlers()
-    
+
     this[$initialized] = true
   }
 
@@ -149,10 +149,10 @@ class A2AService extends BaseApplicationService {
         }, {
           correlationId: req.id || 'agent-create-' + data.ID
         })
-        
-        LOG.info('Agent registration saga completed', { 
-          agentId: data.ID, 
-          transactionId: result.transactionId 
+
+        LOG.info('Agent registration saga completed', {
+          agentId: data.ID,
+          transactionId: result.transactionId
         })
       }
 
@@ -205,38 +205,38 @@ class A2AService extends BaseApplicationService {
 
   /**
    * Update Agent Reputation Score with Business Validation
-   * 
+   *
    * BUSINESS LOGIC:
    * - Validates agent exists and is active in the network
    * - Applies reputation score bounds checking (0-1000 range)
    * - Records reputation change in audit trail
    * - Triggers reputation-based capability updates
    * - Notifies dependent services of reputation change
-   * 
+   *
    * CALCULATION RULES:
    * - Minimum score: 0 (blocked agent)
    * - Maximum score: 1000 (trusted agent)
    * - Score affects service pricing and priority
    * - Historical scores maintained for trend analysis
-   * 
+   *
    * SIDE EFFECTS:
    * - Updates agent's service eligibility
    * - Recalculates network trust metrics
    * - May trigger automatic agent rebalancing
-   * 
+   *
    * @param {Object} req - CDS request object containing reputation update data
    * @param {string} req.params[0].ID - Agent unique identifier in database
    * @param {number} req.data.score - New reputation score (0-1000 inclusive)
    * @param {string} req.data.reason - Business justification for score change
    * @returns {Promise<boolean>} Success status indicating update completion
-   * 
+   *
    * VALIDATION RULES:
    * @throws {400} INVALID_REPUTATION_SCORE - Score outside valid range (0-1000)
    * @throws {400} REPUTATION_CHANGE_REASON_REQUIRED - Missing change justification
    * @throws {404} AGENT_NOT_FOUND - Agent does not exist in system
    * @throws {403} AGENT_INACTIVE - Agent is deactivated and cannot be updated
    * @throws {409} CONCURRENT_REPUTATION_UPDATE - Another update in progress
-   * 
+   *
    * @since 1.0.0
    * @author SAP A2A Development Team
    */
@@ -249,36 +249,36 @@ class A2AService extends BaseApplicationService {
 
   /**
    * Execute Workflow with Business Logic Validation
-   * 
+   *
    * BUSINESS LOGIC:
    * - Validates workflow exists and is published
    * - Checks executor permissions and reputation
    * - Estimates gas costs before execution
    * - Records execution metrics for analytics
-   * 
+   *
    * TECHNICAL IMPLEMENTATION:
    * - Uses distributed tracing for monitoring
    * - Implements transaction coordination
    * - Provides rollback capability on failure
-   * 
+   *
    * @param {Object} req - CDS request object containing workflow execution parameters
    * @param {string} req.params[0].ID - Workflow unique identifier from database
    * @param {string} req.data.parameters - JSON string containing execution parameters
    * @returns {Promise<string>} Execution ID for tracking workflow progress
-   * 
+   *
    * EXCEPTIONS:
    * @throws {404} WORKFLOW_NOT_FOUND - Workflow does not exist in system
-   * @throws {403} WORKFLOW_NOT_PUBLISHED - Workflow is not available for execution  
+   * @throws {403} WORKFLOW_NOT_PUBLISHED - Workflow is not available for execution
    * @throws {400} INVALID_PARAMETERS - Parameters do not match workflow schema
    * @throws {402} INSUFFICIENT_FUNDS - Not enough gas/credits for execution
    * @throws {503} EXECUTION_SERVICE_UNAVAILABLE - Workflow executor unavailable
-   * 
+   *
    * @since 1.0.0
    * @author SAP A2A Development Team
    */
   async _executeWorkflow(req) {
     const span = tracing.startSpan('execute-workflow')
-    
+
     try {
       const { ID } = req.params[0]
       const { parameters } = req.data
@@ -326,7 +326,7 @@ class A2AService extends BaseApplicationService {
 
       span.finish()
       return execution.ID
-      
+
     } catch (error) {
       span.logError(error)
       span.finish()
@@ -379,7 +379,7 @@ class A2AService extends BaseApplicationService {
 
   async _searchAgents(req) {
     const span = tracing.startSpan('search-agents')
-    
+
     try {
       const { capabilities, minReputation, maxPrice } = req.data
 
@@ -419,7 +419,7 @@ class A2AService extends BaseApplicationService {
 
   async _matchCapabilities(req) {
     const span = tracing.startSpan('match-capabilities')
-    
+
     try {
       const { requirements } = req.data
 
@@ -545,12 +545,12 @@ class A2AService extends BaseApplicationService {
    */
   _initializeReputationHandlers() {
     const $reputationService = this[$reputationService];
-    
+
     // Agent endorsement action
     this.on('endorsePeer', 'Agents', async (req) => {
       const { toAgentId, amount, reason, description } = req.data;
       const fromAgentId = req.params[0]; // Agent ID from the URL
-      
+
       try {
         const result = await $reputationService.handlePeerEndorsement({
           data: {
@@ -566,44 +566,44 @@ class A2AService extends BaseApplicationService {
         req.error(400, error.message);
       }
     });
-    
+
     // Reputation functions
     this.on('getReputationHistory', async (req) => {
       const { agentId, startDate, endDate } = req.data;
-      
+
       const transactions = await SELECT.from('ReputationTransactions')
-        .where({ 
+        .where({
           agent_ID: agentId,
           createdAt: { between: startDate, endDate }
         })
         .orderBy({ createdAt: 'desc' });
-        
+
       return transactions.map(tx => JSON.stringify(tx));
     });
-    
+
     this.on('getReputationAnalytics', async (req) => {
       const { agentId, period } = req.data;
-      
+
       const analytics = await SELECT.one.from('ReputationAnalytics')
         .where({ agent_ID: agentId })
         .orderBy({ periodEnd: 'desc' });
-        
+
       return JSON.stringify(analytics || {});
     });
-    
+
     this.on('calculateReputationScore', async (req) => {
       const { agentId } = req.data;
       return await $reputationService.calculateAgentReputation({ data: { agentId } });
     });
-    
+
     this.on('getReputationBadge', async (req) => {
       const { reputation } = req.data;
       return JSON.stringify($reputationService.getReputationBadge(reputation));
     });
-    
+
     this.on('canEndorsePeer', async (req) => {
       const { fromAgentId, toAgentId, amount } = req.data;
-      
+
       try {
         await $reputationService.validateEndorsement(fromAgentId, toAgentId, amount);
         return true;
@@ -611,7 +611,7 @@ class A2AService extends BaseApplicationService {
         return false;
       }
     });
-    
+
     // Listen to service order completion for automatic reputation updates
     this.after('UPDATE', 'ServiceOrders', async (data, req) => {
       if (data.status === 'COMPLETED' && data.rating) {
@@ -626,7 +626,7 @@ class A2AService extends BaseApplicationService {
         });
       }
     });
-    
+
     // Listen to workflow completion for collaboration rewards
     this.after('UPDATE', 'WorkflowExecutions', async (data, req) => {
       if (data.status === 'COMPLETED') {
@@ -634,7 +634,7 @@ class A2AService extends BaseApplicationService {
         const participants = await SELECT.from('WorkflowSteps')
           .where({ execution_ID: data.ID })
           .columns('assignedAgent_ID');
-          
+
         // Batch reputation updates instead of individual calls
         const reputationUpdates = participants
           .filter(p => p.assignedAgent_ID)
@@ -648,62 +648,60 @@ class A2AService extends BaseApplicationService {
               participantId: participant.ID
             }
           }));
-        
+
         // Apply all reputation changes in batch
         if (reputationUpdates.length > 0) {
           await $reputationService.applyBatchReputationChanges(reputationUpdates);
-        });
-          }
         }
       }
     });
-    
+
     // Listen to peer endorsement verification
     this.on('verify', 'PeerEndorsements', async (req) => {
       const endorsementId = req.params[0];
-      
+
       try {
         const endorsement = await SELECT.one.from('PeerEndorsements').where({ ID: endorsementId });
         if (!endorsement) {
           req.error(404, 'Endorsement not found');
         }
-        
+
         // Mark as verified (can be enhanced with blockchain verification)
         await UPDATE('PeerEndorsements')
           .set({ verificationHash: 'verified_' + Date.now() })
           .where({ ID: endorsementId });
-          
+
         return true;
       } catch (error) {
         req.error(400, error.message);
       }
     });
-    
+
     // Reputation recovery program handlers
     this.on('startProgram', 'ReputationRecovery', async (req) => {
       const programId = req.params[0];
-      
+
       await UPDATE('ReputationRecovery')
-        .set({ 
+        .set({
           status: 'IN_PROGRESS',
           startedAt: new Date()
         })
         .where({ ID: programId });
-        
+
       return true;
     });
-    
+
     this.on('updateProgress', 'ReputationRecovery', async (req) => {
       const { progress } = req.data;
       const programId = req.params[0];
-      
+
       await UPDATE('ReputationRecovery')
-        .set({ 
+        .set({
           progress: JSON.stringify(progress),
           modifiedAt: new Date()
         })
         .where({ ID: programId });
-        
+
       return true;
     });
   }
@@ -847,7 +845,7 @@ class A2AService extends BaseApplicationService {
 
   async _executeRemoteStep(agent, step, parameters) {
     const span = tracing.startSpan('execute-remote-step')
-    
+
     try {
       span.setTags({
         'agent.name': agent.name,
@@ -861,7 +859,7 @@ class A2AService extends BaseApplicationService {
         'Content-Type': 'application/json',
         ...tracing.injectTraceHeaders()
       }
-      
+
       const response = await blockchainClient.sendMessage(agent.endpoint, {
         method: 'POST',
         headers,
@@ -883,7 +881,7 @@ class A2AService extends BaseApplicationService {
       const result = await response.json()
       span.setTag('response.success', true)
       span.finish()
-      
+
       return {
         success: true,
         data: result,
@@ -908,18 +906,18 @@ class A2AService extends BaseApplicationService {
 
     // Use optimized batch query instead of individual queries per agent
     const agentIds = agents.map(a => a.ID);
-    
+
     // Get all agent capabilities in one query
     const allAgentCaps = await SELECT.from('AgentCapabilities')
       .where({ agent_ID: { in: agentIds } })
       .columns('agent_ID', 'capability_ID');
-    
-    // Get all capability names in one query  
+
+    // Get all capability names in one query
     const capabilityIds = [...new Set(allAgentCaps.map(ac => ac.capability_ID))];
     const allCapabilities = await SELECT.from(this.entities.Capabilities)
       .where({ ID: { in: capabilityIds } })
       .columns('ID', 'name');
-    
+
     // Create lookup maps for efficient filtering
     const agentCapMap = new Map();
     allAgentCaps.forEach(ac => {
@@ -928,33 +926,23 @@ class A2AService extends BaseApplicationService {
       }
       agentCapMap.get(ac.agent_ID).push(ac.capability_ID);
     });
-    
+
     const capNameMap = new Map();
     allCapabilities.forEach(cap => {
       capNameMap.set(cap.ID, cap.name);
     });
-    
+
     // Filter agents efficiently using the maps
     for (const agent of agents) {
       const agentCapIds = agentCapMap.get(agent.ID) || [];
       const agentCapNames = agentCapIds.map(id => capNameMap.get(id)).filter(Boolean);
-      
+
       const hasAllCaps = capabilities.every(cap =>
         agentCapNames.includes(cap)
       );
 
       if (hasAllCaps) {
         filtered.push(agent);
-      }
-    } })
-        .columns('name')
-
-      const hasAllCaps = capabilities.every(cap =>
-        capNames.some(c => c.name === cap)
-      )
-
-      if (hasAllCaps) {
-        filtered.push(agent)
       }
     }
 

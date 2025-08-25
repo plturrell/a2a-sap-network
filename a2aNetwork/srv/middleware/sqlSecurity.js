@@ -2,7 +2,7 @@
  * @fileoverview SQL Security and Query Validation Middleware
  * @since 1.0.0
  * @module sql-security
- * 
+ *
  * Provides SQL injection protection and query validation
  * for database operations in the A2A Network system
  */
@@ -34,7 +34,7 @@ const SQL_INJECTION_PATTERNS = [
  */
 function validateSQLQuery(query, params = []) {
   const log = cds.log('sql-security');
-  
+
   // Check query string for injection patterns
   for (const pattern of SQL_INJECTION_PATTERNS) {
     if (pattern.test(query)) {
@@ -46,7 +46,7 @@ function validateSQLQuery(query, params = []) {
       };
     }
   }
-  
+
   // Check parameters for injection patterns
   for (let i = 0; i < params.length; i++) {
     const param = String(params[i]);
@@ -62,7 +62,7 @@ function validateSQLQuery(query, params = []) {
       }
     }
   }
-  
+
   return { valid: true };
 }
 
@@ -75,7 +75,7 @@ function sanitizeInput(input) {
   if (typeof input !== 'string') {
     return input;
   }
-  
+
   // Escape single quotes
   return input.replace(/'/g, '\'\'');
 }
@@ -88,7 +88,7 @@ function sanitizeInput(input) {
  */
 function createSafeQuery(baseQuery, params = []) {
   const validation = validateSQLQuery(baseQuery, params);
-  
+
   if (!validation.valid) {
     const error = new Error(`SQL Security Violation: ${validation.reason}`);
     error.code = 'SQL_INJECTION_DETECTED';
@@ -96,7 +96,7 @@ function createSafeQuery(baseQuery, params = []) {
     error.params = params;
     throw error;
   }
-  
+
   return {
     query: baseQuery,
     params: params.map(sanitizeInput),
@@ -109,7 +109,7 @@ function createSafeQuery(baseQuery, params = []) {
  */
 function applySQLSecurityMiddleware(service) {
   const log = cds.log('sql-security');
-  
+
   // Intercept SELECT operations
   service.on('READ', '*', (req, next) => {
     if (req.query && req.query.SELECT) {
@@ -118,7 +118,7 @@ function applySQLSecurityMiddleware(service) {
     }
     return next();
   });
-  
+
   // Intercept INSERT operations
   service.on('CREATE', '*', (req, next) => {
     if (req.data) {
@@ -137,7 +137,7 @@ function applySQLSecurityMiddleware(service) {
     }
     return next();
   });
-  
+
   // Intercept UPDATE operations
   service.on('UPDATE', '*', (req, next) => {
     if (req.data) {
@@ -156,7 +156,7 @@ function applySQLSecurityMiddleware(service) {
     }
     return next();
   });
-  
+
   log.info('SQL security middleware applied');
 }
 
@@ -165,13 +165,13 @@ function applySQLSecurityMiddleware(service) {
  */
 function validateSQLMiddleware(req, res, next) {
   const log = cds.log('sql-security');
-  
+
   // Check request body for potential SQL injection
   if (req.body && typeof req.body === 'object') {
     function checkObject(obj, path = '') {
       for (const [key, value] of Object.entries(obj)) {
         const currentPath = path ? `${path}.${key}` : key;
-        
+
         if (typeof value === 'string') {
           const validation = validateSQLQuery(value, []);
           if (!validation.valid) {
@@ -188,17 +188,17 @@ function validateSQLMiddleware(req, res, next) {
         }
       }
     }
-    
+
     const result = checkObject(req.body);
     if (result) return result;
   }
-  
+
   // Check query parameters
   if (req.query) {
     // Comprehensive whitelist for known safe dashboard IDs, tile IDs, and API endpoints
     const safeDashboardIds = [
       'overview_dashboard',
-      'dashboard_test', 
+      'dashboard_test',
       'agent_visualization',
       'service_marketplace',
       'blockchain_dashboard',
@@ -211,7 +211,7 @@ function validateSQLMiddleware(req, res, next) {
       'code_intelligence',
       'logs_dashboard'
     ];
-    
+
     // Safe API endpoint patterns
     const safeEndpointPatterns = [
       /^\/api\/v\d+\//,
@@ -220,10 +220,10 @@ function validateSQLMiddleware(req, res, next) {
       /^\/metrics$/,
       /^\/status$/
     ];
-    
+
     // Check if this is a safe API endpoint
     const isSafeEndpoint = safeEndpointPatterns.some(pattern => pattern.test(req.path));
-    
+
     // Skip validation for safe endpoints with standard parameters
     if (isSafeEndpoint) {
       const safeParams = ['id', 'version', 'format', 'limit', 'offset', 'since', 'until', 'level'];
@@ -232,14 +232,14 @@ function validateSQLMiddleware(req, res, next) {
         return next();
       }
     }
-    
+
     for (const [key, value] of Object.entries(req.query)) {
       if (typeof value === 'string') {
         // Skip validation for whitelisted dashboard IDs
         if (key === 'id' && safeDashboardIds.includes(value)) {
           continue;
         }
-        
+
         const validation = validateSQLQuery(value, []);
         if (!validation.valid) {
           log.error(`SQL injection attempt detected in query parameter ${key}:`, value);
@@ -252,7 +252,7 @@ function validateSQLMiddleware(req, res, next) {
       }
     }
   }
-  
+
   next();
 }
 

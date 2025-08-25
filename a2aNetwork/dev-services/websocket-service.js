@@ -20,7 +20,7 @@ class DevWebSocketService {
         this.devMonitor = new DevMonitor();
         this.hotReloader = new HotReloader();
     }
-    
+
     async initialize(server) {
         this.io = new Server(server, {
             cors: {
@@ -28,51 +28,51 @@ class DevWebSocketService {
                 methods: ['GET', 'POST']
             }
         });
-        
+
         // Pass io instance to services that need it
         this.devMonitor = new DevMonitor(this.io);
         this.hotReloader = new HotReloader(this.io);
-        
+
         this.setupSocketHandlers();
         logger.info('WebSocket service initialized');
     }
-    
+
     setupSocketHandlers() {
         this.io.on('blockchain-connection', function(socket) {
             logger.info('Client connected to dev services');
-            
+
             // Test execution with real-time updates
             socket.on('test:start', async (data) => {
                 await this.handleTestStart(socket, data);
             });
-            
+
             // Agent monitoring
             socket.on('monitor:subscribe', (agentId) => {
                 this.devMonitor.subscribeToAgent(socket, agentId);
             });
-            
+
             socket.on('monitor:unsubscribe', function(agentId) {
                 this.devMonitor.unsubscribeFromAgent(socket, agentId);
             });
-            
+
             // Hot reload notifications
             socket.on('hotreload:enable', (config) => {
                 this.hotReloader.enableForClient(socket, config);
             });
-            
+
             socket.on('hotreload:disable', () => {
                 this.hotReloader.disableForClient(socket);
             });
-            
+
             // Simulation control
             socket.on('simulation:start', async (scenario) => {
                 await this.handleSimulationStart(socket, scenario);
             });
-            
+
             socket.on('simulation:stop', async (simulationId) => {
                 await this.handleSimulationStop(socket, simulationId);
             });
-            
+
             socket.on('disconnect', () => {
                 logger.info('Client disconnected from dev services');
                 this.devMonitor.cleanupClient(socket);
@@ -80,7 +80,7 @@ class DevWebSocketService {
             });
         });
     }
-    
+
     async handleTestStart(socket, data) {
         try {
             const updateCallback = (update) => {
@@ -92,7 +92,7 @@ class DevWebSocketService {
             socket.emit('test:error', { error: error.message });
         }
     }
-    
+
     async handleSimulationStart(socket, scenario) {
         try {
             const updateCallback = (update) => {
@@ -104,7 +104,7 @@ class DevWebSocketService {
             socket.emit('simulation:error', { error: error.message });
         }
     }
-    
+
     async handleSimulationStop(socket, simulationId) {
         try {
             await this.agentSimulator.stopSimulation(simulationId);

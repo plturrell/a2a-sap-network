@@ -22,7 +22,7 @@ class StartupHealthCheck {
 
     async checkEndpoint(path, validateFn) {
         return new Promise((resolve) => {
-            blockchainClient.sendMessage(`${this.baseUrl}${path}`, { 
+            blockchainClient.sendMessage(`${this.baseUrl}${path}`, {
                 headers: { 'Accept': 'application/json' }
             }, (res) => {
                 let data = '';
@@ -44,32 +44,32 @@ class StartupHealthCheck {
 
     async waitForServer() {
         console.log(chalk.blue('⏳ Waiting for server to start...'));
-        
+
         for (let i = 0; i < this.maxRetries; i++) {
             const result = await this.checkEndpoint('/health');
             if (result.success) {
                 console.log(chalk.green('✅ Server is running'));
                 return true;
             }
-            
+
             process.stdout.write(chalk.gray('.'));
             await new Promise(resolve => setTimeout(resolve, this.retryDelay));
         }
-        
+
         console.log(chalk.red('\n❌ Server failed to start'));
         return false;
     }
 
     async checkLaunchpadEndpoints() {
         console.log(chalk.blue('\n🔍 Checking launchpad endpoints...'));
-        
+
         const checks = [
             {
                 name: 'Agent Visualization',
                 path: '/api/v1/Agents?id=agent_visualization',
                 validate: (data) => {
-                    return data.hasOwnProperty('agentCount') && 
-                           data.hasOwnProperty('services') && 
+                    return data.hasOwnProperty('agentCount') &&
+                           data.hasOwnProperty('services') &&
                            data.hasOwnProperty('workflows');
                 }
             },
@@ -95,13 +95,13 @@ class StartupHealthCheck {
                 allPassed = false;
             }
         }
-        
+
         return allPassed;
     }
 
     async checkLaunchpadHealth() {
         console.log(chalk.blue('\n🏥 Checking launchpad health...'));
-        
+
         const result = await this.checkEndpoint('/api/v1/launchpad/health');
         if (!result.success) {
             console.log(chalk.red('  ❌ Health check endpoint not available'));
@@ -109,10 +109,10 @@ class StartupHealthCheck {
         }
 
         const health = result.data;
-        
+
         // Check critical components
         let hasIssues = false;
-        
+
         if (!health.tiles_loaded) {
             console.log(chalk.red('  ❌ Tiles not loaded'));
             hasIssues = true;
@@ -141,7 +141,7 @@ class StartupHealthCheck {
 
     async checkDataQuality() {
         console.log(chalk.blue('\n📊 Checking data quality...'));
-        
+
         const result = await this.checkEndpoint('/api/v1/Agents?id=agent_visualization');
         if (!result.success) {
             console.log(chalk.red('  ❌ Could not fetch tile data'));
@@ -150,7 +150,7 @@ class StartupHealthCheck {
 
         const data = result.data;
         const hasRealData = data.agentCount > 0 || data.services > 0 || data.workflows > 0;
-        
+
         if (hasRealData) {
             console.log(chalk.green('  ✅ Real data available'));
             console.log(chalk.gray(`     Agents: ${data.agentCount}, Services: ${data.services}, Workflows: ${data.workflows}`));
@@ -158,13 +158,13 @@ class StartupHealthCheck {
             console.log(chalk.yellow('  ⚠️  No real data (all values are zero)'));
             console.log(chalk.yellow('     Start agent services for real data'));
         }
-        
+
         return true; // Don't fail on no data, just warn
     }
 
     async performHealthCheck() {
         console.log(chalk.bold('\n🚀 A2A Network Launchpad Startup Health Check\n'));
-        
+
         // Step 1: Wait for server
         if (!await this.waitForServer()) {
             return { success: false, message: 'Server failed to start' };
@@ -172,18 +172,18 @@ class StartupHealthCheck {
 
         // Step 2: Check endpoints
         const endpointsOk = await this.checkLaunchpadEndpoints();
-        
+
         // Step 3: Check launchpad health
         const healthOk = await this.checkLaunchpadHealth();
-        
+
         // Step 4: Check data quality
         const dataOk = await this.checkDataQuality();
 
         // Summary
         console.log(chalk.bold('\n📋 Summary:'));
-        
+
         const success = endpointsOk && healthOk;
-        
+
         if (success) {
             if (dataOk) {
                 console.log(chalk.green.bold('\n✅ Launchpad is ready and operational!'));
@@ -201,7 +201,7 @@ class StartupHealthCheck {
 // Run if called directly
 if (require.main === module) {
     const checker = new StartupHealthCheck();
-    
+
     checker.performHealthCheck().then(result => {
         if (result.success) {
             console.log(chalk.green('\n✨ Server is ready to serve launchpad!\n'));

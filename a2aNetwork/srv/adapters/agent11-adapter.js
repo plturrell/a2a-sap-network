@@ -27,7 +27,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTToOData(data, 'SQLQueryTask');
         } catch (error) {
             throw this._handleError(error);
@@ -47,7 +47,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTSQLQueryTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -67,7 +67,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return this._convertRESTSQLQueryTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
@@ -94,10 +94,10 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout * 2 // Double timeout for execution
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 queryName: data.query_name,
@@ -125,10 +125,10 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 isValid: data.is_valid,
                 errors: data.errors,
@@ -148,10 +148,10 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 originalSQL: data.original_sql,
                 optimizedSQL: data.optimized_sql,
@@ -187,7 +187,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 sql: data.generated_sql,
                 confidence: data.confidence_score,
@@ -216,10 +216,10 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
                 timeout: this.timeout
-            
+
             });
             const data = await response.json();
-            
+
             return {
                 executionPlan: data.execution_plan,
                 explanation: data.explanation,
@@ -247,7 +247,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 downloadUrl: data.download_url,
                 fileName: data.file_name,
@@ -277,7 +277,7 @@ class Agent11Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return {
                 success: data.success,
                 results: data.results,
@@ -309,7 +309,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 sql: data.generated_sql,
                 confidence: data.confidence_score,
@@ -340,7 +340,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 originalSQL: data.original_sql,
                 optimizedSQL: data.optimized_sql,
@@ -368,7 +368,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 isValid: data.is_valid,
                 errors: data.errors,
@@ -396,7 +396,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return {
                 executionPlan: data.execution_plan,
                 textPlan: data.text_plan,
@@ -422,7 +422,7 @@ class Agent11Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -436,7 +436,7 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -458,7 +458,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -473,7 +473,7 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -496,7 +496,7 @@ class Agent11Adapter {
                 timeout: this.timeout
             });
             const data = await response.json();
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -519,7 +519,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -541,7 +541,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -562,7 +562,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -583,7 +583,7 @@ class Agent11Adapter {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -593,13 +593,13 @@ class Agent11Adapter {
     // ===== CONVERSION UTILITIES =====
     _convertODataToREST(query) {
         const params = {};
-        
+
         if (query.$top) params.limit = query.$top;
         if (query.$skip) params.offset = query.$skip;
         if (query.$filter) params.filter = this._parseODataFilter(query.$filter);
         if (query.$orderby) params.sort = query.$orderby;
         if (query.$search) params.search = query.$search;
-        
+
         return params;
     }
 
@@ -692,7 +692,7 @@ class Agent11Adapter {
             const status = error.response.status;
             const message = error.data?.message || error.response.statusText;
             const details = error.data?.details || null;
-            
+
             return new Error(`Agent 11 Error (${status}): ${message}${details ? ` - ${JSON.stringify(details)}` : ''}`);
         } else if (error.request) {
             return new Error('Agent 11 Connection Error: No response from SQL service');
