@@ -1,9 +1,0 @@
-{
-  "weak_crypto_fixed": 48,
-  "secrets_fixed": 0,
-  "sql_injection_warnings": 3,
-  "env_files_secured": 8,
-  "guidelines_created": 1,
-  "timestamp": "2025-08-25T14:03:31.610061",
-  "guidelines_file": "/Users/apple/projects/a2a/SECURITY_GUIDELINES.md"
-}
