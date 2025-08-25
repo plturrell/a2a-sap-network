@@ -9,8 +9,9 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
+    "sap/base/Log",
     "../../../utils/SharedSecurityUtils"
-], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) => {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, Log, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ObjectPageExt", {
@@ -645,7 +646,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    Log.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

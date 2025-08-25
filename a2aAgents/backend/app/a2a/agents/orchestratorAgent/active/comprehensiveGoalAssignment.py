@@ -325,7 +325,7 @@ class ComprehensiveGoalAssignmentSystem:
             for goal_type in profile.primary_goal_types[:2]:  # Assign top 2 goal types
                 # Extract agent number/type from agent_id (e.g., agent0_data_product -> agent0)
                 agent_key = agent_id.split('_')[0] if '_' in agent_id else agent_id
-                goal_template_key = f"{agent_key}_{goal_type}"
+                goal_template_key = self._map_goal_template_key(agent_key, goal_type)
 
                 if goal_template_key in self.notification_system.goal_templates:
                     # Calculate target metrics based on baseline + improvement
@@ -678,7 +678,7 @@ class ComprehensiveGoalAssignmentSystem:
         params = {
             "time_constraint": "optimal"
         }
-        
+
         # Map common template placeholders to actual metric values
         if goal_type == "transformation":
             params.update({
@@ -718,6 +718,76 @@ class ComprehensiveGoalAssignmentSystem:
                 "availability": target_metrics.get("api_availability", 99.0),
                 "error_rate": target_metrics.get("error_rate", 2.0)
             })
+        elif goal_type == "embedding_generation":
+            params.update({
+                "quality_score": target_metrics.get("embedding_quality_score", 90.0),
+                "throughput": target_metrics.get("vector_generation_throughput", 1000)
+            })
+        elif goal_type == "vector_indexing":
+            params.update({
+                "index_coverage": target_metrics.get("index_coverage_rate", 97.0),
+                "query_speed": target_metrics.get("avg_query_time_ms", 25)
+            })
+        elif goal_type == "calculation_validation":
+            params.update({
+                "validation_accuracy": target_metrics.get("mathematical_validation_accuracy", 99.5),
+                "validation_speed": target_metrics.get("validation_throughput", 100)
+            })
+        elif goal_type == "quality_assurance":
+            params.update({
+                "qa_pass_rate": target_metrics.get("qa_pass_rate", 94.0),
+                "review_time": target_metrics.get("avg_review_time_hours", 4.0)
+            })
+        elif goal_type == "continuous_monitoring":
+            params.update({
+                "detection_rate": target_metrics.get("issue_detection_rate", 96.0),
+                "mttr": target_metrics.get("mean_time_to_repair", 15)
+            })
+        elif goal_type == "agent_management":
+            params.update({
+                "agent_uptime": target_metrics.get("agent_uptime_percentage", 99.5),
+                "deployment_success": target_metrics.get("deployment_success_rate", 97.0)
+            })
+        elif goal_type == "data_storage":
+            params.update({
+                "storage_efficiency": target_metrics.get("storage_efficiency_ratio", 82.0),
+                "retrieval_time": target_metrics.get("avg_retrieval_time_ms", 50)
+            })
+        elif goal_type == "logical_reasoning":
+            params.update({
+                "reasoning_accuracy": target_metrics.get("reasoning_accuracy", 93.0),
+                "inference_speed": target_metrics.get("inference_throughput", 20)
+            })
+        elif goal_type == "complex_calculation":
+            params.update({
+                "calculation_accuracy": target_metrics.get("calculation_accuracy", 99.95),
+                "calc_throughput": target_metrics.get("calculation_throughput", 500)
+            })
+        elif goal_type == "sql_operations":
+            params.update({
+                "nl2sql_accuracy": target_metrics.get("nl2sql_accuracy", 90.0),
+                "query_optimization": target_metrics.get("query_optimization_rate", 80.0)
+            })
+        elif goal_type == "service_catalog":
+            params.update({
+                "catalog_completeness": target_metrics.get("catalog_completeness", 97.0),
+                "discovery_time": target_metrics.get("avg_discovery_time", 5.0)
+            })
+        elif goal_type == "agent_creation":
+            params.update({
+                "build_success": target_metrics.get("agent_build_success_rate", 94.0),
+                "deployment_time": target_metrics.get("avg_deployment_time", 20)
+            })
+        elif goal_type == "model_finetuning":
+            params.update({
+                "model_improvement": target_metrics.get("model_performance_improvement", 15.0),
+                "training_efficiency": target_metrics.get("training_efficiency", 82.0)
+            })
+        elif goal_type == "workflow_orchestration":
+            params.update({
+                "workflow_success": target_metrics.get("workflow_success_rate", 97.0),
+                "scheduling_efficiency": target_metrics.get("scheduling_efficiency", 90.0)
+            })
         else:
             # Default parameters for other goal types
             if target_metrics:
@@ -731,8 +801,35 @@ class ComprehensiveGoalAssignmentSystem:
                     "target_rate": 95.0,
                     "metric_name": "Performance"
                 })
-        
+
         return params
+
+    def _map_goal_template_key(self, agent_key: str, goal_type: str) -> str:
+        """Map goal type to correct template key"""
+        # Direct mapping for known mismatches
+        goal_type_mapping = {
+            ("agent3", "embedding_generation"): "agent3_embedding",
+            ("agent3", "vector_indexing"): "agent3_indexing",
+            ("agent4", "calculation_validation"): "agent4_validation",
+            ("agent5", "quality_assurance"): "agent5_quality",
+            ("agent6", "continuous_monitoring"): "agent6_monitoring",
+            ("agent7", "agent_management"): "agent7_management",
+            ("agent8", "data_storage"): "agent8_storage",
+            ("agent9", "logical_reasoning"): "agent9_reasoning",
+            ("agent10", "complex_calculation"): "agent10_computation",
+            ("agent11", "sql_operations"): "agent11_query",
+            ("agent12", "service_catalog"): "agent12_catalog",
+            ("agent13", "agent_creation"): "agent13_builder",
+            ("agent14", "model_finetuning"): "agent14_finetuning",
+            ("agent15", "workflow_orchestration"): "agent15_orchestration"
+        }
+
+        # Check if we have a specific mapping
+        if (agent_key, goal_type) in goal_type_mapping:
+            return goal_type_mapping[(agent_key, goal_type)]
+
+        # Default behavior
+        return f"{agent_key}_{goal_type}"
 
 
 # Factory function

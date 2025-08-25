@@ -37,8 +37,7 @@ const MESSAGE_ROUTER_ABI = [
     "event MessageDelivered(bytes32 indexed messageId)"
 ];
 
-async async function deployContract(wallet, contractName, bytecode, abi, constructorArgs = []) {
-(async () => {
+async function deployContract(wallet, contractName, bytecode, abi, constructorArgs = []) {
     console.log(`\n🚀 Deploying ${contractName}...`);
     
     // Create contract factory
@@ -64,7 +63,7 @@ async async function deployContract(wallet, contractName, bytecode, abi, constru
     return { contract, address };
 }
 
-async async function main() {
+async function main() {
     console.log("🚀 Starting A2A Blockchain Contract Deployment");
     
     try {
@@ -189,7 +188,7 @@ BLOCKCHAIN_ENABLED=true
 }
 
 // Test connectivity
-async async function testConnectivity() {
+async function testConnectivity() {
     console.log("🔍 Testing blockchain connectivity...");
     
     try {
@@ -235,4 +234,3 @@ if (require.main === module) {
 }
 
 module.exports = { main, deployContract, AGENT_REGISTRY_ABI, MESSAGE_ROUTER_ABI };
-})().catch(console.error);

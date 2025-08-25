@@ -18,7 +18,7 @@ class AgentAIAdvisor:
     """Embedded AI advisor for an A2A agent using Grok-4"""
 
     def __init__(
-        self, agent_id: str, agent_name: str, 
+        self, agent_id: str, agent_name: str,
         agent_capabilities: Dict[str, Any]
     ):
         self.agent_id = agent_id

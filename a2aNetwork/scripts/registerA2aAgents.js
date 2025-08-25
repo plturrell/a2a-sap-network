@@ -3,7 +3,7 @@
  * This script creates agent records in the SAP CAP A2A Network system
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const axios = require('axios');
 
 const A2A_NETWORK_API = process.env.A2A_NETWORK_API_URL || 'http://localhost:4004/api/v1';
 
@@ -15,7 +15,7 @@ const A2A_AGENTS = [
         reputation: 200,
         isActive: true,
         country_code: "US",
-        address: process.env.AGENT_MANAGER_ADDRESS || (() => { throw new Error('AGENT_MANAGER_ADDRESS environment variable is required'); })(),
+        address: process.env.AGENT_MANAGER_ADDRESS || "0xAA00000000000000000000000000000000000001",
         description: "Manages A2A ecosystem registration, trust contracts, and workflow orchestration",
         capabilities: ["agent-registration", "trust-management", "workflow-orchestration", "ecosystem-management"]
     },
@@ -25,7 +25,7 @@ const A2A_AGENTS = [
         reputation: 180,
         isActive: true,
         country_code: "US",
-        address: process.env.AGENT0_ADDRESS || (() => { throw new Error('AGENT0_ADDRESS environment variable is required'); })(),
+        address: process.env.AGENT0_ADDRESS || "0xAA00000000000000000000000000000000000002",
         description: "A2A v0.2.9 compliant agent for data product registration with Dublin Core metadata",
         capabilities: ["cds-csn-generation", "ord-descriptor-creation", "dublin-core-metadata", "crd-integration"]
     },
@@ -35,7 +35,7 @@ const A2A_AGENTS = [
         reputation: 175,
         isActive: true,
         country_code: "DE",
-        address: process.env.AGENT1_ADDRESS || (() => { throw new Error('AGENT1_ADDRESS environment variable is required'); })(),
+        address: process.env.AGENT1_ADDRESS || "0xAA00000000000000000000000000000000000003",
         description: "A2A v0.2.9 compliant agent for standardizing financial data to L4 hierarchical structure",
         capabilities: ["location-standardization", "account-standardization", "financial-data-processing", "hierarchy-generation"]
     },
@@ -45,7 +45,7 @@ const A2A_AGENTS = [
         reputation: 170,
         isActive: true,
         country_code: "JP",
-        address: process.env.AGENT2_ADDRESS || (() => { throw new Error('AGENT2_ADDRESS environment variable is required'); })(),
+        address: process.env.AGENT2_ADDRESS || "0xAA00000000000000000000000000000000000004",
         description: "A2A v0.2.9 compliant agent for AI data preparation and vectorization",
         capabilities: ["data-vectorization", "ai-preparation", "embedding-generation", "feature-extraction"]
     },
@@ -55,7 +55,7 @@ const A2A_AGENTS = [
         reputation: 185,
         isActive: true,
         country_code: "SG",
-        address: process.env.AGENT3_ADDRESS || (() => { throw new Error('AGENT3_ADDRESS environment variable is required'); })(),
+        address: process.env.AGENT3_ADDRESS || "0xAA00000000000000000000000000000000000005",
         description: "A2A v0.2.9 compliant agent for vector processing and knowledge graph management",
         capabilities: ["vector-processing", "hana-vector-engine", "knowledge-graph", "semantic-search"]
     },
@@ -164,11 +164,6 @@ const A2A_AGENTS = [
 async function registerAgents() {
     console.log('Starting A2A Agents registration into A2A Network...\n');
     
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    
     const successfulAgents = [];
     const failedAgents = [];
     
@@ -186,7 +181,12 @@ async function registerAgents() {
                 address: agent.address
             };
             
-            const response = await blockchainClient.sendMessage(`${A2A_NETWORK_API}/Agents`, agentData, { headers });
+            const response = await axios.post(`${A2A_NETWORK_API}/Agents`, agentData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
             const createdAgent = response.data;
             
             console.log(`✓ Created agent: ${agent.name} (ID: ${createdAgent.ID})`);
@@ -230,7 +230,7 @@ async function registerAgents() {
     console.log('2. Link capabilities to agents via AgentCapabilities');
     console.log('3. Create sample workflows using these agents');
     console.log('4. Register services provided by each agent');
-    console.log(`\nAccess the A2A Network UI at: ${process.env.A2A_NETWORK_UI_URL || 'http://localhost:4004/fiori-launchpad.html'}');
+    console.log('\nAccess the A2A Network UI at: ' + (process.env.A2A_NETWORK_UI_URL || 'http://localhost:4004/fiori-launchpad.html'));
 }
 
 // Execute the registration

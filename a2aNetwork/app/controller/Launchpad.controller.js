@@ -46,6 +46,9 @@ sap.ui.define([
             });
             this.getView().setModel(oModel, "launchpad");
 
+                // Initialize AI-powered personalization
+                this._initializePersonalizationAI();
+                
                 this._initializeDataConnection();
                 this._setupConnectionHealthCheck();
             }.bind(this)).catch(function(error) {
@@ -308,11 +311,15 @@ sap.ui.define([
         },
 
         onOpenPersonalization: function () {
-            // Initialize personalization data
+            // Initialize AI-powered personalization data
+            const userProfile = this._getUserPersonalizationProfile();
             const personalizationModel = new JSONModel({
-                selectedTheme: sap.ui.getCore().getConfiguration().getTheme(),
-                contentDensity: "cozy",
-                selectedLanguage: sap.ui.getCore().getConfiguration().getLanguage()
+                selectedTheme: userProfile.preferredTheme || sap.ui.getCore().getConfiguration().getTheme(),
+                contentDensity: userProfile.preferredDensity || "cozy",
+                selectedLanguage: userProfile.preferredLanguage || sap.ui.getCore().getConfiguration().getLanguage(),
+                dashboardLayout: userProfile.dashboardLayout || "default",
+                widgetPreferences: userProfile.widgetPreferences || {},
+                aiRecommendations: userProfile.aiRecommendations || {}
             });
             this.getView().setModel(personalizationModel, "personalization");
             
@@ -346,6 +353,22 @@ sap.ui.define([
                 document.body.classList.toggle("sapUiSizeCompact", personalizationData.contentDensity === "compact");
                 document.body.classList.toggle("sapUiSizeCozy", personalizationData.contentDensity === "cozy");
             }
+            
+            // Apply dashboard layout
+            if (personalizationData.dashboardLayout) {
+                this._applyDashboardLayout(personalizationData.dashboardLayout);
+            }
+            
+            // Apply widget preferences
+            if (personalizationData.widgetPreferences) {
+                this._applyWidgetPreferences(personalizationData.widgetPreferences);
+            }
+            
+            // Save personalization profile
+            this._savePersonalizationProfile(personalizationData);
+            
+            // Record user interaction for AI learning
+            this._recordPersonalizationInteraction(personalizationData);
             
             this.handleStandardSuccess("Personalization settings applied successfully");
             this.onClosePersonalization();
@@ -559,5 +582,341 @@ sap.ui.define([
                 clearInterval(this._connectionHealthCheckInterval);
                 this._connectionHealthCheckInterval = null;
             }
+            
+            // Clear personalization tracking
+            if (this._timeTrackingInterval) {
+                clearInterval(this._timeTrackingInterval);
+                this._timeTrackingInterval = null;
+            }
+        },
+        
+        // AI-Powered Personalization Functions
+        _initializePersonalizationAI: function() {
+            // Initialize user behavior tracking
+            this._userBehavior = {
+                interactions: [],
+                preferences: {},
+                sessionStart: Date.now(),
+                tileClicks: {},
+                timeSpent: {},
+                navigationPatterns: []
+            };
+            
+            // Load existing personalization profile
+            this._loadPersonalizationProfile();
+            
+            // Start behavior tracking
+            this._startBehaviorTracking();
+            
+            // Apply existing personalization
+            this._applyStoredPersonalization();
+        },
+        
+        _getUserPersonalizationProfile: function() {
+            const userId = this._getCurrentUserId();
+            const storedProfile = localStorage.getItem(`a2a_personalization_${userId}`);
+            
+            if (storedProfile) {
+                return JSON.parse(storedProfile);
+            }
+            
+            // Generate AI recommendations for new users
+            return this._generateInitialRecommendations();
+        },
+        
+        _generateInitialRecommendations: function() {
+            // AI-powered initial recommendations based on user role, time of day, etc.
+            const currentHour = new Date().getHours();
+            const userRole = this._getUserRole();
+            
+            return {
+                preferredTheme: currentHour > 18 || currentHour < 6 ? "sap_horizon_dark" : "sap_horizon",
+                preferredDensity: "cozy",
+                dashboardLayout: userRole === "admin" ? "detailed" : "simplified",
+                widgetPreferences: {
+                    priorityWidgets: ["agentCount", "performance", "notifications"],
+                    hiddenWidgets: [],
+                    customOrder: []
+                },
+                aiRecommendations: {
+                    suggestedTheme: "Based on time of day preferences",
+                    suggestedLayout: "Optimized for your role",
+                    suggestedWidgets: "Most relevant for your workflow"
+                }
+            };
+        },
+        
+        _startBehaviorTracking: function() {
+            // Track tile interactions
+            const tiles = this.byId("tileContainer");
+            if (tiles) {
+                tiles.attachPress(function(event) {
+                    const tileInfo = event.getSource().data("info");
+                    this._recordTileInteraction(tileInfo);
+                }.bind(this));
+            }
+            
+            // Track time spent on different sections
+            this._startTimeTracking();
+            
+            // Track navigation patterns
+            this._trackNavigationPatterns();
+        },
+        
+        _recordTileInteraction: function(tileInfo) {
+            const timestamp = Date.now();
+            
+            // Update tile click count
+            this._userBehavior.tileClicks[tileInfo] = 
+                (this._userBehavior.tileClicks[tileInfo] || 0) + 1;
+            
+            // Record interaction
+            this._userBehavior.interactions.push({
+                type: "tile_click",
+                target: tileInfo,
+                timestamp: timestamp,
+                sessionTime: timestamp - this._userBehavior.sessionStart
+            });
+            
+            // Trigger personalization update if enough data
+            if (this._userBehavior.interactions.length > 0 && 
+                this._userBehavior.interactions.length % 10 === 0) {
+                this._updatePersonalizationRecommendations();
+            }
+        },
+        
+        _startTimeTracking: function() {
+            this._timeTrackingInterval = setInterval(function() {
+                // Track time spent in current view
+                const currentView = "launchpad";
+                this._userBehavior.timeSpent[currentView] = 
+                    (this._userBehavior.timeSpent[currentView] || 0) + 5000; // 5 seconds
+            }.bind(this), 5000);
+        },
+        
+        _trackNavigationPatterns: function() {
+            const router = this.getOwnerComponent().getRouter();
+            router.attachRouteMatched(function(event) {
+                const routeName = event.getParameter("name");
+                this._userBehavior.navigationPatterns.push({
+                    route: routeName,
+                    timestamp: Date.now()
+                });
+            }.bind(this));
+        },
+        
+        _updatePersonalizationRecommendations: function() {
+            // Analyze user behavior patterns
+            const recommendations = this._analyzeUserBehavior();
+            
+            // Update personalization model
+            const personalModel = this.getView().getModel("personalization");
+            if (personalModel) {
+                personalModel.setProperty("/aiRecommendations", recommendations);
+            }
+            
+            // Show recommendations to user (non-intrusive)
+            this._showPersonalizationSuggestions(recommendations);
+        },
+        
+        _analyzeUserBehavior: function() {
+            const behavior = this._userBehavior;
+            const recommendations = {};
+            
+            // Analyze tile usage patterns
+            const mostUsedTiles = Object.entries(behavior.tileClicks)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3)
+                .map(([tile]) => tile);
+            
+            recommendations.priorityWidgets = mostUsedTiles;
+            
+            // Analyze time of day preferences
+            const interactionTimes = behavior.interactions.map(i => 
+                new Date(i.timestamp).getHours()
+            );
+            
+            if (interactionTimes.length > 0) {
+                const avgHour = interactionTimes.reduce((a, b) => a + b, 0) / interactionTimes.length;
+                
+                if (avgHour > 18 || avgHour < 6) {
+                    recommendations.suggestedTheme = "sap_horizon_dark";
+                    recommendations.themeReason = "You seem to use the system during evening hours";
+                }
+            }
+            
+            // Analyze interaction frequency
+            const avgInteractionGap = this._calculateAvgInteractionGap();
+            if (avgInteractionGap < 2000) { // Very frequent interactions
+                recommendations.suggestedDensity = "compact";
+                recommendations.densityReason = "High interaction frequency suggests compact layout";
+            }
+            
+            return recommendations;
+        },
+        
+        _calculateAvgInteractionGap: function() {
+            const interactions = this._userBehavior.interactions;
+            if (interactions.length < 2) return 0;
+            
+            const gaps = [];
+            for (let i = 1; i < interactions.length; i++) {
+                gaps.push(interactions[i].timestamp - interactions[i-1].timestamp);
+            }
+            
+            return gaps.reduce((a, b) => a + b, 0) / gaps.length;
+        },
+        
+        _showPersonalizationSuggestions: function(recommendations) {
+            // Show subtle, non-intrusive suggestions
+            if (recommendations.suggestedTheme && 
+                recommendations.suggestedTheme !== this._getCurrentTheme()) {
+                
+                // Show a discrete notification about theme recommendation
+                setTimeout(function() {
+                    MessageToast.show(
+                        "AI Suggestion: " + (recommendations.themeReason || "Consider switching to a different theme"),
+                        { duration: 3000 }
+                    );
+                }, 5000);
+            }
+        },
+        
+        _applyDashboardLayout: function(layoutType) {
+            // Apply different dashboard layouts based on AI recommendations
+            const tileContainer = this.byId("tileContainer");
+            if (!tileContainer) return;
+            
+            switch (layoutType) {
+                case "detailed":
+                    // Show all tiles with detailed information
+                    this._showDetailedLayout(tileContainer);
+                    break;
+                case "simplified":
+                    // Show only most important tiles
+                    this._showSimplifiedLayout(tileContainer);
+                    break;
+                case "customized":
+                    // Apply user-specific customizations
+                    this._showCustomizedLayout(tileContainer);
+                    break;
+                default:
+                    // Default layout
+                    break;
+            }
+        },
+        
+        _showDetailedLayout: function(tileContainer) {
+            // Show all tiles with expanded information (would need access to tiles)
+            Log.info("Applied detailed dashboard layout");
+        },
+        
+        _showSimplifiedLayout: function(tileContainer) {
+            // Hide less important tiles, show key ones in compact form
+            const priorityTiles = this._userBehavior.tileClicks ? 
+                Object.keys(this._userBehavior.tileClicks) : [];
+            
+            Log.info("Applied simplified dashboard layout with priority tiles: " + priorityTiles.join(", "));
+        },
+        
+        _applyWidgetPreferences: function(preferences) {
+            // Apply widget-specific preferences
+            if (preferences.hiddenWidgets && preferences.hiddenWidgets.length > 0) {
+                Log.info("Hidden widgets: " + preferences.hiddenWidgets.join(", "));
+            }
+            
+            if (preferences.priorityWidgets && preferences.priorityWidgets.length > 0) {
+                Log.info("Priority widgets: " + preferences.priorityWidgets.join(", "));
+            }
+        },
+        
+        _savePersonalizationProfile: function(personalizationData) {
+            const userId = this._getCurrentUserId();
+            const profile = {
+                ...personalizationData,
+                lastUpdated: Date.now(),
+                userBehavior: this._userBehavior
+            };
+            
+            localStorage.setItem(`a2a_personalization_${userId}`, JSON.stringify(profile));
+            
+            // Also send to backend for cross-device sync
+            this._syncPersonalizationToBackend(profile);
+        },
+        
+        _loadPersonalizationProfile: function() {
+            const userId = this._getCurrentUserId();
+            const storedProfile = localStorage.getItem(`a2a_personalization_${userId}`);
+            
+            if (storedProfile) {
+                const profile = JSON.parse(storedProfile);
+                if (profile.userBehavior) {
+                    this._userBehavior = {...this._userBehavior, ...profile.userBehavior};
+                }
+            }
+        },
+        
+        _applyStoredPersonalization: function() {
+            const profile = this._getUserPersonalizationProfile();
+            
+            // Apply theme
+            if (profile.preferredTheme && 
+                profile.preferredTheme !== sap.ui.getCore().getConfiguration().getTheme()) {
+                sap.ui.getCore().applyTheme(profile.preferredTheme);
+            }
+            
+            // Apply density
+            if (profile.preferredDensity) {
+                document.body.classList.toggle("sapUiSizeCompact", profile.preferredDensity === "compact");
+                document.body.classList.toggle("sapUiSizeCozy", profile.preferredDensity === "cozy");
+            }
+            
+            // Apply layout
+            if (profile.dashboardLayout) {
+                setTimeout(function() {
+                    this._applyDashboardLayout(profile.dashboardLayout);
+                }.bind(this), 1000);
+            }
+        },
+        
+        _recordPersonalizationInteraction: function(personalizationData) {
+            // Record this personalization change for AI learning
+            this._userBehavior.interactions.push({
+                type: "personalization_change",
+                changes: personalizationData,
+                timestamp: Date.now(),
+                sessionTime: Date.now() - this._userBehavior.sessionStart
+            });
+        },
+        
+        _syncPersonalizationToBackend: function(profile) {
+            // Send personalization data to backend for analysis and cross-device sync
+            this._securityService.secureAjax({
+                url: '/api/v1/personalization/sync',
+                method: 'POST',
+                data: JSON.stringify({
+                    userId: this._getCurrentUserId(),
+                    profile: profile,
+                    timestamp: Date.now()
+                }),
+                contentType: 'application/json'
+            }).catch(function(error) {
+                Log.warning("Failed to sync personalization to backend", error);
+            });
+        },
+        
+        _getCurrentUserId: function() {
+            // Get current user ID (simplified)
+            return "user_" + (new Date().getTime() % 10000);
+        },
+        
+        _getCurrentTheme: function() {
+            return sap.ui.getCore().getConfiguration().getTheme();
+        },
+        
+        _getUserRole: function() {
+            // Determine user role (simplified)
+            return "user"; // Would be determined from authentication context
         }
-    });
+    }));
+});

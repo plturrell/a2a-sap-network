@@ -62,7 +62,7 @@ class AILoadBalancingModel:
     last_training: float = 0.0
     training_interval: float = 3600.0  # Retrain every hour
     prediction_accuracy: float = 0.0
-    
+
     def __post_init__(self):
         if SKLEARN_AVAILABLE:
             self.load_predictor = RandomForestRegressor(n_estimators=100, random_state=42)
@@ -327,7 +327,7 @@ class DistributedTaskCoordinator:
         self.task_history: List[Dict[str, Any]] = []
         self.system_load_history: deque = deque(maxlen=1000)  # System load over time
         self.prediction_cache: Dict[str, Tuple[float, float]] = {}  # worker_id -> (predicted_load, timestamp)
-        
+
         # Redis keys
         self.task_queue_key = f"{self.namespace}:queue"
         self.task_data_key = f"{self.namespace}:data"
@@ -975,28 +975,28 @@ async def initialize_distributed_coordination(
         """AI-powered worker selection with predictive load balancing"""
         if not self.worker_metrics:
             return None
-            
+
         current_time = time.time()
-        
+
         # Update AI model if needed
         if current_time - self.ai_model.last_training > self.ai_model.training_interval:
             await self._train_ai_model()
-        
+
         # Get predictions for each worker
         worker_scores = {}
         for worker_id, metrics in self.worker_metrics.items():
             # Extract features for prediction
             features = self._extract_worker_features(metrics, task)
-            
+
             # Predict load and performance
             predicted_load = self._predict_worker_load(features)
             predicted_performance = self._predict_task_success(features, task)
-            
+
             # Calculate composite score
             availability_score = max(0, 1.0 - (predicted_load / metrics.predicted_capacity))
             expertise_score = metrics.task_type_expertise.get(task.task_type, 0.5)
             efficiency_score = metrics.efficiency_score
-            
+
             # Weighted combination
             composite_score = (
                 availability_score * 0.4 +
@@ -1004,29 +1004,29 @@ async def initialize_distributed_coordination(
                 expertise_score * 0.2 +
                 efficiency_score * 0.1
             )
-            
+
             worker_scores[worker_id] = composite_score
-        
+
         # Select best worker
         if not worker_scores:
             return None
-            
+
         best_worker = max(worker_scores.items(), key=lambda x: x[1])[0]
-        
+
         # Update prediction cache
         predicted_load = self._predict_worker_load(
             self._extract_worker_features(self.worker_metrics[best_worker], task)
         )
         self.prediction_cache[best_worker] = (predicted_load, current_time)
-        
+
         logger.info(f"AI selected worker {best_worker} with score {worker_scores[best_worker]:.3f}")
         return best_worker
-    
+
     def _extract_worker_features(self, metrics: WorkerPerformanceMetrics, task: DistributedTask) -> np.ndarray:
         """Extract features for ML prediction"""
         if not SKLEARN_AVAILABLE:
             return np.array([metrics.current_load, metrics.performance_score])
-            
+
         features = [
             metrics.current_load / max(1, metrics.max_capacity),  # Utilization
             metrics.performance_score,
@@ -1040,15 +1040,15 @@ async def initialize_distributed_coordination(
             metrics.workload_trend,
             metrics.collaboration_score
         ]
-        
+
         return np.array(features)
-    
+
     def _predict_worker_load(self, features: np.ndarray) -> float:
         """Predict worker load using AI model"""
         if not SKLEARN_AVAILABLE or self.ai_model.load_predictor is None:
             # Fallback: simple heuristic
             return features[0] * 10  # Current utilization * capacity
-            
+
         try:
             # Scale features
             features_scaled = self.ai_model.scaler.transform(features.reshape(1, -1))
@@ -1057,13 +1057,13 @@ async def initialize_distributed_coordination(
         except Exception as e:
             logger.warning(f"Load prediction failed: {e}, using fallback")
             return features[0] * 10
-    
+
     def _predict_task_success(self, features: np.ndarray, task: DistributedTask) -> float:
         """Predict task success probability"""
         if not SKLEARN_AVAILABLE or self.ai_model.performance_classifier is None:
             # Fallback: use historical success rate
             return features[3]  # Success rate feature
-            
+
         try:
             features_scaled = self.ai_model.scaler.transform(features.reshape(1, -1))
             success_prob = self.ai_model.performance_classifier.predict(features_scaled)[0]
@@ -1071,54 +1071,54 @@ async def initialize_distributed_coordination(
         except Exception as e:
             logger.warning(f"Success prediction failed: {e}, using fallback")
             return features[3]
-    
+
     async def _train_ai_model(self):
         """Train AI models with historical data"""
         if not SKLEARN_AVAILABLE or len(self.task_history) < 100:
             return
-            
+
         try:
             # Prepare training data
             X, y_load, y_performance = self._prepare_training_data()
-            
+
             if len(X) < 50:
                 logger.info("Insufficient training data for AI model")
                 return
-            
+
             # Scale features
             X_scaled = self.ai_model.scaler.fit_transform(X)
-            
+
             # Train load predictor
             self.ai_model.load_predictor.fit(X_scaled, y_load)
-            
+
             # Train performance classifier
             self.ai_model.performance_classifier.fit(X_scaled, y_performance)
-            
+
             # Update training timestamp
             self.ai_model.last_training = time.time()
-            
+
             # Calculate and store accuracy
             load_score = self.ai_model.load_predictor.score(X_scaled, y_load)
             perf_score = self.ai_model.performance_classifier.score(X_scaled, y_performance)
             self.ai_model.prediction_accuracy = (load_score + perf_score) / 2
-            
+
             logger.info(f"AI model trained - Load accuracy: {load_score:.3f}, Performance accuracy: {perf_score:.3f}")
-            
+
         except Exception as e:
             logger.error(f"AI model training failed: {e}")
-    
+
     def _prepare_training_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Prepare training data from task history"""
         X, y_load, y_performance = [], [], []
-        
+
         for task_record in self.task_history[-500:]:  # Last 500 tasks
             if 'worker_features' in task_record and 'actual_load' in task_record:
                 X.append(task_record['worker_features'])
                 y_load.append(task_record['actual_load'])
                 y_performance.append(1.0 if task_record.get('success', False) else 0.0)
-        
+
         return np.array(X), np.array(y_load), np.array(y_performance)
-    
+
     async def get_system_intelligence_metrics(self) -> Dict[str, Any]:
         """Get comprehensive AI system performance metrics"""
         return {

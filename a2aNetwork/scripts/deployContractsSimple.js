@@ -13,7 +13,7 @@ const path = require('path');
 function loadCompiledContract(contractName) {
     try {
         const artifactPath = path.join(__dirname, `../out/${contractName}.sol/${contractName}.json`);
-        const artifact = JSON.parse(await fs.readFile(artifactPath, 'utf8'));
+        const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
         return {
             bytecode: artifact.bytecode.object,
             abi: artifact.abi
@@ -105,7 +105,7 @@ async function main() {
         // Save to file
         const deploymentPath = path.join(__dirname, '../data/deployments/latest.json');
         fs.mkdirSync(path.dirname(deploymentPath), { recursive: true });
-        await fs.writeFile(deploymentPath, JSON.stringify(deploymentInfo));
+        fs.writeFileSync(deploymentPath, JSON.stringify(deploymentInfo, null, 2));
         
         console.log(`\n📄 Deployment Summary:`);
         console.log(`   Network: ${deploymentInfo.network} (${deploymentInfo.chainId})`);
@@ -134,7 +134,7 @@ BLOCKCHAIN_ENABLED=true
 `;
         
         const envPath = path.join(__dirname, '../.env.deployed');
-        await fs.writeFile(envPath, envContent);
+        fs.writeFileSync(envPath, envContent);
         
         console.log(`\n🔧 Environment Configuration:`);
         console.log(`   Generated: ${envPath}`);

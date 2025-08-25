@@ -14,6 +14,7 @@ to maintain protocol compliance and audit trails.
 import json
 import logging
 import os
+import re
 import time
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
@@ -28,6 +29,14 @@ try:
 except ImportError as e:
     logging.warning(f"Sentiment analysis libraries not available: {e}")
     SENTIMENT_AVAILABLE = False
+
+# Newspaper3k for content extraction
+try:
+    from newspaper import Article
+    NLP_AVAILABLE = True
+except ImportError:
+    NLP_AVAILABLE = False
+    logging.warning("newspaper3k not available for content extraction")
 
 # Grok AI client for enhanced analysis
 try:

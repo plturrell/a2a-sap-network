@@ -1073,8 +1073,8 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
             }
 
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient() as client:
+            # httpx\.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.ord_registry_url}/api/v1/ord/register",
                     json=ord_descriptor

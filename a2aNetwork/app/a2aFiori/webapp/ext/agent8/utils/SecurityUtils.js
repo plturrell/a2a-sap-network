@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/base/security/encodeXML",
     "sap/base/security/encodeJS",
     "sap/base/security/encodeURL",
-    "sap/base/strings/escapeRegExp"
-], (encodeXML, encodeJS, encodeURL, escapeRegExp) => {
+    "sap/base/strings/escapeRegExp",
+    "sap/base/Log"
+], (encodeXML, encodeJS, encodeURL, escapeRegExp, Log) => {
     "use strict";
 
     /**
@@ -201,7 +202,7 @@ sap.ui.define([
                 };
 
                 // In production, this should go to a secure logging service
-                console.info("[AUDIT]", logEntry);
+                Log.info("[AUDIT]", logEntry);
             } catch (e) {
                 // Fail silently to avoid breaking application
             }

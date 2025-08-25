@@ -9,8 +9,9 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
+    "sap/base/Log",
     "../../../utils/SharedSecurityUtils"
-], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) => {
+], (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, Log, SecurityUtils) => {
     "use strict";
 
     /**
@@ -741,7 +742,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    Log.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

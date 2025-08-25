@@ -217,7 +217,7 @@ class PredictiveFailureDetector:
         ml_prediction = self._predict_failure_with_ml(recent_metrics)
         if ml_prediction is not None:
             base_probability = (base_probability * 0.6 + ml_prediction * 0.4)
-        
+
         # Add anomaly detection if available
         if ML_AVAILABLE and self.trained:
             try:
@@ -251,74 +251,74 @@ class PredictiveFailureDetector:
         }
 
         return failure_probability, prediction_details
-    
+
     def _predict_failure_with_ml(self, recent_metrics: List[Dict[str, Any]]) -> Optional[float]:
         """Advanced ML-based failure prediction"""
         if not ML_AVAILABLE or self.prediction_model is None or len(self.failure_history) < 50:
             return None
-            
+
         try:
             # Extract features for prediction
             features = self._extract_prediction_features(recent_metrics)
             if features is None:
                 return None
-                
+
             # Retrain model periodically
             current_time = time.time()
             if current_time - self.last_prediction_training > 3600:  # Every hour
                 self._train_prediction_model()
                 self.last_prediction_training = current_time
-            
+
             # Make prediction
             if len(features) > 0:
                 features_scaled = self.scaler.transform(features.reshape(1, -1))
                 failure_prob = self.prediction_model.predict_proba(features_scaled)[0]
                 # Return probability of failure class (assuming binary classification)
                 return failure_prob[1] if len(failure_prob) > 1 else failure_prob[0]
-                
+
         except Exception as e:
             logger.error(f"ML failure prediction error: {e}")
-            
+
         return None
-    
+
     def _extract_prediction_features(self, recent_metrics: List[Dict[str, Any]]) -> Optional[np.ndarray]:
         """Extract features for failure prediction model"""
         if len(recent_metrics) < 5:
             return None
-            
+
         try:
             # Current state features
             latest = recent_metrics[-1]
             cpu_current = latest.get('cpu_usage', 0)
             memory_current = latest.get('memory_usage', 0)
             disk_current = latest.get('disk_usage', 0)
-            
+
             # Trend features (over last 10 measurements)
             cpu_values = [m.get('cpu_usage', 0) for m in recent_metrics[-10:]]
             memory_values = [m.get('memory_usage', 0) for m in recent_metrics[-10:]]
             disk_values = [m.get('disk_usage', 0) for m in recent_metrics[-10:]]
-            
+
             cpu_trend = self._calculate_trend(cpu_values)
             memory_trend = self._calculate_trend(memory_values)
             disk_trend = self._calculate_trend(disk_values)
-            
+
             # Volatility features (standard deviation)
             cpu_volatility = np.std(cpu_values) if len(cpu_values) > 1 else 0
             memory_volatility = np.std(memory_values) if len(memory_values) > 1 else 0
             disk_volatility = np.std(disk_values) if len(disk_values) > 1 else 0
-            
+
             # Load acceleration (second derivative)
             cpu_acceleration = self._calculate_acceleration(cpu_values)
             memory_acceleration = self._calculate_acceleration(memory_values)
-            
+
             # Process-specific features
             process_memory = latest.get('process_memory_rss', 0)
             open_files = latest.get('open_files', 0)
             num_threads = latest.get('num_threads', 0)
-            
+
             # Time-based features
             time_since_start = time.time() - recent_metrics[0].get('timestamp', time.time())
-            
+
             features = np.array([
                 cpu_current, memory_current, disk_current,
                 cpu_trend, memory_trend, disk_trend,
@@ -327,31 +327,31 @@ class PredictiveFailureDetector:
                 process_memory, open_files, num_threads,
                 time_since_start
             ])
-            
+
             return features
-            
+
         except Exception as e:
             logger.error(f"Feature extraction error: {e}")
             return None
-    
+
     def _calculate_acceleration(self, values: List[float]) -> float:
         """Calculate acceleration (second derivative) of values"""
         if len(values) < 3:
             return 0.0
-            
+
         # Calculate first derivatives
         first_derivatives = []
         for i in range(1, len(values)):
             first_derivatives.append(values[i] - values[i-1])
-        
+
         # Calculate second derivatives (acceleration)
         accelerations = []
         for i in range(1, len(first_derivatives)):
             accelerations.append(first_derivatives[i] - first_derivatives[i-1])
-        
+
         return np.mean(accelerations) if accelerations else 0.0
-    
-    def record_failure_event(self, metrics_before_failure: List[Dict[str, Any]], 
+
+    def record_failure_event(self, metrics_before_failure: List[Dict[str, Any]],
                            failure_type: str, failure_details: Dict[str, Any]):
         """Record a failure event for model training"""
         try:
@@ -364,46 +364,46 @@ class PredictiveFailureDetector:
                     'failure_details': failure_details,
                     'timestamp': time.time()
                 })
-                
+
         except Exception as e:
             logger.error(f"Failed to record failure event: {e}")
-    
+
     def _train_prediction_model(self):
         """Train the failure prediction model with historical data"""
         if not ML_AVAILABLE or len(self.failure_history) < 50:
             return
-            
+
         try:
             # Prepare training data
             X, y = [], []
-            
+
             for failure_record in self.failure_history:
                 features = failure_record.get('features')
                 label = failure_record.get('failure_occurred', 0)
-                
+
                 if features is not None:
                     X.append(features)
                     y.append(label)
-            
+
             if len(X) < 30:
                 return
-                
+
             X = np.array(X)
             y = np.array(y)
-            
+
             # Scale features
             X_scaled = self.scaler.fit_transform(X)
-            
+
             # Train model
             self.prediction_model.fit(X_scaled, y)
-            
+
             # Calculate accuracy
             y_pred = self.prediction_model.predict(X_scaled)
             accuracy = np.mean(y_pred == y)
             self.prediction_accuracy = accuracy
-            
+
             logger.info(f"Failure prediction model trained with accuracy: {accuracy:.3f}")
-            
+
         except Exception as e:
             logger.error(f"Model training error: {e}")
 

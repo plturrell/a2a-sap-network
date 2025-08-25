@@ -533,7 +533,7 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
                 "metadata_features": self._extract_metadata_features(data_product),
                 "timestamp": datetime.utcnow().isoformat()
             }
-            success = await self.store_training_data("metadata_extraction", training_entry)
+            await self.store_training_data("metadata_extraction", training_entry)
 
             # Update metrics
             self.metrics["total_data_products"] += 1
