@@ -186,7 +186,7 @@ class SophisticatedEmbeddingGenerator:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.config = config
+        self.config = config
         self.transformer_model = None
         self.embedding_cache = OrderedDict()
         self.cache_stats = {"hits": 0, "misses": 0}
@@ -590,7 +590,7 @@ class AdvancedConfidenceScorer:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.config = config
+        self.config = config
         self.historical_scores = []
         self.quality_statistics = defaultdict(list)
     
@@ -2524,7 +2524,9 @@ class EnhancedAIPreparationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin
                 
                 loop = asyncio.get_event_loop()
                 await loop.run_in_executor(None, write_state)
-            
+                
+        except Exception as e:
+            logger.error(f"Failed to save agent state: {e}")
 
     @a2a_skill(
         name="ai_data_preparation",

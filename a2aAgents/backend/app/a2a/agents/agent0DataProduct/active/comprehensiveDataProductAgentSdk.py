@@ -174,7 +174,7 @@ class BlockchainQueueMixin:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.blockchain_queue_enabled = False
+        self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
         self._initialize_blockchain()
@@ -294,7 +294,7 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                A2AAgentBase.__init__(
+        A2AAgentBase.__init__(
             self,
             agent_id=create_agent_id(),
             name="Comprehensive Data Product Agent",

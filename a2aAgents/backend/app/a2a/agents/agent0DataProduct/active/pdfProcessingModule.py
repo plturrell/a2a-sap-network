@@ -59,15 +59,15 @@ except ImportError as e:
 logger = logging.getLogger(__name__)
 
 class EnhancedPDFProcessor(SecureA2AAgent):
+    """Enhanced PDF processor with streaming, OCR, and advanced extraction"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced PDF processor with streaming, OCR, and advanced extraction"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, max_concurrent_files: int = 5, chunk_size: int = 1024*1024):
         

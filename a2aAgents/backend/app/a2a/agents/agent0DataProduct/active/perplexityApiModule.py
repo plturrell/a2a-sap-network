@@ -50,7 +50,7 @@ class PerplexityAPIClient(SecureA2AAgent):
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-"""A2A-Compliant Perplexity AI API client using blockchain messaging"""
+    """A2A-Compliant Perplexity AI API client using blockchain messaging"""
     
     def __init__(self, api_key: str, base_url: str = "https://api.perplexity.ai"):
         

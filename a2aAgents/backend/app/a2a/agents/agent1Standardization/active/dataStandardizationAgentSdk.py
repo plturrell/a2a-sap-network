@@ -671,7 +671,7 @@ class DataStandardizationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'allowed_file_extensions': ['.json', '.txt', '.csv', '.xml'],
             'sql_injection_patterns': [
                 r'((SELECT|INSERT|UPDATE|DELETE|DROP|UNION|WHERE|FROM))',
-                r'(--|;|'|"|\*|OR\s+1=1|AND\s+1=1)'
+                r'(--|;|\'|"|\*|OR\s+1=1|AND\s+1=1)'
             ]
         }
         

@@ -1049,9 +1049,12 @@ sap.ui.define([
                 return;
             }
 
+            let oParsedTestData;
+            let nExpectedResult;
+            
             try {
-                const oParsedTestData = JSON.parse(oTestDataValidation.sanitized);
-                const nExpectedResult = parseFloat(oData.expectedResult);
+                oParsedTestData = JSON.parse(oTestDataValidation.sanitized);
+                nExpectedResult = parseFloat(oData.expectedResult);
 
                 if (!isFinite(nExpectedResult)) {
                     MessageBox.error(this.getResourceBundle().getText("error.validation.invalidExpectedResult"));

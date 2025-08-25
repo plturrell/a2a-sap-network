@@ -1,7 +1,7 @@
 sap.ui.define([
     "sap/base/Log",
     "sap/m/MessageToast"
-], function (Log, MessageToast) {
+], (Log, MessageToast) => {
     "use strict";
 
     return {
@@ -10,7 +10,7 @@ sap.ui.define([
          * @param {object} entryData - Catalog entry data to validate
          * @returns {object} Validation result with security checks
          */
-        validateCatalogEntry: function (entryData) {
+        validateCatalogEntry(entryData) {
             const validation = {
                 isValid: true,
                 errors: [],
@@ -65,7 +65,7 @@ sap.ui.define([
             }
 
             // Validate tags and keywords
-            ['tags', 'keywords'].forEach(field => {
+            ["tags", "keywords"].forEach(field => {
                 if (entryData[field]) {
                     validation.sanitized[field] = this.sanitizeSearchQuery(entryData[field]);
                     if (this._containsScriptTags(entryData[field])) {
@@ -76,7 +76,7 @@ sap.ui.define([
             });
 
             // Validate API endpoints
-            ['apiEndpoint', 'documentationUrl', 'healthCheckUrl', 'swaggerUrl'].forEach(field => {
+            ["apiEndpoint", "documentationUrl", "healthCheckUrl", "swaggerUrl"].forEach(field => {
                 if (entryData[field]) {
                     const urlValidation = this.validateResourceURL(entryData[field]);
                     if (!urlValidation.isValid) {
@@ -95,26 +95,26 @@ sap.ui.define([
          * @param {string} url - URL to validate
          * @returns {object} Validation result
          */
-        validateResourceURL: function (url) {
+        validateResourceURL(url) {
             const validation = {
                 isValid: false,
                 error: "",
                 sanitizedUrl: ""
             };
 
-            if (!url || typeof url !== 'string') {
+            if (!url || typeof url !== "string") {
                 validation.error = "URL is required and must be a string";
                 return validation;
             }
 
             // Remove potentially dangerous characters
-            const sanitized = url.trim().replace(/[<>'"]/g, '');
+            const sanitized = url.trim().replace(/[<>'"]/g, "");
 
             try {
                 const urlObj = new URL(sanitized);
 
                 // Check for allowed protocols
-                const allowedProtocols = ['http:', 'https:'];
+                const allowedProtocols = ["http:", "https:"];
                 if (!allowedProtocols.includes(urlObj.protocol)) {
                     validation.error = `Protocol ${urlObj.protocol} not allowed`;
                     return validation;
@@ -164,20 +164,20 @@ sap.ui.define([
          * @param {object|string} metadata - Metadata to validate
          * @returns {object} Validation result
          */
-        validateMetadata: function (metadata) {
+        validateMetadata(metadata) {
             const validation = {
                 isValid: true,
                 sanitized: null
             };
 
-            if (typeof metadata === 'string') {
+            if (typeof metadata === "string") {
                 try {
                     const parsed = JSON.parse(metadata);
                     validation.sanitized = this._sanitizeMetadataObject(parsed);
                 } catch (error) {
                     validation.isValid = false;
                 }
-            } else if (typeof metadata === 'object' && metadata !== null) {
+            } else if (typeof metadata === "object" && metadata !== null) {
                 validation.sanitized = this._sanitizeMetadataObject(metadata);
             } else {
                 validation.isValid = false;
@@ -191,18 +191,18 @@ sap.ui.define([
          * @param {string} query - Search query to sanitize
          * @returns {string} Sanitized query
          */
-        sanitizeSearchQuery: function (query) {
-            if (!query || typeof query !== 'string') {
-                return '';
+        sanitizeSearchQuery(query) {
+            if (!query || typeof query !== "string") {
+                return "";
             }
 
             return query
                 // Remove script tags and event handlers
-                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                .replace(/on\w+\s*=/gi, '')
-                .replace(/javascript:/gi, '')
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+                .replace(/on\w+\s*=/gi, "")
+                .replace(/javascript:/gi, "")
                 // Remove dangerous characters
-                .replace(/[<>'"]/g, '')
+                .replace(/[<>'"]/g, "")
                 // Limit length
                 .substring(0, 500)
                 .trim();
@@ -213,25 +213,25 @@ sap.ui.define([
          * @param {string} data - Data to sanitize
          * @returns {string} Sanitized data
          */
-        sanitizeCatalogData: function (data) {
-            if (!data || typeof data !== 'string') {
-                return '';
+        sanitizeCatalogData(data) {
+            if (!data || typeof data !== "string") {
+                return "";
             }
 
             return data
                 // Remove script tags completely
-                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
                 // Remove event handlers
-                .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+                .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "")
                 // Remove javascript: protocol
-                .replace(/javascript:/gi, '')
+                .replace(/javascript:/gi, "")
                 // Escape HTML entities
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#x27;')
-                .replace(/\//g, '&#x2F;');
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#x27;")
+                .replace(/\//g, "&#x2F;");
         },
 
         /**
@@ -239,10 +239,10 @@ sap.ui.define([
          * @param {string} html - HTML content to escape
          * @returns {string} Escaped HTML
          */
-        escapeHTML: function (html) {
-            if (!html) return '';
+        escapeHTML(html) {
+            if (!html) {return "";}
 
-            const div = document.createElement('div');
+            const div = document.createElement("div");
             div.textContent = html;
             return div.innerHTML;
         },
@@ -254,29 +254,29 @@ sap.ui.define([
          * @param {object} parameters - Function parameters
          * @returns {Promise} Promise resolving to function result
          */
-        secureCallFunction: function (model, functionName, parameters) {
+        secureCallFunction(model, functionName, parameters) {
             return new Promise((resolve, reject) => {
                 // First, refresh security token
                 model.refreshSecurityToken((tokenData) => {
                     // Add CSRF token to headers if not already present
                     const headers = parameters.headers || {};
-                    if (!headers['X-CSRF-Token'] && tokenData) {
-                        headers['X-CSRF-Token'] = tokenData;
+                    if (!headers["X-CSRF-Token"] && tokenData) {
+                        headers["X-CSRF-Token"] = tokenData;
                     }
 
                     // Enhanced parameters with security
                     const secureParams = {
                         ...parameters,
-                        headers: headers,
+                        headers,
                         success: (data) => {
-                            this.logSecureOperation(functionName, 'SUCCESS');
+                            this.logSecureOperation(functionName, "SUCCESS");
                             if (parameters.success) {
                                 parameters.success(data);
                             }
                             resolve(data);
                         },
                         error: (error) => {
-                            this.logSecureOperation(functionName, 'ERROR', error);
+                            this.logSecureOperation(functionName, "ERROR", error);
                             if (parameters.error) {
                                 parameters.error(error);
                             }
@@ -286,8 +286,8 @@ sap.ui.define([
 
                     model.callFunction(functionName, secureParams);
                 }, (error) => {
-                    this.logSecureOperation(functionName, 'TOKEN_ERROR', error);
-                    reject(new Error('Failed to obtain CSRF token'));
+                    this.logSecureOperation(functionName, "TOKEN_ERROR", error);
+                    reject(new Error("Failed to obtain CSRF token"));
                 });
             });
         },
@@ -298,7 +298,7 @@ sap.ui.define([
          * @param {object} context - Operation context
          * @returns {boolean} True if authorized
          */
-        checkCatalogAuth: function (operation, context) {
+        checkCatalogAuth(operation, context) {
             // Check if user has required permissions
             const user = this._getCurrentUser();
             if (!user) {
@@ -314,7 +314,7 @@ sap.ui.define([
 
             if (!hasPermission) {
                 MessageToast.show("Insufficient permissions for this operation");
-                this.logSecureOperation(operation, 'UNAUTHORIZED', { user: user.id });
+                this.logSecureOperation(operation, "UNAUTHORIZED", { user: user.id });
             }
 
             return hasPermission;
@@ -325,7 +325,7 @@ sap.ui.define([
          * @param {object} resource - Discovered resource
          * @returns {object} Validation result
          */
-        validateDiscoveredResource: function (resource) {
+        validateDiscoveredResource(resource) {
             const validation = {
                 isValid: true,
                 sanitized: {},
@@ -382,10 +382,10 @@ sap.ui.define([
          * @param {object} options - Connection options
          * @returns {WebSocket|null} Secure WebSocket connection
          */
-        createSecureWebSocket: function (url, options) {
+        createSecureWebSocket(url, options) {
             try {
                 // Ensure secure protocol
-                const secureUrl = url.replace(/^ws:\/\//, 'wss://').replace(/^http:\/\//, 'https://');
+                const secureUrl = url.replace(/^ws:\/\//, "wss://").replace(/^http:\/\//, "https://");
 
                 // Validate URL
                 const urlValidation = this.validateResourceURL(secureUrl);
@@ -414,7 +414,7 @@ sap.ui.define([
                 };
 
                 ws.onerror = (error) => {
-                    this.logSecureOperation('WEBSOCKET_ERROR', 'ERROR', error);
+                    this.logSecureOperation("WEBSOCKET_ERROR", "ERROR", error);
                     if (options.onerror) {
                         options.onerror(error);
                     }
@@ -434,10 +434,10 @@ sap.ui.define([
          * @param {object} options - Connection options
          * @returns {EventSource|null} Secure EventSource connection
          */
-        createSecureEventSource: function (url, options) {
+        createSecureEventSource(url, options) {
             try {
                 // Ensure secure protocol
-                const secureUrl = url.replace(/^http:\/\//, 'https://');
+                const secureUrl = url.replace(/^http:\/\//, "https://");
 
                 // Validate URL
                 const urlValidation = this.validateResourceURL(secureUrl);
@@ -483,12 +483,12 @@ sap.ui.define([
          * @param {string} status - Operation status
          * @param {object} details - Additional details
          */
-        logSecureOperation: function (operation, status, details) {
+        logSecureOperation(operation, status, details) {
             const logEntry = {
                 timestamp: new Date().toISOString(),
-                operation: operation,
-                status: status,
-                user: this._getCurrentUser()?.id || 'anonymous',
+                operation,
+                status,
+                user: this._getCurrentUser()?.id || "anonymous",
                 details: details || {}
             };
 
@@ -502,8 +502,8 @@ sap.ui.define([
         },
 
         // Private helper methods
-        _containsScriptTags: function (str) {
-            if (!str || typeof str !== 'string') return false;
+        _containsScriptTags(str) {
+            if (!str || typeof str !== "string") {return false;}
 
             const scriptPatterns = [
                 /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
@@ -518,8 +518,8 @@ sap.ui.define([
             return scriptPatterns.some(pattern => pattern.test(str));
         },
 
-        _sanitizeMetadataObject: function (obj) {
-            if (!obj || typeof obj !== 'object') {
+        _sanitizeMetadataObject(obj) {
+            if (!obj || typeof obj !== "object") {
                 return {};
             }
 
@@ -528,9 +528,9 @@ sap.ui.define([
             for (const [key, value] of Object.entries(obj)) {
                 const sanitizedKey = this.sanitizeCatalogData(key);
 
-                if (typeof value === 'string') {
+                if (typeof value === "string") {
                     sanitized[sanitizedKey] = this.sanitizeCatalogData(value);
-                } else if (typeof value === 'object' && value !== null) {
+                } else if (typeof value === "object" && value !== null) {
                     sanitized[sanitizedKey] = this._sanitizeMetadataObject(value);
                 } else {
                     sanitized[sanitizedKey] = value;
@@ -540,17 +540,17 @@ sap.ui.define([
             return sanitized;
         },
 
-        _sanitizeWebSocketData: function (data) {
-            if (!data || typeof data !== 'object') {
+        _sanitizeWebSocketData(data) {
+            if (!data || typeof data !== "object") {
                 return data;
             }
 
             const sanitized = {};
 
             for (const [key, value] of Object.entries(data)) {
-                if (typeof value === 'string') {
+                if (typeof value === "string") {
                     sanitized[key] = this.sanitizeCatalogData(value);
-                } else if (typeof value === 'object' && value !== null) {
+                } else if (typeof value === "object" && value !== null) {
                     sanitized[key] = this._sanitizeWebSocketData(value);
                 } else {
                     sanitized[key] = value;
@@ -560,42 +560,42 @@ sap.ui.define([
             return sanitized;
         },
 
-        _getCurrentUser: function () {
+        _getCurrentUser() {
             // Mock user detection - implement actual user detection
             return {
-                id: 'current-user',
-                permissions: ['catalog:read', 'catalog:write', 'catalog:admin']
+                id: "current-user",
+                permissions: ["catalog:read", "catalog:write", "catalog:admin"]
             };
         },
 
-        _getCatalogPermissions: function (operation) {
+        _getCatalogPermissions(operation) {
             const permissionMap = {
-                'RegisterResource': ['catalog:write'],
-                'ValidateEntry': ['catalog:write'],
-                'PublishEntry': ['catalog:admin'],
-                'IndexResource': ['catalog:write'],
-                'DiscoverDependencies': ['catalog:read'],
-                'SyncRegistryEntry': ['catalog:admin'],
-                'StartResourceDiscovery': ['catalog:admin'],
-                'ValidateCatalogEntries': ['catalog:write'],
-                'PublishCatalogEntries': ['catalog:admin']
+                "RegisterResource": ["catalog:write"],
+                "ValidateEntry": ["catalog:write"],
+                "PublishEntry": ["catalog:admin"],
+                "IndexResource": ["catalog:write"],
+                "DiscoverDependencies": ["catalog:read"],
+                "SyncRegistryEntry": ["catalog:admin"],
+                "StartResourceDiscovery": ["catalog:admin"],
+                "ValidateCatalogEntries": ["catalog:write"],
+                "PublishCatalogEntries": ["catalog:admin"]
             };
 
-            return permissionMap[operation] || ['catalog:read'];
+            return permissionMap[operation] || ["catalog:read"];
         },
 
-        _userHasPermission: function (user, permission) {
+        _userHasPermission(user, permission) {
             return user.permissions && user.permissions.includes(permission);
         },
 
-        _isProduction: function () {
+        _isProduction() {
             // Detect production environment
-            return window.location.hostname !== 'localhost' &&
-                   window.location.hostname !== '127.0.0.1' &&
-                   !window.location.hostname.startsWith('192.168.');
+            return window.location.hostname !== "localhost" &&
+                   window.location.hostname !== "127.0.0.1" &&
+                   !window.location.hostname.startsWith("192.168.");
         },
 
-        _sendToAuditService: function (logEntry) {
+        _sendToAuditService(logEntry) {
             // In production, implement actual audit service integration
             // console.log("AUDIT:", logEntry);
         }

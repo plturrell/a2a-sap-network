@@ -401,7 +401,6 @@ sap.ui.define([
             }
 
             this._auditLogger.log("CREATE_TASK_INITIATED", { action: "create_quality_task" });
-            const oView = this.base.getView();
 
             this._getOrCreateDialog("create", "a2a.network.agent6.ext.fragment.CreateQualityTask")
                 .then((oDialog) => {
@@ -433,8 +432,6 @@ sap.ui.define([
          * @public
          */
         onQualityDashboard() {
-            const oView = this.base.getView();
-
             this._getOrCreateDialog("dashboard", "a2a.network.agent6.ext.fragment.QualityDashboard")
                 .then((oDialog) => {
                     oDialog.open();
@@ -534,8 +531,6 @@ sap.ui.define([
          * @public
          */
         onRoutingDecisionManager() {
-            const oView = this.base.getView();
-
             this._getOrCreateDialog("routing", "a2a.network.agent6.ext.fragment.RoutingDecisionManager")
                 .then((oDialog) => {
                     oDialog.open();
@@ -571,8 +566,6 @@ sap.ui.define([
          * @public
          */
         onTrustVerification() {
-            const oView = this.base.getView();
-
             this._getOrCreateDialog("trust", "a2a.network.agent6.ext.fragment.TrustVerification")
                 .then((oDialog) => {
                     oDialog.open();
@@ -609,8 +602,6 @@ sap.ui.define([
          * @public
          */
         onWorkflowOptimization() {
-            const oView = this.base.getView();
-
             this._getOrCreateDialog("workflow", "a2a.network.agent6.ext.fragment.WorkflowOptimization")
                 .then((oDialog) => {
                     oDialog.open();

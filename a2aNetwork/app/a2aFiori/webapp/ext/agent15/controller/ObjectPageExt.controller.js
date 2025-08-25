@@ -645,7 +645,7 @@ sap.ui.define([
                         action,
                         details: details || {}
                     };
-                    // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+                    console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
                 }.bind(this)
             };
         },

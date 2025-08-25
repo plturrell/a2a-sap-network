@@ -202,7 +202,7 @@ class EnhancedDataProductAgentSDK(SecureA2AAgent):
         
         # Core configuration
         self.ord_registry_url = ord_registry_url
-        self.catalog_manager_url = getattr(config, 'catalog_manager_url', "os.getenv("A2A_FRONTEND_URL")")
+        self.catalog_manager_url = getattr(config, 'catalog_manager_url', os.getenv("A2A_FRONTEND_URL"))
         
         # Data product management
         self.data_products = {}

@@ -13,6 +13,7 @@ const cds = require('@sap/cds');
 const { portManager } = require('./utils/portManager');
 const websocketMonitor = require('./websocketMonitor');
 const { BlockchainEventServer } = require('../../../shared/blockchain/blockchain-event-server');
+const fetch = require('node-fetch');
 
 // Defensive logger initialization
 const { LoggerFactory } = require('../shared/logging/structured-logger');
@@ -503,7 +504,7 @@ class A2AWebSocketDataService extends EventEmitter {
         // Fetch real agent metrics from A2A network
         try {
             const agentManagerUrl = process.env.AGENT_MANAGER_URL || 'http://localhost:8000';
-            const response = await blockchainClient.sendMessage(`${agentManagerUrl}/api/v1/agents/metrics`);
+            const response = await fetch(`${agentManagerUrl}/api/v1/agents/metrics`);
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -522,7 +523,7 @@ class A2AWebSocketDataService extends EventEmitter {
         // Fetch real service metrics from A2A network
         try {
             const catalogManagerUrl = process.env.CATALOG_MANAGER_URL || 'http://localhost:8001';
-            const response = await blockchainClient.sendMessage(`${catalogManagerUrl}/api/v1/services/metrics`);
+            const response = await fetch(`${catalogManagerUrl}/api/v1/services/metrics`);
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -552,14 +553,14 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Fetch from monitoring service or Prometheus
             const monitoringUrl = process.env.MONITORING_SERVICE_URL || 'http://localhost:9090';
-            const response = await blockchainClient.sendMessage(`${monitoringUrl}/api/v1/query?query=a2a_requests_total`);
+            const response = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_requests_total`);
             if (response.ok) {
                 const data = await response.json();
                 // Parse Prometheus response format
                 const requests = data.data?.result?.[0]?.value?.[1] || this.metrics.analytics.requests;
                 
                 // Fetch error rate
-                const errorResponse = await blockchainClient.sendMessage(`${monitoringUrl}/api/v1/query?query=a2a_errors_total`);
+                const errorResponse = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_errors_total`);
                 const errorData = await errorResponse.json();
                 const errors = errorData.data?.result?.[0]?.value?.[1] || this.metrics.analytics.errors;
                 
@@ -582,7 +583,7 @@ class A2AWebSocketDataService extends EventEmitter {
     async fetchResponseTime() {
         try {
             const monitoringUrl = process.env.MONITORING_SERVICE_URL || 'http://localhost:9090';
-            const response = await blockchainClient.sendMessage(`${monitoringUrl}/api/v1/query?query=a2a_response_time_avg`);
+            const response = await fetch(`${monitoringUrl}/api/v1/query?query=a2a_response_time_avg`);
             if (response.ok) {
                 const data = await response.json();
                 return parseFloat(data.data?.result?.[0]?.value?.[1]) || this.metrics.analytics.responseTime;
@@ -608,7 +609,7 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Fetch from network monitoring service
             const networkStatsUrl = process.env.NETWORK_STATS_URL || 'http://localhost:8080';
-            const response = await blockchainClient.sendMessage(`${networkStatsUrl}/api/v1/network/stats`);
+            const response = await fetch(`${networkStatsUrl}/api/v1/network/stats`);
             if (response.ok) {
                 const data = await response.json();
                 return {
@@ -696,7 +697,7 @@ class A2AWebSocketDataService extends EventEmitter {
         try {
             // Fetch real historical analytics from time-series database
             const analyticsUrl = process.env.ANALYTICS_DB_URL || 'http://localhost:8086'; // InfluxDB
-            const response = await blockchainClient.sendMessage(`${analyticsUrl}/api/v1/analytics/timeseries?hours=24`);
+            const response = await fetch(`${analyticsUrl}/api/v1/analytics/timeseries?hours=24`);
             
             if (response.ok) {
                 const data = await response.json();

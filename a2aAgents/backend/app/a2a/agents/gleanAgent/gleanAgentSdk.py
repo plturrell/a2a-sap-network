@@ -59,11 +59,13 @@ from app.a2a.sdk.utils import create_error_response, create_success_response
 # Import blockchain integration
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
+# Import security base
+from app.a2a.core.security_base import SecureA2AAgent
+
 # Import trust system - Real implementation only
 import sys
 sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
 from trustSystem.smartContractTrust import (
-from app.a2a.core.security_base import SecureA2AAgent
     initialize_agent_trust,
     get_trust_contract,
     verify_a2a_message,
@@ -78,21 +80,11 @@ except ImportError:
     # Create stub implementations if not available
     class WorkflowContextManager:
         def __init__(self):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                    pass
+            pass
     
     class WorkflowMonitor:
         def __init__(self):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                    pass
+            pass
     
     workflowContextManager = WorkflowContextManager()
     workflowMonitor = WorkflowMonitor()
@@ -183,12 +175,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str = None):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                # Define blockchain capabilities for glean agent
+        # Define blockchain capabilities for glean agent
         blockchain_capabilities = [
             "code_analysis",
             "semantic_analysis", 
@@ -1772,12 +1759,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             
             class SemanticVisitor(ast.NodeVisitor):
                 def __init__(self):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                            self.current_class = None
+                    self.current_class = None
                     self.current_function = None
                 
                 def visit_Import(self, node):
@@ -6080,12 +6062,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         # Visitor class for AST analysis
         class RefactoringVisitor(ast.NodeVisitor):
             def __init__(self):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                        self.suggestions = []
+                self.suggestions = []
                 self.function_stats = defaultdict(lambda: {'complexity': 1, 'parameters': 0, 'lines': 0})
                 self.duplicated_code = []
                 self.long_parameter_lists = []

@@ -77,14 +77,12 @@ except ImportError:
     # Fallback configuration
     class Config:
         def __init__(self):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                    self.base_url = os.getenv("A2A_SERVICE_URL")
+            self.base_url = os.getenv("A2A_SERVICE_URL")
             self.storage_base_path = "/tmp/a2a"
-        def get_agent_url(self, agent_type): return self.base_url
+            
+        def get_agent_url(self, agent_type): 
+            return self.base_url
+            
         def get_contract_address(self, name):
             # Return actual deployed contract addresses
             contracts = {

@@ -1760,7 +1760,7 @@ sap.ui.define([
                 description,
                 details: details || {}
             };
-            // console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
+            console.info(`AUDIT: ${ JSON.stringify(logEntry)}`);
         },
 
         /**

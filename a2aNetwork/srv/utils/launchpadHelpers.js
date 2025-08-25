@@ -5,6 +5,7 @@
 
 const cds = require('@sap/cds');
 const LOG = cds.log('launchpad-helpers');
+const fetch = require('node-fetch');
 
 // Agent metadata configuration
 const AGENT_METADATA = {
@@ -33,11 +34,11 @@ async function checkAgentHealth(port) {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const [healthResponse, metricsResponse] = await Promise.all([
-            blockchainClient.sendMessage(`http://localhost:${port}/health`, { 
+            fetch(`http://localhost:${port}/health`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            blockchainClient.sendMessage(`http://localhost:${port}/metrics`, { 
+            fetch(`http://localhost:${port}/metrics`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
@@ -95,7 +96,7 @@ async function checkBlockchainHealth() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         
-        const statusResponse = await blockchainClient.sendMessage('http://localhost:8082/blockchain/status', {
+        const statusResponse = await fetch('http://localhost:8082/blockchain/status', {
             signal: controller.signal,
             headers: { 'Accept': 'application/json' }
         }).catch(() => null);

@@ -141,7 +141,7 @@ class EnhancedCache:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.strategy = strategy
+        self.strategy = strategy
         self.max_size = max_size
         self.cache = OrderedDict()
         self.access_counts = defaultdict(int)

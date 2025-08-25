@@ -251,7 +251,7 @@ sap.ui.define([
          */
         addColorBlindSupport($container, options = {}) {
             // Add patterns/shapes in addition to colors
-            $container.find(".sapUiIcon").each(() => {
+            $container.find(".sapUiIcon").each(function() {
                 const $icon = $(this);
                 const iconType = $icon.attr("data-sap-ui-icon");
 
@@ -259,10 +259,10 @@ sap.ui.define([
                 if (!$icon.attr("title")) {
                     $icon.attr("title", this._getIconDescription(iconType));
                 }
-            });
+            }.bind(this));
 
             // Add text indicators for status colors
-            $container.find("[class*=\"sapUiMessageType\"]").each(() => {
+            $container.find("[class*=\"sapUiMessageType\"]").each(function() {
                 const $element = $(this);
                 const messageType = this._extractMessageType($element[0].className);
                 const indicator = this._getStatusIndicator(messageType);
