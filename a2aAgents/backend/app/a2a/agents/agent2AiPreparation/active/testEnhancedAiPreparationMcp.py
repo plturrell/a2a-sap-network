@@ -2,12 +2,10 @@ import asyncio
 import os
 import sys
 import logging
-import json
 import time
 from datetime import datetime
 
 
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test Enhanced AI Preparation Agent with MCP Integration

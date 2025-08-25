@@ -212,7 +212,7 @@ class CircuitBreaker extends EventEmitter {
      */
     stopAdaptiveMonitoring() {
         if (this.intervals) {
-            for (const [name, intervalId] of this.intervals) {
+            for (const [, intervalId] of this.intervals) {
                 clearInterval(intervalId);
             }
             this.intervals.clear();
@@ -835,7 +835,7 @@ class CircuitBreaker extends EventEmitter {
     /**
      * Determine state transition based on error analysis
      */
-    determineStateTransition(errorCategory, errorInfo) {
+    determineStateTransition(errorCategory, _errorInfo) {
         // Different error categories trigger different behaviors
         switch (errorCategory) {
             case FailureCategory.RATE_LIMIT:
@@ -1207,9 +1207,9 @@ class CircuitBreaker extends EventEmitter {
     }
 
     /**
-     * Get comprehensive enterprise status
+     * Get comprehensive enterprise status (basic version)
      */
-    getEnterpriseStatus() {
+    getEnterpriseStatusBasic() {
         return {
             basic: this.getStatus(),
             health: this.getHealthStatus(),
@@ -1306,8 +1306,7 @@ class CircuitBreaker extends EventEmitter {
      * Get enterprise status with detailed metrics
      */
     getEnterpriseStatus() {
-        const now = Date.now();
-        const uptime = this.calculateUptime();
+        const uptime = this.calculateUptimeMs();
 
         return {
             serviceName: this.serviceName,
@@ -1340,9 +1339,9 @@ class CircuitBreaker extends EventEmitter {
     }
 
     /**
-     * Calculate service uptime
+     * Calculate service uptime in milliseconds
      */
-    calculateUptime() {
+    calculateUptimeMs() {
         return Date.now() - this.createdAt;
     }
 
@@ -1426,7 +1425,7 @@ class CircuitBreaker extends EventEmitter {
         // Adjust failure threshold based on error patterns
         const recentFailures = this.history.failures.slice(-100);
         if (recentFailures.length >= 20) {
-            const errorPatterns = this.analyzeErrorPatterns(recentFailures);
+            const errorPatterns = this.analyzeFailurePatterns(recentFailures);
             if (errorPatterns.hasTemporaryIssues) {
                 this.failureThreshold = Math.min(this.failureThreshold + 1, 10);
             } else if (errorPatterns.hasSystemicIssues) {
@@ -1450,9 +1449,9 @@ class CircuitBreaker extends EventEmitter {
     }
 
     /**
-     * Analyze error patterns for adaptive behavior
+     * Analyze error patterns from failure list
      */
-    analyzeErrorPatterns(failures) {
+    analyzeFailurePatterns(failures) {
         const timeWindows = [300000, 900000, 1800000]; // 5, 15, 30 minutes
         let hasTemporaryIssues = false;
         let hasSystemicIssues = false;
@@ -1685,7 +1684,7 @@ class CircuitBreakerRegistry {
     }
 
     stopAdaptiveMonitoring() {
-        for (const [name, intervalId] of this.intervals) {
+        for (const [, intervalId] of this.intervals) {
             clearInterval(intervalId);
         }
         this.intervals.clear();

@@ -417,15 +417,14 @@ class Agent15Adapter extends BaseAdapter {
         const fetch = require('node-fetch');
         const baseUrl = process.env.AGENT15_BASE_URL || 'http://localhost:8015';
 
-        try {
-            let response;
+        let response;
 
-            switch (method) {
+        switch (method) {
                 case 'list_workflows':
                     response = await fetch(`${baseUrl}/api/v1/workflows`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
-                    return await response.json();
+                    return response.json();
 
                 case 'create_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows`, {
@@ -434,7 +433,7 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'update_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
@@ -445,7 +444,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'delete_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
@@ -453,7 +452,7 @@ class Agent15Adapter extends BaseAdapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'execute_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/execute`, {
@@ -462,7 +461,7 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'pause_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/pause`, {
@@ -473,7 +472,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'resume_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/resume`, {
@@ -484,7 +483,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'cancel_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/cancel`, {
@@ -495,7 +494,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'get_workflow_status':
                     response = await fetch(`${baseUrl}/api/v1/workflows/status`, {
@@ -506,7 +505,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'get_execution_history':
                     response = await fetch(`${baseUrl}/api/v1/workflows/history`, {
@@ -521,7 +520,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'coordinate_agents':
                     response = await fetch(`${baseUrl}/api/v1/coordination/agents`, {
@@ -530,13 +529,13 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'list_workflow_templates':
                     response = await fetch(`${baseUrl}/api/v1/templates`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
-                    return await response.json();
+                    return response.json();
 
                 case 'create_workflow_template':
                     response = await fetch(`${baseUrl}/api/v1/templates`, {
@@ -545,7 +544,7 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'create_workflow_from_template':
                     response = await fetch(`${baseUrl}/api/v1/templates/instantiate`, {
@@ -554,7 +553,7 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'get_orchestration_metrics':
                     response = await fetch(`${baseUrl}/api/v1/metrics`, {
@@ -568,7 +567,7 @@ class Agent15Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'optimize_workflow':
                     response = await fetch(`${baseUrl}/api/v1/workflows/optimize`, {
@@ -577,7 +576,7 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'validate_workflow_definition':
                     response = await fetch(`${baseUrl}/api/v1/workflows/validate`, {
@@ -586,7 +585,7 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'bulk_execute_workflows':
                     response = await fetch(`${baseUrl}/api/v1/workflows/bulk-execute`, {
@@ -595,15 +594,10 @@ class Agent15Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 default:
                     throw new Error(`Unknown method: ${method}`);
-            }
-        } catch (error) {
-            // Log error for debugging - use proper logging in production
-            // console.error('Agent 15 backend call failed:', error.message);
-            throw error;
         }
     }
 

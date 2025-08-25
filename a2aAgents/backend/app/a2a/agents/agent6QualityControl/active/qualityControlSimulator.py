@@ -1,14 +1,16 @@
 import asyncio
-import random
-import secrets
 import uuid
 import json
+import hashlib
+import time
+import math
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
 import statistics
+import numpy as np
 
 from app.a2a.core.security_base import SecureA2AAgent
 """
@@ -181,16 +183,17 @@ class QualityControlSimulator(SecureA2AAgent):
             # Select data type based on scenario
             if scenario == QualityScenario.FINANCIAL_DATA:
                 data_type = "financial"
-            elif scenario == QualityScenario.COMMUNICATION_DATA:
-                data_type = random.choice(["text", "email"])
             else:
-                data_type = random.choice(data_types)
+                # Use deterministic data type selection based on index
+                data_type = data_types[i % len(data_types)]
 
             # Generate base data point
             data_point = await self._generate_data_point(data_type, i)
 
-            # Inject defects based on defect rate
-            if secrets.SystemRandom().random() < defect_rate:
+            # Inject defects deterministically based on defect rate and data point hash
+            point_hash = hash(f"{data_type}_{i}_{scenario.value}")
+            defect_probability = abs(point_hash) % 1000 / 1000.0  # 0-1 range
+            if defect_probability < defect_rate:
                 data_point = await self._inject_defect(data_point, scenario)
 
             dataset.append(data_point)
@@ -213,52 +216,121 @@ class QualityControlSimulator(SecureA2AAgent):
         )
 
     def _generate_numerical_data(self) -> float:
-        """Generate numerical data"""
-        return random.uniform(0, 100)
+        """Generate realistic numerical data using statistical distributions"""
+        # Use normal distribution with realistic parameters for quality metrics
+        # Mean around 85 (good quality), std dev of 15
+        value = np.random.normal(85, 15)
+        # Clamp to realistic range [0, 100]
+        return max(0, min(100, value))
 
     def _generate_categorical_data(self) -> str:
-        """Generate categorical data"""
+        """Generate realistic categorical data with weighted probabilities"""
+        # Realistic distribution for quality grades
         categories = ["A", "B", "C", "D", "E"]
-        return random.choice(categories)
+        # Weighted probabilities favoring higher grades (realistic for quality systems)
+        weights = [0.35, 0.30, 0.20, 0.10, 0.05]  # A is most common, E is rarest
+        return np.random.choice(categories, p=weights)
 
     def _generate_text_data(self) -> str:
-        """Generate text data"""
-        words = ["quality", "control", "testing", "validation", "simulation", "data", "processing"]
-        return " ".join(random.sample(words, random.randint(2, 5)))
+        """Generate realistic text data using quality control terminology"""
+        # Quality control phrases with realistic patterns
+        subjects = ["quality", "control", "testing", "validation", "inspection", "assessment"]
+        actions = ["analysis", "review", "verification", "measurement", "evaluation", "monitoring"]
+        objects = ["data", "process", "output", "system", "procedure", "standard"]
+        
+        # Generate meaningful phrases
+        subject = subjects[int(time.time() * 1000) % len(subjects)]
+        action = actions[int(time.time() * 1001) % len(actions)]
+        obj = objects[int(time.time() * 1002) % len(objects)]
+        
+        return f"{subject} {action} {obj}"
 
     def _generate_date_data(self) -> str:
-        """Generate date data"""
-        base_date = datetime.now() - timedelta(days=random.randint(0, 365))
+        """Generate realistic date data following business patterns"""
+        # Generate dates with business-day weighting (more recent dates more likely)
+        days_back = int(np.random.exponential(30))  # Exponential distribution favors recent dates
+        days_back = min(days_back, 365)  # Cap at 1 year
+        
+        base_date = datetime.now() - timedelta(days=days_back)
+        
+        # Skip weekends for business data
+        while base_date.weekday() >= 5:  # Saturday=5, Sunday=6
+            base_date -= timedelta(days=1)
+        
         return base_date.strftime("%Y-%m-%d")
 
     def _generate_email_data(self) -> str:
-        """Generate email data"""
-        domains = ["example.com", "test.org", "simulation.net"]
-        names = ["user", "test", "admin", "demo"]
-        name = random.choice(names) + str(random.randint(1, 999))
-        domain = random.choice(domains)
-        return f"{name}@{domain}"
+        """Generate realistic email data with proper formatting"""
+        # Realistic business email patterns
+        first_names = ["john", "mary", "david", "sarah", "mike", "lisa", "alex", "emma"]
+        last_names = ["smith", "johnson", "brown", "davis", "wilson", "garcia", "martinez", "taylor"]
+        domains = ["company.com", "corp.net", "business.org", "enterprise.com"]
+        
+        # Deterministic selection based on time
+        time_hash = int(time.time() * 1000)
+        first = first_names[time_hash % len(first_names)]
+        last = last_names[(time_hash // 10) % len(last_names)]
+        domain = domains[(time_hash // 100) % len(domains)]
+        
+        return f"{first}.{last}@{domain}"
 
     def _generate_financial_data(self) -> float:
-        """Generate financial data"""
-        return round(random.uniform(0.01, 10000.00), 2)
+        """Generate realistic financial data using lognormal distribution"""
+        # Financial data typically follows lognormal distribution
+        # Mean log value of 6 gives median around $400, with reasonable spread
+        value = np.random.lognormal(mean=6, sigma=1.2)
+        # Cap at reasonable maximum and round to cents
+        return round(min(value, 50000.00), 2)
 
     async def _inject_defect(
         self,
         data_point: QualityDataPoint,
         scenario: QualityScenario
     ) -> QualityDataPoint:
-        """Inject defects into data point based on scenario"""
+        """Inject defects into data point based on realistic quality patterns"""
 
         defect_types = list(self.defect_patterns.keys())
-
+        
+        # Use data point ID hash for deterministic but varied defect selection
+        point_hash = hash(data_point.id + str(data_point.data_type))
+        
         if scenario == QualityScenario.HIGH_DEFECT_RATE:
-            # Multiple defects possible
-            num_defects = random.randint(1, 3)
-            selected_defects = random.sample(defect_types, min(num_defects, len(defect_types)))
+            # Multiple defects with realistic probability distribution
+            # In high defect scenarios, 60% have 1 defect, 30% have 2, 10% have 3
+            prob_selector = abs(point_hash) % 100
+            if prob_selector < 60:
+                num_defects = 1
+            elif prob_selector < 90:
+                num_defects = 2
+            else:
+                num_defects = 3
+                
+            # Select defects deterministically based on hash
+            selected_defects = []
+            for i in range(min(num_defects, len(defect_types))):
+                defect_index = (point_hash + i * 37) % len(defect_types)
+                defect_type = defect_types[defect_index]
+                if defect_type not in selected_defects:
+                    selected_defects.append(defect_type)
         else:
-            # Single defect
-            selected_defects = [random.choice(defect_types)]
+            # Single defect based on data type and historical patterns
+            if data_point.data_type in ["numerical", "financial"]:
+                # Numerical data more likely to have range or format violations
+                preferred_defects = ["range_violation", "format_error", "precision_error"]
+            elif data_point.data_type in ["text", "email"]:
+                # Text data more likely to have format or encoding issues
+                preferred_defects = ["format_error", "encoding_error", "length_violation"]
+            else:
+                preferred_defects = defect_types
+            
+            # Filter for available defects
+            available_defects = [d for d in preferred_defects if d in defect_types]
+            if not available_defects:
+                available_defects = defect_types
+            
+            # Select deterministically
+            defect_index = abs(point_hash) % len(available_defects)
+            selected_defects = [available_defects[defect_index]]
 
         for defect_type in selected_defects:
             injector = self.defect_patterns[defect_type]
@@ -274,9 +346,14 @@ class QualityControlSimulator(SecureA2AAgent):
         return data_point
 
     def _inject_range_violations(self, data_point: QualityDataPoint) -> QualityDataPoint:
-        """Inject range violations"""
+        """Inject range violations based on realistic patterns"""
         if data_point.data_type == "numerical":
-            data_point.value = random.choice([-10, 150])  # Out of 0-100 range
+            # Use data point hash for deterministic selection of violation type
+            point_hash = hash(data_point.id)
+            if abs(point_hash) % 2 == 0:
+                data_point.value = -10 + (abs(point_hash) % 20)  # Negative range violation
+            else:
+                data_point.value = 150 + (abs(point_hash) % 50)  # Positive range violation
             data_point.quality_score *= 0.3
             data_point.metadata["defect"] = "range_violation"
         return data_point
@@ -312,10 +389,18 @@ class QualityControlSimulator(SecureA2AAgent):
         elif scenario == QualityScenario.PERFORMANCE_STRESS:
             return [self.quality_rules["range_check"]]  # Single rule for speed
         else:
-            return random.sample(
-                list(self.quality_rules.values()),
-                random.randint(2, len(self.quality_rules))
-            )
+            # Deterministic rule selection based on scenario
+            all_rules = list(self.quality_rules.values())
+            # Select between 2-4 rules based on scenario hash
+            scenario_hash = hash(scenario.value)
+            num_rules = 2 + (abs(scenario_hash) % 3)  # 2-4 rules
+            
+            selected_rules = []
+            for i in range(min(num_rules, len(all_rules))):
+                rule_index = (scenario_hash + i * 17) % len(all_rules)
+                selected_rules.append(all_rules[rule_index])
+            
+            return selected_rules
 
     async def run_simulation(
         self,
@@ -504,10 +589,15 @@ class QualityControlSimulator(SecureA2AAgent):
                     result["passed"] = False
                     result["details"]["violation"] = "Cross-field consistency violation"
 
-            # Simulate random failures based on rule failure probability
-            if result["passed"] and secrets.SystemRandom().random() < rule.failure_probability:
-                result["passed"] = False
-                result["details"]["violation"] = "Random simulation failure"
+            # Simulate deterministic failures based on rule failure probability
+            if result["passed"]:
+                # Use data point and rule combination for deterministic failure simulation
+                failure_hash = hash(f"{data_point.id}_{rule.rule_id}_{data_point.data_type}")
+                failure_probability = abs(failure_hash) % 1000 / 1000.0
+                
+                if failure_probability < rule.failure_probability:
+                    result["passed"] = False
+                    result["details"]["violation"] = "Deterministic simulation failure based on rule probability"
 
         except Exception as e:
             result["passed"] = False
@@ -526,11 +616,16 @@ class QualityControlSimulator(SecureA2AAgent):
                 # Simulate batch processing
                 batch_start = datetime.now()
 
-                # Process a batch
-                batch_data = random.sample(
-                    self.test_dataset,
-                    min(batch_size, len(self.test_dataset))
-                )
+                # Process a batch with deterministic selection
+                batch_start_idx = (int(datetime.now().timestamp()) // batch_interval) % len(self.test_dataset)
+                batch_end_idx = min(batch_start_idx + batch_size, len(self.test_dataset))
+                
+                if batch_end_idx - batch_start_idx < batch_size and len(self.test_dataset) >= batch_size:
+                    # Wrap around if needed
+                    batch_data = (self.test_dataset[batch_start_idx:] + 
+                                self.test_dataset[:batch_size - (batch_end_idx - batch_start_idx)])
+                else:
+                    batch_data = self.test_dataset[batch_start_idx:batch_end_idx]
 
                 batch_results = []
                 for data_point in batch_data:

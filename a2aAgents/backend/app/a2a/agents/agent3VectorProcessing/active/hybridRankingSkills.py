@@ -1,10 +1,9 @@
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any
 import numpy as np
 from datetime import datetime
 import logging
-import json
 import math
-from collections import Counter, defaultdict
+from collections import Counter
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 

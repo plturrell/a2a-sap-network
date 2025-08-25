@@ -344,6 +344,19 @@
                                                 serviceUrl: "/api/v1/health/summary",
                                                 serviceRefreshInterval: 30
                                             }
+                                        },
+                                        {
+                                            id: "workflow_templates",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Workflow Templates",
+                                                subtitle: "Design & Execute",
+                                                icon: "sap-icon://workflow-tasks",
+                                                targetURL: "#WorkflowTemplate-manage",
+                                                info: "Templates",
+                                                serviceUrl: "/workflow-templates/Templates/$count",
+                                                serviceRefreshInterval: 30
+                                            }
                                         }
                                     ]
                                 }
@@ -395,6 +408,40 @@
                                         }
                                     },
                                     url: "./a2aFiori/webapp/",
+                                    applicationType: "URL",
+                                    navigationMode: "embedded"
+                                },
+                                "WorkflowTemplate-manage": {
+                                    sap: {
+                                        app: {
+                                            id: "a2a.workflow.designer",
+                                            applicationVersion: {
+                                                version: "1.0.0"
+                                            },
+                                            title: "Workflow Template Designer",
+                                            subTitle: "Create and manage workflow templates",
+                                            shortTitle: "Workflow Templates",
+                                            info: "Design workflow templates for document processing"
+                                        },
+                                        ui: {
+                                            technology: "UI5",
+                                            icons: {
+                                                icon: "sap-icon://workflow-tasks"
+                                            },
+                                            deviceTypes: {
+                                                desktop: true,
+                                                tablet: true,
+                                                phone: true
+                                            }
+                                        },
+                                        ui5: {
+                                            componentName: "a2a.workflow.designer"
+                                        },
+                                        flp: {
+                                            type: "application"
+                                        }
+                                    },
+                                    url: "./workflow-designer/",
                                     applicationType: "URL",
                                     navigationMode: "embedded"
                                 },

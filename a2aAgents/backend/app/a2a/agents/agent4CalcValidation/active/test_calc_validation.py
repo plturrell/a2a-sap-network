@@ -1,11 +1,9 @@
 import asyncio
 import logging
-import json
 import time
 import sys
 from pathlib import Path
 
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test script for Calculation Validation Agent

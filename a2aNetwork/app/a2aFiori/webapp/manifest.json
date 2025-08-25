@@ -27,6 +27,13 @@
             "blockchainService": {
                 "uri": "/blockchain/",
                 "type": "REST"
+            },
+            "deploymentService": {
+                "uri": "/api/v1/deployment/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
             }
         },
         "crossNavigation": {
@@ -41,6 +48,17 @@
                     "title": "{{flpTitle}}",
                     "subTitle": "{{flpSubtitle}}",
                     "icon": "sap-icon://collaborate"
+                },
+                "deployment-inbound": {
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    },
+                    "semanticObject": "Deployment",
+                    "action": "manage",
+                    "title": "Deployment Automation",
+                    "subTitle": "Fly.io CI/CD Pipeline",
+                    "icon": "sap-icon://flight"
                 }
             }
         }
@@ -112,6 +130,17 @@
             "@i18n": {
                 "type": "sap.ui.model.resource.ResourceModel",
                 "uri": "i18n/i18n.properties"
+            },
+            "deployment": {
+                "dataSource": "deploymentService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "synchronizationMode": "None",
+                    "groupId": "$auto",
+                    "autoExpandSelect": true,
+                    "earlyRequests": false
+                }
             }
         },
         "resources": {
@@ -258,6 +287,16 @@
                     "name": "goalDetail",
                     "pattern": "goals/{goalId}",
                     "target": "goalDetail"
+                },
+                {
+                    "name": "deploymentDashboard",
+                    "pattern": "deployment",
+                    "target": "deploymentDashboard"
+                },
+                {
+                    "name": "deploymentDetail",
+                    "pattern": "deployment/{deploymentId}",
+                    "target": "deploymentDetail"
                 }
             ],
             "targets": {
@@ -376,6 +415,16 @@
                 "goalDetail": {
                     "viewType": "XML",
                     "viewName": "goalManagement.GoalDetail",
+                    "viewLevel": 3
+                },
+                "deploymentDashboard": {
+                    "viewType": "XML",
+                    "viewName": "ext.deployment.DeploymentDashboard",
+                    "viewLevel": 2
+                },
+                "deploymentDetail": {
+                    "viewType": "XML",
+                    "viewName": "ext.deployment.DeploymentDetail",
                     "viewLevel": 3
                 }
             }

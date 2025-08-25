@@ -1,0 +1,57 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="createWorkflowDialog"
+        title="Create Workflow from Template"
+        contentWidth="40rem"
+        contentHeight="30rem"
+        draggable="true"
+        resizable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <MessageStrip
+                    text="Configure your workflow instance based on the selected template."
+                    class="sapUiMediumMarginBottom"/>
+                
+                <form:SimpleForm
+                    layout="ResponsiveGridLayout"
+                    columnsM="1"
+                    columnsL="1">
+                    
+                    <Label text="Template:"/>
+                    <Text text="{dialog>/template/name}" class="sapUiMediumMarginBottom"/>
+                    
+                    <Label text="Workflow Name:" required="true"/>
+                    <Input 
+                        value="{dialog>/workflow/name}"
+                        placeholder="Enter workflow name"
+                        required="true"/>
+                    
+                    <Label text="Description:"/>
+                    <TextArea 
+                        value="{dialog>/workflow/description}"
+                        rows="3"
+                        placeholder="Enter workflow description"/>
+                    
+                    <Label text="Parameters:"/>
+                    <VBox id="parametersContainer">
+                        <!-- Dynamic parameters will be added here -->
+                    </VBox>
+                </form:SimpleForm>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Cancel" press="onCancelCreateWorkflow"/>
+            <Button 
+                text="Create Workflow" 
+                type="Emphasized" 
+                press="onConfirmCreateWorkflow"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

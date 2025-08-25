@@ -1,11 +1,9 @@
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix
 from datetime import datetime
 import logging
 import json
 import struct
-import base64
 
 from app.a2a.core.security_base import SecureA2AAgent
 """

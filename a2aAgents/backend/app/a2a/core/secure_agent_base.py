@@ -350,8 +350,47 @@ class SecureA2AAgent(A2AAgentBase):
         )
 
         # Route through A2A protocol (not direct HTTP)
-        # This is a placeholder - implement according to your A2A protocol
-        return {"status": "success", "data": {}}
+        try:
+            # Use A2A network client for external requests
+            if hasattr(self, 'a2a_client') and self.a2a_client:
+                # Make request through A2A network
+                request_payload = {
+                    "service": service,
+                    "endpoint": endpoint,
+                    "data": data,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+                response = await self.a2a_client.send_secure_message(
+                    receiver_id="external_service_gateway",
+                    message_type="external_request",
+                    data=request_payload
+                )
+                
+                return {
+                    "status": "success",
+                    "data": response.get("data", {}),
+                    "service": service,
+                    "endpoint": endpoint
+                }
+            else:
+                # A2A client not available - this should not happen in production
+                self.logger.error(f"A2A client not available for external request to {service}")
+                return {
+                    "status": "error",
+                    "error": "A2A client not initialized",
+                    "service": service,
+                    "endpoint": endpoint
+                }
+                
+        except Exception as e:
+            self.logger.error(f"Failed to make external request to {service}/{endpoint}: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "service": service,
+                "endpoint": endpoint
+            }
 
     async def shutdown(self) -> None:
         """Clean shutdown of agent"""

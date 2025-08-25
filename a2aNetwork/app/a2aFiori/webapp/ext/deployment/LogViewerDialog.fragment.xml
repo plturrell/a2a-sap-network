@@ -1,0 +1,82 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="logViewerDialog"
+        title="Deployment Logs"
+        contentWidth="900px"
+        contentHeight="600px"
+        resizable="true"
+        draggable="true">
+        
+        <subHeader>
+            <Toolbar>
+                <Title text="Real-time deployment logs" />
+                <ToolbarSpacer />
+                <SearchField
+                    placeholder="Filter logs..."
+                    width="300px"
+                    search="onFilterLogs" />
+                <Button
+                    icon="sap-icon://refresh"
+                    tooltip="Refresh logs"
+                    press="onRefreshLogs" />
+                <Button
+                    icon="sap-icon://download"
+                    tooltip="Download logs"
+                    press="onDownloadLogs" />
+            </Toolbar>
+        </subHeader>
+        
+        <content>
+            <List
+                id="logsList"
+                items="{logModel>/logs}"
+                growing="true"
+                growingThreshold="50"
+                noDataText="No logs available">
+                <CustomListItem>
+                    <l:HorizontalLayout width="100%">
+                        <l:VerticalLayout width="120px">
+                            <Text
+                                text="{
+                                    path: 'logModel>timestamp',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        pattern: 'HH:mm:ss'
+                                    }
+                                }"
+                                class="sapUiTinyMarginEnd" />
+                            <ObjectStatus
+                                text="{logModel>level}"
+                                state="{
+                                    path: 'logModel>level',
+                                    formatter: '.formatter.logLevelState'
+                                }" />
+                        </l:VerticalLayout>
+                        <l:VerticalLayout width="100px">
+                            <Text text="{logModel>service}" />
+                        </l:VerticalLayout>
+                        <l:VerticalLayout class="sapUiTinyMarginBegin">
+                            <Text
+                                text="{logModel>message}"
+                                wrapping="true"
+                                class="{
+                                    path: 'logModel>level',
+                                    formatter: '.formatter.logMessageClass'
+                                }" />
+                        </l:VerticalLayout>
+                    </l:HorizontalLayout>
+                </CustomListItem>
+            </List>
+        </content>
+        
+        <buttons>
+            <Button
+                text="Close"
+                press="onCloseLogViewer" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

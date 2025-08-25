@@ -39,8 +39,9 @@ class L3DatabaseCache:
             db_url = self.secrets_manager.get_secret("L3_CACHE_DATABASE_URL", required=False)
             if db_url:
                 return db_url
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to get database URL from secrets manager: {e}")
+            logger.info("Falling back to SQLite database for L3 cache")
 
         # Fallback to SQLite for development
         return "sqlite+aiosqlite:///./cache_l3.db"

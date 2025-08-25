@@ -3,13 +3,10 @@ import asyncio
 import os
 import sys
 import logging
-import json
 import time
 import random
-from datetime import datetime
 
 
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test Enhanced Calc Validation Agent with MCP Integration
@@ -36,12 +33,7 @@ async def test_enhanced_calc_validation_agent():
     try:
         # Import after paths are set
         from app.a2a.agents.agent4CalcValidation.active.enhancedCalcValidationAgentMcp import (
-            EnhancedCalcValidationAgentMCP,
-            AdvancedTestTemplate,
-            ComputationType,
-            TestDifficulty,
-            ValidationMethod,
-            TemplateValidationLevel
+            EnhancedCalcValidationAgentMCP
         )
         print("✅ Import successful!")
 

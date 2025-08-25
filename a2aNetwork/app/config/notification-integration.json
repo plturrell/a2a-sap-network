@@ -1,0 +1,120 @@
+{
+  "notification": {
+    "integration": {
+      "enableWebhookBridge": true,
+      "enableWebSocketBridge": true,
+      "enableLegacyBridge": true,
+      "rateLimitEnabled": true,
+      "rateLimitWindow": 60000,
+      "rateLimitMax": 50,
+      "channelPriorities": {
+        "critical": ["webhook", "websocket", "push"],
+        "error": ["webhook", "websocket"],
+        "warning": ["webhook", "websocket"],
+        "info": ["websocket"]
+      }
+    },
+    "alertManager": {
+      "maxAlerts": 10000,
+      "retentionPeriod": 604800000,
+      "escalationEnabled": true,
+      "escalationLevels": [
+        { "level": 1, "delay": 300000 },
+        { "level": 2, "delay": 900000 },
+        { "level": 3, "delay": 1800000 }
+      ],
+      "businessHours": {
+        "start": "09:00",
+        "end": "17:00",
+        "timezone": "UTC",
+        "workdays": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      }
+    },
+    "webhooks": {
+      "enabled": true,
+      "retryAttempts": 3,
+      "timeout": 10000,
+      "endpoints": [
+        {
+          "id": "slack-alerts",
+          "name": "Slack Critical Alerts",
+          "url": "${SLACK_WEBHOOK_URL}",
+          "type": "slack",
+          "events": ["alertCreated", "alertEscalated", "scalingFailed"],
+          "active": true,
+          "severity_filter": ["critical", "error"]
+        },
+        {
+          "id": "email-notifications",
+          "name": "Email Notifications",
+          "url": "internal://email",
+          "type": "email",
+          "events": ["alertCreated", "alertResolved", "scalingCompleted"],
+          "active": true,
+          "config": {
+            "recipients": ["ops-team@company.com", "alerts@company.com"]
+          }
+        }
+      ]
+    },
+    "channels": {
+      "websocket": {
+        "enabled": true,
+        "port": 4005,
+        "maxConnections": 1000
+      },
+      "push": {
+        "enabled": false,
+        "fcm_key": "${FCM_SERVER_KEY}",
+        "apns_cert": "${APNS_CERT_PATH}"
+      }
+    }
+  },
+  "monitoring": {
+    "intervals": {
+      "system": 30000,
+      "agents": 60000,
+      "metrics": 15000
+    },
+    "thresholds": {
+      "cpu": {
+        "scaleUp": 75,
+        "scaleDown": 25,
+        "critical": 90
+      },
+      "memory": {
+        "scaleUp": 80,
+        "scaleDown": 30,
+        "critical": 95
+      },
+      "responseTime": {
+        "scaleUp": 2000,
+        "scaleDown": 500,
+        "critical": 5000
+      }
+    }
+  },
+  "scaling": {
+    "limits": {
+      "min": 1,
+      "max": 10
+    },
+    "cooldownPeriod": 300000,
+    "enableAutoScaling": true,
+    "enableScaleDown": true,
+    "maxScaleUpPerHour": 5,
+    "maxScaleDownPerHour": 3
+  },
+  "sap": {
+    "cloudALM": {
+      "enabled": "${SAP_CLOUD_ALM_ENABLED:false}",
+      "endpoint": "${SAP_CLOUD_ALM_ENDPOINT}",
+      "token": "${SAP_CLOUD_ALM_TOKEN}"
+    },
+    "compliance": {
+      "enableErrorTracking": true,
+      "enableAuditLog": true,
+      "retentionPeriod": 2592000000
+    }
+  }
+}

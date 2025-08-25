@@ -205,6 +205,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 percentage: data.percentage,
@@ -435,6 +436,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 hitRate: data.hit_rate,
@@ -523,6 +525,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 summary: data.summary,
@@ -637,6 +640,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 totalCapacity: data.total_capacity,
@@ -719,6 +723,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 backendId: data.backend_id,
@@ -740,6 +745,7 @@ class Agent8Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return data.schedules.map(schedule => ({
                 id: schedule.id,

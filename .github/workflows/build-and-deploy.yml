@@ -216,9 +216,16 @@ jobs:
           sleep 5
         fi
         
-        # Deploy to Fly.io with timeout for A2A platform startup (25 minutes for 18 agents)
-        echo "🚀 Starting deployment..."
-        flyctl deploy --remote-only --wait-timeout 1500
+        # Deploy to Fly.io with zero-downtime strategy
+        echo "🚀 Starting zero-downtime deployment..."
+        
+        # Use the zero-downtime deployment script if available
+        if [ -f ./scripts/deploy-fly-zero-downtime.sh ]; then
+          ./scripts/deploy-fly-zero-downtime.sh
+        else
+          # Fallback to standard deployment
+          flyctl deploy --remote-only --wait-timeout 1500 --strategy bluegreen
+        fi
         
         # Get the deployed URL
         APP_URL=$(flyctl info --json 2>/dev/null | jq -r '.Hostname' 2>/dev/null || echo "a2a-platform.fly.dev")

@@ -1,0 +1,120 @@
+{
+  "endpoints": [
+    {
+      "id": "slack-deployments",
+      "name": "Slack Deployment Notifications",
+      "url": "${SLACK_WEBHOOK_URL}",
+      "type": "slack",
+      "events": [
+        "deploymentStarted",
+        "deploymentCompleted",
+        "deploymentFailed",
+        "deploymentRollback"
+      ],
+      "active": true,
+      "retryAttempts": 3
+    },
+    {
+      "id": "teams-deployments", 
+      "name": "Microsoft Teams Notifications",
+      "url": "${TEAMS_WEBHOOK_URL}",
+      "type": "teams",
+      "events": [
+        "deploymentStarted",
+        "deploymentCompleted",
+        "deploymentFailed",
+        "deploymentRollback"
+      ],
+      "active": true,
+      "retryAttempts": 3
+    },
+    {
+      "id": "discord-deployments",
+      "name": "Discord Development Channel",
+      "url": "${DISCORD_WEBHOOK_URL}",
+      "type": "discord", 
+      "events": [
+        "deploymentStarted",
+        "deploymentCompleted",
+        "deploymentFailed"
+      ],
+      "active": false,
+      "retryAttempts": 2
+    },
+    {
+      "id": "email-notifications",
+      "name": "Email Notifications",
+      "url": "internal://email",
+      "type": "email",
+      "events": [
+        "deploymentCompleted",
+        "deploymentFailed",
+        "deploymentRollback"
+      ],
+      "active": true,
+      "config": {
+        "recipients": [
+          "devops@company.com",
+          "alerts@company.com"
+        ]
+      }
+    },
+    {
+      "id": "pagerduty-critical",
+      "name": "PagerDuty Critical Alerts",
+      "url": "${PAGERDUTY_WEBHOOK_URL}",
+      "type": "pagerduty",
+      "events": [
+        "deploymentFailed",
+        "deploymentRollback"
+      ],
+      "active": false,
+      "headers": {
+        "Authorization": "Token token=${PAGERDUTY_TOKEN}"
+      },
+      "retryAttempts": 5
+    },
+    {
+      "id": "datadog-metrics",
+      "name": "DataDog Deployment Events",
+      "url": "https://api.datadoghq.com/api/v1/events",
+      "type": "datadog",
+      "events": [
+        "deploymentStarted",
+        "deploymentCompleted",
+        "deploymentFailed"
+      ],
+      "active": false,
+      "headers": {
+        "DD-API-KEY": "${DATADOG_API_KEY}",
+        "DD-APPLICATION-KEY": "${DATADOG_APP_KEY}"
+      }
+    },
+    {
+      "id": "custom-monitoring",
+      "name": "Custom Monitoring Endpoint",
+      "url": "${CUSTOM_WEBHOOK_URL}",
+      "type": "generic",
+      "events": [
+        "deploymentStarted",
+        "deploymentCompleted",
+        "deploymentFailed",
+        "deploymentRollback",
+        "deploymentApproved"
+      ],
+      "active": false,
+      "secret": "${WEBHOOK_SECRET}",
+      "headers": {
+        "X-API-Version": "1.0"
+      },
+      "retryAttempts": 3
+    }
+  ],
+  "globalSettings": {
+    "maxRetries": 3,
+    "retryDelay": 5000,
+    "timeout": 10000,
+    "enableSignatures": true,
+    "logWebhookCalls": true
+  }
+}

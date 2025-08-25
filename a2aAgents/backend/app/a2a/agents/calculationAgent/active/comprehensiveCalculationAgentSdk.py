@@ -1437,8 +1437,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 expr = sp.sympify(expression)
                 simplified = sp.simplify(expr)
                 return str(simplified)
-            except:
-                pass
+            except ImportError:
+                logger.warning("SymPy not available for expression simplification")
+            except Exception as e:
+                logger.error(f"Failed to simplify expression: {e}")
+                logger.debug(f"Expression: {expression}")
         return expression
 
     async def _evaluate_at_point(self, expression: str, variables: Dict[str, float], precision: int) -> Union[float, str]:

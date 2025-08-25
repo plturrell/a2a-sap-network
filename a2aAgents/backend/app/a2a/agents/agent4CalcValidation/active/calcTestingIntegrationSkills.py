@@ -2,10 +2,9 @@ import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 import json
 import uuid
-import time
 import os
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field
 import logging
 from app.a2a.core.security_base import SecureA2AAgent
@@ -38,7 +37,7 @@ except ImportError:
     logging.warning("GrokClient not available. AI evaluation will be limited.")
 
 # Import A2A components
-from app.a2a.sdk import A2AMessage, MessageRole, MessagePart, create_agent_id
+from app.a2a.sdk import A2AMessage, MessageRole, MessagePart
 
 logger = logging.getLogger(__name__)
 
@@ -619,7 +618,6 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                     question_template = templates.get(category, {}).get(difficulty, [])
                     if question_template:
                         # Select random template
-                        import random
 
 
 # A2A Protocol Compliance: All imports must be available

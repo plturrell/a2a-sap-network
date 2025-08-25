@@ -567,7 +567,6 @@ class CalcValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockch
         try:
             # Import blockchain integration components
             from app.a2a.core.trustManager import trust_manager
-            from app.a2a.core.blockchainQueueManager import get_blockchain_queue_manager
 
 
             # Define capabilities directly on the instance

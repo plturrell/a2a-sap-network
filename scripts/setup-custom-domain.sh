@@ -1,0 +1,1 @@
+deployment/fly/setup-custom-domain.sh

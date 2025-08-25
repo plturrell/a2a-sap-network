@@ -404,7 +404,7 @@ class SecurityConfigValidator {
                 /node-ipc/  // Known compromised package
             ];
 
-            for (const [pkg, _version] of Object.entries(allDeps)) {
+            for (const [pkg] of Object.entries(allDeps)) {
                 for (const pattern of suspiciousPatterns) {
                     if (pattern.test(pkg)) {
                         this.warnings.push({

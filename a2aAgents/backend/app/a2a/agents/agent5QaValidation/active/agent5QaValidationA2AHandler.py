@@ -7,15 +7,14 @@ This handler ensures all agent communication goes through the A2A blockchain
 messaging system. No direct HTTP endpoints are exposed.
 """
 
-import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
+from ....core.a2aTypes import A2AMessage, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
 from .enhancedQaValidationAgentMcp import EnhancedQAValidationAgentMCP

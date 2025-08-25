@@ -1,11 +1,8 @@
 import sys
 import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
-import json
 import os
-import numpy as np
 
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test Comprehensive Vector Processing Agent Real AI Integration

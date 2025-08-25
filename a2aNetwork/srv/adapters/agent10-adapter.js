@@ -398,7 +398,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-
+            const data = await response.json();
             return data.methods;
         } catch (error) {
             throw this._handleError(error);
@@ -412,7 +412,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-
+            const data = await response.json();
             return data.methods;
         } catch (error) {
             throw this._handleError(error);
@@ -426,7 +426,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-
+            const data = await response.json();
             return data.strategies;
         } catch (error) {
             throw this._handleError(error);
@@ -519,7 +519,7 @@ class Agent10Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-
+            const data = await response.json();
             return data.metrics;
         } catch (error) {
             throw this._handleError(error);
@@ -610,7 +610,7 @@ class Agent10Adapter {
 
     _convertRESTCalculationTaskToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             taskName: item.task_name,
             description: item.description,
             calculationType: item.calculation_type?.toUpperCase(),

@@ -1,0 +1,62 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <Dialog
+        id="templatePreviewDialog"
+        title="Template Preview"
+        contentWidth="50rem"
+        contentHeight="40rem"
+        draggable="true"
+        resizable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <ObjectHeader
+                    title="{preview>/name}"
+                    number="{preview>/rating}"
+                    numberUnit="★">
+                    <attributes>
+                        <ObjectAttribute title="Category" text="{preview>/categoryName}"/>
+                        <ObjectAttribute title="Usage Count" text="{preview>/usageCount}"/>
+                        <ObjectAttribute title="Author" text="{preview>/author}"/>
+                        <ObjectAttribute title="Version" text="{preview>/version}"/>
+                    </attributes>
+                </ObjectHeader>
+                
+                <Panel headerText="Description" class="sapUiMediumMarginTop">
+                    <content>
+                        <Text text="{preview>/description}"/>
+                    </content>
+                </Panel>
+                
+                <Panel headerText="Required Agents" class="sapUiMediumMarginTop">
+                    <content>
+                        <Text text="{preview>/requiredAgents}"/>
+                    </content>
+                </Panel>
+                
+                <Panel headerText="Tags" class="sapUiMediumMarginTop">
+                    <content>
+                        <Text text="{preview>/tags}"/>
+                    </content>
+                </Panel>
+                
+                <Panel headerText="Estimated Duration" class="sapUiMediumMarginTop">
+                    <content>
+                        <Text text="{preview>/estimatedDuration} minutes"/>
+                    </content>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Close" press="onClosePreview"/>
+            <Button 
+                text="Use This Template" 
+                type="Emphasized" 
+                press="onUseTemplate"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

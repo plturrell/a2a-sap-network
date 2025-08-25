@@ -2,7 +2,6 @@ import os
 import sys
 import logging
 
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Minimal test for Enhanced AI Preparation Agent with MCP Integration
@@ -31,11 +30,8 @@ def test_import():
     try:
         # Test import
         from app.a2a.agents.agent2AiPreparation.active.enhancedAiPreparationAgentMcp import (
-            EnhancedAIPreparationAgentMCP,
             EmbeddingMode,
-            ConfidenceMetric,
-            SophisticatedEmbeddingGenerator,
-            AdvancedConfidenceScorer
+            ConfidenceMetric
         )
         print("✅ Import successful!")
 

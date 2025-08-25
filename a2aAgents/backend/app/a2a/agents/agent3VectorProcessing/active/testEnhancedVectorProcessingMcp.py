@@ -3,13 +3,10 @@ import asyncio
 import os
 import sys
 import logging
-import json
 import time
 import random
-from datetime import datetime
 
 
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test Enhanced Vector Processing Agent with MCP Integration

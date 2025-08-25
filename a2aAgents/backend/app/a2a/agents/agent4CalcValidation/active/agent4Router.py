@@ -1,16 +1,15 @@
 import uuid
 
-import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Body
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from .calcValidationAgentSdk import CalcValidationAgentSDK, ValidationResult
+from .calcValidationAgentSdk import CalcValidationAgentSDK
 
 from app.a2a.core.security_base import SecureA2AAgent
 """
@@ -126,7 +125,6 @@ except ImportError:
 # Import trust components from a2aNetwork - Real implementation only
 import sys
 sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
-from trustSystem.smartContractTrust import sign_a2a_message, initialize_agent_trust, verify_a2a_message
 logger = logging.getLogger(__name__)
 
 

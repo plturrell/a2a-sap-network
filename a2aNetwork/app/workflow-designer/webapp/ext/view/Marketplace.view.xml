@@ -1,0 +1,101 @@
+<mvc:View
+    controllerName="a2a.workflow.designer.ext.controller.Marketplace"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:grid="sap.ui.layout.cssgrid"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="marketplacePage" headerExpanded="true">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="Workflow Template Marketplace"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="Create Template"
+                        type="Emphasized"
+                        icon="sap-icon://add"
+                        press="onCreateTemplate"/>
+                    <Button
+                        text="Import"
+                        icon="sap-icon://upload"
+                        press="onImportTemplate"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox alignItems="Start" justifyContent="SpaceBetween">
+                        <items>
+                            <VBox>
+                                <SearchField
+                                    id="searchField"
+                                    width="20rem"
+                                    placeholder="Search templates..."
+                                    search="onSearch"
+                                    liveChange="onSearchLiveChange"/>
+                                <HBox class="sapUiSmallMarginTop">
+                                    <Label text="Category:" class="sapUiSmallMarginEnd"/>
+                                    <ComboBox
+                                        id="categoryFilter"
+                                        placeholder="All Categories"
+                                        selectionChange="onCategoryChange">
+                                        <items>
+                                            <core:Item key="all" text="All Categories"/>
+                                            <core:Item key="1" text="Document Processing"/>
+                                            <core:Item key="2" text="Data Integration"/>
+                                            <core:Item key="3" text="AI/ML Workflows"/>
+                                            <core:Item key="4" text="Quality Assurance"/>
+                                            <core:Item key="5" text="RAG Pipelines"/>
+                                        </items>
+                                    </ComboBox>
+                                    <Label text="Min Rating:" class="sapUiSmallMarginBeginEnd"/>
+                                    <RatingIndicator
+                                        id="ratingFilter"
+                                        maxValue="5"
+                                        value="0"
+                                        change="onRatingChange"/>
+                                </HBox>
+                            </VBox>
+                            <VBox alignItems="End">
+                                <Text text="Sort by:"/>
+                                <SegmentedButton 
+                                    selectedKey="popularity"
+                                    selectionChange="onSortChange">
+                                    <items>
+                                        <SegmentedButtonItem key="popularity" text="Popularity"/>
+                                        <SegmentedButtonItem key="rating" text="Rating"/>
+                                        <SegmentedButtonItem key="newest" text="Newest"/>
+                                        <SegmentedButtonItem key="usage" text="Most Used"/>
+                                    </items>
+                                </SegmentedButton>
+                            </VBox>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <grid:CSSGrid id="templateGrid" gridGap="1rem">
+                <grid:customLayout>
+                    <grid:GridResponsiveLayout>
+                        <grid:layout>
+                            <grid:GridSettings 
+                                gridTemplateColumns="repeat(auto-fill, minmax(20rem, 1fr))" 
+                                gridAutoRows="1fr"/>
+                        </grid:layout>
+                    </grid:GridResponsiveLayout>
+                </grid:customLayout>
+                
+                <grid:items>
+                    <!-- Template Cards will be dynamically generated -->
+                </grid:items>
+            </grid:CSSGrid>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

@@ -168,6 +168,46 @@ service LaunchpadService {
             timestamp: String;
         };
     };
+    
+    /**
+     * Get Deployment Status for deployment tile
+     * @param id - Tile identifier (e.g., 'deployment_tile')
+     */
+    action getDeploymentStats(id: String) returns {
+        d: {
+            title: String;
+            number: String;
+            numberUnit: String;
+            numberState: String;
+            subtitle: String;
+            stateArrow: String;
+            info: String;
+            deployment_metrics: {
+                active_deployments: Integer;
+                total_deployments_today: Integer;
+                success_rate: Integer;
+                avg_deployment_time: Integer;
+                production_health: Integer;
+                staging_health: Integer;
+                last_deployment_status: String;
+                last_deployment_time: String;
+                failed_deployments_24h: Integer;
+            };
+            environments: {
+                production: {
+                    status: String;
+                    last_deployment: String;
+                    health_score: Integer;
+                };
+                staging: {
+                    status: String;
+                    last_deployment: String;
+                    health_score: Integer;
+                };
+            };
+            timestamp: String;
+        };
+    };
 }
 
 /**

@@ -1,15 +1,13 @@
 import numpy as np
 import json
-import asyncio
-from typing import Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import hashlib
-from pathlib import Path
 
-from app.a2a.sdk.decorators import a2a_skill, a2a_handler, a2a_task
+from app.a2a.sdk.decorators import a2a_skill
 
 from app.a2a.core.security_base import SecureA2AAgent
 """
@@ -888,7 +886,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         # Convert inputs to higher precision if possible
         if isinstance(error.failed_output, (float, np.floating)):
             # Use higher precision arithmetic
-            from decimal import Decimal, getcontext
+            from decimal import getcontext
 
 
 # A2A Protocol Compliance: All imports must be available

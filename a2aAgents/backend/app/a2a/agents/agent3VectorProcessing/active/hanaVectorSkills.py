@@ -1,11 +1,9 @@
-import random
 
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any, Optional
 import numpy as np
 from datetime import datetime
 import logging
 import json
-import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 from .sparseVectorSkills import SparseVectorSkills
 from .hybridRankingSkills import HybridRankingSkills

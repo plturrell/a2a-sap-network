@@ -1,0 +1,307 @@
+<mvc:View
+    controllerName="com.sap.a2a.a2aFiori.ext.deployment.DeploymentDashboard"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.f"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:suite="sap.suite.ui.commons"
+    displayBlock="true">
+    
+    <f:DynamicPage id="deploymentDashboardPage" headerExpanded="true">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="Deployment Automation Dashboard" />
+                </f:heading>
+                <f:expandedContent>
+                    <Text text="Manage and monitor A2A Platform deployments across all environments" />
+                </f:expandedContent>
+                <f:actions>
+                    <Button
+                        text="New Deployment"
+                        type="Emphasized"
+                        icon="sap-icon://add"
+                        press="onNewDeployment" />
+                    <Button
+                        text="Refresh"
+                        icon="sap-icon://refresh"
+                        press="onRefresh" />
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="false">
+                <l:HorizontalLayout>
+                    <l:VerticalLayout class="sapUiMediumMarginEnd">
+                        <ObjectStatus
+                            title="Production"
+                            text="{deploymentModel>/production/status}"
+                            state="{deploymentModel>/production/state}"
+                            icon="sap-icon://cloud" />
+                        <Text text="Last deployed: {deploymentModel>/production/lastDeployment}" />
+                    </l:VerticalLayout>
+                    
+                    <l:VerticalLayout class="sapUiMediumMarginEnd">
+                        <ObjectStatus
+                            title="Staging"
+                            text="{deploymentModel>/staging/status}"
+                            state="{deploymentModel>/staging/state}"
+                            icon="sap-icon://cloud" />
+                        <Text text="Last deployed: {deploymentModel>/staging/lastDeployment}" />
+                    </l:VerticalLayout>
+                    
+                    <l:VerticalLayout>
+                        <ObjectStatus
+                            title="System Health"
+                            text="{deploymentModel>/systemHealth/score}%"
+                            state="{deploymentModel>/systemHealth/state}"
+                            icon="sap-icon://stethoscope" />
+                        <Text text="Agents: {deploymentModel>/systemHealth/activeAgents}/{deploymentModel>/systemHealth/totalAgents}" />
+                    </l:VerticalLayout>
+                </l:HorizontalLayout>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <l:Splitter id="mainSplitter" orientation="Vertical">
+                <!-- Active Deployments Section -->
+                <Panel headerText="Active Deployments" expandable="true" expanded="true">
+                    <List
+                        id="activeDeploymentsList"
+                        items="{deploymentModel>/activeDeployments}"
+                        noDataText="No active deployments">
+                        <CustomListItem>
+                            <l:Grid defaultSpan="L12 M12 S12">
+                                <l:VerticalLayout>
+                                    <l:HorizontalLayout>
+                                        <ObjectStatus
+                                            title="{deploymentModel>appName}"
+                                            text="{deploymentModel>environment}"
+                                            state="{deploymentModel>state}"
+                                            icon="{deploymentModel>icon}" />
+                                        <Text text=" - {deploymentModel>version}" class="sapUiSmallMarginBegin" />
+                                    </l:HorizontalLayout>
+                                    
+                                    <ProgressIndicator
+                                        percentValue="{deploymentModel>progress}"
+                                        displayValue="{deploymentModel>currentStage}"
+                                        showValue="true"
+                                        state="{deploymentModel>state}" />
+                                    
+                                    <l:HorizontalLayout>
+                                        <Text text="Started: {
+                                            path: 'deploymentModel>startTime',
+                                            type: 'sap.ui.model.type.DateTime',
+                                            formatOptions: {
+                                                style: 'medium'
+                                            }
+                                        }" />
+                                        <Text text=" | ETA: {
+                                            path: 'deploymentModel>estimatedCompletion',
+                                            type: 'sap.ui.model.type.DateTime',
+                                            formatOptions: {
+                                                style: 'medium'
+                                            }
+                                        }" class="sapUiSmallMarginBegin" />
+                                    </l:HorizontalLayout>
+                                </l:VerticalLayout>
+                                
+                                <l:HorizontalLayout class="sapUiSmallMarginTop">
+                                    <Button
+                                        text="View Logs"
+                                        icon="sap-icon://log"
+                                        press="onViewLogs" />
+                                    <Button
+                                        text="Pause"
+                                        icon="sap-icon://pause"
+                                        type="Reject"
+                                        press="onPauseDeployment"
+                                        class="sapUiSmallMarginBegin" />
+                                </l:HorizontalLayout>
+                            </l:Grid>
+                        </CustomListItem>
+                    </List>
+                </Panel>
+                
+                <!-- Deployment History Section -->
+                <Panel headerText="Recent Deployments" expandable="true" expanded="true">
+                    <Table
+                        id="deploymentHistoryTable"
+                        items="{
+                            path: 'deploymentModel>/deploymentHistory',
+                            sorter: {
+                                path: 'startTime',
+                                descending: true
+                            }
+                        }"
+                        growing="true"
+                        growingThreshold="20">
+                        <headerToolbar>
+                            <OverflowToolbar>
+                                <Title text="Deployment History" level="H2" />
+                                <ToolbarSpacer />
+                                <SearchField
+                                    placeholder="Search deployments..."
+                                    width="300px"
+                                    search="onSearchDeployments" />
+                                <SegmentedButton selectedKey="{deploymentModel>/selectedEnvironment}">
+                                    <items>
+                                        <SegmentedButtonItem key="all" text="All" />
+                                        <SegmentedButtonItem key="production" text="Production" />
+                                        <SegmentedButtonItem key="staging" text="Staging" />
+                                    </items>
+                                </SegmentedButton>
+                            </OverflowToolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Application" />
+                            </Column>
+                            <Column>
+                                <Text text="Environment" />
+                            </Column>
+                            <Column>
+                                <Text text="Version" />
+                            </Column>
+                            <Column>
+                                <Text text="Type" />
+                            </Column>
+                            <Column>
+                                <Text text="Status" />
+                            </Column>
+                            <Column>
+                                <Text text="Duration" />
+                            </Column>
+                            <Column>
+                                <Text text="Deployed By" />
+                            </Column>
+                            <Column>
+                                <Text text="Start Time" />
+                            </Column>
+                            <Column>
+                                <Text text="Actions" />
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{deploymentModel>appName}" />
+                                    <ObjectStatus
+                                        text="{deploymentModel>environment}"
+                                        state="{
+                                            path: 'deploymentModel>environment',
+                                            formatter: '.formatter.environmentState'
+                                        }" />
+                                    <Text text="{deploymentModel>version}" />
+                                    <Text text="{deploymentModel>deploymentType}" />
+                                    <ObjectStatus
+                                        text="{deploymentModel>status}"
+                                        icon="{deploymentModel>statusIcon}"
+                                        state="{deploymentModel>statusColor}" />
+                                    <Text text="{
+                                        path: 'deploymentModel>duration',
+                                        formatter: '.formatter.formatDuration'
+                                    }" />
+                                    <Text text="{deploymentModel>deployedBy}" />
+                                    <Text text="{
+                                        path: 'deploymentModel>startTime',
+                                        type: 'sap.ui.model.type.DateTime',
+                                        formatOptions: {
+                                            style: 'medium'
+                                        }
+                                    }" />
+                                    <HBox>
+                                        <Button
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press="onViewDetails" />
+                                        <Button
+                                            icon="sap-icon://undo"
+                                            tooltip="Rollback"
+                                            press="onRollback"
+                                            visible="{= ${deploymentModel>status} === 'completed' }" />
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Metrics and Analytics Section -->
+                <Panel headerText="Deployment Analytics" expandable="true" expanded="false">
+                    <l:Grid defaultSpan="L6 M12 S12">
+                        <viz:VizFrame
+                            id="deploymentTrendChart"
+                            uiConfig="{applicationSet:'fiori'}"
+                            height="400px"
+                            width="100%"
+                            vizType="line">
+                            <viz:dataset>
+                                <viz:FlattenedDataset data="{deploymentModel>/deploymentTrend}">
+                                    <viz:dimensions>
+                                        <viz:DimensionDefinition
+                                            name="Date"
+                                            value="{date}" />
+                                    </viz:dimensions>
+                                    <viz:measures>
+                                        <viz:MeasureDefinition
+                                            name="Deployments"
+                                            value="{count}" />
+                                        <viz:MeasureDefinition
+                                            name="Success Rate"
+                                            value="{successRate}" />
+                                    </viz:measures>
+                                </viz:FlattenedDataset>
+                            </viz:dataset>
+                            <viz:feeds>
+                                <viz:FeedItem
+                                    uid="valueAxis"
+                                    type="Measure"
+                                    values="Deployments,Success Rate" />
+                                <viz:FeedItem
+                                    uid="categoryAxis"
+                                    type="Dimension"
+                                    values="Date" />
+                            </viz:feeds>
+                        </viz:VizFrame>
+                        
+                        <viz:VizFrame
+                            id="environmentChart"
+                            uiConfig="{applicationSet:'fiori'}"
+                            height="400px"
+                            width="100%"
+                            vizType="donut">
+                            <viz:dataset>
+                                <viz:FlattenedDataset data="{deploymentModel>/environmentStats}">
+                                    <viz:dimensions>
+                                        <viz:DimensionDefinition
+                                            name="Environment"
+                                            value="{environment}" />
+                                    </viz:dimensions>
+                                    <viz:measures>
+                                        <viz:MeasureDefinition
+                                            name="Deployments"
+                                            value="{count}" />
+                                    </viz:measures>
+                                </viz:FlattenedDataset>
+                            </viz:dataset>
+                            <viz:feeds>
+                                <viz:FeedItem
+                                    uid="size"
+                                    type="Measure"
+                                    values="Deployments" />
+                                <viz:FeedItem
+                                    uid="color"
+                                    type="Dimension"
+                                    values="Environment" />
+                            </viz:feeds>
+                        </viz:VizFrame>
+                    </l:Grid>
+                </Panel>
+            </l:Splitter>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

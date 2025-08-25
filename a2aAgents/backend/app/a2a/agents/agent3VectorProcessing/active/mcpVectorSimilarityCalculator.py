@@ -1,10 +1,8 @@
 import numpy as np
-from typing import List, Dict, Optional, Any, Tuple, Union
-import math
-from collections import defaultdict
+from typing import List, Dict, Optional, Any
 import logging
 from ....sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
-from ....sdk.mcpSkillCoordination import skill_provides, skill_depends_on
+from ....sdk.mcpSkillCoordination import skill_provides
 
 from app.a2a.core.security_base import SecureA2AAgent
 """

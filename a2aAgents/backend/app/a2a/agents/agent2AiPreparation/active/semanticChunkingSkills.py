@@ -1,6 +1,6 @@
 import numpy as np
 import re
-from typing import Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
@@ -8,17 +8,14 @@ from sentence_transformers import SentenceTransformer
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import cosine_similarity
 import spacy
-import json
 import hashlib
-from pathlib import Path
 
-from app.a2a.sdk.decorators import a2a_skill, a2a_handler, a2a_task
+from app.a2a.sdk.decorators import a2a_skill
 from app.a2a.sdk.mixins import PerformanceMonitorMixin, SecurityHardenedMixin
 from app.a2a.core.trustIdentity import TrustIdentity
 from app.a2a.core.dataValidation import DataValidator
 
 
-from app.a2a.core.security_base import SecureA2AAgent
 """
 Semantic Chunking and Hierarchical Embeddings Skills for Agent 2 - Phase 2 Advanced Features
 Implements intelligent document chunking with semantic understanding and multi-level embeddings

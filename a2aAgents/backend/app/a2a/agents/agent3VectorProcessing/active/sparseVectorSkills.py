@@ -1,10 +1,8 @@
-from typing import Dict, List, Any, Optional, Tuple, Set, Union
+from typing import Dict, List, Any, Union
 import numpy as np
 from datetime import datetime
 import logging
-import json
 import struct
-from scipy.sparse import csr_matrix, coo_matrix
 import hashlib
 
 from app.a2a.core.security_base import SecureA2AAgent

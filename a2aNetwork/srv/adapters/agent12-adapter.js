@@ -557,6 +557,7 @@ class Agent12Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return this._convertRESTRegistryToOData(data);
         } catch (error) {
@@ -1199,7 +1200,7 @@ class Agent12Adapter {
 
     _convertRESTCatalogEntryToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `security_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             entryName: item.entry_name,
             description: item.description,
             category: item.category?.toUpperCase() || 'SERVICE',
@@ -1246,7 +1247,7 @@ class Agent12Adapter {
 
     _convertRESTDependencyToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `security_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             catalogEntry_ID: item.catalog_entry_id,
             dependentEntry_ID: item.dependent_entry_id,
             dependencyType: item.dependency_type?.toUpperCase() || 'REQUIRES',
@@ -1276,7 +1277,7 @@ class Agent12Adapter {
 
     _convertRESTReviewToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `security_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             catalogEntry_ID: item.catalog_entry_id,
             reviewer: item.reviewer,
             rating: item.rating,
@@ -1307,7 +1308,7 @@ class Agent12Adapter {
 
     _convertRESTMetadataToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `security_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             catalogEntry_ID: item.catalog_entry_id,
             metadataKey: item.metadata_key,
             metadataValue: item.metadata_value,
@@ -1337,7 +1338,7 @@ class Agent12Adapter {
 
     _convertRESTSearchToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `security_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             searchQuery: item.search_query,
             searchType: item.search_type?.toUpperCase() || 'KEYWORD',
             filtersApplied: item.filters_applied,
@@ -1373,7 +1374,7 @@ class Agent12Adapter {
 
     _convertRESTRegistryToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `security_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             registryName: item.registry_name,
             registryType: item.registry_type?.toUpperCase() || 'SERVICE_REGISTRY',
             registryUrl: item.registry_url,

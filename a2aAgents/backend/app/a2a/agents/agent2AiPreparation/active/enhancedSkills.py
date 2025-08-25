@@ -1,10 +1,8 @@
-from typing import Dict, List, Any, Optional, Tuple
-import numpy as np
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 import logging
 import json
 from sentence_transformers import SentenceTransformer
-import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 from .domainSpecificEmbeddingSkills import DomainSpecificEmbeddingSkills
 

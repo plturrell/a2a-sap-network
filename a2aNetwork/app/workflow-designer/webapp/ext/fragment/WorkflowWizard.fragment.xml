@@ -1,0 +1,263 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    xmlns:grid="sap.ui.layout.cssgrid"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="workflowWizardDialog"
+        title="Workflow Creation Wizard"
+        contentWidth="60rem"
+        contentHeight="50rem"
+        draggable="true"
+        resizable="true"
+        afterClose="onWizardClose">
+        
+        <content>
+            <Wizard
+                id="workflowWizard"
+                class="sapUiResponsivePadding--content"
+                complete="onWizardComplete"
+                stepActivate="onStepActivate"
+                enableBranching="false">
+                
+                <!-- Step 1: Use Case Selection -->
+                <WizardStep
+                    id="useCaseStep"
+                    title="Select Use Case"
+                    icon="sap-icon://goal"
+                    validated="true">
+                    <content>
+                        <VBox>
+                            <MessageStrip
+                                text="Choose the type of workflow you want to create. This will help us suggest the best template and configuration."
+                                class="sapUiMediumMarginBottom"/>
+                            
+                            <grid:CSSGrid gridGap="1rem">
+                                <grid:customLayout>
+                                    <grid:GridResponsiveLayout>
+                                        <grid:layout>
+                                            <grid:GridSettings 
+                                                gridTemplateColumns="repeat(auto-fit, minmax(15rem, 1fr))" 
+                                                gridAutoRows="1fr"/>
+                                        </grid:layout>
+                                    </grid:GridResponsiveLayout>
+                                </grid:customLayout>
+                                
+                                <Panel
+                                    id="docProcessingPanel"
+                                    class="sapUiMediumMargin wizardUseCasePanel"
+                                    press="onUseCaseSelect">
+                                    <content>
+                                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                                            <core:Icon src="sap-icon://document" size="3rem" color="#0070f2"/>
+                                            <Title text="Document Processing" level="H4" class="sapUiSmallMarginTop"/>
+                                            <Text text="Extract, chunk, and process documents for AI workflows" textAlign="Center"/>
+                                            <Button text="Select" type="Emphasized" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                                
+                                <Panel
+                                    id="ragPanel"
+                                    class="sapUiMediumMargin wizardUseCasePanel"
+                                    press="onUseCaseSelect">
+                                    <content>
+                                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                                            <core:Icon src="sap-icon://process" size="3rem" color="#0070f2"/>
+                                            <Title text="RAG Pipeline" level="H4" class="sapUiSmallMarginTop"/>
+                                            <Text text="Retrieval-Augmented Generation for question answering" textAlign="Center"/>
+                                            <Button text="Select" type="Emphasized" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                                
+                                <Panel
+                                    id="dataIntegrationPanel"
+                                    class="sapUiMediumMargin wizardUseCasePanel"
+                                    press="onUseCaseSelect">
+                                    <content>
+                                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                                            <core:Icon src="sap-icon://connected" size="3rem" color="#0070f2"/>
+                                            <Title text="Data Integration" level="H4" class="sapUiSmallMarginTop"/>
+                                            <Text text="Integrate and transform data from multiple sources" textAlign="Center"/>
+                                            <Button text="Select" type="Emphasized" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                                
+                                <Panel
+                                    id="qualityAssurancePanel"
+                                    class="sapUiMediumMargin wizardUseCasePanel"
+                                    press="onUseCaseSelect">
+                                    <content>
+                                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                                            <core:Icon src="sap-icon://quality-issue" size="3rem" color="#0070f2"/>
+                                            <Title text="Quality Assurance" level="H4" class="sapUiSmallMarginTop"/>
+                                            <Text text="Validate and improve data quality across systems" textAlign="Center"/>
+                                            <Button text="Select" type="Emphasized" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                                
+                                <Panel
+                                    id="customPanel"
+                                    class="sapUiMediumMargin wizardUseCasePanel"
+                                    press="onUseCaseSelect">
+                                    <content>
+                                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                                            <core:Icon src="sap-icon://create" size="3rem" color="#0070f2"/>
+                                            <Title text="Custom Workflow" level="H4" class="sapUiSmallMarginTop"/>
+                                            <Text text="Create a custom workflow from scratch" textAlign="Center"/>
+                                            <Button text="Select" type="Emphasized" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                                
+                                <Panel
+                                    id="nlPanel"
+                                    class="sapUiMediumMargin wizardUseCasePanel"
+                                    press="onUseCaseSelect">
+                                    <content>
+                                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                                            <core:Icon src="sap-icon://text" size="3rem" color="#0070f2"/>
+                                            <Title text="Natural Language" level="H4" class="sapUiSmallMarginTop"/>
+                                            <Text text="Describe your workflow in natural language" textAlign="Center"/>
+                                            <Button text="Select" type="Emphasized" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                            </grid:CSSGrid>
+                        </VBox>
+                    </content>
+                </WizardStep>
+                
+                <!-- Step 2: Configuration -->
+                <WizardStep
+                    id="configurationStep"
+                    title="Configuration"
+                    icon="sap-icon://settings"
+                    validated="false">
+                    <content>
+                        <VBox id="configurationContent">
+                            <!-- Content will be dynamically generated based on use case -->
+                        </VBox>
+                    </content>
+                </WizardStep>
+                
+                <!-- Step 3: Agent Selection -->
+                <WizardStep
+                    id="agentSelectionStep"
+                    title="Select Agents"
+                    icon="sap-icon://employee"
+                    validated="false">
+                    <content>
+                        <VBox>
+                            <MessageStrip
+                                text="Select the agents that will participate in your workflow. Required agents are pre-selected."
+                                class="sapUiMediumMarginBottom"/>
+                            
+                            <Table
+                                id="agentSelectionTable"
+                                mode="MultiSelect"
+                                selectionChange="onAgentSelectionChange">
+                                <columns>
+                                    <Column>
+                                        <Text text="Agent"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Capabilities"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Required"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <!-- Agent items will be dynamically populated -->
+                                </items>
+                            </Table>
+                        </VBox>
+                    </content>
+                </WizardStep>
+                
+                <!-- Step 4: Review and Create -->
+                <WizardStep
+                    id="reviewStep"
+                    title="Review & Create"
+                    icon="sap-icon://accept"
+                    validated="true">
+                    <content>
+                        <VBox>
+                            <MessageStrip
+                                text="Review your workflow configuration and create the template."
+                                class="sapUiMediumMarginBottom"/>
+                            
+                            <ObjectHeader
+                                id="workflowReviewHeader"
+                                title="{wizard>/workflow/name}"
+                                number="{wizard>/workflow/estimatedDuration}"
+                                numberUnit="minutes">
+                                <attributes>
+                                    <ObjectAttribute title="Use Case" text="{wizard>/useCase/name}"/>
+                                    <ObjectAttribute title="Agents" text="{wizard>/selectedAgents/length}"/>
+                                    <ObjectAttribute title="Tasks" text="{wizard>/workflow/tasks/length}"/>
+                                </attributes>
+                            </ObjectHeader>
+                            
+                            <Panel headerText="Workflow Configuration" class="sapUiMediumMarginTop">
+                                <content>
+                                    <form:SimpleForm
+                                        layout="ResponsiveGridLayout"
+                                        columnsM="2"
+                                        columnsL="2">
+                                        <Label text="Name:"/>
+                                        <Input value="{wizard>/workflow/name}" change="onWorkflowNameChange"/>
+                                        
+                                        <Label text="Description:"/>
+                                        <TextArea value="{wizard>/workflow/description}" rows="3"/>
+                                        
+                                        <Label text="Strategy:"/>
+                                        <Text text="{wizard>/workflow/strategy}"/>
+                                        
+                                        <Label text="Timeout:"/>
+                                        <Text text="{wizard>/workflow/timeoutMinutes} minutes"/>
+                                    </form:SimpleForm>
+                                </content>
+                            </Panel>
+                            
+                            <Panel headerText="Task Overview" class="sapUiMediumMarginTop">
+                                <content>
+                                    <List items="{wizard>/workflow/tasks}">
+                                        <StandardListItem
+                                            title="{wizard>name}"
+                                            description="Agent {wizard>agent} • {wizard>action}"
+                                            icon="sap-icon://task"/>
+                                    </List>
+                                </content>
+                            </Panel>
+                        </VBox>
+                    </content>
+                </WizardStep>
+            </Wizard>
+        </content>
+        
+        <buttons>
+            <Button text="Cancel" press="onWizardCancel"/>
+            <Button
+                id="wizardNextButton"
+                text="Next"
+                type="Emphasized"
+                press="onWizardNext"/>
+            <Button
+                id="wizardCreateButton"
+                text="Create Workflow"
+                type="Emphasized"
+                press="onWizardCreate"
+                visible="false"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

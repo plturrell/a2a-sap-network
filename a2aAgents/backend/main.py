@@ -195,6 +195,14 @@ async def lifespan(app: FastAPI):
     # Initialize agents
     await initialize_agents()
     
+    # Initialize log aggregator
+    try:
+        from app.log_aggregator import init_log_aggregator
+        await init_log_aggregator()
+        logger.info("Log aggregator started")
+    except Exception as e:
+        logger.warning(f"Failed to start log aggregator: {e}")
+    
     try:
         # Log environment and configuration info
         if config_manager:
@@ -261,6 +269,14 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down...")
     try:
+        # Stop log aggregator
+        try:
+            from app.log_aggregator import shutdown_log_aggregator
+            await shutdown_log_aggregator()
+            logger.info("Log aggregator stopped")
+        except Exception as e:
+            logger.warning(f"Failed to stop log aggregator: {e}")
+        
         # Stop security monitoring
         try:
             security_monitor = get_security_monitor()
@@ -568,6 +584,14 @@ try:
     logger.info("Monitoring dashboard enabled at /api/v1/monitoring/dashboard")
 except ImportError as e:
     logger.warning(f"Monitoring dashboard not available: {e}")
+
+# Import log aggregator router
+try:
+    from app.log_aggregator import router as log_router
+    app.include_router(log_router, prefix="/api/v1", tags=["Logs"])
+    logger.info("Log aggregator enabled at /api/v1/logs")
+except ImportError as e:
+    logger.warning(f"Log aggregator not available: {e}")
 
 # Root endpoint
 @app.get("/")

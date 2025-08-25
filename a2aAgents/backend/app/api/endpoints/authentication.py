@@ -590,8 +590,10 @@ async def disable_mfa(
         try:
             # Remove TOTP secret
             auth_service.secrets_manager.set_secret(f"user_totp_{user_id}", "")
-        except Exception:
-            pass  # Secret removal is best effort
+        except Exception as e:
+            logger.error(f"Failed to remove TOTP secret for user {user_id}: {e}")
+            # Continue with MFA disable even if secret removal fails
+            # The empty secret check in verify_totp will handle this gracefully
 
         logger.info(f"MFA disabled for user: {user.username}")
 

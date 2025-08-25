@@ -1,0 +1,117 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.f">
+    
+    <Dialog
+        id="newDeploymentDialog"
+        title="Create New Deployment"
+        contentWidth="600px"
+        contentHeight="500px"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <l:VerticalLayout width="100%">
+                <VBox class="sapUiMediumMargin">
+                    <Label text="Application Name:" labelFor="appNameInput" />
+                    <Input
+                        id="appNameInput"
+                        value="{deploymentModel>/newDeployment/appName}"
+                        placeholder="e.g., a2a-platform"
+                        required="true" />
+                </VBox>
+                
+                <VBox class="sapUiMediumMargin">
+                    <Label text="Environment:" labelFor="environmentSelect" />
+                    <ComboBox
+                        id="environmentSelect"
+                        selectedKey="{deploymentModel>/newDeployment/environment}"
+                        required="true">
+                        <core:Item key="staging" text="Staging" />
+                        <core:Item key="production" text="Production" />
+                    </ComboBox>
+                </VBox>
+                
+                <VBox class="sapUiMediumMargin">
+                    <Label text="Version:" labelFor="versionInput" />
+                    <Input
+                        id="versionInput"
+                        value="{deploymentModel>/newDeployment/version}"
+                        placeholder="e.g., v1.2.3 or main"
+                        required="true" />
+                </VBox>
+                
+                <VBox class="sapUiMediumMargin">
+                    <Label text="Deployment Type:" labelFor="deploymentTypeSelect" />
+                    <ComboBox
+                        id="deploymentTypeSelect"
+                        selectedKey="{deploymentModel>/newDeployment/deploymentType}">
+                        <core:Item key="standard" text="Standard Deployment" />
+                        <core:Item key="zero_downtime" text="Zero Downtime (Blue-Green)" />
+                        <core:Item key="canary" text="Canary Deployment" />
+                    </ComboBox>
+                </VBox>
+                
+                <VBox class="sapUiMediumMargin">
+                    <Label text="Docker Image:" labelFor="dockerImageInput" />
+                    <Input
+                        id="dockerImageInput"
+                        value="{deploymentModel>/newDeployment/dockerImage}"
+                        placeholder="finsightintelligence/a2a:main" />
+                </VBox>
+                
+                <VBox class="sapUiMediumMargin">
+                    <Label text="Notes:" labelFor="notesTextArea" />
+                    <TextArea
+                        id="notesTextArea"
+                        value="{deploymentModel>/newDeployment/notes}"
+                        placeholder="Optional deployment notes..."
+                        rows="3" />
+                </VBox>
+                
+                <VBox class="sapUiMediumMargin">
+                    <CheckBox
+                        text="Require approval before deployment"
+                        selected="{deploymentModel>/newDeployment/requiresApproval}" />
+                    <CheckBox
+                        text="Run health checks after deployment"
+                        selected="{deploymentModel>/newDeployment/runHealthChecks}" />
+                    <CheckBox
+                        text="Send notifications on completion"
+                        selected="{deploymentModel>/newDeployment/sendNotifications}" />
+                </VBox>
+                
+                <Panel headerText="Pre-deployment Validation" expandable="true" expanded="false">
+                    <VBox class="sapUiSmallMargin">
+                        <CheckBox
+                            text="Validate secrets configuration"
+                            selected="{deploymentModel>/newDeployment/validateSecrets}" />
+                        <CheckBox
+                            text="Check database migrations"
+                            selected="{deploymentModel>/newDeployment/checkMigrations}" />
+                        <CheckBox
+                            text="Verify Docker image exists"
+                            selected="{deploymentModel>/newDeployment/verifyImage}" />
+                        <CheckBox
+                            text="Run staging tests"
+                            selected="{deploymentModel>/newDeployment/runStagingTests}"
+                            visible="{= ${deploymentModel>/newDeployment/environment} === 'production'}" />
+                    </VBox>
+                </Panel>
+            </l:VerticalLayout>
+        </content>
+        
+        <buttons>
+            <Button
+                text="Create Deployment"
+                type="Emphasized"
+                icon="sap-icon://add"
+                press="onStartDeployment" />
+            <Button
+                text="Cancel"
+                press="onCancelDeployment" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

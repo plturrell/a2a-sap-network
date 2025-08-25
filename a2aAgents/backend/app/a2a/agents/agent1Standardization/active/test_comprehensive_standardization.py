@@ -279,7 +279,7 @@ async def test_standardization_agent():
     try:
         # Check if fuzzy matching is available
         try:
-            from fuzzywuzzy import fuzz, process
+            from fuzzywuzzy import fuzz
 
 
 # A2A Protocol Compliance: All imports must be available

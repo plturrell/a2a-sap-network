@@ -630,8 +630,6 @@ class APIDocumentationGenerator {
      * Generate HTML documentation
      */
     async generateHTMLDocumentation() {
-        const openApiSpec = await this.generateDocumentation();
-
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>

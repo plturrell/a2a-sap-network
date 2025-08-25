@@ -67,7 +67,7 @@ class Agent14Adapter extends BaseAdapter {
 
     async stopFineTuning(jobId) {
         try {
-            const response = await this.callPythonBackend('stop_fine_tuning', {
+            await this.callPythonBackend('stop_fine_tuning', {
                 job_id: jobId
             });
             return { status: 'stopped', job_id: jobId };
@@ -190,7 +190,7 @@ class Agent14Adapter extends BaseAdapter {
 
     async undeployModel(deploymentId) {
         try {
-            const response = await this.callPythonBackend('undeploy_model', {
+            await this.callPythonBackend('undeploy_model', {
                 deployment_id: deploymentId
             });
             return { status: 'undeployed', deployment_id: deploymentId };
@@ -211,7 +211,7 @@ class Agent14Adapter extends BaseAdapter {
 
             const response = await this.callPythonBackend('upload_training_data', payload);
             return {
-                dataset_id: dataset_id,
+                dataset_id: response.dataset_id,
                 dataset_name: datasetName,
                 record_count: response.record_count,
                 file_size: response.file_size,
@@ -390,17 +390,16 @@ class Agent14Adapter extends BaseAdapter {
         const fetch = require('node-fetch');
         const baseUrl = process.env.AGENT14_BASE_URL || 'http://localhost:8014';
 
-        try {
-            let response;
+        let response;
 
-            switch (method) {
+        switch (method) {
                 case 'list_embedding_models':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models?${new URLSearchParams({ filters: JSON.stringify(payload.filters || {}) })}`, {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                         timeout: this.timeout
                     });
-                    return await response.json();
+                    return response.json();
 
                 case 'create_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models`, {
@@ -409,7 +408,7 @@ class Agent14Adapter extends BaseAdapter {
                         body: JSON.stringify(payload),
                         timeout: this.timeout
                     });
-                    return await response.json();
+                    return response.json();
 
                 case 'start_fine_tuning':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/start`, {
@@ -418,7 +417,7 @@ class Agent14Adapter extends BaseAdapter {
                         body: JSON.stringify(payload),
                         timeout: this.timeout
                     });
-                    return await response.json();
+                    return response.json();
 
                 case 'stop_fine_tuning':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/stop`, {
@@ -429,7 +428,7 @@ class Agent14Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'get_training_status':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/status`, {
@@ -440,7 +439,7 @@ class Agent14Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'get_training_metrics':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/metrics`, {
@@ -449,7 +448,7 @@ class Agent14Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'evaluate_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/evaluate`, {
@@ -458,7 +457,7 @@ class Agent14Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'deploy_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/deploy`, {
@@ -467,7 +466,7 @@ class Agent14Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 case 'generate_embeddings':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/generate-embeddings`, {
@@ -479,14 +478,10 @@ class Agent14Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            return await response.json();
+            return response.json();
 
                 default:
                     throw new Error(`Unknown method: ${method}`);
-            }
-        } catch (error) {
-            console.error('Agent 14 backend call failed:', error.message);
-            throw error;
         }
     }
 

@@ -1,0 +1,356 @@
+{
+  "_version": "1.42.0",
+  "sap.app": {
+    "id": "a2a.workflow.designer",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:lrop",
+      "version": "1.10.0",
+      "toolsId": "09e8ffde-3d1e-4b9d-bb68-3fe2cb92abaf"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/workflow-templates/",
+        "type": "OData",
+        "settings": {
+          "annotations": ["annotation"],
+          "odataVersion": "4.0"
+        }
+      },
+      "annotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation.xml",
+        "settings": {}
+      }
+    },
+    "offline": false,
+    "crossNavigation": {
+      "inbounds": {
+        "workflow-designer-inbound": {
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "WorkflowTemplate",
+          "action": "manage",
+          "title": "{{flpTitle}}",
+          "subTitle": "{{flpSubtitle}}",
+          "icon": "sap-icon://workflow-tasks"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://workflow-tasks",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.102.1",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ushell": {},
+        "sap.f": {},
+        "sap.ui.comp": {},
+        "sap.ui.generic.app": {},
+        "sap.suite.ui.generic.template": {},
+        "sap.ui.table": {},
+        "sap.ui.fl": {},
+        "sap.ui.integration": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "a2a.workflow.designer.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "@i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      }
+    },
+    "resources": {
+      "css": []
+    },
+    "routing": {
+      "config": {
+        "flexibleColumnLayout": {
+          "defaultTwoColumnLayoutType": "TwoColumnsMidExpanded",
+          "defaultThreeColumnLayoutType": "ThreeColumnsEndExpanded"
+        },
+        "routerClass": "sap.f.routing.Router"
+      },
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "TemplateList",
+          "target": [
+            "TemplateList"
+          ]
+        },
+        {
+          "pattern": "Templates({templateId}):?query:",
+          "name": "TemplateDetail",
+          "target": [
+            "TemplateList",
+            "TemplateDetail"
+          ]
+        },
+        {
+          "pattern": "Marketplace:?query:",
+          "name": "Marketplace",
+          "target": [
+            "Marketplace"
+          ]
+        },
+        {
+          "pattern": "WorkflowInstances({instanceId}):?query:",
+          "name": "WorkflowInstanceDetail",
+          "target": [
+            "TemplateList",
+            "WorkflowInstanceDetail"
+          ]
+        },
+        {
+          "pattern": "DesignMode({templateId}):?query:",
+          "name": "TemplateDesigner",
+          "target": [
+            "TemplateDesigner"
+          ]
+        }
+      ],
+      "targets": {
+        "TemplateList": {
+          "type": "Component",
+          "id": "TemplateList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "Templates",
+              "variantManagement": "Page",
+              "navigation": {
+                "Templates": {
+                  "detail": {
+                    "route": "TemplateDetail"
+                  }
+                }
+              },
+              "initialLoad": "Enabled",
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "Multi",
+                    "condensedTableLayout": true
+                  },
+                  "actions": {
+                    "createFromNL": {
+                      "press": "a2a.workflow.designer.ext.controller.ListReportExt.onCreateFromNL",
+                      "visible": true,
+                      "enabled": true,
+                      "requiresSelection": false,
+                      "text": "Generate from Description"
+                    },
+                    "createFromTemplate": {
+                      "press": "a2a.workflow.designer.ext.controller.ListReportExt.onCreateWorkflow",
+                      "visible": true,
+                      "enabled": true,
+                      "requiresSelection": true,
+                      "text": "Create Workflow"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "controlAggregation": "beginColumnPages",
+          "contextPattern": ""
+        },
+        "TemplateDetail": {
+          "type": "Component",
+          "id": "TemplateDetail",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "editableHeaderContent": true,
+              "entitySet": "Templates",
+              "navigation": {
+                "instances": {
+                  "detail": {
+                    "route": "WorkflowInstanceDetail"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.HeaderFacets": {
+                  "actions": {
+                    "validateTemplate": {
+                      "press": "a2a.workflow.designer.ext.controller.ObjectPageExt.onValidateTemplate",
+                      "visible": true,
+                      "enabled": true,
+                      "text": "Validate"
+                    },
+                    "designMode": {
+                      "press": "a2a.workflow.designer.ext.controller.ObjectPageExt.onDesignMode",
+                      "visible": true,
+                      "enabled": "{= ${IsActiveEntity} === false}",
+                      "text": "Visual Designer"
+                    }
+                  }
+                }
+              },
+              "content": {
+                "header": {
+                  "facets": {
+                    "RatingFacet": {
+                      "template": "a2a.workflow.designer.ext.fragment.RatingFacet"
+                    },
+                    "UsageStatsFacet": {
+                      "template": "a2a.workflow.designer.ext.fragment.UsageStatsFacet"
+                    }
+                  }
+                },
+                "body": {
+                  "sections": {
+                    "TemplateDefinition": {
+                      "template": "a2a.workflow.designer.ext.fragment.TemplateDefinition"
+                    },
+                    "AgentRequirements": {
+                      "template": "a2a.workflow.designer.ext.fragment.AgentRequirements"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "controlAggregation": "midColumnPages",
+          "contextPattern": "/Templates({templateId})"
+        },
+        "Marketplace": {
+          "type": "View",
+          "id": "Marketplace",
+          "viewName": "a2a.workflow.designer.ext.view.Marketplace",
+          "options": {
+            "settings": {
+              "entitySet": "Marketplace"
+            }
+          },
+          "controlAggregation": "beginColumnPages",
+          "contextPattern": ""
+        },
+        "TemplateDesigner": {
+          "type": "View",
+          "id": "TemplateDesigner",
+          "viewName": "a2a.workflow.designer.ext.view.TemplateDesigner",
+          "options": {
+            "settings": {
+              "fullscreen": true
+            }
+          },
+          "controlAggregation": "beginColumnPages",
+          "contextPattern": "/Templates({templateId})"
+        },
+        "WorkflowInstanceDetail": {
+          "type": "Component",
+          "id": "WorkflowInstanceDetail",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "WorkflowInstances",
+              "navigation": {},
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.HeaderFacets": {
+                  "actions": {
+                    "executeWorkflow": {
+                      "press": "a2a.workflow.designer.ext.controller.WorkflowInstanceExt.onExecuteWorkflow",
+                      "visible": true,
+                      "enabled": "{= ${status} === 'ready' || ${status} === 'completed' || ${status} === 'failed'}",
+                      "text": "Execute"
+                    },
+                    "viewMetrics": {
+                      "press": "a2a.workflow.designer.ext.controller.WorkflowInstanceExt.onViewMetrics",
+                      "visible": true,
+                      "enabled": "{= ${executionCount} > 0}",
+                      "text": "View Metrics"
+                    }
+                  }
+                }
+              },
+              "content": {
+                "body": {
+                  "sections": {
+                    "ExecutionHistory": {
+                      "template": "a2a.workflow.designer.ext.fragment.ExecutionHistory"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "controlAggregation": "endColumnPages",
+          "contextPattern": "/WorkflowInstances({instanceId})"
+        }
+      }
+    },
+    "extends": {
+      "extensions": {
+        "sap.ui.controllerExtensions": {
+          "sap.fe.templates.ListReport.ListReportController": {
+            "controllerName": "a2a.workflow.designer.ext.controller.ListReportExt"
+          },
+          "sap.fe.templates.ObjectPage.ObjectPageController#a2a.workflow.designer::TemplateDetail": {
+            "controllerName": "a2a.workflow.designer.ext.controller.ObjectPageExt"
+          },
+          "sap.fe.templates.ObjectPage.ObjectPageController#a2a.workflow.designer::WorkflowInstanceDetail": {
+            "controllerName": "a2a.workflow.designer.ext.controller.WorkflowInstanceExt"
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "a2a.workflow"
+  }
+}

@@ -1,13 +1,10 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, StreamingResponse
-import json
-import asyncio
+from fastapi.responses import JSONResponse
 # Performance: Consider using asyncio.gather for concurrent operations
 from datetime import datetime
 
-from .vectorProcessingAgentSdk import VectorProcessingAgentSDK, A2AMessage
+from .vectorProcessingAgentSdk import A2AMessage
 
-from app.a2a.core.security_base import SecureA2AAgent
 router = APIRouter(prefix="/a2a/agent3/v1", tags=["Agent 3 - SAP HANA Vector Engine Ingestion"])
 
 # Initialize Agent 3
@@ -349,8 +346,6 @@ async def health_check():
     # Check SAP HANA availability
     hana_status = "unknown"
     try:
-        from langchain_hana import HanaDB, HanaInternalEmbeddings
-        from hdbcli import dbapi
 
 
 # A2A Protocol Compliance: All imports must be available

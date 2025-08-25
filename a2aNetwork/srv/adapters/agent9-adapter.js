@@ -741,6 +741,7 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 reasoningTypes: data.reasoning_types?.map(t => t.toUpperCase()) || [],
@@ -812,6 +813,7 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 taskId: data.task_id,
@@ -897,6 +899,7 @@ class Agent9Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 decisionId: data.decision_id,

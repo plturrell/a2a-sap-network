@@ -1,14 +1,13 @@
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional
 import numpy as np
 from datetime import datetime
 import logging
-import json
 import math
 from collections import Counter, defaultdict
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from ....sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
-from ....sdk.mcpSkillCoordination import skill_provides, skill_depends_on
+from ....sdk.mcpSkillCoordination import skill_provides
 
 from app.a2a.core.security_base import SecureA2AAgent
 """

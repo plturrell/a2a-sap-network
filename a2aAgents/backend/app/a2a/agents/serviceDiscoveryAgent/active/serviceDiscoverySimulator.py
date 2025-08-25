@@ -146,11 +146,18 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
         service_types = list(self.service_templates.keys())
 
         for i in range(agent_count):
+            # Deterministic service type assignment based on agent index
+            service_type_count = (i % len(service_types)) + 1
+            assigned_types = [service_types[(i + j) % len(service_types)] for j in range(service_type_count)]
+            
+            # Max services based on agent role
+            max_services = 2 + (i % 3)  # 2-4 services
+            
             agent = SimulationAgent(
                 agent_id=f"sim-agent-{i:03d}",
                 name=f"SimulationAgent{i:03d}",
-                service_types=random.sample(service_types, random.randint(1, len(service_types))),
-                max_services=random.randint(1, 4),
+                service_types=assigned_types,
+                max_services=max_services,
                 failure_probability=self._get_failure_probability(scenario),
                 recovery_probability=self._get_recovery_probability(scenario),
                 request_rate=self._get_request_rate(scenario)
@@ -344,11 +351,18 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
 
         while self.simulation_running:
             try:
-                # Randomly adjust network parameters
-                if secrets.SystemRandom().random() < 0.1:  # 10% chance per iteration
-                    self.network_latency_ms *= random.uniform(0.8, 1.5)
-                    self.network_jitter_ms *= random.uniform(0.5, 2.0)
-                    self.packet_loss_rate = max(0, min(0.1, self.packet_loss_rate + random.uniform(-0.01, 0.01)))
+                # Simulate network conditions with realistic patterns
+                cycle_time = time.time()
+                # Sinusoidal latency variation every 100 seconds
+                latency_factor = 1.0 + 0.3 * math.sin(cycle_time * 0.01)
+                self.network_latency_ms = 50.0 * latency_factor
+                
+                # Jitter increases with latency
+                self.network_jitter_ms = 10.0 * (0.5 + 0.5 * latency_factor)
+                
+                # Packet loss follows a slower pattern
+                loss_wave = (math.sin(cycle_time * 0.005) + 1) / 2  # 0 to 1
+                self.packet_loss_rate = min(0.1, 0.02 * loss_wave)
 
                 await asyncio.sleep(10)
 
@@ -359,20 +373,27 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
     async def _register_service_for_agent(self, agent: SimulationAgent):
         """Register a service for an agent"""
 
-        service_type = random.choice(agent.service_types)
+        # Select service type based on agent's queue of unregistered types
+        service_index = len(agent.services) % len(agent.service_types)
+        service_type = agent.service_types[service_index]
         template = self.service_templates[service_type]
 
         service_name = f"{agent.name}_{service_type}_service"
 
-        # Create endpoints
+        # Create endpoints deterministically
         endpoints = []
         for i in range(template["endpoints"]):
-            port = template["base_port"] + i + random.randint(0, 100)
+            # Generate deterministic port offset using hash
+            port_hash = hash(f"{agent.agent_id}{service_type}{i}") % 1000
+            port = template["base_port"] + i + abs(port_hash) % 100
+            
+            endpoint_id = hashlib.md5(f"{agent.agent_id}{service_type}{i}".encode()).hexdigest()[:8]
+            
             endpoints.append({
-                "id": f"ep-{uuid.uuid4().hex[:8]}",
+                "id": f"ep-{endpoint_id}",
                 "url": f"http://sim-{agent.agent_id}:{port}",
                 "port": port,
-                "weight": random.uniform(0.5, 1.5)
+                "weight": 1.0 + (i * 0.25)  # Even weight distribution: 1.0, 1.25, 1.5, etc.
             })
 
         try:

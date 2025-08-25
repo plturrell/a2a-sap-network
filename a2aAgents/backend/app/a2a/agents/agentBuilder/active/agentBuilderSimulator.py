@@ -1,6 +1,6 @@
 import asyncio
-import random
-import secrets
+import hashlib
+import time
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -191,15 +191,18 @@ class AgentBuilderSimulator(SecureA2AAgent):
 
             # Select template based on scenario
             if scenario == BuilderScenario.TEMPLATE_BASED_BUILD:
-                template_id = random.choice(template_ids)
+                template_id = template_ids[i % len(template_ids)]
                 template = self.agent_templates[template_id]
                 agent_type = template_id
                 capabilities = template["capabilities"].copy()
                 estimated_time = template["estimated_time"]
             else:
-                template_id = random.choice(template_ids) if secrets.SystemRandom().random() < 0.7 else None
-                agent_type = random.choice(["custom", "hybrid", "specialized"])
-                capabilities = self._generate_random_capabilities()
+                # Deterministic template selection based on agent index
+                spec_hash = hash(f"{i}_{scenario.value}_{complexity}")
+                template_id = template_ids[abs(spec_hash) % len(template_ids)] if abs(spec_hash) % 10 < 7 else None
+                agent_types = ["custom", "hybrid", "specialized"]
+                agent_type = agent_types[abs(spec_hash) % len(agent_types)]
+                capabilities = self._generate_deterministic_capabilities(i, scenario)
                 estimated_time = self._estimate_build_time(complexity)
 
             # Add complexity-based variations
@@ -219,26 +222,28 @@ class AgentBuilderSimulator(SecureA2AAgent):
                 custom_config=self._generate_custom_config(scenario),
                 build_complexity=complexity,
                 estimated_build_time=estimated_time,
-                version=f"1.{random.randint(0, 5)}.{random.randint(0, 10)}"
+                version=f"1.{abs(hash(f'{i}_major')) % 6}.{abs(hash(f'{i}_minor')) % 11}"
             )
             specs.append(spec)
 
         return specs
 
     def _select_complexity(self, distribution: Dict[str, float]) -> str:
-        """Select complexity based on probability distribution"""
-        rand = secrets.SystemRandom().random()
+        """Select complexity based on deterministic distribution"""
+        # Use current timestamp for deterministic but varied selection
+        time_hash = hash(str(int(time.time() * 1000)))
+        rand_value = abs(time_hash) % 1000 / 1000.0
         cumulative = 0
 
         for complexity, probability in distribution.items():
             cumulative += probability
-            if rand <= cumulative:
+            if rand_value <= cumulative:
                 return complexity
 
         return "medium"  # fallback
 
-    def _generate_random_capabilities(self) -> List[str]:
-        """Generate random capabilities for custom agents"""
+    def _generate_deterministic_capabilities(self, agent_index: int, scenario: BuilderScenario) -> List[str]:
+        """Generate deterministic capabilities based on agent index and scenario"""
         all_capabilities = [
             "data_processing", "api_integration", "machine_learning",
             "monitoring", "alerting", "workflow_management",
@@ -246,16 +251,28 @@ class AgentBuilderSimulator(SecureA2AAgent):
             "batch_processing", "real_time_processing", "analytics"
         ]
 
-        num_capabilities = random.randint(2, 6)
-        return random.sample(all_capabilities, num_capabilities)
+        # Use agent index and scenario for deterministic capability selection
+        cap_hash = hash(f"{agent_index}_{scenario.value}")
+        num_capabilities = 2 + (abs(cap_hash) % 5)  # 2-6 capabilities
+        
+        # Select capabilities deterministically
+        selected_capabilities = []
+        for i in range(num_capabilities):
+            cap_index = (cap_hash + i * 13) % len(all_capabilities)
+            capability = all_capabilities[cap_index]
+            if capability not in selected_capabilities:
+                selected_capabilities.append(capability)
+        
+        return selected_capabilities
 
     def _estimate_build_time(self, complexity: str) -> float:
         """Estimate build time based on complexity"""
         base_times = {"simple": 15.0, "medium": 30.0, "complex": 60.0}
         base_time = base_times.get(complexity, 30.0)
 
-        # Add randomness
-        variation = random.uniform(0.8, 1.3)
+        # Add deterministic variation based on complexity
+        time_hash = hash(f"{complexity}_build_time")
+        variation = 0.8 + (abs(time_hash) % 500) / 1000.0  # 0.8 to 1.3 range
         return base_time * variation
 
     def _generate_dependencies(self, agent_index: int) -> List[str]:
@@ -263,21 +280,32 @@ class AgentBuilderSimulator(SecureA2AAgent):
         if agent_index == 0:
             return []  # First agent has no dependencies
 
-        # Some agents depend on previously created agents
-        if secrets.SystemRandom().random() < 0.3:  # 30% chance of having dependencies
-            num_deps = random.randint(1, min(3, agent_index))
-            return [f"agent_spec_{random.randint(0, agent_index-1):04d}" for _ in range(num_deps)]
+        # Some agents depend on previously created agents (deterministically)
+        dep_hash = hash(f"deps_{agent_index}")
+        if abs(dep_hash) % 10 < 3:  # 30% chance of having dependencies
+            num_deps = 1 + (abs(dep_hash) % min(3, agent_index))
+            dependencies = []
+            for i in range(num_deps):
+                dep_index = (dep_hash + i * 7) % agent_index
+                dependencies.append(f"agent_spec_{dep_index:04d}")
+            return dependencies
 
         return []
 
     def _generate_custom_config(self, scenario: BuilderScenario) -> Dict[str, Any]:
         """Generate custom configuration based on scenario"""
 
+        # Generate config deterministically based on scenario
+        config_hash = hash(scenario.value)
+        
+        runtimes = ["python", "nodejs", "java"]
+        memory_limits = ["256MB", "512MB", "1GB", "2GB"]
+        
         base_config = {
-            "runtime": random.choice(["python", "nodejs", "java"]),
-            "memory_limit": random.choice(["256MB", "512MB", "1GB", "2GB"]),
-            "cpu_limit": random.uniform(0.1, 1.0),
-            "timeout": random.randint(30, 300)
+            "runtime": runtimes[abs(config_hash) % len(runtimes)],
+            "memory_limit": memory_limits[abs(config_hash // 10) % len(memory_limits)],
+            "cpu_limit": 0.1 + (abs(config_hash) % 900) / 1000.0,  # 0.1 to 1.0 range
+            "timeout": 30 + (abs(config_hash) % 271)  # 30 to 300 range
         }
 
         if scenario == BuilderScenario.PERFORMANCE_OPTIMIZATION:
@@ -288,7 +316,7 @@ class AgentBuilderSimulator(SecureA2AAgent):
             })
         elif scenario == BuilderScenario.DEPLOYMENT_TESTING:
             base_config.update({
-                "deployment_target": random.choice(["docker", "kubernetes", "serverless"]),
+                "deployment_target": ["docker", "kubernetes", "serverless"][abs(config_hash // 100) % 3],
                 "auto_scaling": True,
                 "health_checks": True
             })
@@ -400,7 +428,10 @@ class AgentBuilderSimulator(SecureA2AAgent):
                     # Wait for dependencies
                     logger.debug(f"Waiting for dependencies for {spec.name}")
 
-                await asyncio.sleep(random.expovariate(1.0 / interval))
+                # Deterministic sleep based on current time for realistic intervals
+                sleep_hash = hash(str(int(time.time() * 1000)))
+                sleep_time = interval * (0.5 + (abs(sleep_hash) % 1000) / 2000.0)  # 0.5x to 1.0x interval
+                await asyncio.sleep(sleep_time)
 
             except Exception as e:
                 logger.error(f"Build request generation error: {e}")
@@ -548,11 +579,14 @@ class AgentBuilderSimulator(SecureA2AAgent):
 
         phase_duration = spec.estimated_build_time * time_percentage
 
-        # Add complexity-based variations
+        # Add complexity-based variations deterministically
+        complexity_hash = hash(f"{spec.id}_{spec.build_complexity}")
         if spec.build_complexity == "complex":
-            phase_duration *= random.uniform(1.2, 1.8)
+            multiplier = 1.2 + (abs(complexity_hash) % 600) / 1000.0  # 1.2 to 1.8
+            phase_duration *= multiplier
         elif spec.build_complexity == "simple":
-            phase_duration *= random.uniform(0.5, 0.8)
+            multiplier = 0.5 + (abs(complexity_hash) % 300) / 1000.0  # 0.5 to 0.8
+            phase_duration *= multiplier
 
         # Simulate phase processing
         await asyncio.sleep(phase_duration)
@@ -614,12 +648,15 @@ class AgentBuilderSimulator(SecureA2AAgent):
 
         multiplier = complexity_multipliers.get(spec.build_complexity, {"startup": 1.0, "memory": 1.0, "cpu": 1.0})
 
+        # Generate deterministic performance metrics based on spec
+        perf_hash = hash(f"{spec.id}_{spec.build_complexity}")
+        
         return {
-            "startup_time_ms": round(random.uniform(100, 500) * multiplier["startup"], 2),
-            "memory_usage_mb": round(random.uniform(50, 200) * multiplier["memory"], 2),
-            "cpu_usage_percent": round(random.uniform(5, 25) * multiplier["cpu"], 2),
-            "build_size_mb": round(random.uniform(10, 100), 2),
-            "test_coverage_percent": round(random.uniform(70, 95), 1)
+            "startup_time_ms": round((100 + (abs(perf_hash) % 400)) * multiplier["startup"], 2),
+            "memory_usage_mb": round((50 + (abs(perf_hash // 10) % 150)) * multiplier["memory"], 2),
+            "cpu_usage_percent": round((5 + (abs(perf_hash // 100) % 20)) * multiplier["cpu"], 2),
+            "build_size_mb": round(10 + (abs(perf_hash // 1000) % 90), 2),
+            "test_coverage_percent": round(70 + (abs(perf_hash // 10000) % 25) + 0.1, 1)
         }
 
     def _generate_error_message(self, spec: AgentSpecification) -> str:

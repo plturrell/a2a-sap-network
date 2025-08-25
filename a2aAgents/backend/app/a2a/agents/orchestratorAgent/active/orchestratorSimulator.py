@@ -399,8 +399,13 @@ class OrchestratorSimulator(SecureA2AAgent):
                     self.simulation_metrics.workflows_created += 1
                     self.simulation_metrics.workflows_executed += 1
 
-                # Wait for next generation
-                await asyncio.sleep(random.expovariate(1.0 / interval))
+                # Wait for next generation with realistic interval
+                # Use deterministic interval with small variance
+                base_interval = interval
+                # Add small variance based on current time
+                variance = (int(time.time() * 1000) % 200) / 1000.0 - 0.1  # -0.1 to +0.1 variance
+                sleep_time = max(0.1, base_interval + variance)
+                await asyncio.sleep(sleep_time)
 
             except Exception as e:
                 logger.error(f"Workflow generation error: {e}")
@@ -446,14 +451,31 @@ class OrchestratorSimulator(SecureA2AAgent):
             return None
 
     async def _generate_workflow_tasks(self, template: WorkflowTemplate) -> List[Dict[str, Any]]:
-        """Generate tasks for a workflow based on template"""
+        """Generate tasks for a workflow based on template using realistic patterns"""
 
         tasks = []
         available_agent_types = template.agent_types
+        
+        # Define task action patterns based on complexity
+        action_patterns = {
+            "simple": ["validate", "process", "validate"],
+            "moderate": ["analyze", "transform", "process", "validate"],
+            "complex": ["analyze", "process", "transform", "analyze", "validate"]
+        }
+        
+        # Priority distribution based on workflow complexity
+        priority_weights = {
+            "simple": {"low": 0.6, "medium": 0.3, "high": 0.1},
+            "moderate": {"low": 0.3, "medium": 0.5, "high": 0.2},
+            "complex": {"low": 0.1, "medium": 0.4, "high": 0.5}
+        }
 
         for i in range(template.task_count):
-            # Select agent type and specific agent
-            agent_type = random.choice(available_agent_types)
+            # Select agent type based on round-robin with load balancing
+            agent_type_index = i % len(available_agent_types)
+            agent_type = available_agent_types[agent_type_index]
+            
+            # Find suitable agents with load balancing
             suitable_agents = [
                 agent for agent in self.simulated_agents
                 if agent.agent_id.startswith(agent_type) and agent.is_available
@@ -466,32 +488,82 @@ class OrchestratorSimulator(SecureA2AAgent):
             if not suitable_agents:
                 continue  # Skip if no agents available
 
-            selected_agent = random.choice(suitable_agents)
+            # Select agent with lowest current load
+            selected_agent = min(suitable_agents, key=lambda a: a.current_tasks / a.max_concurrent_tasks)
+
+            # Determine action based on pattern
+            action_list = action_patterns.get(template.complexity, action_patterns["moderate"])
+            action = action_list[i % len(action_list)]
+            
+            # Calculate data size based on complexity and position in workflow
+            base_data_size = {
+                "simple": 500,
+                "moderate": 2500,
+                "complex": 5000
+            }.get(template.complexity, 2500)
+            
+            # Data size increases for later tasks (accumulation effect)
+            data_size = int(base_data_size * (1 + i * 0.2))
+            
+            # Determine priority based on workflow complexity distribution
+            priority_dist = priority_weights.get(template.complexity, priority_weights["moderate"])
+            cumulative = 0
+            priority_rand = (i * 0.37 + 0.13) % 1  # Deterministic but distributed
+            priority = "medium"  # default
+            
+            for prio, weight in priority_dist.items():
+                cumulative += weight
+                if priority_rand < cumulative:
+                    priority = prio
+                    break
+            
+            # Calculate timeout based on data size and complexity
+            timeout_base = 60 if template.complexity == "simple" else (180 if template.complexity == "moderate" else 300)
+            timeout_variance = int(data_size / 1000)  # Add variance based on data size
+            timeout_seconds = timeout_base + timeout_variance
+            
+            # Retries based on priority
+            max_retries = {"low": 1, "medium": 2, "high": 3}[priority]
 
             # Create task
             task = {
                 "id": f"task-{i:03d}",
                 "name": f"SimTask_{i:03d}_{agent_type}",
                 "agent_id": selected_agent.agent_id,
-                "action": f"simulate_{random.choice(['process', 'analyze', 'transform', 'validate'])}",
+                "action": f"simulate_{action}",
                 "parameters": {
-                    "data_size": random.randint(100, 10000),
+                    "data_size": data_size,
                     "complexity": template.complexity,
-                    "priority": random.choice(["low", "medium", "high"])
+                    "priority": priority
                 },
-                "timeout_seconds": random.randint(60, 300),
-                "max_retries": random.randint(1, 3)
+                "timeout_seconds": timeout_seconds,
+                "max_retries": max_retries
             }
 
-            # Add dependencies based on template
-            if i > 0 and secrets.SystemRandom().random() < template.dependency_ratio:
-                # Add dependency on previous task(s)
-                num_deps = min(i, random.randint(1, 3))
-                dependencies = random.sample(
-                    [f"task-{j:03d}" for j in range(i)],
-                    num_deps
-                )
-                task["dependencies"] = dependencies
+            # Add dependencies based on template and workflow structure
+            if i > 0:
+                # Use deterministic dependency pattern
+                dependency_threshold = template.dependency_ratio
+                # Create dependencies based on task position and complexity
+                should_have_deps = ((i * 0.41) % 1) < dependency_threshold
+                
+                if should_have_deps:
+                    # Number of dependencies based on complexity
+                    if template.complexity == "simple":
+                        num_deps = 1
+                    elif template.complexity == "moderate":
+                        num_deps = min(2, i)
+                    else:  # complex
+                        num_deps = min(3, i)
+                    
+                    # Select previous tasks as dependencies (most recent first)
+                    if num_deps == 1:
+                        dependencies = [f"task-{i-1:03d}"]
+                    else:
+                        # Create a logical dependency chain
+                        dependencies = [f"task-{i-j:03d}" for j in range(1, num_deps + 1)]
+                    
+                    task["dependencies"] = dependencies
 
             tasks.append(task)
 
@@ -536,31 +608,57 @@ class OrchestratorSimulator(SecureA2AAgent):
     async def _simulate_agent_status_changes(self):
         """Simulate dynamic agent status changes"""
 
+        cycle_count = 0
         while self.simulation_running:
             try:
-                # Randomly change agent status
-                agent = random.choice(self.simulated_agents)
+                # Cycle through agents deterministically
+                agent_index = cycle_count % len(self.simulated_agents)
+                agent = self.simulated_agents[agent_index]
 
-                if secrets.SystemRandom().random() < agent.failure_probability:
-                    if agent.is_available:
-                        agent.is_available = False
-                        logger.debug(f"Simulated failure for agent {agent.agent_id}")
-                elif not agent.is_available and secrets.SystemRandom().random() < 0.3:  # 30% recovery chance
-                    agent.is_available = True
-                    logger.debug(f"Simulated recovery for agent {agent.agent_id}")
+                # Deterministic failure based on load and cycle
+                failure_threshold = agent.failure_probability
+                load_ratio = agent.current_tasks / max(1, agent.max_concurrent_tasks)
+                failure_chance = failure_threshold * (0.5 + 0.5 * load_ratio)
+                
+                # Use deterministic failure pattern
+                should_fail = ((cycle_count * 0.17 + agent_index * 0.23) % 1) < failure_chance
+                
+                if should_fail and agent.is_available:
+                    agent.is_available = False
+                    logger.debug(f"Simulated failure for agent {agent.agent_id}")
+                elif not agent.is_available:
+                    # Recovery chance increases with downtime
+                    downtime = cycle_count % 20  # Simplified downtime tracking
+                    recovery_chance = min(0.5, 0.1 + downtime * 0.02)
+                    should_recover = ((cycle_count * 0.31) % 1) < recovery_chance
+                    
+                    if should_recover:
+                        agent.is_available = True
+                        logger.debug(f"Simulated recovery for agent {agent.agent_id}")
 
-                # Simulate load changes
+                # Simulate load changes with realistic patterns
                 if agent.is_available:
-                    # Randomly adjust current task count
-                    delta = random.randint(-2, 3)
-                    agent.current_tasks = max(0, min(agent.max_concurrent_tasks, agent.current_tasks + delta))
+                    # Use sinusoidal load pattern
+                    time_factor = (cycle_count * 0.1) % (2 * np.pi)
+                    load_wave = (np.sin(time_factor) + 1) / 2  # 0 to 1
+                    
+                    # Target task count based on wave
+                    target_tasks = int(agent.max_concurrent_tasks * load_wave)
+                    
+                    # Gradually adjust current tasks
+                    if agent.current_tasks < target_tasks:
+                        agent.current_tasks = min(agent.current_tasks + 1, target_tasks)
+                    elif agent.current_tasks > target_tasks:
+                        agent.current_tasks = max(agent.current_tasks - 1, target_tasks)
 
                     # Adjust response time based on load
                     base_response_time = self.agent_configs[agent.agent_id.split('-')[0]]["response_time_ms"]
                     load_multiplier = 1.0 + (agent.current_tasks / agent.max_concurrent_tasks)
                     agent.response_time_ms = base_response_time * load_multiplier * agent.load_factor
 
-                await asyncio.sleep(random.uniform(10, 30))
+                # Fixed interval for consistency
+                await asyncio.sleep(15)
+                cycle_count += 1
 
             except Exception as e:
                 logger.error(f"Agent status simulation error: {e}")
@@ -596,38 +694,52 @@ class OrchestratorSimulator(SecureA2AAgent):
 
     async def _simulate_coordination_sessions(self):
         """Simulate agent coordination sessions"""
-
+        
+        coordination_cycle = 0
         while self.simulation_running:
             try:
-                # Randomly create coordination sessions
-                if secrets.SystemRandom().random() < 0.1:  # 10% chance per cycle
-                    agents = random.sample(
-                        [agent.agent_id for agent in self.simulated_agents if agent.is_available],
-                        k=min(random.randint(2, 5), len([a for a in self.simulated_agents if a.is_available]))
-                    )
-
-                    if len(agents) >= 2:
+                # Create coordination sessions every 10 cycles
+                if coordination_cycle % 10 == 0:
+                    available_agents = [agent for agent in self.simulated_agents if agent.is_available]
+                    
+                    if len(available_agents) >= 2:
+                        # Select agents based on workload - coordinate busy agents
+                        sorted_by_load = sorted(
+                            available_agents,
+                            key=lambda a: a.current_tasks,
+                            reverse=True
+                        )
+                        
+                        # Select 2-4 busiest agents for coordination
+                        num_agents = min(4, max(2, len(sorted_by_load) // 2))
+                        selected_agents = [agent.agent_id for agent in sorted_by_load[:num_agents]]
+                        
+                        # Number of coordination steps based on agent count
+                        num_steps = min(3, len(selected_agents) - 1)
+                        
                         coordination_plan = {
                             "steps": [
                                 {
                                     "id": f"coord-step-{i}",
                                     "action": "coordinate",
-                                    "agents": agents,
-                                    "objective": f"simulation_coordination_{i}"
+                                    "agents": selected_agents,
+                                    "objective": f"load_balancing_step_{i}"
                                 }
-                                for i in range(random.randint(1, 3))
+                                for i in range(num_steps)
                             ]
                         }
 
                         await self.orchestrator_agent.coordinate_agents(
                             coordination_plan=coordination_plan,
-                            agents=agents,
-                            objective="Simulation coordination test"
+                            agents=selected_agents,
+                            objective="Load balancing coordination"
                         )
 
                         self.simulation_metrics.coordination_sessions += 1
 
-                await asyncio.sleep(random.uniform(30, 60))
+                # Fixed interval for coordination checks
+                await asyncio.sleep(45)
+                coordination_cycle += 1
 
             except Exception as e:
                 logger.error(f"Coordination simulation error: {e}")

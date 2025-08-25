@@ -3,22 +3,16 @@ Advanced MCP Vector Processing Agent (Agent 3)
 Enhanced vector processing and embeddings with comprehensive MCP tool integration
 """
 
-import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
-import json
 import logging
 import numpy as np
-from typing import Dict, List, Any, Optional, Union, Tuple
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+from datetime import datetime
 import uuid
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-import faiss
 
-from ...sdk.agentBase import A2AAgentBase
-from ...sdk.decorators import a2a_handler, a2a_skill, a2a_task
-from ...sdk.types import A2AMessage, MessageRole, TaskStatus, AgentCard
 from ...sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ...common.mcpPerformanceTools import MCPPerformanceTools
 from ...common.mcpValidationTools import MCPValidationTools

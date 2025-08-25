@@ -44,6 +44,9 @@ mypy==1.7.1
 # System Monitoring
 psutil==5.9.8
 
+# Async File Operations
+aiofiles==23.2.1
+
 # Security
 bandit==1.7.5
 safety>=3.0.0

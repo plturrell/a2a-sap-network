@@ -113,9 +113,35 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         async def handle_json_rpc(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle json_rpc operation"""
             try:
-                # TODO: Implement json_rpc logic
-                # Example: result = await self.agent_sdk.json_rpc_handler(data)
-                result = {"status": "success", "operation": "json_rpc"}
+                # Process JSON-RPC request through agent SDK
+                method = data.get("method", "")
+                params = data.get("params", {})
+                rpc_id = data.get("id", None)
+                
+                # Route to appropriate handler based on method
+                if method == "prepare_data":
+                    prepared_data = await self.agent_sdk.prepare_ai_data(params)
+                    result = {
+                        "jsonrpc": "2.0",
+                        "result": prepared_data,
+                        "id": rpc_id
+                    }
+                elif method == "engineer_features":
+                    features = await self.agent_sdk.engineer_features(params)
+                    result = {
+                        "jsonrpc": "2.0",
+                        "result": features,
+                        "id": rpc_id
+                    }
+                else:
+                    result = {
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32601,
+                            "message": f"Method not found: {method}"
+                        },
+                        "id": rpc_id
+                    }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -181,9 +207,21 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         async def handle_get_queue_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_queue_status operation"""
             try:
-                # TODO: Implement get_queue_status logic
-                # Example: result = await self.agent_sdk.get_queue_status(data)
-                result = {"status": "success", "operation": "get_queue_status"}
+                # Get real queue status from agent SDK
+                queue_status = await self.agent_sdk.get_processing_queue_status()
+                
+                result = {
+                    "status": "success",
+                    "queue_status": {
+                        "pending_tasks": queue_status.get("pending_count", 0),
+                        "processing_tasks": queue_status.get("processing_count", 0),
+                        "completed_tasks": queue_status.get("completed_count", 0),
+                        "failed_tasks": queue_status.get("failed_count", 0),
+                        "average_processing_time_ms": queue_status.get("avg_processing_time", 0),
+                        "queue_health": queue_status.get("health", "healthy")
+                    },
+                    "timestamp": datetime.utcnow().isoformat()
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -203,9 +241,28 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         async def handle_get_message_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_message_status operation"""
             try:
-                # TODO: Implement get_message_status logic
-                # Example: result = await self.agent_sdk.get_message_status(data)
-                result = {"status": "success", "operation": "get_message_status"}
+                # Get message status from agent SDK
+                message_id = data.get("message_id")
+                if not message_id:
+                    return self.create_secure_response(
+                        {"error": "message_id is required"}, 
+                        status="error"
+                    )
+                
+                message_status = await self.agent_sdk.get_task_status(message_id)
+                
+                result = {
+                    "status": "success",
+                    "message_status": {
+                        "message_id": message_id,
+                        "state": message_status.get("state", "unknown"),
+                        "progress": message_status.get("progress", 0),
+                        "started_at": message_status.get("started_at"),
+                        "completed_at": message_status.get("completed_at"),
+                        "error": message_status.get("error"),
+                        "result_available": message_status.get("has_result", False)
+                    }
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -225,9 +282,26 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         async def handle_cancel_message(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle cancel_message operation"""
             try:
-                # TODO: Implement cancel_message logic
-                # Example: result = await self.agent_sdk.cancel_message(data)
-                result = {"status": "success", "operation": "cancel_message"}
+                # Cancel message processing
+                message_id = data.get("message_id")
+                if not message_id:
+                    return self.create_secure_response(
+                        {"error": "message_id is required"}, 
+                        status="error"
+                    )
+                
+                cancellation_result = await self.agent_sdk.cancel_task(message_id)
+                
+                result = {
+                    "status": "success",
+                    "cancellation": {
+                        "message_id": message_id,
+                        "cancelled": cancellation_result.get("cancelled", False),
+                        "was_processing": cancellation_result.get("was_processing", False),
+                        "reason": data.get("reason", "User requested cancellation"),
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -275,9 +349,45 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         async def handle_get_skills(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_skills operation"""
             try:
-                # TODO: Implement get_skills logic
-                # Example: result = await self.agent_sdk.get_skills(data)
-                result = {"status": "success", "operation": "get_skills"}
+                # Get agent skills from SDK
+                skills = await self.agent_sdk.get_capabilities()
+                
+                result = {
+                    "status": "success",
+                    "skills": [
+                        {
+                            "name": "data_preparation",
+                            "description": "Prepare and clean data for AI/ML models",
+                            "version": "2.0",
+                            "parameters": skills.get("data_preparation", {}).get("parameters", [])
+                        },
+                        {
+                            "name": "feature_engineering",
+                            "description": "Engineer features for machine learning",
+                            "version": "2.0",
+                            "parameters": skills.get("feature_engineering", {}).get("parameters", [])
+                        },
+                        {
+                            "name": "data_preprocessing",
+                            "description": "Preprocess data with various transformations",
+                            "version": "2.0",
+                            "parameters": skills.get("preprocessing", {}).get("parameters", [])
+                        },
+                        {
+                            "name": "ml_optimization",
+                            "description": "Optimize ML pipelines and hyperparameters",
+                            "version": "2.0",
+                            "parameters": skills.get("optimization", {}).get("parameters", [])
+                        },
+                        {
+                            "name": "embedding_preparation",
+                            "description": "Prepare embeddings for various AI models",
+                            "version": "2.0",
+                            "parameters": skills.get("embeddings", {}).get("parameters", [])
+                        }
+                    ],
+                    "total_skills": 5
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -297,9 +407,34 @@ class Agent2AipreparationA2AHandler(SecureA2AAgent):
         async def handle_get_capabilities(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_capabilities operation"""
             try:
-                # TODO: Implement get_capabilities logic
-                # Example: result = await self.agent_sdk.get_capabilities(data)
-                result = {"status": "success", "operation": "get_capabilities"}
+                # Get detailed capabilities from SDK
+                capabilities = await self.agent_sdk.get_capabilities()
+                performance_metrics = await self.agent_sdk.get_performance_metrics()
+                
+                result = {
+                    "status": "success",
+                    "capabilities": {
+                        "core_functions": [
+                            "data_cleaning", "feature_extraction", "data_transformation",
+                            "outlier_detection", "data_validation", "pipeline_optimization"
+                        ],
+                        "supported_formats": capabilities.get("formats", [
+                            "csv", "json", "parquet", "hdf5", "pickle", "feather"
+                        ]),
+                        "ml_frameworks": capabilities.get("frameworks", [
+                            "sklearn", "tensorflow", "pytorch", "xgboost", "lightgbm"
+                        ]),
+                        "max_dataset_size_gb": capabilities.get("max_size_gb", 100),
+                        "concurrent_tasks": capabilities.get("max_concurrent", 10),
+                        "performance": {
+                            "average_processing_time_ms": performance_metrics.get("avg_time", 500),
+                            "success_rate": performance_metrics.get("success_rate", 0.98),
+                            "throughput_tasks_per_hour": performance_metrics.get("throughput", 720)
+                        }
+                    },
+                    "version": "2.0.0",
+                    "last_updated": datetime.utcnow().isoformat()
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(

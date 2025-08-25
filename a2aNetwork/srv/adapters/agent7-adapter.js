@@ -4,7 +4,7 @@
  */
 
 const fetch = require('node-fetch');
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 class Agent7Adapter {
     constructor() {
@@ -485,6 +485,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return data.map(type => ({
                 type: type.type,
@@ -504,6 +505,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 totalAgents: data.total_agents,
@@ -527,6 +529,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 agentId: data.agent_id,
@@ -578,6 +581,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 activeCoordinations: data.active_coordinations,
@@ -603,6 +607,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 type: data.type,
@@ -650,6 +655,7 @@ class Agent7Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
 
             return {
                 strategy: data.strategy,
@@ -759,7 +765,7 @@ class Agent7Adapter {
 
     _convertRESTAgentToOData(agent) {
         return {
-            ID: agent.id || uuidv4(),
+            ID: agent.id || `mgmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             agentName: agent.agent_name,
             agentType: agent.agent_type?.toUpperCase(),
             agentVersion: agent.agent_version,
@@ -809,7 +815,7 @@ class Agent7Adapter {
 
     _convertRESTTaskToOData(task) {
         return {
-            ID: task.id || uuidv4(),
+            ID: task.id || `mgmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             taskName: task.task_name,
             taskType: task.task_type?.toUpperCase(),
             status: task.status?.toUpperCase() || 'SCHEDULED',
@@ -855,7 +861,7 @@ class Agent7Adapter {
 
     _convertRESTCoordinationToOData(coordination) {
         return {
-            ID: coordination.id || uuidv4(),
+            ID: coordination.id || `mgmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             coordinationName: coordination.coordination_name,
             coordinationType: coordination.coordination_type?.toUpperCase(),
             status: coordination.status?.toUpperCase() || 'DRAFT',
@@ -880,7 +886,7 @@ class Agent7Adapter {
 
     _convertRESTBulkOpToOData(operation) {
         return {
-            ID: operation.id || uuidv4(),
+            ID: operation.id || `mgmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             operationName: operation.operation_name,
             operationType: operation.operation_type?.toUpperCase(),
             status: operation.status?.toUpperCase() || 'PREPARING',
@@ -907,7 +913,7 @@ class Agent7Adapter {
 
     _convertRESTHealthCheckToOData(healthCheck) {
         return {
-            ID: healthCheck.id || uuidv4(),
+            ID: healthCheck.id || `mgmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             checkId: healthCheck.check_id,
             checkType: healthCheck.check_type?.toUpperCase(),
             status: healthCheck.status?.toUpperCase(),
@@ -923,7 +929,7 @@ class Agent7Adapter {
 
     _convertRESTMetricToOData(metric) {
         return {
-            ID: metric.id || uuidv4(),
+            ID: metric.id || `mgmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             metricId: metric.metric_id,
             metricType: metric.metric_type?.toUpperCase(),
             value: metric.value,

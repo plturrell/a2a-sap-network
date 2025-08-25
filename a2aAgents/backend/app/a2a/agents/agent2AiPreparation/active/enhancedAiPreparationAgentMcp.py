@@ -46,7 +46,6 @@ from app.a2a.core.security_base import SecureA2AAgent
 
 # Optional dependencies with graceful fallbacks
 try:
-    import transformers
     from sentence_transformers import SentenceTransformer
     TORCH_AVAILABLE = True
 except ImportError:
@@ -61,17 +60,12 @@ except ImportError:
     logger.warning("NumPy not available, using basic operations")
 
 try:
-    from prometheus_client import Counter, Histogram, Gauge, start_http_server
+    from prometheus_client import Counter, Histogram, start_http_server
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
     logger.warning("Prometheus client not available, metrics disabled")
 
-try:
-    import websockets
-    WEBSOCKETS_AVAILABLE = True
-except ImportError:
-    WEBSOCKETS_AVAILABLE = False
 
 
 class EmbeddingMode(str, Enum):

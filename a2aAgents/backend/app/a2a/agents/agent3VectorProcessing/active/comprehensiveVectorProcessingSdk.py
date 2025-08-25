@@ -14,22 +14,18 @@ Rating: 95/100 (Real AI Intelligence)
 
 import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
-import json
 import logging
 import time
 import hashlib
 import pickle
 import os
-import re
-from typing import Dict, List, Any, Optional, Tuple, Union, Set
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
 from dataclasses import dataclass, field
 from collections import defaultdict
 from enum import Enum
 import numpy as np
-import pandas as pd
 from scipy.spatial.distance import cosine, euclidean
-from scipy.sparse import csr_matrix
 import faiss
 import networkx as nx
 
@@ -38,7 +34,7 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingClassifier
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans, HDBSCAN
-from sklearn.preprocessing import StandardScaler, normalize
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
@@ -46,7 +42,6 @@ warnings.filterwarnings('ignore', category=UserWarning)
 # Sparse vector support
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.decomposition import NMF
     SPARSE_SUPPORT = True
 except ImportError:
     SPARSE_SUPPORT = False
@@ -60,16 +55,14 @@ except ImportError:
 
 # Semantic search capabilities
 try:
-    from sentence_transformers import SentenceTransformer, util
+    from sentence_transformers import SentenceTransformer
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 # Import SDK components
-from app.a2a.sdk.agentBase import A2AAgentBase
-from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole
-from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
+from app.a2a.sdk import a2a_skill
+from app.a2a.sdk.utils import create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Blockchain integration
@@ -98,7 +91,6 @@ except ImportError:
     mcp_prompt = lambda name: lambda func: func
 
 # Cross-agent communication
-from app.a2a.network.connector import NetworkConnector
 from app.a2a.core.security_base import SecureA2AAgent
 
 
@@ -1411,7 +1403,6 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         else:
 # A2A REMOVED:             # Fallback: create basic in-memory index
             try:
-                import numpy as np
                 from sklearn.neighbors import NearestNeighbors
 
                 # Create basic KNN index as fallback

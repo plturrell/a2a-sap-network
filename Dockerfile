@@ -76,10 +76,10 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder --chown=a2auser:a2auser /app .
 
 # Copy verification script and start scripts, make them executable
-COPY --chown=a2auser:a2auser scripts/verify-18-steps.sh /app/scripts/
-COPY --chown=a2auser:a2auser scripts/start-fly.sh /app/scripts/
+COPY --chown=a2auser:a2auser scripts/testing/verify-18-steps.sh /app/scripts/
+COPY --chown=a2auser:a2auser scripts/deployment/fly/start-fly.sh /app/scripts/
 COPY --chown=a2auser:a2auser start.sh /app/
-COPY --chown=a2auser:a2auser scripts/start-all-agents.sh /app/scripts/
+COPY --chown=a2auser:a2auser scripts/operations/start-all-agents.sh /app/scripts/
 RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh /app/scripts/start-all-agents.sh /app/scripts/start-fly.sh || true
 
 # Copy nginx configuration

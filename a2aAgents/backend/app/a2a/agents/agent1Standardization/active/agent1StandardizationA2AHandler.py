@@ -415,9 +415,22 @@ class Agent1StandardizationA2AHandler(SecureA2AAgent):
         async def handle_get_queue_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_queue_status operation"""
             try:
-                # TODO: Implement get_queue_status logic
-                # Example: result = await self.agent_sdk.get_queue_status(data)
-                result = {"status": "success", "operation": "get_queue_status"}
+                # Get real queue status from the standardization agent SDK
+                queue_status = await self.agent_sdk.get_processing_queue_status()
+                
+                result = {
+                    "status": "success",
+                    "queue_status": {
+                        "pending_standardizations": queue_status.get("pending_count", 0),
+                        "processing_tasks": queue_status.get("processing_count", 0),
+                        "completed_standardizations": queue_status.get("completed_count", 0),
+                        "failed_tasks": queue_status.get("failed_count", 0),
+                        "average_processing_time_ms": queue_status.get("avg_processing_time", 0),
+                        "queue_health": queue_status.get("health", "healthy"),
+                        "supported_schemas": queue_status.get("schemas", ["L4", "ISO8601", "JSON-LD"])
+                    },
+                    "timestamp": datetime.utcnow().isoformat()
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -437,9 +450,30 @@ class Agent1StandardizationA2AHandler(SecureA2AAgent):
         async def handle_get_message_status(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_message_status operation"""
             try:
-                # TODO: Implement get_message_status logic
-                # Example: result = await self.agent_sdk.get_message_status(data)
-                result = {"status": "success", "operation": "get_message_status"}
+                # Get message status from standardization agent SDK
+                message_id = data.get("message_id")
+                if not message_id:
+                    return self.create_secure_response(
+                        {"error": "message_id is required"}, 
+                        status="error"
+                    )
+                
+                message_status = await self.agent_sdk.get_task_status(message_id)
+                
+                result = {
+                    "status": "success",
+                    "message_status": {
+                        "message_id": message_id,
+                        "state": message_status.get("state", "unknown"),
+                        "progress": message_status.get("progress", 0),
+                        "standardization_type": message_status.get("type", "data_standardization"),
+                        "schema_target": message_status.get("schema_target", "L4"),
+                        "started_at": message_status.get("started_at"),
+                        "completed_at": message_status.get("completed_at"),
+                        "error": message_status.get("error"),
+                        "confidence_score": message_status.get("confidence", 0.0)
+                    }
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -459,9 +493,27 @@ class Agent1StandardizationA2AHandler(SecureA2AAgent):
         async def handle_cancel_message(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle cancel_message operation"""
             try:
-                # TODO: Implement cancel_message logic
-                # Example: result = await self.agent_sdk.cancel_message(data)
-                result = {"status": "success", "operation": "cancel_message"}
+                # Cancel standardization task
+                message_id = data.get("message_id")
+                if not message_id:
+                    return self.create_secure_response(
+                        {"error": "message_id is required"}, 
+                        status="error"
+                    )
+                
+                cancellation_result = await self.agent_sdk.cancel_standardization_task(message_id)
+                
+                result = {
+                    "status": "success",
+                    "cancellation": {
+                        "message_id": message_id,
+                        "cancelled": cancellation_result.get("cancelled", False),
+                        "was_processing": cancellation_result.get("was_processing", False),
+                        "reason": data.get("reason", "User requested cancellation"),
+                        "partial_results": cancellation_result.get("partial_results", {}),
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(

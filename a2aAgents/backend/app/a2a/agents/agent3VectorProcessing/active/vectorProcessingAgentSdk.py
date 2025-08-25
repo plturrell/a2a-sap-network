@@ -4,36 +4,23 @@ Agent 3: Enhanced with A2A SDK for simplified development and maintenance
 """
 import datetime
 
-import time
 
 
-import networkx as nx
-import numpy as np
 import sys
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple, Union, Set
-import asyncio
+from typing import Dict, Optional, Any
 # Performance: Consider using asyncio.gather for concurrent operations
-import hashlib
-import json
 import logging
 import os
-import struct
-import uuid
 
 # Setup logger before dependencies
 logger = logging.getLogger(__name__)
 
 try:
-    from hdbcli import dbapi
-    from langchain_hana import HanaDB, HanaInternalEmbeddings
-    from langchain_hana.vectorstores import DistanceStrategy
-    from sentence_transformers import SentenceTransformer
 except ImportError:
     # Logger is defined later, so we'll use print for early import warnings
     print("Warning: Some vector processing dependencies not available")
 
-from pydantic import BaseModel, Field
 
 from .dynamicKnowledgeGraphSkills import DynamicKnowledgeGraphSkills
 from .vectorQuantizationSkills import VectorQuantizationSkills

@@ -8,30 +8,21 @@ import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 import json
 import os
-import sys
 import time
-import hashlib
 import struct
 import logging
-import mmap
 import gzip
 import pickle
-from typing import Dict, List, Any, Optional, Union, Callable, Tuple, Iterator
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+from datetime import datetime
 from uuid import uuid4
 from enum import Enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import aiofiles
 from collections import OrderedDict, defaultdict, deque
-import yaml
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import psutil
 import gc
-from functools import lru_cache, wraps
-import weakref
-import mimetypes
-import base64
 import networkx as nx
 
 
@@ -58,22 +49,14 @@ logger = logging.getLogger(__name__)
 
 # Import SDK components with MCP support
 from app.a2a.sdk.agentBase import A2AAgentBase
-from app.a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole, TaskStatus, AgentCard
-from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
-from app.a2a.core.workflowContext import workflowContextManager, DataArtifact
-from app.a2a.core.workflowMonitor import workflowMonitor
-from app.a2a.core.helpSeeking import AgentHelpSeeker
+from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource
 from app.a2a.core.circuitBreaker import CircuitBreaker, CircuitBreakerOpenError
-from app.a2a.core.taskTracker import AgentTaskTracker
 
 # Import trust system components
-from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, verify_a2a_message
 
 # Import performance monitoring
 from app.a2a.core.performanceOptimizer import PerformanceOptimizationMixin
-from app.a2a.core.performanceMonitor import AlertThresholds, monitor_performance
+from app.a2a.core.performanceMonitor import AlertThresholds
 from app.a2a.core.security_base import SecureA2AAgent
 
 # Optional dependencies with graceful fallbacks
@@ -85,8 +68,6 @@ except ImportError:
     logger.warning("NumPy not available, using basic operations")
 
 try:
-    from langchain_hana import HanaDB, HanaInternalEmbeddings
-    from langchain_hana.vectorstores import DistanceStrategy
     from hdbcli import dbapi
     HANA_AVAILABLE = True
 except ImportError:
@@ -94,7 +75,6 @@ except ImportError:
     logger.warning("SAP HANA Cloud integration not available")
 
 try:
-    from sentence_transformers import SentenceTransformer
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
@@ -115,7 +95,6 @@ except ImportError:
     logger.warning("Prometheus client not available")
 
 try:
-    import faiss
     FAISS_AVAILABLE = True
 except ImportError:
     FAISS_AVAILABLE = False

@@ -118,7 +118,7 @@ class Agent11Adapter {
         }
     }
 
-    async validateSQL(taskId) {
+    async validateSQLTask(taskId) {
         try {
             const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/validate`, {
                 method: 'POST',
@@ -436,8 +436,8 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-
-            return data;
+            const responseData = await response.json();
+            return responseData;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -473,7 +473,7 @@ class Agent11Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
-
+            const data = await response.json();
             return data;
         } catch (error) {
             throw this._handleError(error);
@@ -651,7 +651,7 @@ class Agent11Adapter {
 
     _convertRESTSQLQueryTaskToOData(item) {
         return {
-            ID: item.id || uuidv4(),
+            ID: item.id || `trusteval_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             queryName: item.query_name,
             description: item.description,
             queryType: item.query_type?.toUpperCase(),
