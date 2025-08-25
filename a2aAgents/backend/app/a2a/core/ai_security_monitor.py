@@ -792,7 +792,7 @@ class AISecurityMonitor:
         threats = []
         
         if not TORCH_AVAILABLE or not self.threat_nn:
-            return threats
+            return await self._ml_fallback_threat_analysis(features)
         
         try:
             # Pad or truncate features to expected input size
@@ -838,6 +838,172 @@ class AISecurityMonitor:
             logger.error(f"Neural network threat analysis error: {e}")
         
         return threats
+    
+    async def _ml_fallback_threat_analysis(self, features: np.ndarray) -> List[ThreatDetection]:
+        """ML-based fallback for threat analysis using statistical and pattern-based detection"""
+        threats = []
+        
+        try:
+            if len(features) == 0:
+                return threats
+            
+            # Security event features analysis
+            # Assuming features contain: [severity, frequency, source_entropy, pattern_match, ...]
+            
+            severity_score = features[0] if len(features) > 0 else 0.5
+            event_frequency = features[1] if len(features) > 1 else 0.3
+            source_entropy = features[2] if len(features) > 2 else 0.5
+            pattern_anomaly = features[3] if len(features) > 3 else 0.3
+            
+            # Additional security indicators
+            network_anomaly = features[4] if len(features) > 4 else 0.2
+            access_pattern = features[5] if len(features) > 5 else 0.3
+            payload_anomaly = features[6] if len(features) > 6 else 0.2
+            
+            # Malware detection heuristics
+            malware_score = 0.0
+            if payload_anomaly > 0.6:  # Suspicious payload patterns
+                malware_score += 0.4
+            if pattern_anomaly > 0.5:  # Unusual execution patterns
+                malware_score += 0.3
+            if source_entropy < 0.3:  # Low entropy may indicate obfuscation
+                malware_score += 0.2
+            
+            if malware_score > 0.6:
+                threat_level = ThreatLevel.HIGH if malware_score > 0.8 else ThreatLevel.MEDIUM
+                threats.append(ThreatDetection(
+                    threat_id=f"ml_malware_{int(time.time())}_{np.random.randint(10000)}",
+                    threat_type="potential_malware",
+                    threat_level=threat_level,
+                    confidence=min(0.95, malware_score),
+                    description="Statistical analysis indicates potential malware activity",
+                    affected_resources=["system", "processes"],
+                    attack_vector="malware_execution",
+                    mitigation_suggestions=[
+                        "Run comprehensive antivirus scan",
+                        "Isolate affected systems",
+                        "Review recent file changes",
+                        "Check process execution patterns"
+                    ]
+                ))
+            
+            # Intrusion detection heuristics
+            intrusion_score = 0.0
+            if event_frequency > 0.7:  # High frequency of security events
+                intrusion_score += 0.35
+            if network_anomaly > 0.6:  # Unusual network patterns
+                intrusion_score += 0.3
+            if access_pattern > 0.6:  # Suspicious access patterns
+                intrusion_score += 0.25
+            
+            if intrusion_score > 0.6:
+                threat_level = ThreatLevel.HIGH if intrusion_score > 0.8 else ThreatLevel.MEDIUM
+                threats.append(ThreatDetection(
+                    threat_id=f"ml_intrusion_{int(time.time())}_{np.random.randint(10000)}",
+                    threat_type="intrusion_attempt",
+                    threat_level=threat_level,
+                    confidence=min(0.95, intrusion_score),
+                    description="Pattern analysis suggests potential intrusion attempt",
+                    affected_resources=["network", "access_control"],
+                    attack_vector="network_intrusion",
+                    mitigation_suggestions=[
+                        "Review firewall logs and rules",
+                        "Check for unauthorized access attempts",
+                        "Monitor network traffic patterns",
+                        "Strengthen access controls"
+                    ]
+                ))
+            
+            # Anomaly detection
+            anomaly_score = (pattern_anomaly + network_anomaly + payload_anomaly) / 3.0
+            if anomaly_score > 0.65:
+                threat_level = ThreatLevel.MEDIUM if anomaly_score > 0.8 else ThreatLevel.LOW
+                threats.append(ThreatDetection(
+                    threat_id=f"ml_anomaly_{int(time.time())}_{np.random.randint(10000)}",
+                    threat_type="behavioral_anomaly",
+                    threat_level=threat_level,
+                    confidence=min(0.9, anomaly_score),
+                    description="Statistical anomaly detected in system behavior",
+                    affected_resources=["system_behavior"],
+                    attack_vector="unknown",
+                    mitigation_suggestions=[
+                        "Investigate unusual system behavior",
+                        "Review system logs for patterns",
+                        "Monitor resource usage",
+                        "Check for configuration changes"
+                    ]
+                ))
+            
+            # Data breach detection heuristics
+            breach_score = 0.0
+            if access_pattern > 0.7:  # Unusual data access patterns
+                breach_score += 0.4
+            if len(features) > 7 and features[7] > 0.6:  # Data transfer anomalies
+                breach_score += 0.3
+            if source_entropy > 0.7:  # High entropy may indicate data exfiltration
+                breach_score += 0.2
+            
+            if breach_score > 0.5:
+                threat_level = ThreatLevel.HIGH if breach_score > 0.7 else ThreatLevel.MEDIUM
+                threats.append(ThreatDetection(
+                    threat_id=f"ml_breach_{int(time.time())}_{np.random.randint(10000)}",
+                    threat_type="potential_data_breach",
+                    threat_level=threat_level,
+                    confidence=min(0.9, breach_score),
+                    description="Analysis suggests potential data breach or exfiltration",
+                    affected_resources=["data_stores", "network"],
+                    attack_vector="data_exfiltration",
+                    mitigation_suggestions=[
+                        "Audit data access logs",
+                        "Check for unauthorized data transfers",
+                        "Review user permissions",
+                        "Monitor network traffic for data patterns"
+                    ]
+                ))
+            
+            # DDoS detection heuristics
+            ddos_score = 0.0
+            if event_frequency > 0.8:  # Very high event frequency
+                ddos_score += 0.5
+            if network_anomaly > 0.7:  # High network load
+                ddos_score += 0.3
+            if len(features) > 8 and features[8] > 0.6:  # Resource exhaustion indicators
+                ddos_score += 0.2
+            
+            if ddos_score > 0.7:
+                threat_level = ThreatLevel.HIGH
+                threats.append(ThreatDetection(
+                    threat_id=f"ml_ddos_{int(time.time())}_{np.random.randint(10000)}",
+                    threat_type="ddos_attack",
+                    threat_level=threat_level,
+                    confidence=min(0.95, ddos_score),
+                    description="High-frequency pattern suggests potential DDoS attack",
+                    affected_resources=["network", "services"],
+                    attack_vector="network_flood",
+                    mitigation_suggestions=[
+                        "Implement rate limiting",
+                        "Check for traffic spikes",
+                        "Review load balancer logs",
+                        "Consider DDoS protection services"
+                    ]
+                ))
+            
+            # Add metadata to all threats
+            for threat in threats:
+                threat.metadata = {
+                    'detection_method': 'statistical_analysis',
+                    'feature_analysis': {
+                        'severity_score': float(severity_score),
+                        'event_frequency': float(event_frequency),
+                        'anomaly_score': float(anomaly_score)
+                    }
+                }
+            
+            return threats
+            
+        except Exception as e:
+            logger.warning(f"ML fallback threat analysis failed: {e}")
+            return []
     
     # Additional helper methods for comprehensive analysis
     def _get_ip_count(self, item):

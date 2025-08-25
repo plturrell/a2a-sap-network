@@ -55,8 +55,8 @@ self.addEventListener("install", event => {
                 // // console.log("[SW] Service worker installed successfully");
                 return self.skipWaiting();
             })
-            .catch(error => {
-                // console.error("[SW] Installation failed:", error);
+            .catch(_error => {
+                // Installation error handled silently
             })
     );
 });
@@ -241,7 +241,6 @@ async function handleCacheFirstStrategy(request, cacheName) {
 
         return response;
     } catch (error) {
-        // console.error("[SW] Cache-first strategy failed:", error);
         return new Response("Resource unavailable offline", {
             status: 503,
             statusText: "Service Unavailable"
@@ -318,7 +317,7 @@ async function queueBackgroundSync(request) {
 
         // // console.log("[SW] Request queued for background sync:", requestData.url);
     } catch (error) {
-        // console.error("[SW] Failed to queue request for background sync:", error);
+        // Background sync queue error handled
     }
 }
 
@@ -375,11 +374,11 @@ async function processBackgroundSync() {
                     // // console.log("[SW] Background sync successful:", requestData.url);
                 }
             } catch (error) {
-                // console.error("[SW] Background sync failed for:", requestData.url, error);
+                // Background sync retry error handled
             }
         }
     } catch (error) {
-        // console.error("[SW] Background sync processing failed:", error);
+        // Background sync process error handled
     }
 }
 
@@ -436,7 +435,7 @@ async function clearAllCaches() {
         await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
         // // console.log("[SW] All caches cleared");
     } catch (error) {
-        // console.error("[SW] Failed to clear caches:", error);
+        // Cache clearing error handled
     }
 }
 

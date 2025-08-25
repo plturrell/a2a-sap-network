@@ -48,7 +48,6 @@ async def test_reasoning_without_agents():
             )
 
             if response.status_code == 200:
-                result = response.json()
                 # This should have failed if agents are missing
                 logger.error("❌ Reasoning succeeded without dependencies - fallbacks still present!")
                 return False
@@ -56,7 +55,7 @@ async def test_reasoning_without_agents():
                 logger.info("✅ Reasoning properly failed when agents unavailable")
                 return True
 
-    except Exception as e:
+    except Exception:
         logger.info(f"✅ Reasoning properly failed with error: {e}")
         return True
 
@@ -86,7 +85,6 @@ async def test_qa_agent_without_reasoning():
             )
 
             if response.status_code == 200:
-                result = response.json()
                 # Check if it used reasoning or fell back
                 logger.warning("QA Agent completed - check if reasoning was used")
                 return True  # May be OK if reasoning wasn't needed
@@ -94,7 +92,7 @@ async def test_qa_agent_without_reasoning():
                 logger.info("✅ QA Agent properly failed when reasoning unavailable")
                 return True
 
-    except Exception as e:
+    except Exception:
         logger.info(f"✅ QA Agent properly failed with error: {e}")
         return True
 
@@ -122,7 +120,7 @@ async def test_initialization_failures():
                 else:
                     logger.info(f"✅ {name} health check failed as expected")
                     results.append(True)
-            except Exception as e:
+            except Exception:
                 logger.info(f"✅ {name} not available: {e}")
                 results.append(True)
 
@@ -163,11 +161,11 @@ async def test_no_mock_responses():
                             logger.error(f"❌ Found mock indicator '{indicator}' in response!")
                             return False
 
-            except Exception as e:
+            except Exception:
                 # Expected to fail without dependencies
                 pass
 
-    except Exception as e:
+    except Exception:
         logger.info(f"✅ No mock responses detected")
         return True
 

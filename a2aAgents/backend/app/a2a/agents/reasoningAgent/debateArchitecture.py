@@ -121,7 +121,9 @@ class DebateAgent:
             opponent_args = [a for a in self.arguments_heard
                            if a.role == DebateRole.OPPONENT]
             if opponent_args:
-                target = max(opponent_args, key=lambda a: a.confidence)
+                def get_argument_confidence(a):
+                    return a.confidence
+                target = max(opponent_args, key=get_argument_confidence)
                 return Argument(
                     argument_id=f"arg_{self.agent_id}_{len(self.arguments_made)}",
                     speaker=self.agent_id,
@@ -159,7 +161,9 @@ class DebateAgent:
             proponent_args = [a for a in self.arguments_heard
                             if a.role == DebateRole.PROPONENT]
             if proponent_args:
-                target = max(proponent_args, key=lambda a: a.confidence)
+                def get_proponent_confidence(a):
+                    return a.confidence
+                target = max(proponent_args, key=get_proponent_confidence)
                 return Argument(
                     argument_id=f"arg_{self.agent_id}_{len(self.arguments_made)}",
                     speaker=self.agent_id,

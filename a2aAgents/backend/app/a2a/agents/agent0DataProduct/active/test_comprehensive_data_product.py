@@ -1,9 +1,6 @@
-import sys
 import asyncio
-import json
 import os
-
-from app.a2a.core.security_base import SecureA2AAgent
+import sys
 #!/usr/bin/env python3
 """
 Test Comprehensive Data Product Agent Real AI Integration

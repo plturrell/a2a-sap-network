@@ -39,7 +39,6 @@ class EnterpriseErrorHandler {
     async initialize() {
         try {
             await fs.mkdir(this.logDir, { recursive: true });
-            // console.log(`✅ Enterprise error handler initialized with logs at: ${this.logDir}`);
 
             // Clean up old log files
             await this.cleanupOldLogs();
@@ -123,7 +122,6 @@ class EnterpriseErrorHandler {
     initializeRecoveryStrategies() {
         this.recoveryStrategies.set('PARSE_ERROR', async (error, context) => {
             // Try alternative parsers or fallback to regex parsing
-            // console.log(`🔄 Attempting recovery for parse error in ${context.filePath}`);
 
             try {
                 // Fallback to simpler parsing
@@ -147,7 +145,6 @@ class EnterpriseErrorHandler {
         });
 
         this.recoveryStrategies.set('FILE_ACCESS_ERROR', async (error, context) => {
-            // console.log(`🔄 Attempting recovery for file access error: ${context.filePath}`);
 
             try {
                 // Wait and retry
@@ -173,7 +170,6 @@ class EnterpriseErrorHandler {
         });
 
         this.recoveryStrategies.set('MEMORY_ERROR', async (error, context) => {
-            // console.log(`🔄 Attempting recovery for memory error`);
 
             try {
                 // Force garbage collection if available
@@ -202,7 +198,6 @@ class EnterpriseErrorHandler {
         });
 
         this.recoveryStrategies.set('CACHE_ERROR', async (error, context) => {
-            // console.log(`🔄 Attempting recovery for cache error`);
 
             // Simply proceed without cache
             try {
@@ -214,7 +209,6 @@ class EnterpriseErrorHandler {
         });
 
         this.recoveryStrategies.set('TIMEOUT_ERROR', async (error, context) => {
-            // console.log(`🔄 Attempting recovery for timeout error`);
 
             try {
                 // Increase timeout and retry
@@ -336,12 +330,10 @@ class EnterpriseErrorHandler {
         }
 
         try {
-            // console.log(`🔄 Attempting recovery for ${errorType}...`);
             const recovery = await strategy(error, context);
 
             if (recovery.success) {
                 this.metrics.successfulRecoveries++;
-                // console.log(`✅ Recovery successful using method: ${recovery.method}`);
 
                 // Log successful recovery
                 await this.logRecovery(errorType, recovery, context);
@@ -354,7 +346,6 @@ class EnterpriseErrorHandler {
                     result: recovery.result
                 };
             } else {
-                // console.log(`❌ Recovery failed for ${errorType}`);
                 return { error, errorType, recovered: false, reason: recovery.method };
             }
 
@@ -510,7 +501,6 @@ class EnterpriseErrorHandler {
                     await fs.unlink(path.join(this.logDir, file));
                 }
 
-                // console.log(`🧹 Cleaned up ${filesToDelete.length} old log files`);
             }
         } catch (error) {
             console.warn(`⚠️ Log cleanup failed: ${error.message}`);

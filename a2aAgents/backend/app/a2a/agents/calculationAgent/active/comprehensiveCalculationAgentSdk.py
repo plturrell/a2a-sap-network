@@ -508,8 +508,6 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     async def perform_calculation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform comprehensive calculations with AI optimization"""
         try:
-            start_time = time.time()
-
             calc_request = request_data["calculation_request"]
             enable_steps = request_data.get("enable_step_by_step", True)
             enable_blockchain = request_data.get("enable_blockchain_validation", True)
@@ -945,8 +943,8 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
 
             # Use semantic matching if available
             if self.embedding_model and SENTENCE_TRANSFORMERS_AVAILABLE:
-                # Get embeddings for expression
-                expr_embedding = self.embedding_model.encode([calculation.expression])
+                # Get embeddings for expression (for future semantic matching)
+                # self.embedding_model.encode([calculation.expression])
 
                 # Compare against known patterns (would be loaded from training data)
                 # For now, create some example patterns
@@ -1711,7 +1709,6 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         try:
             analysis_type = data.get("analysis_type", "descriptive")
             dataset = data.get("dataset", [])
-            parameters = data.get("parameters", {})
 
             if not dataset:
                 return {
@@ -2041,8 +2038,6 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """
         try:
             service_type = data.get("service_type", "computation")
-            task_data = data.get("task_data", {})
-            performance_requirements = data.get("performance_requirements", {})
 
             if service_type == "distributed_computation":
                 # Coordinate distributed computation

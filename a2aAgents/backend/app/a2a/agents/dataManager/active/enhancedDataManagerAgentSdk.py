@@ -709,7 +709,7 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             )
 
             # Stage 5: Update caches and indexes
-            cache_update = await self._ai_update_caches_and_indexes(
+            await self._ai_update_caches_and_indexes(
                 data_context, storage_execution
             )
 

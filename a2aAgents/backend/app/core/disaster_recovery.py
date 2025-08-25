@@ -253,7 +253,9 @@ class LocalFileStorageProvider(BackupStorageProvider):
             except Exception as e:
                 logger.error(f"Failed to load backup metadata {metadata_file}: {e}")
 
-        return sorted(backups, key=lambda b: b.created_at, reverse=True)
+        def get_backup_created_at(b):
+            return b.created_at
+        return sorted(backups, key=get_backup_created_at, reverse=True)
 
 
 class BackupManager:
@@ -582,7 +584,9 @@ class BackupManager:
         if not backups:
             return True
 
-        latest_backup = max(backups, key=lambda b: b.created_at)
+        def get_backup_created_at(b):
+            return b.created_at
+        latest_backup = max(backups, key=get_backup_created_at)
         time_since_backup = datetime.utcnow() - latest_backup.created_at
 
         return time_since_backup > timedelta(hours=1)

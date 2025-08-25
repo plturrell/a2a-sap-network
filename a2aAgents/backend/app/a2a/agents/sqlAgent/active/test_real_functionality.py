@@ -203,7 +203,6 @@ async def test_sql_functionality():
 
     # Calculate intelligence score based on actual features
     score = 0
-    total_tests = 10
 
     # ML Models (20 points)
     if agent.performance_predictor is not None: score += 5

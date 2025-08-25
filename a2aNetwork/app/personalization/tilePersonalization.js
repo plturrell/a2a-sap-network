@@ -25,13 +25,12 @@ class TilePersonalizationService {
             }
 
             this.initialized = true;
-            // console.log('✅ Tile personalization service initialized');
         } catch (error) {
             console.error('❌ Failed to initialize tile personalization:', error.message);
         }
     }
 
-    async initializeSQLiteTables() {
+    initializeSQLiteTables() {
         const handleInitializeSQLiteTables = function(resolve, _reject) {
             const serializeInitialization = function() {
                 // User tile configurations table

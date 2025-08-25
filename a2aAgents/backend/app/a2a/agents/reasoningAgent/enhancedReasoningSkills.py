@@ -1118,7 +1118,6 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         hypotheses = []
 
         # Extract semantic components from question
-        question_words = set(question.lower().split())
         context_entities = self._extract_entities_from_context(context)
 
         # Analyze question structure for hypothesis generation

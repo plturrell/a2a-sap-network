@@ -18,7 +18,6 @@ class TestInverseErrorFunction:
         #   mpmath.mp.dps = 200
         #   for y in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
         #       x = mpmath.erfinv(y)
-        #       print(x)
         #
         y = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
         actual = sc.erfinv(y)

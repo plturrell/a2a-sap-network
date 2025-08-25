@@ -345,10 +345,6 @@ class ComprehensiveGoalAssignmentSystem:
                                 target = min(template.achievable_criteria[metric]["max"], baseline * 1.15)
                             target_metrics[metric] = round(target, 2)
 
-                    # Create SMART goal with proper template parameters
-                    primary_metric = template.measurable_metrics[0] if template.measurable_metrics else "performance"
-                    primary_target = target_metrics.get(primary_metric, 95.0)
-
                     # Create template parameter mapping based on the goal template
                     template_params = self._create_template_params(template, target_metrics, goal_type)
 

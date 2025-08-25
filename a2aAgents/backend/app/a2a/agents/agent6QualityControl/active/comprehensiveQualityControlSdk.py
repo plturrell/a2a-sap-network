@@ -346,12 +346,14 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         }
 
         # Method performance tracking
-        self.method_performance = defaultdict(lambda: {
-            'total': 0,
-            'success': 0,
-            'total_time': 0.0,
-            'average_accuracy': 0.0
-        })
+        def create_quality_performance_metrics():
+            return {
+                'total': 0,
+                'success': 0,
+                'total_time': 0.0,
+                'average_accuracy': 0.0
+            }
+        self.method_performance = defaultdict(create_quality_performance_metrics)
 
         # Quality history for trending
         self.quality_history = defaultdict(list)

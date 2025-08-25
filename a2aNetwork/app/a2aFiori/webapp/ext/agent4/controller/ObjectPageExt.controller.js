@@ -402,7 +402,6 @@ sap.ui.define([
                 async: true,
                 success() {
                     // Audit success logging
-                    // console.log("Audit trail recorded:", sEventType);
                 },
                 error() {
                     // Fallback audit logging to local storage

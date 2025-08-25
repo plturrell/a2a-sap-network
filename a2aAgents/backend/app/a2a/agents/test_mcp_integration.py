@@ -183,7 +183,6 @@ class TestRealMCPIntegration:
 
         assert registration_result["status"] == "success"
         assert "product_id" in registration_result
-        product_id = registration_result["product_id"]
 
         # Step 2: Standardize the data
         standardization_result = await agents["standardization"].intelligent_data_standardization(
@@ -407,7 +406,6 @@ class TestMCPToolChaining:
     async def test_validation_chain(self):
         """Test chaining validation tools across agents"""
         # Initialize agents
-        data_agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
         std_agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_SERVICE_URL"))
 
         # Create test data with validation issues

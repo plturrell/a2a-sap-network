@@ -261,7 +261,6 @@ class ConversationalCalculationInterface(SecureA2AAgent):
 
         current_state = conversation["state"]
         user_intent = analysis.get("intent", "question")
-        suggested_action = analysis.get("suggested_next_action", "analyze")
 
         # Determine response strategy
         if current_state == ConversationState.INITIAL or user_intent == "question":

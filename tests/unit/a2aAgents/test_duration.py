@@ -441,7 +441,6 @@ def create_parsetestcase(durationstring, expectation, format, altstr):
                                  altstr)
             else:
                 # if durationstring == '-P2W':
-                #     import pdb; pdb.set_trace()
                 self.assertEqual(duration_isoformat(expectation, format),
                                  durationstring)
 

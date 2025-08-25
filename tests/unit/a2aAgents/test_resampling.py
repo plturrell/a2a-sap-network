@@ -207,7 +207,6 @@ def test_bootstrap_against_R(method, expected):
     # n = 1000000
     # bootresult = boot(x, stat, n)
     # result <- boot.ci(bootresult)
-    # print(result)
     x = np.array([10, 12, 12.5, 12.5, 13.9, 15, 21, 22,
                   23, 34, 50, 81, 89, 121, 134, 213])
     res = bootstrap((x,), np.mean, n_resamples=1000000, method=method,

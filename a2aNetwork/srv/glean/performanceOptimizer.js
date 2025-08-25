@@ -28,7 +28,6 @@ class PerformanceOptimizer {
     async initialize() {
         try {
             await fs.mkdir(this.cacheDir, { recursive: true });
-            // console.log(`✅ Performance optimizer initialized with cache at: ${this.cacheDir}`);
         } catch (error) {
             console.warn(`⚠️ Could not initialize cache directory: ${error.message}`);
         }
@@ -139,7 +138,6 @@ class PerformanceOptimizer {
         const startTime = Date.now();
         const results = [];
 
-        // console.log(`📦 Processing batch of ${files.length} files...`);
 
         // Process files in parallel but limit concurrency
         const concurrency = Math.min(this.batchSize, files.length);
@@ -185,7 +183,6 @@ class PerformanceOptimizer {
         this.performanceMetrics.batchesProcessed++;
 
         const processingTime = Date.now() - startTime;
-        // console.log(`✅ Batch processed in ${processingTime}ms (${files.length} files)`);
 
         return results;
     }
@@ -195,7 +192,6 @@ class PerformanceOptimizer {
      */
     optimizeFactDatabase(factBatches) {
         const startTime = Date.now();
-        // console.log('🔧 Optimizing fact database...');
 
         // Create indexes for faster lookups
         const indexes = {
@@ -242,7 +238,6 @@ class PerformanceOptimizer {
         });
 
         const optimizationTime = Date.now() - startTime;
-        // console.log(`✅ Fact database optimized in ${optimizationTime}ms`);
 
         return {
             factBatches,
@@ -283,7 +278,6 @@ class PerformanceOptimizer {
                 queryCache.set(queryHash, results);
                 this.performanceMetrics.cacheMisses++;
 
-                // console.log(`🔍 Query executed in ${executionTime}ms (${results.length} results)`);
 
                 return results;
             },
@@ -359,7 +353,6 @@ class PerformanceOptimizer {
                 }
             }
 
-            // console.log(`🧹 Cleaned up ${cleanedCount} old cache entries`);
         } catch (error) {
             console.warn(`⚠️ Cache cleanup error: ${error.message}`);
         }
@@ -410,7 +403,6 @@ class PerformanceOptimizer {
             this.batchSize = Math.max(5, this.batchSize - 2);
         }
 
-        // console.log(`📊 Adapted batch size to ${this.batchSize} based on performance`);
     }
 }
 

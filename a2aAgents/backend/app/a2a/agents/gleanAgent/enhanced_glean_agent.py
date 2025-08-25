@@ -466,7 +466,7 @@ class EnhancedGleanAgent(SecureA2AAgent):
         # Check Glean service connectivity
         try:
             # Simple connectivity test
-            test_result = await self.glean_sdk.analyze_code_semantic(__file__)
+            await self.glean_sdk.analyze_code_semantic(__file__)
             health_status['checks']['glean_service'] = {
                 'status': 'healthy',
                 'message': 'Glean service is accessible'

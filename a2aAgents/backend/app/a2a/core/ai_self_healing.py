@@ -674,7 +674,9 @@ class AISelfHealingSystem:
         scores[ErrorType.SERVICE_UNAVAILABLE.value] = error_rate
         scores[ErrorType.NETWORK_TIMEOUT.value] = features[4] if len(features) > 4 else 0.1
         
-        return max(scores.items(), key=lambda x: x[1])[0]
+        def get_score_value(x):
+            return x[1]
+        return max(scores.items(), key=get_score_value)[0]
     
     def _predict_severity(self, features: np.ndarray) -> int:
         """Predict error severity level"""
@@ -751,7 +753,7 @@ class AISelfHealingSystem:
     async def _get_nn_predictions(self, features: np.ndarray) -> Dict[str, float]:
         """Get predictions from neural network"""
         if not TORCH_AVAILABLE or not self.prediction_nn:
-            return {'error_prob': 0.5, 'time_to_failure': 12.0}
+            return await self._ml_fallback_error_predictions(features)
         
         try:
             # Pad or truncate features to expected input size
@@ -771,6 +773,86 @@ class AISelfHealingSystem:
             }
         except Exception as e:
             logger.error(f"Neural network prediction error: {e}")
+            return await self._ml_fallback_error_predictions(features)
+    
+    async def _ml_fallback_error_predictions(self, features: np.ndarray) -> Dict[str, float]:
+        """ML-based fallback for error predictions using statistical analysis"""
+        try:
+            if len(features) == 0:
+                return {'error_prob': 0.5, 'time_to_failure': 12.0}
+            
+            # Analyze system health indicators from features
+            # Features typically: [cpu, memory, disk, error_rate, response_time, throughput, connections, ...]
+            
+            # Base error probability calculation
+            if len(features) >= 7:
+                cpu_usage = features[0]
+                memory_usage = features[1] 
+                disk_usage = features[2]
+                current_error_rate = features[3]
+                response_time = features[4]
+                throughput = features[5]
+                
+                # Higher resource usage and existing errors increase error probability
+                resource_stress = (cpu_usage + memory_usage + disk_usage) / 3.0
+                performance_degradation = min(1.0, response_time / 1000.0)  # Normalize response time
+                throughput_factor = max(0.0, 1.0 - throughput)  # Lower throughput = higher risk
+                
+                # Combine factors with weights
+                error_prob = (
+                    resource_stress * 0.4 +
+                    current_error_rate * 0.3 +
+                    performance_degradation * 0.2 +
+                    throughput_factor * 0.1
+                )
+            else:
+                # Fallback calculation with available features
+                error_prob = np.mean(features[:min(4, len(features))])
+            
+            # Time to failure prediction based on trends
+            if len(features) >= 13:  # Trend features available
+                cpu_trend = features[10] if len(features) > 10 else 0.0
+                memory_trend = features[11] if len(features) > 11 else 0.0  
+                error_trend = features[12] if len(features) > 12 else 0.0
+                
+                # Negative trends (increasing usage/errors) reduce time to failure
+                trend_severity = abs(cpu_trend) + abs(memory_trend) + abs(error_trend)
+                
+                if trend_severity > 0.01:  # Significant trend
+                    if cpu_trend > 0 or memory_trend > 0 or error_trend > 0:
+                        # Worsening trends
+                        time_to_failure = max(0.5, 24.0 - (trend_severity * 100))
+                    else:
+                        # Improving trends
+                        time_to_failure = min(72.0, 24.0 + (trend_severity * 50))
+                else:
+                    # Stable system
+                    time_to_failure = 24.0 - (error_prob * 20)
+            else:
+                # Simple prediction based on current error probability
+                time_to_failure = 24.0 - (error_prob * 20)
+            
+            # Add variability features if available
+            if len(features) >= 16:
+                cpu_std = features[13] if len(features) > 13 else 0.0
+                memory_std = features[14] if len(features) > 14 else 0.0
+                
+                # High variability indicates instability
+                stability_factor = 1.0 - min(1.0, (cpu_std + memory_std))
+                error_prob = error_prob + (1.0 - stability_factor) * 0.2
+                time_to_failure = time_to_failure * stability_factor
+            
+            # Normalize and bound predictions
+            error_prob = float(np.clip(error_prob, 0.01, 0.99))
+            time_to_failure = float(np.clip(time_to_failure, 0.1, 168.0))  # 1 week max
+            
+            return {
+                'error_prob': error_prob,
+                'time_to_failure': time_to_failure
+            }
+            
+        except Exception as e:
+            logger.warning(f"ML fallback error prediction failed: {e}")
             return {'error_prob': 0.5, 'time_to_failure': 12.0}
     
     # Helper methods for error analysis and healing actions
@@ -1157,7 +1239,9 @@ class AISelfHealingSystem:
             except:
                 continue
         
-        return sorted(similar_errors, key=lambda x: x['similarity'], reverse=True)[:5]
+        def get_similarity_score(x):
+            return x['similarity']
+        return sorted(similar_errors, key=get_similarity_score, reverse=True)[:5]
     
     def _predict_recovery_time(self, error_features: np.ndarray) -> float:
         """Predict error recovery time in minutes"""

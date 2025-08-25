@@ -7,6 +7,10 @@ policies based on user behavior and system capacity.
 """
 
 import asyncio
+
+def create_historical_patterns_deque():
+    """Create a deque for historical patterns with max length of 1000"""
+    return deque(maxlen=1000)
 # Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import numpy as np
@@ -148,7 +152,7 @@ class UserProfile:
     tier: str = "free"  # free, premium, enterprise
     baseline_rate: float = 60.0  # requests per minute
     burst_allowance: float = 10.0  # extra requests in burst
-    historical_patterns: deque = field(default_factory=lambda: deque(maxlen=1000))
+    historical_patterns: deque = field(default_factory=create_historical_patterns_deque)
     anomaly_score: float = 0.0
     trust_score: float = 0.8
     last_updated: datetime = field(default_factory=datetime.utcnow)
@@ -769,12 +773,51 @@ class AIRateLimiter:
                 return
             
             # Extract training data from recent history
-            # Training data preparation: X (features), y_usage, y_anomaly (labels)
+            X_usage, y_usage = [], []
+            X_anomaly = []
+            X_burst, y_burst = [], []
             
             for record in list(self.request_history)[-100:]:
-                # Would extract features and labels from actual data
-                # This is a placeholder for the retraining logic
-                pass
+                try:
+                    request = record['request']
+                    decision = record['decision']
+                    
+                    if request.user_id in self.user_profiles:
+                        user_profile = self.user_profiles[request.user_id]
+                        features = self._extract_request_features(request, user_profile)
+                        
+                        # Usage training data
+                        actual_rate = decision.current_rate
+                        X_usage.append(features)
+                        y_usage.append(actual_rate)
+                        
+                        # Anomaly training data (use allowed requests as normal)
+                        if decision.allowed and user_profile.trust_score > 0.7:
+                            X_anomaly.append(features)
+                        
+                        # Burst training data
+                        user_patterns = list(user_profile.historical_patterns)[-5:]
+                        if len(user_patterns) >= 2:
+                            intervals = [p['interval'] for p in user_patterns]
+                            is_burst = 1 if np.mean(intervals) < 10 else 0  # <10s intervals = burst
+                            X_burst.append(features)
+                            y_burst.append(is_burst)
+                            
+                except Exception as e:
+                    logger.debug(f"Failed to extract retraining data: {e}")
+                    continue
+            
+            # Retrain models with extracted real data
+            if len(X_usage) > 10:
+                X_usage_scaled = self.usage_scaler.fit_transform(X_usage)
+                self.usage_predictor.fit(X_usage_scaled, y_usage)
+                
+            if len(X_anomaly) > 10:
+                X_anomaly_scaled = self.anomaly_scaler.fit_transform(X_anomaly)
+                self.anomaly_detector.fit(X_anomaly_scaled)
+                
+            if len(X_burst) > 10:
+                self.burst_predictor.fit(X_burst, y_burst)
             
             logger.info("Models retrained with recent data")
         

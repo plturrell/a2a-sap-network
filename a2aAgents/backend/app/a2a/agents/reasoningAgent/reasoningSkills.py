@@ -413,8 +413,6 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         causal_indicators = ['causes', 'leads to', 'results in', 'because', 'due to', 'leads to']
 
         # Analyze question for causal structure
-        words = question.lower().split()
-
         for clue in clues[:5]:  # Analyze top 5 clues
             for indicator in causal_indicators:
                 if indicator in clue.lower():

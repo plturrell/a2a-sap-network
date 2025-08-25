@@ -676,42 +676,57 @@ class AIMessageRouter:
             self.latency_predictor.fit(X_scaled, y_latency)
     
     def _generate_route_training_data(self) -> Tuple[List[np.ndarray], List[str]]:
-        """Generate synthetic training data for route prediction"""
+        """Extract real training data from routing history"""
         X, y = [], []
         
-        route_types = ['direct', 'relay', 'multicast', 'broadcast']
+        # Use actual routing decisions and their outcomes
+        if not self.routing_history:
+            logger.warning("No routing history available for training")
+            return [], []
         
-        for i in range(200):
-            features = np.random.rand(20)
-            
-            # Simple heuristics for route selection
-            if features[0] > 0.8:  # Large message
-                route_type = 'relay'
-            elif features[5] > 0.9:  # Critical priority
-                route_type = 'direct'
-            elif features[9] > 0.7:  # Broadcast type
-                route_type = 'broadcast'
-            else:
-                route_type = np.random.choice(route_types)
-            
-            X.append(features)
-            y.append(route_type)
+        for routing_record in list(self.routing_history):
+            try:
+                # Extract features from real routing decision
+                message = routing_record.get('message')
+                route_taken = routing_record.get('route_type')
+                was_successful = routing_record.get('success', False)
+                
+                if message and route_taken and was_successful:
+                    # Extract real features from successful routing
+                    features = self._extract_message_features(message)
+                    
+                    X.append(features)
+                    y.append(route_taken)
+                    
+            except Exception as e:
+                logger.debug(f"Failed to extract routing training data: {e}")
+                continue
         
+        logger.info(f"Extracted {len(X)} real routing training examples")
         return X, y
     
     def _generate_latency_training_data(self) -> Tuple[List[np.ndarray], List[float]]:
-        """Generate synthetic training data for latency prediction"""
+        """Extract real latency training data from message delivery times"""
         X, y = [], []
         
-        for i in range(150):
-            features = np.random.rand(20)
-            
-            # Latency based on message size and route complexity
-            latency = (
-                features[0] * 100 +      # Message size impact
-                features[11] * 50 +      # Routing hops
-                np.random.normal(0, 10)  # Random variation
-            )
+        # Use actual message delivery latencies
+        if not self.routing_history:
+            logger.warning("No routing history available for latency training")
+            return [], []
+        
+        for routing_record in list(self.routing_history):
+            try:
+                # Extract actual latency measurements
+                message = routing_record.get('message')
+                actual_latency = routing_record.get('delivery_time_ms', 0)
+                was_successful = routing_record.get('success', False)
+                
+                if message and actual_latency > 0 and was_successful:
+                    # Extract features from real message
+                    features = self._extract_message_features(message)
+                    
+                    X.append(features)
+                    y.append(actual_latency)  # Real measured latency
             latency = max(1.0, latency)  # Minimum 1ms
             
             X.append(features)

@@ -23,9 +23,7 @@ fixture.split('\n').forEach(line => {
 // // Generate fixture data
 // fixture.split('\n').forEach(line => {
 //   if (!line.includes('export ')) {
-//     console.log(line)
 //     return
 //   }
 //   const names = getEsmExports(line)
-//   console.log(line, '//|', names.join(','))
 // })

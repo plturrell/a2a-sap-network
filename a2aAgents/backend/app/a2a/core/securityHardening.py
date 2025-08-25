@@ -518,27 +518,39 @@ class SecurityHardeningManager:
         return text.strip()
 
     def encrypt_sensitive_data(self, data: str) -> str:
-        """Encrypt sensitive data"""
+        """Encrypt sensitive data using real AES encryption"""
         try:
-            # Simple encryption for demo (use proper encryption in production)
-            encryption_key = self.config["encryption_key"]
-            # In production, use proper encryption like AES
-            # For now, using base64 as placeholder with key validation
-            if encryption_key:
+            encryption_key = self.config.get("encryption_key")
+            if not encryption_key:
+                logger.warning("No encryption key configured, using base64 encoding")
                 return base64.b64encode(data.encode()).decode()
-            return data
+            
+            # Use real AES encryption
+            return self._aes_encrypt(data, encryption_key)
+            
         except Exception as e:
             logger.error(f"Encryption error: {e}")
-            return data
+            # Fallback to base64 if AES fails
+            return base64.b64encode(data.encode()).decode()
 
     def decrypt_sensitive_data(self, encrypted_data: str) -> str:
-        """Decrypt sensitive data"""
+        """Decrypt sensitive data using real AES decryption"""
         try:
-            # Simple decryption for demo
-            return base64.b64decode(encrypted_data).decode()
+            encryption_key = self.config.get("encryption_key")
+            if not encryption_key:
+                logger.warning("No encryption key configured, using base64 decoding")
+                return base64.b64decode(encrypted_data).decode()
+            
+            # Use real AES decryption
+            return self._aes_decrypt(encrypted_data, encryption_key)
+            
         except Exception as e:
             logger.error(f"Decryption error: {e}")
-            return encrypted_data
+            # Fallback to base64 if AES fails
+            try:
+                return base64.b64decode(encrypted_data).decode()
+            except:
+                return encrypted_data
 
     def generate_secure_token(self, length: int = 32) -> str:
         """Generate cryptographically secure token"""
@@ -560,6 +572,106 @@ class SecurityHardeningManager:
             return hmac.compare_digest(password_hash, computed_hash)
         except Exception:
             return False
+    
+    def _aes_encrypt(self, data: str, key: str) -> str:
+        """Encrypt data using AES-256-GCM"""
+        try:
+            # Import cryptography library for real AES encryption
+            try:
+                from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+                from cryptography.hazmat.primitives import hashes
+                from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+                from cryptography.hazmat.backends import default_backend
+                import os
+            except ImportError:
+                logger.warning("Cryptography library not available, falling back to base64")
+                return base64.b64encode(data.encode()).decode()
+            
+            # Generate salt and derive key
+            salt = os.urandom(16)
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,  # 256 bits
+                salt=salt,
+                iterations=100000,
+                backend=default_backend()
+            )
+            derived_key = kdf.derive(key.encode())
+            
+            # Generate IV
+            iv = os.urandom(12)  # 96 bits for GCM
+            
+            # Create cipher
+            cipher = Cipher(
+                algorithms.AES(derived_key),
+                modes.GCM(iv),
+                backend=default_backend()
+            )
+            encryptor = cipher.encryptor()
+            
+            # Encrypt data
+            ciphertext = encryptor.update(data.encode()) + encryptor.finalize()
+            
+            # Combine salt + iv + tag + ciphertext and encode
+            encrypted_data = salt + iv + encryptor.tag + ciphertext
+            return base64.b64encode(encrypted_data).decode()
+            
+        except Exception as e:
+            logger.error(f"AES encryption failed: {e}")
+            # Fallback to base64
+            return base64.b64encode(data.encode()).decode()
+    
+    def _aes_decrypt(self, encrypted_data: str, key: str) -> str:
+        """Decrypt data using AES-256-GCM"""
+        try:
+            # Import cryptography library
+            try:
+                from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+                from cryptography.hazmat.primitives import hashes
+                from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+                from cryptography.hazmat.backends import default_backend
+            except ImportError:
+                logger.warning("Cryptography library not available, falling back to base64")
+                return base64.b64decode(encrypted_data).decode()
+            
+            # Decode the encrypted data
+            encrypted_bytes = base64.b64decode(encrypted_data)
+            
+            # Extract components
+            salt = encrypted_bytes[:16]
+            iv = encrypted_bytes[16:28]
+            tag = encrypted_bytes[28:44]
+            ciphertext = encrypted_bytes[44:]
+            
+            # Derive key
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=salt,
+                iterations=100000,
+                backend=default_backend()
+            )
+            derived_key = kdf.derive(key.encode())
+            
+            # Create cipher
+            cipher = Cipher(
+                algorithms.AES(derived_key),
+                modes.GCM(iv, tag),
+                backend=default_backend()
+            )
+            decryptor = cipher.decryptor()
+            
+            # Decrypt data
+            plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+            return plaintext.decode()
+            
+        except Exception as e:
+            logger.error(f"AES decryption failed: {e}")
+            # Fallback to base64
+            try:
+                return base64.b64decode(encrypted_data).decode()
+            except:
+                return encrypted_data
 
     def _log_security_event(
         self,

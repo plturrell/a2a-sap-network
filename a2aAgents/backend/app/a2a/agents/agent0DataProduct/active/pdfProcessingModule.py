@@ -2,9 +2,8 @@ import asyncio
 import logging
 import os
 import tempfile
-from typing import Dict, List, Any, Union, AsyncGenerator
+from typing import Dict, List, Any, AsyncGenerator
 from datetime import datetime
-import aiofiles
 from asyncio_throttle import Throttler
 
 from app.a2a.core.security_base import SecureA2AAgent
@@ -15,13 +14,10 @@ Implements comprehensive PDF processing capabilities with MCP skills architectur
 
 # Core PDF processing libraries
 try:
-    import PyPDF2
     import pdfplumber
     import tabula
     import fitz  # PyMuPDF
     import camelot
-    from pdfminer.high_level import extract_text
-    from pikepdf import Pdf
     PDF_LIBRARIES_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"PDF libraries not available: {e}")
@@ -30,8 +26,7 @@ except ImportError as e:
 # OCR libraries
 try:
     import pytesseract
-    import cv2
-    from pdf2image import convert_from_path, convert_from_bytes
+    from pdf2image import convert_from_path
     OCR_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"OCR libraries not available: {e}")
@@ -39,7 +34,6 @@ except ImportError as e:
 
 # AWS Textract (optional)
 try:
-    import boto3
     AWS_TEXTRACT_AVAILABLE = True
 except ImportError:
     AWS_TEXTRACT_AVAILABLE = False

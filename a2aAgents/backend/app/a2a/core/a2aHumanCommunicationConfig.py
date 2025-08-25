@@ -325,7 +325,9 @@ class A2AHumanCommunicationRouter:
 
             # Find matching rule (highest priority first)
             matching_rule = None
-            for rule in sorted(self.rules, key=lambda r: r.priority):
+            def get_rule_priority(r):
+                return r.priority
+            for rule in sorted(self.rules, key=get_rule_priority):
                 if not rule.active:
                     continue
 
@@ -570,7 +572,9 @@ class A2AHumanCommunicationRouter:
     def add_custom_rule(self, rule: CommunicationRule):
         """Add a custom communication rule"""
         self.rules.append(rule)
-        self.rules.sort(key=lambda r: r.priority)  # Maintain priority order
+        def get_rule_priority(r):
+            return r.priority
+        self.rules.sort(key=get_rule_priority)  # Maintain priority order
         logger.info(f"Added custom rule: {rule.rule_id}")
 
     def update_agent_profile(self, agent_id: str, profile: AgentCommunicationProfile):

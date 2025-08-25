@@ -309,7 +309,6 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
             msg = result['msg']
             if msg!='':
                 print(result['msg'])
-            # print(result.get('xpass_msg',''))
     if runxfail is None:
         match_count = len(match_list)
         solved = len(match_list)-len(unsolve_list)-len(exception_list)

@@ -18,6 +18,32 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+# Helper functions for lambda replacements
+def get_recent_performance_mean(x):
+    """Get recent performance mean for strategy ranking"""
+    return np.mean(x[1][-10:])
+
+def get_average_score(x):
+    """Get average score for strategy selection"""
+    return x[1]["average_score"]
+
+def get_path_confidence_mean(p):
+    """Get mean confidence for path selection"""
+    return np.mean([n.confidence for n in p])
+
+def get_connection_count(x):
+    """Get connection count for concept analysis"""
+    return x[1]
+
+def get_node_confidence(n):
+    """Get node confidence for scenario analysis"""
+    return n.confidence
+
+def get_relationship_strength(r):
+    """Get relationship strength for sorting"""
+    return r["strength"]
+
+
 class ReasoningStrategy(str, Enum):
     """Available reasoning strategies"""
 
@@ -225,7 +251,7 @@ class ReasoningEngine:
         if self.strategy_performance:
             best_strategy = max(
                 self.strategy_performance.items(),
-                key=lambda x: np.mean(x[1][-10:]),  # Recent performance
+                key=get_recent_performance_mean,  # Recent performance
             )[0]
             return ReasoningStrategy(best_strategy)
 
@@ -256,7 +282,7 @@ class ReasoningEngine:
             "success_rate": successful / total_reasonings if total_reasonings > 0 else 0,
             "strategy_performance": strategy_stats,
             "preferred_strategy": (
-                max(strategy_stats.items(), key=lambda x: x[1]["average_score"])[0]
+                max(strategy_stats.items(), key=get_average_score)[0]
                 if strategy_stats
                 else None
             ),
@@ -472,7 +498,7 @@ class TreeOfThoughtReasoner(BaseReasoner):
         paths = self._find_all_paths(nodes)
 
         # Select path with highest average confidence
-        best_path = max(paths, key=lambda p: np.mean([n.confidence for n in p]))
+        best_path = max(paths, key=get_path_confidence_mean)
         return best_path
 
     def _find_all_paths(self, nodes: List[ReasoningNode]) -> List[List[ReasoningNode]]:
@@ -624,7 +650,7 @@ class GraphOfThoughtReasoner(BaseReasoner):
                 concept_connections[edge.metadata["to"]] += 1
 
         if concept_connections:
-            central_concept = max(concept_connections.items(), key=lambda x: x[1])[0]
+            central_concept = max(concept_connections.items(), key=get_connection_count)[0]
             insights.append(
                 {"content": f"Central concept identified: {central_concept}", "confidence": 0.85}
             )
@@ -786,7 +812,7 @@ class CounterfactualReasoner(BaseReasoner):
         scenario_nodes = [n for n in nodes if n.node_type == "counterfactual"]
 
         if scenario_nodes:
-            highest_confidence = max(scenario_nodes, key=lambda n: n.confidence)
+            highest_confidence = max(scenario_nodes, key=get_node_confidence)
             return f"Most plausible alternative: {highest_confidence.content}"
 
         return "No viable counterfactual scenarios identified"
@@ -949,7 +975,7 @@ class CausalReasoner(BaseReasoner):
         self, nodes: List[ReasoningNode], relationships: List[Dict[str, Any]]
     ) -> str:
         """Draw conclusion from causal analysis"""
-        strongest_rel = max(relationships, key=lambda r: r["strength"]) if relationships else None
+        strongest_rel = max(relationships, key=get_relationship_strength) if relationships else None
 
         if strongest_rel:
             return f"Strongest causal link: {strongest_rel['cause']} → {strongest_rel['effect']} (strength: {strongest_rel['strength']:.2f})"
@@ -986,7 +1012,7 @@ class CausalReasoner(BaseReasoner):
         explanation = f"Causal analysis with {len(causes)} causes and {len(effects)} effects\n"
 
         explanation += "\nCausal relationships:\n"
-        for rel in sorted(relationships, key=lambda r: r["strength"], reverse=True)[:3]:
+        for rel in sorted(relationships, key=get_relationship_strength, reverse=True)[:3]:
             explanation += f"- {rel['cause']} → {rel['effect']} (strength: {rel['strength']:.2f})\n"
 
         if confounders:

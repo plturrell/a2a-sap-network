@@ -216,8 +216,6 @@ class AIGoalOptimizer:
             metrics.get('error_rate', 5)
         ]])
 
-        features_scaled = self.scaler.transform(features)
-
         # Predict future progress points
         future_progress = []
         for days_ahead in range(1, 31):  # Predict 30 days ahead

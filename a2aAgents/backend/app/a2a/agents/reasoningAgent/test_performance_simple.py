@@ -119,7 +119,7 @@ async def test_cache_system():
 
         # Cache miss test
         start = time.time()
-        result = await cache.get(test_key)
+        await cache.get(test_key)
         miss_time = time.time() - start
 
         # Cache set test

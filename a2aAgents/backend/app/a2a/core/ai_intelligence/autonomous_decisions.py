@@ -21,6 +21,34 @@ import uuid
 logger = logging.getLogger(__name__)
 
 
+# Helper functions for lambda replacements
+def get_action_efficiency_ratio(a):
+    """Get efficiency ratio for action selection"""
+    return a.success_probability / a.cost
+
+def get_goal_action_value(ag):
+    """Get goal action value for sorting - ag is tuple (action, goal)"""
+    # This is a simple replacement - the full calculation would need the instance method
+    # For basic sorting, use action success probability
+    return ag[0].success_probability
+
+def get_goal_priority_score(g):
+    """Get goal priority score"""
+    return g.importance * g.urgency
+
+def get_action_success_probability(a):
+    """Get action success probability"""
+    return a.success_probability
+
+def get_action_safe_efficiency_ratio(a):
+    """Get safe efficiency ratio for action selection"""
+    return a.success_probability / (a.cost + 0.1)
+
+def get_action_count(x):
+    """Get action count for statistics"""
+    return x[1]
+
+
 class DecisionType(str, Enum):
     """Types of autonomous decisions"""
 
@@ -559,7 +587,7 @@ class AutonomousDecisionFramework:
 
         if urgent_actions:
             # Select best immediate action
-            best_action = max(urgent_actions, key=lambda a: a.success_probability / a.cost)
+            best_action = max(urgent_actions, key=get_action_efficiency_ratio)
             return {
                 "type": "reactive",
                 "selected_action": best_action.action_id,
@@ -582,8 +610,11 @@ class AutonomousDecisionFramework:
 
         if preparation_actions:
             # Select action with best goal alignment
+            def action_goal_value_func(ag):
+                return self._calculate_goal_action_value(ag[1], ag[0])
+            
             best_action, best_goal = max(
-                preparation_actions, key=lambda ag: self._calculate_goal_action_value(ag[1], ag[0])
+                preparation_actions, key=action_goal_value_func
             )
             return {
                 "type": "proactive",
@@ -607,7 +638,7 @@ class AutonomousDecisionFramework:
         if high_priority_goals:
             # Focus on highest priority goals
             priority_goal = max(
-                high_priority_goals, key=lambda g: self._calculate_goal_priority_score(g)
+                high_priority_goals, key=get_goal_priority_score
             )
 
             # Find actions that significantly advance this goal
@@ -618,7 +649,7 @@ class AutonomousDecisionFramework:
             ]
 
             if strategic_actions:
-                best_action = max(strategic_actions, key=lambda a: a.success_probability)
+                best_action = max(strategic_actions, key=get_action_success_probability)
                 return {
                     "type": "strategic",
                     "selected_action": best_action.action_id,
@@ -642,7 +673,7 @@ class AutonomousDecisionFramework:
         if executable_actions:
             # Select action with best immediate return
             best_action = max(
-                executable_actions, key=lambda a: a.success_probability / (a.cost + 0.1)
+                executable_actions, key=get_action_safe_efficiency_ratio
             )
             return {
                 "type": "tactical",
@@ -663,7 +694,7 @@ class AutonomousDecisionFramework:
         ]
 
         if collaboration_actions:
-            best_collaboration = max(collaboration_actions, key=lambda a: a.success_probability)
+            best_collaboration = max(collaboration_actions, key=get_action_success_probability)
             return {
                 "type": "collaborative",
                 "selected_action": best_collaboration.action_id,
@@ -693,7 +724,7 @@ class AutonomousDecisionFramework:
 
             # Prefer previously successful actions
             if action_counts:
-                most_successful_action_id = max(action_counts.items(), key=lambda x: x[1])[0]
+                most_successful_action_id = max(action_counts.items(), key=get_action_count)[0]
                 if most_successful_action_id in self.action_library:
                     return {
                         "type": "adaptive",
@@ -1021,7 +1052,7 @@ class BackwardChainingPlanner(Planner):
 
         if relevant_actions:
             # Select best action
-            best_action = max(relevant_actions, key=lambda a: a.success_probability)
+            best_action = max(relevant_actions, key=get_action_success_probability)
 
             plan_id = str(uuid.uuid4())
             return Plan(

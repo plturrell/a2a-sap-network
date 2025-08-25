@@ -507,8 +507,6 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             if model_id not in self.embedding_models:
                 return {"success": False, "error": f"Model {model_id} not found"}
 
-            model = self.embedding_models[model_id]
-
             # Perform optimization based on type
             optimized_embeddings = []
             optimization_metrics = {}
@@ -779,7 +777,6 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         """Evaluate embedding model quality"""
         try:
             model_id = input_data.get("model_id")
-            evaluation_data = input_data.get("evaluation_data", {})
             metrics_to_compute = input_data.get("metrics", ["all"])
 
             if not model_id:
@@ -908,7 +905,6 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         """Optimize model hyperparameters"""
         try:
             model_id = data.get("model_id")
-            search_space = data.get("search_space", {})
             optimization_metric = data.get("optimization_metric", "f1_score")
             n_trials = data.get("n_trials", 20)
 
@@ -948,7 +944,6 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         try:
             model_id = data.get("model_id")
             n_folds = data.get("n_folds", 5)
-            validation_data = data.get("validation_data", {})
 
             if not model_id:
                 return {"success": False, "error": "model_id is required"}

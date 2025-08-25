@@ -189,7 +189,7 @@ class EnhancedMCPSkillBase(MCPSkillBase):
             result = await func(*args, **kwargs)
             self.execution_stats["successful_calls"] += 1
             return result
-        except Exception as e:
+        except Exception:
             self.execution_stats["failed_calls"] += 1
             raise
         finally:

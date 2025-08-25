@@ -54,7 +54,6 @@ class A2ACacheService extends EventEmitter {
 
             // Set up event handlers
             this.redis.on('connect', () => {
-                // console.log('✅ Redis cache connected');
                 this.isRedisAvailable = true;
                 this.emit('connected');
             });
@@ -67,11 +66,9 @@ class A2ACacheService extends EventEmitter {
             });
 
             this.redis.on('reconnecting', () => {
-                // console.log('🔄 Redis reconnecting...');
                 this.emit('reconnecting');
             });
 
-            // console.log('✅ Cache service initialized with Redis backend');
 
         } catch (error) {
             console.warn('⚠️  Redis not available, using in-memory cache fallback:', error.message);
@@ -259,39 +256,39 @@ class A2ACacheService extends EventEmitter {
     }
 
     // Cache specific to tile data
-    async cacheTileData(tileId, data, ttl = 30) {
+    cacheTileData(tileId, data, ttl = 30) {
         return this.set(`tile:${tileId}`, data, ttl);
     }
 
-    async getTileData(tileId) {
+    getTileData(tileId) {
         return this.get(`tile:${tileId}`);
     }
 
     // Cache user sessions
-    async cacheUserSession(userId, sessionData, ttl = 3600) {
+    cacheUserSession(userId, sessionData, ttl = 3600) {
         return this.set(`session:${userId}`, sessionData, ttl);
     }
 
-    async getUserSession(userId) {
+    getUserSession(userId) {
         return this.get(`session:${userId}`);
     }
 
     // Cache user preferences
-    async cacheUserPreferences(userId, preferences, ttl = 1800) {
+    cacheUserPreferences(userId, preferences, ttl = 1800) {
         return this.set(`preferences:${userId}`, preferences, ttl);
     }
 
-    async getUserPreferences(userId) {
+    getUserPreferences(userId) {
         return this.get(`preferences:${userId}`);
     }
 
     // Cache database query results
-    async cacheQueryResult(query, params, result, ttl = 300) {
+    cacheQueryResult(query, params, result, ttl = 300) {
         const cacheKey = `query:${this.hashQuery(query, params)}`;
         return this.set(cacheKey, result, ttl);
     }
 
-    async getCachedQueryResult(query, params) {
+    getCachedQueryResult(query, params) {
         const cacheKey = `query:${this.hashQuery(query, params)}`;
         return this.get(cacheKey);
     }
@@ -299,21 +296,6 @@ class A2ACacheService extends EventEmitter {
     // Hash query for consistent cache keys
     hashQuery(query, params = []) {
         const crypto = require('crypto');
-
-function stopAllIntervals() {
-    for (const [, intervalId] of activeIntervals) {
-        clearInterval(intervalId);
-    }
-    activeIntervals.clear();
-}
-
-function shutdown() {
-    stopAllIntervals();
-}
-
-// Export cleanup function
-module.exports.shutdown = shutdown;
-
         const queryString = query + JSON.stringify(params);
         return crypto.createHash('sha256').update(queryString).digest('hex').substring(0, 16);
     }
@@ -351,7 +333,6 @@ module.exports.shutdown = shutdown;
         }
 
         if (removedExpired > 0) {
-            // console.log(`🧹 Cleaned up ${removedExpired} expired cache entries`);
         }
     }
 
@@ -461,11 +442,23 @@ module.exports.shutdown = shutdown;
                 await this.redis.quit();
             }
             this.fallbackCache.clear();
-            // console.log('✅ Cache service shut down successfully');
         } catch (error) {
             console.error('❌ Error shutting down cache service:', error.message);
         }
     }
 }
 
+function stopAllIntervals() {
+    for (const [, intervalId] of activeIntervals) {
+        clearInterval(intervalId);
+    }
+    activeIntervals.clear();
+}
+
+function shutdown() {
+    stopAllIntervals();
+}
+
+// Export cleanup function
 module.exports = A2ACacheService;
+module.exports.shutdown = shutdown;

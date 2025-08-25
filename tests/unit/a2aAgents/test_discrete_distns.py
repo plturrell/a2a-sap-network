@@ -232,7 +232,6 @@ def test_issue_5503pt3():
 def test_issue_6682():
     # Reference value from R:
     # options(digits=16)
-    # print(pnbinom(250, 50, 32/63, lower.tail=FALSE))
     assert_allclose(nbinom.sf(250, 50, 32./63.), 1.460458510976452e-35)
 
 
@@ -294,8 +293,6 @@ class TestZipfian:
         # n <- c(70, 80, 48, 65, 83, 89, 50, 30, 20, 20)
         # pmf <- dzipf(k, N = n, shape = a)
         # cdf <- pzipf(k, N = n, shape = a)
-        # print(pmf)
-        # print(cdf)
         np.random.seed(0)
         k = np.random.randint(1, 20, size=10)
         a = np.random.rand(10)*10 + 1

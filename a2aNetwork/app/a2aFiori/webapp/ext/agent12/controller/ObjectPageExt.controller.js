@@ -60,41 +60,45 @@ sap.ui.define([
 
             this._auditLogger.log("VIEW_ANALYTICS", { taskId: sTaskId, taskName: sTaskName });
 
-            this._getOrCreateDialog("viewAnalytics", "a2a.network.agent12.ext.fragment.ViewAnalytics")
-                .then((oDialog) => {
-                    const oAnalyticsModel = new JSONModel({
-                        taskId: sTaskId,
-                        taskName: sTaskName,
-                        timeRange: "LAST_HOUR",
-                        startTime: new Date(Date.now() - 60 * 60 * 1000),
-                        endTime: new Date(),
-                        refreshInterval: 5000,
-                        autoRefresh: true,
-                        metrics: {
-                            responseTime: { current: 0, average: 0, trend: [] },
-                            throughput: { current: 0, average: 0, trend: [] },
-                            cpuUsage: { current: 0, average: 0, trend: [] },
-                            memoryUsage: { current: 0, average: 0, trend: [] },
-                            errorRate: { current: 0, average: 0, trend: [] },
-                            availability: { current: 0, average: 0, trend: [] }
-                        },
-                        chartType: "LINE",
-                        selectedMetrics: ["responseTime", "throughput"],
-                        alertsEnabled: true,
-                        alertThresholds: {
-                            responseTime: 1000,
-                            errorRate: 5,
-                            cpuUsage: 80,
-                            memoryUsage: 85
-                        }
-                    });
-                    oDialog.setModel(oAnalyticsModel, "analytics");
-                    oDialog.open();
-                    this._startAnalyticsStreaming(sTaskId, oDialog);
-                })
-                .catch((error) => {
-                    MessageBox.error(`Failed to open Analytics Dashboard: ${ error.message}`);
+            const handleAnalyticsDialogOpen = (oDialog) => {
+                const oAnalyticsModel = new JSONModel({
+                    taskId: sTaskId,
+                    taskName: sTaskName,
+                    timeRange: "LAST_HOUR",
+                    startTime: new Date(Date.now() - 60 * 60 * 1000),
+                    endTime: new Date(),
+                    refreshInterval: 5000,
+                    autoRefresh: true,
+                    metrics: {
+                        responseTime: { current: 0, average: 0, trend: [] },
+                        throughput: { current: 0, average: 0, trend: [] },
+                        cpuUsage: { current: 0, average: 0, trend: [] },
+                        memoryUsage: { current: 0, average: 0, trend: [] },
+                        errorRate: { current: 0, average: 0, trend: [] },
+                        availability: { current: 0, average: 0, trend: [] }
+                    },
+                    chartType: "LINE",
+                    selectedMetrics: ["responseTime", "throughput"],
+                    alertsEnabled: true,
+                    alertThresholds: {
+                        responseTime: 1000,
+                        errorRate: 5,
+                        cpuUsage: 80,
+                        memoryUsage: 85
+                    }
                 });
+                oDialog.setModel(oAnalyticsModel, "analytics");
+                oDialog.open();
+                this._startAnalyticsStreaming(sTaskId, oDialog);
+            };
+
+            const handleAnalyticsDialogError = (error) => {
+                MessageBox.error(`Failed to open Analytics Dashboard: ${ error.message}`);
+            };
+
+            this._getOrCreateDialog("viewAnalytics", "a2a.network.agent12.ext.fragment.ViewAnalytics")
+                .then(handleAnalyticsDialogOpen)
+                .catch(handleAnalyticsDialogError);
         },
 
         /**
@@ -122,46 +126,50 @@ sap.ui.define([
 
             this._auditLogger.log("RUN_PERFORMANCE_TEST", { taskId: sTaskId, taskName: sTaskName });
 
-            this._getOrCreateDialog("runPerformanceTest", "a2a.network.agent12.ext.fragment.RunPerformanceTest")
-                .then((oDialog) => {
-                    const oTestModel = new JSONModel({
-                        taskId: sTaskId,
-                        taskName: sTaskName,
-                        testType: "LOAD",
-                        duration: 300,
-                        concurrentUsers: 100,
-                        rampUpTime: 60,
-                        iterations: 1000,
-                        thinkTime: 1000,
-                        testScenarios: [
-                            { name: "Basic Load", selected: true },
-                            { name: "Stress Test", selected: false },
-                            { name: "Spike Test", selected: false },
-                            { name: "Endurance Test", selected: false },
-                            { name: "Volume Test", selected: false }
-                        ],
-                        targetMetrics: {
-                            responseTime: 100,
-                            throughput: 1000,
-                            errorRate: 1,
-                            successRate: 99
-                        },
-                        advancedOptions: {
-                            simulateRealUsers: true,
-                            randomizeRequests: true,
-                            cacheEnabled: false,
-                            compressionEnabled: true,
-                            sslEnabled: true,
-                            customHeaders: [],
-                            customParameters: []
-                        }
-                    });
-                    oDialog.setModel(oTestModel, "test");
-                    oDialog.open();
-                })
-                .catch((error) => {
-                    MessageBox.error(`Failed to open Performance Test: ${ error.message}`);
+            const handlePerformanceTestDialogOpen = (oDialog) => {
+                const oTestModel = new JSONModel({
+                    taskId: sTaskId,
+                    taskName: sTaskName,
+                    testType: "LOAD",
+                    duration: 300,
+                    concurrentUsers: 100,
+                    rampUpTime: 60,
+                    iterations: 1000,
+                    thinkTime: 1000,
+                    testScenarios: [
+                        { name: "Basic Load", selected: true },
+                        { name: "Stress Test", selected: false },
+                        { name: "Spike Test", selected: false },
+                        { name: "Endurance Test", selected: false },
+                        { name: "Volume Test", selected: false }
+                    ],
+                    targetMetrics: {
+                        responseTime: 100,
+                        throughput: 1000,
+                        errorRate: 1,
+                        successRate: 99
+                    },
+                    advancedOptions: {
+                        simulateRealUsers: true,
+                        randomizeRequests: true,
+                        cacheEnabled: false,
+                        compressionEnabled: true,
+                        sslEnabled: true,
+                        customHeaders: [],
+                        customParameters: []
+                    }
                 });
+                oDialog.setModel(oTestModel, "test");
+                oDialog.open();
+            };
+
+            const handlePerformanceTestDialogError = (error) => {
+                MessageBox.error(`Failed to open Performance Test: ${ error.message}`);
+            };
+
+            this._getOrCreateDialog("runPerformanceTest", "a2a.network.agent12.ext.fragment.RunPerformanceTest")
+                .then(handlePerformanceTestDialogOpen)
+                .catch(handlePerformanceTestDialogError);
         },
 
         /**

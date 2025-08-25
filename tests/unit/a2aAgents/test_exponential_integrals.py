@@ -45,7 +45,6 @@ class TestScaledExp1:
     #   from mpmath import mp
     #   mp.dps = 80
     #   x = 1e-25
-    #   print(float(x*mp.exp(x)*np.expint(1, x)))
     #
     # prints 5.698741165994961e-24
     #

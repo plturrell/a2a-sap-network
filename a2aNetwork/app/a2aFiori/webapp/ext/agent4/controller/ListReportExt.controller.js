@@ -404,7 +404,6 @@ sap.ui.define([
                 async: true,
                 success() {
                     // Optionally log to browser console for debugging
-                    // console.log("Audit event logged:", sEventType);
                 },
                 error() {
                     // Fallback logging to local storage for offline audit

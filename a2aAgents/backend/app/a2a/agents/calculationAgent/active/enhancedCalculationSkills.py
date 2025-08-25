@@ -239,7 +239,7 @@ class EnhancedCalculationSkills(SecureA2AAgent):
                     "Error"
                 )
                 return None, methodology
-            except ZeroDivisionError as zde:
+            except ZeroDivisionError:
                 # Handle division by zero
                 methodology = CalculationMethodology(
                     problem_type="Mathematical Error",
@@ -252,7 +252,7 @@ class EnhancedCalculationSkills(SecureA2AAgent):
                 )
                 methodology.add_reference("Division by zero is undefined in mathematics")
                 return None, methodology
-            except OverflowError as oe:
+            except OverflowError:
                 # Handle numerical overflow
                 methodology = CalculationMethodology(
                     problem_type="Numerical Error",
@@ -1280,7 +1280,7 @@ class EnhancedCalculationSkills(SecureA2AAgent):
                 # This is a simplified parser - in practice, you'd want more robust parsing
                 parts = expression.lower().replace("limit", "").replace("lim", "").strip()
                 if "as" in parts and "approaches" in parts:
-                    func_part, approach_part = parts.split("as")[0].strip(), parts.split("approaches")[-1].strip()
+                    func_part = parts.split("as")[0].strip()
                 elif "->" in parts:
                     if "as" in parts:
                         func_part = parts.split("as")[0].strip()

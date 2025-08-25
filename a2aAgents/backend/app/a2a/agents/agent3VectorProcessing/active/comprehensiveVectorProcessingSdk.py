@@ -271,12 +271,14 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         }
 
         # Method performance tracking
-        self.method_performance = defaultdict(lambda: {
-            'total': 0,
-            'success': 0,
-            'total_time': 0.0,
-            'average_quality': 0.0
-        })
+        def create_performance_metrics():
+            return {
+                'total': 0,
+                'success': 0,
+                'total_time': 0.0,
+                'average_quality': 0.0
+            }
+        self.method_performance = defaultdict(create_performance_metrics)
 
         # Cache for frequently accessed vectors
         self.vector_cache = {}
@@ -808,9 +810,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     hybrid_scores[vector_id] = sparse_weight * result['score']
 
             # Sort by hybrid score
+            def get_hybrid_score(x):
+                return x[1]
             sorted_results = sorted(
                 hybrid_scores.items(),
-                key=lambda x: x[1],
+                key=get_hybrid_score,
                 reverse=True
             )[:top_k]
 

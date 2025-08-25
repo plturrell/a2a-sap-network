@@ -18,6 +18,10 @@ To send messages to other agents, use:
 
 
 import logging
+
+def get_report_requested_at(r):
+    """Get report requested_at timestamp for sorting"""
+    return r.requested_at
 import json
 import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
@@ -397,7 +401,7 @@ class EnhancedComplianceReporter:
             reports = [r for r in reports if r.status == status]
 
         # Sort by request time (newest first)
-        reports.sort(key=lambda r: r.requested_at, reverse=True)
+        reports.sort(key=get_report_requested_at, reverse=True)
 
         return reports[:limit]
 

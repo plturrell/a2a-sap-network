@@ -502,7 +502,6 @@ sap.ui.define([
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("WebSocket connection failed, falling back to polling");
                 this._initializePolling();
             }
         },
@@ -560,7 +559,7 @@ sap.ui.define([
                     break;
                 }
             } catch (error) {
-                // console.error("Error processing deployment update:", error);
+                // Error handled silently
             }
         },
 

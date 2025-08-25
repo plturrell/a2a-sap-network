@@ -711,7 +711,9 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
 
         elif strategy == LoadBalancingStrategy.LEAST_CONNECTIONS:
             # Select endpoint with least current connections
-            return min(endpoints, key=lambda x: x[1].current_connections)
+            def get_current_connections(x):
+                return x[1].current_connections
+            return min(endpoints, key=get_current_connections)
 
         elif strategy == LoadBalancingStrategy.WEIGHTED:
             # Weighted selection based on endpoint weight

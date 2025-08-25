@@ -3,14 +3,12 @@ Router for Agent 17 Chat Agent
 Integrates with the main A2A agent router system
 """
 
-from fastapi import APIRouter, HTTPException
-from typing import Dict, Any
+from fastapi import APIRouter
 import logging
 
 from agent17ChatAgentA2AHandler import (
     ChatRequest,
     IntentAnalysisRequest,
-    MultiAgentRequest,
     submit_to_blockchain,
     analyze_intent,
     list_agents,

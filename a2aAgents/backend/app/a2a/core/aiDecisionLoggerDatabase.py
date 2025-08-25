@@ -61,9 +61,10 @@ class AIDecisionDatabaseLogger:
         self._cache_timestamps: Dict[str, float] = {}
 
         # Analytics tracking
-        self.decision_stats = defaultdict(
-            lambda: {"total": 0, "success": 0, "failure": 0, "pending": 0}
-        )
+        def create_decision_stats_dict():
+            return {"total": 0, "success": 0, "failure": 0, "pending": 0}
+        
+        self.decision_stats = defaultdict(create_decision_stats_dict)
 
         self.performance_metrics = {
             "total_decisions": 0,

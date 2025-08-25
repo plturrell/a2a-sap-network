@@ -733,44 +733,66 @@ class AIQueryOptimizer:
             self.cost_estimator.fit(X_scaled, y_cost)
     
     def _generate_execution_time_training_data(self) -> Tuple[List[np.ndarray], List[float]]:
-        """Generate synthetic training data for execution time prediction"""
+        """Extract real execution time training data from query history"""
         X, y = [], []
         
-        for i in range(400):
-            features = np.random.rand(50)
-            
-            # Execution time based on query complexity
-            exec_time = (
-                features[0] * 0.1 +          # Query length impact
-                features[16] * 2.0 +         # JOIN operations
-                features[18] * 1.5 +         # GROUP BY impact
-                features[41] * 0.5 +         # Log estimated rows
-                np.random.lognormal(0, 0.5)  # Random variation
-            )
-            exec_time = max(0.001, exec_time)  # Minimum execution time
-            
-            X.append(features)
-            y.append(exec_time)
+        # Use actual query execution times
+        if not hasattr(self, 'query_history') or not self.query_history:
+            logger.warning("No query execution history available for training")
+            return [], []
         
+        for query_record in list(self.query_history):
+            try:
+                # Extract real execution data
+                query_plan = query_record.get('execution_plan')
+                actual_time = query_record.get('execution_time_ms', 0)
+                was_successful = query_record.get('success', False)
+                
+                if query_plan and actual_time > 0 and was_successful:
+                    # Extract features from real query execution
+                    features = self._extract_query_features(query_plan)
+                    
+                    X.append(features)
+                    y.append(actual_time / 1000.0)  # Convert to seconds
+                    
+            except Exception as e:
+                logger.debug(f"Failed to extract execution time training data: {e}")
+                continue
+        
+        logger.info(f"Extracted {len(X)} real query execution time examples")
         return X, y
     
     def _generate_cost_training_data(self) -> Tuple[List[np.ndarray], List[float]]:
-        """Generate synthetic training data for cost prediction"""
+        """Extract real cost training data from query resource usage"""
         X, y = [], []
         
-        for i in range(300):
-            features = np.random.rand(50)
-            
-            # Cost based on resource usage
-            cost = (
-                features[16] * 10 +          # JOIN cost
-                features[17] * 5 +           # WHERE clause cost
-                features[18] * 8 +           # GROUP BY cost
-                features[19] * 6 +           # ORDER BY cost
-                features[41] * 2 +           # Data size impact
-                np.random.exponential(2)     # Random variation
-            )
-            cost = max(0.1, cost)
+        # Use actual query resource costs
+        if not hasattr(self, 'query_history') or not self.query_history:
+            logger.warning("No query history available for cost training")
+            return [], []
+        
+        for query_record in list(self.query_history):
+            try:
+                # Extract real cost data
+                query_plan = query_record.get('execution_plan')
+                resource_cost = query_record.get('resource_cost', 0)
+                was_successful = query_record.get('success', False)
+                
+                if query_plan and resource_cost > 0 and was_successful:
+                    # Calculate actual cost from resource usage
+                    cpu_time = query_record.get('cpu_time_ms', 0)
+                    memory_used = query_record.get('memory_mb', 0)
+                    io_operations = query_record.get('io_ops', 0)
+                    
+                    # Real cost calculation
+                    actual_cost = (cpu_time * 0.001 +     # CPU cost
+                                 memory_used * 0.01 +     # Memory cost  
+                                 io_operations * 0.1)     # IO cost
+                    
+                    features = self._extract_query_features(query_plan)
+                    
+                    X.append(features)
+                    y.append(max(0.01, actual_cost))  # Real measured cost
             
             X.append(features)
             y.append(cost)

@@ -457,7 +457,7 @@ class MathematicalNLParser(SecureA2AAgent):
         # Try to parse with SymPy if available
         if SYMPY_AVAILABLE:
             try:
-                parsed = parse_expr(expression, transformations=standard_transformations + (implicit_multiplication_application,))
+                parse_expr(expression, transformations=standard_transformations + (implicit_multiplication_application,))
                 confidence += 0.1  # Boost for valid SymPy expression
             except Exception:
                 confidence -= 0.2  # Penalty for invalid expression

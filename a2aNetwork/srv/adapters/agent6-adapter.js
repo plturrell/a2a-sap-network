@@ -4,7 +4,7 @@
  */
 
 const fetch = require('node-fetch');
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 class Agent6Adapter {
     constructor() {
@@ -183,6 +183,10 @@ class Agent6Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             return data.recommendations.map(rec => ({
                 agent: rec.agent,
@@ -279,6 +283,10 @@ class Agent6Adapter {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             return {
                 workflowId: data.workflow_id,
@@ -464,14 +472,17 @@ class Agent6Adapter {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                responseType: 'stream',
-                timeout: 0
-            }),
+                    responseType: 'stream',
+                    timeout: 0
+                }),
                 timeout: this.timeout
             });
-            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-            for await (const chunk of data) {
+            for await (const chunk of response.body) {
                 const lines = chunk.toString().split('\n').filter(line => line.trim());
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
@@ -545,7 +556,7 @@ class Agent6Adapter {
 
     _convertRESTTaskToOData(task) {
         return {
-            ID: task.id || uuidv4(),
+            ID: task.id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             taskName: task.task_name,
             qualityGate: task.quality_gate,
             status: task.status?.toUpperCase() || 'DRAFT',
@@ -595,7 +606,7 @@ class Agent6Adapter {
 
     _convertRESTMetricToOData(metric) {
         return {
-            ID: metric.id || uuidv4(),
+            ID: metric.id || `metric_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             taskId: metric.task_id,
             metricType: metric.metric_type?.toUpperCase(),
             value: metric.value,
@@ -609,7 +620,7 @@ class Agent6Adapter {
 
     _convertRESTRuleToOData(rule) {
         return {
-            ID: rule.id || uuidv4(),
+            ID: rule.id || `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             ruleName: rule.rule_name,
             description: rule.description,
             conditionType: rule.condition_type?.toUpperCase(),
@@ -629,7 +640,7 @@ class Agent6Adapter {
 
     _convertRESTVerificationToOData(verification) {
         return {
-            ID: verification.id || uuidv4(),
+            ID: verification.id || `verification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             taskId: verification.task_id,
             verificationMethod: verification.verification_method?.toUpperCase(),
             overallScore: verification.overall_score,
@@ -648,7 +659,7 @@ class Agent6Adapter {
 
     _convertRESTGateToOData(gate) {
         return {
-            ID: gate.id || uuidv4(),
+            ID: gate.id || `gate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             gateName: gate.gate_name,
             description: gate.description,
             gateType: gate.gate_type?.toUpperCase(),
@@ -666,7 +677,7 @@ class Agent6Adapter {
 
     _convertRESTOptimizationToOData(optimization) {
         return {
-            ID: optimization.id || uuidv4(),
+            ID: optimization.id || `optimization_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             taskId: optimization.task_id,
             workflowId: optimization.workflow_id,
             optimizationType: optimization.optimization_type?.toUpperCase(),

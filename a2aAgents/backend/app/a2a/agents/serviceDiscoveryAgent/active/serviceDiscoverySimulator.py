@@ -432,7 +432,7 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
             if secrets.SystemRandom().random() < 0.3:
                 query_params["capabilities"] = [random.choice(["http_api", "sql", "caching", "messaging"])]
 
-            result = await self.discovery_agent.discover_services(**query_params)
+            await self.discovery_agent.discover_services(**query_params)
 
             response_time = (datetime.now() - start_time).total_seconds() * 1000
             self.simulation_metrics.response_times.append(response_time)
@@ -465,7 +465,7 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
             if discovery_result["services"]:
                 service_name = discovery_result["services"][0]["service_name"]
 
-                result = await self.discovery_agent.get_service_endpoint(
+                await self.discovery_agent.get_service_endpoint(
                     service_name=service_name,
                     strategy=strategy
                 )
@@ -653,7 +653,7 @@ async def run_normal_operations_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(duration_seconds)
+        await simulator.run_simulation(duration_seconds)
         return simulator.get_simulation_report()
     finally:
         await simulator.cleanup_simulation()
@@ -671,7 +671,7 @@ async def run_high_load_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(duration_seconds)
+        await simulator.run_simulation(duration_seconds)
         return simulator.get_simulation_report()
     finally:
         await simulator.cleanup_simulation()
@@ -689,7 +689,7 @@ async def run_failure_recovery_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(duration_seconds)
+        await simulator.run_simulation(duration_seconds)
         return simulator.get_simulation_report()
     finally:
         await simulator.cleanup_simulation()

@@ -302,7 +302,9 @@ class ORDBlockchainIntegration:
                 )
             else:
                 # Use most recent hash
-                matching_hash = max(stored_hashes, key=lambda h: h.timestamp)
+                def get_hash_timestamp(h):
+                    return h.timestamp
+                matching_hash = max(stored_hashes, key=get_hash_timestamp)
 
             if not matching_hash:
                 return False, {
@@ -344,9 +346,11 @@ class ORDBlockchainIntegration:
             stored_hashes = self.document_hashes.get(registration_id, [])
 
             # Sort by timestamp (most recent first)
+            def get_history_timestamp(h):
+                return h.timestamp
             sorted_hashes = sorted(
                 stored_hashes,
-                key=lambda h: h.timestamp,
+                key=get_history_timestamp,
                 reverse=True
             )
 

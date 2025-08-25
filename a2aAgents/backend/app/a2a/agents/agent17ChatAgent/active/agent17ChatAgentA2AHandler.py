@@ -5,9 +5,8 @@ Note: In production, all communication should be via blockchain only
 """
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 import logging
 import os
 

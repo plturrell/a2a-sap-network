@@ -92,9 +92,9 @@ else:
 # Only define MCP handlers if MCP is available
 if MCP_AVAILABLE and server:
     @server.list_resources()
-async def handle_list_resources() -> list[types.Resource]:
-    """List available test resources with enhanced AI and database capabilities."""
-    return [
+    async def handle_list_resources() -> list[types.Resource]:
+        """List available test resources with enhanced AI and database capabilities."""
+        return [
         types.Resource(
             uri=AnyUrl("test://unit"),
             name="Unit Tests",

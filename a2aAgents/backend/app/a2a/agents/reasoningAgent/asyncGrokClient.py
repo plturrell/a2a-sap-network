@@ -70,18 +70,6 @@ class AsyncGrokConnectionPool:
         if self._client is None:
             async with self._lock:
                 if self._client is None:
-                    limits = httpx.Limits(
-                        max_connections=self.config.pool_connections,
-                        max_keepalive_connections=self.config.pool_maxsize
-                    )
-
-                    timeout = httpx.Timeout(
-                        connect=10.0,
-                        read=self.config.timeout,
-                        write=10.0,
-                        pool=5.0
-                    )
-
                     # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
                     # self._client = httpx.AsyncClient(
                     #     limits=limits,

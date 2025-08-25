@@ -356,7 +356,7 @@ sap.ui.define([
 
                 const measure = performance.getEntriesByName(sName)[0];
                 if (measure) {
-                    // console.log(`${sName } took ${ measure.duration.toFixed(2) }ms`);
+                    // Performance measure found
                 }
 
                 return result;

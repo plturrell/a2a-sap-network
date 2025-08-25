@@ -572,7 +572,9 @@ class AdaptiveRateLimiter:
             return None
 
         # Return most specific rule (longest pattern)
-        return max(matching_rules, key=lambda x: x[1])[0]
+        def get_rule_score(x):
+            return x[1]
+        return max(matching_rules, key=get_rule_score)[0]
 
     def _endpoint_matches_pattern(self, endpoint: str, pattern: str) -> bool:
         """Check if endpoint matches pattern (simple wildcard matching)"""

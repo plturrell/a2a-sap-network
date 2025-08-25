@@ -13,6 +13,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def generate_uuid():
+    """Generate a UUID string"""
+    return str(uuid4())
+
+
 class TaskStatus(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
@@ -42,7 +47,7 @@ class TaskPriority(str, Enum):
 class ChecklistItem(BaseModel):
     """Individual checklist item within a task"""
 
-    item_id: str = Field(default_factory=lambda: str(uuid4()))
+    item_id: str = Field(default_factory=generate_uuid)
     description: str
     status: TaskStatus = TaskStatus.PENDING
     depends_on: List[str] = Field(default_factory=list)  # IDs of prerequisite items
@@ -57,7 +62,7 @@ class ChecklistItem(BaseModel):
 class HelpRequest(BaseModel):
     """Tracks help requests made by the agent"""
 
-    request_id: str = Field(default_factory=lambda: str(uuid4()))
+    request_id: str = Field(default_factory=generate_uuid)
     task_id: str
     checklist_item_id: Optional[str] = None
     problem_type: str
@@ -77,7 +82,7 @@ class HelpRequest(BaseModel):
 class Task(BaseModel):
     """Comprehensive task tracking with checklist and help request monitoring"""
 
-    task_id: str = Field(default_factory=lambda: str(uuid4()))
+    task_id: str = Field(default_factory=generate_uuid)
     name: str
     description: str
     priority: TaskPriority = TaskPriority.MEDIUM

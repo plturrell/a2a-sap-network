@@ -228,12 +228,6 @@ class EnhancedReasoningAgentWithMCP(SecureA2AAgent):
         """
         Skill that uses MCP similarity tool for cross-agent search
         """
-        # Prepare candidates with IDs
-        candidates = [
-            {"id": f"text_{i}", "text": text}
-            for i, text in enumerate(candidate_texts)
-        ]
-
         # Use MCP tool to find similar texts
         search_result = await self.mcp_similarity_calculator.find_similar_texts_mcp(
             query=query,
@@ -305,7 +299,7 @@ async def example_usage():
     await agent.initialize()
 
     # Example 1: Direct MCP tool usage
-    confidence_result = await agent.mcp_confidence_calculator.calculate_reasoning_confidence_mcp(
+    await agent.mcp_confidence_calculator.calculate_reasoning_confidence_mcp(
         reasoning_context={
             "evidence": [{"source_type": "academic"}],
             "question": "What is AI?",
@@ -314,7 +308,7 @@ async def example_usage():
     )
 
     # Example 2: Using MCP tools in skills
-    validation_result = await agent.enhanced_reasoning_validation_skill({
+    await agent.enhanced_reasoning_validation_skill({
         "question": "How does machine learning work?",
         "answer": "Machine learning uses algorithms to learn from data",
         "evidence": [
@@ -324,7 +318,7 @@ async def example_usage():
     })
 
     # Example 3: Cross-agent similarity search
-    search_result = await agent.cross_agent_similarity_search_skill(
+    await agent.cross_agent_similarity_search_skill(
         query="natural language processing",
         candidate_texts=[
             "NLP is a branch of AI focused on language",

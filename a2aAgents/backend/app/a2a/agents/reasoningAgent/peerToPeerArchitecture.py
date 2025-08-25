@@ -285,7 +285,6 @@ class PeerToPeerCoordinator:
 
     async def _synthesize_peer_insights(self, consensus: Dict[str, Any], question: str) -> str:
         """Synthesize final answer from peer insights"""
-        contributions = consensus["contributions"]
         approach_groups = consensus["approach_groups"]
 
         # Build comprehensive answer

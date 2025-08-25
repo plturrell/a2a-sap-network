@@ -230,7 +230,9 @@ class MemoryContextManager:
                     relevant_memories.append((memory, similarity))
 
         # Sort by relevance and return top k
-        relevant_memories.sort(key=lambda x: x[1], reverse=True)
+        def get_relevance_score(x):
+            return x[1]
+        relevant_memories.sort(key=get_relevance_score, reverse=True)
         return [mem for mem, _ in relevant_memories[:top_k]]
 
     async def update_context(
@@ -297,7 +299,9 @@ class MemoryContextManager:
                     relevant_contexts.append(context)
 
         # Sort by relevance
-        relevant_contexts.sort(key=lambda x: x.relevance_score, reverse=True)
+        def get_relevance_score(x):
+            return x.relevance_score
+        relevant_contexts.sort(key=get_relevance_score, reverse=True)
         return relevant_contexts
 
     async def consolidate_memories(self):

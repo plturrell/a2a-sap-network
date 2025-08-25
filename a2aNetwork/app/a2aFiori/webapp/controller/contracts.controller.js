@@ -320,7 +320,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
 
             // Simulate blockchain transaction
             let iProgress = 0;
-
+            let oInterval;
             const updateExecutionProgress = () => {
                 iProgress += 10;
                 this.oUIModel.setProperty("/blockchainProgress", iProgress);
@@ -343,7 +343,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                 }
             };
 
-            const oInterval = setInterval(updateExecutionProgress, 500);
+            oInterval = setInterval(updateExecutionProgress, 500);
         },
 
         onPauseContract() {
@@ -458,6 +458,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
 
             // Simulate deployment
             let iProgress = 0;
+            let oInterval;
 
             const updateDeploymentProgress = () => {
                 iProgress += 5;
@@ -493,7 +494,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                 }
             };
 
-            const oInterval = setInterval(updateDeploymentProgress, 300);
+            oInterval = setInterval(updateDeploymentProgress, 300);
         },
 
         onFileSelect(oEvent) {

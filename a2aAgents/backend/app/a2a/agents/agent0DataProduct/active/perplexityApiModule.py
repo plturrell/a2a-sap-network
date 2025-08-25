@@ -16,9 +16,8 @@ import json
 import logging
 import os
 import re
-import time
 from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 # REMOVED: # A2A Protocol: Use blockchain messaging instead of aiohttp_retry import RetryClient, ExponentialRetry  # A2A Protocol Violation
 import backoff
 
@@ -77,7 +76,7 @@ class PerplexityAPIClient(SecureA2AAgent):
         """Initialize A2A blockchain messaging client for protocol compliance"""
         try:
             # Import A2A SDK components
-            from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
+            # A2A types would be imported here if needed
             from ....sdk.a2aNetworkClient import A2ANetworkClient
 
             # Initialize A2A client for blockchain-based external API routing

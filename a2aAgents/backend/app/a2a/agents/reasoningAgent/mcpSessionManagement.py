@@ -525,7 +525,7 @@ class MCPSessionManager:
                 await asyncio.sleep(3600)  # Every hour
 
                 # Clean up expired sessions
-                expired_count = await self.session_store.cleanup_expired_sessions(24)
+                await self.session_store.cleanup_expired_sessions(24)
 
                 # Check for inactive sessions
                 inactive_sessions = []

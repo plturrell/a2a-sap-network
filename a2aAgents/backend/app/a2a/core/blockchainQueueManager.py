@@ -17,6 +17,11 @@ import logging
 from .trustManager import sign_a2a_message
 
 
+def generate_task_id():
+    """Generate a task ID with uuid prefix"""
+    return f"task_{uuid.uuid4().hex}"
+
+
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
 missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
@@ -61,7 +66,7 @@ class QueueType(str, Enum):
 class BlockchainTask(BaseModel):
     """Blockchain-native task representation"""
 
-    task_id: str = Field(default_factory=lambda: f"task_{uuid.uuid4().hex}")
+    task_id: str = Field(default_factory=generate_task_id)
     queue_type: QueueType
     priority: QueuePriority = QueuePriority.MEDIUM
     status: TaskStatus = TaskStatus.PENDING

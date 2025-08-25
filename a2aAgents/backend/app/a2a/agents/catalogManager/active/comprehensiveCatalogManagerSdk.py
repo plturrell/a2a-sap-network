@@ -482,7 +482,7 @@ class CatalogItem:
     relationships: List[Dict[str, Any]] = field(default_factory=list)
     quality_score: float = 0.0
     semantic_embedding: Optional[np.ndarray] = None
-    last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    last_updated: str = field(default_factory=datetime.utcnow().isoformat)
 
 @dataclass
 class RelationshipMapping:
@@ -493,7 +493,7 @@ class RelationshipMapping:
     strength: float
     context: Dict[str, Any] = field(default_factory=dict)
     discovered_by: str = "ai_analysis"
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=datetime.utcnow().isoformat)
 
 class ComprehensiveCatalogManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
     """
@@ -1434,7 +1434,9 @@ class ComprehensiveCatalogManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
                             relationships.append(relationship)
 
                 # Sort by relationship strength
-                relationships.sort(key=lambda x: x.get('strength', 0), reverse=True)
+                def get_relationship_strength(x):
+                    return x.get('strength', 0)
+                relationships.sort(key=get_relationship_strength, reverse=True)
                 relationships = relationships[:10]  # Top 10 relationships
 
             # Update relationship graph if available
@@ -1667,7 +1669,9 @@ class ComprehensiveCatalogManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
                         search_results.append(result)
 
             # Sort by score and limit results
-            search_results.sort(key=lambda x: x['score'], reverse=True)
+            def get_search_score(x):
+                return x['score']
+            search_results.sort(key=get_search_score, reverse=True)
             search_results = search_results[:limit]
 
             # Store search behavior for learning
@@ -2366,11 +2370,17 @@ Provide a structured assessment with specific recommendations."""
 
                 # Sort items
                 if sort_by == 'quality_score':
-                    filtered_items.sort(key=lambda x: x['quality_score'], reverse=True)
+                    def get_quality_score(x):
+                        return x['quality_score']
+                    filtered_items.sort(key=get_quality_score, reverse=True)
                 elif sort_by == 'last_updated':
-                    filtered_items.sort(key=lambda x: x['last_updated'], reverse=True)
+                    def get_last_updated(x):
+                        return x['last_updated']
+                    filtered_items.sort(key=get_last_updated, reverse=True)
                 elif sort_by == 'title':
-                    filtered_items.sort(key=lambda x: x['title'])
+                    def get_title(x):
+                        return x['title']
+                    filtered_items.sort(key=get_title)
 
                 return {
                     'success': True,
@@ -2930,20 +2940,6 @@ Provide a structured assessment with specific recommendations."""
             return {'success': False, 'message': 'AI documentation generation not available'}
 
         try:
-            prompt = f"""Generate comprehensive API documentation for:
-
-Name: {api_data.get('name')}
-Endpoint: {api_data.get('endpoint')}
-Methods: {api_data.get('methods', [])}
-Description: {api_data.get('description')}
-
-Please provide:
-1. Detailed endpoint documentation
-2. Request/response examples
-3. Authentication details
-4. Error codes and handling
-5. Best practices for usage"""
-
             # This would use the Grok client to generate documentation
             # For now, return a placeholder
             return {

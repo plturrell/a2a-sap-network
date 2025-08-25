@@ -647,7 +647,7 @@ class TestOrchestratorAgent(SecureA2AAgent):
                 scenario=scenario
             )
 
-            metrics = await simulator.run_simulation(
+            await simulator.run_simulation(
                 duration_seconds=5,
                 workflow_generation_rate=0.1
             )
@@ -688,7 +688,7 @@ class TestOrchestratorAgent(SecureA2AAgent):
         orchestrator_agent.send_message_and_wait_for_response = mock_send_message
 
         # 1. Create workflow template
-        template_result = await orchestrator_agent.create_workflow_template(
+        await orchestrator_agent.create_workflow_template(
             template_name="IntegrationTemplate",
             description="Integration test template",
             template_definition={

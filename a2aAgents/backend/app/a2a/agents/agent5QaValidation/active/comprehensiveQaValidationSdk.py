@@ -864,13 +864,17 @@ class ComprehensiveQAValidationSDK(A2AAgentBase, BlockchainIntegrationMixin):
 
         if strategy == "adaptive":
             # Sort by complexity and predicted execution time
-            test_cases.sort(key=lambda tc: (
-                len(tc.get("question", "")),
-                len(tc.get("expected_answer", ""))
-            ))
+            def get_test_complexity(tc):
+                return (
+                    len(tc.get("question", "")),
+                    len(tc.get("expected_answer", ""))
+                )
+            test_cases.sort(key=get_test_complexity)
         elif strategy == "priority":
             # Sort by priority if available
-            test_cases.sort(key=lambda tc: tc.get("priority", 5), reverse=True)
+            def get_test_priority(tc):
+                return tc.get("priority", 5)
+            test_cases.sort(key=get_test_priority, reverse=True)
         elif strategy == "parallel":
             # Group tests for parallel execution
             # This is a simplified implementation

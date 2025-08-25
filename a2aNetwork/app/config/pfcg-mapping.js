@@ -1,5 +1,5 @@
 /* global sap */
-sap.ui.define([], function() {
+sap.ui.define([], () => {
     'use strict';
 
     /**
@@ -159,15 +159,16 @@ sap.ui.define([], function() {
         getAuthorizedCatalogs: function(userRoles) {
             const catalogs = new Set();
             
-            function processRole(role) {
+            const addCatalog = (catalog) => {
+                catalogs.add(catalog);
+            };
+            
+            const processRole = (role) => {
                 const roleCatalogs = this.roleToCatalogMapping[role];
                 if (roleCatalogs) {
-                    function addCatalog(catalog) {
-                        catalogs.add(catalog);
-                    }
                     roleCatalogs.forEach(addCatalog);
                 }
-            }
+            };
             
             userRoles.forEach(processRole.bind(this));
             return Array.from(catalogs);
@@ -181,18 +182,19 @@ sap.ui.define([], function() {
         getAuthorizedGroups: function(userRoles) {
             const groups = new Set();
             
-            function processRole(role) {
+            const addGroup = (group) => {
+                groups.add(group);
+            };
+            
+            const processRole = (role) => {
                 const roleGroups = this.roleToGroupMapping[role];
                 if (roleGroups) {
                     if (roleGroups.includes('*')) {
                         return ['*']; // All groups
                     }
-                    function addGroup(group) {
-                        groups.add(group);
-                    }
                     roleGroups.forEach(addGroup);
                 }
-            }
+            };
             
             userRoles.forEach(processRole.bind(this));
             return Array.from(groups);

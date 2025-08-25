@@ -246,7 +246,7 @@ class TestReasoningAgent:
                     pass
 
             # Check that circuit breaker is triggered
-            breaker = reasoning_agent.circuit_breaker_manager.get_breaker(
+            reasoning_agent.circuit_breaker_manager.get_breaker(
                 f"agent_{AgentRole.QUESTION_ANALYZER.value}"
             )
             # Circuit breaker state would be 'open' after failures
@@ -255,14 +255,10 @@ class TestReasoningAgent:
     async def test_caching_functionality(self, reasoning_agent, sample_reasoning_request):
         """Test caching of reasoning results"""
         # First call - should compute result
-        start_time = time.time()
         result1 = await reasoning_agent.multi_agent_reasoning(sample_reasoning_request)
-        first_call_time = time.time() - start_time
 
         # Second call with same request - should use cache
-        start_time = time.time()
         result2 = await reasoning_agent.multi_agent_reasoning(sample_reasoning_request)
-        second_call_time = time.time() - start_time
 
         # Cache should make second call faster (in real scenario)
         assert result1['session_id'] != result2['session_id']  # Different sessions
@@ -342,7 +338,6 @@ class TestReasoningAgent:
 async def test_reasoning_skills_integration():
     """Test integration of different reasoning skills"""
     multi_agent_skills = MultiAgentReasoningSkills()
-    orchestration_skills = ReasoningOrchestrationSkills()
 
     # Test question decomposition
     decomposition_result = await multi_agent_skills.hierarchical_question_decomposition({

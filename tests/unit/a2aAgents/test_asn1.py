@@ -761,7 +761,6 @@ class DerSetOfTests(unittest.TestCase):
     def testDecode3(self):
         # One integer and 2 other types
         der = DerSetOf()
-        #import pdb; pdb.set_trace()
         self.assertRaises(ValueError, der.decode,
             b('0\x0A\x02\x02\x01\x80\x24\x02\xb6\x63\x12\x00'))
 

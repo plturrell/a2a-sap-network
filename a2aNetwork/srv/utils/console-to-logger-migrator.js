@@ -265,7 +265,6 @@ class ConsoleToLoggerMigrator {
         const results = [];
 
         filePaths.forEach(filePath => {
-            // console.log(`Processing ${filePath}...`);
             const result = this.processFile(filePath);
             results.push({ file: filePath, ...result });
         });
@@ -282,29 +281,19 @@ class ConsoleToLoggerMigrator {
      * Generate migration report
      */
     generateReport(results) {
-        // console.log('\n=== Console.log to Logger Migration Report ===\n');
-        // console.log(`Total files processed: ${results.totalFiles}`);
-        // console.log(`Total replacements: ${results.totalReplacements}`);
-        // console.log('\nFile-by-file results:');
 
         results.results.forEach(result => {
             if (result.status === 'success') {
-                // console.log(`✅ ${result.file}: ${result.replacements} replacements${result.loggerAdded ? ' (logger added)' : ''}`);
             } else if (result.status === 'skipped') {
-                // console.log(`⏭️  ${result.file}: ${result.reason}`);
             } else {
-                // console.log(`❌ ${result.file}: ${result.error}`);
             }
         });
 
         if (results.errors.length > 0) {
-            // console.log('\n❌ Errors:');
             results.errors.forEach(error => {
-                // console.log(`  - ${error.file}: ${error.error}`);
             });
         }
 
-        // console.log('\n✅ Migration complete!');
     }
 }
 

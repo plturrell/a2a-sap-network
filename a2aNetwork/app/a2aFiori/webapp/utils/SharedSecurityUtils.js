@@ -443,7 +443,7 @@ sap.ui.define([
                 if (this._isProduction()) {
                     this._sendToAuditService(logEntry);
                 } else {
-                    // console.info("[SECURITY_AUDIT]", logEntry);
+                    // Non-production audit logging
                 }
             } catch (e) {
                 // Fail silently to avoid breaking application
@@ -880,7 +880,6 @@ sap.ui.define([
         _sendToAuditService(logEntry) {
             // In production, implement actual audit service integration
             // For now, log to console with AUDIT prefix
-            // console.log("AUDIT:", logEntry);
         }
     };
 });

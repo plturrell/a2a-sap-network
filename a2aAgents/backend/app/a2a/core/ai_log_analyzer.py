@@ -726,7 +726,7 @@ class AILogAnalyzer:
     async def _get_nn_analysis(self, log_entry: LogEntry) -> Dict[str, Any]:
         """Get neural network analysis results"""
         if not TORCH_AVAILABLE or not self.log_nn:
-            return {'anomaly_score': 0.5}
+            return await self._ml_fallback_log_analysis(log_entry)
         
         try:
             # Convert message to sequence of indices
@@ -754,6 +754,116 @@ class AILogAnalyzer:
         
         except Exception as e:
             logger.error(f"Neural network analysis failed: {e}")
+            return await self._ml_fallback_log_analysis(log_entry)
+    
+    async def _ml_fallback_log_analysis(self, log_entry: LogEntry) -> Dict[str, Any]:
+        """ML-based fallback for log analysis using statistical and heuristic methods"""
+        try:
+            anomaly_score = 0.0
+            predicted_severity = 0
+            predicted_category = 0
+            
+            # Base anomaly score from log level
+            level_scores = {
+                LogLevel.CRITICAL: 0.9,
+                LogLevel.ERROR: 0.8,
+                LogLevel.WARN: 0.5,
+                LogLevel.INFO: 0.2,
+                LogLevel.DEBUG: 0.1
+            }
+            anomaly_score += level_scores.get(log_entry.level, 0.3) * 0.4
+            
+            # Analyze message content for anomaly indicators
+            message = log_entry.message.lower()
+            
+            # Critical patterns that indicate anomalies
+            critical_patterns = [
+                'exception', 'error', 'failed', 'failure', 'timeout', 'crash', 'abort',
+                'panic', 'fatal', 'critical', 'emergency', 'alert', 'denied', 'refused',
+                'rejected', 'unauthorized', 'forbidden', 'conflict', 'deadlock',
+                'out of memory', 'disk full', 'network error', 'connection refused',
+                'stack overflow', 'null pointer', 'segmentation fault'
+            ]
+            
+            warning_patterns = [
+                'warning', 'deprecated', 'retry', 'slow', 'delay', 'timeout warning',
+                'resource limit', 'threshold', 'capacity', 'performance', 'latency'
+            ]
+            
+            # Count critical patterns
+            critical_matches = sum(1 for pattern in critical_patterns if pattern in message)
+            warning_matches = sum(1 for pattern in warning_patterns if pattern in message)
+            
+            # Adjust anomaly score based on content
+            if critical_matches > 0:
+                anomaly_score += 0.3 * min(1.0, critical_matches / 3.0)
+            if warning_matches > 0:
+                anomaly_score += 0.15 * min(1.0, warning_matches / 3.0)
+            
+            # Message length analysis (very short or very long messages might be anomalous)
+            msg_length = len(message)
+            if msg_length < 10 or msg_length > 500:
+                anomaly_score += 0.1
+            
+            # Frequency analysis - check if this type of message is rare
+            # Use existing patterns if available
+            if hasattr(self, 'discovered_patterns') and self.discovered_patterns:
+                # Simple similarity check with existing patterns
+                pattern_similarity = False
+                for pattern in self.discovered_patterns.values():
+                    if any(word in message for word in pattern.template.lower().split()[:5]):
+                        pattern_similarity = True
+                        break
+                
+                if not pattern_similarity:
+                    anomaly_score += 0.15  # New/unusual pattern
+            
+            # Timestamp analysis - unusual timing can indicate anomalies
+            hour = log_entry.timestamp.hour
+            # More likely to be anomalous during off-hours (midnight-6am, assuming business app)
+            if 0 <= hour <= 6:
+                anomaly_score += 0.05
+            
+            # Predict severity (0=low, 1=medium, 2=high)
+            if log_entry.level in [LogLevel.CRITICAL, LogLevel.ERROR]:
+                predicted_severity = 2
+            elif log_entry.level == LogLevel.WARN:
+                predicted_severity = 1
+            else:
+                predicted_severity = 0
+                
+            # Adjust severity based on content
+            if critical_matches >= 2:
+                predicted_severity = 2
+            elif critical_matches == 1 or warning_matches >= 2:
+                predicted_severity = max(1, predicted_severity)
+            
+            # Predict category (simple heuristics)
+            # 0=system, 1=application, 2=security, 3=network, 4=database, 5=other
+            if any(word in message for word in ['unauthorized', 'forbidden', 'denied', 'security', 'auth', 'login', 'permission']):
+                predicted_category = 2  # security
+            elif any(word in message for word in ['network', 'connection', 'socket', 'timeout', 'dns', 'http', 'tcp']):
+                predicted_category = 3  # network
+            elif any(word in message for word in ['database', 'sql', 'query', 'transaction', 'db', 'table', 'index']):
+                predicted_category = 4  # database
+            elif any(word in message for word in ['system', 'kernel', 'memory', 'cpu', 'disk', 'filesystem']):
+                predicted_category = 0  # system
+            elif any(word in message for word in ['application', 'app', 'service', 'process', 'thread']):
+                predicted_category = 1  # application
+            else:
+                predicted_category = 5  # other
+            
+            # Normalize anomaly score
+            anomaly_score = float(np.clip(anomaly_score, 0.0, 1.0))
+            
+            return {
+                'anomaly_score': anomaly_score,
+                'predicted_severity': predicted_severity,
+                'predicted_category': predicted_category
+            }
+            
+        except Exception as e:
+            logger.warning(f"ML fallback log analysis failed: {e}")
             return {'anomaly_score': 0.5}
     
     # Anomaly detection methods
@@ -1218,7 +1328,10 @@ class AILogAnalyzer:
         confidence_factors.append(correlation_strength)
         
         # Timeline clarity
-        timeline_confidence = 0.7  # Default
+        # Calculate confidence based on data quality and pattern strength
+        pattern_strength = len(timeline_events) / max(100, len(timeline_events))
+        data_completeness = sum(1 for event in timeline_events if event.get('timestamp')) / len(timeline_events)
+        timeline_confidence = min(0.95, 0.4 + pattern_strength * 0.3 + data_completeness * 0.25)
         confidence_factors.append(timeline_confidence)
         
         return np.mean(confidence_factors)

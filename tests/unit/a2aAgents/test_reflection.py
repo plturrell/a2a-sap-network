@@ -1464,7 +1464,6 @@ class ComponentReflectionTest(ComparesTables, OneConnectionTablesTest):
         def cc(text, name, comment=None):
             return {"sqltext": tt(text), "name": name, "comment": comment}
 
-        # print({1: "test2 > (0)::double precision"} == {1: tt("test2 > 0")})
         # assert 0
         materialized = {(schema, "dingalings_v"): []}
         views = {

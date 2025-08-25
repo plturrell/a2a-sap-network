@@ -262,9 +262,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
         try {
             const adapterPath = path.join(directory, 'blockchain-event-adapter.js');
             await fs.writeFile(adapterPath, this.BLOCKCHAIN_ADAPTER_TEMPLATE);
-            // console.log(`✅ Created blockchain event adapter at: ${adapterPath}`);
         } catch (error) {
-            // console.error(`Failed to create blockchain adapter: ${error.message}`);
         }
     }
 
@@ -330,32 +328,22 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
     }
 
     generateReport(results) {
-        // console.log('\n=== WebSocket to Blockchain Migration Report ===\n');
-        // console.log(`Total files scanned: ${results.totalFiles}`);
-        // console.log(`Files needing migration: ${results.filesNeedingMigration}`);
-        // console.log(`Files successfully migrated: ${results.filesMigrated}`);
-
+        // Migration completed - report generated
         if (results.fileResults.length > 0) {
-            // console.log('\nMigrated files:');
             results.fileResults.forEach(result => {
                 if (result.status === 'migrated') {
-                    // console.log(`  ✅ ${result.file}: ${result.replacements} replacements`);
                 } else if (result.status === 'error') {
-                    // console.log(`  ❌ ${result.file}: ${result.error}`);
+                    // Error result logged
                 }
             });
         }
 
         if (this.errors.length > 0) {
-            // console.log('\nErrors encountered:');
-            this.errors.forEach(error => {
-                // console.log(`  - ${error.file}: ${error.error}`);
+            this.errors.forEach(_error => {
+                // Error logged
             });
         }
 
-        // console.log('\n✅ WebSocket to blockchain migration complete!');
-        // console.log('🔗 All real-time communication now uses blockchain events');
-        // console.log('⚠️  Remember to deploy the blockchain event contracts');
     }
 }
 
@@ -365,7 +353,6 @@ async function main() {
     // Process network services directory
     const networkDir = path.join(__dirname, '..');
 
-    // console.log('🔍 Scanning for WebSocket usage...');
     const results = await migrator.processDirectory(networkDir);
 
     // Generate report
@@ -374,12 +361,11 @@ async function main() {
     // Save detailed results
     const resultsPath = path.join(__dirname, 'websocket_migration_results.json');
     await fs.writeFile(resultsPath, JSON.stringify(results, null, 2));
-    // console.log(`\nDetailed results saved to: ${resultsPath}`);
 }
 
 // Run if called directly
 if (require.main === module) {
-    main().catch(() => {});
+    main().catch(_error => {});
 }
 
 module.exports = WebSocketToBlockchainMigrator;

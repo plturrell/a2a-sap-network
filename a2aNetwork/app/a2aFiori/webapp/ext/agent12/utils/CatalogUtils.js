@@ -2,7 +2,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/base/Log",
     "a2a/network/agent12/ext/utils/SecurityUtils"
-], function(MessageToast, Log, SecurityUtils) {
+], (MessageToast, Log, SecurityUtils) => {
     "use strict";
 
     return {
@@ -617,12 +617,12 @@ sap.ui.define([
 
         _replaceXmlChar(c) {
             switch (c) {
-                case "<": return "&lt;";
-                case ">": return "&gt;";
-                case "&": return "&amp;";
-                case "'": return "&apos;";
-                case "\"": return "&quot;";
-                default: return c;
+            case "<": return "&lt;";
+            case ">": return "&gt;";
+            case "&": return "&amp;";
+            case "'": return "&apos;";
+            case "\"": return "&quot;";
+            default: return c;
             }
         },
 

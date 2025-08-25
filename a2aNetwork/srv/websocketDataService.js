@@ -625,7 +625,7 @@ class A2AWebSocketDataService extends EventEmitter {
         return this.metrics.network;
     }
 
-    async subscribeToRealTimeEvents() {
+    subscribeToRealTimeEvents() {
         try {
             // Subscribe to real event bus (Redis/MQTT/WebSocket)
             const eventBusUrl = process.env.EVENT_BUS_URL || 'blockchain://a2a-events';
@@ -642,7 +642,7 @@ class A2AWebSocketDataService extends EventEmitter {
         }
     }
 
-    async handleRealTimeEvent(event) {
+    handleRealTimeEvent(event) {
         // Handle real events from the A2A network
         logger.info('Broadcasting real-time event:', event);
         this.broadcastToSubscribers('events', event);

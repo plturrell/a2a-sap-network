@@ -145,7 +145,7 @@ async def create_workflow(request: CreateWorkflowRequest):
             steps.append(step)
 
         # Create workflow using agent
-        result = await agent.create_workflow(
+        await agent.create_workflow(
             name=request.workflow_name,
             steps=steps,
             strategy=request.strategy,
@@ -235,7 +235,7 @@ async def execute_workflow(request: ExecuteWorkflowRequest):
         workflow = workflows[request.workflow_id]
 
         # Execute using agent
-        result = await agent.execute_workflow(
+        await agent.execute_workflow(
             workflow_id=request.workflow_id,
             context=request.execution_context
         )
@@ -360,7 +360,7 @@ async def coordinate_agents(request: CoordinateAgentsRequest):
         coordination_id = str(uuid4())
 
         # Create coordination using agent
-        result = await agent.coordinate_agents(
+        await agent.coordinate_agents(
             agents=request.agents,
             pattern=CoordinationPattern.PEER_TO_PEER,
             objective=request.objective

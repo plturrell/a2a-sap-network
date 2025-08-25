@@ -393,7 +393,6 @@ def test_rvs_broadcast(dist, shape_args):
 #     logp = -mpmath.power(6.0*n*x+1.0, 2)/18.0/n
 #     sf, cdf = mpmath.exp(logp), -mpmath.expm1(logp)
 #     pdf = (6.0*n*x+1.0) * 2 * sf/3
-#     print(mpmath.nstr(sf, 20), mpmath.nstr(cdf, 20), mpmath.nstr(pdf, 20))
 #
 # Tests use 1/n < x < 1-1/n and n > 1e6 to use the asymptotic computation.
 # Larger x has a smaller sf.

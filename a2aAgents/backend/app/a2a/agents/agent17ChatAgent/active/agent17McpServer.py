@@ -10,7 +10,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
@@ -18,10 +18,10 @@ sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
 from mcp import Server
 from mcp.types import (
     Tool, Resource, Prompt,
-    TextContent, ImageContent, EmbeddedResource,
+    TextContent,
     GetPromptResult, ListPromptsResult,
     ListResourcesResult, ListToolsResult, ReadResourceResult,
-    CallToolResult, ErrorData
+    CallToolResult
 )
 
 from agent17ChatAgentSdk import create_agent17_chat_agent, Agent17ChatAgent

@@ -81,7 +81,6 @@ async def test_complete_mcp_system():
         # 3. Test Resource Streaming
         print("\n3️⃣ Testing Resource Streaming...")
         streaming_server = MCPResourceStreamingServer("streaming_test")
-        streaming_skill = StreamingReasoningSkill(streaming_server)
 
         # Test subscription
         sub_result = await streaming_server._handle_resources_subscribe({

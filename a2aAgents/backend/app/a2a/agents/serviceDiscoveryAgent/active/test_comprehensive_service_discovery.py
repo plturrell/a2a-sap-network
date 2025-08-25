@@ -484,7 +484,7 @@ class TestServiceDiscoveryAgent(SecureA2AAgent):
                 scenario=scenario
             )
 
-            metrics = await simulator.run_simulation(duration_seconds=5)
+            await simulator.run_simulation(duration_seconds=5)
 
             # Verify scenario was applied
             assert len(simulator.simulation_agents) >= 2

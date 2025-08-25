@@ -692,7 +692,7 @@ class AIPerformanceOptimizer:
     async def _get_nn_performance_insights(self, features: np.ndarray) -> Dict[str, Any]:
         """Get performance insights from neural network"""
         if not TORCH_AVAILABLE or not self.optimization_nn:
-            return {}
+            return await self._ml_fallback_performance_insights(features)
         
         try:
             # Prepare sequence data if available
@@ -740,6 +740,109 @@ class AIPerformanceOptimizer:
             
         except Exception as e:
             logger.error(f"Neural network performance insights failed: {e}")
+            return await self._ml_fallback_performance_insights(features)
+    
+    async def _ml_fallback_performance_insights(self, features: np.ndarray) -> Dict[str, Any]:
+        """ML-based fallback for performance insights using statistical analysis"""
+        try:
+            if len(features) == 0:
+                return {}
+            
+            # Extract key metrics from features (assuming standard performance feature ordering)
+            # Features typically: [cpu_usage, memory_usage, disk_io, network_io, response_time, throughput, ...]
+            
+            insights = {}
+            
+            # Basic performance predictions
+            if len(features) >= 6:
+                cpu_usage = features[0]
+                memory_usage = features[1]
+                disk_io = features[2] if len(features) > 2 else 0.0
+                network_io = features[3] if len(features) > 3 else 0.0
+                response_time = features[4] if len(features) > 4 else 0.0
+                throughput = features[5] if len(features) > 5 else 0.0
+                
+                # Predict throughput based on resource utilization
+                # Lower utilization generally allows higher throughput
+                resource_utilization = (cpu_usage + memory_usage) / 2.0
+                predicted_throughput = max(0.1, 1.0 - resource_utilization) * 1000.0
+                insights['predicted_throughput'] = float(predicted_throughput)
+                
+                # Predict latency based on current response time and resource usage
+                predicted_latency = response_time * (1.0 + resource_utilization)
+                insights['predicted_latency'] = float(max(10.0, predicted_latency))
+                
+                # CPU efficiency score
+                if cpu_usage > 0:
+                    # Efficiency decreases as CPU approaches 100%
+                    cpu_efficiency = max(0.1, 1.0 - (cpu_usage ** 2))
+                else:
+                    cpu_efficiency = 0.9
+                insights['cpu_efficiency_score'] = float(cpu_efficiency)
+                
+                # Memory efficiency score  
+                if memory_usage > 0:
+                    memory_efficiency = max(0.1, 1.0 - (memory_usage ** 1.5))
+                else:
+                    memory_efficiency = 0.9
+                insights['memory_efficiency_score'] = float(memory_efficiency)
+                
+                # Overall performance score
+                performance_score = (cpu_efficiency + memory_efficiency + (1.0 - response_time/1000.0) + throughput/1000.0) / 4.0
+                insights['performance_score'] = float(np.clip(performance_score, 0.1, 1.0))
+                
+            else:
+                # Minimal feature set fallback
+                avg_utilization = np.mean(features[:min(4, len(features))])
+                insights['predicted_throughput'] = float(max(100.0, 1000.0 * (1.0 - avg_utilization)))
+                insights['predicted_latency'] = float(max(10.0, 100.0 + avg_utilization * 500))
+                insights['cpu_efficiency_score'] = float(max(0.1, 1.0 - avg_utilization))
+                insights['memory_efficiency_score'] = float(max(0.1, 1.0 - avg_utilization))
+                insights['performance_score'] = float(max(0.1, 1.0 - avg_utilization))
+            
+            # Bottleneck prediction using statistical analysis
+            bottleneck_scores = {}
+            if len(features) >= 4:
+                bottleneck_scores['cpu'] = float(features[0])
+                bottleneck_scores['memory'] = float(features[1])
+                bottleneck_scores['disk_io'] = float(features[2] if len(features) > 2 else 0.3)
+                bottleneck_scores['network_io'] = float(features[3] if len(features) > 3 else 0.2)
+                bottleneck_scores['other'] = float(max(0.1, 1.0 - sum(bottleneck_scores.values())))
+            else:
+                # Default bottleneck distribution
+                bottleneck_scores = {
+                    'cpu': 0.4, 'memory': 0.3, 'disk_io': 0.15, 
+                    'network_io': 0.1, 'other': 0.05
+                }
+            insights['bottleneck_predictions'] = bottleneck_scores
+            
+            # Configuration recommendations using heuristics
+            config_recs = []
+            
+            if len(features) >= 2:
+                cpu_usage = features[0] 
+                memory_usage = features[1]
+                
+                if cpu_usage > 0.8:
+                    config_recs.extend([1.0, 0.8, 0.6, 0.4])  # CPU optimization weights
+                elif memory_usage > 0.8:
+                    config_recs.extend([0.6, 1.0, 0.8, 0.4])  # Memory optimization weights
+                elif len(features) > 4 and features[4] > 500:  # High response time
+                    config_recs.extend([0.8, 0.6, 0.4, 1.0])  # Response time optimization
+                else:
+                    config_recs.extend([0.7, 0.7, 0.7, 0.7])  # Balanced optimization
+            
+            # Pad or truncate to expected size
+            while len(config_recs) < 10:
+                config_recs.append(0.5)
+            config_recs = config_recs[:10]
+            
+            insights['config_recommendations'] = config_recs
+            
+            return insights
+            
+        except Exception as e:
+            logger.warning(f"ML fallback performance insights failed: {e}")
             return {}
     
     def _extract_performance_features(self, metrics: PerformanceMetrics) -> np.ndarray:
@@ -1428,7 +1531,7 @@ class AIPerformanceOptimizer:
     async def _get_nn_config_optimizations(self, features, targets):
         """Get configuration optimizations from neural network"""
         if not TORCH_AVAILABLE or not self.optimization_nn:
-            return []
+            return await self._ml_fallback_config_optimizations(features, targets)
         
         try:
             if len(features) < 50:
@@ -1454,6 +1557,133 @@ class AIPerformanceOptimizer:
             return optimizations
         except Exception as e:
             logger.error(f"NN config optimization error: {e}")
+            return await self._ml_fallback_config_optimizations(features, targets)
+    
+    async def _ml_fallback_config_optimizations(self, features, targets):
+        """ML-based fallback for configuration optimizations using heuristic analysis"""
+        try:
+            optimizations = []
+            
+            if len(features) == 0:
+                return optimizations
+            
+            # Analyze current system state from features
+            # Assuming features contain performance metrics in standard order
+            cpu_usage = features[0] if len(features) > 0 else 0.5
+            memory_usage = features[1] if len(features) > 1 else 0.5
+            disk_io = features[2] if len(features) > 2 else 0.3
+            network_io = features[3] if len(features) > 3 else 0.2
+            response_time = features[4] if len(features) > 4 else 100.0
+            throughput = features[5] if len(features) > 5 else 0.5
+            
+            # CPU-based optimizations
+            if cpu_usage > 0.7:
+                optimizations.append({
+                    'type': 'cpu_optimization',
+                    'confidence': min(0.95, cpu_usage + 0.2),
+                    'description': 'High CPU usage detected - optimize thread pool and processing',
+                    'config_changes': {
+                        'thread_pool_size': max(4, min(32, int(16 * (1.0 - cpu_usage)))),
+                        'cpu_affinity': True,
+                        'process_priority': 'high' if cpu_usage > 0.85 else 'normal'
+                    },
+                    'potential_improvement': min(0.3, cpu_usage * 0.4),
+                    'priority': 'high' if cpu_usage > 0.85 else 'medium'
+                })
+            
+            # Memory-based optimizations  
+            if memory_usage > 0.6:
+                optimizations.append({
+                    'type': 'memory_optimization',
+                    'confidence': min(0.95, memory_usage + 0.15),
+                    'description': 'Memory pressure detected - optimize caching and garbage collection',
+                    'config_changes': {
+                        'heap_size_mb': max(512, int(2048 * (1.0 - memory_usage))),
+                        'gc_strategy': 'concurrent' if memory_usage > 0.8 else 'parallel',
+                        'cache_size_limit': int(100 * (1.0 - memory_usage))
+                    },
+                    'potential_improvement': min(0.25, memory_usage * 0.35),
+                    'priority': 'high' if memory_usage > 0.8 else 'medium'
+                })
+            
+            # I/O optimizations
+            if disk_io > 0.5 or network_io > 0.5:
+                optimizations.append({
+                    'type': 'io_optimization', 
+                    'confidence': min(0.9, max(disk_io, network_io) + 0.1),
+                    'description': 'I/O bottleneck detected - optimize data access patterns',
+                    'config_changes': {
+                        'io_thread_count': max(2, min(8, int(8 * max(disk_io, network_io)))),
+                        'buffer_size_kb': 64 if disk_io > network_io else 32,
+                        'connection_pool_size': max(5, min(50, int(25 * network_io))) if network_io > 0.3 else 10
+                    },
+                    'potential_improvement': min(0.2, max(disk_io, network_io) * 0.3),
+                    'priority': 'medium'
+                })
+            
+            # Response time optimizations
+            if response_time > 200:  # Assuming milliseconds
+                optimizations.append({
+                    'type': 'latency_optimization',
+                    'confidence': min(0.9, (response_time / 1000.0) + 0.3),
+                    'description': 'High response time detected - optimize request processing',
+                    'config_changes': {
+                        'request_timeout_ms': max(5000, int(response_time * 2)),
+                        'async_processing': True,
+                        'response_caching': True,
+                        'connection_keepalive': True
+                    },
+                    'potential_improvement': min(0.4, (response_time - 100) / 1000.0),
+                    'priority': 'high' if response_time > 500 else 'medium'
+                })
+            
+            # Throughput optimizations
+            if throughput < 0.6:
+                optimizations.append({
+                    'type': 'throughput_optimization',
+                    'confidence': min(0.85, (1.0 - throughput) + 0.3),
+                    'description': 'Low throughput detected - optimize processing pipeline',
+                    'config_changes': {
+                        'batch_size': max(10, int(100 * throughput)),
+                        'pipeline_stages': min(5, max(2, int(5 * throughput))),
+                        'parallel_workers': max(2, int(8 * throughput)),
+                        'queue_size': max(100, int(1000 * throughput))
+                    },
+                    'potential_improvement': min(0.35, (1.0 - throughput) * 0.5),
+                    'priority': 'medium'
+                })
+            
+            # General system optimization if overall performance is poor
+            overall_performance = 1.0 - ((cpu_usage + memory_usage + max(disk_io, network_io)) / 3.0)
+            if overall_performance < 0.5:
+                optimizations.append({
+                    'type': 'system_optimization',
+                    'confidence': min(0.8, (1.0 - overall_performance) + 0.2),
+                    'description': 'Overall system performance is suboptimal - apply general optimizations',
+                    'config_changes': {
+                        'monitoring_interval_ms': 5000,  # More frequent monitoring
+                        'log_level': 'warn',  # Reduce logging overhead
+                        'health_check_interval_ms': 30000,
+                        'resource_limits': {
+                            'max_cpu_percent': 80,
+                            'max_memory_percent': 75
+                        }
+                    },
+                    'potential_improvement': min(0.2, (1.0 - overall_performance) * 0.4),
+                    'priority': 'low'
+                })
+            
+            # Sort by priority and potential improvement
+            priority_order = {'high': 3, 'medium': 2, 'low': 1}
+            optimizations.sort(key=lambda x: (
+                priority_order.get(x.get('priority', 'low'), 1),
+                x.get('potential_improvement', 0)
+            ), reverse=True)
+            
+            return optimizations[:10]  # Limit to top 10 optimizations
+            
+        except Exception as e:
+            logger.warning(f"ML fallback config optimizations failed: {e}")
             return []
 
 

@@ -1113,7 +1113,6 @@ class EnhancedAgentManagerAgent(BlockchainIntegrationMixin):
         """Continuous trust contract validation"""
         while not self._shutdown_flag:
             try:
-                current_time = datetime.utcnow()
                 expired_contracts = []
 
                 for contract_id, contract in self.trust_contracts.items():

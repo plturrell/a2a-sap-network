@@ -20,6 +20,15 @@ import os
 logger = logging.getLogger(__name__)
 
 
+def create_performance_history_deque():
+    """Create a deque for performance history with max length of 1000"""
+    return deque(maxlen=1000)
+
+def get_strategy_score(x):
+    """Get strategy score for sorting"""
+    return x[1]
+
+
 class LearningStrategy(str, Enum):
     """Available learning strategies"""
 
@@ -76,7 +85,7 @@ class AdaptiveLearningSystem:
         self.active_strategy = LearningStrategy.REINFORCEMENT
 
         # Performance tracking
-        self.performance_history = defaultdict(lambda: deque(maxlen=1000))
+        self.performance_history = defaultdict(create_performance_history_deque)
         self.learning_curves = defaultdict(list)
 
         # Strategy implementations
@@ -330,7 +339,7 @@ class AdaptiveLearningSystem:
 
         if strategy_scores:
             # Select best strategy
-            best_strategy = max(strategy_scores.items(), key=lambda x: x[1])[0]
+            best_strategy = max(strategy_scores.items(), key=get_strategy_score)[0]
 
             if (
                 best_strategy != self.active_strategy

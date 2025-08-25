@@ -71,7 +71,7 @@ def complex_logic(x, y, z):
         print("\n3. Testing caching system:")
         # Run analysis twice to test caching
         start_time = asyncio.get_event_loop().time()
-        result1 = await agent._with_cache(
+        await agent._with_cache(
             "test_analysis",
             lambda directory, file_patterns: {"cached": False, "directory": directory},
             directory=test_dir,
@@ -80,7 +80,7 @@ def complex_logic(x, y, z):
         first_duration = asyncio.get_event_loop().time() - start_time
 
         start_time = asyncio.get_event_loop().time()
-        result2 = await agent._with_cache(
+        await agent._with_cache(
             "test_analysis",
             lambda directory, file_patterns: {"cached": False, "directory": directory},
             directory=test_dir,
@@ -111,10 +111,8 @@ def complex_logic(x, y, z):
             )
             print(f"   ✓ Parallel analysis completed: {parallel_result.get('tasks_completed', 0)} tasks")
             print(f"   ✓ Duration: {parallel_result.get('duration', 0):.2f}s")
-            analysis_id = parallel_result.get('analysis_id')
         except Exception as e:
             print(f"   ⚠️  Parallel analysis error: {e}")
-            analysis_id = None
 
         # Test 5: Analysis History
         print("\n6. Testing analysis history:")

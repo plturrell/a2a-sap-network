@@ -115,7 +115,6 @@ async function main() {
 
         // Revoke admin role from deployer (optional - be careful!)
         // await timelock.revokeRole(await timelock.DEFAULT_ADMIN_ROLE(), deployer.address);
-        // console.log('✅ Revoked admin role from deployer');
 
         // Step 5: Configure Governor Roles
         console.log('\n⚙️ Configuring Governor Roles...');

@@ -734,7 +734,7 @@ async def run_normal_orchestration_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             workflow_generation_rate=0.3
         )
@@ -755,7 +755,7 @@ async def run_high_concurrency_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             workflow_generation_rate=1.0
         )
@@ -776,7 +776,7 @@ async def run_failure_recovery_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             workflow_generation_rate=0.5
         )
@@ -797,7 +797,7 @@ async def run_complex_workflow_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             workflow_generation_rate=0.2
         )

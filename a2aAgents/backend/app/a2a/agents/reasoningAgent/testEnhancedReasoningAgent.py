@@ -416,17 +416,15 @@ class EnhancedReasoningAgentTest:
             question = "What is the meaning of life?"
 
             # First execution (cache miss)
-            result1 = await self.reasoning_agent.call_mcp_tool("execute_reasoning_chain", {
+            await self.reasoning_agent.call_mcp_tool("execute_reasoning_chain", {
                 "question": question,
                 "architecture": "chain_of_thought",
                 "strategy": "deductive",
                 "enable_caching": True
             })
 
-            initial_cache_misses = self.reasoning_agent.metrics["cache_misses"]
-
             # Second execution (should be cache hit)
-            result2 = await self.reasoning_agent.call_mcp_tool("execute_reasoning_chain", {
+            await self.reasoning_agent.call_mcp_tool("execute_reasoning_chain", {
                 "question": question,
                 "architecture": "chain_of_thought",
                 "strategy": "deductive",

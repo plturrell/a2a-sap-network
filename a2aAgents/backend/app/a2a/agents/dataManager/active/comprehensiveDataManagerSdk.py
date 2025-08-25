@@ -1119,7 +1119,6 @@ class ComprehensiveDataManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
                         # Apply basic WHERE filtering if present
                         if where_match and isinstance(parsed_value, dict):
                             # Very basic filtering - in practice would need proper SQL parser
-                            where_clause = where_match.group(1).strip()
                             # For now, just return all results
                             results.append(parsed_value)
                         else:

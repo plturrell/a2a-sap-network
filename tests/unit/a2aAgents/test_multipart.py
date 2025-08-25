@@ -809,10 +809,6 @@ class TestFormParser(unittest.TestCase):
             processed = 0
             exc = e
 
-        # print(repr(param))
-        # print("")
-        # print(repr(self.fields))
-        # print(repr(self.files))
 
         # Do we expect an error?
         if 'error' in param['result']['expected']:

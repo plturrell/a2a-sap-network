@@ -38,7 +38,6 @@ class WebSocketMonitor {
         });
 
         this.updateDatabaseMetrics();
-        // console.log(`🔌 WebSocket connected: ${socketId} (Total: ${this.connections.size})`);
     }
 
     // Remove a disconnected WebSocket
@@ -46,7 +45,6 @@ class WebSocketMonitor {
         if (this.connections.has(socketId)) {
             this.connections.delete(socketId);
             this.updateDatabaseMetrics();
-            // console.log(`🔌 WebSocket disconnected: ${socketId} (Total: ${this.connections.size})`);
         }
     }
 
@@ -181,7 +179,6 @@ class WebSocketMonitor {
         }
 
         staleConnections.forEach(id => {
-            // console.log(`🧹 Cleaning up stale WebSocket connection: ${id}`);
             this.removeConnection(id);
         });
 
@@ -195,7 +192,6 @@ class WebSocketMonitor {
                 if (err) {
                     this.log.error('Error closing WebSocket monitor database:', err);
                 } else {
-                    // console.log('✅ WebSocket monitor database connection closed');
                 }
             });
         }

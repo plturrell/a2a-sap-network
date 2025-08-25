@@ -4,8 +4,8 @@
  * Routes messages based on Python communication configuration
  */
 
-const { BlockchainClient } = require('../core/blockchain-client');
-const WebSocket = require('ws');
+// const { BlockchainClient } = require('../core/blockchain-client');
+// const WebSocket = require('ws');
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
 
@@ -66,19 +66,19 @@ class A2AHumanMessageBridge extends EventEmitter {
         }
     }
 
-    async loadAgentProfiles() {
+    loadAgentProfiles() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.config.agentConfigUrl}/profiles`, {
-                timeout: 5000
-            });
+            // const response = await blockchainClient.sendMessage(`${this.config.agentConfigUrl}/profiles`, {
+            //     timeout: 5000
+            // });
 
-            if (response.data && response.data.profiles) {
-                Object.entries(response.data.profiles).forEach(([agentId, profile]) => {
-                    this.agentProfiles.set(agentId, profile);
-                });
+            // if (response.data && response.data.profiles) {
+            //     Object.entries(response.data.profiles).forEach(([agentId, profile]) => {
+            //         this.agentProfiles.set(agentId, profile);
+            //     });
 
-                this.logger.info(`📋 Loaded ${this.agentProfiles.size} agent communication profiles`);
-            }
+            //     this.logger.info(`📋 Loaded ${this.agentProfiles.size} agent communication profiles`);
+            // }
 
         } catch (error) {
             this.logger.error('Failed to load agent profiles:', error);
@@ -86,11 +86,11 @@ class A2AHumanMessageBridge extends EventEmitter {
         }
     }
 
-    async testPythonRouterConnection() {
+    testPythonRouterConnection() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.config.pythonRouterUrl}/health`, {
-                timeout: 3000
-            });
+            // const response = await blockchainClient.sendMessage(`${this.config.pythonRouterUrl}/health`, {
+            //     timeout: 3000
+            // });
 
             this.logger.info('✅ Python A2A router connection verified');
 
@@ -189,22 +189,23 @@ class A2AHumanMessageBridge extends EventEmitter {
         }
     }
 
-    async routeMessage(message, fromAgent) {
+    routeMessage(message, fromAgent) {
         try {
             // Try to use Python router first
-            const response = await blockchainClient.sendMessage(this.config.pythonRouterUrl, {
-                message,
-                from_agent: fromAgent,
-                context: {
-                    timestamp: new Date().toISOString(),
-                    bridge_version: '1.0.0'
-                }
-            }, {
-                timeout: 5000,
-                headers: { 'Content-Type': 'application/json' }
-            });
+            // const response = await blockchainClient.sendMessage(this.config.pythonRouterUrl, {
+            //     message,
+            //     from_agent: fromAgent,
+            //     context: {
+            //         timestamp: new Date().toISOString(),
+            //         bridge_version: '1.0.0'
+            //     }
+            // }, {
+            //     timeout: 5000,
+            //     headers: { 'Content-Type': 'application/json' }
+            // });
 
-            return response.data;
+            // return response.data;
+            throw new Error('Blockchain client temporarily disabled');
 
         } catch (error) {
             this.logger.warn('Python router unavailable, using JavaScript fallback rules');
@@ -212,7 +213,7 @@ class A2AHumanMessageBridge extends EventEmitter {
         }
     }
 
-    fallbackRouting(message, fromAgent) {
+    fallbackRouting(message, _fromAgent) {
         // JavaScript fallback routing rules
         const messageType = message.message_type || message.type;
         const urgency = message.urgency || 'medium';
@@ -500,14 +501,15 @@ class A2AHumanMessageBridge extends EventEmitter {
         return 'general_request';
     }
 
-    async sendNotificationToHuman(notification) {
+    sendNotificationToHuman(notification) {
         try {
             // Send to notification service
-            await blockchainClient.sendMessage(`${this.config.notificationServiceUrl}/send`, {
-                notification,
-                source: 'a2a_bridge',
-                timestamp: new Date().toISOString()
-            });
+            // TODO: Re-enable blockchain client when available
+            // await blockchainClient.sendMessage(`${this.config.notificationServiceUrl}/send`, {
+            //     notification,
+            //     source: 'a2a_bridge',
+            //     timestamp: new Date().toISOString()
+            // });
 
             // Emit event for WebSocket forwarding
             this.emit('human_notification', notification);
@@ -555,7 +557,7 @@ class A2AHumanMessageBridge extends EventEmitter {
         }
     }
 
-    async forwardMessageToAgent(message, targetAgent) {
+    forwardMessageToAgent(message, targetAgent) {
         // This would integrate with the agent communication system
         // For now, emit an event that can be picked up by the agent runtime
         this.emit('agent_message', {
@@ -565,7 +567,7 @@ class A2AHumanMessageBridge extends EventEmitter {
         });
     }
 
-    async scheduleEscalation(message, routingDecision) {
+    scheduleEscalation(message, routingDecision) {
         const escalationDelay = routingDecision.escalation_timeout_minutes || 15;
 
         setTimeout(async () => {
@@ -592,7 +594,7 @@ class A2AHumanMessageBridge extends EventEmitter {
         this.logger.info(`⏳ Scheduled escalation for message ${message.messageId} in ${escalationDelay} minutes`);
     }
 
-    wasMessageHandledByAgents(messageId) {
+    wasMessageHandledByAgents(_messageId) {
         // Check if any agents responded to this message
         // This would integrate with agent response tracking
         return false; // Simplified for now
@@ -684,7 +686,7 @@ class A2AHumanMessageBridge extends EventEmitter {
         };
     }
 
-    determineResponseIntent(humanResponse, originalMessage) {
+    determineResponseIntent(humanResponse, _originalMessage) {
         if (humanResponse.approved === true) return 'approval_granted';
         if (humanResponse.approved === false) return 'approval_denied';
         if (humanResponse.action === 'approve_request') return 'approval_granted';
@@ -695,7 +697,7 @@ class A2AHumanMessageBridge extends EventEmitter {
         return 'general_response';
     }
 
-    async sendA2AResponseToAgent(a2aResponse, targetAgent) {
+    sendA2AResponseToAgent(a2aResponse, targetAgent) {
         // Send A2A formatted response back to the agent
         this.emit('a2a_response', {
             response: a2aResponse,

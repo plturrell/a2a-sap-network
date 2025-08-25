@@ -36,17 +36,13 @@ class SCIPIndexer {
         // Initialize language servers for SCIP generation
         await this.initializeLanguageServers();
 
-        // console.log('SCIP indexer initialized successfully');
     }
 
     async ensureSCIPAvailable() {
-        // console.log('Using real AST parsers: TypeScript ESLint parser and Babel parser');
-        // console.log('Enhanced symbol extraction with proper AST traversal enabled');
         return true;
     }
 
     async installSCIPTypeScript() {
-        // console.log('Using real AST parsers - no SCIP installation needed');
         return Promise.resolve();
     }
 
@@ -108,7 +104,6 @@ class SCIPIndexer {
     }
 
     async indexProject(languages = ['typescript', 'javascript', 'python', 'solidity', 'cds']) {
-        // console.log(`Starting SCIP indexing for languages: ${languages.join(', ')}`);
 
         // Try to use real SCIP indexers first
         const scipIndex = await this.generateRealSCIPIndex(languages);
@@ -121,7 +116,6 @@ class SCIPIndexer {
     }
 
     async generateRealSCIPIndex(languages) {
-        // console.log('Using enhanced AST-based indexing with real parsers...');
         return await this.generateEnhancedSCIPIndex(languages);
     }
 
@@ -131,7 +125,6 @@ class SCIPIndexer {
     }
 
     async runRealSCIPTypeScript() {
-        // console.log('Using enhanced AST-based TypeScript/JavaScript indexing...');
         return await this.generateEnhancedSCIPIndex(['typescript', 'javascript']);
     }
 
@@ -153,7 +146,6 @@ class SCIPIndexer {
         };
 
         for (const language of languages) {
-            // console.log(`Fallback indexing ${language} files...`);
             const langResults = await this.indexLanguage(language);
 
             // Merge SCIP results
@@ -183,7 +175,6 @@ class SCIPIndexer {
         const gleanFacts = { facts: [] };
 
         for (const file of files) {
-            // console.log(`Processing ${file}...`);
 
             if (typeof server.command === 'function') {
                 // Custom indexer (e.g., Solidity)
@@ -285,7 +276,6 @@ class SCIPIndexer {
 
     async parseTypeScript(filePath, content, document) {
         try {
-            // console.log(`Attempting AST parsing for ${filePath}`);
 
             // Use Babel parser for all files as it handles both JS and TS
             const ast = babelParser.parse(content, {
@@ -306,7 +296,6 @@ class SCIPIndexer {
                     'optionalChaining'
                 ]
             });
-            // console.log('Babel parser succeeded');
 
             let symbolCounter = 0;
 
@@ -460,7 +449,6 @@ class SCIPIndexer {
             };
 
             // Use Babel traversal
-            // console.log('Using Babel traversal');
             traverse(ast, {
                 enter(path) {
                     const nodeType = path.node.type;
@@ -740,7 +728,6 @@ class SCIPIndexer {
             const content = await fs.readFile(filePath, 'utf8');
             const relativePath = path.relative(this.workspaceRoot, filePath);
 
-            // console.log(`Processing CDS file: ${relativePath} (${content.length} chars)`);
 
             // Use advanced CDS parser for comprehensive analysis
             const parseResult = this.advancedCDSParser.parseAdvancedCDSContent(content, relativePath);
@@ -759,7 +746,6 @@ class SCIPIndexer {
                 flatFacts.push(...factArray);
             });
 
-            // console.log(`✅ CDS processing complete: ${parseResult.symbols.length} symbols, ${flatFacts.length} facts`);
 
             return {
                 scip: {
@@ -1274,7 +1260,6 @@ class SCIPIndexer {
     }
 
     async parseTypeScriptFallback(filePath, content, document) {
-        // console.log(`Using fallback regex parsing for ${filePath}`);
 
         const lines = content.split('\n');
         let symbolCounter = 0;
@@ -1391,7 +1376,6 @@ class SCIPIndexer {
             }
 
             const result = await response.json();
-            // console.log(`Uploaded ${gleanFacts.facts.length} facts to Glean`);
             return result;
         } catch (error) {
             console.error('Failed to upload facts to Glean:', error);

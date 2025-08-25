@@ -489,7 +489,6 @@ class EnhancedSQLSkills(SecureA2AAgent):
         """
         try:
             # Parse SQL query
-            sql_upper = sql_query.upper()
             query_parts = self._parse_sql_query(sql_query)
 
             # Generate natural language description

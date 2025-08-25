@@ -17,7 +17,7 @@ const EventEmitter = require('events');
 const activeIntervals = new Map();
 
 function stopAllIntervals() {
-    for (const [name, intervalId] of activeIntervals) {
+    for (const [, intervalId] of activeIntervals) {
         clearInterval(intervalId);
     }
     activeIntervals.clear();

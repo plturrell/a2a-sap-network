@@ -5,7 +5,7 @@
  */
 
 const BaseAdapter = require('./base-adapter');
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 class Agent15Adapter extends BaseAdapter {
     constructor() {
@@ -88,7 +88,7 @@ class Agent15Adapter extends BaseAdapter {
 
     async pauseWorkflow(workflowId) {
         try {
-            const response = await this.callPythonBackend('pause_workflow', {
+            await this.callPythonBackend('pause_workflow', {
                 workflow_id: workflowId
             });
             return { status: 'paused', workflow_id: workflowId };
@@ -99,7 +99,7 @@ class Agent15Adapter extends BaseAdapter {
 
     async resumeWorkflow(workflowId) {
         try {
-            const response = await this.callPythonBackend('resume_workflow', {
+            await this.callPythonBackend('resume_workflow', {
                 workflow_id: workflowId
             });
             return { status: 'running', workflow_id: workflowId };
@@ -110,7 +110,7 @@ class Agent15Adapter extends BaseAdapter {
 
     async cancelWorkflow(workflowId) {
         try {
-            const response = await this.callPythonBackend('cancel_workflow', {
+            await this.callPythonBackend('cancel_workflow', {
                 workflow_id: workflowId
             });
             return { status: 'cancelled', workflow_id: workflowId };

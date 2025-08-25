@@ -100,7 +100,7 @@ def retry_with_backoff(
                         f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {str(e)}. "
                         f"Retrying in {delay:.1f} seconds..."
                     )
-                    await asyncio.sleep(delay)
+                    time.sleep(delay)
 
             raise last_exception
 

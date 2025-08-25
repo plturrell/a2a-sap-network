@@ -3289,7 +3289,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
             for role, agents in self.sub_agent_pool.items():
                 if agents:
                     try:
-                        result = await self._query_sub_agent(
+                        await self._query_sub_agent(
                             agents[0],
                             "health_check",
                             {}
@@ -3472,8 +3472,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
     async def _grok_intra_skill_routing_rule(self, message: SkillMessage, skills: Dict[str, Any]) -> bool:
         """Grok powered intra-skill routing optimization rule"""
         if not self.grok_intra_skill_messaging:
-            if not self._validate_architecture(architecture):
-                architecture = ReasoningArchitecture.HIERARCHICAL
+            # Use hierarchical architecture by default for non-grok routing
             return True
 
         try:

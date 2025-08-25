@@ -868,7 +868,7 @@ class AIWorkflowOptimizer:
     async def _get_nn_optimization_insights(self, features: np.ndarray) -> Dict[str, Any]:
         """Get optimization insights from neural network"""
         if not TORCH_AVAILABLE or not self.optimization_nn:
-            return {}
+            return await self._ml_fallback_optimization_insights(features)
         
         try:
             # Pad or truncate features
@@ -893,6 +893,128 @@ class AIWorkflowOptimizer:
         
         except Exception as e:
             logger.error(f"Neural network insight error: {e}")
+            return await self._ml_fallback_optimization_insights(features)
+    
+    async def _ml_fallback_optimization_insights(self, features: np.ndarray) -> Dict[str, Any]:
+        """ML-based fallback for workflow optimization insights using statistical analysis"""
+        try:
+            if len(features) == 0:
+                return {}
+            
+            insights = {}
+            
+            # Extract workflow characteristics from features
+            # Assuming features contain: [step_count, complexity, dependency_depth, parallel_potential, ...]
+            
+            step_count = features[0] if len(features) > 0 else 5.0
+            complexity = features[1] if len(features) > 1 else 0.5
+            dependency_depth = features[2] if len(features) > 2 else 3.0
+            parallel_potential = features[3] if len(features) > 3 else 0.3
+            
+            # Predict execution time based on workflow characteristics
+            base_time = step_count * 100  # 100ms per step as baseline
+            complexity_factor = 1.0 + (complexity * 2.0)  # Higher complexity increases time
+            dependency_penalty = dependency_depth * 0.2  # Sequential dependencies add time
+            parallel_benefit = 1.0 - (parallel_potential * 0.4)  # Parallelization reduces time
+            
+            predicted_exec_time = base_time * complexity_factor * (1.0 + dependency_penalty) * parallel_benefit
+            insights['predicted_execution_time'] = float(max(50.0, predicted_exec_time))
+            
+            # Resource efficiency based on step distribution and complexity
+            if len(features) >= 6:
+                resource_usage = features[4] if len(features) > 4 else 0.5
+                io_intensity = features[5] if len(features) > 5 else 0.3
+                
+                # Lower resource usage and well-distributed I/O operations = higher efficiency
+                resource_efficiency = max(0.1, 1.0 - resource_usage * 0.8)
+                if io_intensity < 0.5:  # Well-balanced I/O
+                    resource_efficiency += 0.1
+                
+                insights['resource_efficiency'] = float(np.clip(resource_efficiency, 0.1, 1.0))
+            else:
+                # Simple heuristic based on complexity
+                resource_efficiency = max(0.3, 1.0 - complexity * 0.6)
+                insights['resource_efficiency'] = float(resource_efficiency)
+            
+            # Bottleneck risk assessment
+            bottleneck_risk = 0.0
+            
+            # High dependency depth increases bottleneck risk
+            if dependency_depth > 5:
+                bottleneck_risk += 0.3
+            elif dependency_depth > 3:
+                bottleneck_risk += 0.15
+            
+            # Low parallelization potential increases risk
+            if parallel_potential < 0.3:
+                bottleneck_risk += 0.25
+            
+            # High complexity increases risk
+            if complexity > 0.7:
+                bottleneck_risk += 0.2
+            
+            insights['bottleneck_risk'] = float(np.clip(bottleneck_risk, 0.0, 1.0))
+            
+            # Parallelization potential assessment
+            if parallel_potential > 0.0:
+                # Factor in step count and dependency structure
+                parallelization_score = parallel_potential
+                if step_count > 5:  # More steps = more parallel opportunities
+                    parallelization_score += 0.1
+                if dependency_depth < 3:  # Shallow dependencies = better parallelization
+                    parallelization_score += 0.15
+                
+                insights['parallelization_potential'] = float(np.clip(parallelization_score, 0.0, 1.0))
+            else:
+                # Estimate based on workflow structure
+                if dependency_depth < step_count / 2:
+                    parallelization_score = 0.4  # Some potential
+                else:
+                    parallelization_score = 0.1  # Limited potential
+                insights['parallelization_potential'] = float(parallelization_score)
+            
+            # Overall optimization score
+            optimization_components = [
+                insights['resource_efficiency'],
+                1.0 - insights['bottleneck_risk'],
+                insights['parallelization_potential'],
+                max(0.1, 1.0 - complexity)  # Lower complexity = better optimization potential
+            ]
+            
+            optimization_score = np.mean(optimization_components)
+            insights['optimization_score'] = float(np.clip(optimization_score, 0.1, 1.0))
+            
+            # Attention weights (simplified heuristic simulation)
+            if len(features) >= 8:
+                # Create attention-like weights based on feature importance
+                attention_weights = []
+                for i, feature in enumerate(features[:min(8, len(features))]):
+                    if i == 0:  # Step count
+                        weight = 0.2 + (feature / 20.0) * 0.3  # Higher for more steps
+                    elif i == 1:  # Complexity
+                        weight = 0.15 + feature * 0.35  # Higher for more complex
+                    elif i == 2:  # Dependency depth
+                        weight = 0.1 + (feature / 10.0) * 0.25  # Higher for deeper dependencies
+                    elif i == 3:  # Parallel potential
+                        weight = 0.1 + feature * 0.2  # Higher for more parallel potential
+                    else:
+                        weight = 0.05 + feature * 0.1  # Lower weight for other features
+                    
+                    attention_weights.append(float(np.clip(weight, 0.01, 0.5)))
+                
+                # Normalize weights
+                total_weight = sum(attention_weights)
+                if total_weight > 0:
+                    attention_weights = [w / total_weight for w in attention_weights]
+                
+                insights['attention_weights'] = attention_weights
+            else:
+                insights['attention_weights'] = []
+            
+            return insights
+            
+        except Exception as e:
+            logger.warning(f"ML fallback workflow optimization insights failed: {e}")
             return {}
     
     # Placeholder methods for additional functionality
@@ -1101,11 +1223,161 @@ class AIWorkflowOptimizer:
             logger.error(f"Error analyzing resource distribution: {e}")
         
         return distribution
-    def _calculate_complexity_score(self, steps, graph): return 0.5
-    def _heuristic_bottleneck_score(self, step, steps): return 0.5
-    def _analyze_resource_contention(self, step, steps): return 0.3
-    def _analyze_dependency_bottleneck(self, step, graph): return 0.2
-    def _heuristic_parallel_score(self, group, steps): return 0.6
+    def _calculate_complexity_score(self, steps, graph):
+        """Calculate workflow complexity score from real step analysis"""
+        if not steps:
+            return 0.1
+        
+        # Base complexity from step count
+        step_complexity = min(1.0, len(steps) / 20.0)  # Normalize to 20 steps
+        
+        # Add complexity from step types
+        complex_step_types = ['validation', 'approval', 'transformation', 'analysis']
+        complex_steps = sum(1 for step in steps if step.get('type', '') in complex_step_types)
+        type_complexity = complex_steps / len(steps) if steps else 0
+        
+        # Add complexity from graph structure
+        graph_complexity = 0.0
+        if graph and 'edges' in graph:
+            edges = graph['edges']
+            # More edges relative to nodes = higher complexity
+            edge_ratio = len(edges) / max(len(steps), 1)
+            graph_complexity = min(0.5, edge_ratio / 2.0)
+        
+        # Combine factors
+        total_complexity = (step_complexity * 0.4 + 
+                          type_complexity * 0.4 + 
+                          graph_complexity * 0.2)
+        
+        return min(1.0, max(0.1, total_complexity))
+    def _heuristic_bottleneck_score(self, step, steps):
+        """Calculate bottleneck score for a step based on real characteristics"""
+        if not step:
+            return 0.0
+        
+        score = 0.0
+        
+        # Duration-based bottleneck scoring
+        step_duration = step.get('estimated_duration', 60)
+        total_duration = sum(s.get('estimated_duration', 60) for s in steps) if steps else step_duration
+        duration_ratio = step_duration / max(total_duration, 1)
+        score += duration_ratio * 0.4
+        
+        # Resource-based scoring
+        cpu_usage = step.get('cpu_usage', 0.5)
+        memory_usage = step.get('memory_usage', 0.5)
+        resource_score = max(cpu_usage, memory_usage)
+        score += resource_score * 0.3
+        
+        # Dependency-based scoring
+        step_id = step.get('id', '')
+        dependent_steps = sum(1 for s in steps if step_id in s.get('dependencies', []))
+        dependency_score = min(1.0, dependent_steps / 5.0)  # Normalize to 5 dependents
+        score += dependency_score * 0.3
+        
+        return min(1.0, score)
+    def _analyze_resource_contention(self, step, steps):
+        """Analyze resource contention for a step"""
+        if not step or not steps:
+            return 0.0
+        
+        step_cpu = step.get('cpu_usage', 0.5)
+        step_memory = step.get('memory_usage', 0.5)
+        step_io = step.get('io_usage', 0.3)
+        
+        contention_score = 0.0
+        concurrent_steps = 0
+        
+        # Check for concurrent resource usage
+        for other_step in steps:
+            if other_step.get('id') == step.get('id'):
+                continue
+                
+            # Check if steps could run concurrently (no dependencies)
+            if step.get('id', '') not in other_step.get('dependencies', []):
+                concurrent_steps += 1
+                
+                # Calculate resource overlap
+                other_cpu = other_step.get('cpu_usage', 0.5)
+                other_memory = other_step.get('memory_usage', 0.5)
+                other_io = other_step.get('io_usage', 0.3)
+                
+                # Higher overlap = higher contention
+                cpu_overlap = min(step_cpu, other_cpu)
+                memory_overlap = min(step_memory, other_memory)
+                io_overlap = min(step_io, other_io)
+                
+                overlap_score = (cpu_overlap + memory_overlap + io_overlap) / 3.0
+                contention_score += overlap_score
+        
+        # Average contention across concurrent steps
+        return contention_score / max(concurrent_steps, 1) if concurrent_steps > 0 else 0.0
+    def _analyze_dependency_bottleneck(self, step, graph):
+        """Analyze dependency-based bottleneck potential"""
+        if not step or not graph:
+            return 0.0
+        
+        step_id = step.get('id', '')
+        edges = graph.get('edges', [])
+        
+        # Count incoming and outgoing dependencies
+        incoming_deps = sum(1 for edge in edges if edge.get('target') == step_id)
+        outgoing_deps = sum(1 for edge in edges if edge.get('source') == step_id)
+        
+        bottleneck_score = 0.0
+        
+        # High fan-in creates bottleneck
+        if incoming_deps > 2:
+            bottleneck_score += min(0.5, incoming_deps / 10.0)
+        
+        # High fan-out creates bottleneck
+        if outgoing_deps > 3:
+            bottleneck_score += min(0.4, outgoing_deps / 8.0)
+        
+        # Critical path analysis - steps with many dependents
+        if outgoing_deps > 0:
+            # Calculate how many total downstream steps depend on this
+            downstream_count = self._count_downstream_dependencies(step_id, edges)
+            downstream_score = min(0.3, downstream_count / 15.0)
+            bottleneck_score += downstream_score
+        
+        return min(1.0, bottleneck_score)
+    def _heuristic_parallel_score(self, group, steps):
+        """Calculate how suitable a group of steps is for parallel execution"""
+        if not group or len(group) < 2:
+            return 0.0
+        
+        score = 0.5  # Base parallelizability
+        
+        # Check resource compatibility
+        total_cpu = sum(step.get('cpu_usage', 0.5) for step in group)
+        total_memory = sum(step.get('memory_usage', 0.5) for step in group)
+        
+        # Lower total resource usage = higher parallelization score
+        if total_cpu < 1.0 and total_memory < 1.0:
+            score += 0.3
+        elif total_cpu > 1.5 or total_memory > 1.5:
+            score -= 0.2
+        
+        # Check for data dependencies between steps
+        dependency_penalty = 0
+        for step in group:
+            step_deps = step.get('dependencies', [])
+            other_step_ids = [s.get('id', '') for s in group if s.get('id') != step.get('id')]
+            
+            # Penalty for internal dependencies
+            internal_deps = sum(1 for dep in step_deps if dep in other_step_ids)
+            dependency_penalty += internal_deps * 0.1
+        
+        score -= dependency_penalty
+        
+        # Bonus for similar execution times (easier to parallelize)
+        durations = [step.get('estimated_duration', 60) for step in group]
+        duration_variance = np.var(durations) if len(durations) > 1 else 0
+        if duration_variance < 100:  # Low variance in durations
+            score += 0.1
+        
+        return max(0.0, min(1.0, score))
     def _estimate_parallel_speedup(self, group, steps): return 1.5
     def _check_resource_conflicts(self, group, steps): return False
     def _assess_parallel_complexity(self, group, steps): return "medium"

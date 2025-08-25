@@ -12,7 +12,7 @@
 
 const dotenv = require('dotenv');
 const path = require('path');
-const { exec } = require('child_process');
+// const { exec } = require('child_process');
 const fs = require('fs').promises;
 
 // Load environment variables
@@ -87,9 +87,8 @@ class RealNotificationSystemStarter {
         } catch {
             this.logger.info('📝 Creating .env file with default configuration...');
 
-            function formatEnvVar([key, value]) {
-                return `${key}=${value}`;
-            }
+            const formatEnvVar = ([key, value]) => `${key}=${value}`;
+            
             const envContent = Object.entries(vars)
                 .map(formatEnvVar)
                 .join('\n');

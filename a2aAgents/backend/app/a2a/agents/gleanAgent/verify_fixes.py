@@ -36,9 +36,6 @@ async def test_fixes():
         else:
             print("❌ _run_command method missing")
 
-        # Test simple linter functions
-        test_file = Path(__file__)
-
         # Test JSON linter with a simple valid JSON
         json_content = '{"test": "value"}'
         json_file = Path("test_temp.json")

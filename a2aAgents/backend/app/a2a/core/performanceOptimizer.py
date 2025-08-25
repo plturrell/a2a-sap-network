@@ -132,7 +132,9 @@ class CacheOptimizer:
             scores[key] = frequency / (1 + recency)
 
         # Remove lowest scoring entry
-        least_valuable = min(scores.items(), key=lambda x: x[1])[0]
+        def get_score_value(x):
+            return x[1]
+        least_valuable = min(scores.items(), key=get_score_value)[0]
         del self.cache[least_valuable]
         del self.access_times[least_valuable]
         del self.access_counts[least_valuable]

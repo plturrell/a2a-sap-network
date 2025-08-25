@@ -698,7 +698,6 @@ def test_cython_transform_series(op, args, targop):
 
     # series
     for data in [s, s_missing]:
-        # print(data.head())
         expected = data.groupby(labels).transform(targop)
 
         tm.assert_series_equal(expected, data.groupby(labels).transform(op, *args))

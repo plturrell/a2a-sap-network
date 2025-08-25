@@ -427,7 +427,6 @@ class MonitoringDashboard(SecureA2AAgent):
 
         # Operation metrics
         for op_name, stats in data['operations'].items():
-            clean_name = op_name.replace('.', '_').replace('-', '_')
             lines.append(f'a2a_operation_total{{operation="{op_name}"}} {stats["total_operations"]}')
             lines.append(f'a2a_operation_duration_avg{{operation="{op_name}"}} {stats["avg_response_time"]}')
             lines.append(f'a2a_operation_success_rate{{operation="{op_name}"}} {stats["success_rate"]/100}')

@@ -5,7 +5,7 @@
  */
 
 const BaseAdapter = require('./base-adapter');
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 class Agent14Adapter extends BaseAdapter {
     constructor() {

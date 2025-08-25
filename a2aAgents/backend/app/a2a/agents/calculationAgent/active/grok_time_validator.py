@@ -383,7 +383,7 @@ class GrokRealTimeValidator(SecureA2AAgent):
         # Test Grok client if available
         if self.grok_client:
             try:
-                test_validation = await self.grok_client.validate_mathematical_result(
+                await self.grok_client.validate_mathematical_result(
                     "What is 2 + 2?",
                     4,
                     [{"step": "add", "result": 4}]

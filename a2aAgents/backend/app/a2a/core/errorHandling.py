@@ -18,6 +18,10 @@ from functools import wraps
 
 logger = logging.getLogger(__name__)
 
+def get_error_count(x):
+    """Get error count for sorting error patterns"""
+    return x[1]
+
 
 from ...core.exceptions import ErrorSeverity
 
@@ -464,7 +468,7 @@ class ErrorRecoveryManager:
                 for name, breaker in self.circuit_breakers.items()
             },
             "error_patterns": dict(
-                sorted(self.error_patterns.items(), key=lambda x: x[1], reverse=True)[:10]
+                sorted(self.error_patterns.items(), key=get_error_count, reverse=True)[:10]
             ),
         }
 

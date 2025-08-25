@@ -548,7 +548,7 @@ class AICodeQuality:
             fixed_code = original_code
             fixes_applied = []
             
-            for issue in sorted(fixable_issues, key=lambda x: x.line_number, reverse=True):
+            def get_issue_line_number(x):\n                return x.line_number\n            for issue in sorted(fixable_issues, key=get_issue_line_number, reverse=True):
                 if issue.fix_code:
                     try:
                         fixed_code = await self._apply_fix(fixed_code, issue)

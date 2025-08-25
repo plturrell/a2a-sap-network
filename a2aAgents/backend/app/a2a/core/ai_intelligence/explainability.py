@@ -20,6 +20,11 @@ import uuid
 logger = logging.getLogger(__name__)
 
 
+def get_feature_importance(x):
+    """Get feature importance value for sorting"""
+    return x[1]
+
+
 class ExplanationType(str, Enum):
     """Types of explanations"""
 
@@ -490,7 +495,7 @@ class ExplainabilityFramework:
                     feature_counts[feature] += 1
 
             summary["most_common_features"] = sorted(
-                feature_counts.items(), key=lambda x: x[1], reverse=True
+                feature_counts.items(), key=get_feature_importance, reverse=True
             )[:10]
 
             # Analyze decision patterns
@@ -855,7 +860,7 @@ class FeatureImportanceGenerator(ExplanationGenerator):
 
         # Create explanation steps for top features
         steps = []
-        sorted_features = sorted(feature_importances.items(), key=lambda x: x[1], reverse=True)
+        sorted_features = sorted(feature_importances.items(), key=get_feature_importance, reverse=True)
 
         for i, (feature, importance) in enumerate(sorted_features[:5]):
             step = ExplanationStep(

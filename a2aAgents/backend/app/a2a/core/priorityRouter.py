@@ -296,7 +296,9 @@ class PriorityRouter:
             weighted_instances.append((weighted_depth, instance))
 
         # Select instance with lowest weighted queue depth
-        weighted_instances.sort(key=lambda x: x[0])
+        def get_weighted_depth(x):
+            return x[0]
+        weighted_instances.sort(key=get_weighted_depth)
         best_instance = weighted_instances[0][1]
 
         # Add to queue
@@ -354,14 +356,13 @@ class PriorityRouter:
 
         if not best_instance:
             # No instance can meet deadline, pick fastest
-            best_instance = min(
-                instances,
-                key=lambda i: (
+            def get_average_response_time(i):
+                return (
                     sum(i.response_times) / len(i.response_times)
                     if i.response_times
                     else float("inf")
-                ),
-            )
+                )
+            best_instance = min(instances, key=get_average_response_time)
 
         # Priority score includes deadline urgency
         deadline_factor = max(0, min(1, time_to_deadline / 300))  # Normalize to 0-1

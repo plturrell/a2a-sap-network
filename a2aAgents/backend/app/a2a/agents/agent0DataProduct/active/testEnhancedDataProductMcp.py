@@ -1,13 +1,8 @@
 import asyncio
-# Performance: Consider using asyncio.gather for concurrent operations
+import json
+import logging
 import os
 import sys
-import logging
-import json
-from datetime import datetime
-
-
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test Enhanced Data Product Agent with MCP Integration

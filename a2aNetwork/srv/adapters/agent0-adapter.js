@@ -3,8 +3,26 @@
  * Converts between REST API and OData formats for data product management operations
  */
 
-const { BlockchainClient } = require('../core/blockchain-client');
-const { v4: uuidv4 } = require('uuid');
+const fetch = require('node-fetch');
+// const { BlockchainClient } = require('../core/blockchain-client');
+// const { v4: uuidv4 } = require('uuid');
+
+// TODO: Replace all blockchainClient.sendMessage calls with proper fetch calls
+const blockchainClient = {
+    sendMessage: async (url, data, options = {}) => {
+        const response = await fetch(url, {
+            method: data ? 'POST' : 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            body: data ? JSON.stringify(data) : undefined,
+            timeout: options.timeout || 30000
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return { data: result };
+    }
+};
 
 class Agent0Adapter {
     constructor() {
@@ -32,11 +50,18 @@ class Agent0Adapter {
     async createDataProduct(data) {
         try {
             const restData = this._convertODataProductToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-products`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-            return this._convertRESTProductToOData(response.data);
+            return this._convertRESTProductToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -45,7 +70,10 @@ class Agent0Adapter {
     async updateDataProduct(id, data) {
         try {
             const restData = this._convertODataProductToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-products/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
 
@@ -559,7 +587,7 @@ class Agent0Adapter {
 
     _convertRESTProductToOData(product) {
         return {
-            ID: product.id || uuidv4(),
+            ID: product.id || `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             productName: product.product_name || product.name,
             description: product.description,
             productType: product.product_type?.toUpperCase() || 'DATASET',
@@ -625,7 +653,7 @@ class Agent0Adapter {
 
     _convertRESTDublinCoreToOData(dublinCore) {
         return {
-            ID: dublinCore.id || uuidv4(),
+            ID: dublinCore.id || `dublin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             title: dublinCore.title,
             creator: dublinCore.creator,
             subject: dublinCore.subject,
@@ -672,7 +700,7 @@ class Agent0Adapter {
 
     _convertRESTIngestionToOData(session) {
         return {
-            ID: session.id || uuidv4(),
+            ID: session.id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             sessionName: session.session_name,
             status: session.status?.toUpperCase(),
             startTime: session.start_time,
@@ -690,7 +718,7 @@ class Agent0Adapter {
 
     _convertRESTQualityToOData(assessment) {
         return {
-            ID: assessment.id || uuidv4(),
+            ID: assessment.id || `assessment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             assessmentType: assessment.assessment_type?.toUpperCase(),
             overallScore: assessment.overall_score,
             completenessScore: assessment.completeness_score,
@@ -709,7 +737,7 @@ class Agent0Adapter {
 
     _convertRESTTransformationToOData(transformation) {
         return {
-            ID: transformation.id || uuidv4(),
+            ID: transformation.id || `transform_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             transformationName: transformation.transformation_name,
             transformationType: transformation.transformation_type?.toUpperCase(),
             transformationRules: JSON.stringify(transformation.transformation_rules || {}),

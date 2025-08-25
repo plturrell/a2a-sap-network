@@ -587,7 +587,7 @@ class AIAgentDiscovery:
     def _get_nn_predictions(self, features: np.ndarray) -> Dict[str, float]:
         """Get predictions from neural network"""
         if not TORCH_AVAILABLE or not self.matching_nn:
-            return {'performance': 0.5, 'reliability': 0.5, 'suitability': 0.5, 'load': 0.5}
+            return self._ml_fallback_agent_predictions(features)
         
         try:
             # Pad or truncate features to expected input size
@@ -609,6 +609,86 @@ class AIAgentDiscovery:
             }
         except Exception as e:
             logger.error(f"Neural network prediction error: {e}")
+            return self._ml_fallback_agent_predictions(features)
+    
+    def _ml_fallback_agent_predictions(self, features: np.ndarray) -> Dict[str, float]:
+        """ML-based fallback for agent predictions using statistical analysis"""
+        try:
+            # Ensure we have minimum feature length for analysis
+            if len(features) == 0:
+                return {'performance': 0.5, 'reliability': 0.5, 'suitability': 0.5, 'load': 0.5}
+            
+            # Split features into task and agent features (assuming concatenated)
+            mid_point = len(features) // 2
+            task_features = features[:mid_point] if mid_point > 0 else features[:10]
+            agent_features = features[mid_point:] if mid_point > 0 else features[10:]
+            
+            # Performance prediction based on resource alignment
+            if len(task_features) >= 3 and len(agent_features) >= 3:
+                # Task complexity vs agent capability alignment
+                task_complexity = np.mean(task_features[:3]) if len(task_features) >= 3 else 0.5
+                agent_capability = np.mean(agent_features[:3]) if len(agent_features) >= 3 else 0.5
+                performance = 0.3 + 0.7 * min(1.0, agent_capability / max(0.1, task_complexity))
+            else:
+                performance = 0.5
+            
+            # Reliability prediction based on historical success patterns
+            if len(agent_features) >= 10:
+                # Use success rate, error rate, and availability features
+                success_rate = agent_features[4] if len(agent_features) > 4 else 0.8
+                error_rate = agent_features[7] if len(agent_features) > 7 else 0.1
+                availability = agent_features[8] if len(agent_features) > 8 else 0.9
+                reliability = (success_rate + (1.0 - error_rate) + availability) / 3.0
+            else:
+                reliability = 0.5
+            
+            # Suitability prediction based on capability matching
+            if len(task_features) >= 10 and len(agent_features) >= 10:
+                # Capability overlap analysis
+                task_caps = task_features[5:15] if len(task_features) >= 15 else task_features[5:]
+                agent_caps = agent_features[:10] if len(agent_features) >= 10 else agent_features
+                
+                if len(task_caps) > 0 and len(agent_caps) > 0:
+                    # Calculate cosine similarity for capability matching
+                    min_len = min(len(task_caps), len(agent_caps))
+                    if min_len > 0:
+                        dot_product = np.dot(task_caps[:min_len], agent_caps[:min_len])
+                        norm_task = np.linalg.norm(task_caps[:min_len])
+                        norm_agent = np.linalg.norm(agent_caps[:min_len])
+                        if norm_task > 0 and norm_agent > 0:
+                            suitability = 0.3 + 0.7 * (dot_product / (norm_task * norm_agent))
+                        else:
+                            suitability = 0.5
+                    else:
+                        suitability = 0.5
+                else:
+                    suitability = 0.5
+            else:
+                suitability = 0.5
+            
+            # Load prediction based on resource utilization
+            if len(agent_features) >= 12:
+                # CPU and memory usage features
+                cpu_usage = agent_features[9] if len(agent_features) > 9 else 0.3
+                memory_usage = agent_features[10] if len(agent_features) > 10 else 0.3
+                concurrent_tasks = agent_features[12] if len(agent_features) > 12 else 0.2
+                
+                # Lower utilization = better load capacity
+                load_capacity = 1.0 - (cpu_usage + memory_usage + concurrent_tasks) / 3.0
+                load = max(0.1, load_capacity)
+            else:
+                load = 0.5
+            
+            # Normalize all values to [0.1, 1.0] range
+            return {
+                'performance': float(np.clip(performance, 0.1, 1.0)),
+                'reliability': float(np.clip(reliability, 0.1, 1.0)),
+                'suitability': float(np.clip(suitability, 0.1, 1.0)),
+                'load': float(np.clip(load, 0.1, 1.0))
+            }
+            
+        except Exception as e:
+            logger.warning(f"ML fallback prediction error: {e}")
             return {'performance': 0.5, 'reliability': 0.5, 'suitability': 0.5, 'load': 0.5}
     
     def _calculate_selection_confidence(self, scores: List[float]) -> float:

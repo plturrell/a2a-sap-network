@@ -91,8 +91,6 @@ class TestFlapackSimple:
 
             ba, lo, hi, pivscale, info = f(a1, permute=1, scale=1)
             assert_(not info, repr(info))
-            # print(a1)
-            # print(ba, lo, hi, pivscale)
 
     def test_gehrd(self):
         a = [[-149, -50, -154],

@@ -103,42 +103,46 @@ sap.ui.define([
 
             this._auditLogger.log("VALIDATE_DEPLOYMENT", { taskId: sTaskId, taskName: sTaskName });
 
-            this._getOrCreateDialog("validateDeployment", "a2a.network.agent15.ext.fragment.ValidateDeployment")
-                .then((oDialog) => {
-                    const oValidationModel = new JSONModel({
-                        taskId: sTaskId,
-                        taskName: sTaskName,
-                        deploymentId: oData.deploymentId,
-                        environment: oData.environment,
-                        validationType: "COMPREHENSIVE",
-                        validationChecks: {
-                            configurationValidation: true,
-                            dependencyValidation: true,
-                            securityValidation: true,
-                            performanceValidation: true,
-                            compatibilityValidation: true,
-                            integrationValidation: true
-                        },
-                        validationScope: "ALL",
-                        includeTests: true,
-                        generateReport: true,
-                        validationResults: {
-                            status: "NOT_STARTED",
-                            progress: 0,
-                            checksCompleted: 0,
-                            totalChecks: 0,
-                            errors: 0,
-                            warnings: 0,
-                            passed: 0,
-                            details: []
-                        }
-                    });
-                    oDialog.setModel(oValidationModel, "validation");
-                    oDialog.open();
-                })
-                .catch((error) => {
-                    MessageBox.error(`Failed to open Validate Deployment dialog: ${ error.message}`);
+            const handleValidationDialogOpen = (oDialog) => {
+                const oValidationModel = new JSONModel({
+                    taskId: sTaskId,
+                    taskName: sTaskName,
+                    deploymentId: oData.deploymentId,
+                    environment: oData.environment,
+                    validationType: "COMPREHENSIVE",
+                    validationChecks: {
+                        configurationValidation: true,
+                        dependencyValidation: true,
+                        securityValidation: true,
+                        performanceValidation: true,
+                        compatibilityValidation: true,
+                        integrationValidation: true
+                    },
+                    validationScope: "ALL",
+                    includeTests: true,
+                    generateReport: true,
+                    validationResults: {
+                        status: "NOT_STARTED",
+                        progress: 0,
+                        checksCompleted: 0,
+                        totalChecks: 0,
+                        errors: 0,
+                        warnings: 0,
+                        passed: 0,
+                        details: []
+                    }
                 });
+                oDialog.setModel(oValidationModel, "validation");
+                oDialog.open();
+            };
+
+            const handleValidationDialogError = (error) => {
+                MessageBox.error(`Failed to open Validate Deployment dialog: ${ error.message}`);
+            };
+
+            this._getOrCreateDialog("validateDeployment", "a2a.network.agent15.ext.fragment.ValidateDeployment")
+                .then(handleValidationDialogOpen)
+                .catch(handleValidationDialogError);
         },
 
         /**
@@ -160,44 +164,48 @@ sap.ui.define([
 
             this._auditLogger.log("VIEW_LOGS", { taskId: sTaskId, taskName: sTaskName });
 
-            this._getOrCreateDialog("viewLogs", "a2a.network.agent15.ext.fragment.ViewLogs")
-                .then((oDialog) => {
-                    const oLogModel = new JSONModel({
-                        taskId: sTaskId,
-                        taskName: sTaskName,
-                        deploymentId: oData.deploymentId,
-                        logLevel: "ALL",
-                        timeRange: "LAST_HOUR",
-                        startTime: new Date(Date.now() - 60 * 60 * 1000),
-                        endTime: new Date(),
-                        searchQuery: "",
-                        autoRefresh: true,
-                        refreshInterval: 10000,
-                        maxLines: 1000,
-                        logSources: [
-                            { key: "DEPLOYMENT", text: "Deployment Engine", selected: true },
-                            { key: "APPLICATION", text: "Application", selected: true },
-                            { key: "SYSTEM", text: "System", selected: false },
-                            { key: "SECURITY", text: "Security", selected: false },
-                            { key: "NETWORK", text: "Network", selected: false }
-                        ],
-                        logLevels: [
-                            { key: "ALL", text: "All Levels" },
-                            { key: "ERROR", text: "Errors Only" },
-                            { key: "WARN", text: "Warnings & Errors" },
-                            { key: "INFO", text: "Info & Above" },
-                            { key: "DEBUG", text: "Debug & Above" }
-                        ],
-                        logs: [],
-                        filteredLogs: []
-                    });
-                    oDialog.setModel(oLogModel, "logs");
-                    oDialog.open();
-                    this._loadDeploymentLogs(sTaskId, oDialog);
-                })
-                .catch((error) => {
-                    MessageBox.error(`Failed to open Logs Viewer: ${ error.message}`);
+            const handleLogDialogOpen = (oDialog) => {
+                const oLogModel = new JSONModel({
+                    taskId: sTaskId,
+                    taskName: sTaskName,
+                    deploymentId: oData.deploymentId,
+                    logLevel: "ALL",
+                    timeRange: "LAST_HOUR",
+                    startTime: new Date(Date.now() - 60 * 60 * 1000),
+                    endTime: new Date(),
+                    searchQuery: "",
+                    autoRefresh: true,
+                    refreshInterval: 10000,
+                    maxLines: 1000,
+                    logSources: [
+                        { key: "DEPLOYMENT", text: "Deployment Engine", selected: true },
+                        { key: "APPLICATION", text: "Application", selected: true },
+                        { key: "SYSTEM", text: "System", selected: false },
+                        { key: "SECURITY", text: "Security", selected: false },
+                        { key: "NETWORK", text: "Network", selected: false }
+                    ],
+                    logLevels: [
+                        { key: "ALL", text: "All Levels" },
+                        { key: "ERROR", text: "Errors Only" },
+                        { key: "WARN", text: "Warnings & Errors" },
+                        { key: "INFO", text: "Info & Above" },
+                        { key: "DEBUG", text: "Debug & Above" }
+                    ],
+                    logs: [],
+                    filteredLogs: []
                 });
+                oDialog.setModel(oLogModel, "logs");
+                oDialog.open();
+                this._loadDeploymentLogs(sTaskId, oDialog);
+            };
+
+            const handleLogDialogError = (error) => {
+                MessageBox.error(`Failed to open Logs Viewer: ${ error.message}`);
+            };
+
+            this._getOrCreateDialog("viewLogs", "a2a.network.agent15.ext.fragment.ViewLogs")
+                .then(handleLogDialogOpen)
+                .catch(handleLogDialogError);
         },
 
         /**
@@ -454,12 +462,11 @@ sap.ui.define([
                 });
 
                 this._deploymentWs.onclose = function() {
-                    // console.info("Deployment WebSocket closed, will reconnect...");
                     setTimeout(() => this._initializeDeploymentWebSocket(), 5000);
                 }.bind(this);
 
             } catch (error) {
-                // console.warn("Deployment WebSocket not available");
+                // Error handled silently
             }
         },
 

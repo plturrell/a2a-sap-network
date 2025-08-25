@@ -6,7 +6,7 @@
 
 const { BlockchainClient } = require('../core/blockchain-client');
 const blockchainClient = new BlockchainClient();
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 class Agent13Adapter {
     constructor() {

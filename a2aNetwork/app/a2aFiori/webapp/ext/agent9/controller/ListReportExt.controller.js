@@ -635,7 +635,6 @@ sap.ui.define([
             // Validate EventSource URL for security
             const testStreamUrl = `/a2a/agent9/v1/test-stream?ids=${ encodeURIComponent(aIntegrationIds.join(","))}`;
             if (!this._securityUtils || !this._securityUtils.validateEventSourceUrl(testStreamUrl)) {
-                // console.warn("Invalid test stream URL, skipping real-time monitoring");
                 return;
             }
 
@@ -646,7 +645,7 @@ sap.ui.define([
                     const data = JSON.parse(event.data);
                     this._updateTestProgress(data, oDialog);
                 } catch (error) {
-                    // console.error("Error processing test update:", error);
+                    // Error handled in test progress
                 }
             }.bind(this);
 

@@ -330,25 +330,26 @@ class Agent17ChatAgent(SecureA2AAgent):
     
     async def _blockchain_message_listener(self) -> None:
         """Listen for incoming blockchain messages"""
+        logger.warning("Blockchain message listener started - waiting for proper message retrieval implementation")
+        
         while True:
             try:
                 if not self.blockchain_client:
                     await asyncio.sleep(5)
                     continue
                 
-                # Poll for new messages
-                messages = await self.blockchain_client.get_messages_for_agent(self.AGENT_ID)
+                # TODO: Implement proper message retrieval when blockchain client is updated
+                # Current blockchain client only supports send_message, not receive
+                # This would need to be implemented with:
+                # 1. Event listeners for smart contract events
+                # 2. Message queue integration
+                # 3. WebSocket connections to blockchain nodes
+                # 4. Or periodic polling of contract state
                 
-                for msg in messages:
-                    self.stats["blockchain_messages_received"] += 1
-                    
-                    # Convert blockchain message to A2A format
-                    a2a_message = self._blockchain_to_a2a_message(msg)
-                    
-                    # Process through appropriate handler
-                    asyncio.create_task(self._process_blockchain_message(a2a_message))
+                # For now, just log that we're listening
+                logger.debug("Blockchain listener active - waiting for message retrieval implementation")
                 
-                await asyncio.sleep(1)  # Poll interval
+                await asyncio.sleep(30)  # Longer interval since we can't actually retrieve messages yet
                 
             except Exception as e:
                 logger.error(f"Error in blockchain listener: {e}")
@@ -497,10 +498,11 @@ class Agent17ChatAgent(SecureA2AAgent):
                     "timestamp": datetime.utcnow().isoformat()
                 }
                 
-                # Send via blockchain
+                # Send via blockchain (convert to proper format)
                 tx_hash = await self.blockchain_client.send_message(
-                    to_agent=agent_id,
-                    message=message_data
+                    to_address=agent_id,  # Correct parameter name
+                    content=json.dumps(message_data),  # Serialize to string
+                    message_type="a2a_agent_request"
                 )
                 
                 self.stats["blockchain_messages_sent"] += 1
@@ -636,8 +638,9 @@ class Agent17ChatAgent(SecureA2AAgent):
             }
             
             await self.blockchain_client.send_message(
-                to_agent="agent9_reasoning",
-                message=message_data
+                to_address="agent9_reasoning",
+                content=json.dumps(message_data),
+                message_type="a2a_ai_analysis"
             )
             
             # Wait for response (simplified - in production would use message callbacks)
@@ -671,8 +674,9 @@ class Agent17ChatAgent(SecureA2AAgent):
             }
             
             await self.blockchain_client.send_message(
-                to_agent="agent9_reasoning",
-                message=message_data
+                to_address="agent9_reasoning",
+                content=json.dumps(message_data),
+                message_type="a2a_ai_analysis"
             )
             
             # Simplified sentiment analysis fallback
@@ -733,8 +737,9 @@ class Agent17ChatAgent(SecureA2AAgent):
             }
             
             await self.blockchain_client.send_message(
-                to_agent="agent12_data_manager",
-                message=message_data
+                to_address="agent12_data_manager",
+                content=json.dumps(message_data),
+                message_type="a2a_data_storage"
             )
             
             self.persisted_conversations.add(conversation_id)
@@ -1058,8 +1063,9 @@ class Agent17ChatAgent(SecureA2AAgent):
             # Route through Agent 8 (Manager) for external API coordination
             if "agent8_manager" in self.agent_registry:
                 tx_hash = await self.blockchain_client.send_message(
-                    to_agent="agent8_manager",
-                    message=gateway_message
+                    to_address="agent8_manager",
+                    content=json.dumps(gateway_message),
+                    message_type="a2a_api_gateway"
                 )
                 return {"status": "api_request_sent", "tx_hash": tx_hash}
             else:
@@ -1088,18 +1094,40 @@ class Agent17ChatAgent(SecureA2AAgent):
     
     def _blockchain_to_a2a_message(self, blockchain_msg: Dict[str, Any]) -> A2AMessage:
         """Convert blockchain message to A2A message format"""
-        return A2AMessage(
-            message_id=blockchain_msg.get("id", str(uuid4())),
-            sender_id=blockchain_msg.get("sender", "unknown"),
-            recipient_id=self.AGENT_ID,
-            context_id=blockchain_msg.get("context_id", str(uuid4())),
-            parts=[MessagePart(
-                type="data",
-                data=blockchain_msg.get("data", {}),
-                role=MessageRole.USER
-            )],
-            metadata=blockchain_msg.get("metadata", {})
-        )
+        try:
+            # Parse the message content if it's a JSON string
+            if "content" in blockchain_msg and isinstance(blockchain_msg["content"], str):
+                try:
+                    message_data = json.loads(blockchain_msg["content"])
+                except json.JSONDecodeError:
+                    message_data = {"raw_content": blockchain_msg["content"]}
+            else:
+                message_data = blockchain_msg.get("data", blockchain_msg)
+            
+            return A2AMessage(
+                messageId=blockchain_msg.get("id", str(uuid4())),
+                role=MessageRole.USER,  # Messages from blockchain are from users/other agents
+                parts=[MessagePart(
+                    kind="data",  # Correct field name
+                    data=message_data,
+                    text=message_data.get("prompt") if isinstance(message_data, dict) else str(message_data)
+                )],
+                taskId=blockchain_msg.get("task_id"),
+                contextId=message_data.get("context_id") if isinstance(message_data, dict) else blockchain_msg.get("context_id", str(uuid4())),
+                # timestamp is auto-generated by the model
+                # signature can be added later if needed
+            )
+        except Exception as e:
+            logger.error(f"Error converting blockchain message to A2A format: {e}")
+            # Return a minimal valid message
+            return A2AMessage(
+                messageId=str(uuid4()),
+                role=MessageRole.USER,
+                parts=[MessagePart(
+                    kind="error",
+                    data={"error": "Failed to parse blockchain message", "original": blockchain_msg}
+                )]
+            )
     
     async def _send_blockchain_response(
         self,
@@ -1111,12 +1139,13 @@ class Agent17ChatAgent(SecureA2AAgent):
         try:
             if self.blockchain_client:
                 await self.blockchain_client.send_message(
-                    to_agent=recipient_id,
-                    message={
+                    to_address=recipient_id,
+                    content=json.dumps({
                         "response": response,
                         "context_id": context_id,
                         "from_agent": self.AGENT_ID
-                    }
+                    }),
+                    message_type="a2a_response"
                 )
                 self.stats["blockchain_messages_sent"] += 1
         except Exception as e:

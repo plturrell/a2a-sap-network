@@ -507,7 +507,9 @@ class AgentDiscoveryEngine:
             for cap in discovery.get("required_capabilities", []):
                 capability_counts[cap] = capability_counts.get(cap, 0) + 1
 
-        return sorted(capability_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        def get_capability_count(x):
+            return x[1]
+        return sorted(capability_counts.items(), key=get_capability_count, reverse=True)[:10]
 
 
 # Convenience functions for agent discovery

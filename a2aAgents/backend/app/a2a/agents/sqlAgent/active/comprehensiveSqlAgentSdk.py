@@ -1422,8 +1422,8 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
     async def _ensure_sql_data_tables(self):
         """Ensure SQL training data tables exist in the database"""
         try:
-            # Create training data table
-            training_table_request = {
+            # Create training data table (schema would be defined here for A2A implementation)
+            # training_table_request = {
                 "jsonrpc": "2.0",
                 "method": "ai_data_storage",
                 "params": {
@@ -1447,8 +1447,8 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
                 "id": f"create_sql_training_{int(time.time())}"
             }
 
-            # Create query patterns table
-            patterns_table_request = {
+            # Create query patterns table (schema would be defined here for A2A implementation)
+            # patterns_table_request = {
                 "jsonrpc": "2.0",
                 "method": "ai_data_storage",
                 "params": {
@@ -1496,7 +1496,7 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
     async def _load_sql_training_data_from_database(self):
         """Load existing SQL training data from database into memory"""
         try:
-            load_request = {
+            # load_request = {
                 "jsonrpc": "2.0",
                 "method": "ai_data_retrieval",
                 "params": {

@@ -972,7 +972,6 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
         Monitor and analyze workflow execution performance
         """
         monitoring_target = data.get('target', 'all')
-        monitoring_params = data.get('monitoring_params', {})
 
         # Collect monitoring data
         monitoring_data = {
@@ -1092,7 +1091,6 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
     async def handle_failures(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle and recover from workflow failures"""
         failure_type = data.get('failure_type')
-        workflow_id = data.get('workflow_id')
 
         recovery_actions = {
             'retry_attempted': True,
@@ -1111,8 +1109,6 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     async def resource_allocation(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Allocate resources across agents and tasks"""
-        allocation_request = data.get('allocation_request', {})
-
         allocation_result = {
             'allocated_resources': {
                 'compute': {'agent1': 4, 'agent2': 2, 'agent3': 4},

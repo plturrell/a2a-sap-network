@@ -251,8 +251,6 @@ class EnhancedAgentManagerTest(SecureA2AAgent):
             if workflow_id not in workflows_resource.get("workflows", {}):
                 return {"success": False, "error": "Workflow not found in active workflows"}
 
-            workflow_data = workflows_resource["workflows"][workflow_id]
-
             return {
                 "success": True,
                 "workflow_created": True,

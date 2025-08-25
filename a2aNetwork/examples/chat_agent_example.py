@@ -176,7 +176,6 @@ if __name__ == "__main__":
     asyncio.run(main())
     
     # Uncomment to run blockchain example
-    # print("\nRunning Blockchain Example...")
     # asyncio.run(blockchain_example())
     
     # To run as a server:

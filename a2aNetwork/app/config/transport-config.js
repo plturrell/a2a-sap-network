@@ -1,7 +1,7 @@
 /* global sap, jQuery */
 sap.ui.define([
     'sap/base/Log'
-], function(Log) {
+], (Log) => {
     'use strict';
 
     /**

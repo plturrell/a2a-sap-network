@@ -82,11 +82,6 @@ class A2ATelemetry {
             // Create custom metrics
             this.createCustomMetrics();
 
-            // console.log('✅ OpenTelemetry initialized successfully');
-            // console.log(`   Service: ${this.serviceName} v${this.serviceVersion}`);
-            // console.log(`   Environment: ${this.environment}`);
-            // console.log(`   Trace Export: ${this.isBTP ? 'SAP Cloud Logging' : 'Console + Jaeger'}`);
-            // console.log(`   Metrics Export: ${this.isBTP ? 'SAP Monitoring' : 'Console + Prometheus'}`);
 
         } catch (error) {
             console.error('❌ Failed to initialize OpenTelemetry:', error.message);
@@ -142,7 +137,6 @@ class A2ATelemetry {
                     preventServerStart: false
                 });
 
-                // console.log('🔍 Prometheus metrics available at: http://localhost:9090/metrics');
 
                 return new PeriodicExportingMetricReader({
                     exporter: prometheusExporter,
@@ -312,7 +306,6 @@ class A2ATelemetry {
     async shutdown() {
         try {
             await this.sdk?.shutdown();
-            // console.log('✅ OpenTelemetry shut down successfully');
         } catch (error) {
             console.error('❌ Error shutting down OpenTelemetry:', error.message);
         }

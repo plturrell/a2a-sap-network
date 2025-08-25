@@ -93,7 +93,6 @@ def test_chi2_contingency_R():
     #
     # # 3-way Chi squared test of independence
     # s = summary(xtabs(data~r+c+t))
-    # print(s)
     # """
     # Routput = \
     # """
@@ -143,7 +142,6 @@ def test_chi2_contingency_R():
     #
     # # 4-way Chi squared test of independence
     # s = summary(xtabs(data~r+c+d+t))
-    # print(s)
     # """
     # Routput = \
     # """

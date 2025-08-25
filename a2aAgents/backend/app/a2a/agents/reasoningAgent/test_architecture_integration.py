@@ -36,7 +36,7 @@ async def test_architectures():
 
     for name, module_name in architectures_to_test:
         try:
-            module = __import__(module_name)
+            __import__(module_name)
             import_results[name] = "✅ SUCCESS"
             print(f"✅ {name}: Import successful")
         except Exception as e:

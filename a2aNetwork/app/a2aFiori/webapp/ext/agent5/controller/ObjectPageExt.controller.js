@@ -605,7 +605,7 @@ sap.ui.define([
                 data: JSON.stringify(oAuditData),
                 async: true,
                 success() {
-                    // console.log("Audit trail recorded:", sEventType);
+                    // Audit logged successfully
                 },
                 error() {
                     // Fallback audit logging to local storage

@@ -42,7 +42,6 @@ class SAPCloudALMService extends EventEmitter {
 
     async initialize() {
         if (!this.config.enabled) {
-            // console.log('📊 SAP Cloud ALM integration disabled');
             return;
         }
 
@@ -57,10 +56,6 @@ class SAPCloudALMService extends EventEmitter {
             await this.registerApplication();
             this.startPeriodicReporting();
 
-            // console.log('✅ SAP Cloud ALM integration initialized');
-            // console.log(`   Application ID: ${this.config.applicationId}`);
-            // console.log(`   Tenant ID: ${this.config.tenantId}`);
-            // console.log(`   Service URL: ${this.config.serviceUrl}`);
 
             this.isConnected = true;
             this.emit('connected');
@@ -72,7 +67,6 @@ class SAPCloudALMService extends EventEmitter {
     }
 
     initializeMockMode() {
-        // console.log('📊 SAP Cloud ALM running in mock mode');
         this.isConnected = false;
 
         // Start collecting metrics locally
@@ -95,7 +89,6 @@ class SAPCloudALMService extends EventEmitter {
             if (response.access_token) {
                 this.authToken = response.access_token;
                 this.tokenExpiry = Date.now() + (response.expires_in * 1000);
-                // console.log('✅ SAP Cloud ALM authentication successful');
                 return true;
             } else {
                 throw new Error('No access token received');
@@ -141,7 +134,6 @@ class SAPCloudALMService extends EventEmitter {
 
         try {
             await this.makeRequest('POST', '/api/v1/applications/register', applicationData);
-            // console.log('✅ Application registered with SAP Cloud ALM');
         } catch (error) {
             console.warn('⚠️  Application registration failed:', error.message);
         }
@@ -483,7 +475,7 @@ class SAPCloudALMService extends EventEmitter {
     }
 
     // Make HTTP request to SAP Cloud ALM
-    async makeRequest(method, endpoint, data = null) {
+    makeRequest(method, endpoint, data = null) {
         return new Promise((resolve, reject) => {
             if (!this.config.serviceUrl) {
                 reject(new Error('SAP Cloud ALM service URL not configured'));
@@ -559,7 +551,7 @@ class SAPCloudALMService extends EventEmitter {
     }
 
     // Health check for ALM service
-    async healthCheck() {
+    healthCheck() {
         return {
             service: 'SAP Cloud ALM',
             status: this.isConnected ? 'connected' : 'disconnected',
@@ -605,7 +597,6 @@ class SAPCloudALMService extends EventEmitter {
                 timestamp: new Date().toISOString()
             }, 'INFO');
 
-            // console.log('✅ SAP Cloud ALM service shut down successfully');
         } catch (error) {
             console.error('❌ Error shutting down SAP Cloud ALM service:', error.message);
         }

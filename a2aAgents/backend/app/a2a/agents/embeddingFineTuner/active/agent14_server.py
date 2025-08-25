@@ -168,14 +168,6 @@ async def start_fine_tuning(request: StartFineTuningRequest):
 
         model_config = model_registry[request.model_id]
 
-        # Create fine-tuning task
-        task_params = {
-            "model_config": model_config,
-            "training_data": request.training_data,
-            "validation_data": request.validation_data,
-            "custom_config": request.custom_config or {}
-        }
-
         # Use the agent's fine-tuning method
         result = await agent.fine_tune_embedding_model(
             base_model=model_config["base_model"],
@@ -264,8 +256,6 @@ async def get_training_metrics(request: TrainingMetricsRequest):
     try:
         if request.job_id not in active_jobs:
             raise HTTPException(status_code=404, detail="Job not found")
-
-        job = active_jobs[request.job_id]
 
         # Return metrics based on the agent's monitoring
         return {

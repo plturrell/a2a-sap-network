@@ -324,7 +324,6 @@ class BlockchainCommunicationTester:
         """Test message exchange between two agents"""
         try:
             sender = self.agents[sender_id]
-            receiver = self.agents[receiver_id]
 
             # Create test message
             test_message = {
