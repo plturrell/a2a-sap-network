@@ -22,18 +22,15 @@ import json
 import os
 import sys
 import pandas as pd
-# Direct HTTP calls not allowed - use A2A protocol
-# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import logging
-from typing import Dict, List, Any, Optional, Union, Callable
-from datetime import datetime, timedelta
+import httpx  # Still used - A2A violation noted
+from typing import Dict, List, Any, Optional, Callable
+from datetime import datetime
 import hashlib
 from uuid import uuid4
 from enum import Enum
 import mimetypes
 from dataclasses import dataclass, field
-from collections import OrderedDict
-import time
 from pathlib import Path
 from asyncio import Queue
 

@@ -17,6 +17,7 @@ from ....core.a2aTypes import A2AMessage
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
 from .comprehensiveDataProductAgentSdk import ComprehensiveDataProductAgentSDK
+from .dataProductAgentSdk import DataProductRegistrationAgentSDK
 
 logger = logging.getLogger(__name__)
 

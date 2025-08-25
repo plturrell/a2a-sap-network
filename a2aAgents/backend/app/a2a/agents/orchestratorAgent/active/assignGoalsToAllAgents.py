@@ -162,16 +162,14 @@ async def verify_goal_assignments():
             from app.a2a.core.a2aTypes import A2AMessage, MessagePart, MessageRole
 
             message = A2AMessage(
-                sender_id="goal_verification",
-                recipient_id="orchestrator_agent",
+                role=MessageRole.USER,
                 parts=[MessagePart(
-                    role=MessageRole.USER,
+                    kind="goal_verification",
                     data={
                         "operation": "get_agent_goals",
                         "data": {"agent_id": agent_id}
                     }
-                )],
-                timestamp=datetime.utcnow()
+                )]
             )
 
             result = await orchestrator_handler.process_a2a_message(message)

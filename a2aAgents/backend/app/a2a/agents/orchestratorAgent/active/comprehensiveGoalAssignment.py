@@ -386,13 +386,11 @@ class ComprehensiveGoalAssignmentSystem:
 
                     # Process through orchestrator
                     message = A2AMessage(
-                        sender_id="goal_assignment_system",
-                        recipient_id="orchestrator_agent",
+                        role=MessageRole.USER,
                         parts=[MessagePart(
-                            role=MessageRole.USER,
+                            kind="goal_assignment",
                             data=goal_message
-                        )],
-                        timestamp=datetime.utcnow()
+                        )]
                     )
 
                     result = await self.orchestrator.process_a2a_message(message)
@@ -578,13 +576,11 @@ class ComprehensiveGoalAssignmentSystem:
                 }
 
                 message = A2AMessage(
-                    sender_id="goal_monitoring_system",
-                    recipient_id="orchestrator_agent",
+                    role=MessageRole.USER,
                     parts=[MessagePart(
-                        role=MessageRole.USER,
+                        kind="goal_monitoring",
                         data=progress_message
-                    )],
-                    timestamp=datetime.utcnow()
+                    )]
                 )
 
                 result = await self.orchestrator.process_a2a_message(message)

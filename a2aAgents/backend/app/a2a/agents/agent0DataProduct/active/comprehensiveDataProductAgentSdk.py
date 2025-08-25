@@ -31,8 +31,8 @@ import time
 import hashlib
 import os
 import re
-from typing import Dict, List, Any, Optional, Tuple, Union
-from datetime import datetime
+from typing import Dict, List, Any, Optional
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from collections import defaultdict
 
@@ -41,7 +41,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics.pairwise import cosine_similarity
+# from sklearn.metrics.pairwise import cosine_similarity  # Unused
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -61,10 +61,8 @@ except ImportError:
 
 # Import SDK components - Use standard A2A SDK (NO FALLBACKS)
 from app.a2a.sdk.agentBase import A2AAgentBase
-from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk import a2a_skill
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 from app.a2a.core.security_base import SecureA2AAgent
 
 

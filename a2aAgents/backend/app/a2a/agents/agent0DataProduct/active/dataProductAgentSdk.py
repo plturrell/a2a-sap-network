@@ -16,20 +16,16 @@ To send messages to other agents, use:
 
 
 import os
-import sys
 from datetime import datetime
-
-
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
 import asyncio
 import hashlib
-# Direct HTTP calls not allowed - use A2A protocol
-# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import pandas as pd
+import httpx  # Still used in some places - A2A violation noted
 
-from app.a2a.sdk.agentBase import A2AAgentBase, MessagePriority
+from app.a2a.sdk.agentBase import A2AAgentBase
 try:
     from app.a2a.sdk.mixins import PerformanceMonitoringMixin
     def monitor_a2a_operation(func): return func  # Stub decorator
