@@ -31,7 +31,7 @@ from uuid import uuid4
 from enum import Enum
 import mimetypes
 from dataclasses import dataclass, field
-from pathlib import Path
+# from pathlib import Path  # Unused
 from asyncio import Queue
 
 # Define logger first
@@ -46,18 +46,18 @@ except ImportError:
     logger.warning("PyYAML not available - YAML config loading disabled")
 
 try:
-    import websockets
-    WEBSOCKETS_AVAILABLE = True
+    # import websockets  # Unused
+    WEBSOCKETS_AVAILABLE = False
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
-    logger.warning("websockets not available - WebSocket streaming disabled")
+    # logger.warning("websockets not available - WebSocket streaming disabled")
 
 try:
-    import jsonschema
-    JSONSCHEMA_AVAILABLE = True
+    # import jsonschema  # Unused
+    JSONSCHEMA_AVAILABLE = False
 except ImportError:
     JSONSCHEMA_AVAILABLE = False
-    logger.warning("jsonschema not available - advanced validation disabled")
+    # logger.warning("jsonschema not available - advanced validation disabled")
 
 # Optional imports with fallback
 try:
@@ -77,16 +77,13 @@ except ImportError:
     logger.warning("PyArrow not available - Parquet operations may be limited")
 
 # Import SDK components with MCP support
-from app.a2a.sdk.agentBase import A2AAgentBase
-from app.a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole, TaskStatus, AgentCard
+from app.a2a.sdk.decorators import a2a_handler
+from app.a2a.sdk.types import A2AMessage
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
-from app.a2a.core.workflowContext import workflowContextManager, DataArtifact
-from app.a2a.core.workflowMonitor import workflowMonitor
-from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, verify_a2a_message
+from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource
+from app.a2a.core.trustManager import initialize_agent_trust
 from app.a2a.core.helpSeeking import AgentHelpSeeker
-from app.a2a.core.circuitBreaker import CircuitBreaker, CircuitBreakerOpenError
+from app.a2a.core.circuitBreaker import CircuitBreaker
 from app.a2a.core.taskTracker import AgentTaskTracker
 from app.a2a.core.security_base import SecureA2AAgent
 

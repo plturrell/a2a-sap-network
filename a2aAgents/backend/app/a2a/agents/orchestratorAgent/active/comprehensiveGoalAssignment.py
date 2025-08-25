@@ -348,12 +348,8 @@ class ComprehensiveGoalAssignmentSystem:
                     primary_metric = template.measurable_metrics[0] if template.measurable_metrics else "performance"
                     primary_target = target_metrics.get(primary_metric, 95.0)
 
-                    template_params = {
-                        "target_rate": primary_target,
-                        "metric_name": primary_metric.replace('_', ' ').title(),
-                        "time_constraint": "optimal",
-                        **target_metrics  # Include all target metrics
-                    }
+                    # Create template parameter mapping based on the goal template
+                    template_params = self._create_template_params(template, target_metrics, goal_type)
 
                     goal_params = {
                         "specific": template.specific_template.format(**template_params),
@@ -676,6 +672,67 @@ class ComprehensiveGoalAssignmentSystem:
                     recommendations.append(recommendation)
 
         return recommendations
+
+    def _create_template_params(self, template: 'SMARTGoalTemplate', target_metrics: Dict[str, float], goal_type: str) -> Dict[str, Any]:
+        """Create template parameter mapping based on goal template and metrics"""
+        params = {
+            "time_constraint": "optimal"
+        }
+        
+        # Map common template placeholders to actual metric values
+        if goal_type == "transformation":
+            params.update({
+                "success_rate": target_metrics.get("standardization_success_rate", 95.0),
+                "processing_time": target_metrics.get("avg_transformation_time", 2.0)
+            })
+        elif goal_type == "compliance":
+            params.update({
+                "compliance_rate": target_metrics.get("canonical_compliance_rate", 96.0),
+                "validation_accuracy": target_metrics.get("validation_accuracy", 98.0)
+            })
+        elif goal_type == "feature_engineering":
+            params.update({
+                "feature_quality": target_metrics.get("feature_quality_score", 88.0),
+                "feature_coverage": target_metrics.get("feature_coverage_rate", 85.0)
+            })
+        elif goal_type == "privacy_preservation":
+            params.update({
+                "privacy_score": target_metrics.get("privacy_preservation_score", 97.0),
+                "anonymization_rate": target_metrics.get("anonymization_success_rate", 98.0)
+            })
+        elif goal_type == "performance":
+            # Get first metric as primary target
+            first_metric = list(target_metrics.keys())[0] if target_metrics else "performance"
+            params.update({
+                "target_rate": target_metrics.get(first_metric, 95.0),
+                "metric_name": first_metric.replace('_', ' ').title()
+            })
+        elif goal_type == "quality":
+            params.update({
+                "target_score": target_metrics.get("data_quality_score", 85.0),
+                "quality_metric": "data quality score",
+                "compliance_rate": target_metrics.get("schema_compliance_rate", 95.0)
+            })
+        elif goal_type == "reliability":
+            params.update({
+                "availability": target_metrics.get("api_availability", 99.0),
+                "error_rate": target_metrics.get("error_rate", 2.0)
+            })
+        else:
+            # Default parameters for other goal types
+            if target_metrics:
+                first_metric = list(target_metrics.keys())[0]
+                params.update({
+                    "target_rate": target_metrics[first_metric],
+                    "metric_name": first_metric.replace('_', ' ').title()
+                })
+            else:
+                params.update({
+                    "target_rate": 95.0,
+                    "metric_name": "Performance"
+                })
+        
+        return params
 
 
 # Factory function

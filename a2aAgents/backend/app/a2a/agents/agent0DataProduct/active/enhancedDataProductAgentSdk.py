@@ -29,24 +29,19 @@ To send messages to other agents, use:
 
 
 import asyncio
-import datetime
 import hashlib
-# Direct HTTP calls not allowed - use A2A protocol
-# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os
-import pandas as pd
 import sys
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Dict, List, Any, Optional
 from uuid import uuid4
 from dataclasses import dataclass, field
 import traceback
 
 # Configuration and dependencies
 from config.agentConfig import config
-from ....sdk.types import TaskStatus
 
 # Trust system imports
 try:
