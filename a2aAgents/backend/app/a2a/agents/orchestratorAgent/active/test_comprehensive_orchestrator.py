@@ -23,15 +23,15 @@ from .orchestratorSimulator import (
 )
 
 class TestOrchestratorAgent(SecureA2AAgent):
+    """Test suite for Orchestrator Agent"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Test suite for Orchestrator Agent"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     @pytest.fixture
     async def orchestrator_agent(self):
@@ -795,15 +795,15 @@ class TestOrchestratorAgent(SecureA2AAgent):
 
 # Performance Tests
 class TestOrchestratorPerformance(SecureA2AAgent):
+    """Performance tests for orchestrator"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Performance tests for orchestrator"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     @pytest.mark.asyncio
     async def test_concurrent_workflow_executions(self, orchestrator_agent):

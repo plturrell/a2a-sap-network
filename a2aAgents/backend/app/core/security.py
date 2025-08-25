@@ -2,31 +2,26 @@
 A2A Platform Security Module
 Enterprise-grade security utilities and middleware
 """
-import email
-
-import hashlib
 import hmac
 from app.core.loggingConfig import get_logger, LogCategory
 import secrets
 import time
 import jwt
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple
 from functools import wraps
 from enum import Enum
 
 import bcrypt
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from fastapi import HTTPException, Request, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Request
 import base64
 import os
 
 from .exceptions import (
     A2AAuthenticationError,
-    A2AAuthorizationError,
     A2ATokenExpiredError,
     A2AInvalidTokenError,
     A2AConfigurationError

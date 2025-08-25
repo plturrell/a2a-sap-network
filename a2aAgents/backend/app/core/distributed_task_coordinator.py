@@ -9,18 +9,14 @@ import json
 import logging
 import time
 from typing import Dict, Any, List, Optional, Callable, Set
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
 import redis.asyncio as redis
 from uuid import uuid4
-import hashlib
 
 # A2A SDK imports
-from ..a2a.sdk.types import A2AMessage, MessagePart, MessageRole, TaskStatus as A2ATaskStatus
-from ..a2a.core.telemetry import trace_async, add_span_attributes, init_telemetry
 from ..a2a.security.requestSigning import A2ARequestSigner
-from ..clients.redisClient import RedisClient, RedisConfig
 
 logger = logging.getLogger(__name__)
 

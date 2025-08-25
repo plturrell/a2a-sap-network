@@ -17,7 +17,7 @@ sap.ui.define([
     return ControllerExtension.extend("a2a.network.agent8.ext.controller.ObjectPageExt", {
 
         override: {
-            onInit: function () {
+            onInit() {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
                 this._authHandler = AuthHandler;
@@ -31,7 +31,7 @@ sap.ui.define([
                 this._initializeCreateModel();
             },
 
-            onExit: function() {
+            onExit() {
                 this._cleanupResources();
                 if (this.base.onExit) {
                     this.base.onExit.apply(this, arguments);
@@ -39,7 +39,7 @@ sap.ui.define([
             }
         },
 
-        _initializeCreateModel: function() {
+        _initializeCreateModel() {
             this._oCreateModel = new JSONModel({
                 taskName: "",
                 description: "",
@@ -93,7 +93,7 @@ sap.ui.define([
             });
         },
 
-        _cleanupResources: function() {
+        _cleanupResources() {
             if (this._optimizationEventSource) {
                 this._optimizationEventSource.close();
                 this._optimizationEventSource = null;
@@ -128,7 +128,7 @@ sap.ui.define([
             }
         },
 
-        onStoreData: function() {
+        onStoreData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
@@ -158,7 +158,7 @@ sap.ui.define([
             }
         },
 
-        onRetrieveData: function() {
+        onRetrieveData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
             const sCurrentVersion = oContext.getProperty("currentVersion");
@@ -191,71 +191,71 @@ sap.ui.define([
             }
         },
 
-        _loadAvailableVersions: function(sDatasetName) {
+        _loadAvailableVersions(sDatasetName) {
             jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + sDatasetName + "/versions",
+                url: `/a2a/agent8/v1/datasets/${sDatasetName}/versions`,
                 type: "GET",
-                success: function(data) {
+                success: (data) => {
                     const oModel = this._oRetrieveDialog.getModel("retrieve");
                     const oData = oModel.getData();
                     oData.availableVersions = data.versions;
                     oModel.setData(oData);
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to load versions: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Failed to load versions: ${errorMsg}`);
+                }
             });
         },
 
-        onCacheData: function() {
+        onCacheData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
-            MessageBox.confirm("Cache dataset '" + sDatasetName + "' in memory?", {
-                onClose: function(oAction) {
+            MessageBox.confirm(`Cache dataset '${sDatasetName}' in memory?`, {
+                onClose: (oAction) => {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeCacheOperation(sDatasetName);
                     }
-                }.bind(this)
+                }
             });
         },
 
-        _executeCacheOperation: function(sDatasetName) {
+        _executeCacheOperation(sDatasetName) {
             this._extensionAPI.getView().setBusy(true);
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sDatasetName) + "/cache",
+                url: `/a2a/agent8/v1/datasets/${encodeURIComponent(sDatasetName)}/cache`,
                 type: "POST",
                 data: JSON.stringify({
                     cacheLevel: "MEMORY",
                     ttl: 3600,
                     preload: true
                 }),
-                success: function(data) {
+                success: (data) => {
                     this._extensionAPI.getView().setBusy(false);
-                    const safeCacheSize = this._securityUtils.encodeHTML(data.cacheSize || '0');
+                    const safeCacheSize = this._securityUtils.encodeHTML(data.cacheSize || "0");
                     const safeRecordCount = parseInt(data.recordCount, 10) || 0;
-                    const safeCacheKey = this._securityUtils.encodeHTML(data.cacheKey || 'N/A');
+                    const safeCacheKey = this._securityUtils.encodeHTML(data.cacheKey || "N/A");
                     MessageBox.success(
-                        "Dataset cached successfully!\\n" +
-                        "Cache size: " + safeCacheSize + "\\n" +
-                        "Records cached: " + safeRecordCount + "\\n" +
-                        "Cache key: " + safeCacheKey
+                        `Dataset cached successfully!\n` +
+                        `Cache size: ${safeCacheSize}\n` +
+                        `Records cached: ${safeRecordCount}\n` +
+                        `Cache key: ${safeCacheKey}`
                     );
                     this._extensionAPI.refresh();
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._extensionAPI.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Cache operation failed: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Cache operation failed: ${errorMsg}`);
+                }
             });
 
             jQuery.ajax(ajaxConfig);
         },
 
-        onCreateVersion: function() {
+        onCreateVersion() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
@@ -264,7 +264,7 @@ sap.ui.define([
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent8.ext.fragment.CreateVersion",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oVersionDialog = oDialog;
                     this.base.getView().addDependent(this._oVersionDialog);
 
@@ -278,31 +278,31 @@ sap.ui.define([
                     });
                     this._oVersionDialog.setModel(oModel, "version");
                     this._oVersionDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oVersionDialog.open();
             }
         },
 
-        onOptimizeStorage: function() {
+        onOptimizeStorage() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
             MessageBox.confirm(
-                "Optimize storage for dataset '" + sDatasetName + "'? This may take several minutes.",
+                `Optimize storage for dataset '${sDatasetName}'? This may take several minutes.`,
                 {
-                    onClose: function(oAction) {
+                    onClose: (oAction) => {
                         if (oAction === MessageBox.Action.OK) {
                             this._optimizeStorage(sDatasetName);
                         }
-                    }.bind(this)
+                    }
                 }
             );
         },
 
-        _optimizeStorage: function(sDatasetName) {
+        _optimizeStorage(sDatasetName) {
             // Check user permissions
-            if (!this._authHandler.hasPermission('DATASET_OPTIMIZE', sDatasetName)) {
+            if (!this._authHandler.hasPermission("DATASET_OPTIMIZE", sDatasetName)) {
                 MessageBox.error("Insufficient permissions to optimize dataset storage");
                 return;
             }
@@ -310,7 +310,7 @@ sap.ui.define([
             this._extensionAPI.getView().setBusy(true);
 
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(sDatasetName) + "/optimize",
+                url: `/a2a/agent8/v1/datasets/${this._securityUtils.encodeURL(sDatasetName)}/optimize`,
                 type: "POST",
                 data: JSON.stringify({
                     compressionLevel: "OPTIMAL",
@@ -318,104 +318,104 @@ sap.ui.define([
                     rebuildIndexes: true,
                     updateStatistics: true
                 }),
-                success: function(data) {
+                success: (data) => {
                     this._extensionAPI.getView().setBusy(false);
 
-                    const safeSpaceSaved = this._securityUtils.encodeHTML(data.spaceSaved || '0');
+                    const safeSpaceSaved = this._securityUtils.encodeHTML(data.spaceSaved || "0");
                     const safeCompression = parseFloat(data.compressionImprovement) || 0;
                     const safeTime = parseFloat(data.optimizationTime) || 0;
                     MessageBox.success(
-                        "Storage optimization completed!\n" +
-                        "Space saved: " + safeSpaceSaved + "\n" +
-                        "Compression improved: " + safeCompression + "%\n" +
-                        "Optimization time: " + safeTime + "s"
+                        `Storage optimization completed!\n` +
+                        `Space saved: ${safeSpaceSaved}\n` +
+                        `Compression improved: ${safeCompression}%\n` +
+                        `Optimization time: ${safeTime}s`
                     );
 
                     this._extensionAPI.refresh();
                     this._startOptimizationMonitoring(data.optimizationId);
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._extensionAPI.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Storage optimization failed: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Storage optimization failed: ${errorMsg}`);
+                }
             }));
         },
 
-        _startOptimizationMonitoring: function(sOptimizationId) {
-            this._optimizationEventSource = new EventSource("/a2a/agent8/v1/optimizations/" + sOptimizationId + "/stream");
+        _startOptimizationMonitoring(sOptimizationId) {
+            this._optimizationEventSource = new EventSource(`/a2a/agent8/v1/optimizations/${sOptimizationId}/stream`);
 
-            this._optimizationEventSource.onmessage = function(event) {
+            this._optimizationEventSource.onmessage = (event) => {
                 const data = JSON.parse(event.data);
 
                 if (data.type === "progress") {
-                    const safeStage = this._securityUtils.encodeHTML(data.stage || 'Unknown stage');
+                    const safeStage = this._securityUtils.encodeHTML(data.stage || "Unknown stage");
                     const safeProgress = parseInt(data.progress, 10) || 0;
-                    MessageToast.show("Optimization: " + safeStage + " (" + safeProgress + "%)");
+                    MessageToast.show(`Optimization: ${safeStage} (${safeProgress}%)`);
                 } else if (data.type === "complete") {
                     this._optimizationEventSource.close();
                     MessageToast.show("Storage optimization completed successfully");
                 } else if (data.type === "error") {
                     this._optimizationEventSource.close();
                     const safeError = this._securityUtils.sanitizeErrorMessage(data.error);
-                    MessageBox.error("Optimization failed: " + safeError);
+                    MessageBox.error(`Optimization failed: ${safeError}`);
                 }
-            }.bind(this);
+            };
 
-            this._optimizationEventSource.onerror = function() {
+            this._optimizationEventSource.onerror = () => {
                 this._optimizationEventSource.close();
-            }.bind(this);
+            };
         },
 
-        onClearCache: function() {
+        onClearCache() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
-            MessageBox.confirm("Clear all cache entries for '" + sDatasetName + "'?", {
-                onClose: function(oAction) {
+            MessageBox.confirm(`Clear all cache entries for '${sDatasetName}'?`, {
+                onClose: (oAction) => {
                     if (oAction === MessageBox.Action.OK) {
                         this._clearCache(sDatasetName);
                     }
-                }.bind(this)
+                }
             });
         },
 
-        _clearCache: function(sDatasetName) {
+        _clearCache(sDatasetName) {
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sDatasetName) + "/cache",
+                url: `/a2a/agent8/v1/datasets/${encodeURIComponent(sDatasetName)}/cache`,
                 type: "DELETE",
-                success: function(data) {
+                success: (data) => {
                     const safeEntries = parseInt(data.entriesRemoved, 10) || 0;
-                    const safeMemory = this._securityUtils.encodeHTML(data.memoryFreed || '0');
+                    const safeMemory = this._securityUtils.encodeHTML(data.memoryFreed || "0");
                     MessageToast.show(
-                        "Cache cleared: " + safeEntries + " entries removed, " +
-                        safeMemory + " memory freed"
+                        `Cache cleared: ${safeEntries} entries removed, ` +
+                        `${safeMemory} memory freed`
                     );
                     this._extensionAPI.refresh();
                     this._securityUtils.auditLog("CACHE_CLEARED", {
                         dataset: sDatasetName,
                         entriesRemoved: safeEntries
                     });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to clear cache: " + errorMsg);
+                    MessageBox.error(`Failed to clear cache: ${errorMsg}`);
                     this._securityUtils.auditLog("CACHE_CLEAR_FAILED", {
                         dataset: sDatasetName,
                         error: errorMsg
                     });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
         },
 
-        onValidateData: function() {
+        onValidateData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
             // Check user permissions
-            if (!this._authHandler.hasPermission('DATASET_VALIDATE', sDatasetName)) {
+            if (!this._authHandler.hasPermission("DATASET_VALIDATE", sDatasetName)) {
                 MessageBox.error("Insufficient permissions to validate dataset");
                 return;
             }
@@ -423,71 +423,71 @@ sap.ui.define([
             this._extensionAPI.getView().setBusy(true);
 
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(sDatasetName) + "/validate",
+                url: `/a2a/agent8/v1/datasets/${this._securityUtils.encodeURL(sDatasetName)}/validate`,
                 type: "POST",
-                success: function(data) {
+                success: (data) => {
                     this._extensionAPI.getView().setBusy(false);
                     this._showValidationResults(data);
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._extensionAPI.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Data validation failed: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Data validation failed: ${errorMsg}`);
+                }
             }));
         },
 
-        _showValidationResults: function(validationData) {
-            const sMessage = "Data Validation Results:\\n\\n";
+        _showValidationResults(validationData) {
+            let sMessage = `Data Validation Results:\n\n`;
 
-            sMessage += "Total Records: " + validationData.totalRecords + "\\n";
-            sMessage += "Valid Records: " + validationData.validRecords + "\\n";
-            sMessage += "Invalid Records: " + validationData.invalidRecords + "\\n";
-            sMessage += "Validation Score: " + validationData.validationScore + "%\\n\\n";
+            sMessage += `Total Records: ${validationData.totalRecords}\n`;
+            sMessage += `Valid Records: ${validationData.validRecords}\n`;
+            sMessage += `Invalid Records: ${validationData.invalidRecords}\n`;
+            sMessage += `Validation Score: ${validationData.validationScore}%\n\n`;
 
             if (validationData.errors && validationData.errors.length > 0) {
-                sMessage += "Validation Errors:\\n";
-                validationData.errors.slice(0, 5).forEach(function(error) {
-                    sMessage += "• " + error.field + ": " + error.message + "\\n";
+                sMessage += `Validation Errors:\n`;
+                validationData.errors.slice(0, 5).forEach((error) => {
+                    sMessage += `• ${error.field}: ${error.message}\n`;
                 });
 
                 if (validationData.errors.length > 5) {
-                    sMessage += "... and " + (validationData.errors.length - 5) + " more errors\\n";
+                    sMessage += `... and ${validationData.errors.length - 5} more errors\n`;
                 }
             }
 
             MessageBox.information(sMessage, {
                 actions: ["Export Report", MessageBox.Action.CLOSE],
-                onClose: function(oAction) {
+                onClose: (oAction) => {
                     if (oAction === "Export Report") {
                         this._exportValidationReport(validationData);
                     }
-                }.bind(this)
+                }
             });
         },
 
-        _exportValidationReport: function(validationData) {
+        _exportValidationReport(validationData) {
             const sDatasetName = this._extensionAPI.getBindingContext().getProperty("datasetName");
 
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(sDatasetName) + "/validation-report",
+                url: `/a2a/agent8/v1/datasets/${this._securityUtils.encodeURL(sDatasetName)}/validation-report`,
                 type: "POST",
                 data: JSON.stringify({
                     validationData: validationData,
                     format: "PDF"
                 }),
-                success: function(data) {
+                success: (data) => {
                     MessageToast.show("Validation report exported successfully");
                     window.open(data.downloadUrl, "_blank");
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to export report: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Failed to export report: ${errorMsg}`);
+                }
             }));
         },
 
-        onCompressData: function() {
+        onCompressData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
@@ -496,7 +496,7 @@ sap.ui.define([
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent8.ext.fragment.CompressData",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oCompressDialog = oDialog;
                     this.base.getView().addDependent(this._oCompressDialog);
 
@@ -509,13 +509,13 @@ sap.ui.define([
                     });
                     this._oCompressDialog.setModel(oModel, "compress");
                     this._oCompressDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oCompressDialog.open();
             }
         },
 
-        onBackupData: function() {
+        onBackupData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sDatasetName = oContext.getProperty("datasetName");
 
@@ -524,7 +524,7 @@ sap.ui.define([
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent8.ext.fragment.BackupData",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oBackupDialog = oDialog;
                     this.base.getView().addDependent(this._oBackupDialog);
 
@@ -538,13 +538,13 @@ sap.ui.define([
                     });
                     this._oBackupDialog.setModel(oModel, "backup");
                     this._oBackupDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oBackupDialog.open();
             }
         },
 
-        onExecuteStoreData: function() {
+        onExecuteStoreData() {
             const oModel = this._oStoreDialog.getModel("store");
             const oData = oModel.getData();
 
@@ -559,22 +559,22 @@ sap.ui.define([
             this._oStoreDialog.setBusy(true);
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sanitizedData.datasetName) + "/store",
+                url: `/a2a/agent8/v1/datasets/${encodeURIComponent(sanitizedData.datasetName)}/store`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(sanitizedData),
-                success: function(data) {
+                success: (data) => {
                     this._oStoreDialog.setBusy(false);
                     this._oStoreDialog.close();
 
                     const safeRecordsStored = parseInt(data.recordsStored, 10) || 0;
-                    const safeStorageSize = this._securityUtils.encodeHTML(data.storageSize || '0');
+                    const safeStorageSize = this._securityUtils.encodeHTML(data.storageSize || "0");
                     const safeCompressionRatio = parseFloat(data.compressionRatio) || 0;
                     MessageBox.success(
-                        "Data stored successfully!\\n" +
-                        "Records stored: " + safeRecordsStored + "\\n" +
-                        "Storage size: " + safeStorageSize + "\\n" +
-                        "Compression ratio: " + safeCompressionRatio + "%"
+                        `Data stored successfully!\n` +
+                        `Records stored: ${safeRecordsStored}\n` +
+                        `Storage size: ${safeStorageSize}\n` +
+                        `Compression ratio: ${safeCompressionRatio}%`
                     );
 
                     this._extensionAPI.refresh();
@@ -583,22 +583,22 @@ sap.ui.define([
                         recordsStored: safeRecordsStored,
                         storageSize: data.storageSize
                     });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._oStoreDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Store operation failed: " + errorMsg);
+                    MessageBox.error(`Store operation failed: ${errorMsg}`);
                     this._securityUtils.auditLog("DATA_STORE_FAILED", {
                         dataset: sanitizedData.datasetName,
                         error: errorMsg
                     });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
         },
 
-        onExecuteRetrieveData: function() {
+        onExecuteRetrieveData() {
             const oModel = this._oRetrieveDialog.getModel("retrieve");
             const oData = oModel.getData();
 
@@ -613,11 +613,11 @@ sap.ui.define([
             this._oRetrieveDialog.setBusy(true);
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sanitizedData.datasetName) + "/retrieve",
+                url: `/a2a/agent8/v1/datasets/${encodeURIComponent(sanitizedData.datasetName)}/retrieve`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(sanitizedData),
-                success: function(data) {
+                success: (data) => {
                     this._oRetrieveDialog.setBusy(false);
                     this._oRetrieveDialog.close();
 
@@ -626,22 +626,22 @@ sap.ui.define([
                         dataset: sanitizedData.datasetName,
                         recordsRetrieved: data.recordCount || 0
                     });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._oRetrieveDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Retrieve operation failed: " + errorMsg);
+                    MessageBox.error(`Retrieve operation failed: ${errorMsg}`);
                     this._securityUtils.auditLog("DATA_RETRIEVE_FAILED", {
                         dataset: sanitizedData.datasetName,
                         error: errorMsg
                     });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
         },
 
-        _showRetrievedData: function(retrievedData) {
+        _showRetrievedData(retrievedData) {
             const oView = this.base.getView();
 
             if (!this._oDataViewerDialog) {
@@ -649,14 +649,14 @@ sap.ui.define([
                     id: oView.getId(),
                     name: "a2a.network.agent8.ext.fragment.DataViewer",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oDataViewerDialog = oDialog;
                     oView.addDependent(this._oDataViewerDialog);
 
                     const oModel = new JSONModel(retrievedData);
                     this._oDataViewerDialog.setModel(oModel, "data");
                     this._oDataViewerDialog.open();
-                }.bind(this));
+                });
             } else {
                 const oModel = new JSONModel(retrievedData);
                 this._oDataViewerDialog.setModel(oModel, "data");
@@ -664,77 +664,77 @@ sap.ui.define([
             }
         },
 
-        onConfirmCreateVersion: function() {
+        onConfirmCreateVersion() {
             const oModel = this._oVersionDialog.getModel("version");
             const oData = oModel.getData();
 
             this._oVersionDialog.setBusy(true);
 
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(oData.datasetName) + "/versions",
+                url: `/a2a/agent8/v1/datasets/${this._securityUtils.encodeURL(oData.datasetName)}/versions`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oData),
-                success: function(data) {
+                success: (data) => {
                     this._oVersionDialog.setBusy(false);
                     this._oVersionDialog.close();
 
-                    const safeVersionId = this._securityUtils.encodeHTML(data.versionId || 'N/A');
-                    const safeVersionNumber = this._securityUtils.encodeHTML(data.versionNumber || 'N/A');
-                    const safeVersionSize = this._securityUtils.encodeHTML(data.versionSize || '0');
+                    const safeVersionId = this._securityUtils.encodeHTML(data.versionId || "N/A");
+                    const safeVersionNumber = this._securityUtils.encodeHTML(data.versionNumber || "N/A");
+                    const safeVersionSize = this._securityUtils.encodeHTML(data.versionSize || "0");
                     MessageBox.success(
-                        "Version created successfully!\\n" +
-                        "Version ID: " + safeVersionId + "\\n" +
-                        "Version Number: " + safeVersionNumber + "\\n" +
-                        "Size: " + safeVersionSize
+                        `Version created successfully!\n` +
+                        `Version ID: ${safeVersionId}\n` +
+                        `Version Number: ${safeVersionNumber}\n` +
+                        `Size: ${safeVersionSize}`
                     );
 
                     this._extensionAPI.refresh();
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._oVersionDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Version creation failed: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Version creation failed: ${errorMsg}`);
+                }
             }));
         },
 
-        onConfirmCompress: function() {
+        onConfirmCompress() {
             const oModel = this._oCompressDialog.getModel("compress");
             const oData = oModel.getData();
 
             this._oCompressDialog.setBusy(true);
 
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(oData.datasetName) + "/compress",
+                url: `/a2a/agent8/v1/datasets/${this._securityUtils.encodeURL(oData.datasetName)}/compress`,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oData),
-                success: function(data) {
+                success: (data) => {
                     this._oCompressDialog.setBusy(false);
                     this._oCompressDialog.close();
 
-                    const safeOriginalSize = this._securityUtils.encodeHTML(data.originalSize || '0');
-                    const safeCompressedSize = this._securityUtils.encodeHTML(data.compressedSize || '0');
+                    const safeOriginalSize = this._securityUtils.encodeHTML(data.originalSize || "0");
+                    const safeCompressedSize = this._securityUtils.encodeHTML(data.compressedSize || "0");
                     const safeRatio = parseFloat(data.compressionRatio) || 0;
                     MessageBox.success(
-                        "Data compression completed!\\n" +
-                        "Original size: " + safeOriginalSize + "\\n" +
-                        "Compressed size: " + safeCompressedSize + "\\n" +
-                        "Compression ratio: " + safeRatio + "%"
+                        `Data compression completed!\n` +
+                        `Original size: ${safeOriginalSize}\n` +
+                        `Compressed size: ${safeCompressedSize}\n` +
+                        `Compression ratio: ${safeRatio}%`
                     );
 
                     this._extensionAPI.refresh();
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this._oCompressDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Compression failed: " + errorMsg);
-                }.bind(this)
+                    MessageBox.error(`Compression failed: ${errorMsg}`);
+                }
             }));
         },
 
-        onConfirmBackup: function() {
+        onConfirmBackup() {
             const oModel = this._oBackupDialog.getModel("backup");
             const oData = oModel.getData();
 
@@ -749,39 +749,39 @@ sap.ui.define([
             this._oBackupDialog.setBusy(true);
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sanitizedData.datasetName) + "/backup",
+                url: `/a2a/agent8/v1/datasets/${encodeURIComponent(sanitizedData.datasetName)}/backup`,
                 type: "POST",
                 data: JSON.stringify(sanitizedData),
-                success: function(data) {
+                success: (data) => {
                     this._oBackupDialog.setBusy(false);
                     this._oBackupDialog.close();
 
-                    const safeBackupId = this._securityUtils.encodeHTML(data.backupId || 'N/A');
-                    const safeBackupSize = this._securityUtils.encodeHTML(data.backupSize || '0');
-                    const safeLocation = this._securityUtils.encodeHTML(data.backupLocation || 'N/A');
+                    const safeBackupId = this._securityUtils.encodeHTML(data.backupId || "N/A");
+                    const safeBackupSize = this._securityUtils.encodeHTML(data.backupSize || "0");
+                    const safeLocation = this._securityUtils.encodeHTML(data.backupLocation || "N/A");
                     MessageBox.success(
-                        "Backup created successfully!\\n" +
-                        "Backup ID: " + safeBackupId + "\\n" +
-                        "Backup size: " + safeBackupSize + "\\n" +
-                        "Location: " + safeLocation
+                        `Backup created successfully!\n` +
+                        `Backup ID: ${safeBackupId}\n` +
+                        `Backup size: ${safeBackupSize}\n` +
+                        `Location: ${safeLocation}`
                     );
 
                     this._extensionAPI.refresh();
-                    this._securityUtils.auditLog('DATA_BACKUP_CREATED', { datasetName: sanitizedData.datasetName });
-                }.bind(this),
-                error: function(xhr) {
+                    this._securityUtils.auditLog("DATA_BACKUP_CREATED", { datasetName: sanitizedData.datasetName });
+                },
+                error: (xhr) => {
                     this._oBackupDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Backup failed: " + errorMsg);
-                    this._securityUtils.auditLog('DATA_BACKUP_FAILED', { error: errorMsg });
-                }.bind(this)
+                    MessageBox.error(`Backup failed: ${errorMsg}`);
+                    this._securityUtils.auditLog("DATA_BACKUP_FAILED", { error: errorMsg });
+                }
             });
 
             jQuery.ajax(ajaxConfig);
         },
 
         // Input validation and sanitization methods
-        _validateStoreData: function(oData) {
+        _validateStoreData(oData) {
             if (!oData.datasetName || !oData.datasetName.trim()) {
                 return { isValid: false, message: "Dataset name is required" };
             }
@@ -794,7 +794,7 @@ sap.ui.define([
             return { isValid: true };
         },
 
-        _sanitizeStoreData: function(oData) {
+        _sanitizeStoreData(oData) {
             return {
                 datasetName: this._securityUtils.sanitizeInput(oData.datasetName),
                 dataFormat: this._securityUtils.sanitizeInput(oData.dataFormat || 'JSON'),
@@ -806,7 +806,7 @@ sap.ui.define([
             };
         },
 
-        _validateRetrieveData: function(oData) {
+        _validateRetrieveData(oData) {
             if (!oData.datasetName || !oData.datasetName.trim()) {
                 return { isValid: false, message: "Dataset name is required" };
             }
@@ -823,7 +823,7 @@ sap.ui.define([
             return { isValid: true };
         },
 
-        _sanitizeRetrieveData: function(oData) {
+        _sanitizeRetrieveData(oData) {
             return {
                 datasetName: this._securityUtils.sanitizeInput(oData.datasetName),
                 version: this._securityUtils.sanitizeInput(oData.version || ''),
@@ -835,7 +835,7 @@ sap.ui.define([
             };
         },
 
-        _validateBackupData: function(oData) {
+        _validateBackupData(oData) {
             if (!oData.datasetName || !oData.datasetName.trim()) {
                 return { isValid: false, message: "Dataset name is required" };
             }
@@ -852,7 +852,7 @@ sap.ui.define([
             return { isValid: true };
         },
 
-        _sanitizeBackupData: function(oData) {
+        _sanitizeBackupData(oData) {
             return {
                 datasetName: this._securityUtils.sanitizeInput(oData.datasetName),
                 backupType: this._securityUtils.sanitizeInput(oData.backupType || 'FULL'),
@@ -863,7 +863,7 @@ sap.ui.define([
             };
         },
 
-        _sanitizeObject: function(obj) {
+        _sanitizeObject(obj) {
             if (!obj || typeof obj !== 'object') return {};
             const sanitized = {};
             Object.keys(obj).forEach(key => {
@@ -879,7 +879,7 @@ sap.ui.define([
         },
 
         // Create Data Task Dialog Methods
-        onCreateDataTask: function() {
+        onCreateDataTask() {
             // Check user permissions
             if (!this._authHandler.hasPermission('CREATE_DATA_TASK')) {
                 MessageBox.error("Insufficient permissions to create data tasks");
@@ -910,7 +910,7 @@ sap.ui.define([
             }
         },
 
-        _loadAvailableBackends: function() {
+        _loadAvailableBackends() {
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
                 url: "/a2a/agent8/v1/storage-backends",
                 type: "GET",
@@ -929,11 +929,11 @@ sap.ui.define([
             jQuery.ajax(ajaxConfig);
         },
 
-        onCancelCreateTask: function() {
+        onCancelCreateTask() {
             this._oCreateDialog.close();
         },
 
-        onConfirmCreateTask: function() {
+        onConfirmCreateTask() {
             const oData = this._oCreateModel.getData();
 
             // Validate form
@@ -1012,7 +1012,7 @@ sap.ui.define([
         },
 
         // Validation Event Handlers
-        onTaskNameChange: function() {
+        onTaskNameChange() {
             const sValue = this._oCreateModel.getProperty("/taskName");
             const oValidation = this._validateTaskName(sValue);
 
@@ -1020,7 +1020,7 @@ sap.ui.define([
             this._oCreateModel.setProperty("/taskNameStateText", oValidation.message);
         },
 
-        onDatasetNameChange: function() {
+        onDatasetNameChange() {
             const sValue = this._oCreateModel.getProperty("/datasetName");
             const oValidation = this._validateDatasetName(sValue);
 
@@ -1028,7 +1028,7 @@ sap.ui.define([
             this._oCreateModel.setProperty("/datasetNameStateText", oValidation.message);
         },
 
-        onOperationTypeChange: function() {
+        onOperationTypeChange() {
             const sValue = this._oCreateModel.getProperty("/operationType");
             const oValidation = this._validateOperationType(sValue);
 
@@ -1039,7 +1039,7 @@ sap.ui.define([
             this._applyOperationDefaults(sValue);
         },
 
-        _applyOperationDefaults: function(sOperationType) {
+        _applyOperationDefaults(sOperationType) {
             switch (sOperationType) {
                 case "STORE":
                     this._oCreateModel.setProperty("/compressionEnabled", true);
@@ -1072,12 +1072,12 @@ sap.ui.define([
             }
         },
 
-        onSelectDataset: function() {
+        onSelectDataset() {
             MessageBox.information("Dataset selection functionality will be available in a future update.");
         },
 
         // Validation Methods
-        _validateTaskName: function(sValue) {
+        _validateTaskName(sValue) {
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Task name is required" };
             }
@@ -1093,7 +1093,7 @@ sap.ui.define([
             return { state: "Success", message: "" };
         },
 
-        _validateDatasetName: function(sValue) {
+        _validateDatasetName(sValue) {
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Dataset name is required" };
             }
@@ -1109,7 +1109,7 @@ sap.ui.define([
             return { state: "Success", message: "" };
         },
 
-        _validateOperationType: function(sValue) {
+        _validateOperationType(sValue) {
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Operation type is required" };
             }
@@ -1120,9 +1120,9 @@ sap.ui.define([
             return { state: "Success", message: "" };
         },
 
-        _validateForm: function() {
+        _validateForm() {
             const oData = this._oCreateModel.getData();
-            const bValid = true;
+            let bValid = true;
 
             // Validate task name
             const oTaskNameValidation = this._validateTaskName(oData.taskName);
@@ -1145,7 +1145,7 @@ sap.ui.define([
             return bValid;
         },
 
-        _sanitizeArray: function(arr) {
+        _sanitizeArray(arr) {
             if (!Array.isArray(arr)) return [];
             return arr.map(item => {
                 if (typeof item === 'string') {
@@ -1165,7 +1165,7 @@ sap.ui.define([
          * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onTestTransformation: function() {
+        onTestTransformation() {
             const oContext = this._extensionAPI.getBindingContext();
             const sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
             const sTaskName = this._securityUtils.sanitizeInput(oContext.getProperty("taskName"));
@@ -1192,7 +1192,7 @@ sap.ui.define([
          * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onRunTransformation: function() {
+        onRunTransformation() {
             const oContext = this._extensionAPI.getBindingContext();
             const sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
             const sTaskName = this._securityUtils.sanitizeInput(oContext.getProperty("taskName"));
@@ -1229,7 +1229,7 @@ sap.ui.define([
          * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onViewResults: function() {
+        onViewResults() {
             const oContext = this._extensionAPI.getBindingContext();
             const sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
             const sStatus = oContext.getProperty("status");
@@ -1255,7 +1255,7 @@ sap.ui.define([
          * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
          * @since 1.0.0
          */
-        onExportTransformedData: function() {
+        onExportTransformedData() {
             const oContext = this._extensionAPI.getBindingContext();
             const sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
 
@@ -1290,7 +1290,7 @@ sap.ui.define([
          * @param {string} sTaskId - Task ID to test
          * @private
          */
-        _executeTransformationTest: function(sTaskId) {
+        _executeTransformationTest(sTaskId) {
             this.base.getView().setBusy(true);
 
             const requestData = {
@@ -1329,7 +1329,7 @@ sap.ui.define([
          * @param {string} sTaskId - Task ID to run
          * @private
          */
-        _executeTransformation: function(sTaskId) {
+        _executeTransformation(sTaskId) {
             this.base.getView().setBusy(true);
 
             const requestData = {
@@ -1377,7 +1377,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _loadTransformationResults: function(sTaskId, oDialog) {
+        _loadTransformationResults(sTaskId, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
             if (!oTargetDialog) return;
 
@@ -1418,7 +1418,7 @@ sap.ui.define([
          * @param {Object} testData - Test results data
          * @private
          */
-        _showTestResults: function(testData) {
+        _showTestResults(testData) {
             const sMessage = "Transformation Test Results:\\n\\n";
 
             const safeRecordsProcessed = parseInt(testData.recordsProcessed, 10) || 0;
@@ -1463,7 +1463,7 @@ sap.ui.define([
          * @param {Object} testData - Test results data
          * @private
          */
-        _showDetailedTestResults: function(testData) {
+        _showDetailedTestResults(testData) {
             this._getOrCreateDialog("testResults", "a2a.network.agent8.ext.fragment.TestResults")
                 .then(function(oDialog) {
                     const oModel = new JSONModel({
@@ -1480,7 +1480,7 @@ sap.ui.define([
          * @param {string} sJobId - Job ID to monitor
          * @private
          */
-        _startTransformationMonitoring: function(sJobId) {
+        _startTransformationMonitoring(sJobId) {
             if (this._transformationEventSource) {
                 this._transformationEventSource.close();
             }
@@ -1535,7 +1535,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createResultsCharts: function(data, oDialog) {
+        _createResultsCharts(data, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
             if (!oTargetDialog) return;
 
@@ -1550,7 +1550,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createTransformationSummaryChart: function(summaryData, oDialog) {
+        _createTransformationSummaryChart(summaryData, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
             if (!oTargetDialog) return;
 
@@ -1585,7 +1585,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Target dialog
          * @private
          */
-        _createErrorDistributionChart: function(errorData, oDialog) {
+        _createErrorDistributionChart(errorData, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
             if (!oTargetDialog) return;
 
@@ -1620,7 +1620,7 @@ sap.ui.define([
          * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
          * @private
          */
-        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+        _getOrCreateDialog(sDialogId, sFragmentName) {
             const that = this;
 
             if (this._dialogCache && this._dialogCache[sDialogId]) {
@@ -1656,7 +1656,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog to enhance
          * @private
          */
-        _enableDialogAccessibility: function(oDialog) {
+        _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
                 onAfterRendering: function() {
                     const $dialog = oDialog.$();
@@ -1685,7 +1685,7 @@ sap.ui.define([
          * @param {sap.m.Dialog} oDialog - Dialog to optimize
          * @private
          */
-        _optimizeDialogForDevice: function(oDialog) {
+        _optimizeDialogForDevice(oDialog) {
             if (sap.ui.Device.system.phone) {
                 oDialog.setStretch(true);
                 oDialog.setContentWidth("100%");
@@ -1710,7 +1710,7 @@ sap.ui.define([
          * @description Confirms and starts export of transformed data.
          * @public
          */
-        onConfirmExportTransformedData: function() {
+        onConfirmExportTransformedData() {
             const oDialog = this._dialogCache["exportTransformed"];
             if (!oDialog) return;
 
@@ -1776,7 +1776,7 @@ sap.ui.define([
          * @description Cancels export of transformed data.
          * @public
          */
-        onCancelExportTransformedData: function() {
+        onCancelExportTransformedData() {
             const oDialog = this._dialogCache["exportTransformed"];
             if (oDialog) {
                 oDialog.close();

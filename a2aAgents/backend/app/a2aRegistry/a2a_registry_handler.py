@@ -14,11 +14,7 @@ from app.a2a.core.security_base import SecureA2AAgent
 
 # Import models from existing registry
 from .models import (
-    AgentCard, AgentRegistrationRequest, AgentRegistrationResponse,
-    AgentSearchRequest, AgentSearchResponse, AgentDetails,
-    AgentHealthResponse, AgentMetricsResponse, SystemHealthResponse,
-    WorkflowMatchRequest, WorkflowMatchResponse,
-    HealthStatus, AgentType
+    AgentCard, HealthStatus, AgentType
 )
 
 logger = logging.getLogger(__name__)

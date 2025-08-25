@@ -58,15 +58,15 @@ class SimulatedAgent(SecureA2AAgent):
     
 @dataclass
 class WorkflowTemplate(SecureA2AAgent):
+    """Template for generating test workflows"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Template for generating test workflows"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     name: str
     task_count: int
     strategy: OrchestrationStrategy
@@ -76,15 +76,15 @@ class WorkflowTemplate(SecureA2AAgent):
 
 @dataclass
 class SimulationMetrics(SecureA2AAgent):
+    """Metrics collected during orchestration simulation"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Metrics collected during orchestration simulation"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     workflows_created: int = 0
     workflows_executed: int = 0
     workflows_completed: int = 0
@@ -102,17 +102,15 @@ class SimulationMetrics(SecureA2AAgent):
     task_durations: List[float] = field(default_factory=list)
 
 class OrchestratorSimulator(SecureA2AAgent):
+    """Comprehensive simulation framework for workflow orchestration testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""
-    Comprehensive simulation framework for workflow orchestration testing
-    """
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, orchestrator_agent: OrchestratorAgentSdk):
         

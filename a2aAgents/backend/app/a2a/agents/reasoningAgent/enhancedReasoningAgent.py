@@ -22,7 +22,8 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 # Import SDK components including MCP
-from app.a2a.sdk.agentBase import A2AAgentBase
+try:
+    from app.a2a.sdk.agentBase import A2AAgentBase
 except ImportError:
     logger.error("Failed to import A2AAgentBase - using base class")
     class A2AAgentBase:

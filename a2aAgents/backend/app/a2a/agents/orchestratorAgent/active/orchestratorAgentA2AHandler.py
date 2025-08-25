@@ -24,6 +24,43 @@ from ....network.agentRegistration import get_registration_service
 logger = logging.getLogger(__name__)
 
 
+class MockA2ANetworkClient:
+    """Mock A2A Network Client for development mode"""
+    
+    def __init__(self, agent_id: str):
+        self.agent_id = agent_id
+        self.connected = False
+        self.registered = False
+    
+    async def connect(self):
+        """Mock connect method"""
+        logger.info(f"Mock A2A client: connecting agent {self.agent_id}")
+        self.connected = True
+        return True
+    
+    async def disconnect(self):
+        """Mock disconnect method"""
+        logger.info(f"Mock A2A client: disconnecting agent {self.agent_id}")
+        self.connected = False
+        return True
+    
+    async def register_agent(self, agent_info: Dict[str, Any]):
+        """Mock register agent method"""
+        logger.info(f"Mock A2A client: registering agent {agent_info.get('agent_id', self.agent_id)}")
+        self.registered = True
+        return {"status": "success", "message": "Agent registered (mock)"}
+    
+    async def unregister_agent(self, agent_id: str):
+        """Mock unregister agent method"""
+        logger.info(f"Mock A2A client: unregistering agent {agent_id}")
+        self.registered = False
+        return {"status": "success", "message": "Agent unregistered (mock)"}
+    
+    async def is_connected(self):
+        """Mock connection check"""
+        return self.connected
+
+
 class OrchestratorAgentA2AHandler(SecureA2AAgent):
     """
     A2A-compliant handler for Orchestrator Agent
@@ -84,26 +121,28 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
         
         # Initialize A2A blockchain client (with development fallback)
         try:
-            from ....core.networkClient import A2ANetworkClient
-            # Try protocol-compliant client first
-            self.a2a_client = A2ANetworkClient(
-                agent_id=config.agent_id,
-                blockchain_client=None,  # Use None for dev mode
-                config=None
-            )
-        except (TypeError, ImportError):
-            # Fallback to simple client
-            try:
-                from ....core.network_client import A2ANetworkClient as SimpleNetworkClient
-                self.a2a_client = SimpleNetworkClient(agent_id=config.agent_id)
-            except ImportError:
-                # Ultimate fallback - mock client for development
-                self.a2a_client = None
-                logger.warning("No A2A network client available - running in offline mode")
+            # Check if we're in development mode
+            if os.getenv('A2A_DEV_MODE', '').lower() == 'true' or os.getenv('BLOCKCHAIN_DISABLED', '').lower() == 'true':
+                # Development mode - create mock client
+                logger.info("Running in development mode - creating mock A2A client")
+                self.a2a_client = MockA2ANetworkClient(agent_id=config.agent_id)
+            else:
+                # Production mode - use real client
+                from ....core.networkClient import A2ANetworkClient
+                self.a2a_client = A2ANetworkClient(
+                    agent_id=config.agent_id,
+                    blockchain_client=None,  # Use None for dev mode
+                    config=None
+                )
+        except Exception as e:
+            logger.warning(f"Failed to create A2A network client: {e}")
+            # Ultimate fallback - create mock client
+            self.a2a_client = MockA2ANetworkClient(agent_id=config.agent_id)
+            logger.info("Using mock A2A client for development")
         
-        # Goal management storage - now with persistent backend
-        self.storage = get_distributed_storage()
-        self.registry_service = get_registration_service()
+        # Goal management storage - defer async initialization  
+        self.storage = None
+        self.registry_service = None
         
         # Initialize goal management storage
         self.agent_goals = {}
@@ -121,8 +160,8 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
             "..", "..", "..", "..", "data", "orchestrator_goals.json"
         )
         
-        # Load existing goals from persistent storage
-        asyncio.create_task(self._load_persistent_goals())
+        # Load existing goals from persistent storage (deferred to avoid event loop issues)
+        self._goals_loaded = False
         
         # Initialize AI integration (will be done after handler registration)
         self.ai_integration_pending = True

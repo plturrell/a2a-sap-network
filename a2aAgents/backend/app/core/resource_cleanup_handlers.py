@@ -10,23 +10,23 @@ import signal
 import sys
 import weakref
 from typing import Dict, Any, List, Optional, Set, Callable
-from datetime import datetime, timedelta
+from datetime import datetime
 from contextlib import asynccontextmanager
 import atexit
 
 # Import all production components for cleanup
-from .secure_secrets_manager import get_secrets_manager, shutdown_secrets_manager
-from .resource_manager import get_resource_manager, shutdown_resource_manager
-from .a2a_protocol_validator import get_protocol_validator, shutdown_protocol_validator
-from .slo_sli_framework import get_slo_sli_framework, shutdown_slo_sli_framework
-from .backpressure_manager import get_backpressure_manager, shutdown_backpressure_manager
-from .chaos_engineering import get_chaos_framework, shutdown_chaos_framework
-from .standardized_lifecycle import get_lifecycle_manager, shutdown_lifecycle_manager
-from .testing_framework import get_testing_framework, shutdown_testing_framework
-from .security_hardening import get_security_framework, shutdown_security_hardening
-from .observability_stack import get_observability_manager, shutdown_observability_manager
-from .disaster_recovery import get_disaster_recovery_manager, shutdown_disaster_recovery_manager
-from .a2a_distributed_coordinator import get_distributed_coordinator, shutdown_distributed_coordinator
+from .secure_secrets_manager import shutdown_secrets_manager
+from .resource_manager import shutdown_resource_manager
+from .a2a_protocol_validator import shutdown_protocol_validator
+from .slo_sli_framework import shutdown_slo_sli_framework
+from .backpressure_manager import shutdown_backpressure_manager
+from .chaos_engineering import shutdown_chaos_framework
+from .standardized_lifecycle import shutdown_lifecycle_manager
+from .testing_framework import shutdown_testing_framework
+from .security_hardening import shutdown_security_hardening
+from .observability_stack import shutdown_observability_manager
+from .disaster_recovery import shutdown_disaster_recovery_manager
+from .a2a_distributed_coordinator import shutdown_distributed_coordinator
 
 logger = logging.getLogger(__name__)
 

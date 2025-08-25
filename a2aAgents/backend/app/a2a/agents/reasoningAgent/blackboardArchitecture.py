@@ -11,7 +11,8 @@ from datetime import datetime
 from enum import Enum
 import json
 
-from .grokReasoning import GrokReasoning
+try:
+    from .grokReasoning import GrokReasoning
 except ImportError:
     # For direct imports
     from grokReasoning import GrokReasoning

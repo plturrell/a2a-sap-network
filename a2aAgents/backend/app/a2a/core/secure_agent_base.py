@@ -229,8 +229,10 @@ class SecureA2AAgent(A2AAgentBase):
                         "error": f"Operation failed: {str(e)}"
                     }
             
-            # Register handler with parent SDK
-            self.register_handler(operation, wrapper)
+            # Store handler for later registration
+            if not hasattr(self, '_handlers'):
+                self._handlers = {}
+            self._handlers[operation] = wrapper
             return wrapper
         
         return decorator

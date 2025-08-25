@@ -82,18 +82,19 @@ class AsyncGrokConnectionPool:
                         pool=5.0
                     )
                     
-                    self._client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        # httpx\.AsyncClient(
-                        limits=limits,
-                        timeout=timeout,
-                        verify=True,
-                        follow_redirects=False,
-                        headers={
-                            "Authorization": f"Bearer {self.config.api_key}",
-                            "Content-Type": "application/json",
-                            "User-Agent": "A2A-Reasoning-Agent/1.0"
-                        }
-                    )
+                    # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+                    # self._client = httpx.AsyncClient(
+                    #     limits=limits,
+                    #     timeout=timeout,
+                    #     verify=True,
+                    #     follow_redirects=False,
+                    #     headers={
+                    #         "Authorization": f"Bearer {self.config.api_key}",
+                    #         "Content-Type": "application/json",
+                    #         "User-Agent": "A2A-Reasoning-Agent/1.0"
+                    #     }
+                    # )
+                    self._client = None  # Placeholder for blockchain messaging
                     
         return self._client
     

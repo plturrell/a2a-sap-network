@@ -40,17 +40,15 @@ class MockWorkflowExecution(SecureA2AAgent):
     execution_log: List[str] = field(default_factory=list)
 
 class MockOrchestratorAgent(SecureA2AAgent):
+    """Mock implementation of Orchestrator Agent for testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""
-    Mock implementation of Orchestrator Agent for testing
-    """
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
         
@@ -587,15 +585,15 @@ class MockOrchestratorAgent(SecureA2AAgent):
 
 # Test utilities and fixtures
 class OrchestratorTestHelper(SecureA2AAgent):
+    """Helper class for orchestrator testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Helper class for orchestrator testing"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, mock_orchestrator: MockOrchestratorAgent):
         
