@@ -300,8 +300,9 @@ jobs:
           -e A2A_AGENT_BASE_URL=http://localhost:8000 \
           -e A2A_IN_CONTAINER=true \
           -e SKIP_VENV_CREATION=true \
-          --memory=6g \
-          --cpus=4 \
+          --memory=8g \
+          --cpus=6 \
+          --restart=unless-stopped \
           ${{ env.IMAGE_NAME }}:main \
           complete
         
@@ -313,8 +314,8 @@ jobs:
         echo "   - MCP servers must be operational"
         echo ""
         
-        # Initial startup wait
-        sleep 180  # 3 minutes for complete ecosystem
+        # Initial startup wait - reduced to prevent container timeout
+        sleep 60  # 1 minute initial wait
         
         # Check container is still running
         if ! docker ps | grep -q a2a-full-test; then
@@ -326,44 +327,65 @@ jobs:
         # Wait for all core services to be ready
         echo "🔄 Verifying all core services are operational..."
         
-        # Wait for Launch Pad (Frontend)
+        # Wait for Launch Pad (Frontend) with container health checks
         echo "🎯 Checking Launch Pad (port 3000)..."
-        for i in {1..60}; do
+        for i in {1..30}; do
+          # Check container is still running before each attempt
+          if ! docker ps | grep -q a2a-full-test; then
+            echo "❌ Container stopped during Launch Pad check"
+            docker logs a2a-full-test --tail=100
+            exit 1
+          fi
+          
           if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
             echo "✅ Launch Pad is ready"
             break
           fi
-          if [ $i -eq 60 ]; then
-            echo "❌ Launch Pad not ready after 2 minutes"
+          if [ $i -eq 30 ]; then
+            echo "❌ Launch Pad not ready after 1 minute"
             docker logs a2a-full-test --tail=50
             exit 1
           fi
           sleep 2
         done
         
-        # Wait for A2A Network API
+        # Wait for A2A Network API with container health checks
         echo "🌐 Checking A2A Network API (port 4004)..."
-        for i in {1..60}; do
+        for i in {1..30}; do
+          # Check container is still running before each attempt
+          if ! docker ps | grep -q a2a-full-test; then
+            echo "❌ Container stopped during Network API check"
+            docker logs a2a-full-test --tail=100
+            exit 1
+          fi
+          
           if docker exec a2a-full-test curl -f -s http://localhost:4004/api/v1/health > /dev/null 2>&1; then
             echo "✅ A2A Network API is ready"
             break
           fi
-          if [ $i -eq 60 ]; then
-            echo "❌ A2A Network API not ready after 2 minutes"
+          if [ $i -eq 30 ]; then
+            echo "❌ A2A Network API not ready after 1 minute"
             docker logs a2a-full-test --tail=50
             exit 1
           fi
           sleep 2
         done
         
-        # Wait for all 16 agents to be accessible
+        # Wait for all 16 agents to be accessible with container health checks
         echo "🤖 Verifying all 16 agents are accessible..."
         READY_AGENTS=0
         for port in {8000..8015}; do
           agent_id=$((port - 8000))
           echo -n "Agent $agent_id (port $port): "
           
-          for i in {1..30}; do
+          # Check container is still running before checking agents
+          if ! docker ps | grep -q a2a-full-test; then
+            echo "❌ Container stopped during agent verification"
+            docker logs a2a-full-test --tail=100
+            exit 1
+          fi
+          
+          for i in {1..15}; do  # Reduced from 30 to 15 attempts
             if curl -f -s http://localhost:$port/health > /dev/null 2>&1; then
               echo "✅ Ready"
               ((READY_AGENTS++))
@@ -373,7 +395,7 @@ jobs:
               ((READY_AGENTS++))
               break
             fi
-            if [ $i -eq 30 ]; then
+            if [ $i -eq 15 ]; then
               echo "❌ Not ready"
             fi
             sleep 1
@@ -389,9 +411,16 @@ jobs:
         
         echo "✅ System ready: $READY_AGENTS/16 agents accessible"
         
-        # Verify MCP servers are operational
+        # Verify MCP servers are operational with container health checks
         echo "🔌 Checking MCP servers..."
         MCP_READY=0
+        
+        # Check container is still running before MCP verification
+        if ! docker ps | grep -q a2a-full-test; then
+          echo "❌ Container stopped during MCP verification"
+          docker logs a2a-full-test --tail=100
+          exit 1
+        fi
         
         # Check for MCP server files and processes
         if docker exec a2a-full-test find /app -path "*/mcp/servers/*" -name "*.py" | head -3 > /dev/null 2>&1; then
