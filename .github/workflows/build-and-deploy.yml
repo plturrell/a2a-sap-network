@@ -302,8 +302,8 @@ jobs:
           -e SKIP_VENV_CREATION=true \
           --memory=6g \
           --cpus=4 \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main \
-          start complete
+          ${{ env.IMAGE_NAME }}:main \
+          complete
         
         # Wait for all services to initialize
         echo "⏳ Waiting for complete A2A platform to start (120 seconds for 18 agents)..."
