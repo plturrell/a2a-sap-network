@@ -2026,6 +2026,9 @@ main() {
             ;;
         complete)
             # Complete ecosystem mode - everything enabled
+            enable_network=true
+            enable_agents=true
+            enable_blockchain=true
             enable_telemetry=true
             enable_infrastructure=true
             enable_trust=true
