@@ -94,7 +94,7 @@ class AgentGenerationRequest(BaseModel, PerformanceMonitoringMixin):
     output_directory: str = "/tmp/generated_agents"
 
 
-class AgentBuilderResponse(BaseModel), PerformanceMonitoringMixin:
+class AgentBuilderResponse(BaseModel, PerformanceMonitoringMixin):
     """Response from agent builder operations"""
     success: bool
     message: str
@@ -104,7 +104,7 @@ class AgentBuilderResponse(BaseModel), PerformanceMonitoringMixin:
     metadata: Optional[Dict[str, Any]] = None
 
 
-class AgentBuilderAgentSDK(A2AAgentBase), PerformanceMonitoringMixin:
+class AgentBuilderAgentSDK(A2AAgentBase, PerformanceMonitoringMixin):
     """
     Agent Builder Agent - SDK Version
     Generates and manages A2A agents using templates and BPMN workflows
@@ -1541,7 +1541,7 @@ import json
 from {Path(agent_file_path).stem} import *
 
 
-class TestGeneratedAgent(unittest.TestCase), PerformanceMonitoringMixin:
+class TestGeneratedAgent(unittest.TestCase, PerformanceMonitoringMixin):
     """Unit tests for the generated agent"""
     
     def setUp(self):
@@ -1633,7 +1633,7 @@ missing_vars = [var for var in required_env_vars if var in locals() and not os.g
 if missing_vars:
     raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
-class TestAgentIntegration(unittest.TestCase), PerformanceMonitoringMixin:
+class TestAgentIntegration(unittest.TestCase, PerformanceMonitoringMixin):
     """Integration tests for the generated agent"""
     
     @classmethod

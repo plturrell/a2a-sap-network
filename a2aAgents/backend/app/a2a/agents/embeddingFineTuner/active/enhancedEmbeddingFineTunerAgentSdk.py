@@ -95,7 +95,7 @@ from app.a2a.network import get_network_connector, get_registration_service, get
 logger = logging.getLogger(__name__)
 
 
-class FineTuningStrategy(str, Enum), PerformanceMonitoringMixin:
+class FineTuningStrategy(str, Enum, PerformanceMonitoringMixin):
     CONTRASTIVE_LEARNING = "contrastive_learning"
     FEEDBACK_DRIVEN = "feedback_driven"
     DOMAIN_ADAPTIVE = "domain_adaptive"
@@ -104,7 +104,7 @@ class FineTuningStrategy(str, Enum), PerformanceMonitoringMixin:
     META_LEARNING = "meta_learning"
 
 
-class EmbeddingDomain(str, Enum), PerformanceMonitoringMixin:
+class EmbeddingDomain(str, Enum, PerformanceMonitoringMixin):
     GENERAL = "general"
     FINANCIAL = "financial"
     LEGAL = "legal"
@@ -158,7 +158,7 @@ class FineTuningResult:
     error_details: Optional[str] = None
 
 
-class EnhancedEmbeddingFineTunerAgent(A2AAgentBase, BlockchainIntegrationMixin), PerformanceMonitoringMixin:
+class EnhancedEmbeddingFineTunerAgent(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
     """
     Enhanced Embedding Fine-tuner Agent with AI Intelligence Framework and Blockchain
     

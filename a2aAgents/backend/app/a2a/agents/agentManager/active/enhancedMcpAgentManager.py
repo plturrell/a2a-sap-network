@@ -1194,7 +1194,7 @@ class EnhancedMCPAgentManager(SecureA2AAgent):
             'allowed_file_extensions': ['.json', '.txt', '.csv', '.xml'],
             'sql_injection_patterns': [
                 r'(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|WHERE|FROM)\b)',
-                r'(--|;|'|\"|\\*|OR\\s+1=1|AND\\s+1=1)'
+                r'(--|;|\'|\"|\\*|OR\\s+1=1|AND\\s+1=1)'
             ]
         }
         

@@ -9,16 +9,16 @@ from enum import Enum
 import logging
 import statistics
 
-from .comprehensiveOrchestratorAgentSdk import (
-from app.a2a.core.security_base import SecureA2AAgent
 """
 Orchestrator Simulation Framework
 Provides comprehensive simulation capabilities for testing workflow orchestration scenarios
 """
 
+from .comprehensiveOrchestratorAgentSdk import (
     OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask, 
     WorkflowStatus, TaskStatus, OrchestrationStrategy
 )
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +36,15 @@ class SimulationScenario(Enum):
 
 @dataclass
 class SimulatedAgent(SecureA2AAgent):
+    """Simulated agent for orchestration testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Simulated agent for orchestration testing"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     agent_id: str
     name: str
     capabilities: List[str]

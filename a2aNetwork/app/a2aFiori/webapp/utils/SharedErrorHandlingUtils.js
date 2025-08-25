@@ -168,7 +168,8 @@ sap.ui.define([
                             result
                                 .then(resolve)
                                 .catch(error => {
-                                    this._handleOperationFailure(error, remainingFallbacks, attemptOperation, reject, options);
+                                    this._handleOperationFailure(error, remainingFallbacks,
+                                        attemptOperation, reject, options);
                                 });
                         } else {
                             resolve(result);

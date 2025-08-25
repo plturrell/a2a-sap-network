@@ -19,7 +19,7 @@ from app.a2a.sdk.utils import create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 
-class SqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin), PerformanceMonitoringMixin:
+class SqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
     """SQL Agent SDK"""
     
     def __init__(self, base_url: str):

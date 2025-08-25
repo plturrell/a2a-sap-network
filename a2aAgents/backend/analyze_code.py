@@ -4,11 +4,9 @@ Simple code analysis script for the directories
 """
 
 import os
-import sys
 import glob
 import ast
 import json
-from pathlib import Path
 from typing import Dict, List, Any
 from collections import defaultdict
 

@@ -9,7 +9,8 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "sap/base/Log",
     "../utils/SecurityUtils"
-], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp,
+    sanitizeHTML, Log, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent4.ext.controller.ObjectPageExt", {

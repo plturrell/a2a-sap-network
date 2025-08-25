@@ -10,7 +10,8 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "../../../utils/SharedSecurityUtils",
     "a2a/network/agent8/ext/utils/AuthHandler"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) {
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML,
+    encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent8.ext.controller.ObjectPageExt", {
@@ -338,7 +339,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Storage optimization failed: " + errorMsg);
                 }.bind(this)
-            });
+            }));
         },
 
         _startOptimizationMonitoring: function(sOptimizationId) {
@@ -433,7 +434,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Data validation failed: " + errorMsg);
                 }.bind(this)
-            });
+            }));
         },
 
         _showValidationResults: function(validationData) {
@@ -483,7 +484,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Failed to export report: " + errorMsg);
                 }.bind(this)
-            });
+            }));
         },
 
         onCompressData: function() {

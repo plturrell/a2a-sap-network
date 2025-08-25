@@ -82,12 +82,24 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
         
         self.agent_sdk = agent_sdk
         
-        # Initialize A2A blockchain client
-        self.a2a_client = A2ANetworkClient(
-            agent_id=config.agent_id,
-            private_key=os.getenv('A2A_PRIVATE_KEY'),
-            rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
-        )
+        # Initialize A2A blockchain client (with development fallback)
+        try:
+            from ....core.networkClient import A2ANetworkClient
+            # Try protocol-compliant client first
+            self.a2a_client = A2ANetworkClient(
+                agent_id=config.agent_id,
+                blockchain_client=None,  # Use None for dev mode
+                config=None
+            )
+        except (TypeError, ImportError):
+            # Fallback to simple client
+            try:
+                from ....core.network_client import A2ANetworkClient as SimpleNetworkClient
+                self.a2a_client = SimpleNetworkClient(agent_id=config.agent_id)
+            except ImportError:
+                # Ultimate fallback - mock client for development
+                self.a2a_client = None
+                logger.warning("No A2A network client available - running in offline mode")
         
         # Goal management storage - now with persistent backend
         self.storage = get_distributed_storage()
@@ -1465,18 +1477,21 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
         logger.info(f"Initializing A2A handler for {self.config.agent_name}")
         
         try:
-            # Connect to blockchain
-            await self.a2a_client.connect()
-            
-            # Register agent on blockchain
-            await self.a2a_client.register_agent({
-                "agent_id": self.config.agent_id,
-                "agent_name": self.config.agent_name,
-                "capabilities": list(self.config.allowed_operations),
-                "version": self.config.agent_version
-            })
-            
-            logger.info(f"A2A handler initialized and registered on blockchain")
+            if self.a2a_client:
+                # Connect to blockchain
+                await self.a2a_client.connect()
+                
+                # Register agent on blockchain
+                await self.a2a_client.register_agent({
+                    "agent_id": self.config.agent_id,
+                    "agent_name": self.config.agent_name,
+                    "capabilities": list(self.config.allowed_operations),
+                    "version": self.config.agent_version
+                })
+                
+                logger.info(f"A2A handler initialized and registered on blockchain")
+            else:
+                logger.info(f"A2A handler initialized in offline mode")
         except Exception as e:
             logger.warning(f"A2A handler initialization failed: {e}")
     
@@ -1484,17 +1499,18 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
         """Cleanup agent resources"""
         logger.info(f"Shutting down A2A handler for {self.config.agent_name}")
         
-        try:
-            # Unregister from blockchain
-            await self.a2a_client.unregister_agent(self.config.agent_id)
-        except Exception as e:
-            logger.warning(f"Failed to unregister from blockchain: {e}")
-        
-        try:
-            # Disconnect
-            await self.a2a_client.disconnect()
-        except Exception as e:
-            logger.warning(f"Failed to disconnect from blockchain: {e}")
+        if self.a2a_client:
+            try:
+                # Unregister from blockchain
+                await self.a2a_client.unregister_agent(self.config.agent_id)
+            except Exception as e:
+                logger.warning(f"Failed to unregister from blockchain: {e}")
+            
+            try:
+                # Disconnect
+                await self.a2a_client.disconnect()
+            except Exception as e:
+                logger.warning(f"Failed to disconnect from blockchain: {e}")
         
         logger.info(f"A2A handler shutdown complete")
 

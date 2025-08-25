@@ -7,30 +7,30 @@ from unittest.mock import Mock, AsyncMock
 from dataclasses import dataclass, field
 import logging
 
-from .comprehensiveOrchestratorAgentSdk import (
-from app.a2a.core.security_base import SecureA2AAgent
 """
 Mock Orchestrator Agent for Testing
 Provides mock implementations for isolated testing of workflow orchestration
 """
 
-    OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask, WorkflowStatus,
-    TaskStatus, OrchestrationStrategy
+from .comprehensiveOrchestratorAgentSdk import (
+    ComprehensiveOrchestratorAgent, OrchestratorAgentSdk, WorkflowDefinition, 
+    WorkflowTask, WorkflowStatus, TaskStatus, OrchestrationStrategy
 )
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
 @dataclass
 class MockWorkflowExecution(SecureA2AAgent):
+    """Mock workflow execution for testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Mock workflow execution for testing"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     workflow_id: str
     status: WorkflowStatus
     start_time: datetime

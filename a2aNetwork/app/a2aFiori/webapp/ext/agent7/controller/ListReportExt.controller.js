@@ -975,7 +975,8 @@ sap.ui.define([
             const oModel = oDialog.getModel("create");
             const oData = oModel.getData();
 
-            if (!this._validateInput(oData.taskName) || !this._validateInput(oData.managedAgent) || !this._validateInput(oData.operationType)) {
+            if (!this._validateInput(oData.taskName) || !this._validateInput(oData.managedAgent) ||
+                !this._validateInput(oData.operationType)) {
                 const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
                 const sErrorMsg = oBundle.getText("validation.requiredFields") || "Please fill all required fields";
                 MessageBox.error(sErrorMsg);
@@ -1157,49 +1158,7 @@ sap.ui.define([
             return encodeXML(input.toString().trim());
         },
 
-        /**
-         * @function _sanitizeObject
-         * @description Recursively sanitizes object properties.
-         * @param {Object} obj - Object to sanitize
-         * @returns {Object} Sanitized object
-         * @private
-         */
-        _sanitizeObject(obj) {
-            if (!obj || typeof obj !== "object") {return {};}
-            const sanitized = {};
-            Object.keys(obj).forEach((key) => {
-                if (typeof obj[key] === "string") {
-                    sanitized[key] = this._sanitizeInput(obj[key]);
-                } else if (Array.isArray(obj[key])) {
-                    sanitized[key] = this._sanitizeArray(obj[key]);
-                } else if (typeof obj[key] === "object") {
-                    sanitized[key] = this._sanitizeObject(obj[key]);
-                } else {
-                    sanitized[key] = obj[key];
-                }
-            });
-            return sanitized;
-        },
 
-        /**
-         * @function _sanitizeArray
-         * @description Sanitizes array elements.
-         * @param {Array} arr - Array to sanitize
-         * @returns {Array} Sanitized array
-         * @private
-         */
-        _sanitizeArray(arr) {
-            if (!Array.isArray(arr)) {return [];}
-            return arr.map((item) => {
-                if (typeof item === "string") {
-                    return this._sanitizeInput(item);
-                } else if (typeof item === "object") {
-                    return this._sanitizeObject(item);
-                }
-                return item;
-
-            });
-        },
 
         /**
          * @function _createPerformanceChart
@@ -1225,39 +1184,6 @@ sap.ui.define([
             // This would create charts for operation counts, success rates, etc.
         },
 
-        /**
-         * @function _startRealtimeUpdates
-         * @description Establishes EventSource connection for real-time updates.
-         * @private
-         */
-        _startRealtimeUpdates() {
-            if (this._realtimeEventSource) {
-                this._realtimeEventSource.close();
-            }
-
-            this._realtimeEventSource = new EventSource("/a2a/agent7/v1/realtime-updates");
-
-            this._realtimeEventSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-
-                if (data.type === "agent_status_change") {
-                    this._throttledDashboardUpdate();
-                    const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                    const sStatusMsg = oBundle.getText("msg.agentStatusChanged") || "Agent status changed";
-                    MessageToast.show(sStatusMsg.replace("{0}", data.agentName).replace("{1}", data.status));
-                } else if (data.type === "performance_alert") {
-                    const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                    const sAlertMsg = oBundle.getText("msg.performanceAlert") || "Performance Alert";
-                    MessageToast.show(`${sAlertMsg }: ${ data.message}`);
-                }
-            }.bind(this);
-
-            this._realtimeEventSource.onerror = function() {
-                const oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                const sErrorMsg = oBundle.getText("error.realtimeDisconnected") || "Real-time updates disconnected";
-                MessageToast.show(sErrorMsg);
-            }.bind(this);
-        },
 
         /**
          * @function onCreateStreamProcessing
@@ -1610,17 +1536,6 @@ sap.ui.define([
             oChart.setModel(oChartModel);
         },
 
-        /**
-         * @function _hasRole
-         * @description Checks if current user has specified role.
-         * @param {string} role - Role to check
-         * @returns {boolean} True if user has role
-         * @private
-         */
-        _hasRole(role) {
-            const user = sap.ushell?.Container?.getUser();
-            return user && user.hasRole && user.hasRole(role);
-        },
 
         /**
          * @function _auditLogger

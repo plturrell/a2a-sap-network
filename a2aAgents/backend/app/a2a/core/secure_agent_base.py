@@ -87,9 +87,9 @@ class SecureA2AAgent(A2AAgentBase):
         # Initialize parent SDK
         super().__init__(
             agent_id=config.agent_id,
-            agent_name=config.agent_name,
-            description=getattr(config, 'description', f"Secure {config.agent_name}"),
-            base_url=getattr(config, 'base_url', 'http://localhost:4004'),
+            name=config.agent_name,  # Changed from agent_name to name
+            description=config.description or f"Secure {config.agent_name}",
+            base_url=config.base_url,
             capabilities=list(config.allowed_operations),
             version=config.agent_version
         )

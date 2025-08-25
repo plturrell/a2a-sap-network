@@ -4,21 +4,17 @@ SAP HANA Advanced Features Integration
 Implements spatial data processing, graph processing, and advanced analytics
 """
 
-import asyncio
-import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
+from datetime import datetime
+from typing import Dict, List, Any
+from dataclasses import dataclass
 from enum import Enum
-import numpy as np
 from app.core.loggingConfig import get_logger, LogCategory
 from app.core.exceptions import SecurityError
 
-from sqlalchemy import text, create_engine
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from geoalchemy2 import Geography, Geometry
-from geoalchemy2.functions import ST_Distance, ST_Within, ST_Buffer, ST_Intersects
+from geoalchemy2.functions import ST_Distance, ST_Within
 
 from app.core.config import get_settings
 

@@ -53,7 +53,7 @@ async def validate_live_testing():
                         "structure": "Simple boolean success response"
                     }
                 })
-        except httpx.RequestError as e:
+        except Exception as e:
             agents_tested.append({
                 "agent": "Agent 4", 
                 "status": f"❌ Error: {e}",
@@ -82,7 +82,7 @@ async def validate_live_testing():
                         "structure": "Status + numeric score response"
                     }
                 })
-        except httpx.RequestError as e:
+        except Exception as e:
             agents_tested.append({
                 "agent": "Agent 5",
                 "status": f"❌ Error: {e}",

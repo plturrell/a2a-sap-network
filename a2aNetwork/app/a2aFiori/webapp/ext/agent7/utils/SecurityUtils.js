@@ -286,11 +286,11 @@ sap.ui.define([
                         if (data && data.token) {
                             resolve(data.token);
                         } else {
-                            reject("Invalid CSRF token response");
+                            reject(new Error("Invalid CSRF token response"));
                         }
                     },
                     error() {
-                        reject("Failed to retrieve CSRF token");
+                        reject(new Error("Failed to retrieve CSRF token"));
                     }
                 });
             });

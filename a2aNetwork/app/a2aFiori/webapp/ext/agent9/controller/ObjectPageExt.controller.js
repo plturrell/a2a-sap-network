@@ -672,8 +672,10 @@ sap.ui.define([
                     timestamp: logEntry.timestamp,
                     level: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.level) : logEntry.level,
                     message: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.message) : logEntry.message,
-                    component: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.component) : logEntry.component,
-                    requestId: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.requestId) : logEntry.requestId,
+                    component: this._securityUtils ?
+                        this._securityUtils.encodeHTML(logEntry.component) : logEntry.component,
+                    requestId: this._securityUtils ?
+                        this._securityUtils.encodeHTML(logEntry.requestId) : logEntry.requestId,
                     duration: parseInt(logEntry.duration, 10) || 0,
                     statusCode: parseInt(logEntry.statusCode, 10) || 0
                 };
@@ -911,15 +913,21 @@ sap.ui.define([
                 break;
             case "BASIC_AUTH":
                 oSanitized.basicAuth = {
-                    username: this._securityUtils ? this._securityUtils.sanitizeInput(oData.basicAuth.username) : oData.basicAuth.username.trim(),
+                    username: this._securityUtils ?
+                        this._securityUtils.sanitizeInput(oData.basicAuth.username) :
+                        oData.basicAuth.username.trim(),
                     password: oData.basicAuth.password // Password not sanitized to preserve special characters
                 };
                 break;
             case "OAUTH2":
                 oSanitized.oauth2 = {
-                    clientId: this._securityUtils ? this._securityUtils.sanitizeInput(oData.oauth2.clientId) : oData.oauth2.clientId.trim(),
+                    clientId: this._securityUtils ?
+                        this._securityUtils.sanitizeInput(oData.oauth2.clientId) :
+                        oData.oauth2.clientId.trim(),
                     clientSecret: oData.oauth2.clientSecret.trim(),
-                    tokenUrl: this._securityUtils ? this._securityUtils.sanitizeInput(oData.oauth2.tokenUrl) : oData.oauth2.tokenUrl.trim(),
+                    tokenUrl: this._securityUtils ?
+                        this._securityUtils.sanitizeInput(oData.oauth2.tokenUrl) :
+                        oData.oauth2.tokenUrl.trim(),
                     scope: this._securityUtils ? this._securityUtils.sanitizeInput(oData.oauth2.scope || "") : (oData.oauth2.scope || "").trim()
                 };
                 break;

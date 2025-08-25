@@ -4,14 +4,11 @@ Replaces HTTP-based registry with A2A protocol compliant implementation
 """
 
 import logging
-import json
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 from datetime import datetime
-import asyncio
 
-from app.a2a.sdk.agentBase import A2AAgentBase
 from app.a2a.sdk import a2a_handler, a2a_skill
-from app.a2a.sdk.types import A2AMessage, MessageRole, AgentConfig
+from app.a2a.sdk.types import A2AMessage, AgentConfig
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.core.security_base import SecureA2AAgent
 

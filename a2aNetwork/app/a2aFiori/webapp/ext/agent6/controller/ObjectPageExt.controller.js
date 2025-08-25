@@ -11,7 +11,8 @@ sap.ui.define([
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
     "../utils/SecurityUtils"
-], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML, SecurityUtils) => {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL,
+    Log, Router, escapeRegExp, sanitizeHTML, SecurityUtils) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent6.ext.controller.ObjectPageExt", {
@@ -160,7 +161,7 @@ sap.ui.define([
                             resolve({ data, textStatus, xhr });
                         },
                         error(xhr, textStatus, errorThrown) {
-                            reject({ xhr, textStatus, errorThrown });
+                            reject(new Error(errorThrown || textStatus || "Request failed"));
                         }
                     });
 

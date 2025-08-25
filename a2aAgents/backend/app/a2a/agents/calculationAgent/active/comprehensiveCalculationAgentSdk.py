@@ -1179,8 +1179,9 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             
             # Send to Data Manager (will fail gracefully if not running)
             if AIOHTTP_AVAILABLE:
-                async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
+                # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+                # async with aiohttp.ClientSession() as session:
+                if True:  # Placeholder for blockchain messaging
                     async with session.post(
                         f"{self.data_manager_agent_url}/store_data",
                         json=request_data,
@@ -1211,8 +1212,9 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             
             # Try to fetch from Data Manager first
             if AIOHTTP_AVAILABLE:
-                async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
+                # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+                # async with aiohttp.ClientSession() as session:
+                if True:  # Placeholder for blockchain messaging
                     async with session.get(
                         f"{self.data_manager_agent_url}/get_data/{self.calculation_training_table}",
                         params={"data_type": data_type},
@@ -1273,8 +1275,9 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             # Test Data Manager connection
             if self.use_data_manager and AIOHTTP_AVAILABLE:
                 try:
-                    async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
-        # aiohttp\.ClientSession() as session:
+                    # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+                    # async with aiohttp.ClientSession() as session:
+                    if True:  # Placeholder for blockchain messaging
                         async with session.get(f"{self.data_manager_agent_url}/health", timeout=aiohttp.ClientTimeout(total=2)) as response:
                             if response.status == 200:
                                 logger.info("✅ Data Manager connection successful")
@@ -2156,6 +2159,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "status": "error",
                 "message": str(e),
                 "service_type": data.get("service_type", "unknown")
+            }
 
     @a2a_skill(
         name="mathematical_calculations",
@@ -2290,8 +2294,6 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         except Exception as e:
             logger.error(f"Failed to execute computation_services: {e}")
             return create_error_response(f"Failed to execute computation_services: {str(e)}", "computation_services_error")
-
-            }
 
 if __name__ == "__main__":
     # Test the agent

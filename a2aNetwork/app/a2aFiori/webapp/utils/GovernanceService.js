@@ -558,7 +558,8 @@ sap.ui.define([
          * @returns {number} Quorum percentage
          */
         _calculateQuorumPercentage(oVotes) {
-            const iTotalVotes = parseInt(oVotes.forVotes, 10) + parseInt(oVotes.againstVotes, 10) + parseInt(oVotes.abstainVotes, 10);
+            const iTotalVotes = parseInt(oVotes.forVotes, 10) + parseInt(oVotes.againstVotes, 10) +
+                parseInt(oVotes.abstainVotes, 10);
             // Mock total supply for calculation
             const iTotalSupply = 1000000000;
             return Math.round((iTotalVotes / iTotalSupply) * 100);

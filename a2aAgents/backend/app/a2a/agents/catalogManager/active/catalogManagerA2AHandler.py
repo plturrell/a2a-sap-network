@@ -311,6 +311,6 @@ class catalogManagerA2AHandler(SecureA2AAgent):
 
 
 # Factory function to create A2A handler
-def create_{folder_name}_a2a_handler(agent_sdk: {sdk_class}) -> {class_name}:
-    """Create A2A-compliant handler for {agent_name}"""
-    return {class_name}(agent_sdk)
+def create_catalogManager_a2a_handler(agent_sdk: ComprehensivecatalogManagerSDK) -> CatalogManagerA2AHandler:
+    """Create A2A-compliant handler for Catalog Manager"""
+    return CatalogManagerA2AHandler(agent_sdk)

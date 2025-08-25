@@ -10,7 +10,8 @@ sap.ui.define([
     "sap/ui/core/routing/Router",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML"
-], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML) => {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL,
+    Log, Router, escapeRegExp, sanitizeHTML) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent7.ext.controller.ObjectPageExt", {
@@ -129,7 +130,7 @@ sap.ui.define([
                             resolve({ data, textStatus, xhr });
                         },
                         error(xhr, textStatus, errorThrown) {
-                            reject({ xhr, textStatus, errorThrown });
+                            reject(new Error(errorThrown || textStatus || "Request failed"));
                         }
                     });
 
@@ -1107,7 +1108,7 @@ sap.ui.define([
 
         onDeleteParameter(oEvent) {
             const sPath = oEvent.getParameter("listItem").getBindingContext("create").getPath();
-            const iIndex = parseInt(sPath.split("/", 10).pop());
+            const iIndex = parseInt(sPath.split("/", 10).pop(), 10);
             const aParameters = this._oCreateModel.getProperty("/parameters");
 
             aParameters.splice(iIndex, 1);
