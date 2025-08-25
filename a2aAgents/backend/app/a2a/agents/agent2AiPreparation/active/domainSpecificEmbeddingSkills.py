@@ -1,15 +1,12 @@
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any
 import numpy as np
 from datetime import datetime
 import logging
 import json
 from sentence_transformers import SentenceTransformer
-import torch
-from transformers import AutoTokenizer, AutoModel
 import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 from concurrent.futures import ThreadPoolExecutor
-import hashlib
 
 from app.a2a.core.security_base import SecureA2AAgent
 """

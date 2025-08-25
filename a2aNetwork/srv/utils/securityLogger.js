@@ -462,7 +462,7 @@ class SecurityLogger {
     /**
      * Send immediate alert for critical events
      */
-    async sendImmediateAlert(event) {
+    sendImmediateAlert(event) {
         const alertData = {
             type: 'CRITICAL_SECURITY_EVENT',
             eventType: event.type,

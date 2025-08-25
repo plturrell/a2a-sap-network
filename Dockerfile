@@ -75,11 +75,12 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 # Copy application code
 COPY --from=builder --chown=a2auser:a2auser /app .
 
-# Copy verification script and start script, make them executable
+# Copy verification script and start scripts, make them executable
 COPY --chown=a2auser:a2auser scripts/verify-18-steps.sh /app/scripts/
-COPY --chown=a2auser:a2auser scripts/start.sh /app/
+COPY --chown=a2auser:a2auser scripts/start-fly.sh /app/scripts/
+COPY --chown=a2auser:a2auser start.sh /app/
 COPY --chown=a2auser:a2auser scripts/start-all-agents.sh /app/scripts/
-RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh /app/scripts/start-all-agents.sh
+RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh /app/scripts/start-all-agents.sh /app/scripts/start-fly.sh || true
 
 # Copy nginx configuration
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
@@ -142,7 +143,12 @@ case "${1}" in
     complete)
         echo "Starting complete A2A platform with all services..."
         cd /app
-        exec /app/scripts/start.sh complete
+        # Use optimized startup for Fly.io if available
+        if [ -f /app/scripts/start-fly.sh ] && [ "$A2A_ENVIRONMENT" = "production" ]; then
+            exec /app/scripts/start-fly.sh
+        else
+            exec /app/start.sh complete
+        fi
         ;;
     backend)
         echo "Starting A2A Backend Service..."

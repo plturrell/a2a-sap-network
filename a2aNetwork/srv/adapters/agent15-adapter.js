@@ -536,7 +536,7 @@ class Agent15Adapter extends BaseAdapter {
                     response = await fetch(`${baseUrl}/api/v1/templates`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
-                    return data;
+                    return await response.json();
 
                 case 'create_workflow_template':
                     response = await fetch(`${baseUrl}/api/v1/templates`, {
@@ -601,7 +601,8 @@ class Agent15Adapter extends BaseAdapter {
                     throw new Error(`Unknown method: ${method}`);
             }
         } catch (error) {
-            console.error('Agent 15 backend call failed:', error.message);
+            // Log error for debugging - use proper logging in production
+            // console.error('Agent 15 backend call failed:', error.message);
             throw error;
         }
     }

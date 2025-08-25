@@ -8,13 +8,10 @@ import asyncio
 import json
 import sys
 import os
-from typing import Dict, Any
-from uuid import uuid4
 
 # Add parent directories to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', '..'))
 
-from a2aAgents.backend.app.a2a.sdk.types import A2AMessage, MessagePart, MessageRole
 from a2aAgents.backend.app.a2a.agents.agent17ChatAgent.active.agent17ChatAgentSdk import Agent17ChatAgent
 
 async def test_blockchain_to_a2a_conversion():

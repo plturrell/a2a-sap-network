@@ -23,7 +23,7 @@ sap.ui.define([
          * Removes IP addresses from blocked list with reason tracking
          */
         onUnblockIP: function (oEvent) {
-            const that = this;
+            // const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
 
@@ -52,7 +52,7 @@ sap.ui.define([
          * Increases block expiration time for temporary blocks
          */
         onExtendBlock: function (oEvent) {
-            const that = this;
+            // const that = this;
             const oModel = this.getModel();
             const aSelectedContexts = this._getSelectedContexts(oEvent);
 

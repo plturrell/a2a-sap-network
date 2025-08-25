@@ -333,6 +333,7 @@ class A2ACacheService extends EventEmitter {
         }
 
         if (removedExpired > 0) {
+            // Cleanup completed
         }
     }
 

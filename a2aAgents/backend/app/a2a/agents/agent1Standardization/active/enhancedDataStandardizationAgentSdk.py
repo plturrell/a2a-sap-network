@@ -29,15 +29,13 @@ To send messages to other agents, use:
 
 
 import asyncio
-import hashlib
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os
-import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional
 from uuid import uuid4
 from dataclasses import dataclass, field
 import traceback
@@ -66,10 +64,7 @@ except ImportError:
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
 # Import SDK components
-from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
-    A2AMessage, MessageRole, create_agent_id
-)
+from app.a2a.sdk import a2a_skill
 from app.a2a.sdk.utils import create_error_response, create_success_response
 
 # Import AI Intelligence Framework

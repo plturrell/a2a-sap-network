@@ -192,6 +192,7 @@ class WebSocketMonitor {
                 if (err) {
                     this.log.error('Error closing WebSocket monitor database:', err);
                 } else {
+                    // Database closed successfully
                 }
             });
         }

@@ -173,8 +173,11 @@ class AIBehaviorAnalyzer:
         user_agents = [r.user_agent for r in recent_requests if r.user_agent]
         ua_diversity = len(set(user_agents)) / max(1, len(user_agents))
 
-        # Classification logic
-        confidence = 0.7
+        # Calculate dynamic classification confidence
+        confidence = self._calculate_behavior_classification_confidence(
+            requests_per_minute, error_rate, unique_endpoints, session_duration,
+            request_patterns, user_agent_consistency
+        )
 
         # Attack patterns
         if requests_per_minute > 100 and error_rate > 0.7:
@@ -443,7 +446,7 @@ class AdaptiveRateLimiter:
             self.user_profiles[user_id] = UserBehaviorProfile(
                 user_id=user_id,
                 behavior_class=UserBehaviorClass.LEGITIMATE,
-                confidence=0.5,
+                confidence=self._calculate_initial_user_confidence(user_id, endpoint, request_meta),
                 request_patterns=deque(maxlen=1000)
             )
 
@@ -545,9 +548,10 @@ class AdaptiveRateLimiter:
         else:
             longevity_bonus = 0
 
-        # Combine factors
+        # Combine factors with dynamic weighting
+        dynamic_weight = self._calculate_dynamic_trust_weight(profile, confidence)
         trust_score = (
-            behavior_trust * confidence * 0.5 +
+            behavior_trust * confidence * dynamic_weight +
             success_influence +
             consistency_influence +
             longevity_bonus
@@ -796,6 +800,179 @@ class AdaptiveRateLimiter:
             "recent_false_positives": len(self.false_positives),
             "active_rules": len(self.rules)
         }
+    
+    def _calculate_behavior_classification_confidence(self, requests_per_minute: float, 
+                                                    error_rate: float, unique_endpoints: int,
+                                                    session_duration: float, request_patterns: dict,
+                                                    user_agent_consistency: float) -> float:
+        """Calculate dynamic confidence for behavior classification"""
+        try:
+            confidence_factors = []
+            
+            # Factor 1: Request rate confidence (clear patterns = higher confidence)
+            if requests_per_minute > 100:  # Very high rate
+                confidence_factors.append(0.9)
+            elif requests_per_minute > 50:  # High rate
+                confidence_factors.append(0.8)
+            elif requests_per_minute < 10:  # Low rate
+                confidence_factors.append(0.7)
+            else:  # Medium rate
+                confidence_factors.append(0.6)
+            
+            # Factor 2: Error rate confidence
+            if error_rate > 0.8 or error_rate < 0.1:  # Very high or very low = clear pattern
+                confidence_factors.append(0.8)
+            else:  # Moderate error rate = less clear
+                confidence_factors.append(0.5)
+            
+            # Factor 3: Endpoint diversity confidence
+            if unique_endpoints > 20:  # High diversity
+                confidence_factors.append(0.7)
+            elif unique_endpoints < 3:  # Low diversity = possible bot
+                confidence_factors.append(0.8)
+            else:
+                confidence_factors.append(0.6)
+            
+            # Factor 4: Session duration confidence
+            if session_duration > 3600:  # Long session = likely legitimate
+                confidence_factors.append(0.8)
+            elif session_duration < 60:  # Very short = possible attack
+                confidence_factors.append(0.7)
+            else:
+                confidence_factors.append(0.6)
+            
+            # Factor 5: User agent consistency confidence
+            if user_agent_consistency > 0.9:  # Very consistent
+                confidence_factors.append(0.7)
+            elif user_agent_consistency < 0.3:  # Very inconsistent = suspicious
+                confidence_factors.append(0.8)
+            else:
+                confidence_factors.append(0.6)
+            
+            # Calculate weighted average
+            return sum(confidence_factors) / len(confidence_factors)
+            
+        except Exception as e:
+            logger.error(f"Behavior classification confidence calculation failed: {e}")
+            return 0.7  # Safe default
+    
+    def _calculate_initial_user_confidence(self, user_id: str, endpoint: str, 
+                                         request_meta: dict) -> float:
+        """Calculate initial confidence for new users"""
+        try:
+            confidence = 0.5  # Base confidence for new users
+            
+            # Factor 1: User ID characteristics
+            if len(user_id) > 20:  # Longer user IDs might be more legitimate
+                confidence += 0.1
+            
+            # Factor 2: Endpoint reputation
+            endpoint_reputation = self._get_endpoint_reputation(endpoint)
+            if endpoint_reputation > 0.8:
+                confidence += 0.1
+            elif endpoint_reputation < 0.3:
+                confidence -= 0.1
+            
+            # Factor 3: Request metadata quality
+            if request_meta:
+                if 'user_agent' in request_meta and len(request_meta['user_agent']) > 10:
+                    confidence += 0.1
+                if 'referer' in request_meta:
+                    confidence += 0.05
+                if 'accept_language' in request_meta:
+                    confidence += 0.05
+            
+            # Factor 4: Time-based factors
+            import datetime
+            current_hour = datetime.datetime.now().hour
+            if 9 <= current_hour <= 17:  # Business hours = more legitimate
+                confidence += 0.1
+            elif 22 <= current_hour or current_hour <= 5:  # Late night = more suspicious
+                confidence -= 0.1
+            
+            return max(0.2, min(0.9, confidence))
+            
+        except Exception as e:
+            logger.error(f"Initial user confidence calculation failed: {e}")
+            return 0.5
+    
+    def _get_endpoint_reputation(self, endpoint: str) -> float:
+        """Get reputation score for endpoint based on historical data"""
+        try:
+            # In production, this would query actual reputation database
+            # For now, calculate based on endpoint characteristics
+            
+            reputation = 0.5  # Base reputation
+            
+            # Public/common endpoints have higher reputation
+            high_reputation_patterns = ['/api/health', '/api/status', '/api/docs', 
+                                      '/api/users', '/api/auth']
+            low_reputation_patterns = ['/admin/', '/debug/', '/test/', '/.env', 
+                                     '/config/', '/backup/']
+            
+            endpoint_lower = endpoint.lower()
+            
+            for pattern in high_reputation_patterns:
+                if pattern in endpoint_lower:
+                    reputation += 0.3
+                    break
+            
+            for pattern in low_reputation_patterns:
+                if pattern in endpoint_lower:
+                    reputation -= 0.4
+                    break
+            
+            # Length-based adjustment
+            if len(endpoint) > 100:  # Very long endpoints = suspicious
+                reputation -= 0.2
+            
+            return max(0.1, min(1.0, reputation))
+            
+        except Exception:
+            return 0.5
+    
+    def _calculate_dynamic_trust_weight(self, profile: 'UserBehaviorProfile', 
+                                      confidence: float) -> float:
+        """Calculate dynamic weighting factor for trust calculation"""
+        try:
+            base_weight = 0.5  # Default weight
+            
+            # Factor 1: Confidence level influences weight
+            confidence_weight = confidence * 0.6  # Scale confidence to 0-0.6 range
+            
+            # Factor 2: Profile maturity influences weight
+            if hasattr(profile, 'total_requests'):
+                maturity_factor = min(0.3, profile.total_requests / 1000)  # Up to 0.3 bonus
+            else:
+                maturity_factor = 0
+            
+            # Factor 3: Recent behavior consistency
+            consistency_weight = 0.1  # Default
+            if hasattr(profile, 'request_patterns') and len(profile.request_patterns) > 10:
+                # Calculate consistency in recent patterns
+                recent_patterns = list(profile.request_patterns)[-10:]
+                if recent_patterns:
+                    intervals = []
+                    for i in range(1, len(recent_patterns)):
+                        interval = recent_patterns[i].timestamp - recent_patterns[i-1].timestamp
+                        intervals.append(interval)
+                    
+                    if intervals:
+                        import statistics
+                        avg_interval = statistics.mean(intervals)
+                        if avg_interval > 0:
+                            interval_variance = statistics.variance(intervals) if len(intervals) > 1 else 0
+                            consistency = 1.0 / (1.0 + interval_variance / avg_interval)
+                            consistency_weight = consistency * 0.2  # Up to 0.2 bonus
+            
+            # Combine all factors
+            total_weight = base_weight + confidence_weight + maturity_factor + consistency_weight
+            
+            return max(0.2, min(1.0, total_weight))
+            
+        except Exception as e:
+            logger.error(f"Dynamic trust weight calculation failed: {e}")
+            return 0.5
 
 
 # Global instance for easy access

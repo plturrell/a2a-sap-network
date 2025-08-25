@@ -26,10 +26,9 @@ import logging
 import math
 import os
 import struct
-import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 
 # Trust system imports
@@ -71,14 +70,14 @@ except ImportError:
     def monitor_a2a_operation(func): return func
 from app.a2a.sdk import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
-    A2AMessage, MessageRole, create_agent_id
+    A2AMessage
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
-    AIIntelligenceFramework, AIIntelligenceConfig,
+    AIIntelligenceFramework,
     create_ai_intelligence_framework, create_enhanced_agent_config
 )
 from app.a2a.core.security_base import SecureA2AAgent

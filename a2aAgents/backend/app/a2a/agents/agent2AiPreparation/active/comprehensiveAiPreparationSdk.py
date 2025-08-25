@@ -13,44 +13,33 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
-# Performance: Consider using asyncio.gather for concurrent operations
-import json
 import logging
 import time
 import hashlib
 import pickle
 import os
 import re
-from typing import Dict, List, Any, Optional, Tuple, Union, Set
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+from datetime import datetime
 from dataclasses import dataclass, field
 from collections import defaultdict
 from enum import Enum
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
 # Real ML and data analysis libraries
 from sklearn.ensemble import RandomForestClassifier, IsolationForest
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.impute import KNNImputer
-import warnings
-warnings.filterwarnings('ignore', category=UserWarning)
 
-# Data validation and quality
-try:
-    import great_expectations as ge
-    GE_AVAILABLE = True
-except ImportError:
-    GE_AVAILABLE = False
 
 # Semantic chunking and NLP
 try:
     import nltk
-    from nltk.tokenize import sent_tokenize, word_tokenize
+    from nltk.tokenize import sent_tokenize
     NLTK_AVAILABLE = True
 except ImportError:
     NLTK_AVAILABLE = False
@@ -63,19 +52,12 @@ except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 # Import A2A SDK components
-from app.a2a.sdk.agentBase import A2AAgentBase
-from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole
-from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
+from app.a2a.sdk import a2a_skill
+from app.a2a.sdk.utils import create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Blockchain integration
-try:
-    from web3 import Web3
-    from eth_account import Account
-    WEB3_AVAILABLE = True
-except ImportError:
-    WEB3_AVAILABLE = False
+WEB3_AVAILABLE = False  # Web3 import removed as unused
 
 # Grok AI Integration
 try:
@@ -85,7 +67,7 @@ except ImportError:
     GROK_AVAILABLE = False
 
 # MCP decorators for tool integration
-from mcp import Tool as mcp_tool, Resource as mcp_resource, Prompt as mcp_prompt
+from mcp import Tool as mcp_tool
 MCP_AVAILABLE = True
 
 # Cross-agent communication
@@ -93,7 +75,6 @@ from app.a2a.network.connector import NetworkConnector
 NETWORK_AVAILABLE = True
 
 # Blockchain queue integration
-from app.a2a.sdk.blockchainQueueMixin import BlockchainQueueMixin
 from app.a2a.core.security_base import SecureA2AAgent
 
 

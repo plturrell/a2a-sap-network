@@ -546,15 +546,28 @@ if 'agent17' in agent_routers:
 
 logger.info(f"Successfully loaded {len(agent_routers)} agent routers")
 
-# Health endpoint for Docker health checks
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "app": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "timestamp": "2025-08-01T16:22:00Z"
-    }
+# Import health router
+try:
+    from app.health import router as health_router
+    app.include_router(health_router, tags=["Health"])
+except ImportError:
+    # Fallback health endpoint for Docker health checks
+    @app.get("/health")
+    async def health():
+        return {
+            "status": "healthy",
+            "app": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+            "timestamp": "2025-08-01T16:22:00Z"
+        }
+
+# Import monitoring router
+try:
+    from app.monitoring import router as monitoring_router
+    app.include_router(monitoring_router, prefix="/api/v1", tags=["Monitoring"])
+    logger.info("Monitoring dashboard enabled at /api/v1/monitoring/dashboard")
+except ImportError as e:
+    logger.warning(f"Monitoring dashboard not available: {e}")
 
 # Root endpoint
 @app.get("/")

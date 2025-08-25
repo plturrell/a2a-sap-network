@@ -21,21 +21,22 @@ const customMiddleware = {
     
     // Request logging middleware
     (req, res, next) => {
-      const start = Date.now();
+      // const start = Date.now();
       const originalSend = res.send;
       
       res.send = function(body) {
-        const duration = Date.now() - start;
-        console.log(JSON.stringify({
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          method: req.method,
-          url: req.url,
-          statusCode: res.statusCode,
-          duration: duration,
-          userAgent: req.headers['user-agent'],
-          ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress
-        }));
+        // const duration = Date.now() - start;
+        // Request logging - commented for production
+        // console.log(JSON.stringify({
+        //   timestamp: new Date().toISOString(),
+        //   requestId: req.requestId,
+        //   method: req.method,
+        //   url: req.url,
+        //   statusCode: res.statusCode,
+        //   duration: duration,
+        //   userAgent: req.headers['user-agent'],
+        //   ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        // }));
         originalSend.call(this, body);
       };
       

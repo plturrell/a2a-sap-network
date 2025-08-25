@@ -882,33 +882,290 @@ class WeightedVoteConsensus(ConsensusAlgorithm):
         return {"consensus": None, "confidence": 0.0, "algorithm": "weighted_vote"}
 
 
-# Simplified implementations for other consensus algorithms
+# Real implementations for consensus algorithms
 class ByzantineFaultTolerantConsensus(ConsensusAlgorithm):
     async def reach_consensus(
         self, votes: Dict[str, Any], agents: List[str], agent_registry: Dict[str, Agent]
     ) -> Dict[str, Any]:
-        # Simplified BFT - in practice would be much more complex
-        return {
-            "consensus": "bft_result",
-            "confidence": 0.9,
-            "algorithm": "byzantine_fault_tolerant",
-        }
+        """
+        Implement real Byzantine Fault Tolerant consensus algorithm.
+        Can tolerate up to (n-1)/3 faulty/malicious nodes.
+        """
+        n = len(agents)
+        if n == 0:
+            return {"consensus": None, "confidence": 0.0, "algorithm": "byzantine_fault_tolerant"}
+        
+        # BFT requires at least 3f+1 nodes to tolerate f faults
+        f = (n - 1) // 3  # Maximum Byzantine faults tolerable
+        required_agreement = n - f  # Need n-f nodes to agree
+        
+        # Extract and validate votes
+        valid_votes = {}
+        vote_counts = {}
+        
+        for agent_id, vote_data in votes.items():
+            if isinstance(vote_data, dict) and "vote" in vote_data:
+                vote_value = str(vote_data["vote"])  # Normalize to string
+                valid_votes[agent_id] = vote_value
+                
+                if vote_value not in vote_counts:
+                    vote_counts[vote_value] = []
+                vote_counts[vote_value].append(agent_id)
+        
+        # Find vote with most support
+        if not vote_counts:
+            return {"consensus": None, "confidence": 0.0, "algorithm": "byzantine_fault_tolerant"}
+        
+        # Sort votes by count
+        sorted_votes = sorted(vote_counts.items(), key=lambda x: len(x[1]), reverse=True)
+        dominant_vote, supporting_agents = sorted_votes[0]
+        support_count = len(supporting_agents)
+        
+        # Check if we have Byzantine agreement
+        consensus_reached = support_count >= required_agreement
+        
+        if consensus_reached:
+            # Calculate confidence based on agreement strength
+            agreement_ratio = support_count / n
+            
+            # Verify consistency among supporting agents
+            confidence_scores = []
+            for agent_id in supporting_agents:
+                if agent_id in votes and isinstance(votes[agent_id], dict):
+                    conf = votes[agent_id].get("confidence", 0.5)
+                    confidence_scores.append(conf)
+            
+            # Remove outliers (potential Byzantine nodes)
+            if len(confidence_scores) > 2 * f:
+                confidence_scores.sort()
+                # Trim f lowest and f highest scores
+                trimmed_scores = confidence_scores[f:len(confidence_scores)-f] if f > 0 else confidence_scores
+                avg_confidence = sum(trimmed_scores) / len(trimmed_scores) if trimmed_scores else 0.5
+            else:
+                avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
+            
+            # Apply Byzantine penalty if too many outliers
+            byzantine_ratio = (n - support_count) / n
+            if byzantine_ratio > 0.33:  # More than 1/3 Byzantine
+                avg_confidence *= 0.7  # Reduce confidence
+            
+            return {
+                "consensus": dominant_vote,
+                "confidence": min(0.95, avg_confidence * agreement_ratio),
+                "algorithm": "byzantine_fault_tolerant",
+                "support_count": support_count,
+                "required_agreement": required_agreement,
+                "byzantine_tolerance": f
+            }
+        else:
+            return {
+                "consensus": None,
+                "confidence": 0.0,
+                "algorithm": "byzantine_fault_tolerant",
+                "reason": f"Insufficient agreement: {support_count}/{required_agreement} required"
+            }
 
 
 class RaftConsensus(ConsensusAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.leader_id = None
+        self.term = 0
+        self.voted_for = {}
+        
     async def reach_consensus(
         self, votes: Dict[str, Any], agents: List[str], agent_registry: Dict[str, Agent]
     ) -> Dict[str, Any]:
-        # Simplified Raft - in practice would implement leader election, log replication
-        return {"consensus": "raft_result", "confidence": 0.95, "algorithm": "raft"}
+        """
+        Implement Raft-inspired consensus algorithm.
+        Includes leader election and vote aggregation.
+        """
+        n = len(agents)
+        if n == 0:
+            return {"consensus": None, "confidence": 0.0, "algorithm": "raft"}
+        
+        # Step 1: Leader Election (simplified)
+        # In real Raft, this would involve terms, heartbeats, and timeouts
+        leader_votes = {}
+        
+        for agent_id, vote_data in votes.items():
+            if isinstance(vote_data, dict) and "leader_preference" in vote_data:
+                preferred_leader = vote_data["leader_preference"]
+                if preferred_leader not in leader_votes:
+                    leader_votes[preferred_leader] = 0
+                leader_votes[preferred_leader] += 1
+        
+        # Select leader by majority vote
+        if not leader_votes:
+            # No leader preferences, select based on highest confidence
+            confidence_scores = {}
+            for agent_id, vote_data in votes.items():
+                if isinstance(vote_data, dict) and "confidence" in vote_data:
+                    confidence_scores[agent_id] = vote_data["confidence"]
+            
+            if confidence_scores:
+                self.leader_id = max(confidence_scores.items(), key=lambda x: x[1])[0]
+            else:
+                self.leader_id = agents[0] if agents else None
+        else:
+            # Leader with most votes
+            self.leader_id = max(leader_votes.items(), key=lambda x: x[1])[0]
+        
+        # Step 2: Leader aggregates votes
+        if self.leader_id and self.leader_id in votes:
+            leader_vote = votes[self.leader_id]
+            
+            # Count followers who agree with leader
+            agreeing_followers = 0
+            total_confidence = 0.0
+            
+            if isinstance(leader_vote, dict) and "vote" in leader_vote:
+                leader_decision = str(leader_vote["vote"])
+                
+                for agent_id, vote_data in votes.items():
+                    if agent_id != self.leader_id and isinstance(vote_data, dict):
+                        if str(vote_data.get("vote", "")) == leader_decision:
+                            agreeing_followers += 1
+                            total_confidence += vote_data.get("confidence", 0.5)
+                
+                # Raft requires majority agreement
+                majority = (n // 2) + 1
+                total_agreement = agreeing_followers + 1  # +1 for leader
+                
+                if total_agreement >= majority:
+                    # Calculate consensus confidence
+                    avg_follower_confidence = total_confidence / agreeing_followers if agreeing_followers > 0 else 0.5
+                    leader_confidence = leader_vote.get("confidence", 0.5)
+                    
+                    # Weight leader confidence higher
+                    consensus_confidence = (leader_confidence * 0.6 + avg_follower_confidence * 0.4)
+                    
+                    return {
+                        "consensus": leader_decision,
+                        "confidence": min(0.95, consensus_confidence),
+                        "algorithm": "raft",
+                        "leader": self.leader_id,
+                        "agreement_count": total_agreement,
+                        "majority_required": majority
+                    }
+        
+        # No consensus reached
+        return {
+            "consensus": None,
+            "confidence": 0.0,
+            "algorithm": "raft",
+            "reason": "No majority agreement on leader or decision"
+        }
 
 
 class ProofOfStakeConsensus(ConsensusAlgorithm):
     async def reach_consensus(
         self, votes: Dict[str, Any], agents: List[str], agent_registry: Dict[str, Agent]
     ) -> Dict[str, Any]:
-        # Simplified PoS - in practice would implement stake-based selection
-        return {"consensus": "pos_result", "confidence": 0.85, "algorithm": "proof_of_stake"}
+        """
+        Implement real Proof of Stake consensus algorithm.
+        Validators are selected based on their stake (reputation/trust scores).
+        """
+        if not agents:
+            return {"consensus": None, "confidence": 0.0, "algorithm": "proof_of_stake"}
+        
+        # Step 1: Calculate stakes for each agent
+        agent_stakes = {}
+        total_stake = 0.0
+        
+        for agent_id in agents:
+            if agent_id in agent_registry:
+                agent = agent_registry[agent_id]
+                # Use trust score as stake (could also use performance metrics)
+                stake = getattr(agent, 'trust_score', 0.5)
+                
+                # Boost stake based on past performance
+                if hasattr(agent, 'successful_tasks'):
+                    performance_bonus = min(0.3, agent.successful_tasks * 0.01)
+                    stake += performance_bonus
+                
+                agent_stakes[agent_id] = min(1.0, stake)  # Cap at 1.0
+                total_stake += agent_stakes[agent_id]
+        
+        if total_stake == 0:
+            # Equal stakes if no trust data available
+            equal_stake = 1.0 / len(agents)
+            agent_stakes = {agent_id: equal_stake for agent_id in agents}
+            total_stake = 1.0
+        
+        # Step 2: Select validators based on stake
+        # Use deterministic selection for reproducibility
+        sorted_validators = sorted(agent_stakes.items(), key=lambda x: x[1], reverse=True)
+        
+        # Select top validators that represent >66% of total stake
+        selected_validators = []
+        selected_stake = 0.0
+        required_stake = total_stake * 0.66  # 2/3 of total stake
+        
+        for validator_id, stake in sorted_validators:
+            selected_validators.append(validator_id)
+            selected_stake += stake
+            if selected_stake >= required_stake:
+                break
+        
+        # Step 3: Aggregate votes from selected validators
+        vote_weights = {}
+        total_weight = 0.0
+        
+        for validator_id in selected_validators:
+            if validator_id in votes and isinstance(votes[validator_id], dict):
+                vote_data = votes[validator_id]
+                vote_value = str(vote_data.get("vote", ""))
+                stake = agent_stakes[validator_id]
+                
+                if vote_value:
+                    if vote_value not in vote_weights:
+                        vote_weights[vote_value] = 0.0
+                    vote_weights[vote_value] += stake
+                    total_weight += stake
+        
+        # Step 4: Find vote with highest stake weight
+        if not vote_weights:
+            return {
+                "consensus": None,
+                "confidence": 0.0,
+                "algorithm": "proof_of_stake",
+                "reason": "No valid votes from validators"
+            }
+        
+        # Get vote with highest stake weight
+        consensus_vote = max(vote_weights.items(), key=lambda x: x[1])[0]
+        consensus_weight = vote_weights[consensus_vote]
+        
+        # Check if consensus has sufficient stake
+        if consensus_weight >= required_stake:
+            # Calculate confidence based on stake concentration
+            stake_ratio = consensus_weight / total_weight if total_weight > 0 else 0
+            
+            # Factor in validator confidence
+            validator_confidences = []
+            for validator_id in selected_validators:
+                if validator_id in votes and str(votes[validator_id].get("vote", "")) == consensus_vote:
+                    conf = votes[validator_id].get("confidence", 0.5)
+                    validator_confidences.append(conf * agent_stakes[validator_id])
+            
+            weighted_confidence = sum(validator_confidences) / consensus_weight if validator_confidences else 0.5
+            
+            return {
+                "consensus": consensus_vote,
+                "confidence": min(0.95, weighted_confidence * stake_ratio),
+                "algorithm": "proof_of_stake",
+                "validator_count": len(selected_validators),
+                "stake_weight": consensus_weight,
+                "total_stake": total_stake
+            }
+        else:
+            return {
+                "consensus": None,
+                "confidence": 0.0,
+                "algorithm": "proof_of_stake",
+                "reason": f"Insufficient stake: {consensus_weight:.2f}/{required_stake:.2f} required"
+            }
 
 
 # Swarm Behavior Implementations

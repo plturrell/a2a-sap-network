@@ -321,6 +321,7 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
             // Simulate blockchain transaction
             let iProgress = 0;
             let oInterval;
+
             const updateExecutionProgress = () => {
                 iProgress += 10;
                 this.oUIModel.setProperty("/blockchainProgress", iProgress);

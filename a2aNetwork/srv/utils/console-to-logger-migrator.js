@@ -284,8 +284,11 @@ class ConsoleToLoggerMigrator {
 
         results.results.forEach(result => {
             if (result.status === 'success') {
+                // Migration successful
             } else if (result.status === 'skipped') {
+                // File skipped
             } else {
+                // Migration failed or other status
             }
         });
 

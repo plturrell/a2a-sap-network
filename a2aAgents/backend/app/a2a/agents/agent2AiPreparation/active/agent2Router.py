@@ -1,12 +1,9 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse, StreamingResponse
-import json
-import asyncio
+from fastapi.responses import JSONResponse
 from datetime import datetime
 
-from .aiPreparationAgentSdk import AIPreparationAgentSDK, A2AMessage
+from .aiPreparationAgentSdk import A2AMessage
 
-from app.a2a.core.security_base import SecureA2AAgent
 router = APIRouter(prefix="/a2a/agent2/v1", tags=["Agent 2 - AI Preparation"])
 
 # Initialize Agent 2

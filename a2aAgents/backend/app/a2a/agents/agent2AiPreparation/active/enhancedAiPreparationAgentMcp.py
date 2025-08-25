@@ -7,23 +7,16 @@ Score: 100/100 - All gaps addressed
 import asyncio
 import json
 import os
-import sys
 import time
 import hashlib
-import struct
 import logging
-from typing import Dict, List, Any, Optional, Union, Callable, Tuple
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
 from uuid import uuid4
 from enum import Enum
 from dataclasses import dataclass, field
 from collections import OrderedDict, defaultdict
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import psutil
-import gc
-from functools import lru_cache, wraps
-import weakref
 
 logger = logging.getLogger(__name__)
 
@@ -35,43 +28,24 @@ except ImportError:
     AIOFILES_AVAILABLE = False
     logger.warning("aiofiles not available, using synchronous file operations")
 
-try:
-    import yaml
-    YAML_AVAILABLE = True
-except ImportError:
-    YAML_AVAILABLE = False
-    logger.warning("PyYAML not available")
 
-try:
-    import mimetypes
-    import base64
-    MEDIA_SUPPORT = True
-except ImportError:
-    MEDIA_SUPPORT = False
 
 # Import SDK components with MCP support
 from app.a2a.sdk.agentBase import A2AAgentBase
-from app.a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole, TaskStatus, AgentCard
-from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
-from app.a2a.core.workflowContext import workflowContextManager, DataArtifact
-from app.a2a.core.workflowMonitor import workflowMonitor
-from app.a2a.core.helpSeeking import AgentHelpSeeker
-from app.a2a.core.circuitBreaker import CircuitBreaker, CircuitBreakerOpenError
-from app.a2a.core.taskTracker import AgentTaskTracker
+from app.a2a.sdk.decorators import a2a_skill
+from app.a2a.sdk.utils import create_error_response, create_success_response
+from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource
+from app.a2a.core.circuitBreaker import CircuitBreaker
 
 # Import trust system components
-from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, verify_a2a_message
 
 # Import performance monitoring
 from app.a2a.core.performanceOptimizer import PerformanceOptimizationMixin
-from app.a2a.core.performanceMonitor import AlertThresholds, monitor_performance
+from app.a2a.core.performanceMonitor import AlertThresholds
 from app.a2a.core.security_base import SecureA2AAgent
 
 # Optional dependencies with graceful fallbacks
 try:
-    import torch
     import transformers
     from sentence_transformers import SentenceTransformer
     TORCH_AVAILABLE = True

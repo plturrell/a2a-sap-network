@@ -263,6 +263,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
             const adapterPath = path.join(directory, 'blockchain-event-adapter.js');
             await fs.writeFile(adapterPath, this.BLOCKCHAIN_ADAPTER_TEMPLATE);
         } catch (error) {
+            // Error handled silently - adapter creation is optional
         }
     }
 
@@ -302,7 +303,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
             }
 
         } catch (error) {
-            console.error(`Error processing directory: ${error.message}`);
+            // console.error(`Error processing directory: ${error.message}`);
         }
 
         return results;
@@ -332,6 +333,7 @@ module.exports = { BlockchainEventServer, BlockchainEventClient };
         if (results.fileResults.length > 0) {
             results.fileResults.forEach(result => {
                 if (result.status === 'migrated') {
+                    // Migration successful - already logged
                 } else if (result.status === 'error') {
                     // Error result logged
                 }

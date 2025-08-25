@@ -26,17 +26,12 @@ To send messages to other agents, use:
 
 
 import asyncio
-# Performance: Consider using asyncio.gather for concurrent operations
-import json
 import logging
 import time
 import hashlib
-import pickle
 import os
-import re
 import numpy as np
-import pandas as pd
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -65,20 +60,13 @@ try:
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
-# Schema validation and transformation
-try:
-    import jsonschema
-    JSONSCHEMA_AVAILABLE = True
-except ImportError:
-    JSONSCHEMA_AVAILABLE = False
 
 # Import SDK components - Use standard A2A SDK (NO FALLBACKS)
 from app.a2a.sdk.agentBase import A2AAgentBase
-from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin, monitor_a2a_operation
-from app.a2a.sdk import a2a_ha, a2a_handlerndler, a2a_skill, a2a_task
-from app.a2a.sdk.types import A2AMessage, MessageRole
+from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin
+from app.a2a.sdk import a2a_skill
+from app.a2a.sdk.types import A2AMessage
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 from app.a2a.core.security_base import SecureA2AAgent
 
 

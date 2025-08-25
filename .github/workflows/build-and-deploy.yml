@@ -175,9 +175,6 @@ jobs:
       run: |
         echo "🚀 Deploying A2A Platform to Fly.io..."
         
-        # Update fly.toml with the latest image
-        sed -i 's|image = ".*"|image = "${{ env.IMAGE_NAME }}:main"|' fly.toml
-        
         # Check if app exists, create if not
         if ! flyctl apps list | grep -q "a2a-platform"; then
           echo "Creating new Fly.io app: a2a-platform"

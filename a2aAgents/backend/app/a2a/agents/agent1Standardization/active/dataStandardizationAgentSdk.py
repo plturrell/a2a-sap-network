@@ -17,14 +17,9 @@ To send messages to other agents, use:
 
 
 import asyncio
-# Performance: Consider using asyncio.gather for concurrent operations
-import hashlib
-# Direct HTTP calls not allowed - use A2A protocol
-# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os
-import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 from uuid import uuid4
@@ -54,10 +49,10 @@ except ImportError:
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
 # Import SDK components
-from app.a2a.sdk.agentBase import A2AAgentBase, MessagePriority
+from app.a2a.sdk.agentBase import A2AAgentBase
 from app.a2a.sdk import (
     a2a_handler, a2a_skill, a2a_task,
-    A2AMessage, MessageRole, create_agent_id
+    A2AMessage
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin

@@ -252,11 +252,91 @@ class SemanticAnalyzer:
                     'value': match.group(),
                     'start': match.start(),
                     'end': match.end(),
-                    'confidence': 0.8  # Pattern-based confidence
+                    'confidence': self._calculate_entity_confidence(entity_type, match.group(), content)
                 }
                 entities.append(entity)
 
         return entities
+    
+    def _calculate_entity_confidence(self, entity_type: str, entity_value: str, content: str) -> float:
+        """Calculate confidence score for entity extraction"""
+        try:
+            confidence = 0.5  # Base confidence
+            
+            # Factor 1: Entity type reliability
+            type_reliability = {
+                'EMAIL': 0.9,  # Regex patterns are very reliable for emails
+                'URL': 0.85,   # URLs have clear structure
+                'PHONE': 0.8,  # Phone patterns are fairly reliable
+                'IP': 0.9,     # IP addresses have strict format
+                'DATE': 0.7,   # Date patterns can be ambiguous
+                'NUMBER': 0.6, # Numbers are common and can be misidentified
+                'PERSON': 0.5, # Person names are harder to identify
+                'LOCATION': 0.5 # Locations can be ambiguous
+            }
+            confidence += type_reliability.get(entity_type, 0.5) * 0.4
+            
+            # Factor 2: Entity value characteristics
+            value_length = len(entity_value)
+            if entity_type in ['EMAIL', 'URL']:
+                if '@' in entity_value and '.' in entity_value:
+                    confidence += 0.2
+                if value_length > 10:
+                    confidence += 0.1
+            elif entity_type == 'PHONE':
+                # Count digits in phone number
+                digit_count = sum(c.isdigit() for c in entity_value)
+                if digit_count >= 10:
+                    confidence += 0.2
+            elif entity_type == 'IP':
+                # IP addresses should have exactly 4 octets
+                parts = entity_value.split('.')
+                if len(parts) == 4:
+                    confidence += 0.2
+            
+            # Factor 3: Context validation
+            context_words = content.lower().split()
+            entity_index = content.lower().find(entity_value.lower())
+            
+            if entity_index >= 0:
+                # Look at words around the entity
+                words_before = []
+                words_after = []
+                
+                # Get context window
+                start_context = max(0, entity_index - 50)
+                end_context = min(len(content), entity_index + len(entity_value) + 50)
+                context_window = content[start_context:end_context].lower()
+                
+                # Context clues for different entity types
+                context_indicators = {
+                    'EMAIL': ['email', 'contact', 'send', 'mail', '@', 'address'],
+                    'URL': ['http', 'www', 'website', 'link', 'url', 'site'],
+                    'PHONE': ['phone', 'call', 'number', 'contact', 'tel'],
+                    'DATE': ['on', 'at', 'when', 'date', 'time', 'schedule'],
+                    'PERSON': ['mr', 'ms', 'mrs', 'dr', 'prof', 'name'],
+                    'LOCATION': ['in', 'at', 'from', 'to', 'location', 'address']
+                }
+                
+                indicators = context_indicators.get(entity_type, [])
+                context_matches = sum(1 for indicator in indicators if indicator in context_window)
+                
+                if context_matches > 0:
+                    confidence += min(0.2, context_matches * 0.05)
+            
+            # Factor 4: Uniqueness in content
+            entity_count = content.lower().count(entity_value.lower())
+            if entity_count == 1:  # Unique occurrence = more likely to be significant
+                confidence += 0.1
+            elif entity_count > 5:  # Too many occurrences = might be noise
+                confidence -= 0.1
+            
+            # Ensure confidence is within valid range
+            return max(0.1, min(0.95, confidence))
+            
+        except Exception as e:
+            logger.error(f"Entity confidence calculation failed: {e}")
+            return 0.6  # Safe default
 
     def _extract_keywords(self, content: str) -> List[str]:
         """Extract keywords from message content"""

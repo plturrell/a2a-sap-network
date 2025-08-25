@@ -4,14 +4,9 @@ Tests A2A protocol compliance and blockchain-only communication
 """
 
 import pytest
-import asyncio
-import json
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime
-from uuid import uuid4
+from unittest.mock import AsyncMock
 
-from agent17ChatAgentSdk import Agent17ChatAgent, create_agent17_chat_agent
-from app.a2a.sdk.types import A2AMessage, MessagePart, MessageRole
+from agent17ChatAgentSdk import create_agent17_chat_agent
 
 
 class TestAgent17ChatAgent:

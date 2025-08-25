@@ -1,14 +1,14 @@
-# A2A Platform Fly.io Configuration - Complete Platform
-app = "a2a-platform"
+# A2A Platform Fly.io Configuration - Staging Environment
+app = "a2a-platform-staging"
 primary_region = "ord"
 kill_signal = "SIGINT"
 kill_timeout = "300s"
 
 [build]
-  image = "finsightintelligence/a2a:main"
+  image = "finsightintelligence/a2a:staging"
 
 [env]
-  A2A_ENVIRONMENT = "production"
+  A2A_ENVIRONMENT = "staging"
   ENABLE_ALL_AGENTS = "true"
   A2A_NETWORK_ENABLED = "true"
   FRONTEND_ENABLED = "true"
@@ -18,52 +18,54 @@ kill_timeout = "300s"
   A2A_AGENT_BASE_URL = "http://localhost:8000"
   A2A_IN_CONTAINER = "true"
   SKIP_VENV_CREATION = "true"
-  STARTUP_MODE = "complete"
-  NODE_OPTIONS = "--max-old-space-size=4096"
-  JAVA_OPTS = "-Xmx2g -Xms1g"
+  STARTUP_MODE = "backend"
+  NODE_OPTIONS = "--max-old-space-size=2048"
+  JAVA_OPTS = "-Xmx1g -Xms512m"
   DATABASE_TIMEOUT = "30000"
-  STARTUP_TIMEOUT = "300"
+  STARTUP_TIMEOUT = "180"
   AGENT_STARTUP_MODE = "quick"
   PYTHONPATH = "/app/a2aAgents/backend:/app"
   NODE_PATH = "/app/node_modules"
+  LOG_LEVEL = "DEBUG"
+  ENABLE_PROFILING = "true"
 
-# Start with reasonable resources
+# Smaller resources for staging
 [[vm]]
-  cpu_kind = "performance"
-  cpus = 8
-  memory_mb = 16384
+  cpu_kind = "shared"
+  cpus = 4
+  memory_mb = 8192
 
 [processes]
   app = "bash -c 'cd /app && ./entrypoint.sh complete'"
 
 [deploy]
-  strategy = "bluegreen"
-  max_unavailable = 0.0
-  wait_timeout = "10m"
+  strategy = "immediate"
+  max_unavailable = 1.0
+  wait_timeout = "5m"
 
 [restart]
   policy = "always"
-  retries = 10
+  retries = 5
 
 # Main service on port 8000
 [http_service]
   internal_port = 8000
   force_https = true
-  auto_stop_machines = false
+  auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
   max_machines_running = 1
   processes = ["app"]
 
   [http_service.concurrency]
     type = "connections"
-    hard_limit = 50
-    soft_limit = 40
+    hard_limit = 25
+    soft_limit = 20
 
   [[http_service.checks]]
-    grace_period = "600s"
-    interval = "60s"
-    timeout = "30s"
+    grace_period = "300s"
+    interval = "30s"
+    timeout = "10s"
     path = "/health"
     method = "GET"
     type = "http"

@@ -703,8 +703,8 @@ class MLTaskPrioritizer:
         # Normalize to 1-5 range
         final_score = max(1.0, min(5.0, final_score))
 
-        # Calculate overall confidence
-        confidence = (ml_confidence + 0.8) / 2  # Average with base confidence
+        # Calculate dynamic overall confidence based on data quality and ML performance
+        confidence = self._calculate_dynamic_confidence(ml_confidence, task_context)
 
         priority_score = PriorityScore(
             task_id=task_context.task_id,
@@ -803,6 +803,178 @@ class MLTaskPrioritizer:
 
         return 1.0
 
+    def _calculate_dynamic_confidence(self, ml_confidence: float, task_context: TaskContext) -> float:
+        """Calculate dynamic confidence based on multiple factors"""
+        try:
+            # Start with ML confidence as base
+            confidence_factors = []
+            
+            # Factor 1: ML model confidence (primary)
+            if ml_confidence > 0:
+                confidence_factors.append(ml_confidence)
+            
+            # Factor 2: Data quality confidence
+            data_quality_confidence = self._assess_data_quality_confidence(task_context)
+            confidence_factors.append(data_quality_confidence)
+            
+            # Factor 3: Historical performance confidence
+            historical_confidence = self._assess_historical_performance_confidence(task_context)
+            confidence_factors.append(historical_confidence)
+            
+            # Factor 4: Context completeness confidence
+            context_confidence = self._assess_context_completeness_confidence(task_context)
+            confidence_factors.append(context_confidence)
+            
+            # Factor 5: Task complexity confidence (inverse relationship)
+            complexity_confidence = self._assess_complexity_confidence(task_context)
+            confidence_factors.append(complexity_confidence)
+            
+            # Weighted average of all confidence factors
+            weights = [0.4, 0.25, 0.15, 0.1, 0.1]  # ML confidence gets highest weight
+            
+            if len(confidence_factors) == len(weights):
+                weighted_confidence = sum(c * w for c, w in zip(confidence_factors, weights))
+            else:
+                # Fallback: simple average
+                weighted_confidence = sum(confidence_factors) / len(confidence_factors)
+            
+            # Apply confidence bounds
+            final_confidence = max(0.1, min(0.95, weighted_confidence))
+            
+            return float(final_confidence)
+            
+        except Exception as e:
+            logger.error(f"Dynamic confidence calculation failed: {e}")
+            # Fallback to safe default
+            return max(0.5, ml_confidence) if ml_confidence > 0 else 0.5
+    
+    def _assess_data_quality_confidence(self, task_context: TaskContext) -> float:
+        """Assess confidence based on data quality"""
+        try:
+            confidence = 0.5  # Base confidence
+            
+            # Factor in task description quality
+            desc_length = len(task_context.description.strip())
+            if desc_length > 50:
+                confidence += 0.2
+            elif desc_length > 20:
+                confidence += 0.1
+            
+            # Factor in tags/metadata richness
+            if len(task_context.tags) > 3:
+                confidence += 0.15
+            elif len(task_context.tags) > 0:
+                confidence += 0.1
+            
+            # Factor in additional context
+            if hasattr(task_context, 'dependencies') and task_context.dependencies:
+                confidence += 0.1
+            
+            return min(1.0, confidence)
+            
+        except Exception:
+            return 0.5
+    
+    def _assess_historical_performance_confidence(self, task_context: TaskContext) -> float:
+        """Assess confidence based on historical performance"""
+        try:
+            if not self.prioritization_history:
+                return 0.5  # No history available
+            
+            # Look for similar tasks in history
+            similar_tasks = []
+            task_type = getattr(task_context, 'task_type', 'unknown')
+            
+            for prev_score in self.prioritization_history[-50:]:  # Last 50 tasks
+                if hasattr(prev_score, 'task_type') and prev_score.task_type == task_type:
+                    similar_tasks.append(prev_score)
+            
+            if not similar_tasks:
+                return 0.5  # No similar tasks
+            
+            # Calculate accuracy of previous predictions
+            accurate_predictions = 0
+            total_predictions = len(similar_tasks)
+            
+            for task in similar_tasks:
+                # Simple heuristic: if confidence was high and task was successful
+                if hasattr(task, 'confidence') and hasattr(task, 'actual_outcome'):
+                    if task.confidence > 0.7 and task.actual_outcome == 'success':
+                        accurate_predictions += 1
+                    elif task.confidence <= 0.7 and task.actual_outcome != 'success':
+                        accurate_predictions += 1
+            
+            if total_predictions > 0:
+                accuracy_rate = accurate_predictions / total_predictions
+                # Convert accuracy to confidence
+                return 0.3 + (accuracy_rate * 0.4)  # Scale to 0.3-0.7 range
+            
+            return 0.5
+            
+        except Exception:
+            return 0.5
+    
+    def _assess_context_completeness_confidence(self, task_context: TaskContext) -> float:
+        """Assess confidence based on context completeness"""
+        try:
+            completeness_score = 0.0
+            max_score = 5.0
+            
+            # Check for essential fields
+            if task_context.description and len(task_context.description.strip()) > 10:
+                completeness_score += 1.0
+            
+            if task_context.tags and len(task_context.tags) > 0:
+                completeness_score += 1.0
+            
+            if hasattr(task_context, 'deadline') and task_context.deadline:
+                completeness_score += 1.0
+            
+            if hasattr(task_context, 'dependencies') and task_context.dependencies:
+                completeness_score += 1.0
+            
+            if hasattr(task_context, 'resource_requirements'):
+                completeness_score += 1.0
+            
+            # Convert to confidence (0.4 to 0.9 range)
+            confidence = 0.4 + (completeness_score / max_score) * 0.5
+            
+            return min(0.9, confidence)
+            
+        except Exception:
+            return 0.6
+    
+    def _assess_complexity_confidence(self, task_context: TaskContext) -> float:
+        """Assess confidence based on task complexity (inverse relationship)"""
+        try:
+            complexity_indicators = 0
+            
+            # High complexity indicators reduce confidence
+            description_length = len(task_context.description.split())
+            if description_length > 100:  # Very detailed = potentially complex
+                complexity_indicators += 1
+            
+            if len(task_context.tags) > 8:  # Too many tags = complex
+                complexity_indicators += 1
+            
+            # Look for complexity keywords
+            complexity_keywords = ['complex', 'multiple', 'integrate', 'coordinate', 
+                                 'analyze', 'optimize', 'refactor', 'migrate']
+            desc_lower = task_context.description.lower()
+            keyword_count = sum(1 for kw in complexity_keywords if kw in desc_lower)
+            
+            if keyword_count > 3:
+                complexity_indicators += 1
+            
+            # Calculate inverse confidence (more complexity = less confidence)
+            base_confidence = 0.8
+            confidence_reduction = complexity_indicators * 0.1
+            
+            return max(0.3, base_confidence - confidence_reduction)
+            
+        except Exception:
+            return 0.6
+    
     def _calculate_context_multiplier(self, context_factors: Dict[str, float]) -> float:
         """Calculate context multiplier from factors"""
 

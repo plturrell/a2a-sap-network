@@ -3,20 +3,18 @@ MCP-Enhanced Data Standardization Agent
 Example implementation showing how to integrate MCP tools into existing agents
 """
 
-import sys
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import os
-import hashlib
 
 # Import SDK components
 from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
-    A2AMessage, MessageRole, create_agent_id
+    a2a_handler, a2a_skill, a2a_task,
+    A2AMessage
 )
 
 # Import performance monitoring

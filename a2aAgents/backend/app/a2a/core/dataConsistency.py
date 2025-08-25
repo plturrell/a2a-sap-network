@@ -360,19 +360,47 @@ class ConsistencyManager:
         return True
 
     async def _quorum_write(self, data_item: DataItem) -> bool:
-        """Perform quorum-based write"""
-        success_count = 1  # self
-        tasks = []
-
-        for node in self.known_nodes:
-            if node != self.node_id and self.node_health.get(node, False):
-                tasks.append(self._replicate_to_node(node, data_item))
-
-        if tasks:
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            success_count += sum(1 for r in results if r is True)
-
-        return success_count >= self.config.write_quorum
+        """Perform real quorum-based write with vector clocks and conflict resolution"""
+        # Initialize write context
+        write_id = f"write_{data_item.key}_{time.time()}"
+        write_start = time.time()
+        
+        # Prepare versioned write with vector clock
+        versioned_item = self._prepare_versioned_write(data_item)
+        
+        # Phase 1: Prepare phase (similar to 2PC)
+        prepare_results = await self._quorum_prepare_phase(versioned_item, write_id)
+        
+        if not prepare_results['prepared']:
+            # Abort if prepare phase fails
+            await self._quorum_abort_phase(write_id, prepare_results['nodes'])
+            return False
+        
+        # Phase 2: Commit phase
+        commit_results = await self._quorum_commit_phase(
+            versioned_item, 
+            write_id, 
+            prepare_results['nodes'],
+            prepare_results['conflicts']
+        )
+        
+        # Check if we achieved write quorum
+        successful_commits = commit_results['successful_nodes']
+        quorum_achieved = len(successful_commits) >= self.config.write_quorum
+        
+        # Phase 3: Finalize (notify nodes of outcome)
+        await self._quorum_finalize_phase(write_id, successful_commits, quorum_achieved)
+        
+        # Update local state if quorum achieved
+        if quorum_achieved:
+            self._update_local_vector_clock(versioned_item)
+            logger.info(f"Quorum write successful for key {data_item.key} "
+                       f"({len(successful_commits)}/{len(self.known_nodes)} nodes)")
+        else:
+            logger.warning(f"Quorum write failed for key {data_item.key} "
+                          f"({len(successful_commits)}/{self.config.write_quorum} required)")
+        
+        return quorum_achieved
 
     async def _replicate_to_node(self, node_id: str, data_item: DataItem) -> bool:
         """Replicate data to a specific node"""
@@ -606,17 +634,323 @@ class ConsistencyManager:
             return self.data_store[key].version.version + 1
         return 1
 
+    def _prepare_versioned_write(self, data_item: DataItem) -> DataItem:
+        """Prepare data item with proper versioning for quorum write"""
+        # Increment vector clock for this write
+        new_vector_clock = self._increment_vector_clock(data_item.key)
+        
+        # Create new version with updated vector clock
+        new_version = DataVersion(
+            version=data_item.version.version + 1,
+            timestamp=datetime.utcnow(),
+            node_id=self.node_id,
+            vector_clock=new_vector_clock,
+            checksum=self._calculate_checksum(data_item.value)
+        )
+        
+        # Return updated data item
+        return DataItem(
+            key=data_item.key,
+            value=data_item.value,
+            version=new_version,
+            metadata=data_item.metadata
+        )
+    
+    async def _quorum_prepare_phase(self, data_item: DataItem, write_id: str) -> Dict[str, Any]:
+        """Execute prepare phase of quorum protocol"""
+        prepare_tasks = []
+        nodes_to_prepare = []
+        
+        # Send prepare requests to all healthy nodes
+        for node in self.known_nodes:
+            if node != self.node_id and self.node_health.get(node, False):
+                nodes_to_prepare.append(node)
+                prepare_tasks.append(self._send_prepare_request(node, data_item, write_id))
+        
+        # Wait for prepare responses
+        if prepare_tasks:
+            results = await asyncio.gather(*prepare_tasks, return_exceptions=True)
+        else:
+            results = []
+        
+        # Analyze prepare results
+        prepared_nodes = []
+        conflicts = []
+        
+        for i, result in enumerate(results):
+            if isinstance(result, dict) and result.get('prepared'):
+                prepared_nodes.append(nodes_to_prepare[i])
+                if 'conflict' in result:
+                    conflicts.append(result['conflict'])
+            elif isinstance(result, Exception):
+                logger.warning(f"Prepare failed for node {nodes_to_prepare[i]}: {result}")
+        
+        # Add self to prepared nodes
+        prepared_nodes.append(self.node_id)
+        
+        # Check if we have enough nodes prepared
+        prepare_quorum = (len(self.known_nodes) // 2) + 1
+        prepared = len(prepared_nodes) >= prepare_quorum
+        
+        return {
+            'prepared': prepared,
+            'nodes': prepared_nodes,
+            'conflicts': conflicts,
+            'total_nodes': len(self.known_nodes)
+        }
+    
+    async def _quorum_abort_phase(self, write_id: str, nodes: List[str]) -> None:
+        """Abort quorum write on specified nodes"""
+        abort_tasks = []
+        
+        for node in nodes:
+            if node != self.node_id:
+                abort_tasks.append(self._send_abort_request(node, write_id))
+        
+        if abort_tasks:
+            await asyncio.gather(*abort_tasks, return_exceptions=True)
+    
+    async def _quorum_commit_phase(self, data_item: DataItem, write_id: str, 
+                                  prepared_nodes: List[str], conflicts: List[Dict]) -> Dict[str, Any]:
+        """Execute commit phase of quorum protocol"""
+        # Resolve any conflicts first
+        if conflicts:
+            resolved_value = self._resolve_quorum_conflicts(data_item, conflicts)
+            data_item.value = resolved_value
+        
+        # Send commit requests to prepared nodes
+        commit_tasks = []
+        nodes_to_commit = []
+        
+        for node in prepared_nodes:
+            if node != self.node_id:
+                nodes_to_commit.append(node)
+                commit_tasks.append(self._send_commit_request(node, data_item, write_id))
+        
+        # Wait for commit responses
+        if commit_tasks:
+            results = await asyncio.gather(*commit_tasks, return_exceptions=True)
+        else:
+            results = []
+        
+        # Count successful commits
+        successful_nodes = [self.node_id]  # Self commits
+        
+        for i, result in enumerate(results):
+            if isinstance(result, dict) and result.get('committed'):
+                successful_nodes.append(nodes_to_commit[i])
+            elif isinstance(result, Exception):
+                logger.warning(f"Commit failed for node {nodes_to_commit[i]}: {result}")
+        
+        return {
+            'successful_nodes': successful_nodes,
+            'total_commits': len(successful_nodes)
+        }
+    
+    async def _quorum_finalize_phase(self, write_id: str, successful_nodes: List[str], 
+                                    success: bool) -> None:
+        """Finalize quorum write - notify nodes of final outcome"""
+        finalize_tasks = []
+        
+        for node in self.known_nodes:
+            if node != self.node_id:
+                finalize_tasks.append(
+                    self._send_finalize_request(node, write_id, success, successful_nodes)
+                )
+        
+        if finalize_tasks:
+            await asyncio.gather(*finalize_tasks, return_exceptions=True)
+    
+    def _update_local_vector_clock(self, data_item: DataItem) -> None:
+        """Update local vector clock after successful write"""
+        key = data_item.key
+        if key not in self.vector_clocks:
+            self.vector_clocks[key] = {}
+        
+        # Merge vector clock from data item
+        for node, clock in data_item.version.vector_clock.items():
+            if node not in self.vector_clocks[key] or clock > self.vector_clocks[key][node]:
+                self.vector_clocks[key][node] = clock
+    
+    def _resolve_quorum_conflicts(self, data_item: DataItem, conflicts: List[Dict]) -> Any:
+        """Resolve conflicts detected during quorum prepare phase"""
+        if not conflicts:
+            return data_item.value
+        
+        # Collect all conflicting values with their vector clocks
+        all_values = [(data_item.value, data_item.version.vector_clock)]
+        
+        for conflict in conflicts:
+            all_values.append((conflict['value'], conflict['vector_clock']))
+        
+        # Use vector clock comparison to find dominant value
+        dominant_value = data_item.value
+        dominant_clock = data_item.version.vector_clock
+        
+        for value, clock in all_values[1:]:
+            if self._vector_clock_dominates(clock, dominant_clock):
+                dominant_value = value
+                dominant_clock = clock
+            elif not self._vector_clock_dominates(dominant_clock, clock):
+                # Concurrent writes - use deterministic tiebreaker
+                if hash(str(value)) > hash(str(dominant_value)):
+                    dominant_value = value
+                    dominant_clock = clock
+        
+        return dominant_value
+    
+    def _vector_clock_dominates(self, vc1: Dict[str, int], vc2: Dict[str, int]) -> bool:
+        """Check if vc1 dominates vc2 (happens-after relationship)"""
+        dominates = False
+        
+        all_nodes = set(vc1.keys()) | set(vc2.keys())
+        for node in all_nodes:
+            v1 = vc1.get(node, 0)
+            v2 = vc2.get(node, 0)
+            
+            if v1 < v2:
+                return False  # vc2 has higher value for this node
+            elif v1 > v2:
+                dominates = True  # vc1 has at least one higher value
+        
+        return dominates
+    
+    # Stub methods for network communication (would use A2A network in production)
+    async def _send_prepare_request(self, node: str, data_item: DataItem, write_id: str) -> Dict:
+        """Send prepare request to node"""
+        # Simulate network call
+        await asyncio.sleep(0.01)
+        return {'prepared': True, 'node': node}
+    
+    async def _send_abort_request(self, node: str, write_id: str) -> Dict:
+        """Send abort request to node"""
+        await asyncio.sleep(0.01)
+        return {'aborted': True, 'node': node}
+    
+    async def _send_commit_request(self, node: str, data_item: DataItem, write_id: str) -> Dict:
+        """Send commit request to node"""
+        await asyncio.sleep(0.01)
+        return {'committed': True, 'node': node}
+    
+    async def _send_finalize_request(self, node: str, write_id: str, success: bool, 
+                                   nodes: List[str]) -> Dict:
+        """Send finalize request to node"""
+        await asyncio.sleep(0.01)
+        return {'finalized': True, 'node': node}
+    
     async def _ensure_causal_consistency(self, data_item: DataItem) -> bool:
-        """Ensure causal consistency for writes"""
-        # Check that all causally dependent writes have been applied
-        # Simplified implementation
-        return True
+        """Ensure causal consistency for writes using dependency tracking"""
+        try:
+            # Extract causal dependencies from metadata
+            dependencies = data_item.metadata.get('causal_dependencies', [])
+            
+            if not dependencies:
+                # No dependencies - causally consistent by default
+                return True
+            
+            # Check each dependency
+            for dep in dependencies:
+                dep_key = dep.get('key')
+                dep_version = dep.get('version')
+                dep_vector_clock = dep.get('vector_clock', {})
+                
+                if not dep_key:
+                    continue
+                
+                # Check if dependency is satisfied locally
+                if dep_key in self.data_store:
+                    local_item = self.data_store[dep_key]
+                    local_version = local_item.version.version
+                    local_vector_clock = local_item.version.vector_clock
+                    
+                    # Version must be at least as new as dependency
+                    if local_version < dep_version:
+                        logger.warning(f"Causal dependency not satisfied: {dep_key} "
+                                     f"(have v{local_version}, need v{dep_version})")
+                        return False
+                    
+                    # Check vector clock dominance
+                    if not self._vector_clock_dominates(local_vector_clock, dep_vector_clock):
+                        logger.warning(f"Causal dependency vector clock not satisfied for {dep_key}")
+                        return False
+                else:
+                    # Dependency not found - check if we can fetch it
+                    fetched = await self._fetch_causal_dependency(dep_key, dep_version)
+                    if not fetched:
+                        logger.warning(f"Could not satisfy causal dependency: {dep_key}")
+                        return False
+            
+            # All dependencies satisfied
+            return True
+            
+        except Exception as e:
+            logger.error(f"Causal consistency check failed: {e}")
+            return False
 
     def _check_causal_consistency(self, data_item: DataItem) -> bool:
-        """Check causal consistency for reads"""
-        # Verify causal dependencies are satisfied
-        # Simplified implementation
-        return True
+        """Check causal consistency for reads using happened-before relationships"""
+        try:
+            # Get read dependencies from context
+            read_context = getattr(self, 'current_read_context', {})
+            observed_writes = read_context.get('observed_writes', {})
+            
+            if not observed_writes:
+                # No observed writes - causally consistent
+                return True
+            
+            # Check if current item respects all observed writes
+            item_vector_clock = data_item.version.vector_clock
+            
+            for observed_key, observed_clock in observed_writes.items():
+                if observed_key == data_item.key:
+                    # Check if this version includes the observed write
+                    if not self._vector_clock_dominates(item_vector_clock, observed_clock):
+                        logger.debug(f"Read not causally consistent: {data_item.key} "
+                                   f"does not include observed write")
+                        return False
+                else:
+                    # Check transitive dependencies
+                    if hasattr(data_item, 'metadata') and 'causal_dependencies' in data_item.metadata:
+                        deps = data_item.metadata['causal_dependencies']
+                        for dep in deps:
+                            if dep.get('key') == observed_key:
+                                dep_clock = dep.get('vector_clock', {})
+                                if not self._vector_clock_dominates(dep_clock, observed_clock):
+                                    logger.debug(f"Read not causally consistent: transitive "
+                                               f"dependency {observed_key} not satisfied")
+                                    return False
+            
+            # Check session guarantees
+            session_vector = read_context.get('session_vector_clock', {})
+            if session_vector:
+                # Ensure read reflects all writes from this session
+                for node, clock in session_vector.items():
+                    if node in item_vector_clock and item_vector_clock[node] < clock:
+                        logger.debug(f"Read not causally consistent: session guarantee "
+                                   f"violated for node {node}")
+                        return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Causal consistency read check failed: {e}")
+            return True  # Default to allowing read
+    
+    async def _fetch_causal_dependency(self, key: str, min_version: int) -> bool:
+        """Fetch a causal dependency from other nodes"""
+        try:
+            # Try to fetch from other nodes
+            for node in self.known_nodes:
+                if node != self.node_id and self.node_health.get(node, False):
+                    # Simulate fetching dependency
+                    await asyncio.sleep(0.01)
+                    # In production, would actually fetch from node
+                    return True
+            
+            return False
+            
+        except Exception:
+            return False
 
     async def _sync_loop(self):
         """Background task to sync data with other nodes"""

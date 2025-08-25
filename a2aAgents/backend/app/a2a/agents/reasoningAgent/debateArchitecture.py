@@ -413,12 +413,111 @@ class DebateCoordinator:
         if len(self.debate_history) < 10:
             return False
 
-        # Check position strengths
-        positions = [agent.position_strength for agent in self.debate_agents.values()]
+        # Get all agent positions and their arguments
+        agent_data = []
+        for agent_id, agent in self.debate_agents.items():
+            agent_data.append({
+                'id': agent_id,
+                'position': agent.position,
+                'strength': agent.position_strength,
+                'arguments': len(agent.arguments_made)
+            })
 
-        # Consensus if positions converge
-        position_variance = max(positions) - min(positions)
-        return position_variance < 0.2
+        # Implement Raft-inspired consensus
+        return self._calculate_raft_consensus(agent_data)
+    
+    def _calculate_raft_consensus(self, agent_data: List[Dict[str, Any]]) -> bool:
+        """
+        Implement Raft-inspired consensus algorithm for debate positions
+        Uses leader election, log replication concepts adapted for debate consensus
+        """
+        try:
+            n = len(agent_data)
+            if n == 0:
+                return False
+            
+            # Step 1: Leader Election (agent with strongest position)
+            sorted_agents = sorted(agent_data, key=lambda x: x['strength'], reverse=True)
+            leader = sorted_agents[0]
+            
+            # Step 2: Calculate majority threshold (Raft requires majority)
+            majority_threshold = (n // 2) + 1
+            
+            # Step 3: Count agents that agree with leader's position
+            leader_position = leader['position']
+            leader_strength = leader['strength']
+            
+            agreeing_agents = 1  # Leader agrees with itself
+            position_clusters = {leader_position: [leader]}
+            
+            # Group agents by position
+            for agent in sorted_agents[1:]:
+                position = agent['position']
+                if position not in position_clusters:
+                    position_clusters[position] = []
+                position_clusters[position].append(agent)
+            
+            # Find dominant position cluster
+            dominant_cluster = max(position_clusters.values(), key=len)
+            dominant_position = None
+            for pos, cluster in position_clusters.items():
+                if cluster == dominant_cluster:
+                    dominant_position = pos
+                    break
+            
+            # Step 4: Check if dominant cluster has majority
+            cluster_size = len(dominant_cluster)
+            has_majority = cluster_size >= majority_threshold
+            
+            # Step 5: Check position strength convergence within cluster
+            if has_majority and cluster_size > 1:
+                cluster_strengths = [agent['strength'] for agent in dominant_cluster]
+                strength_variance = max(cluster_strengths) - min(cluster_strengths)
+                
+                # Positions must be similar in strength (within 30% variance)
+                strength_converged = strength_variance < 0.3
+            else:
+                strength_converged = cluster_size == 1  # Single agent is converged
+            
+            # Step 6: Check argument saturation (like log replication)
+            total_arguments = sum(agent['arguments'] for agent in agent_data)
+            avg_arguments_per_agent = total_arguments / n if n > 0 else 0
+            
+            # Need sufficient arguments to consider consensus
+            sufficient_deliberation = avg_arguments_per_agent >= 3
+            
+            # Step 7: Calculate consensus based on Raft principles
+            consensus_reached = (
+                has_majority and 
+                strength_converged and 
+                sufficient_deliberation
+            )
+            
+            # Step 8: Additional check for split decisions
+            if len(position_clusters) > 1:
+                # Check if there's a clear winner
+                sizes = sorted([len(cluster) for cluster in position_clusters.values()], reverse=True)
+                if len(sizes) > 1:
+                    # Need clear majority, not just plurality
+                    margin = sizes[0] - sizes[1]
+                    clear_winner = margin >= 2 or sizes[0] >= n * 0.6
+                    consensus_reached = consensus_reached and clear_winner
+            
+            logger.debug(f"Raft consensus: majority={has_majority}, "
+                       f"converged={strength_converged}, "
+                       f"deliberation={sufficient_deliberation}, "
+                       f"result={consensus_reached}")
+            
+            return consensus_reached
+            
+        except Exception as e:
+            logger.error(f"Raft consensus calculation failed: {e}")
+            # Fallback to simple variance check
+            positions = [agent['strength'] for agent in agent_data]
+            if positions:
+                position_variance = max(positions) - min(positions)
+                return position_variance < 0.2
+            return False
 
     async def _generate_conclusion(
         self,
