@@ -21,8 +21,10 @@ from uuid import uuid4
 from ..a2a.security.requestSigning import A2ARequestSigner
 
 try:
-    from sklearn.linear_model import LinearRegression
+    from sklearn.linear_model import LinearRegression, Ridge
+    from sklearn.ensemble import RandomForestRegressor
     from sklearn.preprocessing import StandardScaler
+    from sklearn.cluster import KMeans
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False

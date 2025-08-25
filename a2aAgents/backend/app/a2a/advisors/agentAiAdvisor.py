@@ -5,10 +5,9 @@ Each agent has an intelligent advisor accessible via A2A protocol
 
 import json
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime
 from uuid import uuid4
-import asyncio
 
 from app.clients.grokClient import get_grok_client
 
@@ -18,7 +17,10 @@ logger = logging.getLogger(__name__)
 class AgentAIAdvisor:
     """Embedded AI advisor for an A2A agent using Grok-4"""
 
-    def __init__(self, agent_id: str, agent_name: str, agent_capabilities: Dict[str, Any]):
+    def __init__(
+        self, agent_id: str, agent_name: str, 
+        agent_capabilities: Dict[str, Any]
+    ):
         self.agent_id = agent_id
         self.agent_name = agent_name
         self.agent_capabilities = agent_capabilities
