@@ -650,7 +650,7 @@ sap.ui.define([
             const result = { isValid: true, message: "" };
 
             try {
-                const parsed = JSON.parse(jsonString);
+                JSON.parse(jsonString);
 
                 // Check for code injection in JSON
                 if (this._containsCodeInjection(jsonString)) {

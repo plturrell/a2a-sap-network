@@ -315,7 +315,7 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                A2AAgentBase.__init__(
+        A2AAgentBase.__init__(
             self,
             agent_id=create_agent_id(),
             name="Comprehensive Data Standardization Agent",

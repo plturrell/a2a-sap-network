@@ -198,8 +198,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             base_url=base_url or os.getenv("GLEAN_AGENT_URL")
         )
         
-        # Initialize A2AAgentBase 
-        A2AAgentBase.__init__(self, config)
+        # Initialize parent classes properly
+        # Initialize SecureA2AAgent (which will call A2AAgentBase.__init__)
+        SecureA2AAgent.__init__(self, config)
         
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)

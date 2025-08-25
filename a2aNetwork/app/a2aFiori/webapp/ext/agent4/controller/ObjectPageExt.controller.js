@@ -352,7 +352,7 @@ sap.ui.define([
                         resolve(data.token);
                     },
                     error() {
-                        reject("Failed to retrieve CSRF token");
+                        reject(new Error("Failed to retrieve CSRF token"));
                     }
                 });
             });

@@ -251,7 +251,7 @@ class ConnectionPool:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.service_url = service_url
+        self.service_url = service_url
         self.max_connections = max_connections
         self.pool = asyncio.Queue(maxsize=max_connections)
         self.active_connections = 0

@@ -597,15 +597,15 @@ class PerplexityAPIClient(SecureA2AAgent):
             return ["artificial intelligence", "machine learning", "blockchain technology", "climate change", "renewable energy"]
 
 class EnhancedNewsProcessor(SecureA2AAgent):
+    """Enhanced news processing with advanced features"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced news processing with advanced features"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
         
