@@ -10,7 +10,7 @@ import logging
 import json
 from typing import Dict, Any, List, Optional, AsyncGenerator
 from dataclasses import dataclass
-# A2A Protocol: Use blockchain messaging instead of httpx  # External service client - allowed to make HTTP calls
+import httpx  # External service client - allowed to make HTTP calls
 from dotenv import load_dotenv
 import sys
 from pathlib import Path

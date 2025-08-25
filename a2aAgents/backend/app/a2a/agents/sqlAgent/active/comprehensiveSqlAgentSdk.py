@@ -177,12 +177,11 @@ class RealGrokSQLClient:
     """Real Grok AI client for SQL processing"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.api_key = None
+        self.api_key = None
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
         self.client = None

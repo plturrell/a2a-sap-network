@@ -1195,6 +1195,7 @@ sap.ui.define([
             }
 
             return str
+                // eslint-disable-next-line no-control-regex
                 .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
                 .replace(/[<>"'&]/g, "") // Remove HTML characters
                 .trim()
@@ -1252,6 +1253,7 @@ sap.ui.define([
          */
         _sanitizeModelPath(path) {
             return path
+                // eslint-disable-next-line no-control-regex
                 .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
                 .replace(/[<>:"|?*]/g, "") // Remove invalid path characters
                 .replace(/\s+/g, "_") // Replace spaces with underscores

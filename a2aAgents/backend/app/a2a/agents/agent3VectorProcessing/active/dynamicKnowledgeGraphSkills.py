@@ -24,7 +24,6 @@ try:
     from app.a2a.core.trustIdentity import TrustIdentity
 except ImportError:
     class TrustIdentity(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -32,14 +31,13 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs): pass
         def validate(self, *args): return True
 
 try:
     from app.a2a.core.dataValidation import DataValidator
 except ImportError:
     class DataValidator(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -47,14 +45,13 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs): pass
         def validate(self, *args): return {"valid": True}
 
 try:
     from app.clients.grokClient import GrokClient, get_grok_client
 except ImportError:
     class GrokClient(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -62,7 +59,7 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs): pass
         async def generate_embedding(self, *args): return [0] * 768
     def get_grok_client(): return GrokClient()
 
@@ -89,16 +86,8 @@ class NodeType(Enum):
 
 
 @dataclass
-class KnowledgeNode(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Represents a node in the knowledge graph"""
+class KnowledgeNode:
+    """Represents a node in the knowledge graph"""
     node_id: str
     node_type: NodeType
     label: str
@@ -110,16 +99,8 @@ class KnowledgeNode(SecureA2AAgent):
 
 
 @dataclass
-class KnowledgeEdge(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Represents an edge in the knowledge graph"""
+class KnowledgeEdge:
+    """Represents an edge in the knowledge graph"""
     edge_id: str
     source_node_id: str
     target_node_id: str
@@ -132,16 +113,8 @@ class KnowledgeEdge(SecureA2AAgent):
 
 
 @dataclass
-class GraphUpdate(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Represents an update to the knowledge graph"""
+class GraphUpdate:
+    """Represents an update to the knowledge graph"""
     update_id: str
     update_type: str  # "node_add", "node_update", "node_remove", "edge_add", "edge_update", "edge_remove"
     affected_elements: List[str]  # IDs of affected nodes/edges

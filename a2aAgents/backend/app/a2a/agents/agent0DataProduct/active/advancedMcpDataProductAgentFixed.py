@@ -37,15 +37,15 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
         super().__init__(
             agent_id="advanced_mcp_data_product_agent_fixed",
             name="Advanced MCP Data Product Agent (Fixed)",
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             description="Enhanced data product management with real MCP tool integration",
             version="2.1.0",
             base_url=base_url
         )
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Initialize MCP tool providers - REAL INSTANCES
         self.performance_tools = MCPPerformanceTools()

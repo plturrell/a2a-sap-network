@@ -36,18 +36,17 @@ class QuestionComplexity(str, Enum):
 
 
 class SemanticQASkills(SecureA2AAgent):
+    """Enhanced QA testing skills leveraging SAP HANA Knowledge Engine"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced QA testing skills leveraging SAP HANA Knowledge Engine"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaClient=None, vectorServiceUrl=None):
-        
         super().__init__()
         self.hanaClient = hanaClient
         self.vectorServiceUrl = vectorServiceUrl

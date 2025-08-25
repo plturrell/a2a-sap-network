@@ -21,18 +21,17 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 class GrokRealTimeValidator(SecureA2AAgent):
+    """Real-time mathematical calculation validator using Grok AI"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Real-time mathematical calculation validator using Grok AI"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, grok_client: Optional[GrokMathematicalClient] = None):
-        
         super().__init__()
         self.grok_client = grok_client or (GrokMathematicalClient() if GROK_AVAILABLE else None)
         self.validation_queue = asyncio.Queue()

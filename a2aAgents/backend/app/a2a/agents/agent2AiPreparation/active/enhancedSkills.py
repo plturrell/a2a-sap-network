@@ -17,18 +17,17 @@ logger = logging.getLogger(__name__)
 
 
 class EnhancedAIPreparationSkills(SecureA2AAgent):
+    """Enhanced skills for AI Preparation Agent leveraging SAP HANA Knowledge Engine"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced skills for AI Preparation Agent leveraging SAP HANA Knowledge Engine"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaClient=None):
-        
         super().__init__()
         self.hanaClient = hanaClient
         self.embeddingModels = {}

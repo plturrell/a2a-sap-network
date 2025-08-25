@@ -34,16 +34,8 @@ class ConversationState(Enum):
     ERROR = "error"
 
 @dataclass
-class ConversationTurn(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""A single turn in the conversation"""
+class ConversationTurn:
+    """A single turn in the conversation"""
     turn_id: str
     user_input: str
     assistant_response: Dict[str, Any]
@@ -53,20 +45,19 @@ class ConversationTurn(SecureA2AAgent):
     context_used: Dict[str, Any]
     
 class ConversationalCalculationInterface(SecureA2AAgent):
+    """Interactive conversational interface for mathematical problem solving"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Interactive conversational interface for mathematical problem solving"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, 
                  grok_client: Optional[GrokMathematicalClient] = None,
                  calculation_agent = None):
-        
         super().__init__()
         self.grok_client = grok_client or (GrokMathematicalClient() if GROK_AVAILABLE else None)
         self.grok_assistant = GrokMathematicalAssistant(self.grok_client) if self.grok_client else None

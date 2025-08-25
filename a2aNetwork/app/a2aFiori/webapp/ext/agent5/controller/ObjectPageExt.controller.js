@@ -9,7 +9,8 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "sap/base/Log",
     "../utils/SecurityUtils"
-], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel,
+    encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) => {
     "use strict";
 
     /**
@@ -541,7 +542,7 @@ sap.ui.define([
                         resolve(data.token);
                     },
                     error() {
-                        reject("Failed to retrieve CSRF token");
+                        reject(new Error("Failed to retrieve CSRF token"));
                     }
                 });
             });

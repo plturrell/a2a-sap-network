@@ -623,11 +623,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
     async def assess_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Alias for quality_assessment to maintain backward compatibility"""
         return await self.quality_assessment(request_data)
-            
-        except Exception as e:
-            logger.error(f"Quality assessment error: {e}")
-            self.method_performance[method_name]['total'] += 1
-            return create_error_response(f"Assessment error: {str(e)}")
     
     @a2a_skill(
         name="routing_decision",

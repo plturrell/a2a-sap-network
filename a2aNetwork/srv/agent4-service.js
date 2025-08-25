@@ -4,6 +4,7 @@
  */
 
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
 
 // Import the adapter for REST/OData conversion

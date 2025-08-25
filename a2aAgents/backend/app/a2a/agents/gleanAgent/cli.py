@@ -22,7 +22,7 @@ import sys
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List
 import logging
 from datetime import datetime
 import time
@@ -32,7 +32,7 @@ backend_dir = Path(__file__).parent.parent.parent.parent.parent
 sys.path.insert(0, str(backend_dir))
 
 from app.a2a.agents.gleanAgent import GleanAgent
-from app.a2a.agents.gleanAgent.intelligentScanManager import IntelligentScanManager, IntelligentScanCLI
+from app.a2a.agents.gleanAgent.intelligentScanManager import IntelligentScanCLI
 
 # Configure logging
 logging.basicConfig(
@@ -62,7 +62,6 @@ class GleanAgentCLI:
             
             # Initialize intelligent scan manager with proper database path
             import tempfile
-            import os
             scan_db_path = os.path.join(tempfile.gettempdir(), f"intelligent_scan_{os.getpid()}.db")
             self.intelligent_scan_manager = IntelligentScanCLI(scan_db_path)
             print(f"🧠 Intelligent Scan Manager initialized")
@@ -100,19 +99,29 @@ class GleanAgentCLI:
         return result
     
     async def lint_analysis(self, directory: str, options: Dict[str, Any]) -> Dict[str, Any]:
-        """Run real linting analysis"""
+        """Run real linting analysis with severity and language filtering"""
         print(f"\n🔍 REAL LINTING ANALYSIS")
         print(f"📁 Directory: {directory}")
+        
+        # Show filters being applied
+        if options.get("min_severity"):
+            print(f"🎯 Minimum severity: {options['min_severity']}")
+        if options.get("severity"):
+            print(f"🎯 Exact severity: {options['severity']}")
+        if options.get("languages"):
+            print(f"🌐 Languages: {', '.join(options['languages'])}")
         print("-" * 50)
         
         file_patterns = options.get("patterns", ["*.py", "*.js", "*.ts"])
         
-        result = await self.agent._perform_lint_analysis(directory, file_patterns)
+        # Pass filtering options to the analysis method
+        result = await self.agent._perform_lint_analysis(directory, file_patterns, options)
         
         print(f"📊 Analysis Results:")
         print(f"   Files analyzed: {result.get('files_analyzed', 0)}")
         print(f"   Total issues: {result.get('total_issues', 0)}")
         print(f"   Critical issues: {result.get('critical_issues', 0)}")
+        print(f"   Languages scanned: {', '.join(result.get('languages_scanned', []))}")
         print(f"   Linters used: {list(result.get('linter_results', {}).keys())}")
         print(f"   Duration: {result.get('duration', 0):.2f}s")
         
@@ -122,9 +131,10 @@ class GleanAgentCLI:
             for severity, count in result['issues_by_severity'].items():
                 print(f"   {severity.title()}: {count}")
         
-        # Show sample issues
+        # Show filtered issues
         if options.get("show_issues", True) and result.get('issues'):
-            self._display_lint_issues(result['issues'], options.get("max_issues", 10))
+            filtered_issues = self._filter_issues_by_severity(result['issues'], options)
+            self._display_lint_issues(filtered_issues, options.get("max_issues", 10))
         
         if options.get("output"):
             await self._save_results(result, options["output"], "lint")
@@ -482,6 +492,30 @@ class GleanAgentCLI:
             elif analysis_type == "glean":
                 print(f"     Files analyzed: {analysis_result.get('files_analyzed', 0)}")
     
+    def _filter_issues_by_severity(self, issues: List[Dict], options: Dict[str, Any]) -> List[Dict]:
+        """Filter issues by severity level"""
+        if not issues:
+            return []
+        
+        severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
+        
+        # Filter by exact severity if specified
+        if options.get("severity"):
+            return [issue for issue in issues if issue.get('severity') == options["severity"]]
+        
+        # Filter by minimum severity
+        min_severity = options.get("min_severity", "low")
+        min_level = severity_order.get(min_severity, 3)
+        
+        filtered = []
+        for issue in issues:
+            issue_severity = issue.get('severity', 'low')
+            issue_level = severity_order.get(issue_severity, 3)
+            if issue_level <= min_level:
+                filtered.append(issue)
+        
+        return filtered
+    
     def _display_lint_issues(self, issues: list, max_issues: int):
         """Display linting issues"""
         print(f"\n🔍 Issues Found (showing first {min(len(issues), max_issues)}):")
@@ -617,6 +651,13 @@ Examples:
     lint_parser.add_argument('--patterns', nargs='+', default=['*.py', '*.js', '*.ts'], help='File patterns')
     lint_parser.add_argument('--show-issues', action='store_true', default=True, help='Show issues')
     lint_parser.add_argument('--max-issues', type=int, default=10, help='Max issues to show')
+    lint_parser.add_argument('--severity', choices=['critical', 'high', 'medium', 'low'], 
+                           help='Filter by severity level (show only this level and above)')
+    lint_parser.add_argument('--min-severity', choices=['critical', 'high', 'medium', 'low'], default='low',
+                           help='Minimum severity to include (default: low - show all)')
+    lint_parser.add_argument('--languages', nargs='+', 
+                           choices=['python', 'javascript', 'typescript', 'html', 'xml', 'yaml', 'json', 'shell', 'css', 'scss', 'cds', 'solidity'],
+                           help='Scan only specific languages (default: all detected languages)')
     
     # Security analysis
     security_parser = subparsers.add_parser('security', help='Run security vulnerability analysis')
@@ -711,7 +752,10 @@ Examples:
                 'output': args.output,
                 'patterns': args.patterns,
                 'show_issues': args.show_issues,
-                'max_issues': args.max_issues
+                'max_issues': args.max_issues,
+                'severity': getattr(args, 'severity', None),
+                'min_severity': getattr(args, 'min_severity', 'low'),
+                'languages': getattr(args, 'languages', None)
             }
             await cli.lint_analysis(args.directory, options)
             

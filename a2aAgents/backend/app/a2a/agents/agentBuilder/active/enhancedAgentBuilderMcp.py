@@ -204,12 +204,11 @@ class DynamicTemplateEngine:
     """Advanced dynamic template engine with context awareness"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.template_cache: Dict[str, Template] = {}
+        self.template_cache: Dict[str, Template] = {}
         self.context_analyzers: Dict[str, Callable] = {}
         self.template_validators: List[Callable] = []
         self.performance_monitor = PerformanceMonitor()
@@ -870,12 +869,11 @@ class AdvancedBPMNProcessor:
     """Advanced BPMN processor with complex workflow support"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.element_handlers: Dict[BPMNElementType, Callable] = {}
+        self.element_handlers: Dict[BPMNElementType, Callable] = {}
         self.flow_analyzers: List[Callable] = []
         self.optimization_strategies: Dict[str, Callable] = {}
         self._register_element_handlers()
@@ -1345,12 +1343,11 @@ class AdvancedTestGenerator:
     """Advanced test generator with multiple strategies"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.test_strategies: Dict[TestGenerationStrategy, Callable] = {
+        self.test_strategies: Dict[TestGenerationStrategy, Callable] = {
             TestGenerationStrategy.BASIC: self._generate_basic_tests,
             TestGenerationStrategy.PROPERTY_BASED: self._generate_property_based_tests,
             TestGenerationStrategy.MUTATION: self._generate_mutation_tests,
@@ -2664,12 +2661,11 @@ class PerformanceMonitor:
     """Performance monitoring helper"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.metrics = defaultdict(list)
+        self.metrics = defaultdict(list)
     
     def record_metric(self, metric_name: str, value: float):
         """Record a performance metric"""

@@ -16,18 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 class MCPVectorSimilarityCalculator(SecureA2AAgent):
+    """MCP-enabled vector similarity calculator with multiple distance metrics"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""MCP-enabled vector similarity calculator with multiple distance metrics"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
-        
         super().__init__()
         self.supported_metrics = [
             "cosine",

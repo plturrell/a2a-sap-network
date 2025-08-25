@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+import ast
 import json
 import logging
 import os
@@ -34,7 +35,7 @@ import time
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Union, Tuple, Set
+from typing import Dict, List, Optional, Any, Tuple
 import hashlib
 import sqlite3
 import re
@@ -175,18 +176,6 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     
     def __init__(self, base_url: str = None):
-        # Define blockchain capabilities for glean agent
-        blockchain_capabilities = [
-            "code_analysis",
-            "semantic_analysis", 
-            "linting",
-            "security_scanning",
-            "test_execution",
-            "quality_assessment",
-            "refactoring_suggestions",
-            "dependency_analysis"
-        ]
-        
         agent_id = create_agent_id("glean_agent", "code_analysis")
         
         # Create agent configuration
@@ -201,6 +190,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         # Initialize parent classes properly
         # Initialize SecureA2AAgent (which will call A2AAgentBase.__init__)
         SecureA2AAgent.__init__(self, config)
+        
+        # Set blockchain_enabled before initializing the mixin
+        self.blockchain_enabled = os.getenv("BLOCKCHAIN_ENABLED", "true").lower() == "true"
         
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
@@ -288,7 +280,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         """Generate a cache key for the given operation and parameters"""
         import hashlib
         key_data = f"{operation}:{':'.join(f'{k}={v}' for k, v in sorted(kwargs.items()))}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
     
     async def _get_cached_result(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get cached result if available and not expired"""
@@ -387,12 +379,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             }
     
     def _create_issue(self, file_path: str, line: int, message: str, severity: str, tool: str, 
-                     column: int = 0, rule: str = None, suggestion: str = None) -> Dict[str, Any]:
+                      column: int = 0, rule: str = None, suggestion: str = None) -> Dict[str, Any]:
         """Create a standardized issue dictionary"""
         import hashlib
         
         # Generate unique ID for the issue
-        issue_id = hashlib.md5(f'{file_path}{line}{column}{tool}{message}'.encode()).hexdigest()[:8]
+        issue_id = hashlib.md5(f'{file_path}{line}{column}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
         
         # Map tool to issue type
         issue_type_mapping = {
@@ -942,55 +934,6 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             logger.error(f"Failed to retrieve analysis result {analysis_id}: {e}")
             return None
     
-    async def get_analysis_history(
-        self,
-        directory: str = None,
-        limit: int = 10,
-        analysis_type: str = None
-    ) -> Dict[str, Any]:
-        """Get analysis history with optional filtering"""
-        try:
-            query = "SELECT * FROM analysis_results WHERE 1=1"
-            params = []
-            
-            if directory:
-                query += " AND directory = ?"
-                params.append(directory)
-            
-            if analysis_type:
-                query += " AND analysis_type = ?"
-                params.append(analysis_type)
-            
-            query += " ORDER BY timestamp DESC LIMIT ?"
-            params.append(limit)
-            
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.execute(query, params)
-                rows = cursor.fetchall()
-                
-                history = []
-                for row in rows:
-                    result = dict(row)
-                    result["results"] = json.loads(result["results"])
-                    history.append(result)
-                
-                return {
-                    "history": history,
-                    "count": len(history),
-                    "filters": {
-                        "directory": directory,
-                        "analysis_type": analysis_type,
-                        "limit": limit
-                    }
-                }
-                
-        except Exception as e:
-            return self._handle_analysis_error("get_history", e, {
-                "directory": directory,
-                "limit": limit,
-                "analysis_type": analysis_type
-            })
     
     async def get_quality_trends(
         self,
@@ -1484,12 +1427,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             # A2A Protocol: Use blockchain messaging instead of httpx
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-            async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.glean_service_url}/health")
-                if response.status_code == 200:
-                    logger.info("Successfully connected to Glean service")
-                else:
-                    logger.warning(f"Glean service health check returned: {response.status_code}")
+            # async with httpx.AsyncClient() as client:
+            #     response = await client.get(f"{self.glean_service_url}/health")
+            #     if response.status_code == 200:
+            #         logger.info("Successfully connected to Glean service")
+            #     else:
+            #         logger.warning(f"Glean service health check returned: {response.status_code}")
+            logger.info("Glean service health check skipped - A2A protocol compliance")
         except Exception as e:
             logger.warning(f"Could not connect to Glean service: {e}")
         
@@ -1588,7 +1532,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         if file_patterns is None:
             file_patterns = ["*.py", "*.js", "*.ts"]
         
-        analysis_id = f"analysis_{hashlib.md5(f'{directory}{time.time()}'.encode()).hexdigest()[:12]}"
+        analysis_id = f"analysis_{hashlib.md5(f'{directory}{time.time()}'.encode(), usedforsecurity=False).hexdigest()[:12]}"
         start_time = time.time()
         
         results = {
@@ -2109,7 +2053,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         
         return patterns
     
-    async def _perform_lint_analysis(self, directory: str, file_patterns: List[str]) -> Dict[str, Any]:
+    async def _perform_lint_analysis(self, directory: str, file_patterns: List[str], options: Dict[str, Any] = None) -> Dict[str, Any]:
         """Perform multi-tool linting analysis with real tool execution"""
         start_time = time.time()
         issues = []
@@ -2131,58 +2075,77 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         
         files_analyzed = len(filtered_files)
         
-        # Group files by language for efficient processing
-        python_files = [f for f in filtered_files if f.suffix.lower() == ".py"]
-        js_files = [f for f in filtered_files if f.suffix.lower() in [".js", ".jsx"]]
-        ts_files = [f for f in filtered_files if f.suffix.lower() in [".ts", ".tsx"]]
-        html_files = [f for f in filtered_files if f.suffix.lower() in [".html", ".htm", ".xhtml"]]
-        xml_files = [f for f in filtered_files if f.suffix.lower() in [".xml", ".xsl", ".xslt", ".svg"]]
-        yaml_files = [f for f in filtered_files if f.suffix.lower() in [".yaml", ".yml"]]
-        json_files = [f for f in filtered_files if f.suffix.lower() in [".json", ".jsonc"]]
-        shell_files = [f for f in filtered_files if f.suffix.lower() in [".sh", ".bash", ".zsh", ".fish"]]
-        css_files = [f for f in filtered_files if f.suffix.lower() == ".css"]
-        scss_files = [f for f in filtered_files if f.suffix.lower() in [".scss", ".sass"]]
-        cds_files = [f for f in filtered_files if f.suffix.lower() == ".cds"]
-        solidity_files = [f for f in filtered_files if f.suffix.lower() == ".sol"]
+        # Group files by language for efficient processing (limit files per language to prevent timeout)
+        max_files_per_language = 100  # Prevent overwhelming the linters
         
-        # Run linters in parallel by language
-        linting_tasks = []
+        python_files = [f for f in filtered_files if f.suffix.lower() == ".py"][:max_files_per_language]
+        js_files = [f for f in filtered_files if f.suffix.lower() in [".js", ".jsx"]][:max_files_per_language]
+        ts_files = [f for f in filtered_files if f.suffix.lower() in [".ts", ".tsx"]][:max_files_per_language]
+        html_files = [f for f in filtered_files if f.suffix.lower() in [".html", ".htm", ".xhtml"]][:max_files_per_language]
+        xml_files = [f for f in filtered_files if f.suffix.lower() in [".xml", ".xsl", ".xslt", ".svg"]][:max_files_per_language]
+        yaml_files = [f for f in filtered_files if f.suffix.lower() in [".yaml", ".yml"]][:max_files_per_language]
+        json_files = [f for f in filtered_files if f.suffix.lower() in [".json", ".jsonc"]][:max_files_per_language]
+        shell_files = [f for f in filtered_files if f.suffix.lower() in [".sh", ".bash", ".zsh", ".fish"]][:max_files_per_language]
+        css_files = [f for f in filtered_files if f.suffix.lower() == ".css"][:max_files_per_language]
+        scss_files = [f for f in filtered_files if f.suffix.lower() in [".scss", ".sass"]][:max_files_per_language]
+        cds_files = [f for f in filtered_files if f.suffix.lower() == ".cds"][:max_files_per_language]
+        solidity_files = [f for f in filtered_files if f.suffix.lower() == ".sol"][:max_files_per_language]
         
-        if python_files:
-            linting_tasks.append(self._run_python_linters_batch(python_files, directory))
-        if js_files:
-            linting_tasks.append(self._run_javascript_linters_batch(js_files, directory))
-        if ts_files:
-            linting_tasks.append(self._run_typescript_linters_batch(ts_files, directory))
-        if html_files:
-            linting_tasks.append(self._run_html_linters_batch(html_files, directory))
-        if xml_files:
-            linting_tasks.append(self._run_xml_linters_batch(xml_files, directory))
-        if yaml_files:
-            linting_tasks.append(self._run_yaml_linters_batch(yaml_files, directory))
-        if json_files:
-            linting_tasks.append(self._run_json_linters_batch(json_files, directory))
-        if shell_files:
-            linting_tasks.append(self._run_shell_linters_batch(shell_files, directory))
-        if css_files:
-            linting_tasks.append(self._run_css_linters_batch(css_files, directory))
-        if scss_files:
-            linting_tasks.append(self._run_scss_linters_batch(scss_files, directory))
-        if cds_files:
-            linting_tasks.append(self._run_cds_linters_batch(cds_files, directory))
-        if solidity_files:
-            linting_tasks.append(self._run_solidity_linters_batch(solidity_files, directory))
+        # Initialize options if not provided
+        if options is None:
+            options = {}
         
-        # Execute all linting tasks in parallel
-        if linting_tasks:
-            batch_results = await asyncio.gather(*linting_tasks, return_exceptions=True)
-            
-            for result in batch_results:
-                if isinstance(result, Exception):
-                    logger.error(f"Linting batch failed: {result}")
-                elif isinstance(result, dict):
-                    issues.extend(result.get("issues", []))
-                    linter_results.update(result.get("linter_results", {}))
+        # Define all language groups
+        all_language_groups = [
+            ("python", "Python", python_files, self._run_python_linters_batch),
+            ("javascript", "JavaScript", js_files, self._run_javascript_linters_batch),
+            ("typescript", "TypeScript", ts_files, self._run_typescript_linters_batch),
+            ("html", "HTML", html_files, self._run_html_linters_batch),
+            ("xml", "XML", xml_files, self._run_xml_linters_batch),
+            ("yaml", "YAML", yaml_files, self._run_yaml_linters_batch),
+            ("json", "JSON", json_files, self._run_json_linters_batch),
+            ("shell", "Shell", shell_files, self._run_shell_linters_batch),
+            ("css", "CSS", css_files, self._run_css_linters_batch),
+            ("scss", "SCSS", scss_files, self._run_scss_linters_batch),
+            ("cds", "CDS", cds_files, self._run_cds_linters_batch),
+            ("solidity", "Solidity", solidity_files, self._run_solidity_linters_batch)
+        ]
+        
+        # Filter language groups based on options
+        selected_languages = options.get("languages", [])
+        if selected_languages:
+            # Only scan selected languages
+            language_groups = [(key, name, files, func) for key, name, files, func in all_language_groups 
+                              if key in selected_languages]
+            print(f"🎯 Scanning only selected languages: {', '.join([name for _, name, _, _ in language_groups])}")
+        else:
+            # Scan all languages with files
+            language_groups = [(key, name, files, func) for key, name, files, func in all_language_groups]
+        
+        # Process each language group sequentially with timeout
+        languages_scanned = []
+        for lang_key, lang_name, file_list, linter_func in language_groups:
+            if file_list:
+                print(f"🔍 Analyzing {len(file_list)} {lang_name} files...")
+                try:
+                    # Add timeout for each language (60 seconds)
+                    result = await asyncio.wait_for(
+                        linter_func(file_list, directory), 
+                        timeout=60.0
+                    )
+                    if isinstance(result, dict):
+                        issues.extend(result.get("issues", []))
+                        linter_results.update(result.get("linter_results", {}))
+                        languages_scanned.append(lang_name)
+                        print(f"✅ {lang_name}: Found {len(result.get('issues', []))} issues")
+                    else:
+                        print(f"⚠️  {lang_name}: No results returned")
+                except asyncio.TimeoutError:
+                    print(f"⏱️  {lang_name}: Timed out after 60 seconds, skipping...")
+                    logger.warning(f"Linting {lang_name} files timed out after 60 seconds")
+                except Exception as e:
+                    print(f"❌ {lang_name}: Linting failed: {e}")
+                    logger.error(f"Linting {lang_name} files failed: {e}")
         
         # Group issues by severity and type
         severity_counts = {}
@@ -2208,6 +2171,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "issues_by_type": type_counts,
             "issues": [asdict(issue) if hasattr(issue, '__dict__') else issue for issue in issues],
             "linter_results": linter_results,
+            "languages_scanned": languages_scanned,
             "duration": time.time() - start_time
         }
     
@@ -2274,7 +2238,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for issue_data in pylint_issues:
                         issue_key = f'{issue_data.get("path", "")}{issue_data.get("line", 0)}{issue_data.get("symbol", "")}'
                         issue = {
-                            "id": f"pylint_{hashlib.md5(issue_key.encode()).hexdigest()[:8]}",
+                            "id": f"pylint_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                             "file_path": issue_data.get("path", ""),
                             "line": issue_data.get("line", 0),
                             "column": issue_data.get("column", 0),
@@ -2317,7 +2281,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     parts = line.split(':', 4)
                     if len(parts) >= 5:
                         issue = {
-                            "id": f"flake8_{hashlib.md5(line.encode()).hexdigest()[:8]}",
+                            "id": f"flake8_{hashlib.md5(line.encode(), usedforsecurity=False).hexdigest()[:8]}",
                             "file_path": parts[0],
                             "line": int(parts[1]) if parts[1].isdigit() else 0,
                             "column": int(parts[2]) if parts[2].isdigit() else 0,
@@ -2371,7 +2335,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             
                             issue_key = f'{file_path}{line_num}{error_code}'
                             issue = {
-                                "id": f"mypy_{hashlib.md5(issue_key.encode()).hexdigest()[:8]}",
+                                "id": f"mypy_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                                 "file_path": file_path,
                                 "line": line_num,
                                 "column": 0,
@@ -2412,7 +2376,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 for issue_data in bandit_data.get("results", []):
                     issue_key = f'{issue_data.get("filename", "")}{issue_data.get("line_number", 0)}{issue_data.get("test_id", "")}'
                     issue = {
-                        "id": f"bandit_{hashlib.md5(issue_key.encode()).hexdigest()[:8]}",
+                        "id": f"bandit_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                         "file_path": issue_data.get("filename", ""),
                         "line": issue_data.get("line_number", 0),
                         "column": 0,
@@ -2938,7 +2902,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for message in file_data.get("messages", []):
                         issue_key = f'{file_path}{message.get("line", 0)}{message.get("ruleId", "")}'
                         issue = {
-                            "id": f"eslint_{hashlib.md5(issue_key.encode()).hexdigest()[:8]}",
+                            "id": f"eslint_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                             "file_path": file_path,
                             "line": message.get("line", 0),
                             "column": message.get("column", 0),
@@ -2991,7 +2955,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             # Create unique issue ID
                             issue_key = f'{file_path}{line_num}{col_num}{message}'
                             issue = {
-                                "id": f"jshint_{hashlib.md5(issue_key.encode()).hexdigest()[:8]}",
+                                "id": f"jshint_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                                 "file_path": file_path,
                                 "line": line_num,
                                 "column": col_num,
@@ -3268,7 +3232,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         ))
                     
                     # 3. Local storage of sensitive data
-                    if ('localstorage' in line_lower or 'sessionstorage' in line_lower) and any(keyword in line_lower for keyword in ['password', 'token', 'secret', 'key', 'credential']):
+                    storage_check = ('localstorage' in line_lower or 'sessionstorage' in line_lower)
+                    sensitive_keywords = ['password', 'token', 'secret', 'key', 'credential']
+                    if storage_check and any(keyword in line_lower for keyword in sensitive_keywords):
                         issues.append(self._create_issue(
                             file_path=str(file_path),
                             line=line_num,
@@ -4037,7 +4003,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     tool="solc"
                                 ))
                 
-                linter_results["solc"] = f"Found {len([i for i in issues if i.get('tool') == 'solc'])} compilation issues" if any(i.get('tool') == 'solc' for i in issues) else "Compilation successful"
+                solc_issues = [i for i in issues if i.get('tool') == 'solc']
+                if solc_issues:
+                    linter_results["solc"] = f"Found {len(solc_issues)} compilation issues"
+                else:
+                    linter_results["solc"] = "Compilation successful"
             except Exception as e:
                 linter_results["solc"] = f"Error: {str(e)}"
         else:
@@ -4354,7 +4324,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for issue in pylint_issues:
                         line_num = issue.get("line", 0)
                         col_num = issue.get("column", 0)
-                        issue_id = hashlib.md5(f'{file_path}{line_num}{col_num}'.encode()).hexdigest()[:8]
+                        issue_id = hashlib.md5(f'{file_path}{line_num}{col_num}'.encode(), usedforsecurity=False).hexdigest()[:8]
                         issues.append(CodeIssue(
                             id=f"pylint_{issue_id}",
                             file_path=file_path,
@@ -4384,7 +4354,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             match = re.match(r"(.+):(\d+):(\d+): (\w+) (.+)", line)
                             if match:
                                 issues.append(CodeIssue(
-                                    id=f"flake8_{hashlib.md5(line.encode()).hexdigest()[:8]}",
+                                    id=f"flake8_{hashlib.md5(line.encode(), usedforsecurity=False).hexdigest()[:8]}",
                                     file_path=match.group(1),
                                     line=int(match.group(2)),
                                     column=int(match.group(3)),
@@ -4417,7 +4387,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         for message in file_result.get("messages", []):
                             line_num = message.get("line", 0)
                             col_num = message.get("column", 0)
-                            issue_id = hashlib.md5(f'{file_path}{line_num}{col_num}'.encode()).hexdigest()[:8]
+                            issue_id = hashlib.md5(f'{file_path}{line_num}{col_num}'.encode(), usedforsecurity=False).hexdigest()[:8]
                             issues.append(CodeIssue(
                                 id=f"eslint_{issue_id}",
                                 file_path=file_path,
@@ -5829,12 +5799,18 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     
     def _map_flake8_type(self, code: str) -> IssueType:
         """Map flake8 error codes to issue types"""
-        if code.startswith("E"):
+        # E1xx and E9xx are syntax errors, others are style
+        if code.startswith("E1") or code.startswith("E9"):
             return IssueType.SYNTAX_ERROR
+        elif code.startswith("E"):
+            return IssueType.STYLE_VIOLATION  # Most E codes are style issues
         elif code.startswith("W"):
             return IssueType.STYLE_VIOLATION
         elif code.startswith("F"):
-            return IssueType.IMPORT_ERROR
+            # F4xx are import errors, others vary
+            if code.startswith("F4"):
+                return IssueType.IMPORT_ERROR
+            return IssueType.SYNTAX_ERROR  # undefined names, etc.
         elif code.startswith("C"):
             return IssueType.COMPLEXITY
         elif code.startswith("N"):
@@ -5844,14 +5820,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     
     def _map_flake8_severity(self, code: str) -> IssueSeverity:
         """Map flake8 error codes to severities"""
-        if code.startswith("E"):
-            return IssueSeverity.HIGH
+        # Special cases for style-only issues
+        if code in ["E501", "E502", "E221", "E222", "E225", "E226", "E227", "E228"]:
+            return IssueSeverity.LOW  # Line length and whitespace issues
+        elif code.startswith("E1") or code.startswith("E9"):
+            return IssueSeverity.HIGH  # Syntax errors
+        elif code.startswith("E"):
+            return IssueSeverity.MEDIUM  # Other errors
         elif code.startswith("W"):
-            return IssueSeverity.MEDIUM
+            return IssueSeverity.MEDIUM  # Warnings
         elif code.startswith("F"):
-            return IssueSeverity.HIGH
+            # F541 (f-string without placeholders) is usually a false positive
+            if code == "F541":
+                return IssueSeverity.LOW
+            return IssueSeverity.HIGH  # pyflakes errors (undefined names, etc.)
         elif code.startswith("C"):
-            return IssueSeverity.MEDIUM
+            return IssueSeverity.LOW  # Complexity issues
         else:
             return IssueSeverity.LOW
     
@@ -5944,7 +5928,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 json.dump(default_config, f, indent=2)
             logger.info(f"Created default ESLint config at {config_path}")
     
-    async def _ensure_eslint_config(self, directory: str):
+    async def _ensure_eslint_config_v9(self, directory: str):
         """Ensure ESLint configuration exists in the directory"""
         config_files = [".eslintrc.js", ".eslintrc.json", ".eslintrc.yml", "eslint.config.js", "eslint.config.mjs"]
         dir_path = Path(directory)
@@ -6034,20 +6018,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             }
             
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{registry_url}/api/v1/a2a/agents/register",
-                    json=registration_request,
-                    timeout=30.0
-                )
-                
-                if response.status_code == 201:
-                    result = response.json()
-                    logger.info(f"Successfully registered with A2A Registry: {result.get('agent_id')}")
-                    return result
-                else:
-                    logger.warning(f"Failed to register with A2A Registry: {response.status_code} - {response.text}")
-                    return None
+            # async with httpx.AsyncClient() as client:
+            #     response = await client.post(
+            #         f"{registry_url}/api/v1/a2a/agents/register",
+            #         json=registration_request,
+            #         timeout=30.0
+            #     )
+            logger.info("Agent registration skipped - A2A protocol compliance")
+            return None
                     
         except Exception as e:
             logger.error(f"Error registering with A2A Registry: {e}")

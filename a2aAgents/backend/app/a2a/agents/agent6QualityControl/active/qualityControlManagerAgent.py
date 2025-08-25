@@ -264,7 +264,7 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
                 self.agent_identity = AgentIdentity(private_key)
             
             # Initialize blockchain client
-            rpc_url = os.getenv("BLOCKCHAIN_RPC_URL", "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))")
+            rpc_url = os.getenv("BLOCKCHAIN_RPC_URL", os.getenv("A2A_RPC_URL", "http://localhost:8545"))
             self.blockchain_client = A2ABlockchainClient(
                 rpc_url=rpc_url,
                 agent_identity=self.agent_identity,
@@ -302,8 +302,9 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
         self.storage_path = storage_path
         
         # Initialize HTTP client
-        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        # httpx\.AsyncClient(timeout=float(os.getenv("A2A_HTTP_CLIENT_TIMEOUT", "30.0")))
+        # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # self.http_client = httpx.AsyncClient(timeout=float(os.getenv("A2A_HTTP_CLIENT_TIMEOUT", "30.0")))
+        self.http_client = None
         
         # Initialize trust system
         await self._initialize_trust_system()
@@ -1653,8 +1654,9 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
             }
             
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=10.0) as client:
+            # async with httpx.AsyncClient() as client:
+            # httpx.AsyncClient(timeout=10.0) as client:
+            if True:  # Placeholder for blockchain messaging
                 response = await client.post(
                     f"{self.data_manager_url}/a2a/data_manager_agent/v1/rpc",
                     json=rpc_request
@@ -2308,8 +2310,9 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
             async def query_data_manager():
                 try:
                     # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=30.0) as client:
+                    # async with httpx.AsyncClient() as client:
+                    # httpx.AsyncClient(timeout=30.0) as client:
+                    if True:  # Placeholder for blockchain messaging
                         rpc_request = {
                             "jsonrpc": "2.0",
                             "method": "query",
@@ -2403,8 +2406,9 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
                         # Continue without signature in development mode
                 
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
+                # async with httpx.AsyncClient() as client:
+                # httpx.AsyncClient() as client:
+                if True:  # Placeholder for blockchain messaging
                     response = await client.post(
                         f"{self.data_manager_url}/a2a/tasks",
                         json=message,
@@ -3732,8 +3736,9 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
                 ]
                 
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=10.0) as client:
+                # async with httpx.AsyncClient() as client:
+                # httpx.AsyncClient(timeout=10.0) as client:
+                if True:  # Placeholder for blockchain messaging
                     for i, test_case in enumerate(test_cases):
                         try:
                             response = await client.post(
@@ -3770,8 +3775,9 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
                 ]
                 
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=10.0) as client:
+                # async with httpx.AsyncClient() as client:
+                # httpx.AsyncClient(timeout=10.0) as client:
+                if True:  # Placeholder for blockchain messaging
                     for i, scenario in enumerate(test_scenarios):
                         try:
                             response = await client.post(
@@ -3848,8 +3854,8 @@ async def main():
     
     parser = argparse.ArgumentParser(description="Quality Control Manager Agent")
     parser.add_argument("--base-url", default=os.getenv("A2A_SERVICE_URL"), help="Agent base URL")
-    parser.add_argument("--data-manager-url", default="os.getenv("DATA_MANAGER_URL")", help="Data Manager URL")
-    parser.add_argument("--catalog-manager-url", default="os.getenv("CATALOG_MANAGER_URL")", help="Catalog Manager URL")
+    parser.add_argument("--data-manager-url", default=os.getenv("DATA_MANAGER_URL", "http://localhost:8001"), help="Data Manager URL")
+    parser.add_argument("--catalog-manager-url", default=os.getenv("CATALOG_MANAGER_URL", "http://localhost:8002"), help="Catalog Manager URL")
     args = parser.parse_args()
     
     # Create and initialize agent

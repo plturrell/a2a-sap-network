@@ -111,6 +111,70 @@ entity GoalNotifications : managed, cuid {
   priority        : String(20) enum { low; medium; high; urgent } default 'medium';
 }
 
+// Goal Dependencies for dependency management
+entity GoalDependencies : cuid {
+  goal            : Association to Goals;
+  dependsOnGoal   : Association to Goals;
+  dependencyType  : String(50) enum { prerequisite; co_requisite; blocking; informational } default 'prerequisite';
+  isBlocking      : Boolean default true;
+  description     : String(500);
+  validatedAt     : Timestamp;
+}
+
+// Collaborative Goals for cross-agent collaboration
+entity CollaborativeGoals : managed, cuid {
+  title           : String(200);
+  description     : LargeString;
+  status          : String(20) enum { planning; active; completed; cancelled } default 'planning';
+  overallProgress : Decimal(5,2) default 0.00;
+  coordinator     : Association to Agents;
+  participants    : Composition of many CollaborativeParticipants on participants.collaborativeGoal = $self;
+  milestones      : Composition of many CollaborativeMilestones on milestones.collaborativeGoal = $self;
+  targetDate      : Date;
+  completedDate   : Date;
+}
+
+entity CollaborativeParticipants : cuid {
+  collaborativeGoal : Association to CollaborativeGoals;
+  agent           : Association to Agents;
+  role            : String(50) enum { leader; contributor; reviewer; observer } default 'contributor';
+  contribution    : Decimal(5,2) default 0.00;
+  joinedAt        : Timestamp;
+  responsibilities : LargeString;
+}
+
+entity CollaborativeMilestones : managed, cuid {
+  collaborativeGoal : Association to CollaborativeGoals;
+  title           : String(200);
+  description     : LargeString;
+  achievedDate    : Timestamp;
+  significance    : String(20) enum { low; medium; high; critical } default 'medium';
+  contributingAgents : array of String(50);
+}
+
+// Goal Conflicts for tracking and resolving conflicts
+entity GoalConflicts : managed, cuid {
+  goal1           : Association to Goals;
+  goal2           : Association to Goals;
+  conflictType    : String(50) enum { resource; timeline; priority; objective } default 'resource';
+  severity        : String(20) enum { low; medium; high; critical } default 'medium';
+  status          : String(20) enum { identified; analyzing; resolved; accepted } default 'identified';
+  description     : LargeString;
+  resolution      : LargeString;
+  resolvedAt      : Timestamp;
+  resolvedBy      : String(100);
+}
+
+// Goal Activity for tracking all goal-related activities
+entity GoalActivity : managed, cuid {
+  goal            : Association to Goals;
+  agent           : Association to Agents;
+  timestamp       : Timestamp;
+  activityType    : String(50) enum { created; updated; progress_tracked; milestone_achieved; status_changed; conflict_detected; dependency_added };
+  description     : String(500);
+  metadata        : LargeString; // JSON with activity-specific data
+}
+
 entity SystemAnalytics : managed, cuid {
   timestamp       : Timestamp;
   totalAgents     : Integer;
@@ -161,3 +225,83 @@ view SystemMetricsSummary as select from SystemAnalytics {
   agentsAbove50,
   systemHealth
 } order by timestamp desc;
+
+// Visualization-specific views
+view GoalDependencyGraph as select from GoalDependencies {
+  goal.ID as sourceGoalId,
+  goal.specific as sourceGoalTitle,
+  goal.agent.agentId as sourceAgentId,
+  goal.status as sourceStatus,
+  goal.overallProgress as sourceProgress,
+  dependsOnGoal.ID as targetGoalId,
+  dependsOnGoal.specific as targetGoalTitle,
+  dependsOnGoal.agent.agentId as targetAgentId,
+  dependsOnGoal.status as targetStatus,
+  dependsOnGoal.overallProgress as targetProgress,
+  dependencyType,
+  isBlocking
+};
+
+view CollaborativeGoalNetwork as select from CollaborativeParticipants {
+  collaborativeGoal.ID as goalId,
+  collaborativeGoal.title as goalTitle,
+  collaborativeGoal.status as goalStatus,
+  collaborativeGoal.overallProgress as goalProgress,
+  agent.agentId,
+  agent.agentName,
+  role,
+  contribution,
+  joinedAt
+};
+
+view ConflictAnalysis as select from GoalConflicts {
+  ID as conflictId,
+  goal1.ID as goal1Id,
+  goal1.specific as goal1Title,
+  goal1.agent.agentId as goal1AgentId,
+  goal2.ID as goal2Id,
+  goal2.specific as goal2Title,
+  goal2.agent.agentId as goal2AgentId,
+  conflictType,
+  severity,
+  status,
+  createdAt,
+  resolvedAt
+} where status != 'resolved';
+
+// Service definition
+service GoalManagementService @(path: '/api/v1/goal-management') {
+  // Core entities
+  entity Agents as projection on a2a.goalmanagement.Agents;
+  entity Goals as projection on a2a.goalmanagement.Goals;
+  entity GoalProgress as projection on a2a.goalmanagement.GoalProgress;
+  entity Milestones as projection on a2a.goalmanagement.Milestones;
+  entity AgentMetrics as projection on a2a.goalmanagement.AgentMetrics;
+  
+  // Enhanced entities
+  entity GoalDependencies as projection on a2a.goalmanagement.GoalDependencies;
+  entity CollaborativeGoals as projection on a2a.goalmanagement.CollaborativeGoals;
+  entity GoalConflicts as projection on a2a.goalmanagement.GoalConflicts;
+  entity GoalActivity as projection on a2a.goalmanagement.GoalActivity;
+  
+  // Analytics and views
+  entity SystemAnalytics as projection on a2a.goalmanagement.SystemAnalytics;
+  entity AgentGoalSummary as projection on a2a.goalmanagement.AgentGoalSummary;
+  entity GoalProgressSummary as projection on a2a.goalmanagement.GoalProgressSummary;
+  
+  // Visualization endpoints
+  @readonly entity GoalVisualization {
+    key type : String enum { overview; progress_timeline; agent_comparison; goal_heatmap; dependency_graph; collaborative_goals };
+    agentId : String;
+    dateRange : Integer;
+    data : LargeString; // JSON response from visualization functions
+  }
+  
+  // Actions for goal management
+  action assignGoal(agentId: String, goalData: String) returns String;
+  action updateProgress(goalId: String, progressData: String) returns String;
+  action detectConflicts(goalId: String) returns array of String;
+  action resolveConflict(conflictId: String, resolution: String) returns Boolean;
+  action createCollaborativeGoal(goalData: String, participants: array of String) returns String;
+  action generateAIPredictions(goalId: String) returns String;
+}

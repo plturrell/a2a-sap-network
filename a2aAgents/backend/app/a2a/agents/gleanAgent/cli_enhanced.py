@@ -10,16 +10,15 @@ import json
 import sys
 import os
 from typing import Dict, Any, Optional
-from datetime import datetime
 
-from .glean_agent_enhanced import create_enhanced_glean_agent, quick_analyze
+from .glean_agent_enhanced import create_enhanced_glean_agent, quick_analyze, GleanAgentEnhanced
 
 
 class EnhancedGleanCLI:
     """Enhanced CLI for comprehensive code analysis"""
     
     def __init__(self):
-        self.agent: Optional['GleanAgentEnhanced'] = None
+        self.agent: Optional[GleanAgentEnhanced] = None
         
     async def analyze_comprehensive(self, args) -> int:
         """Run comprehensive analysis"""
@@ -352,13 +351,13 @@ Examples:
     
     # Global options
     parser.add_argument('--log-level', 
-                       choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], 
-                       default='INFO',
-                       help='Set logging level')
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], 
+                        default='INFO',
+                        help='Set logging level')
     parser.add_argument('--output-format',
-                       choices=['human', 'json'],
-                       default='human',
-                       help='Output format')
+                        choices=['human', 'json'],
+                        default='human',
+                        help='Output format')
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
@@ -396,10 +395,10 @@ Examples:
     security_parser.add_argument('directory', help='Directory to scan')
     
     # Health check command
-    health_parser = subparsers.add_parser('health', help='Run health check')
+    subparsers.add_parser('health', help='Run health check')
     
     # Status command  
-    status_parser = subparsers.add_parser('status', help='Get real-time status')
+    subparsers.add_parser('status', help='Get real-time status')
     
     args = parser.parse_args()
     

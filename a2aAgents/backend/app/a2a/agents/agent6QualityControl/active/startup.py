@@ -92,8 +92,7 @@ async def health_check_services(agent: QualityControlManagerAgent):
         try:
             # A2A Protocol: Use blockchain messaging instead of httpx
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
+            async with httpx.AsyncClient() as client:
                 response = await client.get(f"{service_url}/health", timeout=10.0)
                 if response.status_code == 200:
                     healthy_services.append(service_name)
@@ -297,13 +296,13 @@ Environment Variables:
     
     parser.add_argument(
         "--data-manager-url",
-        default=os.getenv("DATA_MANAGER_URL", "os.getenv("DATA_MANAGER_URL")"),
+        default=os.getenv("DATA_MANAGER_URL", "http://localhost:8001"),
         help="Data Manager service URL (default: http://localhost:8001)"
     )
     
     parser.add_argument(
         "--catalog-manager-url",
-        default=os.getenv("CATALOG_MANAGER_URL", "os.getenv("CATALOG_MANAGER_URL")"),
+        default=os.getenv("CATALOG_MANAGER_URL", "http://localhost:8002"),
         help="Catalog Manager service URL (default: http://localhost:8002)"
     )
     

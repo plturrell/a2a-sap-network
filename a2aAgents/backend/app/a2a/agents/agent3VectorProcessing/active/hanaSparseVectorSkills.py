@@ -18,18 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 class HanaSparseVectorSkills(SecureA2AAgent):
+    """Enhanced sparse vector processing capabilities for SAP HANA"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced sparse vector processing capabilities for SAP HANA"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaConnection=None):
-        
         super().__init__()
         self.hanaConnection = hanaConnection
         self.sparseFormats = {

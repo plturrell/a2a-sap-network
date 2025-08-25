@@ -22,7 +22,6 @@ try:
     from app.a2a.core.trustIdentity import TrustIdentity
 except ImportError:
     class TrustIdentity(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -30,14 +29,13 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs): pass
         def validate(self, *args): return True
 
 try:
     from app.a2a.core.dataValidation import DataValidator
 except ImportError:
     class DataValidator(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -45,21 +43,13 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs): pass
         def validate(self, *args): return {"valid": True}
 
 
 @dataclass
-class QuantizationConfig(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Configuration for vector quantization parameters"""
+class QuantizationConfig:
+    """Configuration for vector quantization parameters"""
     num_subquantizers: int = 8  # Number of subquantizers (m)
     subquantizer_bits: int = 8  # Bits per subquantizer (nbits)
     training_vectors_count: int = 10000  # Vectors for training

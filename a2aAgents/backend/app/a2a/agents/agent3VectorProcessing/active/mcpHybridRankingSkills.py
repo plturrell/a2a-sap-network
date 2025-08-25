@@ -20,18 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 class MCPHybridRankingSkills(SecureA2AAgent):
+    """MCP-enabled hybrid ranking with exposed tools for cross-agent usage"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""MCP-enabled hybrid ranking with exposed tools for cross-agent usage"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaConnection=None):
-        
         super().__init__()
         self.hanaConnection = hanaConnection
         self.executor = ThreadPoolExecutor(max_workers=4)

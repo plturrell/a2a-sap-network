@@ -12,11 +12,11 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
-from ....sdk.a2aNetworkClient import A2ANetworkClient
+from ....core.networkClient import A2ANetworkClient
 from .comprehensiveOrchestratorAgentSdk import ComprehensiveOrchestratorAgentSDK
 from ....storage.distributedStorage import get_distributed_storage
 from ....network.agentRegistration import get_registration_service
@@ -37,6 +37,8 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
             agent_id="orchestrator_agent",
             agent_name="Orchestrator Agent",
             agent_version="1.0.0",
+            description="A2A-compliant workflow orchestration and coordination system",
+            base_url=os.getenv("A2A_BASE_URL", "http://localhost:4004"),
             allowed_operations={
                 "orchestrator_info",
                 "workflow_orchestration",
@@ -60,7 +62,14 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
                 "track_goal_progress",
                 "update_goal_status",
                 "get_goal_analytics",
-                "goal_assignment_acknowledged"
+                "goal_assignment_acknowledged",
+                "check_goal_exists",
+                "check_goal_conflicts",
+                "add_goal_dependency",
+                "remove_goal_dependency",
+                "get_goal_dependencies",
+                "validate_goal_dependencies",
+                "get_dependency_graph"
             },
             enable_authentication=True,
             enable_rate_limiting=True,
@@ -88,6 +97,11 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
         self.agent_goals = {}
         self.goal_progress = {}
         self.goal_history = {}
+        
+        # Initialize goal dependency tracking
+        self.goal_dependencies = {}  # goal_id -> list of dependency goal_ids
+        self.reverse_dependencies = {}  # goal_id -> list of dependent goal_ids
+        self.goal_conflicts = {}  # goal_id -> list of conflicting goal_ids
         
         # Initialize persistent storage
         self.persistent_storage_path = os.path.join(
@@ -129,6 +143,23 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
             if history_data:
                 self.goal_history = json.loads(history_data)
                 logger.info(f"Loaded goal history for {len(self.goal_history)} agents")
+            
+            # Load dependency data
+            deps_data = await self.storage.get("orchestrator:goal_dependencies")
+            if deps_data:
+                self.goal_dependencies = json.loads(deps_data)
+                logger.info(f"Loaded {len(self.goal_dependencies)} goal dependencies")
+            
+            reverse_deps_data = await self.storage.get("orchestrator:reverse_dependencies")
+            if reverse_deps_data:
+                self.reverse_dependencies = json.loads(reverse_deps_data)
+                logger.info(f"Loaded {len(self.reverse_dependencies)} reverse dependencies")
+            
+            # Load conflicts data
+            conflicts_data = await self.storage.get("orchestrator:goal_conflicts")
+            if conflicts_data:
+                self.goal_conflicts = json.loads(conflicts_data)
+                logger.info(f"Loaded {len(self.goal_conflicts)} goal conflicts")
                 
         except Exception as e:
             logger.warning(f"Failed to load persistent goals: {e}")
@@ -144,6 +175,13 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
             
             # Save history
             await self.storage.set("orchestrator:goal_history", json.dumps(self.goal_history))
+            
+            # Save dependencies
+            await self.storage.set("orchestrator:goal_dependencies", json.dumps(self.goal_dependencies))
+            await self.storage.set("orchestrator:reverse_dependencies", json.dumps(self.reverse_dependencies))
+            
+            # Save conflicts
+            await self.storage.set("orchestrator:goal_conflicts", json.dumps(self.goal_conflicts))
             
             logger.debug("Saved goal data to persistent storage")
         except Exception as e:
@@ -568,8 +606,22 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
                     "created_at": datetime.utcnow().isoformat(),
                     "created_by": message.sender_id,
                     "status": "active",
-                    "version": goals_data.get("version", "1.0")
+                    "version": goals_data.get("version", "1.0"),
+                    "dependencies": goals_data.get("dependencies", []),
+                    "collaborative_agents": goals_data.get("collaborative_agents", [])
                 }
+                
+                # Process dependencies if provided
+                if "dependencies" in goals_data:
+                    for goal_obj in goals_data.get("primary_objectives", []):
+                        goal_id = goal_obj.get("goal_id")
+                        if goal_id and "dependencies" in goal_obj:
+                            self.goal_dependencies[goal_id] = goal_obj["dependencies"]
+                            # Update reverse dependencies
+                            for dep_id in goal_obj["dependencies"]:
+                                if dep_id not in self.reverse_dependencies:
+                                    self.reverse_dependencies[dep_id] = []
+                                self.reverse_dependencies[dep_id].append(goal_id)
                 
                 self.agent_goals[agent_id] = goal_record
                 
@@ -874,6 +926,425 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
             except Exception as e:
                 logger.error(f"Failed to get_goal_analytics: {e}")
                 return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("check_goal_exists")
+        async def handle_check_goal_exists(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Check if a goal exists"""
+            try:
+                goal_id = data.get("goal_id")
+                if not goal_id:
+                    return self.create_secure_response("goal_id is required", status="error")
+                
+                # Check in all agent goals
+                exists = False
+                owning_agent = None
+                for agent_id, goal_record in self.agent_goals.items():
+                    goals = goal_record.get("goals", {}).get("primary_objectives", [])
+                    for goal in goals:
+                        if goal.get("goal_id") == goal_id:
+                            exists = True
+                            owning_agent = agent_id
+                            break
+                    if exists:
+                        break
+                
+                result = {
+                    "exists": exists,
+                    "goal_id": goal_id,
+                    "owning_agent": owning_agent
+                }
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to check_goal_exists: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("check_goal_conflicts")
+        async def handle_check_goal_conflicts(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Check for conflicts with existing goals"""
+            try:
+                agent_id = data.get("agent_id")
+                new_goal = data.get("new_goal", {})
+                
+                if not agent_id or not new_goal:
+                    return self.create_secure_response("agent_id and new_goal are required", status="error")
+                
+                conflicts = []
+                
+                # Check for resource conflicts
+                if agent_id in self.agent_goals:
+                    existing_goals = self.agent_goals[agent_id].get("goals", {}).get("primary_objectives", [])
+                    for existing_goal in existing_goals:
+                        if existing_goal.get("status") == "active":
+                            # Check for overlapping KPIs
+                            new_kpis = set(new_goal.get("measurable", {}).keys())
+                            existing_kpis = set(existing_goal.get("measurable", {}).keys())
+                            
+                            if new_kpis & existing_kpis:  # Intersection
+                                conflicts.append({
+                                    "goal_id": existing_goal.get("goal_id"),
+                                    "conflict_type": "resource",
+                                    "details": f"Overlapping KPIs: {list(new_kpis & existing_kpis)}"
+                                })
+                            
+                            # Check for timeline conflicts
+                            new_end = new_goal.get("time_bound")
+                            existing_end = existing_goal.get("time_bound")
+                            if new_end == existing_end:
+                                conflicts.append({
+                                    "goal_id": existing_goal.get("goal_id"),
+                                    "conflict_type": "timeline",
+                                    "details": "Same target completion date"
+                                })
+                
+                # Check for cross-agent conflicts
+                if "collaborative_agents" in new_goal:
+                    for collab_agent in new_goal["collaborative_agents"]:
+                        if collab_agent in self.agent_goals:
+                            # Check if collaborative agent has conflicting goals
+                            collab_goals = self.agent_goals[collab_agent].get("goals", {}).get("primary_objectives", [])
+                            for cg in collab_goals:
+                                if cg.get("priority") == "critical" and new_goal.get("priority") == "critical":
+                                    conflicts.append({
+                                        "goal_id": cg.get("goal_id"),
+                                        "conflict_type": "priority",
+                                        "details": f"Both goals have critical priority for agent {collab_agent}"
+                                    })
+                
+                result = {
+                    "has_conflicts": len(conflicts) > 0,
+                    "conflicting_goals": [c["goal_id"] for c in conflicts],
+                    "conflicts": conflicts
+                }
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to check_goal_conflicts: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("add_goal_dependency")
+        async def handle_add_goal_dependency(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Add a dependency between goals"""
+            try:
+                goal_id = data.get("goal_id")
+                depends_on_goal_id = data.get("depends_on_goal_id")
+                dependency_type = data.get("dependency_type", "prerequisite")
+                
+                if not goal_id or not depends_on_goal_id:
+                    return self.create_secure_response("goal_id and depends_on_goal_id are required", status="error")
+                
+                # Validate both goals exist
+                goal_exists = await self._check_goal_exists_internal(goal_id)
+                dependency_exists = await self._check_goal_exists_internal(depends_on_goal_id)
+                
+                if not goal_exists:
+                    return self.create_secure_response(f"Goal {goal_id} does not exist", status="error")
+                if not dependency_exists:
+                    return self.create_secure_response(f"Dependency goal {depends_on_goal_id} does not exist", status="error")
+                
+                # Check for circular dependencies
+                if await self._would_create_circular_dependency(goal_id, depends_on_goal_id):
+                    return self.create_secure_response("Cannot add dependency: would create circular dependency", status="error")
+                
+                # Add dependency
+                if goal_id not in self.goal_dependencies:
+                    self.goal_dependencies[goal_id] = []
+                
+                if depends_on_goal_id not in self.goal_dependencies[goal_id]:
+                    self.goal_dependencies[goal_id].append(depends_on_goal_id)
+                
+                # Update reverse dependencies
+                if depends_on_goal_id not in self.reverse_dependencies:
+                    self.reverse_dependencies[depends_on_goal_id] = []
+                
+                if goal_id not in self.reverse_dependencies[depends_on_goal_id]:
+                    self.reverse_dependencies[depends_on_goal_id].append(goal_id)
+                
+                # Save to persistent storage
+                await self._save_persistent_goals()
+                
+                result = {
+                    "status": "success",
+                    "goal_id": goal_id,
+                    "depends_on_goal_id": depends_on_goal_id,
+                    "dependency_type": dependency_type,
+                    "total_dependencies": len(self.goal_dependencies.get(goal_id, []))
+                }
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="add_goal_dependency",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to add_goal_dependency: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("remove_goal_dependency")
+        async def handle_remove_goal_dependency(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Remove a dependency between goals"""
+            try:
+                goal_id = data.get("goal_id")
+                depends_on_goal_id = data.get("depends_on_goal_id")
+                
+                if not goal_id or not depends_on_goal_id:
+                    return self.create_secure_response("goal_id and depends_on_goal_id are required", status="error")
+                
+                # Remove dependency
+                if goal_id in self.goal_dependencies and depends_on_goal_id in self.goal_dependencies[goal_id]:
+                    self.goal_dependencies[goal_id].remove(depends_on_goal_id)
+                    if not self.goal_dependencies[goal_id]:
+                        del self.goal_dependencies[goal_id]
+                
+                # Update reverse dependencies
+                if depends_on_goal_id in self.reverse_dependencies and goal_id in self.reverse_dependencies[depends_on_goal_id]:
+                    self.reverse_dependencies[depends_on_goal_id].remove(goal_id)
+                    if not self.reverse_dependencies[depends_on_goal_id]:
+                        del self.reverse_dependencies[depends_on_goal_id]
+                
+                # Save to persistent storage
+                await self._save_persistent_goals()
+                
+                result = {
+                    "status": "success",
+                    "goal_id": goal_id,
+                    "depends_on_goal_id": depends_on_goal_id,
+                    "remaining_dependencies": len(self.goal_dependencies.get(goal_id, []))
+                }
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to remove_goal_dependency: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("get_goal_dependencies")
+        async def handle_get_goal_dependencies(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Get dependencies for a goal"""
+            try:
+                goal_id = data.get("goal_id")
+                include_transitive = data.get("include_transitive", False)
+                
+                if not goal_id:
+                    return self.create_secure_response("goal_id is required", status="error")
+                
+                direct_dependencies = self.goal_dependencies.get(goal_id, [])
+                dependent_goals = self.reverse_dependencies.get(goal_id, [])
+                
+                result = {
+                    "goal_id": goal_id,
+                    "direct_dependencies": direct_dependencies,
+                    "dependent_goals": dependent_goals
+                }
+                
+                if include_transitive:
+                    result["transitive_dependencies"] = await self._get_transitive_dependencies(goal_id)
+                    result["is_circular"] = await self._has_circular_dependency(goal_id)
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to get_goal_dependencies: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("validate_goal_dependencies")
+        async def handle_validate_goal_dependencies(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Validate all goal dependencies are satisfied"""
+            try:
+                goal_id = data.get("goal_id")
+                
+                if not goal_id:
+                    return self.create_secure_response("goal_id is required", status="error")
+                
+                dependencies = self.goal_dependencies.get(goal_id, [])
+                validation_results = []
+                all_satisfied = True
+                
+                for dep_id in dependencies:
+                    dep_status = await self._get_goal_status(dep_id)
+                    dep_progress = await self._get_goal_progress(dep_id)
+                    
+                    is_satisfied = dep_status == "completed" or dep_progress >= 100.0
+                    
+                    validation_results.append({
+                        "dependency_goal_id": dep_id,
+                        "status": dep_status,
+                        "progress": dep_progress,
+                        "is_satisfied": is_satisfied
+                    })
+                    
+                    if not is_satisfied:
+                        all_satisfied = False
+                
+                result = {
+                    "goal_id": goal_id,
+                    "all_dependencies_satisfied": all_satisfied,
+                    "dependency_count": len(dependencies),
+                    "validation_results": validation_results
+                }
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to validate_goal_dependencies: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("get_dependency_graph")
+        async def handle_get_dependency_graph(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Get the full dependency graph for visualization"""
+            try:
+                agent_filter = data.get("agent_id")
+                
+                nodes = []
+                edges = []
+                
+                # Build nodes from all goals
+                for agent_id, goal_record in self.agent_goals.items():
+                    if agent_filter and agent_id != agent_filter:
+                        continue
+                        
+                    goals = goal_record.get("goals", {}).get("primary_objectives", [])
+                    for goal in goals:
+                        goal_id = goal.get("goal_id")
+                        if goal_id:
+                            nodes.append({
+                                "id": goal_id,
+                                "agent_id": agent_id,
+                                "label": goal.get("specific", "")[:50] + "...",
+                                "status": goal_record.get("status", "active"),
+                                "progress": self.goal_progress.get(agent_id, {}).get("overall_progress", 0)
+                            })
+                
+                # Build edges from dependencies
+                for goal_id, deps in self.goal_dependencies.items():
+                    for dep_id in deps:
+                        edges.append({
+                            "source": goal_id,
+                            "target": dep_id,
+                            "type": "depends_on"
+                        })
+                
+                result = {
+                    "nodes": nodes,
+                    "edges": edges,
+                    "statistics": {
+                        "total_goals": len(nodes),
+                        "total_dependencies": len(edges),
+                        "goals_with_dependencies": len(self.goal_dependencies),
+                        "goals_as_dependencies": len(self.reverse_dependencies)
+                    }
+                }
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to get_dependency_graph: {e}")
+                return self.create_secure_response(str(e), status="error")
+    
+    # Helper methods for dependency management
+    async def _check_goal_exists_internal(self, goal_id: str) -> bool:
+        """Internal method to check if a goal exists"""
+        for agent_id, goal_record in self.agent_goals.items():
+            goals = goal_record.get("goals", {}).get("primary_objectives", [])
+            for goal in goals:
+                if goal.get("goal_id") == goal_id:
+                    return True
+        return False
+    
+    async def _would_create_circular_dependency(self, goal_id: str, new_dependency: str) -> bool:
+        """Check if adding a dependency would create a circular dependency"""
+        # Use DFS to check for cycles
+        visited = set()
+        
+        def has_path(current: str, target: str) -> bool:
+            if current == target:
+                return True
+            if current in visited:
+                return False
+            visited.add(current)
+            
+            for dep in self.goal_dependencies.get(current, []):
+                if has_path(dep, target):
+                    return True
+            return False
+        
+        # Check if new_dependency can reach goal_id
+        return has_path(new_dependency, goal_id)
+    
+    async def _get_transitive_dependencies(self, goal_id: str) -> List[str]:
+        """Get all transitive dependencies of a goal"""
+        all_deps = set()
+        to_process = [goal_id]
+        
+        while to_process:
+            current = to_process.pop()
+            for dep in self.goal_dependencies.get(current, []):
+                if dep not in all_deps:
+                    all_deps.add(dep)
+                    to_process.append(dep)
+        
+        return list(all_deps)
+    
+    async def _has_circular_dependency(self, goal_id: str) -> bool:
+        """Check if a goal has circular dependencies"""
+        return await self._would_create_circular_dependency(goal_id, goal_id)
+    
+    async def _get_goal_status(self, goal_id: str) -> Optional[str]:
+        """Get the status of a goal"""
+        for agent_id, goal_record in self.agent_goals.items():
+            goals = goal_record.get("goals", {}).get("primary_objectives", [])
+            for goal in goals:
+                if goal.get("goal_id") == goal_id:
+                    return goal_record.get("status", "unknown")
+        return None
+    
+    async def _get_goal_progress(self, goal_id: str) -> float:
+        """Get the progress of a goal"""
+        for agent_id, goal_record in self.agent_goals.items():
+            goals = goal_record.get("goals", {}).get("primary_objectives", [])
+            for goal in goals:
+                if goal.get("goal_id") == goal_id:
+                    return self.goal_progress.get(agent_id, {}).get("overall_progress", 0.0)
+        return 0.0
+    
+    def _calculate_success_criteria_met(self, agent_id: str) -> int:
+        """Calculate how many success criteria have been met"""
+        if agent_id not in self.agent_goals:
+            return 0
+            
+        goal_record = self.agent_goals[agent_id]
+        success_criteria = goal_record.get("goals", {}).get("success_criteria", [])
+        progress_data = self.goal_progress.get(agent_id, {})
+        objective_progress = progress_data.get("objective_progress", {})
+        
+        met_count = 0
+        for criterion in success_criteria:
+            metric_name = criterion.get("metric_name")
+            target_value = criterion.get("target_value")
+            comparison = criterion.get("comparison", ">=")
+            
+            if metric_name in objective_progress:
+                current_value = objective_progress[metric_name]
+                
+                if comparison == ">=" and current_value >= target_value:
+                    met_count += 1
+                elif comparison == ">" and current_value > target_value:
+                    met_count += 1
+                elif comparison == "<=" and current_value <= target_value:
+                    met_count += 1
+                elif comparison == "<" and current_value < target_value:
+                    met_count += 1
+                elif comparison == "==" and current_value == target_value:
+                    met_count += 1
+        
+        return met_count
     
     async def _initialize_ai_integration(self):
         """Initialize AI integration for enhanced goal management"""
@@ -989,17 +1460,49 @@ class OrchestratorAgentA2AHandler(SecureA2AAgent):
         
         logger.info(f"A2A handler started and registered on blockchain")
     
+    async def initialize(self) -> None:
+        """Initialize agent-specific resources"""
+        logger.info(f"Initializing A2A handler for {self.config.agent_name}")
+        
+        try:
+            # Connect to blockchain
+            await self.a2a_client.connect()
+            
+            # Register agent on blockchain
+            await self.a2a_client.register_agent({
+                "agent_id": self.config.agent_id,
+                "agent_name": self.config.agent_name,
+                "capabilities": list(self.config.allowed_operations),
+                "version": self.config.agent_version
+            })
+            
+            logger.info(f"A2A handler initialized and registered on blockchain")
+        except Exception as e:
+            logger.warning(f"A2A handler initialization failed: {e}")
+    
+    async def shutdown(self) -> None:
+        """Cleanup agent resources"""
+        logger.info(f"Shutting down A2A handler for {self.config.agent_name}")
+        
+        try:
+            # Unregister from blockchain
+            await self.a2a_client.unregister_agent(self.config.agent_id)
+        except Exception as e:
+            logger.warning(f"Failed to unregister from blockchain: {e}")
+        
+        try:
+            # Disconnect
+            await self.a2a_client.disconnect()
+        except Exception as e:
+            logger.warning(f"Failed to disconnect from blockchain: {e}")
+        
+        logger.info(f"A2A handler shutdown complete")
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
         
-        # Unregister from blockchain
-        await self.a2a_client.unregister_agent(self.config.agent_id)
-        
-        # Disconnect
-        await self.a2a_client.disconnect()
-        
-        # Parent cleanup
+        # Call shutdown instead of self.shutdown()
         await self.shutdown()
         
         logger.info(f"A2A handler stopped")

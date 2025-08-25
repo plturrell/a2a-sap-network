@@ -21,18 +21,17 @@ logger = logging.getLogger(__name__)
 
 
 class DomainSpecificEmbeddingSkills(SecureA2AAgent):
+    """Specialized embedding generation for different domains and contexts"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Specialized embedding generation for different domains and contexts"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaClient=None):
-        
         super().__init__()
         self.hanaClient = hanaClient
         self.domainModels = {}

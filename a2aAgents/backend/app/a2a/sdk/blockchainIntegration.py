@@ -11,12 +11,40 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
 import asyncio
 
-
-# A2A Protocol Compliance: Require environment variables
-required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
-missing_vars = [var for var in required_env_vars if not os.getenv(var)]
-if missing_vars:
-    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+# Import centralized configuration
+try:
+    from app.a2a.config.environment import get_config, EnvironmentConfig
+    config = get_config()
+    logging.info(f"Loaded A2A configuration in {config.mode.value} mode")
+except ImportError:
+    # Fallback for when config module isn't available yet
+    logging.warning("Using legacy environment variable configuration")
+    
+    # A2A Protocol Compliance: Check for development mode
+    A2A_DEV_MODE = os.getenv("A2A_DEV_MODE", "false").lower() == "true"
+    
+    # In development mode, set default values for missing environment variables
+    if A2A_DEV_MODE:
+        default_env = {
+            "A2A_SERVICE_URL": "http://localhost:4004",
+            "A2A_SERVICE_HOST": "localhost",
+            "A2A_BASE_URL": "http://localhost:4004",
+            "A2A_PRIVATE_KEY": "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            "A2A_RPC_URL": "http://localhost:8545"
+        }
+        for var, default_value in default_env.items():
+            if not os.getenv(var):
+                os.environ[var] = default_value
+                logging.warning(f"Development mode: Using default value for {var}")
+    
+    # A2A Protocol Compliance: Require environment variables
+    required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+    missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+    if missing_vars and not A2A_DEV_MODE:
+        raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+    elif missing_vars:
+        logging.error(f"Critical error: Missing environment variables even in dev mode: {missing_vars}")
+        raise ValueError(f"Failed to set default values for: {missing_vars}")
 
 # A2A Protocol Compliance: Direct imports only - no fallback implementations allowed
 from app.a2a.sdk.blockchain.web3Client import A2ABlockchainClient, AgentIdentity

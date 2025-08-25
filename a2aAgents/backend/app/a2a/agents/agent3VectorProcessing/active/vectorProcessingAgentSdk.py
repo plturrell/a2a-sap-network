@@ -91,14 +91,10 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
-from app.a2a.core.security_base import SecureA2AAgent
-
-
-# A2A Protocol Compliance: All imports must be available
-# No fallback implementations allowed - the agent must have all required dependencies
     AIIntelligenceFramework, AIIntelligenceConfig,
     create_ai_intelligence_framework, create_enhanced_agent_config
 )
+from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: Require environment variables

@@ -73,15 +73,12 @@ from app.a2a.sdk import (
 from app.a2a.sdk.utils import create_error_response, create_success_response
 
 # Import AI Intelligence Framework
-from app.a2a.core.ai_intelligence import (
+from app.a2a.core.ai_intelligence import create_ai_intelligence_framework
 from app.a2a.core.security_base import SecureA2AAgent
 
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-    AIIntelligenceFramework, AIIntelligenceConfig,
-    create_ai_intelligence_framework, create_enhanced_agent_config
-)
 
 logger = logging.getLogger(__name__)
 
@@ -129,12 +126,11 @@ class EnhancedStandardizer:
     """AI-enhanced standardizer with intelligent pattern recognition"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework, data_type: str):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
         self.data_type = data_type
         self.schema_patterns = {}
         self.learning_history = []

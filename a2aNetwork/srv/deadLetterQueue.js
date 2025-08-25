@@ -8,6 +8,7 @@
  */
 
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const Redis = require('ioredis');
 const { v4: uuidv4 } = require('uuid');
 const EventEmitter = require('events');

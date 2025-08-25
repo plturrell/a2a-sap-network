@@ -52,16 +52,8 @@ class CacheStrategy(Enum):
 
 
 @dataclass
-class CacheEntry(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced cache entry with metadata"""
+class CacheEntry:
+    """Enhanced cache entry with metadata"""
     key: str
     value: Any
     created_at: datetime
@@ -73,16 +65,8 @@ class CacheEntry(SecureA2AAgent):
 
 
 @dataclass
-class SemanticSearchResult(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced search result with relevance scoring"""
+class SemanticSearchResult:
+    """Enhanced search result with relevance scoring"""
     document_id: str
     score: float
     highlights: List[str]
@@ -92,15 +76,15 @@ class SemanticSearchResult(SecureA2AAgent):
 
 
 class EnhancedORDMetadataProcessor(SecureA2AAgent):
+    """Advanced ORD metadata enhancement processor"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Advanced ORD metadata enhancement processor"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
         
@@ -352,15 +336,15 @@ class EnhancedORDMetadataProcessor(SecureA2AAgent):
 
 
 class AdvancedSemanticSearchEngine(SecureA2AAgent):
+    """Production-ready semantic search with advanced ranking"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Production-ready semantic search with advanced ranking"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, embedding_model):
         
@@ -528,15 +512,15 @@ class AdvancedSemanticSearchEngine(SecureA2AAgent):
 
 
 class IntelligentCacheManager(SecureA2AAgent):
+    """Advanced caching system with multiple strategies"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Advanced caching system with multiple strategies"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, max_size_mb: int = 100, default_strategy: CacheStrategy = CacheStrategy.ADAPTIVE):
         

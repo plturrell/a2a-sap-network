@@ -34,16 +34,8 @@ class ChunkingStrategy(Enum):
 
 
 @dataclass
-class ChunkMetadata(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Metadata for each semantic chunk"""
+class ChunkMetadata:
+    """Metadata for each semantic chunk"""
     chunk_id: str
     start_position: int
     end_position: int
@@ -57,16 +49,8 @@ class ChunkMetadata(SecureA2AAgent):
 
 
 @dataclass
-class HierarchicalEmbedding(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Multi-level embedding representation"""
+class HierarchicalEmbedding:
+    """Multi-level embedding representation"""
     chunk_id: str
     embeddings: Dict[int, np.ndarray]  # level -> embedding
     aggregation_method: str

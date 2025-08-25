@@ -8,6 +8,7 @@
  */
 
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const { v4: uuidv4 } = require('uuid');
 const { CircuitBreaker, getBreaker } = require('./utils/circuitBreaker');
 const { createCompressionMiddleware } = require('./utils/compressionMiddleware');

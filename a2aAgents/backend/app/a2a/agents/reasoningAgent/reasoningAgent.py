@@ -564,12 +564,11 @@ class GrokSkillMessaging:
     """Grok-4 powered intelligent skill messaging system"""
     
     def __init__(self, reasoning_agent):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.reasoning_agent = reasoning_agent
+        self.reasoning_agent = reasoning_agent
         self.grok_client = None
         self.message_context_cache = {}
         self.skill_performance_history = {}

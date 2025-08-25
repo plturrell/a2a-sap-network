@@ -3,7 +3,7 @@
  * Converts between REST API and OData formats for data management, storage, cache, versioning, and backup operations
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent8Adapter {
@@ -17,12 +17,17 @@ class Agent8Adapter {
     async getDataTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'DataTask');
+            return this._convertRESTToOData(data, 'DataTask');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -31,11 +36,18 @@ class Agent8Adapter {
     async createDataTask(data) {
         try {
             const restData = this._convertODataTaskToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTTaskToOData(response.data);
+            return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -44,11 +56,18 @@ class Agent8Adapter {
     async updateDataTask(id, data) {
         try {
             const restData = this._convertODataTaskToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${id}`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTTaskToOData(response.data);
+            return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -56,7 +75,9 @@ class Agent8Adapter {
 
     async deleteDataTask(id) {
         try {
-            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${id}`, {
+            await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
         } catch (error) {
@@ -67,17 +88,24 @@ class Agent8Adapter {
     // Data Task Operations
     async executeTask(taskId, parameters) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/execute`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 parameters
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                taskType: response.data.task_type,
-                executionId: response.data.execution_id
+                success: data.success,
+                message: data.message,
+                taskType: data.task_type,
+                executionId: data.execution_id
             };
         } catch (error) {
             throw this._handleError(error);
@@ -86,13 +114,18 @@ class Agent8Adapter {
 
     async pauseTask(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/pause`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/pause`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -101,13 +134,18 @@ class Agent8Adapter {
 
     async resumeTask(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/resume`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/resume`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -116,15 +154,22 @@ class Agent8Adapter {
 
     async cancelTask(taskId, reason) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/cancel`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 reason
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -133,15 +178,20 @@ class Agent8Adapter {
 
     async validateTask(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/validate`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/validate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                status: response.data.status?.toUpperCase(),
-                message: response.data.message,
-                errors: response.data.errors || [],
-                warnings: response.data.warnings || []
+                status: data.status?.toUpperCase(),
+                message: data.message,
+                errors: data.errors || [],
+                warnings: data.warnings || []
             };
         } catch (error) {
             throw this._handleError(error);
@@ -150,16 +200,18 @@ class Agent8Adapter {
 
     async getTaskProgress(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/progress`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/progress`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                percentage: response.data.percentage,
-                processedRecords: response.data.processed_records,
-                totalRecords: response.data.total_records,
-                estimatedCompletion: response.data.estimated_completion,
-                currentPhase: response.data.current_phase
+                percentage: data.percentage,
+                processedRecords: data.processed_records,
+                totalRecords: data.total_records,
+                estimatedCompletion: data.estimated_completion,
+                currentPhase: data.current_phase
             };
         } catch (error) {
             throw this._handleError(error);
@@ -168,16 +220,22 @@ class Agent8Adapter {
 
     async getTaskLogs(taskId, logLevel, startTime, endTime) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/logs`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/${taskId}/logs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: {
                     log_level: logLevel,
                     start_time: startTime,
                     end_time: endTime
                 },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
-            return response.data.logs.map(log => ({
+            return data.logs.map(log => ({
                 timestamp: log.timestamp,
                 level: log.level?.toUpperCase(),
                 message: log.message,
@@ -192,12 +250,17 @@ class Agent8Adapter {
     async getStorageBackends(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/storage-backends`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/storage-backends?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'StorageBackend');
+            return this._convertRESTToOData(data, 'StorageBackend');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -206,11 +269,18 @@ class Agent8Adapter {
     async createStorageBackend(data) {
         try {
             const restData = this._convertODataBackendToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/storage-backends`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/storage-backends`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTBackendToOData(response.data);
+            return this._convertRESTBackendToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -218,17 +288,22 @@ class Agent8Adapter {
 
     async performBackendHealthCheck(backendId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/storage-backends/${backendId}/health-check`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/storage-backends/${backendId}/health-check`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                status: response.data.status?.toUpperCase(),
-                responseTime: response.data.response_time,
-                errorRate: response.data.error_rate,
-                availableCapacity: response.data.available_capacity,
-                errorDetails: response.data.error_details,
-                recommendations: response.data.recommendations
+                status: data.status?.toUpperCase(),
+                responseTime: data.response_time,
+                errorRate: data.error_rate,
+                availableCapacity: data.available_capacity,
+                errorDetails: data.error_details,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -237,17 +312,24 @@ class Agent8Adapter {
 
     async optimizeStorage(backendId, optimizationType) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/storage-backends/${backendId}/optimize`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/storage-backends/${backendId}/optimize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 optimization_type: optimizationType
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                optimizationResults: response.data.optimization_results,
-                performanceImprovement: response.data.performance_improvement
+                success: data.success,
+                message: data.message,
+                optimizationResults: data.optimization_results,
+                performanceImprovement: data.performance_improvement
             };
         } catch (error) {
             throw this._handleError(error);
@@ -258,12 +340,17 @@ class Agent8Adapter {
     async getCacheConfigurations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/cache/configurations`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/cache/configurations?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'CacheConfiguration');
+            return this._convertRESTToOData(data, 'CacheConfiguration');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -272,11 +359,18 @@ class Agent8Adapter {
     async createCacheConfiguration(data) {
         try {
             const restData = this._convertODataCacheToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/cache/configurations`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/cache/configurations`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTCacheToOData(response.data);
+            return this._convertRESTCacheToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -284,16 +378,21 @@ class Agent8Adapter {
 
     async clearCache(cacheId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/cache/${cacheId}/clear`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/cache/${cacheId}/clear`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message,
+                success: data.success,
+                message: data.message,
                 details: {
-                    clearedEntries: response.data.cleared_entries,
-                    freedMemory: response.data.freed_memory
+                    clearedEntries: data.cleared_entries,
+                    freedMemory: data.freed_memory
                 }
             };
         } catch (error) {
@@ -303,18 +402,25 @@ class Agent8Adapter {
 
     async warmupCache(cacheId, dataKeys) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/cache/${cacheId}/warmup`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/cache/${cacheId}/warmup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 data_keys: dataKeys
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
+                success: data.success,
+                message: data.message,
                 details: {
-                    warmedKeys: response.data.warmed_keys,
-                    cacheHitRate: response.data.cache_hit_rate
+                    warmedKeys: data.warmed_keys,
+                    cacheHitRate: data.cache_hit_rate
                 }
             };
         } catch (error) {
@@ -324,17 +430,19 @@ class Agent8Adapter {
 
     async getCacheStats(cacheId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/cache/${cacheId}/stats`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/cache/${cacheId}/stats`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                hitRate: response.data.hit_rate,
-                missRate: response.data.miss_rate,
-                totalOperations: response.data.total_operations,
-                memoryUsage: response.data.memory_usage,
-                entryCount: response.data.entry_count,
-                averageResponseTime: response.data.average_response_time
+                hitRate: data.hit_rate,
+                missRate: data.miss_rate,
+                totalOperations: data.total_operations,
+                memoryUsage: data.memory_usage,
+                entryCount: data.entry_count,
+                averageResponseTime: data.average_response_time
             };
         } catch (error) {
             throw this._handleError(error);
@@ -345,12 +453,17 @@ class Agent8Adapter {
     async getDataVersions(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-versions`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-versions?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'DataVersion');
+            return this._convertRESTToOData(data, 'DataVersion');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -359,11 +472,18 @@ class Agent8Adapter {
     async createDataVersion(data) {
         try {
             const restData = this._convertODataVersionToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-versions`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-versions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTVersionToOData(response.data);
+            return this._convertRESTVersionToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -371,18 +491,25 @@ class Agent8Adapter {
 
     async restoreVersion(versionId, targetDataset, backupCurrent) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-versions/${versionId}/restore`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-versions/${versionId}/restore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 target_dataset: targetDataset,
                 backup_current: backupCurrent
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                restoredRecords: response.data.restored_records,
-                backupId: response.data.backup_id
+                success: data.success,
+                message: data.message,
+                restoredRecords: data.restored_records,
+                backupId: data.backup_id
             };
         } catch (error) {
             throw this._handleError(error);
@@ -391,20 +518,22 @@ class Agent8Adapter {
 
     async compareVersions(versionId, compareVersionId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-versions/${versionId}/compare/${compareVersionId}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-versions/${versionId}/compare/${compareVersionId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                summary: response.data.summary,
-                differences: response.data.differences.map(diff => ({
+                summary: data.summary,
+                differences: data.differences.map(diff => ({
                     type: diff.type?.toUpperCase(),
                     field: diff.field,
                     oldValue: diff.old_value,
                     newValue: diff.new_value,
                     recordId: diff.record_id
                 })),
-                statistics: response.data.statistics
+                statistics: data.statistics
             };
         } catch (error) {
             throw this._handleError(error);
@@ -415,12 +544,17 @@ class Agent8Adapter {
     async getDataBackups(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-backups`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-backups?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'DataBackup');
+            return this._convertRESTToOData(data, 'DataBackup');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -429,11 +563,18 @@ class Agent8Adapter {
     async createDataBackup(data) {
         try {
             const restData = this._convertODataBackupToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-backups`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-backups`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTBackupToOData(response.data);
+            return this._convertRESTBackupToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -441,18 +582,25 @@ class Agent8Adapter {
 
     async restoreBackup(backupId, targetLocation, verifyIntegrity) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-backups/${backupId}/restore`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-backups/${backupId}/restore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 target_location: targetLocation,
                 verify_integrity: verifyIntegrity
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                restoredFiles: response.data.restored_files,
-                restoredSize: response.data.restored_size
+                success: data.success,
+                message: data.message,
+                restoredFiles: data.restored_files,
+                restoredSize: data.restored_size
             };
         } catch (error) {
             throw this._handleError(error);
@@ -461,15 +609,20 @@ class Agent8Adapter {
 
     async verifyBackup(backupId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-backups/${backupId}/verify`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-backups/${backupId}/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                status: response.data.status?.toUpperCase(),
-                integrityScore: response.data.integrity_score,
-                verificationResults: response.data.verification_results,
-                issues: response.data.issues || []
+                status: data.status?.toUpperCase(),
+                integrityScore: data.integrity_score,
+                verificationResults: data.verification_results,
+                issues: data.issues || []
             };
         } catch (error) {
             throw this._handleError(error);
@@ -479,16 +632,18 @@ class Agent8Adapter {
     // Function implementations
     async getStorageMetrics() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/metrics/storage`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/metrics/storage`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                totalCapacity: response.data.total_capacity,
-                usedCapacity: response.data.used_capacity,
-                availableCapacity: response.data.available_capacity,
-                utilizationPercent: response.data.utilization_percent,
-                backends: response.data.backends.map(backend => ({
+                totalCapacity: data.total_capacity,
+                usedCapacity: data.used_capacity,
+                availableCapacity: data.available_capacity,
+                utilizationPercent: data.utilization_percent,
+                backends: data.backends.map(backend => ({
                     name: backend.name,
                     type: backend.type?.toUpperCase(),
                     capacity: backend.capacity,
@@ -503,17 +658,23 @@ class Agent8Adapter {
 
     async getCachePerformance(timeRange) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance/cache`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/performance/cache`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: { time_range: timeRange },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
             return {
-                overallHitRate: response.data.overall_hit_rate,
-                averageResponseTime: response.data.average_response_time,
-                operationsPerSecond: response.data.operations_per_second,
-                memoryUsage: response.data.memory_usage,
-                trends: response.data.trends.map(trend => ({
+                overallHitRate: data.overall_hit_rate,
+                averageResponseTime: data.average_response_time,
+                operationsPerSecond: data.operations_per_second,
+                memoryUsage: data.memory_usage,
+                trends: data.trends.map(trend => ({
                     timestamp: trend.timestamp,
                     hitRate: trend.hit_rate,
                     responseTime: trend.response_time
@@ -526,15 +687,19 @@ class Agent8Adapter {
 
     async getDataTasksStatus(status, timeRange) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/status`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-tasks/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: { 
                     status: status?.toLowerCase(),
                     time_range: timeRange 
                 },
                 timeout: this.timeout
+            })
             });
-            
-            return response.data.tasks.map(task => ({
+            const data = await response.json();
+            return data.tasks.map(task => ({
                 id: task.id,
                 name: task.name,
                 status: task.status?.toUpperCase(),
@@ -549,17 +714,19 @@ class Agent8Adapter {
 
     async getStorageUtilization(backendId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/storage-backends/${backendId}/utilization`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/storage-backends/${backendId}/utilization`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                backendId: response.data.backend_id,
-                totalCapacity: response.data.total_capacity,
-                usedCapacity: response.data.used_capacity,
-                utilizationPercent: response.data.utilization_percent,
-                growthRate: response.data.growth_rate,
-                projectedFull: response.data.projected_full
+                backendId: data.backend_id,
+                totalCapacity: data.total_capacity,
+                usedCapacity: data.used_capacity,
+                utilizationPercent: data.utilization_percent,
+                growthRate: data.growth_rate,
+                projectedFull: data.projected_full
             };
         } catch (error) {
             throw this._handleError(error);
@@ -568,11 +735,13 @@ class Agent8Adapter {
 
     async getBackupSchedules() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/backup-schedules`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/backup-schedules`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
-            return response.data.schedules.map(schedule => ({
+            return data.schedules.map(schedule => ({
                 id: schedule.id,
                 name: schedule.name,
                 frequency: schedule.frequency?.toUpperCase(),
@@ -587,12 +756,18 @@ class Agent8Adapter {
 
     async getVersionHistory(datasetId, limit) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/datasets/${datasetId}/versions`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/datasets/${datasetId}/versions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: { limit },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
-            return response.data.versions.map(version => ({
+            return data.versions.map(version => ({
                 id: version.id,
                 versionNumber: version.version_number,
                 createdAt: version.created_at,
@@ -608,20 +783,26 @@ class Agent8Adapter {
 
     async analyzePerformanceTrends(metricType, timeRange) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/analytics/performance-trends`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/analytics/performance-trends`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: {
                     metric_type: metricType,
                     time_range: timeRange
                 },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
             return {
-                metricType: response.data.metric_type,
-                trend: response.data.trend?.toUpperCase(),
-                dataPoints: response.data.data_points,
-                analysis: response.data.analysis,
-                recommendations: response.data.recommendations
+                metricType: data.metric_type,
+                trend: data.trend?.toUpperCase(),
+                dataPoints: data.data_points,
+                analysis: data.analysis,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -630,17 +811,24 @@ class Agent8Adapter {
 
     async optimizeDataLayout(datasetId, strategy) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/datasets/${datasetId}/optimize-layout`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/datasets/${datasetId}/optimize-layout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 strategy: strategy?.toLowerCase()
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                optimizationResults: response.data.optimization_results,
-                performanceGain: response.data.performance_gain
+                success: data.success,
+                message: data.message,
+                optimizationResults: data.optimization_results,
+                performanceGain: data.performance_gain
             };
         } catch (error) {
             throw this._handleError(error);
@@ -649,17 +837,24 @@ class Agent8Adapter {
 
     async validateDataIntegrity(datasetId, validationType) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/datasets/${datasetId}/validate-integrity`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/datasets/${datasetId}/validate-integrity`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 validation_type: validationType?.toLowerCase()
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                status: response.data.status?.toUpperCase(),
-                integrityScore: response.data.integrity_score,
-                issues: response.data.issues || [],
-                recommendations: response.data.recommendations || []
+                status: data.status?.toUpperCase(),
+                integrityScore: data.integrity_score,
+                issues: data.issues || [],
+                recommendations: data.recommendations || []
             };
         } catch (error) {
             throw this._handleError(error);
@@ -668,19 +863,26 @@ class Agent8Adapter {
 
     async estimateStorageNeeds(dataSize, retentionPeriod, compressionRatio) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/estimate-storage`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/estimate-storage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 data_size: dataSize,
                 retention_period: retentionPeriod,
                 compression_ratio: compressionRatio
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                estimatedSize: response.data.estimated_size,
-                recommendedBackends: response.data.recommended_backends,
-                costEstimate: response.data.cost_estimate,
-                recommendations: response.data.recommendations
+                estimatedSize: data.estimated_size,
+                recommendedBackends: data.recommended_backends,
+                costEstimate: data.cost_estimate,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -691,12 +893,17 @@ class Agent8Adapter {
     async getStorageUtilizations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/storage-utilizations`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/storage-utilizations?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'StorageUtilization');
+            return this._convertRESTToOData(data, 'StorageUtilization');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -705,12 +912,17 @@ class Agent8Adapter {
     async getCacheOperations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/cache/operations`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/cache/operations?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'CacheOperation');
+            return this._convertRESTToOData(data, 'CacheOperation');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -719,12 +931,17 @@ class Agent8Adapter {
     async getDataPerformanceMetrics(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance/metrics`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/performance/metrics?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'DataPerformanceMetric');
+            return this._convertRESTToOData(data, 'DataPerformanceMetric');
         } catch (error) {
             throw this._handleError(error);
         }

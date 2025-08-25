@@ -54,15 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 class EnhancedSQLSkills(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""
+    """
     Advanced SQL skills for natural language to SQL conversion
     Supports HANA-specific features including graph, vector, ML, and multi-model queries
     Features:
@@ -73,8 +65,15 @@ class EnhancedSQLSkills(SecureA2AAgent):
     - Context-aware conversation support
     """
     
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
+    
     def __init__(self, agent):
-        
         super().__init__()
         self.agent = agent
         

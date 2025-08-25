@@ -7,13 +7,44 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
+from enum import Enum
 
 from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
-from ....sdk.a2aNetworkClient import A2ANetworkClient
+from ....core.networkClient import A2ANetworkClient
 
 logger = logging.getLogger(__name__)
+
+class ConflictType(Enum):
+    """Types of goal conflicts"""
+    RESOURCE = "resource"  # Competing for same resources/metrics
+    TIMELINE = "timeline"  # Same completion dates
+    PRIORITY = "priority"  # Multiple critical priorities
+    OBJECTIVE = "objective"  # Conflicting objectives
+    COLLABORATIVE = "collaborative"  # Conflicts in collaborative goals
+
+class ConflictSeverity(Enum):
+    """Severity levels for conflicts"""
+    LOW = "low"  # Can coexist with minor adjustments
+    MEDIUM = "medium"  # Requires coordination
+    HIGH = "high"  # Requires resolution before proceeding
+    CRITICAL = "critical"  # Blocks goal execution
+
+@dataclass
+class GoalConflict:
+    """Represents a conflict between goals"""
+    conflict_id: str
+    goal1_id: str
+    goal2_id: str
+    conflict_type: ConflictType
+    severity: ConflictSeverity
+    description: str
+    detected_at: datetime
+    resolution_suggestions: List[Dict[str, Any]]
+    is_resolved: bool = False
+    resolution: Optional[str] = None
+    resolved_at: Optional[datetime] = None
 
 @dataclass
 class AgentCapabilities:
@@ -23,6 +54,8 @@ class AgentCapabilities:
     collection_frequency: str
     last_updated: datetime
     notification_preferences: Dict[str, Any]
+    resource_constraints: Dict[str, Any] = None  # CPU, memory, bandwidth limits
+    current_load: Dict[str, float] = None  # Current resource utilization
 
 @dataclass
 class SMARTGoalTemplate:
@@ -42,6 +75,8 @@ class SMARTGoalNotificationSystem:
         self.registered_agents: Dict[str, AgentCapabilities] = {}
         self.goal_templates: Dict[str, SMARTGoalTemplate] = {}
         self.active_notifications: Dict[str, Dict[str, Any]] = {}
+        self.detected_conflicts: Dict[str, GoalConflict] = {}
+        self.resolution_history: List[Dict[str, Any]] = []
         
         # Initialize goal templates
         self._initialize_goal_templates()
@@ -104,6 +139,363 @@ class SMARTGoalNotificationSystem:
                 "processing_time_p95": {"min": 1.0, "max": 30.0}
             },
             relevant_context="Ensures reliable service for enterprise data management",
+            time_bound_options=["30 days", "60 days", "90 days"]
+        )
+        
+        # Agent 1 (Data Standardization) Templates
+        self.goal_templates["agent1_transformation"] = SMARTGoalTemplate(
+            goal_type="transformation",
+            specific_template="Achieve {success_rate}% standardization success with {processing_time}s avg time",
+            measurable_metrics=[
+                "standardization_success_rate",
+                "avg_transformation_time",
+                "schema_mapping_accuracy",
+                "data_enrichment_rate"
+            ],
+            achievable_criteria={
+                "standardization_success_rate": {"min": 90.0, "max": 99.9},
+                "avg_transformation_time": {"min": 0.1, "max": 5.0},
+                "schema_mapping_accuracy": {"min": 95.0, "max": 100.0},
+                "data_enrichment_rate": {"min": 70.0, "max": 95.0}
+            },
+            relevant_context="Critical for maintaining data consistency across the enterprise",
+            time_bound_options=["7 days", "14 days", "30 days", "60 days"]
+        )
+        
+        self.goal_templates["agent1_compliance"] = SMARTGoalTemplate(
+            goal_type="compliance",
+            specific_template="Maintain {compliance_rate}% canonical format compliance with {validation_accuracy}% accuracy",
+            measurable_metrics=[
+                "canonical_compliance_rate",
+                "validation_accuracy",
+                "format_consistency_score",
+                "metadata_completeness"
+            ],
+            achievable_criteria={
+                "canonical_compliance_rate": {"min": 95.0, "max": 100.0},
+                "validation_accuracy": {"min": 98.0, "max": 100.0},
+                "format_consistency_score": {"min": 90.0, "max": 100.0},
+                "metadata_completeness": {"min": 85.0, "max": 100.0}
+            },
+            relevant_context="Ensures all data conforms to enterprise canonical standards",
+            time_bound_options=["14 days", "30 days", "45 days", "90 days"]
+        )
+        
+        # Agent 2 (AI Data Preparation) Templates
+        self.goal_templates["agent2_feature_engineering"] = SMARTGoalTemplate(
+            goal_type="feature_engineering",
+            specific_template="Generate {feature_quality}% quality features with {feature_coverage}% coverage",
+            measurable_metrics=[
+                "feature_quality_score",
+                "feature_coverage_rate",
+                "feature_generation_speed",
+                "ml_readiness_score"
+            ],
+            achievable_criteria={
+                "feature_quality_score": {"min": 85.0, "max": 99.0},
+                "feature_coverage_rate": {"min": 80.0, "max": 100.0},
+                "feature_generation_speed": {"min": 100, "max": 1000},  # features/minute
+                "ml_readiness_score": {"min": 90.0, "max": 100.0}
+            },
+            relevant_context="Prepares data for advanced ML/AI model training and inference",
+            time_bound_options=["7 days", "14 days", "30 days"]
+        )
+        
+        self.goal_templates["agent2_privacy"] = SMARTGoalTemplate(
+            goal_type="privacy_preservation",
+            specific_template="Achieve {privacy_score}% privacy preservation with {anonymization_rate}% anonymization",
+            measurable_metrics=[
+                "privacy_preservation_score",
+                "anonymization_success_rate",
+                "pii_detection_accuracy",
+                "differential_privacy_epsilon"
+            ],
+            achievable_criteria={
+                "privacy_preservation_score": {"min": 95.0, "max": 100.0},
+                "anonymization_success_rate": {"min": 98.0, "max": 100.0},
+                "pii_detection_accuracy": {"min": 99.0, "max": 100.0},
+                "differential_privacy_epsilon": {"min": 0.1, "max": 10.0}
+            },
+            relevant_context="Ensures AI-ready data maintains privacy and regulatory compliance",
+            time_bound_options=["14 days", "30 days", "60 days"]
+        )
+        
+        # Agent 3 (Vector Processing) Templates
+        self.goal_templates["agent3_embedding"] = SMARTGoalTemplate(
+            goal_type="embedding_generation",
+            specific_template="Generate embeddings with {quality_score}% quality at {throughput} vectors/sec",
+            measurable_metrics=[
+                "embedding_quality_score",
+                "vector_generation_throughput",
+                "dimensionality_reduction_ratio",
+                "semantic_accuracy"
+            ],
+            achievable_criteria={
+                "embedding_quality_score": {"min": 85.0, "max": 99.0},
+                "vector_generation_throughput": {"min": 100, "max": 10000},
+                "dimensionality_reduction_ratio": {"min": 0.1, "max": 0.9},
+                "semantic_accuracy": {"min": 90.0, "max": 99.5}
+            },
+            relevant_context="Enables semantic search and similarity-based operations",
+            time_bound_options=["7 days", "14 days", "30 days"]
+        )
+        
+        self.goal_templates["agent3_indexing"] = SMARTGoalTemplate(
+            goal_type="vector_indexing",
+            specific_template="Maintain {index_coverage}% index coverage with {query_speed}ms query time",
+            measurable_metrics=[
+                "index_coverage_rate",
+                "avg_query_time_ms",
+                "index_freshness_hours",
+                "similarity_search_accuracy"
+            ],
+            achievable_criteria={
+                "index_coverage_rate": {"min": 95.0, "max": 100.0},
+                "avg_query_time_ms": {"min": 1, "max": 100},
+                "index_freshness_hours": {"min": 0.1, "max": 24},
+                "similarity_search_accuracy": {"min": 90.0, "max": 99.9}
+            },
+            relevant_context="Enables fast and accurate vector similarity searches",
+            time_bound_options=["14 days", "30 days", "45 days"]
+        )
+        
+        # Agent 4 (Calculation Validation) Templates
+        self.goal_templates["agent4_validation"] = SMARTGoalTemplate(
+            goal_type="calculation_validation",
+            specific_template="Achieve {validation_accuracy}% accuracy with {validation_speed} validations/sec",
+            measurable_metrics=[
+                "mathematical_validation_accuracy",
+                "validation_throughput",
+                "false_positive_rate",
+                "symbolic_computation_success"
+            ],
+            achievable_criteria={
+                "mathematical_validation_accuracy": {"min": 99.0, "max": 100.0},
+                "validation_throughput": {"min": 10, "max": 1000},
+                "false_positive_rate": {"min": 0.01, "max": 5.0},
+                "symbolic_computation_success": {"min": 95.0, "max": 100.0}
+            },
+            relevant_context="Ensures mathematical correctness and computational integrity",
+            time_bound_options=["7 days", "14 days", "30 days"]
+        )
+        
+        # Agent 5 (QA Validation) Templates
+        self.goal_templates["agent5_quality"] = SMARTGoalTemplate(
+            goal_type="quality_assurance",
+            specific_template="Maintain {qa_pass_rate}% QA pass rate with {review_time}hr avg review time",
+            measurable_metrics=[
+                "qa_pass_rate",
+                "avg_review_time_hours",
+                "defect_detection_rate",
+                "compliance_check_score"
+            ],
+            achievable_criteria={
+                "qa_pass_rate": {"min": 90.0, "max": 99.9},
+                "avg_review_time_hours": {"min": 0.5, "max": 48},
+                "defect_detection_rate": {"min": 95.0, "max": 100.0},
+                "compliance_check_score": {"min": 98.0, "max": 100.0}
+            },
+            relevant_context="Final quality gate ensuring data meets all standards",
+            time_bound_options=["14 days", "30 days", "60 days"]
+        )
+        
+        # Agent 6 (Quality Control Manager) Templates
+        self.goal_templates["agent6_monitoring"] = SMARTGoalTemplate(
+            goal_type="continuous_monitoring",
+            specific_template="Monitor with {detection_rate}% issue detection and {mttr}min mean time to repair",
+            measurable_metrics=[
+                "issue_detection_rate",
+                "mean_time_to_repair",
+                "false_alarm_rate",
+                "monitoring_coverage"
+            ],
+            achievable_criteria={
+                "issue_detection_rate": {"min": 95.0, "max": 99.9},
+                "mean_time_to_repair": {"min": 1, "max": 60},
+                "false_alarm_rate": {"min": 0.1, "max": 5.0},
+                "monitoring_coverage": {"min": 90.0, "max": 100.0}
+            },
+            relevant_context="Proactive quality management across the data pipeline",
+            time_bound_options=["30 days", "60 days", "90 days"]
+        )
+        
+        # Agent 7 (Agent Manager) Templates
+        self.goal_templates["agent7_management"] = SMARTGoalTemplate(
+            goal_type="agent_management",
+            specific_template="Maintain {agent_uptime}% agent uptime with {deployment_success}% deployment success",
+            measurable_metrics=[
+                "agent_uptime_percentage",
+                "deployment_success_rate",
+                "health_check_response_time",
+                "resource_utilization"
+            ],
+            achievable_criteria={
+                "agent_uptime_percentage": {"min": 99.0, "max": 99.99},
+                "deployment_success_rate": {"min": 95.0, "max": 100.0},
+                "health_check_response_time": {"min": 10, "max": 1000},  # ms
+                "resource_utilization": {"min": 20.0, "max": 80.0}
+            },
+            relevant_context="Central management of all A2A network agents",
+            time_bound_options=["30 days", "60 days", "90 days", "180 days"]
+        )
+        
+        # Agent 8 (Data Manager) Templates
+        self.goal_templates["agent8_storage"] = SMARTGoalTemplate(
+            goal_type="data_storage",
+            specific_template="Achieve {storage_efficiency}% efficiency with {retrieval_time}ms retrieval time",
+            measurable_metrics=[
+                "storage_efficiency_ratio",
+                "avg_retrieval_time_ms",
+                "data_compression_ratio",
+                "cache_hit_rate"
+            ],
+            achievable_criteria={
+                "storage_efficiency_ratio": {"min": 70.0, "max": 95.0},
+                "avg_retrieval_time_ms": {"min": 1, "max": 500},
+                "data_compression_ratio": {"min": 2.0, "max": 10.0},
+                "cache_hit_rate": {"min": 80.0, "max": 99.0}
+            },
+            relevant_context="Centralized data storage and retrieval optimization",
+            time_bound_options=["14 days", "30 days", "60 days"]
+        )
+        
+        # Agent 9 (Reasoning Agent) Templates
+        self.goal_templates["agent9_reasoning"] = SMARTGoalTemplate(
+            goal_type="logical_reasoning",
+            specific_template="Achieve {reasoning_accuracy}% accuracy with {inference_speed} inferences/sec",
+            measurable_metrics=[
+                "reasoning_accuracy",
+                "inference_throughput",
+                "logic_consistency_score",
+                "explanation_quality"
+            ],
+            achievable_criteria={
+                "reasoning_accuracy": {"min": 90.0, "max": 99.5},
+                "inference_throughput": {"min": 1, "max": 100},
+                "logic_consistency_score": {"min": 95.0, "max": 100.0},
+                "explanation_quality": {"min": 85.0, "max": 100.0}
+            },
+            relevant_context="Advanced reasoning and decision-making capabilities",
+            time_bound_options=["14 days", "30 days", "45 days"]
+        )
+        
+        # Agent 10 (Calculation Agent) Templates
+        self.goal_templates["agent10_computation"] = SMARTGoalTemplate(
+            goal_type="complex_calculation",
+            specific_template="Process {calculation_accuracy}% accurately with {calc_throughput} calculations/sec",
+            measurable_metrics=[
+                "calculation_accuracy",
+                "calculation_throughput",
+                "numerical_stability_score",
+                "self_healing_success_rate"
+            ],
+            achievable_criteria={
+                "calculation_accuracy": {"min": 99.9, "max": 100.0},
+                "calculation_throughput": {"min": 10, "max": 10000},
+                "numerical_stability_score": {"min": 95.0, "max": 100.0},
+                "self_healing_success_rate": {"min": 90.0, "max": 100.0}
+            },
+            relevant_context="High-precision mathematical and statistical computations",
+            time_bound_options=["7 days", "14 days", "30 days"]
+        )
+        
+        # Agent 11 (SQL Agent) Templates
+        self.goal_templates["agent11_query"] = SMARTGoalTemplate(
+            goal_type="sql_operations",
+            specific_template="Convert {nl2sql_accuracy}% accurately with {query_optimization}% optimization",
+            measurable_metrics=[
+                "nl2sql_accuracy",
+                "query_optimization_rate",
+                "avg_query_execution_time",
+                "sql_injection_prevention"
+            ],
+            achievable_criteria={
+                "nl2sql_accuracy": {"min": 85.0, "max": 98.0},
+                "query_optimization_rate": {"min": 70.0, "max": 95.0},
+                "avg_query_execution_time": {"min": 10, "max": 5000},  # ms
+                "sql_injection_prevention": {"min": 99.9, "max": 100.0}
+            },
+            relevant_context="Natural language to SQL conversion and database operations",
+            time_bound_options=["14 days", "30 days", "45 days"]
+        )
+        
+        # Agent 12 (Catalog Manager) Templates
+        self.goal_templates["agent12_catalog"] = SMARTGoalTemplate(
+            goal_type="service_catalog",
+            specific_template="Maintain {catalog_completeness}% completeness with {discovery_time}s discovery time",
+            measurable_metrics=[
+                "catalog_completeness",
+                "avg_discovery_time",
+                "ord_compliance_rate",
+                "metadata_accuracy"
+            ],
+            achievable_criteria={
+                "catalog_completeness": {"min": 95.0, "max": 100.0},
+                "avg_discovery_time": {"min": 0.1, "max": 30.0},
+                "ord_compliance_rate": {"min": 98.0, "max": 100.0},
+                "metadata_accuracy": {"min": 95.0, "max": 100.0}
+            },
+            relevant_context="Service discovery and resource catalog management",
+            time_bound_options=["30 days", "60 days", "90 days"]
+        )
+        
+        # Agent 13 (Agent Builder) Templates
+        self.goal_templates["agent13_builder"] = SMARTGoalTemplate(
+            goal_type="agent_creation",
+            specific_template="Build agents with {build_success}% success and {deployment_time}min deployment",
+            measurable_metrics=[
+                "agent_build_success_rate",
+                "avg_deployment_time",
+                "code_quality_score",
+                "test_coverage"
+            ],
+            achievable_criteria={
+                "agent_build_success_rate": {"min": 90.0, "max": 100.0},
+                "avg_deployment_time": {"min": 1, "max": 60},
+                "code_quality_score": {"min": 85.0, "max": 100.0},
+                "test_coverage": {"min": 80.0, "max": 100.0}
+            },
+            relevant_context="Dynamic agent creation and deployment automation",
+            time_bound_options=["7 days", "14 days", "30 days"]
+        )
+        
+        # Agent 14 (Embedding Fine-Tuner) Templates
+        self.goal_templates["agent14_finetuning"] = SMARTGoalTemplate(
+            goal_type="model_finetuning",
+            specific_template="Achieve {model_improvement}% improvement with {training_efficiency}% efficiency",
+            measurable_metrics=[
+                "model_performance_improvement",
+                "training_efficiency",
+                "embedding_quality_score",
+                "convergence_speed"
+            ],
+            achievable_criteria={
+                "model_performance_improvement": {"min": 5.0, "max": 50.0},
+                "training_efficiency": {"min": 70.0, "max": 95.0},
+                "embedding_quality_score": {"min": 85.0, "max": 99.0},
+                "convergence_speed": {"min": 10, "max": 1000}  # epochs
+            },
+            relevant_context="Optimize embedding models for domain-specific tasks",
+            time_bound_options=["14 days", "30 days", "60 days"]
+        )
+        
+        # Agent 15 (Orchestrator) Templates  
+        self.goal_templates["agent15_orchestration"] = SMARTGoalTemplate(
+            goal_type="workflow_orchestration",
+            specific_template="Orchestrate with {workflow_success}% success and {scheduling_efficiency}% efficiency",
+            measurable_metrics=[
+                "workflow_success_rate",
+                "scheduling_efficiency",
+                "pipeline_throughput",
+                "resource_optimization_score"
+            ],
+            achievable_criteria={
+                "workflow_success_rate": {"min": 95.0, "max": 99.9},
+                "scheduling_efficiency": {"min": 85.0, "max": 99.0},
+                "pipeline_throughput": {"min": 10, "max": 1000},  # workflows/hour
+                "resource_optimization_score": {"min": 80.0, "max": 100.0}
+            },
+            relevant_context="Central workflow coordination and task scheduling",
             time_bound_options=["30 days", "60 days", "90 days"]
         )
     
@@ -456,5 +848,369 @@ class SMARTGoalNotificationSystem:
                 }
                 for agent_id, caps in self.registered_agents.items()
             },
-            "notifications": list(self.active_notifications.values())
+            "notifications": list(self.active_notifications.values()),
+            "conflicts": {
+                "total": len(self.detected_conflicts),
+                "unresolved": len([c for c in self.detected_conflicts.values() if not c.is_resolved]),
+                "by_severity": self._group_conflicts_by_severity(),
+                "by_type": self._group_conflicts_by_type()
+            }
         }
+    
+    async def detect_goal_conflicts(self, new_goal: Dict[str, Any], agent_id: str) -> List[GoalConflict]:
+        """Detect conflicts between a new goal and existing goals"""
+        conflicts = []
+        
+        try:
+            # Get all active goals across agents
+            all_goals = await self._get_all_active_goals()
+            
+            for existing_goal in all_goals:
+                if existing_goal["agent_id"] == agent_id:
+                    # Check intra-agent conflicts
+                    conflict = self._check_intra_agent_conflict(new_goal, existing_goal)
+                else:
+                    # Check inter-agent conflicts
+                    conflict = self._check_inter_agent_conflict(new_goal, existing_goal, agent_id)
+                
+                if conflict:
+                    conflicts.append(conflict)
+            
+            # Store detected conflicts
+            for conflict in conflicts:
+                self.detected_conflicts[conflict.conflict_id] = conflict
+            
+            return conflicts
+            
+        except Exception as e:
+            logger.error(f"Failed to detect goal conflicts: {e}")
+            return conflicts
+    
+    def _check_intra_agent_conflict(self, new_goal: Dict[str, Any], existing_goal: Dict[str, Any]) -> Optional[GoalConflict]:
+        """Check for conflicts within the same agent"""
+        conflict_checks = [
+            self._check_resource_conflict,
+            self._check_timeline_conflict,
+            self._check_priority_conflict,
+            self._check_objective_conflict
+        ]
+        
+        for check in conflict_checks:
+            conflict = check(new_goal, existing_goal)
+            if conflict:
+                return conflict
+        
+        return None
+    
+    def _check_inter_agent_conflict(self, new_goal: Dict[str, Any], existing_goal: Dict[str, Any], agent_id: str) -> Optional[GoalConflict]:
+        """Check for conflicts between different agents"""
+        # Check if goals involve collaboration
+        new_collaborators = new_goal.get("collaborative_agents", [])
+        existing_collaborators = existing_goal.get("collaborative_agents", [])
+        
+        if existing_goal["agent_id"] in new_collaborators or agent_id in existing_collaborators:
+            # Check collaborative conflicts
+            return self._check_collaborative_conflict(new_goal, existing_goal, agent_id)
+        
+        # Check for shared resource conflicts
+        return self._check_shared_resource_conflict(new_goal, existing_goal, agent_id)
+    
+    def _check_resource_conflict(self, goal1: Dict[str, Any], goal2: Dict[str, Any]) -> Optional[GoalConflict]:
+        """Check if goals compete for the same resources/metrics"""
+        metrics1 = set(goal1.get("measurable", {}).keys())
+        metrics2 = set(goal2.get("measurable", {}).keys())
+        
+        overlapping_metrics = metrics1 & metrics2
+        
+        if overlapping_metrics:
+            # Check if the overlapping metrics have conflicting targets
+            conflicting_metrics = []
+            for metric in overlapping_metrics:
+                target1 = goal1["measurable"][metric]
+                target2 = goal2["measurable"][metric]
+                
+                # If targets differ significantly (>20%), it's a conflict
+                if abs(target1 - target2) / max(target1, target2) > 0.2:
+                    conflicting_metrics.append(metric)
+            
+            if conflicting_metrics:
+                return GoalConflict(
+                    conflict_id=f"conflict_{datetime.utcnow().timestamp()}",
+                    goal1_id=goal1.get("goal_id", "new"),
+                    goal2_id=goal2.get("goal_id"),
+                    conflict_type=ConflictType.RESOURCE,
+                    severity=ConflictSeverity.MEDIUM if len(conflicting_metrics) < 2 else ConflictSeverity.HIGH,
+                    description=f"Conflicting targets for metrics: {', '.join(conflicting_metrics)}",
+                    detected_at=datetime.utcnow(),
+                    resolution_suggestions=[
+                        {"action": "adjust_targets", "description": "Align metric targets between goals"},
+                        {"action": "prioritize", "description": "Set one goal as higher priority"},
+                        {"action": "sequence", "description": "Execute goals sequentially instead of parallel"}
+                    ]
+                )
+        
+        return None
+    
+    def _check_timeline_conflict(self, goal1: Dict[str, Any], goal2: Dict[str, Any]) -> Optional[GoalConflict]:
+        """Check if goals have conflicting timelines"""
+        time1 = goal1.get("time_bound")
+        time2 = goal2.get("time_bound")
+        
+        if time1 == time2 and goal1.get("priority") == "critical" and goal2.get("priority") == "critical":
+            return GoalConflict(
+                conflict_id=f"conflict_{datetime.utcnow().timestamp()}",
+                goal1_id=goal1.get("goal_id", "new"),
+                goal2_id=goal2.get("goal_id"),
+                conflict_type=ConflictType.TIMELINE,
+                severity=ConflictSeverity.HIGH,
+                description="Both critical goals have the same deadline",
+                detected_at=datetime.utcnow(),
+                resolution_suggestions=[
+                    {"action": "stagger_deadlines", "description": "Adjust one deadline by 7-14 days"},
+                    {"action": "allocate_resources", "description": "Ensure sufficient resources for both"},
+                    {"action": "delegate", "description": "Assign to different team members"}
+                ]
+            )
+        
+        return None
+    
+    def _check_priority_conflict(self, goal1: Dict[str, Any], goal2: Dict[str, Any]) -> Optional[GoalConflict]:
+        """Check if there are too many high-priority goals"""
+        if goal1.get("priority") == "critical" and goal2.get("priority") == "critical":
+            if goal1.get("status") == "active" and goal2.get("status") != "completed":
+                return GoalConflict(
+                    conflict_id=f"conflict_{datetime.utcnow().timestamp()}",
+                    goal1_id=goal1.get("goal_id", "new"),
+                    goal2_id=goal2.get("goal_id"),
+                    conflict_type=ConflictType.PRIORITY,
+                    severity=ConflictSeverity.MEDIUM,
+                    description="Multiple critical priority goals active simultaneously",
+                    detected_at=datetime.utcnow(),
+                    resolution_suggestions=[
+                        {"action": "reprioritize", "description": "Review and adjust priority levels"},
+                        {"action": "focus", "description": "Complete one critical goal before starting another"},
+                        {"action": "resources", "description": "Allocate additional resources"}
+                    ]
+                )
+        
+        return None
+    
+    def _check_objective_conflict(self, goal1: Dict[str, Any], goal2: Dict[str, Any]) -> Optional[GoalConflict]:
+        """Check if goals have conflicting objectives"""
+        # Example: One goal optimizes for speed, another for accuracy
+        objective_pairs = [
+            ({"response_time", "throughput"}, {"accuracy", "quality_score"}),
+            ({"cost_reduction"}, {"feature_expansion", "quality_improvement"}),
+            ({"automation_rate"}, {"manual_review_rate"})
+        ]
+        
+        metrics1 = set(goal1.get("measurable", {}).keys())
+        metrics2 = set(goal2.get("measurable", {}).keys())
+        
+        for speed_metrics, quality_metrics in objective_pairs:
+            if (metrics1 & speed_metrics and metrics2 & quality_metrics) or \
+               (metrics2 & speed_metrics and metrics1 & quality_metrics):
+                return GoalConflict(
+                    conflict_id=f"conflict_{datetime.utcnow().timestamp()}",
+                    goal1_id=goal1.get("goal_id", "new"),
+                    goal2_id=goal2.get("goal_id"),
+                    conflict_type=ConflictType.OBJECTIVE,
+                    severity=ConflictSeverity.LOW,
+                    description="Goals have potentially conflicting objectives (speed vs quality trade-off)",
+                    detected_at=datetime.utcnow(),
+                    resolution_suggestions=[
+                        {"action": "balance", "description": "Find optimal balance between objectives"},
+                        {"action": "phase", "description": "Phase goals to focus on one objective at a time"},
+                        {"action": "segment", "description": "Apply different objectives to different segments"}
+                    ]
+                )
+        
+        return None
+    
+    def _check_collaborative_conflict(self, goal1: Dict[str, Any], goal2: Dict[str, Any], agent_id: str) -> Optional[GoalConflict]:
+        """Check for conflicts in collaborative goals"""
+        # Check if agents have conflicting roles or responsibilities
+        role1 = goal1.get("collaborative_role")
+        role2 = goal2.get("collaborative_role")
+        
+        if role1 == "leader" and role2 == "leader":
+            return GoalConflict(
+                conflict_id=f"conflict_{datetime.utcnow().timestamp()}",
+                goal1_id=goal1.get("goal_id", "new"),
+                goal2_id=goal2.get("goal_id"),
+                conflict_type=ConflictType.COLLABORATIVE,
+                severity=ConflictSeverity.HIGH,
+                description="Multiple agents assigned as leaders for collaborative goals",
+                detected_at=datetime.utcnow(),
+                resolution_suggestions=[
+                    {"action": "reassign_roles", "description": "Designate clear leader and contributor roles"},
+                    {"action": "co_leadership", "description": "Implement co-leadership with clear divisions"},
+                    {"action": "hierarchy", "description": "Establish clear hierarchy for decision making"}
+                ]
+            )
+        
+        return None
+    
+    def _check_shared_resource_conflict(self, goal1: Dict[str, Any], goal2: Dict[str, Any], agent_id: str) -> Optional[GoalConflict]:
+        """Check if goals from different agents compete for shared resources"""
+        # Check agent capabilities and current load
+        agent1_caps = self.registered_agents.get(goal1["agent_id"])
+        agent2_caps = self.registered_agents.get(agent_id)
+        
+        if agent1_caps and agent2_caps:
+            # Check if both agents are near capacity
+            if agent1_caps.current_load and agent2_caps.current_load:
+                avg_load1 = sum(agent1_caps.current_load.values()) / len(agent1_caps.current_load)
+                avg_load2 = sum(agent2_caps.current_load.values()) / len(agent2_caps.current_load)
+                
+                if avg_load1 > 0.8 and avg_load2 > 0.8:
+                    return GoalConflict(
+                        conflict_id=f"conflict_{datetime.utcnow().timestamp()}",
+                        goal1_id=goal1.get("goal_id", "new"),
+                        goal2_id=goal2.get("goal_id"),
+                        conflict_type=ConflictType.RESOURCE,
+                        severity=ConflictSeverity.CRITICAL,
+                        description="Both agents near capacity, new goals may overload system",
+                        detected_at=datetime.utcnow(),
+                        resolution_suggestions=[
+                            {"action": "defer", "description": "Defer one goal until resources are available"},
+                            {"action": "scale", "description": "Scale up agent resources"},
+                            {"action": "optimize", "description": "Optimize current workloads to free resources"}
+                        ]
+                    )
+        
+        return None
+    
+    async def resolve_conflict(self, conflict_id: str, resolution_action: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve a detected conflict"""
+        try:
+            conflict = self.detected_conflicts.get(conflict_id)
+            if not conflict:
+                return {"status": "error", "message": "Conflict not found"}
+            
+            if conflict.is_resolved:
+                return {"status": "error", "message": "Conflict already resolved"}
+            
+            # Apply resolution based on action
+            resolution_result = await self._apply_resolution(conflict, resolution_action, parameters)
+            
+            if resolution_result["status"] == "success":
+                # Mark conflict as resolved
+                conflict.is_resolved = True
+                conflict.resolution = resolution_result["description"]
+                conflict.resolved_at = datetime.utcnow()
+                
+                # Add to resolution history
+                self.resolution_history.append({
+                    "conflict_id": conflict_id,
+                    "resolution_action": resolution_action,
+                    "parameters": parameters,
+                    "resolved_at": conflict.resolved_at,
+                    "result": resolution_result
+                })
+            
+            return resolution_result
+            
+        except Exception as e:
+            logger.error(f"Failed to resolve conflict {conflict_id}: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    async def _apply_resolution(self, conflict: GoalConflict, action: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply specific resolution action"""
+        resolution_handlers = {
+            "adjust_targets": self._resolve_by_adjusting_targets,
+            "prioritize": self._resolve_by_prioritizing,
+            "sequence": self._resolve_by_sequencing,
+            "stagger_deadlines": self._resolve_by_staggering_deadlines,
+            "allocate_resources": self._resolve_by_allocating_resources,
+            "reassign_roles": self._resolve_by_reassigning_roles
+        }
+        
+        handler = resolution_handlers.get(action)
+        if not handler:
+            return {"status": "error", "message": f"Unknown resolution action: {action}"}
+        
+        return await handler(conflict, parameters)
+    
+    async def _resolve_by_adjusting_targets(self, conflict: GoalConflict, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve by adjusting metric targets"""
+        # Send notifications to affected agents to adjust targets
+        adjustment_plan = parameters.get("adjustment_plan", {})
+        
+        notifications_sent = await self._send_target_adjustment_notifications(
+            conflict.goal1_id, 
+            conflict.goal2_id,
+            adjustment_plan
+        )
+        
+        return {
+            "status": "success",
+            "description": f"Sent target adjustment notifications to affected agents",
+            "details": {"notifications_sent": notifications_sent}
+        }
+    
+    async def _resolve_by_prioritizing(self, conflict: GoalConflict, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve by setting priority order"""
+        priority_order = parameters.get("priority_order", [])
+        
+        if not priority_order:
+            return {"status": "error", "message": "Priority order not specified"}
+        
+        # Update goal priorities through orchestrator
+        for idx, goal_id in enumerate(priority_order):
+            new_priority = "critical" if idx == 0 else "high" if idx == 1 else "medium"
+            await self.orchestrator._update_goal_priority(goal_id, new_priority)
+        
+        return {
+            "status": "success",
+            "description": f"Updated goal priorities based on specified order",
+            "details": {"priority_order": priority_order}
+        }
+    
+    async def _resolve_by_sequencing(self, conflict: GoalConflict, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve by creating sequential dependencies"""
+        # Add dependency so goal2 depends on goal1 completion
+        dependency_added = await self.orchestrator._add_goal_dependency(
+            conflict.goal2_id,
+            conflict.goal1_id,
+            "prerequisite"
+        )
+        
+        return {
+            "status": "success" if dependency_added else "error",
+            "description": f"Created sequential dependency: {conflict.goal2_id} depends on {conflict.goal1_id}",
+            "details": {"dependency_added": dependency_added}
+        }
+    
+    async def _get_all_active_goals(self) -> List[Dict[str, Any]]:
+        """Get all active goals from orchestrator"""
+        all_goals = []
+        for agent_id, goal_record in self.orchestrator.agent_goals.items():
+            if goal_record.get("status") == "active":
+                goals = goal_record.get("goals", {}).get("primary_objectives", [])
+                for goal in goals:
+                    goal["agent_id"] = agent_id
+                    all_goals.append(goal)
+        return all_goals
+    
+    def _group_conflicts_by_severity(self) -> Dict[str, int]:
+        """Group conflicts by severity level"""
+        severity_counts = {s.value: 0 for s in ConflictSeverity}
+        for conflict in self.detected_conflicts.values():
+            if not conflict.is_resolved:
+                severity_counts[conflict.severity.value] += 1
+        return severity_counts
+    
+    def _group_conflicts_by_type(self) -> Dict[str, int]:
+        """Group conflicts by type"""
+        type_counts = {t.value: 0 for t in ConflictType}
+        for conflict in self.detected_conflicts.values():
+            if not conflict.is_resolved:
+                type_counts[conflict.conflict_type.value] += 1
+        return type_counts
+    
+    async def _send_target_adjustment_notifications(self, goal1_id: str, goal2_id: str, adjustment_plan: Dict[str, Any]) -> int:
+        """Send notifications to agents about target adjustments"""
+        # Implementation would send A2A messages to affected agents
+        # For now, return mock success
+        return 2  # Number of notifications sent

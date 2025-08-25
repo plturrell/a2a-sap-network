@@ -1,4 +1,5 @@
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const Agent2Adapter = require('./agent2-adapter');
 
 /**

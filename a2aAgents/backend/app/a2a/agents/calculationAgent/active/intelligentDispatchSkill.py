@@ -15,18 +15,17 @@ logger = logging.getLogger(__name__)
 
 
 class IntelligentDispatchSkill(SecureA2AAgent):
+    """Analyzes calculation requests and dispatches to appropriate calculation skills"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Analyzes calculation requests and dispatches to appropriate calculation skills"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, grok_client: Optional[GrokClient] = None):
-        
         super().__init__()
         self.grok_client = grok_client or GrokClient()
         

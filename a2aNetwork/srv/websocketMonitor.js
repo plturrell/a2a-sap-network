@@ -6,6 +6,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 
 class WebSocketMonitor {
     constructor() {

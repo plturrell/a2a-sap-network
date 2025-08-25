@@ -70,9 +70,9 @@ from app.a2a.core.circuitBreaker import CircuitBreaker
 # Import additional components - Real implementation only  
 from app.a2a.core.taskTracker import AgentTaskTracker
 from app.a2aRegistry.client import get_registry_client
-from app.a2a.advisors.agentAiAdvisor import create_agent_advisor
 
-
+try:
+    from app.a2a.advisors.agentAiAdvisor import create_agent_advisor
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
 except ImportError:

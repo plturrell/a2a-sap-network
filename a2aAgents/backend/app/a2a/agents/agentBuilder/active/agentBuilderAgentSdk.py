@@ -54,7 +54,7 @@ def create_success_response(data: Dict[str, Any]) -> Dict[str, Any]:
     return {"success": True, "data": data, "timestamp": datetime.now().isoformat()}
 
 
-class AgentTemplate(BaseModel), PerformanceMonitoringMixin:
+class AgentTemplate(BaseModel, PerformanceMonitoringMixin):
     """Agent template definition"""
     name: str
     description: str
@@ -67,7 +67,7 @@ class AgentTemplate(BaseModel), PerformanceMonitoringMixin:
     template_variables: Dict[str, Any] = {}
 
 
-class BPMNWorkflow(BaseModel), PerformanceMonitoringMixin:
+class BPMNWorkflow(BaseModel, PerformanceMonitoringMixin):
     """BPMN workflow definition"""
     workflow_id: str
     name: str
@@ -81,7 +81,7 @@ class BPMNWorkflow(BaseModel), PerformanceMonitoringMixin:
     data_objects: List[Dict[str, Any]] = []
 
 
-class AgentGenerationRequest(BaseModel), PerformanceMonitoringMixin:
+class AgentGenerationRequest(BaseModel, PerformanceMonitoringMixin):
     """Request for agent generation"""
     agent_name: str
     agent_id: str

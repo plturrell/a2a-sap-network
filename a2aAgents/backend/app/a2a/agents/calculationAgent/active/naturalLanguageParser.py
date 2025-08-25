@@ -44,16 +44,8 @@ class MathOperation(Enum):
     DIFFERENTIAL_EQUATION = "differential_equation"
 
 @dataclass
-class ParsedMathQuery(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Structured representation of a parsed mathematical query"""
+class ParsedMathQuery:
+    """Structured representation of a parsed mathematical query"""
     operation: MathOperation
     expression: str
     variables: List[str]
@@ -64,18 +56,17 @@ class ParsedMathQuery(SecureA2AAgent):
     parsed_components: Dict[str, str]
 
 class MathematicalNLParser(SecureA2AAgent):
+    """Advanced natural language parser for mathematical expressions"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Advanced natural language parser for mathematical expressions"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
-        
         super().__init__()
         self.patterns = self._initialize_patterns()
         self.math_keywords = self._initialize_math_keywords()
@@ -526,18 +517,17 @@ class MathematicalNLParser(SecureA2AAgent):
         return sorted(variables)[0]
 
 class MathQueryProcessor(SecureA2AAgent):
+    """Processes parsed mathematical queries and provides enhanced context"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Processes parsed mathematical queries and provides enhanced context"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
-        
         super().__init__()
         self.parser = MathematicalNLParser()
     

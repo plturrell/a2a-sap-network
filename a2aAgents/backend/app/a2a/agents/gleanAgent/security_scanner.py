@@ -8,6 +8,7 @@ import re
 import json
 import hashlib
 import subprocess
+import time
 from typing import Dict, List, Any, Optional, Set, Tuple
 from datetime import datetime
 from enum import Enum
@@ -337,7 +338,8 @@ class SecurityScanner(SecureA2AAgent):
                         
                         if confidence > 0.3:  # Threshold to reduce false positives
                             vuln_id = hashlib.md5(
-                                f"{file_path}:{line_num}:{vuln_type.value}:{match.start()}".encode()
+                                f"{file_path}:{line_num}:{vuln_type.value}:{match.start()}".encode(),
+                                usedforsecurity=False
                             ).hexdigest()[:8]
                             
                             vulnerability = SecurityVulnerability(
@@ -387,7 +389,8 @@ class SecurityScanner(SecureA2AAgent):
                 
                 for issue in data.get('results', []):
                     vuln_id = hashlib.md5(
-                        f"{file_path}:{issue['line_number']}:bandit:{issue['test_id']}".encode()
+                        f"{file_path}:{issue['line_number']}:bandit:{issue['test_id']}".encode(),
+                        usedforsecurity=False
                     ).hexdigest()[:8]
                     
                     # Map Bandit severity to our severity levels
@@ -437,7 +440,8 @@ class SecurityScanner(SecureA2AAgent):
                 
                 for finding in data.get('results', []):
                     vuln_id = hashlib.md5(
-                        f"{file_path}:{finding['start']['line']}:semgrep:{finding['check_id']}".encode()
+                        f"{file_path}:{finding['start']['line']}:semgrep:{finding['check_id']}".encode(),
+                        usedforsecurity=False
                     ).hexdigest()[:8]
                     
                     # Map Semgrep severity
@@ -479,7 +483,7 @@ class SecurityScanner(SecureA2AAgent):
         
         # Check for authentication bypass patterns
         if self._check_auth_bypass_patterns(content):
-            vuln_id = hashlib.md5(f"{file_path}:auth_bypass".encode()).hexdigest()[:8]
+            vuln_id = hashlib.md5(f"{file_path}:auth_bypass".encode(), usedforsecurity=False).hexdigest()[:8]
             
             vulnerability = SecurityVulnerability(
                 id=vuln_id,

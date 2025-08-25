@@ -782,8 +782,8 @@ class ComprehensiveQAValidationSDK(A2AAgentBase, BlockchainIntegrationMixin):
     def _calculate_f1_score(self, results: List[ValidationResult], threshold: float) -> float:
         """Calculate F1 score for validation results"""
         true_positives = len([r for r in results if r.score >= threshold])
-        false_positives = len([r for r in results if r.score < threshold but r.confidence > 0.7])
-        false_negatives = len([r for r in results if r.score >= threshold but r.confidence < 0.7])
+        false_positives = len([r for r in results if r.score < threshold and r.confidence > 0.7])
+        false_negatives = len([r for r in results if r.score >= threshold and r.confidence < 0.7])
         
         precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
         recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0

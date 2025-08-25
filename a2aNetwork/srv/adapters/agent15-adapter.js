@@ -414,7 +414,7 @@ class Agent15Adapter extends BaseAdapter {
     }
 
     async callPythonBackend(method, payload) {
-        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const fetch = require('node-fetch');
         const baseUrl = process.env.AGENT15_BASE_URL || 'http://localhost:8015';
         
         try {
@@ -422,101 +422,196 @@ class Agent15Adapter extends BaseAdapter {
             
             switch (method) {
                 case 'list_workflows':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows`, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
-                    return response.data;
+                    return data;
                     
                 case 'create_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/workflows`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'update_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                         updates: payload.updates
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'delete_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/workflows/${payload.workflow_id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'execute_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/execute`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/workflows/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'pause_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/pause`, null, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows/pause`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(null, {
                         params: { workflow_id: payload.workflow_id }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'resume_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/resume`, null, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows/resume`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(null, {
                         params: { workflow_id: payload.workflow_id }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'cancel_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/cancel`, null, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(null, {
                         params: { workflow_id: payload.workflow_id }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'get_workflow_status':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/status`, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                         params: { workflow_id: payload.workflow_id }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'get_execution_history':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/history`, {
+                    response = await fetch(`${baseUrl}/api/v1/workflows/history`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                         params: {
                             workflow_id: payload.workflow_id,
                             limit: payload.limit || 50,
                             offset: payload.offset || 0
                         }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'coordinate_agents':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/coordination/agents`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/coordination/agents`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'list_workflow_templates':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/templates`, {
+                    response = await fetch(`${baseUrl}/api/v1/templates`, {
                         params: { filters: JSON.stringify(payload.filters || {}) }
                     });
-                    return response.data;
+                    return data;
                     
                 case 'create_workflow_template':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/templates`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/templates`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'create_workflow_from_template':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/templates/instantiate`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/templates/instantiate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'get_orchestration_metrics':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/metrics`, {
+                    response = await fetch(`${baseUrl}/api/v1/metrics`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                         params: {
                             time_range: payload.time_range || '24h',
                             group_by: payload.group_by || 'day'
                         }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'optimize_workflow':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/optimize`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/workflows/optimize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'validate_workflow_definition':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/validate`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/workflows/validate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'bulk_execute_workflows':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/workflows/bulk-execute`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/workflows/bulk-execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 default:
                     throw new Error(`Unknown method: ${method}`);

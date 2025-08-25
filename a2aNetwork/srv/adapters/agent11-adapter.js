@@ -4,7 +4,7 @@
  * query optimization, execution, and database operations
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent11Adapter {
@@ -18,12 +18,17 @@ class Agent11Adapter {
     async getSQLQueryTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'SQLQueryTask');
+            return this._convertRESTToOData(data, 'SQLQueryTask');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -32,11 +37,18 @@ class Agent11Adapter {
     async createSQLQueryTask(data) {
         try {
             const restData = this._convertODataSQLQueryTaskToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTSQLQueryTaskToOData(response.data);
+            return this._convertRESTSQLQueryTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -45,11 +57,18 @@ class Agent11Adapter {
     async updateSQLQueryTask(id, data) {
         try {
             const restData = this._convertODataSQLQueryTaskToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTSQLQueryTaskToOData(response.data);
+            return this._convertRESTSQLQueryTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -57,7 +76,9 @@ class Agent11Adapter {
 
     async deleteSQLQueryTask(id) {
         try {
-            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, {
+            await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
         } catch (error) {
@@ -68,24 +89,29 @@ class Agent11Adapter {
     // ===== SQL QUERY OPERATIONS =====
     async executeQuery(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/execute`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout * 2 // Double timeout for execution
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                queryName: response.data.query_name,
-                database: response.data.database,
-                executionTime: response.data.execution_time,
-                rowsAffected: response.data.rows_affected,
-                resultRowCount: response.data.result_row_count,
-                results: response.data.results,
-                executionPlan: response.data.execution_plan,
-                performanceMetrics: response.data.performance_metrics,
-                memoryUsed: response.data.memory_used,
-                cpuTime: response.data.cpu_time,
-                details: response.data.details,
-                error: response.data.error
+                success: data.success,
+                queryName: data.query_name,
+                database: data.database,
+                executionTime: data.execution_time,
+                rowsAffected: data.rows_affected,
+                resultRowCount: data.result_row_count,
+                results: data.results,
+                executionPlan: data.execution_plan,
+                performanceMetrics: data.performance_metrics,
+                memoryUsed: data.memory_used,
+                cpuTime: data.cpu_time,
+                details: data.details,
+                error: data.error
             };
         } catch (error) {
             throw this._handleError(error);
@@ -94,16 +120,21 @@ class Agent11Adapter {
 
     async validateSQL(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/validate`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/validate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                isValid: response.data.is_valid,
-                errors: response.data.errors,
-                warnings: response.data.warnings,
-                suggestions: response.data.suggestions,
-                dialect: response.data.dialect
+                isValid: data.is_valid,
+                errors: data.errors,
+                warnings: data.warnings,
+                suggestions: data.suggestions,
+                dialect: data.dialect
             };
         } catch (error) {
             throw this._handleError(error);
@@ -112,14 +143,19 @@ class Agent11Adapter {
 
     async optimizeQuery(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/optimize`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/optimize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                originalSQL: response.data.original_sql,
-                optimizedSQL: response.data.optimized_sql,
-                optimizations: response.data.optimizations?.map(opt => ({
+                originalSQL: data.original_sql,
+                optimizedSQL: data.optimized_sql,
+                optimizations: data.optimizations?.map(opt => ({
                     type: opt.optimization_type?.toUpperCase(),
                     originalQuery: opt.original_query,
                     optimizedQuery: opt.optimized_query,
@@ -129,8 +165,8 @@ class Agent11Adapter {
                     benefit: opt.estimated_benefit,
                     details: opt.details
                 })) || [],
-                averageImprovement: response.data.average_improvement,
-                estimatedCostSaving: response.data.estimated_cost_saving
+                averageImprovement: data.average_improvement,
+                estimatedCostSaving: data.estimated_cost_saving
             };
         } catch (error) {
             throw this._handleError(error);
@@ -139,27 +175,34 @@ class Agent11Adapter {
 
     async generateFromNaturalLanguage(taskId, naturalLanguage) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/generate-from-nl`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/generate-from-nl`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 natural_language: naturalLanguage
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                sql: response.data.generated_sql,
-                confidence: response.data.confidence_score,
-                status: response.data.processing_status?.toUpperCase(),
-                intent: response.data.intent_recognition,
-                entities: response.data.entity_extraction,
-                schemaMapping: response.data.schema_mapping,
-                ambiguities: response.data.ambiguities_found,
-                clarifications: response.data.clarification_questions,
-                context: response.data.context_used,
-                processingTime: response.data.processing_time,
-                modelVersion: response.data.model_version,
-                alternatives: response.data.alternative_sqls,
-                validation: response.data.validation_results,
-                language: response.data.language
+                sql: data.generated_sql,
+                confidence: data.confidence_score,
+                status: data.processing_status?.toUpperCase(),
+                intent: data.intent_recognition,
+                entities: data.entity_extraction,
+                schemaMapping: data.schema_mapping,
+                ambiguities: data.ambiguities_found,
+                clarifications: data.clarification_questions,
+                context: data.context_used,
+                processingTime: data.processing_time,
+                modelVersion: data.model_version,
+                alternatives: data.alternative_sqls,
+                validation: data.validation_results,
+                language: data.language
             };
         } catch (error) {
             throw this._handleError(error);
@@ -168,16 +211,21 @@ class Agent11Adapter {
 
     async explainQuery(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/explain`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/sql-queries/${taskId}/explain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                executionPlan: response.data.execution_plan,
-                explanation: response.data.explanation,
-                cost: response.data.estimated_cost,
-                steps: response.data.execution_steps,
-                recommendations: response.data.recommendations
+                executionPlan: data.execution_plan,
+                explanation: data.explanation,
+                cost: data.estimated_cost,
+                steps: data.execution_steps,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -186,19 +234,26 @@ class Agent11Adapter {
 
     async exportResults(taskId, options) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/export-results/${taskId}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/export-results/${taskId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 format: options.format,
                 include_metadata: options.includeMetadata
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                downloadUrl: response.data.download_url,
-                fileName: response.data.file_name,
-                format: response.data.format,
-                size: response.data.size,
-                expiresAt: response.data.expires_at
+                downloadUrl: data.download_url,
+                fileName: data.file_name,
+                format: data.format,
+                size: data.size,
+                expiresAt: data.expires_at
             };
         } catch (error) {
             throw this._handleError(error);
@@ -208,24 +263,30 @@ class Agent11Adapter {
     // ===== MAIN SQL OPERATIONS =====
     async executeSQL(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/execute-sql`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/execute-sql`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 sql: data.sql,
                 parameters: data.parameters,
                 database: data.database,
                 timeout: data.timeout
             }, {
                 timeout: data.timeout + 5000 // Add buffer to axios timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                results: response.data.results,
-                executionTime: response.data.execution_time,
-                rowsAffected: response.data.rows_affected,
-                resultRowCount: response.data.result_row_count,
-                executionPlan: response.data.execution_plan,
-                performanceMetrics: response.data.performance_metrics,
-                error: response.data.error
+                success: data.success,
+                results: data.results,
+                executionTime: data.execution_time,
+                rowsAffected: data.rows_affected,
+                resultRowCount: data.result_row_count,
+                executionPlan: data.execution_plan,
+                performanceMetrics: data.performance_metrics,
+                error: data.error
             };
         } catch (error) {
             throw this._handleError(error);
@@ -234,22 +295,29 @@ class Agent11Adapter {
 
     async translateNaturalLanguage(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/translate-nl`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/translate-nl`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 natural_language: data.naturalLanguage,
                 context: data.context,
                 database: data.database
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                sql: response.data.generated_sql,
-                confidence: response.data.confidence_score,
-                processingTime: response.data.processing_time,
-                language: response.data.language,
-                intent: response.data.intent,
-                entities: response.data.entities,
-                warnings: response.data.warnings
+                sql: data.generated_sql,
+                confidence: data.confidence_score,
+                processingTime: data.processing_time,
+                language: data.language,
+                intent: data.intent,
+                entities: data.entities,
+                warnings: data.warnings
             };
         } catch (error) {
             throw this._handleError(error);
@@ -258,20 +326,27 @@ class Agent11Adapter {
 
     async optimizeSQL(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/optimize-sql`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/optimize-sql`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 sql: data.sql,
                 database: data.database,
                 explain: data.explain
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                originalSQL: response.data.original_sql,
-                optimizedSQL: response.data.optimized_sql,
-                improvements: response.data.improvements,
-                executionPlan: response.data.execution_plan,
-                recommendations: response.data.recommendations
+                originalSQL: data.original_sql,
+                optimizedSQL: data.optimized_sql,
+                improvements: data.improvements,
+                executionPlan: data.execution_plan,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -280,19 +355,26 @@ class Agent11Adapter {
 
     async validateSQL(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-sql`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/validate-sql`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 sql: data.sql,
                 dialect: data.dialect
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                isValid: response.data.is_valid,
-                errors: response.data.errors,
-                warnings: response.data.warnings,
-                suggestions: response.data.suggestions,
-                dialect: response.data.dialect
+                isValid: data.is_valid,
+                errors: data.errors,
+                warnings: data.warnings,
+                suggestions: data.suggestions,
+                dialect: data.dialect
             };
         } catch (error) {
             throw this._handleError(error);
@@ -301,19 +383,26 @@ class Agent11Adapter {
 
     async explainExecutionPlan(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/explain-plan`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/explain-plan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 sql: data.sql,
                 database: data.database
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                executionPlan: response.data.execution_plan,
-                textPlan: response.data.text_plan,
-                cost: response.data.cost,
-                operations: response.data.operations,
-                bottlenecks: response.data.bottlenecks
+                executionPlan: data.execution_plan,
+                textPlan: data.text_plan,
+                cost: data.cost,
+                operations: data.operations,
+                bottlenecks: data.bottlenecks
             };
         } catch (error) {
             throw this._handleError(error);
@@ -323,12 +412,18 @@ class Agent11Adapter {
     // ===== SCHEMA AND DATABASE OPERATIONS =====
     async getSchemaInfo(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/schema-info/${data.database}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/schema-info/${data.database}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: { schema: data.schema },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -336,11 +431,13 @@ class Agent11Adapter {
 
     async getTableInfo(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/table-info/${data.database}/${data.table}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/table-info/${data.database}/${data.table}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -348,14 +445,21 @@ class Agent11Adapter {
 
     async suggestIndexes(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/suggest-indexes`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/suggest-indexes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 table: data.table,
                 database: data.database
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -364,11 +468,13 @@ class Agent11Adapter {
     // ===== ADDITIONAL OPERATIONS =====
     async analyzeQueryPerformance(queryId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${queryId}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${queryId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -376,16 +482,22 @@ class Agent11Adapter {
 
     async getQueryHistory(options) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/query-history`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/query-history`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: {
                     database: options.database,
                     limit: options.limit,
                     offset: options.offset
                 },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -393,15 +505,22 @@ class Agent11Adapter {
 
     async createQueryTemplate(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/query-templates`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/query-templates`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 name: data.name,
                 sql: data.sql,
                 parameters: data.parameters
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -409,14 +528,21 @@ class Agent11Adapter {
 
     async manageDatabaseConnection(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/connections`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/connections`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 operation: data.operation,
                 connection_config: data.connectionConfig
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -424,13 +550,20 @@ class Agent11Adapter {
 
     async backupQuery(data) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/backup-query/${data.queryId}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/backup-query/${data.queryId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 include_results: data.includeResults
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -438,13 +571,20 @@ class Agent11Adapter {
 
     async restoreQuery(backupId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/restore-query`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/restore-query`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 backup_id: backupId
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return response.data;
+            return data;
         } catch (error) {
             throw this._handleError(error);
         }
@@ -550,8 +690,8 @@ class Agent11Adapter {
     _handleError(error) {
         if (error.response) {
             const status = error.response.status;
-            const message = error.response.data?.message || error.response.statusText;
-            const details = error.response.data?.details || null;
+            const message = error.data?.message || error.response.statusText;
+            const details = error.data?.details || null;
             
             return new Error(`Agent 11 Error (${status}): ${message}${details ? ` - ${JSON.stringify(details)}` : ''}`);
         } else if (error.request) {

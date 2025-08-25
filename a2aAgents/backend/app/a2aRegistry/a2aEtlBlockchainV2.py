@@ -436,6 +436,7 @@ async def initialize_a2a_etl_agents():
 async def root():
     """Root endpoint - A2A ETL network information"""
     blockchain_status = blockchain.get_status()
+    trust_enabled = app.state.trust_system is not None
     
     return {
         "network": "A2A ETL Blockchain Agent Network",
@@ -1100,7 +1101,7 @@ async def execute_l4_standardization_v2(args: Dict[str, Any], blockchain_status:
                     flat_cols = [col for col in df.columns if not col.startswith('_') and '(L' not in col]
                     
                     # Create L4 standardized structure
-                    for _, row in df.iterrows():
+                    for idx, row in df.iterrows():
                         standardized_entity = {
                             "entity_id": f"{entity_type}_{idx+1}",
                             "entity_type": entity_type.rstrip('s'),
@@ -1309,8 +1310,10 @@ async def execute_semantic_matching_v2(args: Dict[str, Any], blockchain_status: 
         "timestamp": datetime.utcnow().isoformat()
     }
 
-async def execute_quality_assessment_v2(blockchain_status: Dict):
+async def execute_quality_assessment_v2(blockchain_status: Dict, args: Dict[str, Any] = None):
     """Execute data quality assessment v2.0 with blockchain integration"""
+    if args is None:
+        args = {}
     
     assessment_type = args.get("assessment_type", "comprehensive")
     

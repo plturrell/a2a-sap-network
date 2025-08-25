@@ -2775,7 +2775,7 @@ class MemoryMonitor:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.warning_threshold = 0.8  # 80% memory usage
+        self.warning_threshold = 0.8  # 80% memory usage
         self.critical_threshold = 0.9  # 90% memory usage
     
     def get_current_usage(self) -> float:

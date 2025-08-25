@@ -101,16 +101,16 @@ class AgentManagerAgentMCP(SecureA2AAgent):
     def __init__(self, base_url: str):
         super().__init__(
             agent_id=create_agent_id("agent_manager"),
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             name="Agent Manager MCP",
             description="Enhanced A2A Agent Manager with MCP-powered orchestration",
             version="2.0.0",
             base_url=base_url
         )
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Agent registry
         self.registered_agents: Dict[str, Dict[str, Any]] = {}
@@ -188,8 +188,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             # Verify agent is reachable
             try:
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=10.0) as client:
+                async with httpx.AsyncClient() as client:
                     response = await client.get(f"{base_url}/health")
                     if response.status_code != 200:
                         return {"success": False, "error": f"Agent health check failed with status {response.status_code}"}
@@ -409,8 +408,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             
             try:
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=10.0) as client:
+                async with httpx.AsyncClient() as client:
                     response = await client.get(f"{base_url}/health")
                     response_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
                     

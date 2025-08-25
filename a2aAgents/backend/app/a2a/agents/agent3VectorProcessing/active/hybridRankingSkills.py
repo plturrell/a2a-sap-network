@@ -19,18 +19,17 @@ logger = logging.getLogger(__name__)
 
 
 class HybridRankingSkills(SecureA2AAgent):
+    """Advanced hybrid ranking for vector search results"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Advanced hybrid ranking for vector search results"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaConnection=None):
-        
         super().__init__()
         self.hanaConnection = hanaConnection
         self.executor = ThreadPoolExecutor(max_workers=4)

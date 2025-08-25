@@ -324,9 +324,9 @@ sap.ui.define([
                     const safeCompression = parseFloat(data.compressionImprovement) || 0;
                     const safeTime = parseFloat(data.optimizationTime) || 0;
                     MessageBox.success(
-                        "Storage optimization completed!\\n" +
-                        "Space saved: " + safeSpaceSaved + "\\n" +
-                        "Compression improved: " + safeCompression + "%\\n" +
+                        "Storage optimization completed!\n" +
+                        "Space saved: " + safeSpaceSaved + "\n" +
+                        "Compression improved: " + safeCompression + "%\n" +
                         "Optimization time: " + safeTime + "s"
                     );
 

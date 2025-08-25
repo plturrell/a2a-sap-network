@@ -252,12 +252,37 @@ async def update_agent_progress(
     progress_data: Dict[str, Any],
     handler: OrchestratorAgentA2AHandler = Depends(get_orchestrator_handler)
 ):
-    """Update progress for a specific agent"""
+    """Update progress for a specific agent with validation"""
     try:
+        # Validate input
+        if not agent_id or not agent_id.strip():
+            raise GoalValidationError("Agent ID cannot be empty")
+            
+        if not progress_data:
+            raise GoalValidationError("Progress data cannot be empty")
+            
+        # Validate progress values are in valid range
+        if "overall_progress" in progress_data:
+            overall = progress_data["overall_progress"]
+            if not isinstance(overall, (int, float)) or overall < 0 or overall > 100:
+                raise GoalValidationError(
+                    "Overall progress must be between 0 and 100",
+                    details={"invalid_value": overall}
+                )
+                
+        # Validate objective progress if provided
+        if "objective_progress" in progress_data:
+            for obj_name, value in progress_data["objective_progress"].items():
+                if not isinstance(value, (int, float)) or value < 0 or value > 100:
+                    raise GoalValidationError(
+                        f"Objective progress for '{obj_name}' must be between 0 and 100",
+                        details={"objective": obj_name, "invalid_value": value}
+                    )
+        
         message_data = {
             "operation": "track_goal_progress",
             "data": {
-                "agent_id": agent_id,
+                "agent_id": agent_id.strip(),
                 "progress": progress_data
             }
         }
@@ -276,12 +301,33 @@ async def update_agent_progress(
         
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
+        elif result.get("status") == "not_found":
+            raise GoalNotFoundError(agent_id)
         else:
-            raise HTTPException(status_code=400, detail=result.get("message", "Failed to update progress"))
+            raise GoalManagementError(
+                result.get("message", "Failed to update progress"),
+                status_code=result.get("status_code", 400),
+                details=result.get("error_details", {})
+            )
             
+    except GoalManagementError:
+        raise
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Failed to update agent progress: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error updating agent progress: {e}\n{traceback.format_exc()}")
+        raise GoalManagementError(
+            "An unexpected error occurred while updating progress",
+            details={"error": str(e), "agent_id": agent_id}
+        )
+
+# Valid goal statuses
+class GoalStatus(str, Enum):
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
 
 @router.put("/agents/{agent_id}/status")
 async def update_goal_status(
@@ -289,14 +335,38 @@ async def update_goal_status(
     status_data: Dict[str, str],
     handler: OrchestratorAgentA2AHandler = Depends(get_orchestrator_handler)
 ):
-    """Update goal status for a specific agent"""
+    """Update goal status for a specific agent with validation"""
     try:
+        # Validate input
+        if not agent_id or not agent_id.strip():
+            raise GoalValidationError("Agent ID cannot be empty")
+            
+        if not status_data or "status" not in status_data:
+            raise GoalValidationError("Status is required")
+            
+        # Validate status value
+        new_status = status_data.get("status")
+        try:
+            GoalStatus(new_status)
+        except ValueError:
+            raise GoalValidationError(
+                f"Invalid status value: {new_status}",
+                details={"valid_statuses": [s.value for s in GoalStatus]}
+            )
+            
+        # Require reason for certain status changes
+        if new_status in [GoalStatus.CANCELLED, GoalStatus.FAILED] and not status_data.get("reason"):
+            raise GoalValidationError(
+                f"Reason is required when setting status to {new_status}"
+            )
+        
         message_data = {
             "operation": "update_goal_status",
             "data": {
-                "agent_id": agent_id,
-                "status": status_data.get("status"),
-                "reason": status_data.get("reason", "")
+                "agent_id": agent_id.strip(),
+                "status": new_status,
+                "reason": status_data.get("reason", ""),
+                "updated_by": status_data.get("updated_by", "api_client")
             }
         }
         
@@ -314,12 +384,30 @@ async def update_goal_status(
         
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
+        elif result.get("status") == "not_found":
+            raise GoalNotFoundError(agent_id)
+        elif result.get("status") == "invalid_transition":
+            raise GoalValidationError(
+                result.get("message", "Invalid status transition"),
+                details=result.get("transition_details", {})
+            )
         else:
-            raise HTTPException(status_code=400, detail=result.get("message", "Failed to update status"))
+            raise GoalManagementError(
+                result.get("message", "Failed to update status"),
+                status_code=result.get("status_code", 400),
+                details=result.get("error_details", {})
+            )
             
+    except GoalManagementError:
+        raise
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Failed to update goal status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error updating goal status: {e}\n{traceback.format_exc()}")
+        raise GoalManagementError(
+            "An unexpected error occurred while updating goal status",
+            details={"error": str(e), "agent_id": agent_id}
+        )
 
 @router.get("/analytics")
 async def get_system_analytics(
@@ -421,50 +509,93 @@ async def enable_auto_progress_updates(
         raise HTTPException(status_code=500, detail=str(e))
 
 async def automated_progress_monitor(agent_id: str, handler: OrchestratorAgentA2AHandler):
-    """Background task for automated progress monitoring"""
+    """Background task for automated progress monitoring with error recovery"""
+    retry_count = 0
+    max_retries = 3
+    base_delay = 300  # 5 minutes
+    
     try:
         logger.info(f"Starting automated progress monitoring for {agent_id}")
         
         while True:
-            # Check agent performance metrics and update progress
-            await update_progress_from_metrics(agent_id, handler)
-            
-            # Wait 5 minutes before next update
-            await asyncio.sleep(300)
-            
+            try:
+                # Check agent performance metrics and update progress
+                await update_progress_from_metrics(agent_id, handler)
+                
+                # Reset retry count on success
+                retry_count = 0
+                
+                # Wait before next update
+                await asyncio.sleep(base_delay)
+                
+            except Exception as e:
+                retry_count += 1
+                logger.warning(
+                    f"Error in progress monitoring for {agent_id} (attempt {retry_count}/{max_retries}): {e}"
+                )
+                
+                if retry_count >= max_retries:
+                    logger.error(
+                        f"Max retries reached for progress monitoring of {agent_id}. Stopping monitor."
+                    )
+                    break
+                    
+                # Exponential backoff
+                wait_time = base_delay * (2 ** retry_count)
+                logger.info(f"Retrying in {wait_time} seconds...")
+                await asyncio.sleep(wait_time)
+                
+    except asyncio.CancelledError:
+        logger.info(f"Progress monitoring cancelled for {agent_id}")
+        raise
     except Exception as e:
-        logger.error(f"Automated progress monitoring failed for {agent_id}: {e}")
+        logger.error(f"Fatal error in automated progress monitoring for {agent_id}: {e}\n{traceback.format_exc()}")
 
 async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgentA2AHandler):
-    """Update goal progress based on real agent metrics"""
+    """Update goal progress based on real agent metrics with enhanced error handling"""
     try:
         # Get current agent metrics from real monitoring system
         metrics = await get_agent_performance_metrics(agent_id)
         
         if not metrics:
+            logger.debug(f"No metrics available for {agent_id}, skipping progress update")
             return
         
-        # Calculate progress based on metrics
-        progress_update = {
-            "overall_progress": min(100.0, metrics.get("success_rate", 0.0)),
-            "objective_progress": {
-                "data_registration": metrics.get("registration_success_rate", 0.0),
-                "validation_accuracy": metrics.get("validation_accuracy", 0.0),
-                "response_time": max(0, 100 - (metrics.get("avg_response_time", 5000) / 50)),
-                "compliance_tracking": metrics.get("compliance_score", 0.0),
-                "quality_assessment": metrics.get("quality_score", 0.0),
-                "catalog_management": metrics.get("catalog_completeness", 0.0)
+        # Calculate progress based on metrics with safe defaults
+        try:
+            # Response time progress calculation with bounds checking
+            response_time = metrics.get("avg_response_time", 5000)
+            response_time_progress = max(0, min(100, 100 - (response_time / 50)))
+            
+            progress_update = {
+                "overall_progress": min(100.0, metrics.get("success_rate", 0.0)),
+                "objective_progress": {
+                    "data_registration": metrics.get("registration_success_rate", 0.0),
+                    "validation_accuracy": metrics.get("validation_accuracy", 0.0),
+                    "response_time": response_time_progress,
+                    "compliance_tracking": metrics.get("compliance_score", 0.0),
+                    "quality_assessment": metrics.get("quality_score", 0.0),
+                    "catalog_management": metrics.get("catalog_completeness", 0.0)
+                },
+                "metrics_timestamp": datetime.utcnow().isoformat()
             }
-        }
+        except (TypeError, ValueError) as e:
+            logger.error(f"Error calculating progress for {agent_id}: {e}")
+            return
         
         # Add new milestones based on metrics
         milestones = []
-        if metrics.get("success_rate", 0) > 95:
-            milestones.append("High success rate achieved (>95%)")
-        if metrics.get("avg_response_time", 5000) < 2000:
-            milestones.append("Fast response time achieved (<2s)")
-        if metrics.get("uptime", 0) > 99.9:
-            milestones.append("High availability achieved (>99.9%)")
+        milestone_checks = [
+            (metrics.get("success_rate", 0) > 95, "High success rate achieved (>95%)"),
+            (metrics.get("avg_response_time", 5000) < 2000, "Fast response time achieved (<2s)"),
+            (metrics.get("uptime", 0) > 99.9, "High availability achieved (>99.9%)"),
+            (metrics.get("error_rate", 100) < 5, "Low error rate achieved (<5%)"),
+            (metrics.get("validation_accuracy", 0) > 98, "High validation accuracy achieved (>98%)")
+        ]
+        
+        for condition, milestone in milestone_checks:
+            if condition:
+                milestones.append(milestone)
         
         if milestones:
             progress_update["milestones_achieved"] = milestones
@@ -474,7 +605,8 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
             "operation": "track_goal_progress",
             "data": {
                 "agent_id": agent_id,
-                "progress": progress_update
+                "progress": progress_update,
+                "source": "automated_monitor"
             }
         }
         
@@ -491,12 +623,18 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
         result = await handler.process_a2a_message(message)
         
         if result.get("status") == "success":
-            logger.info(f"Automated progress update successful for {agent_id}")
+            logger.info(
+                f"Automated progress update successful for {agent_id}: "
+                f"overall={progress_update['overall_progress']:.1f}%"
+            )
         else:
-            logger.warning(f"Automated progress update failed for {agent_id}: {result}")
+            logger.warning(
+                f"Automated progress update failed for {agent_id}: "
+                f"status={result.get('status')}, message={result.get('message')}"
+            )
             
     except Exception as e:
-        logger.error(f"Failed to update progress from metrics for {agent_id}: {e}")
+        logger.error(f"Failed to update progress from metrics for {agent_id}: {e}\n{traceback.format_exc()}")
 
 async def get_agent_performance_metrics(agent_id: str) -> Optional[Dict[str, float]]:
     """Get real-time performance metrics for an agent with proper error handling"""

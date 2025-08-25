@@ -34,16 +34,8 @@ class ReasoningStrategy(Enum):
 
 
 @dataclass
-class ReasoningStep(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Individual step in chain-of-thought reasoning"""
+class ReasoningStep:
+    """Individual step in chain-of-thought reasoning"""
     step_id: int
     step_type: str  # "premise", "inference", "conclusion", "validation", "evidence"
     content: str
@@ -55,16 +47,8 @@ class ReasoningStep(SecureA2AAgent):
 
 
 @dataclass
-class ReasoningChain(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Complete chain of reasoning for a question"""
+class ReasoningChain:
+    """Complete chain of reasoning for a question"""
     chain_id: str
     question: str
     strategy: ReasoningStrategy

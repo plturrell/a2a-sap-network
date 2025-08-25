@@ -22,7 +22,7 @@ class StandaloneSCSSAnalyzer:
         import hashlib
         from datetime import datetime
         
-        issue_id = hashlib.md5(f'{file_path}{line}{tool}{message}'.encode()).hexdigest()[:8]
+        issue_id = hashlib.md5(f'{file_path}{line}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
         
         return {
             "id": f"{tool}_{issue_id}",

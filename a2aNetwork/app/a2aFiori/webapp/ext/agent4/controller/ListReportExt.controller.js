@@ -413,10 +413,6 @@ sap.ui.define([
             });
         },
 
-        _getSessionId() {
-            return sessionStorage.getItem("a2a_session_id") || "unknown";
-        },
-
         _getClientIP() {
             // In real implementation, this would come from server-side
             return "client_ip_masked";
@@ -1051,7 +1047,7 @@ sap.ui.define([
 
             let oParsedTestData;
             let nExpectedResult;
-            
+
             try {
                 oParsedTestData = JSON.parse(oTestDataValidation.sanitized);
                 nExpectedResult = parseFloat(oData.expectedResult);

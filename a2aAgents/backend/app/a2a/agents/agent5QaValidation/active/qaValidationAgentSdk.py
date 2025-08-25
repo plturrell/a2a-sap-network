@@ -70,12 +70,11 @@ if False:  # Disabled fallback
         # Create minimal base class if SDK not available
         class A2AAgentBase(ABC, PerformanceMonitoringMixin):
             def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-                        self.agent_id = agent_id
+                # Initialize security features
+                self._init_security_features()
+                self._init_rate_limiting()
+                self._init_input_validation()
+                self.agent_id = agent_id
                 self.name = name  
                 self.description = description
                 self.version = version
@@ -418,12 +417,11 @@ class RealGrokClient:
     """Real Grok AI client implementation"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.api_key = None
+        self.api_key = None
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
         self.client = None
@@ -550,12 +548,11 @@ class RealGrokAssistant:
     """Grok AI assistant for specialized tasks"""
     
     def __init__(self, client: RealGrokClient):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.client = client
+        self.client = client
     
     async def analyze_semantic_similarity(self, text1: str, text2: str) -> float:
         """Analyze semantic similarity using Grok"""

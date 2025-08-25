@@ -30,16 +30,8 @@ class BuilderScenario(Enum):
     INTEGRATION_TESTING = "integration_testing"
 
 @dataclass
-class AgentSpecification(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Specification for agent to be built"""
+class AgentSpecification:
+    """Specification for agent to be built"""
     id: str
     name: str
     agent_type: str
@@ -52,16 +44,8 @@ class AgentSpecification(SecureA2AAgent):
     version: str = "1.0.0"
 
 @dataclass
-class BuildResult(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Result of agent build process"""
+class BuildResult:
+    """Result of agent build process"""
     spec_id: str
     build_id: str
     status: str  # "success", "failed", "building"
@@ -74,16 +58,8 @@ class BuildResult(SecureA2AAgent):
     performance_metrics: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
-class SimulationMetrics(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Metrics collected during agent builder simulation"""
+class SimulationMetrics:
+    """Metrics collected during agent builder simulation"""
     total_builds: int = 0
     successful_builds: int = 0
     failed_builds: int = 0
@@ -97,20 +73,17 @@ class SimulationMetrics(SecureA2AAgent):
     resource_utilization: Dict[str, float] = field(default_factory=dict)
 
 class AgentBuilderSimulator(SecureA2AAgent):
+    """Comprehensive simulation framework for agent builder testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""
-    Comprehensive simulation framework for agent builder testing
-    """
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, agent_builder):
-        
         super().__init__()
         self.agent_builder = agent_builder
         self.simulation_metrics = SimulationMetrics()

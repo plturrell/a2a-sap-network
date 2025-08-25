@@ -18,18 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 class SparseVectorSkills(SecureA2AAgent):
+    """Sparse vector processing capabilities for efficient high-dimensional operations"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Sparse vector processing capabilities for efficient high-dimensional operations"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, hanaConnection=None):
-        
         super().__init__()
         self.hanaConnection = hanaConnection
         self.compressionThresholds = {

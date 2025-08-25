@@ -3,7 +3,8 @@
  */
 
 const cds = require('@sap/cds');
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
+const { BlockchainClient } = require('../core/blockchain-client');
 
 /**
  * Agent 2 OData to REST API Adapter

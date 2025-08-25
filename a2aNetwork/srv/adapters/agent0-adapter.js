@@ -3,7 +3,7 @@
  * Converts between REST API and OData formats for data product management operations
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent0Adapter {
@@ -17,7 +17,8 @@ class Agent0Adapter {
     async getDataProducts(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/data-products`, {
+            const fetch = require('node-fetch');
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/data-products`, {
                 params,
                 timeout: this.timeout
             });

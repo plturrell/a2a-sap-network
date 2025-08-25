@@ -48,18 +48,17 @@ logger = logging.getLogger(__name__)
 
 
 class CalculationStep(SecureA2AAgent):
+    """Represents a single step in a calculation"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Represents a single step in a calculation"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, description: str, operation: str, result: Any, latex: Optional[str] = None):
-        
         super().__init__()
         self.description = description
         self.operation = operation
@@ -78,18 +77,17 @@ class CalculationStep(SecureA2AAgent):
 
 
 class CalculationMethodology(SecureA2AAgent):
+    """Tracks methodology and steps for a calculation"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Tracks methodology and steps for a calculation"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, problem_type: str, approach: str):
-        
         super().__init__()
         self.problem_type = problem_type
         self.approach = approach
@@ -123,18 +121,17 @@ class CalculationMethodology(SecureA2AAgent):
 
 
 class EnhancedCalculationSkills(SecureA2AAgent):
+    """Enhanced calculation skills with detailed methodology tracking"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced calculation skills with detailed methodology tracking"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, agent):
-        
         super().__init__()
         self.agent = agent
         self.transformations = (standard_transformations + (implicit_multiplication_application,)) if SYMPY_AVAILABLE else None

@@ -191,16 +191,16 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         """
         super().__init__(
             agent_id=create_agent_id("data_product_agent"),
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             name="Enhanced Data Product Registration Agent MCP",
             description="A2A v0.2.9 compliant agent with MCP, streaming, and advanced features",
             version="4.0.0",
             base_url=base_url
         )
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Core configuration
         self.ord_registry_url = ord_registry_url

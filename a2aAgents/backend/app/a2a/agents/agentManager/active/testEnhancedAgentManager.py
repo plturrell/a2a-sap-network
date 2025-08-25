@@ -20,18 +20,17 @@ if missing_vars:
     raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
 class EnhancedAgentManagerTest(SecureA2AAgent):
+    """Test suite for Enhanced Agent Manager"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Test suite for Enhanced Agent Manager"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
-        
         super().__init__()
         self.agent_manager = EnhancedAgentManagerAgent()
         self.test_results = []

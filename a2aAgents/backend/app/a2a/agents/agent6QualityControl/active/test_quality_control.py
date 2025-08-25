@@ -1,16 +1,16 @@
-import asyncio
-import json
-import logging
-from typing import Dict, Any
-
-from qualityControlManagerAgent import (
-from app.a2a.core.security_base import SecureA2AAgent
 #!/usr/bin/env python3
 """
 Test script for Quality Control Manager Agent
 Demonstrates quality assessment and routing decisions
 """
 
+import asyncio
+import json
+import logging
+from typing import Dict, Any
+
+from app.a2a.core.security_base import SecureA2AAgent
+from qualityControlManagerAgent import (
     QualityControlManagerAgent, 
     QualityAssessmentRequest,
     QualityDecision

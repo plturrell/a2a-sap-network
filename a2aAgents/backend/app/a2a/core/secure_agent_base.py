@@ -18,7 +18,7 @@ from .security_middleware import (
     get_secure_logger, require_auth, validate_input
 )
 from ..sdk.types import A2AMessage, MessagePart, MessageRole, AgentCard
-from ..sdk.a2aAgentSDK import A2AAgentSDK
+from ..sdk.agentBase import A2AAgentBase
 
 
 class SecureAgentConfig(BaseModel):
@@ -28,6 +28,8 @@ class SecureAgentConfig(BaseModel):
     agent_id: str
     agent_name: str
     agent_version: str = "1.0.0"
+    description: str = ""
+    base_url: str = "http://localhost:4004"
     
     # Security settings
     enable_authentication: bool = True
@@ -74,7 +76,7 @@ class SecureAgentConfig(BaseModel):
         }
 
 
-class SecureA2AAgent(A2AAgentSDK):
+class SecureA2AAgent(A2AAgentBase):
     """
     Security-hardened base class for A2A agents
     Provides authentication, rate limiting, input validation, and secure logging
@@ -86,6 +88,8 @@ class SecureA2AAgent(A2AAgentSDK):
         super().__init__(
             agent_id=config.agent_id,
             agent_name=config.agent_name,
+            description=getattr(config, 'description', f"Secure {config.agent_name}"),
+            base_url=getattr(config, 'base_url', 'http://localhost:4004'),
             capabilities=list(config.allowed_operations),
             version=config.agent_version
         )

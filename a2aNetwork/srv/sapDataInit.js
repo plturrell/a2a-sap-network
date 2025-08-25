@@ -1,4 +1,5 @@
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 /**
  * @fileoverview SAP Data Initialization Service
  * @since 1.0.0

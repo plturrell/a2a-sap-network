@@ -211,7 +211,7 @@ class Agent14Adapter extends BaseAdapter {
 
             const response = await this.callPythonBackend('upload_training_data', payload);
             return {
-                dataset_id: response.dataset_id,
+                dataset_id: dataset_id,
                 dataset_name: datasetName,
                 record_count: response.record_count,
                 file_size: response.file_size,
@@ -387,7 +387,7 @@ class Agent14Adapter extends BaseAdapter {
     }
 
     async callPythonBackend(method, payload) {
-        const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+        const fetch = require('node-fetch');
         const baseUrl = process.env.AGENT14_BASE_URL || 'http://localhost:8014';
         
         try {
@@ -395,49 +395,100 @@ class Agent14Adapter extends BaseAdapter {
             
             switch (method) {
                 case 'list_embedding_models':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/embedding-models`, {
-                        params: { filters: JSON.stringify(payload.filters || {}) }
+                    response = await fetch(`${baseUrl}/api/v1/embedding-models?${new URLSearchParams({ filters: JSON.stringify(payload.filters || {}) })}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: this.timeout
                     });
-                    return response.data;
+                    const data = await response.json();
+                    return data;
                     
                 case 'create_embedding_model':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/embedding-models`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/embedding-models`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'start_fine_tuning':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/fine-tuning/start`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/fine-tuning/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'stop_fine_tuning':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/fine-tuning/stop`, null, {
+                    response = await fetch(`${baseUrl}/api/v1/fine-tuning/stop`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(null, {
                         params: { job_id: payload.job_id }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'get_training_status':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/fine-tuning/status`, {
+                    response = await fetch(`${baseUrl}/api/v1/fine-tuning/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                         params: { job_id: payload.job_id }
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'get_training_metrics':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/fine-tuning/metrics`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/fine-tuning/metrics`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'evaluate_embedding_model':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/embedding-models/evaluate`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/embedding-models/evaluate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'deploy_embedding_model':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/embedding-models/deploy`, payload);
-                    return response.data;
+                    response = await fetch(`${baseUrl}/api/v1/embedding-models/deploy`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 case 'generate_embeddings':
-                    response = await blockchainClient.sendMessage(`${baseUrl}/api/v1/embedding-models/generate-embeddings`, {
+                    response = await fetch(`${baseUrl}/api/v1/embedding-models/generate-embeddings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                         model_id: payload.model_id,
                         texts: payload.texts
-                    });
-                    return response.data;
+                    }),
+                timeout: this.timeout
+            });
+            const data = await response.json();
+                    return data;
                     
                 default:
                     throw new Error(`Unknown method: ${method}`);

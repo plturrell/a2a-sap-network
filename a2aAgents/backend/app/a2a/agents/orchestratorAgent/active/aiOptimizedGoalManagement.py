@@ -38,6 +38,27 @@ class IntelligentMilestone:
     dependencies: List[str]
     impact_score: float
 
+@dataclass
+class CollaborativeGoalRecommendation:
+    """AI recommendation for collaborative goals"""
+    goal_title: str
+    recommended_agents: List[str]
+    agent_roles: Dict[str, str]
+    synergy_score: float
+    estimated_efficiency_gain: float
+    risk_assessment: str
+    collaboration_pattern: str  # "sequential", "parallel", "hierarchical"
+
+@dataclass
+class AgentCollaborationProfile:
+    """Profile of agent's collaboration capabilities and history"""
+    agent_id: str
+    collaboration_success_rate: float
+    preferred_partners: List[str]
+    expertise_areas: List[str]
+    workload_capacity: float
+    communication_efficiency: float
+
 class AIGoalOptimizer:
     """AI-powered goal optimization and prediction system"""
     
@@ -45,9 +66,12 @@ class AIGoalOptimizer:
         self.orchestrator_handler = orchestrator_handler
         self.progress_predictor = None
         self.milestone_classifier = None
+        self.collaboration_recommender = None
         self.scaler = StandardScaler()
         self.historical_data = []
         self.prediction_cache = {}
+        self.collaboration_profiles = {}
+        self.collaborative_goals = {}
         
     async def initialize_ai_models(self):
         """Initialize and train AI models"""
@@ -502,6 +526,405 @@ class AIGoalOptimizer:
             score += 10
         
         return min(100.0, score)
+    
+    async def analyze_collaboration_opportunities(self, agent_id: str) -> List[CollaborativeGoalRecommendation]:
+        """Analyze and recommend collaborative goal opportunities using AI"""
+        try:
+            recommendations = []
+            
+            # Get agent's current goals and metrics
+            agent_goals = self.orchestrator_handler.agent_goals.get(agent_id, {})
+            agent_metrics = await self._get_current_metrics(agent_id)
+            
+            # Build collaboration profile for agent
+            agent_profile = await self._build_collaboration_profile(agent_id)
+            
+            # Find potential collaborators
+            potential_collaborators = await self._find_compatible_agents(agent_profile)
+            
+            # Generate collaboration recommendations
+            for collab_agents in potential_collaborators:
+                recommendation = await self._generate_collaboration_recommendation(
+                    agent_id, collab_agents, agent_goals, agent_metrics
+                )
+                if recommendation and recommendation.synergy_score > 0.7:
+                    recommendations.append(recommendation)
+            
+            # Sort by synergy score
+            recommendations.sort(key=lambda r: r.synergy_score, reverse=True)
+            
+            return recommendations[:5]  # Top 5 recommendations
+            
+        except Exception as e:
+            logger.error(f"Failed to analyze collaboration opportunities: {e}")
+            return []
+    
+    async def _build_collaboration_profile(self, agent_id: str) -> AgentCollaborationProfile:
+        """Build collaboration profile for an agent"""
+        # Get historical collaboration data
+        collaboration_history = await self._get_collaboration_history(agent_id)
+        
+        # Calculate collaboration metrics
+        success_rate = self._calculate_collaboration_success_rate(collaboration_history)
+        preferred_partners = self._identify_preferred_partners(collaboration_history)
+        expertise_areas = self._extract_expertise_areas(agent_id)
+        workload = await self._assess_workload_capacity(agent_id)
+        comm_efficiency = self._calculate_communication_efficiency(collaboration_history)
+        
+        return AgentCollaborationProfile(
+            agent_id=agent_id,
+            collaboration_success_rate=success_rate,
+            preferred_partners=preferred_partners,
+            expertise_areas=expertise_areas,
+            workload_capacity=workload,
+            communication_efficiency=comm_efficiency
+        )
+    
+    async def _find_compatible_agents(self, agent_profile: AgentCollaborationProfile) -> List[List[str]]:
+        """Find agents compatible for collaboration"""
+        compatible_groups = []
+        all_agents = list(self.orchestrator_handler.agent_goals.keys())
+        
+        # Remove the source agent
+        other_agents = [a for a in all_agents if a != agent_profile.agent_id]
+        
+        # Check pairwise compatibility
+        for other_agent in other_agents:
+            other_profile = await self._build_collaboration_profile(other_agent)
+            
+            # Check compatibility criteria
+            if self._are_compatible(agent_profile, other_profile):
+                compatible_groups.append([other_agent])
+        
+        # Check for three-way collaborations
+        for i, agent1 in enumerate(other_agents):
+            for agent2 in other_agents[i+1:]:
+                profile1 = await self._build_collaboration_profile(agent1)
+                profile2 = await self._build_collaboration_profile(agent2)
+                
+                if self._are_compatible_trio(agent_profile, profile1, profile2):
+                    compatible_groups.append([agent1, agent2])
+        
+        return compatible_groups
+    
+    def _are_compatible(self, profile1: AgentCollaborationProfile, profile2: AgentCollaborationProfile) -> bool:
+        """Check if two agents are compatible for collaboration"""
+        # Check workload capacity
+        if profile1.workload_capacity < 0.3 or profile2.workload_capacity < 0.3:
+            return False
+        
+        # Check if they have complementary expertise
+        overlap = set(profile1.expertise_areas) & set(profile2.expertise_areas)
+        if len(overlap) == 0:  # No common ground
+            return False
+        
+        # Check communication efficiency
+        if profile1.communication_efficiency < 0.5 or profile2.communication_efficiency < 0.5:
+            return False
+        
+        # Check if they have successfully collaborated before
+        if profile2.agent_id in profile1.preferred_partners:
+            return True
+        
+        # General compatibility check
+        return (profile1.collaboration_success_rate + profile2.collaboration_success_rate) / 2 > 0.7
+    
+    def _are_compatible_trio(self, p1: AgentCollaborationProfile, p2: AgentCollaborationProfile, 
+                           p3: AgentCollaborationProfile) -> bool:
+        """Check if three agents are compatible for collaboration"""
+        # All pairs should be somewhat compatible
+        return (self._are_compatible(p1, p2) and 
+                self._are_compatible(p1, p3) and 
+                self._are_compatible(p2, p3))
+    
+    async def _generate_collaboration_recommendation(self, primary_agent: str, 
+                                                   collaborators: List[str],
+                                                   goals: Dict, metrics: Dict) -> Optional[CollaborativeGoalRecommendation]:
+        """Generate specific collaboration recommendation"""
+        try:
+            # Determine collaboration pattern based on agent count
+            if len(collaborators) == 1:
+                pattern = "parallel"  # Two agents working in parallel
+                roles = {primary_agent: "co-lead", collaborators[0]: "co-lead"}
+            elif len(collaborators) == 2:
+                pattern = "hierarchical"  # Three agents with hierarchy
+                roles = {
+                    primary_agent: "lead",
+                    collaborators[0]: "contributor",
+                    collaborators[1]: "reviewer"
+                }
+            else:
+                pattern = "sequential"  # Multiple agents in sequence
+                roles = {primary_agent: "initiator"}
+                for i, collab in enumerate(collaborators):
+                    roles[collab] = f"stage_{i+2}_processor"
+            
+            # Calculate synergy score
+            synergy = await self._calculate_synergy_score(primary_agent, collaborators)
+            
+            # Estimate efficiency gain
+            efficiency_gain = self._estimate_efficiency_gain(len(collaborators) + 1, pattern)
+            
+            # Risk assessment
+            risk = self._assess_collaboration_risk(primary_agent, collaborators)
+            
+            # Generate goal title based on agents involved
+            goal_title = self._generate_collaborative_goal_title(primary_agent, collaborators)
+            
+            return CollaborativeGoalRecommendation(
+                goal_title=goal_title,
+                recommended_agents=[primary_agent] + collaborators,
+                agent_roles=roles,
+                synergy_score=synergy,
+                estimated_efficiency_gain=efficiency_gain,
+                risk_assessment=risk,
+                collaboration_pattern=pattern
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to generate collaboration recommendation: {e}")
+            return None
+    
+    async def _calculate_synergy_score(self, primary_agent: str, collaborators: List[str]) -> float:
+        """Calculate synergy score for agent collaboration"""
+        # Base synergy from agent compatibility
+        base_synergy = 0.5
+        
+        # Add synergy for complementary expertise
+        primary_profile = await self._build_collaboration_profile(primary_agent)
+        all_expertise = set(primary_profile.expertise_areas)
+        
+        for collab in collaborators:
+            collab_profile = await self._build_collaboration_profile(collab)
+            all_expertise.update(collab_profile.expertise_areas)
+        
+        # More diverse expertise = higher synergy
+        expertise_diversity = len(all_expertise) / (len(collaborators) + 1)
+        base_synergy += min(0.3, expertise_diversity * 0.1)
+        
+        # Add historical collaboration success
+        history_bonus = 0.0
+        for collab in collaborators:
+            if collab in primary_profile.preferred_partners:
+                history_bonus += 0.1
+        
+        base_synergy += min(0.2, history_bonus)
+        
+        return min(1.0, base_synergy)
+    
+    def _estimate_efficiency_gain(self, agent_count: int, pattern: str) -> float:
+        """Estimate efficiency gain from collaboration"""
+        # Base efficiency gains by pattern
+        pattern_gains = {
+            "parallel": 0.4,      # Good for independent tasks
+            "sequential": 0.3,   # Good for pipeline processing
+            "hierarchical": 0.35  # Good for complex decisions
+        }
+        
+        base_gain = pattern_gains.get(pattern, 0.2)
+        
+        # Adjust for agent count (diminishing returns)
+        if agent_count == 2:
+            return base_gain * 1.0
+        elif agent_count == 3:
+            return base_gain * 0.9
+        else:
+            return base_gain * 0.8
+    
+    def _assess_collaboration_risk(self, primary_agent: str, collaborators: List[str]) -> str:
+        """Assess risk level of collaboration"""
+        # Simple risk assessment based on agent count and complexity
+        agent_count = len(collaborators) + 1
+        
+        if agent_count == 2:
+            return "low"  # Two agents - simple coordination
+        elif agent_count == 3:
+            return "medium"  # Three agents - moderate complexity
+        else:
+            return "high"  # Many agents - complex coordination
+    
+    def _generate_collaborative_goal_title(self, primary_agent: str, collaborators: List[str]) -> str:
+        """Generate descriptive title for collaborative goal"""
+        agent_types = [self._extract_agent_type(primary_agent)]
+        agent_types.extend([self._extract_agent_type(c) for c in collaborators])
+        
+        # Generate title based on agent types
+        if "data_product" in agent_types and "standardization" in agent_types:
+            return "Integrated Data Quality Enhancement Pipeline"
+        elif "calculator" in agent_types and "ai_preparation" in agent_types:
+            return "AI-Powered Financial Analysis Workflow"
+        elif "orchestrator" in agent_types:
+            return "Cross-Agent Process Optimization Initiative"
+        else:
+            return f"Collaborative Goal: {' + '.join(agent_types[:3])}"
+    
+    def _extract_agent_type(self, agent_id: str) -> str:
+        """Extract agent type from agent ID"""
+        if "agent0" in agent_id:
+            return "data_product"
+        elif "agent1" in agent_id:
+            return "standardization"
+        elif "agent2" in agent_id:
+            return "ai_preparation"
+        elif "calculator" in agent_id:
+            return "calculator"
+        elif "orchestrator" in agent_id:
+            return "orchestrator"
+        else:
+            return agent_id.split("_")[0]
+    
+    async def create_collaborative_goal(self, recommendation: CollaborativeGoalRecommendation) -> Dict[str, Any]:
+        """Create a collaborative goal based on AI recommendation"""
+        try:
+            # Generate SMART goal components
+            smart_goal = {
+                "goal_id": f"collab_goal_{datetime.utcnow().timestamp()}",
+                "goal_type": "collaborative",
+                "specific": recommendation.goal_title,
+                "measurable": await self._generate_collaborative_metrics(recommendation),
+                "achievable": True,
+                "relevant": f"Leverages synergies between {len(recommendation.recommended_agents)} agents",
+                "time_bound": "30 days",
+                "collaborative_agents": recommendation.recommended_agents,
+                "agent_roles": recommendation.agent_roles,
+                "collaboration_pattern": recommendation.collaboration_pattern,
+                "expected_efficiency_gain": recommendation.estimated_efficiency_gain,
+                "ai_metadata": {
+                    "synergy_score": recommendation.synergy_score,
+                    "risk_assessment": recommendation.risk_assessment,
+                    "generated_at": datetime.utcnow().isoformat()
+                }
+            }
+            
+            # Create notifications for all participating agents
+            notifications_sent = await self._send_collaborative_goal_notifications(smart_goal)
+            
+            return {
+                "status": "success",
+                "collaborative_goal": smart_goal,
+                "notifications_sent": notifications_sent
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to create collaborative goal: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    async def _generate_collaborative_metrics(self, recommendation: CollaborativeGoalRecommendation) -> Dict[str, float]:
+        """Generate measurable metrics for collaborative goal"""
+        metrics = {}
+        
+        # Base metrics for all collaborative goals
+        metrics["collaboration_efficiency"] = 85.0  # Target 85% efficiency
+        metrics["milestone_synchronization"] = 95.0  # 95% on-time milestone delivery
+        metrics["communication_effectiveness"] = 90.0  # 90% effective communication
+        
+        # Pattern-specific metrics
+        if recommendation.collaboration_pattern == "parallel":
+            metrics["parallel_completion_rate"] = 90.0
+            metrics["resource_utilization"] = 80.0
+        elif recommendation.collaboration_pattern == "sequential":
+            metrics["handoff_success_rate"] = 95.0
+            metrics["pipeline_throughput"] = 100.0  # items/hour
+        elif recommendation.collaboration_pattern == "hierarchical":
+            metrics["decision_quality_score"] = 90.0
+            metrics["review_turnaround_time"] = 24.0  # hours
+        
+        return metrics
+    
+    async def _send_collaborative_goal_notifications(self, goal: Dict[str, Any]) -> int:
+        """Send notifications to all agents involved in collaborative goal"""
+        # This would integrate with the notification system
+        # For now, return the count of agents notified
+        return len(goal["collaborative_agents"])
+    
+    # Helper methods for collaboration analysis
+    async def _get_collaboration_history(self, agent_id: str) -> List[Dict[str, Any]]:
+        """Get historical collaboration data for agent"""
+        # In production, this would query historical data
+        # For now, return simulated data
+        return [
+            {
+                "collaboration_id": f"collab_{i}",
+                "agents": [agent_id, f"agent{i % 5}"],
+                "success": np.random.random() > 0.3,
+                "duration_days": np.random.randint(10, 60),
+                "efficiency_score": np.random.random()
+            }
+            for i in range(10)
+        ]
+    
+    def _calculate_collaboration_success_rate(self, history: List[Dict[str, Any]]) -> float:
+        """Calculate success rate from collaboration history"""
+        if not history:
+            return 0.5  # Default neutral score
+        
+        successes = sum(1 for h in history if h.get("success", False))
+        return successes / len(history)
+    
+    def _identify_preferred_partners(self, history: List[Dict[str, Any]]) -> List[str]:
+        """Identify preferred collaboration partners"""
+        partner_scores = {}
+        
+        for collab in history:
+            if collab.get("success", False):
+                for agent in collab["agents"]:
+                    if agent not in partner_scores:
+                        partner_scores[agent] = 0
+                    partner_scores[agent] += collab.get("efficiency_score", 0.5)
+        
+        # Sort by score and return top partners
+        sorted_partners = sorted(partner_scores.items(), key=lambda x: x[1], reverse=True)
+        return [partner for partner, score in sorted_partners[:5]]
+    
+    def _extract_expertise_areas(self, agent_id: str) -> List[str]:
+        """Extract expertise areas based on agent type"""
+        expertise_map = {
+            "agent0": ["data_registration", "validation", "quality_assessment"],
+            "agent1": ["standardization", "schema_compliance", "data_transformation"],
+            "agent2": ["ai_preparation", "feature_engineering", "data_cleaning"],
+            "calculator": ["financial_analysis", "risk_assessment", "projections"],
+            "orchestrator": ["workflow_management", "coordination", "optimization"]
+        }
+        
+        for key, expertise in expertise_map.items():
+            if key in agent_id:
+                return expertise
+        
+        return ["general_processing"]
+    
+    async def _assess_workload_capacity(self, agent_id: str) -> float:
+        """Assess current workload capacity (0-1, higher is more available)"""
+        # Get current goals for agent
+        agent_goals = self.orchestrator_handler.agent_goals.get(agent_id, {})
+        active_goals = agent_goals.get("goals", {}).get("primary_objectives", [])
+        
+        # Calculate capacity based on active goals
+        if len(active_goals) == 0:
+            return 1.0  # Full capacity
+        elif len(active_goals) < 3:
+            return 0.7  # Good capacity
+        elif len(active_goals) < 5:
+            return 0.4  # Limited capacity
+        else:
+            return 0.1  # Very limited capacity
+    
+    def _calculate_communication_efficiency(self, history: List[Dict[str, Any]]) -> float:
+        """Calculate communication efficiency from collaboration history"""
+        if not history:
+            return 0.7  # Default decent communication
+        
+        # Calculate based on collaboration duration vs expected
+        efficiency_scores = []
+        for collab in history:
+            duration = collab.get("duration_days", 30)
+            expected_duration = 30  # baseline expectation
+            
+            if duration <= expected_duration:
+                efficiency_scores.append(1.0)
+            else:
+                efficiency_scores.append(expected_duration / duration)
+        
+        return sum(efficiency_scores) / len(efficiency_scores) if efficiency_scores else 0.7
 
 # Global AI optimizer instance
 _ai_optimizer: Optional[AIGoalOptimizer] = None

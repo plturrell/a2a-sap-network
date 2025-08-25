@@ -38,12 +38,11 @@ class BlockchainOnlyEnforcer:
     """Enforces blockchain-only communication - no HTTP fallbacks"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.blockchain_required = True
+        self.blockchain_required = True
     
     async def call(self, func, *args, **kwargs):
         """Execute function only if blockchain is available"""
@@ -182,12 +181,11 @@ class CorruptionDetector:
     """Advanced corruption detection for vector data"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.corruption_patterns = [
+        self.corruption_patterns = [
             self._check_dimension_consistency,
             self._check_value_ranges,
             self._check_nan_inf_values,
@@ -455,12 +453,11 @@ class HANAConnectionManager:
     """Advanced HANA connection management with retry and circuit breaking"""
     
     def __init__(self, config: Dict[str, Any], max_retries: int = 3):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.config = config
+        self.config = config
         self.max_retries = max_retries
         self.connection_pool = deque(maxlen=5)  # Pool of up to 5 connections
         self.blockchain_enforcer = BlockchainOnlyEnforcer(
@@ -569,12 +566,11 @@ class MemoryManagedVectorStore:
     """Memory-managed vector store with chunking and streaming support"""
     
     def __init__(self, config: VectorProcessingConfig):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.config = config
+        self.config = config
         self.vectors = {}  # In-memory vector storage
         self.metadata = {}  # Vector metadata
         self.memory_usage = 0  # Track memory usage in bytes
@@ -991,12 +987,11 @@ class NetworkXDocumentedOperations:
     """
     
     def __init__(self, graph: nx.DiGraph = None):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.graph = graph or nx.DiGraph()
+        self.graph = graph or nx.DiGraph()
         self.operation_history = []
         
     def add_node_with_documentation(

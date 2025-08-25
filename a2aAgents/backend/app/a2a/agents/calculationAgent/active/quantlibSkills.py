@@ -20,18 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 class QuantLibSkills(SecureA2AAgent):
+    """Advanced financial calculations using QuantLib"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Advanced financial calculations using QuantLib"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
-        
         super().__init__()
         self.calendar = ql.UnitedStates() if QUANTLIB_AVAILABLE else None
         self.day_count = ql.Actual365Fixed() if QUANTLIB_AVAILABLE else None

@@ -34,12 +34,11 @@ class BlockchainRegistry:
     """Registry that uses blockchain as single source of truth"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.blockchain_client = None
+        self.blockchain_client = None
         self._init_blockchain()
     
     def _init_blockchain(self):
@@ -859,36 +858,33 @@ class EnhancedWorkflowOptimizer:
     """AI-enhanced workflow optimization"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
 
 
 class AgentPerformancePredictor:
     """AI-powered agent performance prediction"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
 
 
 class TrustIntelligenceSystem:
     """AI-enhanced trust decision making"""
     
     def __init__(self, ai_framework: AIIntelligenceFramework):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
 
 
 # Keep original class for backward compatibility

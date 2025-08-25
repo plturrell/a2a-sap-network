@@ -3,7 +3,7 @@
  * Converts between REST API and OData formats for agent management and coordination operations
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 
 class Agent7Adapter {
@@ -17,12 +17,17 @@ class Agent7Adapter {
     async getRegisteredAgents(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'RegisteredAgent');
+            return this._convertRESTToOData(data, 'RegisteredAgent');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -31,11 +36,18 @@ class Agent7Adapter {
     async createRegisteredAgent(data) {
         try {
             const restData = this._convertODataAgentToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTAgentToOData(response.data);
+            return this._convertRESTAgentToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -44,11 +56,18 @@ class Agent7Adapter {
     async updateRegisteredAgent(id, data) {
         try {
             const restData = this._convertODataAgentToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTAgentToOData(response.data);
+            return this._convertRESTAgentToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -56,7 +75,9 @@ class Agent7Adapter {
 
     async deleteRegisteredAgent(id) {
         try {
-            await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, {
+            await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
         } catch (error) {
@@ -67,21 +88,28 @@ class Agent7Adapter {
     // Agent Registration and Management
     async registerAgent(agentData) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/register-agent`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/register-agent`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 agent_name: agentData.agentName,
                 agent_type: agentData.agentType,
                 agent_version: agentData.agentVersion,
                 endpoint_url: agentData.endpointUrl,
                 capabilities: agentData.capabilities,
                 configuration: agentData.configuration
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                agentId: response.data.agent_id
+                success: data.success,
+                message: data.message,
+                agentId: data.agent_id
             };
         } catch (error) {
             throw this._handleError(error);
@@ -90,16 +118,23 @@ class Agent7Adapter {
 
     async updateAgentStatus(agentId, status, reason) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-status`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 status: status.toLowerCase(),
                 reason
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -108,19 +143,24 @@ class Agent7Adapter {
 
     async performHealthCheck(agentId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/health-check`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/health-check`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                status: response.data.status?.toUpperCase(),
-                responseTime: response.data.response_time,
-                statusCode: response.data.status_code,
-                details: response.data.details,
-                errorDetails: response.data.error_details,
-                alertTriggered: response.data.alert_triggered,
-                alertLevel: response.data.alert_level,
-                recommendations: response.data.recommendations
+                status: data.status?.toUpperCase(),
+                responseTime: data.response_time,
+                statusCode: data.status_code,
+                details: data.details,
+                errorDetails: data.error_details,
+                alertTriggered: data.alert_triggered,
+                alertLevel: data.alert_level,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -129,16 +169,23 @@ class Agent7Adapter {
 
     async updateAgentConfiguration(agentId, configuration, restartRequired) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-config`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/update-config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 configuration,
                 restart_required: restartRequired
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -147,16 +194,23 @@ class Agent7Adapter {
 
     async deactivateAgent(agentId, reason, gracefulShutdown) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/deactivate`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/deactivate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 reason,
                 graceful_shutdown: gracefulShutdown
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -165,19 +219,26 @@ class Agent7Adapter {
 
     async scheduleTask(agentId, taskData) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/schedule-task`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/schedule-task`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 task_type: taskData.taskType,
                 parameters: taskData.parameters,
                 scheduled_time: taskData.scheduledTime,
                 priority: taskData.priority.toLowerCase()
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                taskId: response.data.task_id
+                success: data.success,
+                message: data.message,
+                taskId: data.task_id
             };
         } catch (error) {
             throw this._handleError(error);
@@ -186,19 +247,26 @@ class Agent7Adapter {
 
     async assignWorkload(agentId, workloadData) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/assign-workload`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/registered-agents/${agentId}/assign-workload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 workload_type: workloadData.workloadType,
                 parameters: workloadData.parameters,
                 priority: workloadData.priority.toLowerCase(),
                 expected_duration: workloadData.expectedDuration
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message,
-                workloadId: response.data.workload_id
+                success: data.success,
+                message: data.message,
+                workloadId: data.workload_id
             };
         } catch (error) {
             throw this._handleError(error);
@@ -209,12 +277,17 @@ class Agent7Adapter {
     async getManagementTasks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/management-tasks?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'ManagementTask');
+            return this._convertRESTToOData(data, 'ManagementTask');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -223,11 +296,18 @@ class Agent7Adapter {
     async createManagementTask(data) {
         try {
             const restData = this._convertODataTaskToREST(data);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, restData, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/management-tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restData),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTTaskToOData(response.data);
+            return this._convertRESTTaskToOData(data);
         } catch (error) {
             throw this._handleError(error);
         }
@@ -235,13 +315,18 @@ class Agent7Adapter {
 
     async executeTask(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/execute`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -250,13 +335,18 @@ class Agent7Adapter {
 
     async pauseTask(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/pause`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/pause`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -265,13 +355,18 @@ class Agent7Adapter {
 
     async resumeTask(taskId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/resume`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/resume`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -280,15 +375,22 @@ class Agent7Adapter {
 
     async cancelTask(taskId, reason) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/cancel`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/management-tasks/${taskId}/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 reason
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -299,12 +401,17 @@ class Agent7Adapter {
     async getAgentCoordinations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/coordination`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/coordination?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'AgentCoordination');
+            return this._convertRESTToOData(data, 'AgentCoordination');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -312,13 +419,18 @@ class Agent7Adapter {
 
     async activateCoordination(coordinationId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/coordination/${coordinationId}/activate`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/coordination/${coordinationId}/activate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -329,12 +441,17 @@ class Agent7Adapter {
     async getBulkOperations(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'BulkOperation');
+            return this._convertRESTToOData(data, 'BulkOperation');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -342,13 +459,18 @@ class Agent7Adapter {
 
     async executeBulkOperation(operationId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations/${operationId}/execute`, {}, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/bulk-operations/${operationId}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
                 timeout: this.timeout
+            
             });
+            const data = await response.json();
             
             return {
-                success: response.data.success,
-                message: response.data.message
+                success: data.success,
+                message: data.message
             };
         } catch (error) {
             throw this._handleError(error);
@@ -358,11 +480,13 @@ class Agent7Adapter {
     // Agent Management Functions
     async getAgentTypes() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/agent-types`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/agent-types`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
-            return response.data.map(type => ({
+            return data.map(type => ({
                 type: type.type,
                 description: type.description,
                 capabilities: JSON.stringify(type.capabilities),
@@ -375,19 +499,21 @@ class Agent7Adapter {
 
     async getDashboardData() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/dashboard`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/dashboard`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                totalAgents: response.data.total_agents,
-                activeAgents: response.data.active_agents,
-                healthyAgents: response.data.healthy_agents,
-                tasksInProgress: response.data.tasks_in_progress,
-                averageResponseTime: response.data.average_response_time,
-                systemLoad: response.data.system_load,
-                alerts: response.data.alerts,
-                trends: response.data.trends
+                totalAgents: data.total_agents,
+                activeAgents: data.active_agents,
+                healthyAgents: data.healthy_agents,
+                tasksInProgress: data.tasks_in_progress,
+                averageResponseTime: data.average_response_time,
+                systemLoad: data.system_load,
+                alerts: data.alerts,
+                trends: data.trends
             };
         } catch (error) {
             throw this._handleError(error);
@@ -396,18 +522,20 @@ class Agent7Adapter {
 
     async getHealthStatus(agentId) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/health-status/${agentId}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/health-status/${agentId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                agentId: response.data.agent_id,
-                status: response.data.status?.toUpperCase(),
-                lastCheck: response.data.last_check,
-                responseTime: response.data.response_time,
-                errorRate: response.data.error_rate,
-                alerts: response.data.alerts,
-                recommendations: response.data.recommendations
+                agentId: data.agent_id,
+                status: data.status?.toUpperCase(),
+                lastCheck: data.last_check,
+                responseTime: data.response_time,
+                errorRate: data.error_rate,
+                alerts: data.alerts,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -416,21 +544,27 @@ class Agent7Adapter {
 
     async getPerformanceAnalysis(agentId, timeRange) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${agentId}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/performance-analysis/${agentId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 params: { time_range: timeRange },
                 timeout: this.timeout
+            }),
+                timeout: this.timeout
             });
+            const data = await response.json();
             
             return {
-                agentId: response.data.agent_id,
-                metrics: response.data.metrics.map(metric => ({
+                agentId: data.agent_id,
+                metrics: data.metrics.map(metric => ({
                     metricType: metric.metric_type,
                     value: metric.value,
                     trend: metric.trend?.toUpperCase(),
                     benchmark: metric.benchmark
                 })),
-                bottlenecks: response.data.bottlenecks,
-                recommendations: response.data.recommendations
+                bottlenecks: data.bottlenecks,
+                recommendations: data.recommendations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -439,16 +573,18 @@ class Agent7Adapter {
 
     async getCoordinationStatus() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/coordination-status`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/coordination-status`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                activeCoordinations: response.data.active_coordinations,
-                totalWorkflows: response.data.total_workflows,
-                averageSuccess: response.data.average_success,
-                currentLoad: response.data.current_load,
-                connections: response.data.connections.map(conn => ({
+                activeCoordinations: data.active_coordinations,
+                totalWorkflows: data.total_workflows,
+                averageSuccess: data.average_success,
+                currentLoad: data.current_load,
+                connections: data.connections.map(conn => ({
                     source: conn.source,
                     target: conn.target,
                     status: conn.status?.toUpperCase(),
@@ -462,16 +598,18 @@ class Agent7Adapter {
 
     async getAgentCapabilities(agentType) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/agent-capabilities/${agentType}`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/agent-capabilities/${agentType}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                type: response.data.type,
-                capabilities: response.data.capabilities,
-                supportedProtocols: response.data.supported_protocols,
-                requirements: response.data.requirements,
-                limitations: response.data.limitations
+                type: data.type,
+                capabilities: data.capabilities,
+                supportedProtocols: data.supported_protocols,
+                requirements: data.requirements,
+                limitations: data.limitations
             };
         } catch (error) {
             throw this._handleError(error);
@@ -480,18 +618,25 @@ class Agent7Adapter {
 
     async validateConfiguration(configuration, agentType) {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/validate-configuration`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/validate-configuration`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                 configuration,
                 agent_type: agentType
-            }, {
+            }),
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             return {
-                valid: response.data.valid,
-                errors: response.data.errors,
-                warnings: response.data.warnings,
-                suggestions: response.data.suggestions
+                valid: data.valid,
+                errors: data.errors,
+                warnings: data.warnings,
+                suggestions: data.suggestions
             };
         } catch (error) {
             throw this._handleError(error);
@@ -500,19 +645,21 @@ class Agent7Adapter {
 
     async getLoadBalancingRecommendations() {
         try {
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/load-balancing-recommendations`, {
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/load-balancing-recommendations`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
             
             return {
-                strategy: response.data.strategy,
-                distribution: response.data.distribution.map(item => ({
+                strategy: data.strategy,
+                distribution: data.distribution.map(item => ({
                     agentId: item.agent_id,
                     recommendedWeight: item.recommended_weight,
                     currentLoad: item.current_load,
                     capacity: item.capacity
                 })),
-                expectedImprovement: response.data.expected_improvement
+                expectedImprovement: data.expected_improvement
             };
         } catch (error) {
             throw this._handleError(error);
@@ -523,12 +670,17 @@ class Agent7Adapter {
     async getAgentHealthChecks(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/health-checks`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/health-checks?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'AgentHealthCheck');
+            return this._convertRESTToOData(data, 'AgentHealthCheck');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -537,12 +689,17 @@ class Agent7Adapter {
     async getAgentPerformanceMetrics(query = {}) {
         try {
             const params = this._convertODataToREST(query);
-            const response = await blockchainClient.sendMessage(`${this.baseUrl}/api/${this.apiVersion}/performance-metrics`, {
-                params,
+            const response = await fetch(`${this.baseUrl}/api/${this.apiVersion}/performance-metrics?${new URLSearchParams(params)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
                 timeout: this.timeout
             });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            return this._convertRESTToOData(response.data, 'AgentPerformanceMetric');
+            return this._convertRESTToOData(data, 'AgentPerformanceMetric');
         } catch (error) {
             throw this._handleError(error);
         }
@@ -787,7 +944,7 @@ class Agent7Adapter {
     _handleError(error) {
         if (error.response) {
             const status = error.response.status;
-            const message = error.response.data?.message || error.message;
+            const message = error.data?.message || error.message;
             
             switch (status) {
                 case 400:

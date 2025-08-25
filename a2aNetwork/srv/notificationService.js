@@ -7,6 +7,7 @@
 const WebSocket = require('ws');
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const { portManager } = require('./utils/portManager');
 const logger = cds.log('notifications');
 

@@ -156,12 +156,11 @@ class BlockchainQueueMixin:
     """Mixin for blockchain queue message processing"""
     
     def __init__(self):
-
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.blockchain_queue_enabled = False
+        self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
         self._initialize_blockchain()

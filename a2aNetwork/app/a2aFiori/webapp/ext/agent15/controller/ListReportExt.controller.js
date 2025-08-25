@@ -25,7 +25,8 @@ sap.ui.define([
         override: {
             /**
              * @function onInit
-             * @description Initializes the controller extension with security utilities, device model, dialog caching, and real-time updates.
+             * @description Initializes the controller extension with security utilities,
+             * device model, dialog caching, and real-time updates.
              * @override
              */
             onInit() {

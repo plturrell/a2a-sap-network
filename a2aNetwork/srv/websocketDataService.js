@@ -10,6 +10,7 @@
 
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const { portManager } = require('./utils/portManager');
 const websocketMonitor = require('./websocketMonitor');
 const { BlockchainEventServer } = require('../../../shared/blockchain/blockchain-event-server');

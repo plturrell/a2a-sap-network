@@ -20,6 +20,48 @@ module.exports = (srv) => {
         let analyticsRefreshTimer;
         
         /**
+         * Get visualization data for goal dashboard
+         */
+        this.on('READ', 'GoalVisualization', async (req) => {
+            try {
+                const visualizationType = req.data.type || 'overview';
+                const agentFilter = req.data.agentId;
+                const dateRange = req.data.dateRange || 30; // days
+                
+                let visualizationData = {};
+                
+                switch (visualizationType) {
+                    case 'overview':
+                        visualizationData = await this._getOverviewVisualization(agentFilter, dateRange);
+                        break;
+                    case 'progress_timeline':
+                        visualizationData = await this._getProgressTimelineVisualization(agentFilter, dateRange);
+                        break;
+                    case 'agent_comparison':
+                        visualizationData = await this._getAgentComparisonVisualization();
+                        break;
+                    case 'goal_heatmap':
+                        visualizationData = await this._getGoalHeatmapVisualization();
+                        break;
+                    case 'dependency_graph':
+                        visualizationData = await this._getDependencyGraphVisualization(agentFilter);
+                        break;
+                    case 'collaborative_goals':
+                        visualizationData = await this._getCollaborativeGoalsVisualization();
+                        break;
+                    default:
+                        throw new Error(`Unknown visualization type: ${visualizationType}`);
+                }
+                
+                return visualizationData;
+                
+            } catch (error) {
+                LOG.error('Failed to generate visualization data', { error: error.message });
+                throw error;
+            }
+        });
+        
+        /**
          * Get comprehensive goal analytics
          */
         this.on('READ', 'GoalAnalytics', async (req) => {
@@ -717,6 +759,505 @@ module.exports = (srv) => {
             }
         }, ANALYTICS_REFRESH_INTERVAL);
 
+        /**
+         * Visualization helper functions
+         */
+        this._getOverviewVisualization = async function(agentFilter, dateRange) {
+            const endDate = new Date();
+            const startDate = new Date(endDate.getTime() - dateRange * 24 * 60 * 60 * 1000);
+            
+            // Get goals with progress history
+            let query = SELECT.from(Goals, g => {
+                g.ID, g.goalType, g.priority, g.status, g.overallProgress;
+                g.specific, g.targetDate, g.agent_agentId;
+                g.progress(p => { p.timestamp, p.overallProgress; }).where({ timestamp: { '>=': startDate } });
+            });
+            
+            if (agentFilter) {
+                query = query.where({ agent_agentId: agentFilter });
+            }
+            
+            const goals = await srv.run(query);
+            
+            // Process data for visualization
+            return {
+                type: 'overview',
+                summary: {
+                    totalGoals: goals.length,
+                    activeGoals: goals.filter(g => g.status === 'active').length,
+                    completedGoals: goals.filter(g => g.status === 'completed').length,
+                    averageProgress: goals.reduce((sum, g) => sum + (g.overallProgress || 0), 0) / (goals.length || 1),
+                    byPriority: this._groupByProperty(goals, 'priority'),
+                    byType: this._groupByProperty(goals, 'goalType'),
+                    byStatus: this._groupByProperty(goals, 'status')
+                },
+                charts: {
+                    progressDistribution: this._getProgressDistribution(goals),
+                    priorityRadar: this._getPriorityRadarData(goals),
+                    typeBreakdown: this._getTypeBreakdownData(goals)
+                },
+                recentActivity: await this._getRecentActivity(agentFilter, 10)
+            };
+        };
+        
+        this._getProgressTimelineVisualization = async function(agentFilter, dateRange) {
+            const endDate = new Date();
+            const startDate = new Date(endDate.getTime() - dateRange * 24 * 60 * 60 * 1000);
+            
+            // Get all progress updates in date range
+            const progressQuery = SELECT.from('GoalProgress', p => {
+                p.timestamp, p.overallProgress, p.goal_ID;
+                p.goal(g => { g.goalType, g.priority, g.agent_agentId; });
+            }).where({ timestamp: { between: [startDate, endDate] } }).orderBy('timestamp');
+            
+            const progressData = await srv.run(progressQuery);
+            
+            // Group by day for timeline
+            const timelineData = {};
+            progressData.forEach(p => {
+                if (!agentFilter || p.goal.agent_agentId === agentFilter) {
+                    const dateKey = new Date(p.timestamp).toISOString().split('T')[0];
+                    if (!timelineData[dateKey]) {
+                        timelineData[dateKey] = {
+                            date: dateKey,
+                            updates: 0,
+                            averageProgress: 0,
+                            goals: new Set()
+                        };
+                    }
+                    timelineData[dateKey].updates++;
+                    timelineData[dateKey].averageProgress += p.overallProgress;
+                    timelineData[dateKey].goals.add(p.goal_ID);
+                }
+            });
+            
+            // Convert to array and calculate averages
+            const timeline = Object.values(timelineData).map(day => ({
+                date: day.date,
+                updates: day.updates,
+                averageProgress: day.averageProgress / day.updates,
+                uniqueGoals: day.goals.size
+            }));
+            
+            return {
+                type: 'progress_timeline',
+                timeline: timeline,
+                summary: {
+                    totalUpdates: progressData.length,
+                    averageUpdatesPerDay: progressData.length / dateRange,
+                    daysWithActivity: timeline.length
+                }
+            };
+        };
+        
+        this._getAgentComparisonVisualization = async function() {
+            // Get all agents with their goals
+            const agents = await srv.run(SELECT.from(Agents, a => {
+                a.agentId, a.agentName, a.status;
+                a.goals(g => { g.ID, g.status, g.overallProgress, g.priority; });
+            }));
+            
+            const comparisonData = agents.map(agent => {
+                const goals = agent.goals || [];
+                return {
+                    agentId: agent.agentId,
+                    agentName: agent.agentName,
+                    status: agent.status,
+                    metrics: {
+                        totalGoals: goals.length,
+                        activeGoals: goals.filter(g => g.status === 'active').length,
+                        completedGoals: goals.filter(g => g.status === 'completed').length,
+                        averageProgress: goals.length > 0 
+                            ? goals.reduce((sum, g) => sum + (g.overallProgress || 0), 0) / goals.length 
+                            : 0,
+                        highPriorityGoals: goals.filter(g => g.priority === 'high' || g.priority === 'critical').length
+                    }
+                };
+            }).sort((a, b) => b.metrics.averageProgress - a.metrics.averageProgress);
+            
+            return {
+                type: 'agent_comparison',
+                agents: comparisonData,
+                rankings: {
+                    byProgress: comparisonData.slice(0, 10),
+                    byActiveGoals: [...comparisonData].sort((a, b) => b.metrics.activeGoals - a.metrics.activeGoals).slice(0, 10),
+                    byCompletionRate: [...comparisonData]
+                        .filter(a => a.metrics.totalGoals > 0)
+                        .map(a => ({
+                            ...a,
+                            completionRate: (a.metrics.completedGoals / a.metrics.totalGoals) * 100
+                        }))
+                        .sort((a, b) => b.completionRate - a.completionRate)
+                        .slice(0, 10)
+                }
+            };
+        };
+        
+        this._getGoalHeatmapVisualization = async function() {
+            // Get all goals with their progress and dates
+            const goals = await srv.run(SELECT.from(Goals, g => {
+                g.ID, g.goalType, g.priority, g.status, g.overallProgress;
+                g.createdAt, g.modifiedAt, g.targetDate;
+                g.agent(a => { a.agentId, a.agentName; });
+            }));
+            
+            // Create heatmap data by week and goal type
+            const heatmapData = {};
+            const goalTypes = [...new Set(goals.map(g => g.goalType))];
+            
+            goals.forEach(goal => {
+                const weekKey = this._getWeekKey(new Date(goal.modifiedAt));
+                if (!heatmapData[weekKey]) {
+                    heatmapData[weekKey] = {};
+                    goalTypes.forEach(type => {
+                        heatmapData[weekKey][type] = { count: 0, totalProgress: 0 };
+                    });
+                }
+                
+                heatmapData[weekKey][goal.goalType].count++;
+                heatmapData[weekKey][goal.goalType].totalProgress += goal.overallProgress || 0;
+            });
+            
+            // Convert to visualization format
+            const heatmap = Object.entries(heatmapData).map(([week, typeData]) => {
+                const weekData = { week };
+                Object.entries(typeData).forEach(([type, data]) => {
+                    weekData[type] = {
+                        activity: data.count,
+                        averageProgress: data.count > 0 ? data.totalProgress / data.count : 0
+                    };
+                });
+                return weekData;
+            }).sort((a, b) => a.week.localeCompare(b.week));
+            
+            return {
+                type: 'goal_heatmap',
+                heatmap: heatmap,
+                goalTypes: goalTypes,
+                intensityScale: {
+                    min: 0,
+                    max: Math.max(...Object.values(heatmapData).map(week => 
+                        Math.max(...Object.values(week).map(type => type.count))
+                    ))
+                }
+            };
+        };
+        
+        this._getDependencyGraphVisualization = async function(agentFilter) {
+            // Get goals with dependencies
+            let query = SELECT.from(Goals, g => {
+                g.ID, g.specific, g.status, g.overallProgress, g.agent_agentId;
+                g.dependencies(d => { d.dependsOnGoal_ID, d.dependencyType, d.isBlocking; });
+            });
+            
+            if (agentFilter) {
+                query = query.where({ agent_agentId: agentFilter });
+            }
+            
+            const goals = await srv.run(query);
+            
+            // Build graph nodes and edges
+            const nodes = goals.map(g => ({
+                id: g.ID,
+                label: g.specific.substring(0, 50) + (g.specific.length > 50 ? '...' : ''),
+                status: g.status,
+                progress: g.overallProgress,
+                agentId: g.agent_agentId,
+                type: 'goal'
+            }));
+            
+            const edges = [];
+            goals.forEach(g => {
+                (g.dependencies || []).forEach(dep => {
+                    edges.push({
+                        source: g.ID,
+                        target: dep.dependsOnGoal_ID,
+                        type: dep.dependencyType || 'depends_on',
+                        isBlocking: dep.isBlocking || false
+                    });
+                });
+            });
+            
+            // Identify critical paths
+            const criticalPaths = this._findCriticalPaths(nodes, edges);
+            
+            return {
+                type: 'dependency_graph',
+                graph: {
+                    nodes: nodes,
+                    edges: edges
+                },
+                analysis: {
+                    totalDependencies: edges.length,
+                    blockingDependencies: edges.filter(e => e.isBlocking).length,
+                    criticalPaths: criticalPaths,
+                    isolatedGoals: nodes.filter(n => 
+                        !edges.some(e => e.source === n.id || e.target === n.id)
+                    ).length
+                }
+            };
+        };
+        
+        this._getCollaborativeGoalsVisualization = async function() {
+            // Get collaborative goals (goals shared between multiple agents)
+            const collaborativeGoals = await srv.run(SELECT.from('CollaborativeGoals', c => {
+                c.ID, c.title, c.description, c.status, c.overallProgress;
+                c.participants(p => { 
+                    p.agent_agentId, p.role, p.contribution;
+                    p.agent(a => { a.agentName; });
+                });
+                c.milestones(m => { m.title, m.achievedDate, m.significance; });
+            }));
+            
+            // Process collaborative network
+            const agentConnections = {};
+            collaborativeGoals.forEach(goal => {
+                const participants = goal.participants || [];
+                participants.forEach((p1, i) => {
+                    participants.slice(i + 1).forEach(p2 => {
+                        const key = [p1.agent_agentId, p2.agent_agentId].sort().join('-');
+                        if (!agentConnections[key]) {
+                            agentConnections[key] = {
+                                agents: [p1.agent_agentId, p2.agent_agentId],
+                                collaborations: 0,
+                                totalProgress: 0
+                            };
+                        }
+                        agentConnections[key].collaborations++;
+                        agentConnections[key].totalProgress += goal.overallProgress || 0;
+                    });
+                });
+            });
+            
+            // Convert to network format
+            const collaborationNetwork = {
+                nodes: [],
+                links: Object.values(agentConnections).map(conn => ({
+                    source: conn.agents[0],
+                    target: conn.agents[1],
+                    weight: conn.collaborations,
+                    averageProgress: conn.totalProgress / conn.collaborations
+                }))
+            };
+            
+            // Get unique agents for nodes
+            const uniqueAgents = new Set();
+            Object.values(agentConnections).forEach(conn => {
+                conn.agents.forEach(agent => uniqueAgents.add(agent));
+            });
+            
+            collaborationNetwork.nodes = Array.from(uniqueAgents).map(agentId => ({
+                id: agentId,
+                collaborations: Object.values(agentConnections)
+                    .filter(conn => conn.agents.includes(agentId)).length
+            }));
+            
+            return {
+                type: 'collaborative_goals',
+                goals: collaborativeGoals.map(g => ({
+                    id: g.ID,
+                    title: g.title,
+                    status: g.status,
+                    progress: g.overallProgress,
+                    participantCount: (g.participants || []).length,
+                    participants: (g.participants || []).map(p => ({
+                        agentId: p.agent_agentId,
+                        agentName: p.agent?.agentName || p.agent_agentId,
+                        role: p.role,
+                        contribution: p.contribution
+                    })),
+                    recentMilestones: (g.milestones || [])
+                        .filter(m => m.achievedDate)
+                        .sort((a, b) => new Date(b.achievedDate) - new Date(a.achievedDate))
+                        .slice(0, 3)
+                })),
+                network: collaborationNetwork,
+                summary: {
+                    totalCollaborativeGoals: collaborativeGoals.length,
+                    activeCollaborations: collaborativeGoals.filter(g => g.status === 'active').length,
+                    averageParticipants: collaborativeGoals.reduce((sum, g) => 
+                        sum + (g.participants || []).length, 0) / (collaborativeGoals.length || 1),
+                    topCollaborators: this._getTopCollaborators(collaborativeGoals)
+                }
+            };
+        };
+        
+        // Helper functions for visualizations
+        this._groupByProperty = function(items, property) {
+            return items.reduce((groups, item) => {
+                const key = item[property] || 'unknown';
+                groups[key] = (groups[key] || 0) + 1;
+                return groups;
+            }, {});
+        };
+        
+        this._getProgressDistribution = function(goals) {
+            const bins = [0, 25, 50, 75, 100];
+            const distribution = {};
+            
+            bins.forEach((bin, i) => {
+                const nextBin = bins[i + 1] || 101;
+                const label = i === bins.length - 1 ? `${bin}%` : `${bin}-${nextBin - 1}%`;
+                distribution[label] = goals.filter(g => 
+                    g.overallProgress >= bin && g.overallProgress < nextBin
+                ).length;
+            });
+            
+            return distribution;
+        };
+        
+        this._getPriorityRadarData = function(goals) {
+            const priorities = ['low', 'medium', 'high', 'critical'];
+            const metrics = ['count', 'averageProgress', 'completionRate'];
+            
+            const radarData = priorities.map(priority => {
+                const priorityGoals = goals.filter(g => g.priority === priority);
+                return {
+                    priority: priority,
+                    count: priorityGoals.length,
+                    averageProgress: priorityGoals.length > 0
+                        ? priorityGoals.reduce((sum, g) => sum + (g.overallProgress || 0), 0) / priorityGoals.length
+                        : 0,
+                    completionRate: priorityGoals.length > 0
+                        ? (priorityGoals.filter(g => g.status === 'completed').length / priorityGoals.length) * 100
+                        : 0
+                };
+            });
+            
+            return radarData;
+        };
+        
+        this._getTypeBreakdownData = function(goals) {
+            const typeGroups = {};
+            
+            goals.forEach(goal => {
+                const type = goal.goalType || 'unknown';
+                if (!typeGroups[type]) {
+                    typeGroups[type] = {
+                        type: type,
+                        count: 0,
+                        totalProgress: 0,
+                        statuses: {}
+                    };
+                }
+                
+                typeGroups[type].count++;
+                typeGroups[type].totalProgress += goal.overallProgress || 0;
+                typeGroups[type].statuses[goal.status] = (typeGroups[type].statuses[goal.status] || 0) + 1;
+            });
+            
+            return Object.values(typeGroups).map(group => ({
+                type: group.type,
+                count: group.count,
+                averageProgress: group.count > 0 ? group.totalProgress / group.count : 0,
+                statuses: group.statuses
+            }));
+        };
+        
+        this._getRecentActivity = async function(agentFilter, limit = 10) {
+            let query = SELECT.from('GoalActivity', a => {
+                a.timestamp, a.activityType, a.description, a.goal_ID, a.agent_agentId;
+                a.goal(g => { g.specific; });
+            }).orderBy('timestamp desc').limit(limit);
+            
+            if (agentFilter) {
+                query = query.where({ agent_agentId: agentFilter });
+            }
+            
+            const activities = await srv.run(query);
+            
+            return activities.map(a => ({
+                timestamp: a.timestamp,
+                type: a.activityType,
+                description: a.description,
+                goalId: a.goal_ID,
+                goalTitle: a.goal?.specific || 'Unknown Goal',
+                agentId: a.agent_agentId
+            }));
+        };
+        
+        this._getWeekKey = function(date) {
+            const year = date.getFullYear();
+            const firstDayOfYear = new Date(year, 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
+        };
+        
+        this._findCriticalPaths = function(nodes, edges) {
+            // Simple critical path detection - find longest dependency chains
+            const paths = [];
+            const visited = new Set();
+            
+            function findPath(nodeId, currentPath = []) {
+                if (visited.has(nodeId)) return;
+                visited.add(nodeId);
+                currentPath.push(nodeId);
+                
+                const dependencies = edges.filter(e => e.source === nodeId);
+                if (dependencies.length === 0) {
+                    paths.push([...currentPath]);
+                } else {
+                    dependencies.forEach(dep => {
+                        findPath(dep.target, currentPath);
+                    });
+                }
+                
+                currentPath.pop();
+                visited.delete(nodeId);
+            }
+            
+            // Start from nodes with no incoming edges
+            const rootNodes = nodes.filter(n => 
+                !edges.some(e => e.target === n.id)
+            );
+            
+            rootNodes.forEach(root => findPath(root.id));
+            
+            // Return top 5 longest paths
+            return paths
+                .sort((a, b) => b.length - a.length)
+                .slice(0, 5)
+                .map(path => ({
+                    path: path,
+                    length: path.length,
+                    isBlocked: edges.some(e => 
+                        path.includes(e.source) && path.includes(e.target) && e.isBlocking
+                    )
+                }));
+        };
+        
+        this._getTopCollaborators = function(collaborativeGoals) {
+            const agentStats = {};
+            
+            collaborativeGoals.forEach(goal => {
+                (goal.participants || []).forEach(p => {
+                    if (!agentStats[p.agent_agentId]) {
+                        agentStats[p.agent_agentId] = {
+                            agentId: p.agent_agentId,
+                            agentName: p.agent?.agentName || p.agent_agentId,
+                            collaborations: 0,
+                            roles: new Set(),
+                            totalContribution: 0
+                        };
+                    }
+                    
+                    agentStats[p.agent_agentId].collaborations++;
+                    agentStats[p.agent_agentId].roles.add(p.role);
+                    agentStats[p.agent_agentId].totalContribution += p.contribution || 0;
+                });
+            });
+            
+            return Object.values(agentStats)
+                .map(stats => ({
+                    ...stats,
+                    roles: Array.from(stats.roles),
+                    averageContribution: stats.totalContribution / stats.collaborations
+                }))
+                .sort((a, b) => b.collaborations - a.collaborations)
+                .slice(0, 10);
+        };
+        
         // Service cleanup handler
         this.on('shutdown', () => {
             if (analyticsRefreshTimer) {

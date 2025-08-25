@@ -25,18 +25,17 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 class EnhancedIntelligentDispatchSkill(SecureA2AAgent):
+    """Enhanced intelligent dispatch with natural language understanding"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Enhanced intelligent dispatch with natural language understanding"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, grok_client=None):
-        
         super().__init__()
         self.grok_client = grok_client
         self.nl_processor = MathQueryProcessor() if NL_PARSER_AVAILABLE else None

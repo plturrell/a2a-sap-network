@@ -107,17 +107,31 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
     """
 
     def __init__(self):
-        super().__init__(
+        # Import AgentConfig here to avoid circular imports
+        from app.a2a.sdk.agentBase import AgentConfig
+        import os
+        
+        # Create agent configuration using the proper class
+        config = AgentConfig(
             agent_id=create_agent_id("orchestrator-agent"),
             name="Orchestrator Agent",
-            description="Multi-agent workflow orchestration and coordination system",
-            version="1.0.0"
+            description="Multi-agent workflow orchestration and coordination system", 
+            base_url=os.getenv("A2A_BASE_URL", "http://localhost:4004"),
+            version="1.0.0",
+            enable_telemetry=True,
+            a2a_protocol_only=True
         )
+        
+        super().__init__(config)
 
-        # Initialize AI Intelligence Framework
-        self.ai_framework = create_ai_intelligence_framework(
-            create_enhanced_agent_config("orchestrator")
-        )
+        # Initialize AI Intelligence Framework (with fallback for missing dependencies)
+        try:
+            self.ai_framework = create_ai_intelligence_framework(
+                create_enhanced_agent_config()
+            )
+        except Exception as e:
+            logger.warning(f"AI Intelligence Framework initialization failed: {e}")
+            self.ai_framework = None
 
         # Workflow management
         self.workflows: Dict[str, WorkflowDefinition] = {}
@@ -134,8 +148,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="workflow_creation",
-        description="Create and define new workflows",
-        version="1.0.0"
+        description="Create and define new workflows"
     )
     @mcp_tool(
         name="create_workflow",
@@ -205,8 +218,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="workflow_execution",
-        description="Execute workflows with various orchestration strategies",
-        version="1.0.0"
+        description="Execute workflows with various orchestration strategies"
     )
     @mcp_tool(
         name="execute_workflow",
@@ -255,8 +267,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="workflow_monitoring",
-        description="Monitor workflow execution status and progress",
-        version="1.0.0"
+        description="Monitor workflow execution status and progress"
     )
     @mcp_tool(
         name="get_workflow_status",
@@ -325,8 +336,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="agent_coordination",
-        description="Coordinate communication between multiple agents",
-        version="1.0.0"
+        description="Coordinate communication between multiple agents"
     )
     @mcp_tool(
         name="coordinate_agents",
@@ -376,8 +386,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="workflow_templates",
-        description="Manage reusable workflow templates",
-        version="1.0.0"
+        description="Manage reusable workflow templates"
     )
     @mcp_tool(
         name="create_workflow_template",
@@ -757,8 +766,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
     # Registry capability methods
     @a2a_skill(
         name="workflow_orchestration",
-        description="Orchestrate complex workflows across multiple agents",
-        version="1.0.0"
+        description="Orchestrate complex workflows across multiple agents"
     )
     async def workflow_orchestration(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -796,8 +804,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="task_scheduling",
-        description="Schedule tasks across the agent network",
-        version="1.0.0"
+        description="Schedule tasks across the agent network"
     )
     async def task_scheduling(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -838,8 +845,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="pipeline_management",
-        description="Manage data processing pipelines",
-        version="1.0.0"
+        description="Manage data processing pipelines"
     )
     async def pipeline_management(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -898,8 +904,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="coordination_services",
-        description="Coordinate services across agents",
-        version="1.0.0"
+        description="Coordinate services across agents"
     )
     async def coordination_services(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -959,8 +964,7 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
 
     @a2a_skill(
         name="execution_monitoring",
-        description="Monitor workflow and task execution",
-        version="1.0.0"
+        description="Monitor workflow and task execution"
     )
     async def execution_monitoring(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -1150,10 +1154,29 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
             'balancing_result': balancing_result,
             'message': 'Load balancing applied successfully'
         }
+    
+    async def initialize(self) -> None:
+        """Initialize the orchestrator agent"""
+        logger.info("Initializing Comprehensive Orchestrator Agent")
+        # Initialize components if needed
+        pass
+    
+    async def shutdown(self) -> None:
+        """Shutdown the orchestrator agent"""
+        logger.info("Shutting down Comprehensive Orchestrator Agent")
+        # Cleanup resources if needed
+        pass
 
-# Create singleton instance
-orchestrator_agent = ComprehensiveOrchestratorAgentSDK()
+# Singleton management - avoid module-level instantiation
+_orchestrator_agent: Optional[ComprehensiveOrchestratorAgentSDK] = None
 
 def get_orchestrator_agent() -> ComprehensiveOrchestratorAgentSDK:
-    """Get the singleton orchestrator agent instance"""
-    return orchestrator_agent
+    """Get or create the singleton orchestrator agent instance"""
+    global _orchestrator_agent
+    if _orchestrator_agent is None:
+        _orchestrator_agent = ComprehensiveOrchestratorAgentSDK()
+    return _orchestrator_agent
+
+def create_orchestrator_agent() -> ComprehensiveOrchestratorAgentSDK:
+    """Create a new orchestrator agent instance (for testing/development)"""
+    return ComprehensiveOrchestratorAgentSDK()

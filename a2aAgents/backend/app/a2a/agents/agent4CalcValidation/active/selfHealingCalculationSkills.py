@@ -23,7 +23,6 @@ try:
 except ImportError:
     # Fallback stubs
     class PerformanceMonitorMixin(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -31,9 +30,8 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-pass
+        pass
     class SecurityHardenedMixin(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -41,14 +39,14 @@ pass
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-pass
+        pass
 
 # Import trust identity with fallback
-from app.a2a.core.trustIdentity import TrustIdentity
+try:
+    from app.a2a.core.trustIdentity import TrustIdentity
 except ImportError:
     # Fallback stub
     class TrustIdentity(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -56,13 +54,13 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs):
+        def __init__(self, **kwargs):
             pass
 # Import data validation with fallback
-from app.a2a.core.dataValidation import DataValidator
+try:
+    from app.a2a.core.dataValidation import DataValidator
 except ImportError:
     class DataValidator(SecureA2AAgent):
-        
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
         # - Rate limiting and request throttling  
@@ -70,11 +68,12 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-@staticmethod
+        @staticmethod
         def validate_input(data, schema): return True
 
 # Import grok client with fallback
-from app.clients.grokClient import GrokClient, get_grok_client
+try:
+    from app.clients.grokClient import GrokClient, get_grok_client
 except ImportError:
     from app.a2a.core.grokClient import GrokClient
     def get_grok_client(): return GrokClient()
@@ -91,16 +90,8 @@ class CalculationErrorType(Enum):
 
 
 @dataclass
-class CalculationError(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Represents a calculation error with context"""
+class CalculationError:
+    """Represents a calculation error with context"""
     error_id: str
     error_type: CalculationErrorType
     description: str
@@ -111,16 +102,8 @@ class CalculationError(SecureA2AAgent):
 
 
 @dataclass
-class HealingStrategy(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Strategy for healing a calculation error"""
+class HealingStrategy:
+    """Strategy for healing a calculation error"""
     strategy_id: str
     strategy_type: str
     description: str
@@ -130,16 +113,8 @@ class HealingStrategy(SecureA2AAgent):
 
 
 @dataclass
-class HealingResult(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Result of self-healing process"""
+class HealingResult:
+    """Result of a healing operation"""
     healing_id: str
     original_error: CalculationError
     strategy_used: HealingStrategy

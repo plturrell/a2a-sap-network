@@ -86,18 +86,17 @@ class Scoreboard(BaseModel):
 
 
 class CalcTestingIntegrationSkills(SecureA2AAgent):
+    """Skills for CalcTesting agent to interact with CalculationAgent"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Skills for CalcTesting agent to interact with CalculationAgent"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, agent):
-        
         super().__init__()
         self.agent = agent
         self.grok_client = GrokClient() if GROK_AVAILABLE else None

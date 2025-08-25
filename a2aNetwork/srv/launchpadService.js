@@ -10,6 +10,7 @@
 
 const cds = require('@sap/cds');
 const LOG = cds.log('launchpad-service');
+const fetch = require('node-fetch');
 
 // Agent metadata configuration (same as Express version)
 const AGENT_METADATA = {
@@ -39,11 +40,11 @@ async function checkAgentHealth(port) {
         
         // Get both health and metrics from agent
         const [healthResponse, metricsResponse] = await Promise.all([
-            blockchainClient.sendMessage(`http://localhost:${port}/health`, { 
+            fetch(`http://localhost:${port}/health`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            blockchainClient.sendMessage(`http://localhost:${port}/metrics`, { 
+            fetch(`http://localhost:${port}/metrics`, { 
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)
@@ -113,15 +114,15 @@ async function checkBlockchainHealth() {
         
         // Check multiple blockchain endpoints for comprehensive data
         const [statusResponse, trustResponse, agentsResponse] = await Promise.all([
-            blockchainClient.sendMessage('http://localhost:8082/blockchain/status', {
+            fetch('http://localhost:8082/blockchain/status', {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            blockchainClient.sendMessage('http://localhost:8082/trust/scores', {
+            fetch('http://localhost:8082/trust/scores', {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null),
-            blockchainClient.sendMessage('http://localhost:8082/agents', {
+            fetch('http://localhost:8082/agents', {
                 signal: controller.signal,
                 headers: { 'Accept': 'application/json' }
             }).catch(() => null)

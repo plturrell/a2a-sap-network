@@ -77,10 +77,10 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
-from app.a2a.core.security_base import SecureA2AAgent
     AIIntelligenceFramework, AIIntelligenceConfig,
     create_ai_intelligence_framework, create_enhanced_agent_config
 )
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -921,7 +921,7 @@ class PreparationReasoningEngine:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
 
 class AdaptivePreparationLearner:
     def __init__(self, ai_framework: AIIntelligenceFramework):
@@ -930,7 +930,7 @@ class AdaptivePreparationLearner:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
     
     async def update_preparation_patterns(self, learning_result: Dict[str, Any], learning_data: Dict[str, Any]) -> Dict[str, Any]:
         return {"patterns_updated": True}
@@ -942,7 +942,7 @@ class IntelligentVectorizer:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
     
     async def vectorize_with_intelligence(self, context: Dict[str, Any], reasoning_result: Dict[str, Any]) -> Dict[str, Any]:
         return {"intelligent_vectorization": "completed"}
@@ -954,7 +954,7 @@ class AutonomousPreparationOptimizer:
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-                self.ai_framework = ai_framework
+        self.ai_framework = ai_framework
     
     async def optimize_preparation(self, data: Dict[str, Any], intelligence: Dict[str, Any], enhanced: Dict[str, Any]) -> Dict[str, Any]:
         return {"optimization": "completed"}

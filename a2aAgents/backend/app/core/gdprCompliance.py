@@ -28,6 +28,7 @@ import uuid
 
 from .config import settings
 from .auditTrail import audit_log, AuditEventType
+from ..a2a.sdk.networkClient import A2ANetworkClient
 from .dataRetention import get_retention_manager, DataCategory, RetentionAction
 from .errorHandling import ValidationError
 from .rbac import get_auth_service

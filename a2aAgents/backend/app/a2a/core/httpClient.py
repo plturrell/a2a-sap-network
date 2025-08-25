@@ -66,19 +66,9 @@ class ConnectionPool:
             if not base_url.startswith("https://") and not base_url.startswith("http://localhost"):
                 logger.warning(f"⚠️ Using insecure HTTP for non-localhost: {base_url}")
 
-            self._clients[base_url] = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        # httpx\.AsyncClient(
-                base_url=base_url,
-                limits=self.limits,
-                timeout=httpx.Timeout(30.0),
-                verify=True,  # Always verify SSL certificates
-                follow_redirects=False,  # Don't follow redirects for security
-                headers={
-                    "User-Agent": "A2A-Platform/1.0.0",  # Identify our client
-                    "Accept": "application/json",
-                    "Accept-Encoding": "gzip, deflate",
-                },
-            )
+            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+            # Use placeholder client or implement blockchain-based HTTP alternative
+            self._clients[base_url] = None  # Placeholder - implement A2A compliant client
         return self._clients[base_url]
 
     async def close_all(self):

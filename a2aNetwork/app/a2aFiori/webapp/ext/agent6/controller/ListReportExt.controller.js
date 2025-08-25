@@ -220,7 +220,7 @@ sap.ui.define([
                             resolve({ data, textStatus, xhr });
                         },
                         error(xhr, textStatus, errorThrown) {
-                            reject({ xhr, textStatus, errorThrown });
+                            reject(new Error(`AJAX request failed: ${textStatus} - ${errorThrown}`));
                         }
                     });
 
