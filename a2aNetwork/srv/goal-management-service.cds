@@ -304,4 +304,24 @@ service GoalManagementService @(path: '/api/v1/goal-management') {
   action resolveConflict(conflictId: String, resolution: String) returns Boolean;
   action createCollaborativeGoal(goalData: String, participants: array of String) returns String;
   action generateAIPredictions(goalId: String) returns String;
+  
+  // Goal synchronization actions
+  action syncGoals() returns {
+    status: String;
+    message: String;
+    result: {
+      status: String;
+      timestamp: Timestamp;
+      successCount: Integer;
+      failureCount: Integer;
+      totalAgents: Integer;
+    }
+  };
+  
+  action getSyncStatus() returns {
+    running: Boolean;
+    interval: Integer;
+    nextSync: Timestamp;
+    serverTime: Timestamp;
+  };
 }

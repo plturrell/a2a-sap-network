@@ -136,9 +136,25 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_create_reasoning_task(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle create_reasoning_task operation"""
             try:
-                # TODO: Implement create_reasoning_task logic
-                # Example: result = await self.agent_sdk.create_reasoning_task(data)
-                result = {"status": "success", "operation": "create_reasoning_task"}
+                # Create a new reasoning task
+                task_data = {
+                    "task_id": data.get("task_id", str(uuid.uuid4())),
+                    "task_type": data.get("task_type", "logical_reasoning"),
+                    "query": data.get("query", ""),
+                    "premises": data.get("premises", []),
+                    "domain": data.get("domain", "general"),
+                    "priority": data.get("priority", "medium"),
+                    "metadata": data.get("metadata", {})
+                }
+                
+                # Use agent SDK to create reasoning task
+                result = await self.agent_sdk.create_reasoning_chain({
+                    "chain_id": task_data["task_id"],
+                    "reasoning_type": task_data["task_type"],
+                    "initial_query": task_data["query"],
+                    "domain": task_data["domain"],
+                    "premises": task_data["premises"]
+                })
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -158,9 +174,28 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_list_reasoning_tasks(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle list_reasoning_tasks operation"""
             try:
-                # TODO: Implement list_reasoning_tasks logic
-                # Example: result = await self.agent_sdk.list_reasoning_tasks(data)
-                result = {"status": "success", "operation": "list_reasoning_tasks"}
+                # List active reasoning tasks
+                active_chains = self.agent_sdk.get_active_chains()
+                tasks = []
+                
+                for chain_id, chain_data in active_chains.items():
+                    tasks.append({
+                        "task_id": chain_id,
+                        "task_type": chain_data.get("reasoning_type", "unknown"),
+                        "status": "active" if chain_data.get("active", True) else "completed",
+                        "created_at": chain_data.get("created_at", ""),
+                        "steps_completed": len(chain_data.get("reasoning_steps", [])),
+                        "confidence": chain_data.get("confidence_scores", {}).get("overall", 0.0)
+                    })
+                
+                # Sort by creation time (newest first)
+                tasks.sort(key=lambda x: x["created_at"], reverse=True)
+                
+                result = {
+                    "tasks": tasks,
+                    "total_count": len(tasks),
+                    "active_count": sum(1 for t in tasks if t["status"] == "active")
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -243,9 +278,66 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_explain_reasoning(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle explain_reasoning operation"""
             try:
-                # TODO: Implement explain_reasoning logic
-                # Example: result = await self.agent_sdk.explain_reasoning(data)
-                result = {"status": "success", "operation": "explain_reasoning"}
+                # Explain reasoning process
+                chain_id = data.get("chain_id") or data.get("task_id")
+                step_index = data.get("step_index", -1)  # -1 for full explanation
+                
+                if not chain_id:
+                    return self.create_secure_response(
+                        "No chain_id or task_id provided",
+                        status="error"
+                    )
+                
+                # Get reasoning chain
+                chain_data = self.agent_sdk.reasoning_chains.get(chain_id)
+                if not chain_data:
+                    return self.create_secure_response(
+                        f"Reasoning chain {chain_id} not found",
+                        status="error"
+                    )
+                
+                # Build explanation
+                explanation = {
+                    "chain_id": chain_id,
+                    "reasoning_type": chain_data.get("reasoning_type", "unknown"),
+                    "initial_query": chain_data.get("initial_query", ""),
+                    "premises": chain_data.get("premises", []),
+                    "reasoning_steps": []
+                }
+                
+                # Add step-by-step reasoning
+                steps = chain_data.get("reasoning_steps", [])
+                if step_index >= 0 and step_index < len(steps):
+                    # Explain specific step
+                    step = steps[step_index]
+                    explanation["reasoning_steps"] = [{
+                        "step_index": step_index,
+                        "type": step.get("type", ""),
+                        "input": step.get("input", ""),
+                        "reasoning": step.get("reasoning", ""),
+                        "output": step.get("output", ""),
+                        "confidence": step.get("confidence", 0.0),
+                        "evidence": step.get("evidence", [])
+                    }]
+                else:
+                    # Explain all steps
+                    for idx, step in enumerate(steps):
+                        explanation["reasoning_steps"].append({
+                            "step_index": idx,
+                            "type": step.get("type", ""),
+                            "reasoning": step.get("reasoning", ""),
+                            "confidence": step.get("confidence", 0.0)
+                        })
+                
+                # Add conclusion if available
+                if chain_data.get("conclusion"):
+                    explanation["conclusion"] = {
+                        "statement": chain_data["conclusion"],
+                        "confidence": chain_data.get("confidence_scores", {}).get("overall", 0.0),
+                        "supporting_evidence": chain_data.get("supporting_evidence", [])
+                    }
+                
+                result = explanation
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -265,9 +357,43 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_add_knowledge(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle add_knowledge operation"""
             try:
-                # TODO: Implement add_knowledge logic
-                # Example: result = await self.agent_sdk.add_knowledge(data)
-                result = {"status": "success", "operation": "add_knowledge"}
+                # Add knowledge to the reasoning agent's knowledge base
+                knowledge_item = {
+                    "id": data.get("id", str(uuid.uuid4())),
+                    "type": data.get("type", "fact"),  # fact, rule, constraint, axiom
+                    "domain": data.get("domain", "general"),
+                    "content": data.get("content", ""),
+                    "confidence": data.get("confidence", 1.0),
+                    "source": data.get("source", "user_provided"),
+                    "metadata": data.get("metadata", {}),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+                # Validate knowledge item
+                if not knowledge_item["content"]:
+                    return self.create_secure_response(
+                        "Knowledge content cannot be empty",
+                        status="error"
+                    )
+                
+                # Add to knowledge graph
+                domain_knowledge = self.agent_sdk.knowledge_graph.setdefault(
+                    knowledge_item["domain"], []
+                )
+                domain_knowledge.append(knowledge_item)
+                
+                # Update embeddings if available
+                if hasattr(self.agent_sdk, 'knowledge_embeddings'):
+                    embedding = self.agent_sdk._generate_embedding(knowledge_item["content"])
+                    self.agent_sdk.knowledge_embeddings[knowledge_item["id"]] = embedding
+                
+                result = {
+                    "status": "success",
+                    "knowledge_id": knowledge_item["id"],
+                    "domain": knowledge_item["domain"],
+                    "type": knowledge_item["type"],
+                    "message": f"Knowledge added to {knowledge_item['domain']} domain"
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -287,9 +413,74 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_validate_knowledge_base(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle validate_knowledge_base operation"""
             try:
-                # TODO: Implement validate_knowledge_base logic
-                # Example: result = await self.agent_sdk.validate_knowledge_base(data)
-                result = {"status": "success", "operation": "validate_knowledge_base"}
+                # Validate knowledge base consistency and integrity
+                domain = data.get("domain", "all")
+                validation_type = data.get("validation_type", "full")  # full, consistency, completeness
+                
+                validation_results = {
+                    "domain": domain,
+                    "validation_type": validation_type,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "issues": [],
+                    "statistics": {},
+                    "recommendations": []
+                }
+                
+                # Get domains to validate
+                domains_to_check = [domain] if domain != "all" else list(self.agent_sdk.knowledge_graph.keys())
+                
+                total_items = 0
+                inconsistencies = 0
+                
+                for check_domain in domains_to_check:
+                    domain_knowledge = self.agent_sdk.knowledge_graph.get(check_domain, [])
+                    total_items += len(domain_knowledge)
+                    
+                    # Check for contradictions
+                    for i, item1 in enumerate(domain_knowledge):
+                        for j, item2 in enumerate(domain_knowledge[i+1:], i+1):
+                            if self._check_contradiction(item1, item2):
+                                inconsistencies += 1
+                                validation_results["issues"].append({
+                                    "type": "contradiction",
+                                    "severity": "high",
+                                    "domain": check_domain,
+                                    "items": [item1["id"], item2["id"]],
+                                    "description": f"Potential contradiction between items"
+                                })
+                    
+                    # Check for incomplete rules
+                    rules = [item for item in domain_knowledge if item["type"] == "rule"]
+                    for rule in rules:
+                        if not self._validate_rule_completeness(rule):
+                            validation_results["issues"].append({
+                                "type": "incomplete_rule",
+                                "severity": "medium",
+                                "domain": check_domain,
+                                "item_id": rule["id"],
+                                "description": "Rule missing required components"
+                            })
+                
+                # Calculate statistics
+                validation_results["statistics"] = {
+                    "total_items": total_items,
+                    "domains_checked": len(domains_to_check),
+                    "inconsistencies_found": inconsistencies,
+                    "issues_count": len(validation_results["issues"]),
+                    "health_score": max(0, 1 - (len(validation_results["issues"]) / max(total_items, 1)))
+                }
+                
+                # Generate recommendations
+                if inconsistencies > 0:
+                    validation_results["recommendations"].append(
+                        "Review and resolve contradictions in the knowledge base"
+                    )
+                if total_items < 10:
+                    validation_results["recommendations"].append(
+                        "Consider adding more knowledge items for better reasoning"
+                    )
+                
+                result = validation_results
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -338,9 +529,22 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_make_decision(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle make_decision operation"""
             try:
-                # TODO: Implement make_decision logic
-                # Example: result = await self.agent_sdk.make_decision(data)
-                result = {"status": "success", "operation": "make_decision"}
+                # Make decision using multi-criteria analysis
+                decision_query = data.get("query", "")
+                options = data.get("options", [])
+                criteria = data.get("criteria", [])
+                constraints = data.get("constraints", [])
+                decision_type = data.get("decision_type", "multi_criteria")
+                
+                # Use the enhanced decision making capability
+                result = await self.agent_sdk.make_decisions_enhanced({
+                    "query": decision_query,
+                    "options": options,
+                    "criteria": criteria,
+                    "constraints": constraints,
+                    "decision_type": decision_type,
+                    "require_explanation": data.get("require_explanation", True)
+                })
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -401,9 +605,46 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_get_dashboard_data(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_dashboard_data operation"""
             try:
-                # TODO: Implement get_dashboard_data logic
-                # Example: result = await self.agent_sdk.get_dashboard_data(data)
-                result = {"status": "success", "operation": "get_dashboard_data"}
+                # Get dashboard data for reasoning agent
+                time_range = data.get("time_range", "24h")
+                metrics = data.get("metrics", ["all"])
+                
+                dashboard_data = {
+                    "agent_info": {
+                        "name": self.config.agent_name,
+                        "version": self.config.agent_version,
+                        "status": "active",
+                        "uptime": self._calculate_uptime()
+                    },
+                    "reasoning_metrics": {
+                        "total_chains": len(self.agent_sdk.reasoning_chains),
+                        "active_chains": sum(1 for c in self.agent_sdk.reasoning_chains.values() if c.get("active", True)),
+                        "completed_chains": sum(1 for c in self.agent_sdk.reasoning_chains.values() if not c.get("active", True)),
+                        "average_confidence": self._calculate_average_confidence(),
+                        "reasoning_types_distribution": self._get_reasoning_type_distribution()
+                    },
+                    "knowledge_base_stats": {
+                        "total_domains": len(self.agent_sdk.knowledge_graph),
+                        "total_items": sum(len(items) for items in self.agent_sdk.knowledge_graph.values()),
+                        "items_by_type": self._get_knowledge_type_distribution()
+                    },
+                    "performance_metrics": {
+                        "average_response_time": self.agent_sdk.performance_metrics.get("avg_response_time", 0),
+                        "success_rate": self.agent_sdk.performance_metrics.get("success_rate", 1.0),
+                        "cache_hit_rate": self.agent_sdk.performance_metrics.get("cache_hit_rate", 0)
+                    },
+                    "recent_activity": self._get_recent_activity(time_range)
+                }
+                
+                # Filter metrics if specific ones requested
+                if "all" not in metrics:
+                    filtered_data = {"agent_info": dashboard_data["agent_info"]}
+                    for metric in metrics:
+                        if metric in dashboard_data:
+                            filtered_data[metric] = dashboard_data[metric]
+                    result = filtered_data
+                else:
+                    result = dashboard_data
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -423,9 +664,53 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         async def handle_get_reasoning_options(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle get_reasoning_options operation"""
             try:
-                # TODO: Implement get_reasoning_options logic
-                # Example: result = await self.agent_sdk.get_reasoning_options(data)
-                result = {"status": "success", "operation": "get_reasoning_options"}
+                # Get available reasoning options and capabilities
+                result = {
+                    "reasoning_types": [
+                        {
+                            "type": "deductive",
+                            "description": "Logical deduction from premises to conclusion",
+                            "confidence": "high",
+                            "use_cases": ["Mathematical proofs", "Rule-based inference"]
+                        },
+                        {
+                            "type": "inductive",
+                            "description": "Pattern recognition and generalization",
+                            "confidence": "medium",
+                            "use_cases": ["Trend analysis", "Hypothesis generation"]
+                        },
+                        {
+                            "type": "abductive",
+                            "description": "Best explanation reasoning",
+                            "confidence": "medium",
+                            "use_cases": ["Diagnostics", "Root cause analysis"]
+                        },
+                        {
+                            "type": "causal",
+                            "description": "Cause-effect relationship analysis",
+                            "confidence": "medium-high",
+                            "use_cases": ["Impact analysis", "Prediction"]
+                        },
+                        {
+                            "type": "analogical",
+                            "description": "Reasoning by comparison and similarity",
+                            "confidence": "medium",
+                            "use_cases": ["Problem solving", "Knowledge transfer"]
+                        }
+                    ],
+                    "supported_domains": list(self.agent_sdk.domain_expertise.keys()),
+                    "collaboration_strategies": [
+                        "consensus", "weighted_voting", "expert_selection", "hierarchical"
+                    ],
+                    "confidence_thresholds": {
+                        "high": 0.8,
+                        "medium": 0.6,
+                        "low": 0.4
+                    },
+                    "max_reasoning_depth": 10,
+                    "parallel_processing": True,
+                    "explanation_formats": ["natural_language", "structured", "visual"]
+                }
 
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
@@ -672,6 +957,96 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
         await self.shutdown()
 
         logger.info(f"A2A handler stopped")
+    
+    # Helper methods for TODO implementations
+    def _check_contradiction(self, item1: Dict, item2: Dict) -> bool:
+        """Check if two knowledge items contradict each other"""
+        # Simple contradiction detection - can be enhanced with NLP
+        content1 = item1.get("content", "").lower()
+        content2 = item2.get("content", "").lower()
+        
+        # Check for negation patterns
+        negation_words = ["not", "never", "no", "false", "incorrect"]
+        for neg in negation_words:
+            if (neg in content1 and neg not in content2) or (neg in content2 and neg not in content1):
+                # Check if they refer to the same subject
+                words1 = set(content1.split())
+                words2 = set(content2.split())
+                common_words = words1.intersection(words2)
+                if len(common_words) > 2:  # Likely about the same topic
+                    return True
+        return False
+    
+    def _validate_rule_completeness(self, rule: Dict) -> bool:
+        """Validate if a rule has all required components"""
+        content = rule.get("content", "")
+        # A complete rule should have condition and consequence
+        return "if" in content.lower() and ("then" in content.lower() or "->" in content)
+    
+    def _calculate_uptime(self) -> str:
+        """Calculate agent uptime"""
+        # This would typically track actual start time
+        return "Active"
+    
+    def _calculate_average_confidence(self) -> float:
+        """Calculate average confidence across all reasoning chains"""
+        confidences = []
+        for chain in self.agent_sdk.reasoning_chains.values():
+            if "confidence_scores" in chain and "overall" in chain["confidence_scores"]:
+                confidences.append(chain["confidence_scores"]["overall"])
+        return sum(confidences) / len(confidences) if confidences else 0.0
+    
+    def _get_reasoning_type_distribution(self) -> Dict[str, int]:
+        """Get distribution of reasoning types used"""
+        distribution = {}
+        for chain in self.agent_sdk.reasoning_chains.values():
+            r_type = chain.get("reasoning_type", "unknown")
+            distribution[r_type] = distribution.get(r_type, 0) + 1
+        return distribution
+    
+    def _get_knowledge_type_distribution(self) -> Dict[str, int]:
+        """Get distribution of knowledge item types"""
+        distribution = {}
+        for items in self.agent_sdk.knowledge_graph.values():
+            for item in items:
+                k_type = item.get("type", "unknown")
+                distribution[k_type] = distribution.get(k_type, 0) + 1
+        return distribution
+    
+    def _get_recent_activity(self, time_range: str) -> List[Dict]:
+        """Get recent reasoning activity"""
+        # Parse time range
+        hours = 24
+        if time_range.endswith('h'):
+            hours = int(time_range[:-1])
+        elif time_range.endswith('d'):
+            hours = int(time_range[:-1]) * 24
+        
+        cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+        recent_activity = []
+        
+        # Get recent chains
+        for chain_id, chain in self.agent_sdk.reasoning_chains.items():
+            created_at_str = chain.get("created_at", "")
+            if created_at_str:
+                try:
+                    created_at = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                    if created_at > cutoff_time:
+                        recent_activity.append({
+                            "type": "reasoning_chain",
+                            "id": chain_id,
+                            "timestamp": created_at_str,
+                            "details": {
+                                "reasoning_type": chain.get("reasoning_type"),
+                                "status": "active" if chain.get("active", True) else "completed"
+                            }
+                        })
+                except:
+                    pass
+        
+        # Sort by timestamp
+        recent_activity.sort(key=lambda x: x["timestamp"], reverse=True)
+        return recent_activity[:10]  # Return last 10 activities
 
 
 # Factory function to create A2A handler

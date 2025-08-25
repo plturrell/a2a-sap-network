@@ -6,6 +6,7 @@
  */
 
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const { execSync } = require('child_process');
 const crypto = require('crypto');
@@ -53,7 +54,7 @@ function checkNodeVersion() {
 }
 
 // Step 2: Generate development .env file
-function generateEnvFile() {
+async function generateEnvFile() {
     log('\nGenerating development .env file...', 'blue');
     
     const envContent = `# A2A Network Development Environment
@@ -198,7 +199,7 @@ SKIP_AUTH=true
         log(`📁 Backed up existing .env to ${backupPath}`, 'yellow');
     }
     
-    await fs.writeFile(envPath, envContent);
+    await fsPromises.writeFile(envPath, envContent);
     log('✅ Development .env file created', 'green');
 }
 
@@ -230,7 +231,7 @@ function installDependencies() {
 }
 
 // Step 5: Setup local blockchain
-function setupLocalBlockchain() {
+async function setupLocalBlockchain() {
     log('\nSetting up local blockchain...', 'blue');
     
     // Create a simple script to start local blockchain
@@ -259,14 +260,14 @@ echo "📝 Using deterministic accounts for testing"
 `;
 
     const scriptPath = path.join(process.cwd(), 'scripts', 'start-local-blockchain.sh');
-    await fs.writeFile(scriptPath, blockchainScript);
+    await fsPromises.writeFile(scriptPath, blockchainScript);
     fs.chmodSync(scriptPath, '755');
     
     log('✅ Local blockchain setup script created', 'green');
 }
 
 // Step 6: Deploy test contracts
-function createContractDeploymentScript() {
+async function createContractDeploymentScript() {
     log('\nCreating contract deployment script...', 'blue');
     
     const deployScript = `const { ethers } = require('ethers');
@@ -327,7 +328,7 @@ module.exports = { deployTestContracts };
 `;
 
     const scriptPath = path.join(process.cwd(), 'scripts', 'deployTestContracts.js');
-    await fs.writeFile(scriptPath, deployScript);
+    await fsPromises.writeFile(scriptPath, deployScript);
     
     log('✅ Contract deployment script created', 'green');
 }
@@ -338,7 +339,7 @@ function initializeDatabase() {
 }
 
 // Step 8: Create development startup script
-function createStartupScript() {
+async function createStartupScript() {
     log('\nCreating rapid development startup script...', 'blue');
     
     const startScript = `#!/usr/bin/env node
@@ -412,18 +413,18 @@ console.log(chalk.cyan('🏥 Health: http://localhost:4004/health\\n'));
 `;
 
     const scriptPath = path.join(process.cwd(), 'scripts', 'quick-start.js');
-    await fs.writeFile(scriptPath, startScript);
+    await fsPromises.writeFile(scriptPath, startScript);
     fs.chmodSync(scriptPath, '755');
     
     log('✅ Quick start script created', 'green');
 }
 
 // Step 9: Update package.json with new scripts
-function updatePackageJson() {
+async function updatePackageJson() {
     log('\nUpdating package.json with development scripts...', 'blue');
     
     const packageJsonPath = path.join(process.cwd(), 'package.json');
-    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+    const packageJson = JSON.parse(await fsPromises.readFile(packageJsonPath, 'utf8'));
     
     // Add new development scripts
     const newScripts = {
@@ -440,7 +441,7 @@ function updatePackageJson() {
     
     packageJson.scripts = { ...packageJson.scripts, ...newScripts };
     
-    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson));
+    await fsPromises.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
     log('✅ package.json updated with rapid development scripts', 'green');
 }
 

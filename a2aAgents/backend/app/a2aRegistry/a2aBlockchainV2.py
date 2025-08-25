@@ -4,12 +4,11 @@ A2A Blockchain Agent Network v2.0
 Full A2A v0.2.9 compliance with real blockchain integration
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import sys
 import os
-import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel

@@ -10,8 +10,7 @@ import uvicorn
 import sys
 import os
 from datetime import datetime
-from typing import Dict, Any, List
-import asyncio
+from typing import Dict, Any
 
 
 # A2A Protocol Compliance: Require environment variables
@@ -40,8 +39,8 @@ def initialize_trust_system():
         AGENT1_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
         AGENT2_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 
-        agent1_identity = trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
-        agent2_identity = trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
+        trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
+        trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
 
         # Simple agent registry
         agents_registry[AGENT1_ADDRESS] = {

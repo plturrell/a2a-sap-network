@@ -15,6 +15,34 @@ sap.ui.define([
             this._initializeGoalDashboard();
             this._setupRealTimeUpdates();
         },
+        
+        onSyncGoals() {
+            const that = this;
+            MessageToast.show("Synchronizing goals from orchestrator...");
+            
+            // Show busy indicator
+            this.getView().setBusy(true);
+            
+            // Call sync service
+            this._callA2AService("/api/v1/goal-management/syncGoals", "POST")
+                .then((oResult) => {
+                    that.getView().setBusy(false);
+                    
+                    if (oResult.status === "success") {
+                        const msg = `Goal sync completed: ${oResult.result.successCount} agents synced successfully`;
+                        MessageToast.show(msg);
+                        
+                        // Reload goal data
+                        that._loadGoalData();
+                    } else {
+                        MessageToast.show("Goal sync failed");
+                    }
+                })
+                .catch((oError) => {
+                    that.getView().setBusy(false);
+                    MessageToast.show(`Sync failed: ${oError.message}`);
+                });
+        },
 
         _initializeGoalDashboard() {
             // Initialize goal management data model

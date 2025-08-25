@@ -95,6 +95,16 @@
                                     icon="sap-icon://line-chart"
                                     key="analytics"/>
                                 <tnt:NavigationListItem
+                                    text="Goal Management"
+                                    icon="sap-icon://target-group"
+                                    key="goalManagement"
+                                    items="{undefined}">
+                                    <tnt:NavigationListItem text="Dashboard" key="goalDashboard"/>
+                                    <tnt:NavigationListItem text="All Goals" key="allGoals"/>
+                                    <tnt:NavigationListItem text="Create Goal" key="createGoal"/>
+                                    <tnt:NavigationListItem text="Collaborative Goals" key="collaborativeGoals"/>
+                                </tnt:NavigationListItem>
+                                <tnt:NavigationListItem
                                     text="Blockchain"
                                     icon="sap-icon://chain-link"
                                     key="blockchain"

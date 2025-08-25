@@ -4,7 +4,6 @@ Trust-Aware A2A Registry Server
 Runs alongside your blockchain network with full trust integration
 """
 
-import asyncio
 import uvicorn
 import sys
 import os
@@ -107,8 +106,8 @@ async def register_blockchain_agents():
         print("📋 Auto-registering blockchain agents...")
 
         # Register agents in trust system first
-        agent1_identity = trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
-        agent2_identity = trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
+        trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
+        trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
 
         # Create Agent1 card (Financial Agent)
         agent1_card = AgentCard(
@@ -335,9 +334,9 @@ async def get_trust_scores(trust: object = Depends(get_trust)):
         for agent_id in registry_service.agents.keys():
             scores[agent_id] = {
                 "trust_score": trust.get_trust_score(agent_id),
-                "trust_level": "verified" if trust.get_trust_score(agent_id) >= 0.9 else
-                              "high" if trust.get_trust_score(agent_id) >= 0.7 else
-                              "medium" if trust.get_trust_score(agent_id) >= 0.5 else "low"
+                "trust_level": ("verified" if trust.get_trust_score(agent_id) >= 0.9 else
+                               "high" if trust.get_trust_score(agent_id) >= 0.7 else
+                               "medium" if trust.get_trust_score(agent_id) >= 0.5 else "low")
             }
     return {"trust_scores": scores}
 

@@ -580,9 +580,6 @@ class A2ARegistryAgent(SecureA2AAgent):
         if key in self.local_cache:
             del self.local_cache[key]
 
-    def __init__(self):
-        super().__init__()
-        self.start_time = datetime.utcnow()
 
 
 # Create singleton instance

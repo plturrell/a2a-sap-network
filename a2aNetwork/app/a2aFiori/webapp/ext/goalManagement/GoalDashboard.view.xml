@@ -76,6 +76,12 @@
 
             <!-- Action Bar -->
             <Toolbar class="sapUiMediumMarginBottom">
+                <Button text="Sync Goals" 
+                       type="Success" 
+                       press="onSyncGoals" 
+                       icon="sap-icon://synchronize" 
+                       tooltip="Sync goals from orchestrator"/>
+                <ToolbarSpacer/>
                 <Button text="Create SMART Goal" 
                        type="Emphasized" 
                        icon="sap-icon://add" 

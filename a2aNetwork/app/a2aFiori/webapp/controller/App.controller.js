@@ -87,7 +87,11 @@ sap.ui.define([
                 "agentVisualization": "agentVisualization",
                 "contracts": "contracts",
                 "transactions": "transactions",
-                "settings": "settings"
+                "settings": "settings",
+                "goalDashboard": "goalDashboard",
+                "allGoals": "allGoals",
+                "createGoal": "createGoal",
+                "collaborativeGoals": "collaborativeGoals"
             };
 
             if (mRoutes[sKey]) {

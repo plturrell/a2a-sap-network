@@ -233,6 +233,31 @@
                     "name": "offline",
                     "pattern": "offline",
                     "target": "offline"
+                },
+                {
+                    "name": "goalDashboard",
+                    "pattern": "goal-dashboard",
+                    "target": "goalDashboard"
+                },
+                {
+                    "name": "allGoals",
+                    "pattern": "goals",
+                    "target": "allGoals"
+                },
+                {
+                    "name": "createGoal",
+                    "pattern": "goals/create",
+                    "target": "createGoal"
+                },
+                {
+                    "name": "collaborativeGoals",
+                    "pattern": "collaborative-goals",
+                    "target": "collaborativeGoals"
+                },
+                {
+                    "name": "goalDetail",
+                    "pattern": "goals/{goalId}",
+                    "target": "goalDetail"
                 }
             ],
             "targets": {
@@ -325,6 +350,33 @@
                     "viewType": "XML",
                     "viewName": "Offline",
                     "viewLevel": 2
+                },
+                "goalDashboard": {
+                    "viewType": "XML",
+                    "viewName": "goalManagement.GoalDashboard",
+                    "viewLevel": 2,
+                    "controlId": "navContainer",
+                    "controlAggregation": "pages"
+                },
+                "allGoals": {
+                    "viewType": "XML",
+                    "viewName": "goalManagement.AllGoals",
+                    "viewLevel": 2
+                },
+                "createGoal": {
+                    "viewType": "XML",
+                    "viewName": "goalManagement.CreateGoal",
+                    "viewLevel": 3
+                },
+                "collaborativeGoals": {
+                    "viewType": "XML",
+                    "viewName": "goalManagement.CollaborativeGoals",
+                    "viewLevel": 2
+                },
+                "goalDetail": {
+                    "viewType": "XML",
+                    "viewName": "goalManagement.GoalDetail",
+                    "viewLevel": 3
                 }
             }
         }

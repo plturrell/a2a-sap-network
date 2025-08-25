@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 from enum import Enum
 

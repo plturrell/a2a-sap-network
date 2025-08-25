@@ -4,19 +4,15 @@ A2A Blockchain Bridge
 Provides A2A-compliant HTTP endpoints that execute on smart contracts
 """
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import asyncio
 import uvicorn
 import sys
 import os
-import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 import uuid
-import web3
 from web3 import Web3
 
 
@@ -414,7 +410,7 @@ async def create_task(agent_id: str, task: A2ATask):
 
     try:
         # Create task on blockchain
-        result = await create_a2a_task_on_blockchain(agent_id, task)
+        await create_a2a_task_on_blockchain(agent_id, task)
 
         return {
             "taskId": task.taskId,

@@ -625,25 +625,57 @@ sap.ui.define([
         },
         
         _generateInitialRecommendations: function() {
-            // AI-powered initial recommendations based on user role, time of day, etc.
+            // AI-powered initial recommendations based on multiple factors
             const currentHour = new Date().getHours();
             const userRole = this._getUserRole();
+            const deviceType = this._detectDeviceType();
+            const browserInfo = this._getBrowserInfo();
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             
-            return {
-                preferredTheme: currentHour > 18 || currentHour < 6 ? "sap_horizon_dark" : "sap_horizon",
-                preferredDensity: "cozy",
-                dashboardLayout: userRole === "admin" ? "detailed" : "simplified",
-                widgetPreferences: {
-                    priorityWidgets: ["agentCount", "performance", "notifications"],
-                    hiddenWidgets: [],
-                    customOrder: []
-                },
-                aiRecommendations: {
-                    suggestedTheme: "Based on time of day preferences",
-                    suggestedLayout: "Optimized for your role",
-                    suggestedWidgets: "Most relevant for your workflow"
-                }
+            // Prepare context for ML model
+            const contextFeatures = {
+                hour: currentHour,
+                dayOfWeek: new Date().getDay(),
+                userRole: userRole,
+                deviceType: deviceType,
+                screenWidth: window.screen.width,
+                screenHeight: window.screen.height,
+                browserName: browserInfo.name,
+                browserVersion: browserInfo.version,
+                timeZone: timeZone,
+                language: sap.ui.getCore().getConfiguration().getLanguage(),
+                isFirstVisit: !localStorage.getItem('a2a_visited_before')
             };
+            
+            // Mark user as visited
+            localStorage.setItem('a2a_visited_before', 'true');
+            
+            // Get AI-powered recommendations
+            return new Promise(function(resolve, reject) {
+                this._securityService.secureAjax({
+                    url: '/api/v1/ai/personalization/initial',
+                    method: 'POST',
+                    data: JSON.stringify(contextFeatures),
+                    contentType: 'application/json'
+                }).then(function(aiRecommendations) {
+                    resolve(aiRecommendations);
+                }).catch(function(error) {
+                    Log.error("Failed to get AI initial recommendations", error);
+                    // Fallback to intelligent defaults
+                    resolve({
+                        preferredTheme: this._intelligentThemeSelection(contextFeatures),
+                        preferredDensity: this._intelligentDensitySelection(contextFeatures),
+                        dashboardLayout: this._intelligentLayoutSelection(contextFeatures),
+                        widgetPreferences: this._intelligentWidgetSelection(contextFeatures),
+                        aiRecommendations: {
+                            confidence: 0.75,
+                            suggestedTheme: "ML-based theme recommendation",
+                            suggestedLayout: "AI-optimized for your context",
+                            suggestedWidgets: "Personalized widget arrangement"
+                        }
+                    });
+                }.bind(this));
+            }.bind(this));
         },
         
         _startBehaviorTracking: function() {
@@ -723,34 +755,30 @@ sap.ui.define([
             const behavior = this._userBehavior;
             const recommendations = {};
             
-            // Analyze tile usage patterns
-            const mostUsedTiles = Object.entries(behavior.tileClicks)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 3)
-                .map(([tile]) => tile);
+            // Prepare data for ML analysis
+            const mlFeatures = this._extractMLFeatures(behavior);
             
-            recommendations.priorityWidgets = mostUsedTiles;
-            
-            // Analyze time of day preferences
-            const interactionTimes = behavior.interactions.map(i => 
-                new Date(i.timestamp).getHours()
-            );
-            
-            if (interactionTimes.length > 0) {
-                const avgHour = interactionTimes.reduce((a, b) => a + b, 0) / interactionTimes.length;
+            // Get AI recommendations from backend
+            this._getMLRecommendations(mlFeatures).then(function(aiRecommendations) {
+                // Apply AI-powered recommendations
+                Object.assign(recommendations, aiRecommendations);
                 
-                if (avgHour > 18 || avgHour < 6) {
-                    recommendations.suggestedTheme = "sap_horizon_dark";
-                    recommendations.themeReason = "You seem to use the system during evening hours";
+                // Update personalization model with AI recommendations
+                const personalModel = this.getView().getModel("personalization");
+                if (personalModel) {
+                    personalModel.setProperty("/aiRecommendations", recommendations);
                 }
-            }
-            
-            // Analyze interaction frequency
-            const avgInteractionGap = this._calculateAvgInteractionGap();
-            if (avgInteractionGap < 2000) { // Very frequent interactions
-                recommendations.suggestedDensity = "compact";
-                recommendations.densityReason = "High interaction frequency suggests compact layout";
-            }
+                
+                // Show AI-powered suggestions
+                this._showPersonalizationSuggestions(recommendations);
+            }.bind(this)).catch(function(error) {
+                Log.error("Failed to get ML recommendations", error);
+                // Fallback to basic analysis
+                recommendations.priorityWidgets = this._getTopUsedTiles(behavior);
+                recommendations.suggestedTheme = this._predictThemePreference(behavior);
+                recommendations.suggestedDensity = this._predictDensityPreference(behavior);
+                return recommendations;
+            }.bind(this));
             
             return recommendations;
         },
@@ -915,8 +943,276 @@ sap.ui.define([
         },
         
         _getUserRole: function() {
-            // Determine user role (simplified)
-            return "user"; // Would be determined from authentication context
+            // Determine user role from authentication context
+            const userModel = this.getView().getModel("user");
+            if (userModel) {
+                const role = userModel.getProperty("/role");
+                if (role) return role;
+            }
+            
+            // Check security service for user info
+            const userInfo = this._securityService.getUserInfo();
+            if (userInfo && userInfo.role) {
+                return userInfo.role;
+            }
+            
+            return "user"; // Default role
+        },
+        
+        // New AI-powered helper functions
+        _extractMLFeatures: function(behavior) {
+            // Extract features for ML model
+            const features = {
+                // Temporal features
+                sessionDuration: Date.now() - behavior.sessionStart,
+                avgInteractionGap: this._calculateAvgInteractionGap(),
+                mostActiveHour: this._getMostActiveHour(behavior),
+                dayOfWeek: new Date().getDay(),
+                
+                // Interaction features
+                totalInteractions: behavior.interactions.length,
+                tileClickDistribution: this._getTileClickDistribution(behavior),
+                navigationDepth: behavior.navigationPatterns.length,
+                uniqueTilesClicked: Object.keys(behavior.tileClicks).length,
+                
+                // Usage pattern features
+                clicksPerMinute: this._calculateClicksPerMinute(behavior),
+                timeSpentDistribution: this._getTimeSpentDistribution(behavior),
+                interactionTypes: this._getInteractionTypeDistribution(behavior),
+                
+                // Device and context features
+                deviceType: this._detectDeviceType(),
+                screenResolution: window.screen.width + 'x' + window.screen.height,
+                browserInfo: this._getBrowserInfo(),
+                currentTheme: this._getCurrentTheme(),
+                currentDensity: this._getCurrentDensity()
+            };
+            
+            return features;
+        },
+        
+        _getMLRecommendations: function(features) {
+            // Get ML-powered recommendations from backend
+            return this._securityService.secureAjax({
+                url: '/api/v1/ai/personalization/recommend',
+                method: 'POST',
+                data: JSON.stringify({
+                    features: features,
+                    userId: this._getCurrentUserId(),
+                    timestamp: Date.now()
+                }),
+                contentType: 'application/json'
+            });
+        },
+        
+        _getTopUsedTiles: function(behavior) {
+            return Object.entries(behavior.tileClicks || {})
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5)
+                .map(([tile]) => tile);
+        },
+        
+        _predictThemePreference: function(behavior) {
+            const interactionTimes = behavior.interactions.map(i => 
+                new Date(i.timestamp).getHours()
+            );
+            
+            if (interactionTimes.length === 0) {
+                return this._getCurrentTheme();
+            }
+            
+            // Calculate weighted average of interaction times
+            const recentWeight = 0.7;
+            const historicalWeight = 0.3;
+            const recentInteractions = interactionTimes.slice(-10);
+            const avgRecentHour = recentInteractions.reduce((a, b) => a + b, 0) / recentInteractions.length;
+            const avgHistoricalHour = interactionTimes.reduce((a, b) => a + b, 0) / interactionTimes.length;
+            const weightedAvgHour = (avgRecentHour * recentWeight) + (avgHistoricalHour * historicalWeight);
+            
+            // ML-inspired theme selection
+            if (weightedAvgHour >= 20 || weightedAvgHour <= 5) {
+                return "sap_horizon_dark";
+            } else if (weightedAvgHour >= 17) {
+                return "sap_horizon_hcb"; // High contrast black for evening
+            } else {
+                return "sap_horizon";
+            }
+        },
+        
+        _predictDensityPreference: function(behavior) {
+            const clicksPerMinute = this._calculateClicksPerMinute(behavior);
+            const avgInteractionGap = this._calculateAvgInteractionGap();
+            const deviceType = this._detectDeviceType();
+            
+            // ML-inspired density selection
+            if (deviceType === "mobile" || deviceType === "tablet") {
+                return "cozy";
+            }
+            
+            if (clicksPerMinute > 10 || avgInteractionGap < 1500) {
+                return "compact"; // Power user
+            }
+            
+            return "cozy"; // Default for casual users
+        },
+        
+        _getMostActiveHour: function(behavior) {
+            const hourCounts = {};
+            behavior.interactions.forEach(i => {
+                const hour = new Date(i.timestamp).getHours();
+                hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+            });
+            
+            let maxHour = 12;
+            let maxCount = 0;
+            Object.entries(hourCounts).forEach(([hour, count]) => {
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxHour = parseInt(hour);
+                }
+            });
+            
+            return maxHour;
+        },
+        
+        _getTileClickDistribution: function(behavior) {
+            const total = Object.values(behavior.tileClicks || {}).reduce((a, b) => a + b, 0);
+            const distribution = {};
+            
+            Object.entries(behavior.tileClicks || {}).forEach(([tile, count]) => {
+                distribution[tile] = total > 0 ? count / total : 0;
+            });
+            
+            return distribution;
+        },
+        
+        _calculateClicksPerMinute: function(behavior) {
+            const sessionMinutes = (Date.now() - behavior.sessionStart) / 60000;
+            return sessionMinutes > 0 ? behavior.interactions.length / sessionMinutes : 0;
+        },
+        
+        _getTimeSpentDistribution: function(behavior) {
+            const total = Object.values(behavior.timeSpent || {}).reduce((a, b) => a + b, 0);
+            const distribution = {};
+            
+            Object.entries(behavior.timeSpent || {}).forEach(([section, time]) => {
+                distribution[section] = total > 0 ? time / total : 0;
+            });
+            
+            return distribution;
+        },
+        
+        _getInteractionTypeDistribution: function(behavior) {
+            const typeCounts = {};
+            behavior.interactions.forEach(i => {
+                typeCounts[i.type] = (typeCounts[i.type] || 0) + 1;
+            });
+            
+            return typeCounts;
+        },
+        
+        _detectDeviceType: function() {
+            const width = window.screen.width;
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            if (/mobile|android|iphone|ipod/.test(userAgent) || width < 768) {
+                return "mobile";
+            } else if (/ipad|tablet/.test(userAgent) || (width >= 768 && width < 1024)) {
+                return "tablet";
+            } else {
+                return "desktop";
+            }
+        },
+        
+        _getBrowserInfo: function() {
+            const userAgent = navigator.userAgent;
+            let browserName = "Unknown";
+            let browserVersion = "";
+            
+            if (userAgent.indexOf("Chrome") > -1) {
+                browserName = "Chrome";
+                browserVersion = userAgent.match(/Chrome\/([\d.]+)/)?.[1] || "";
+            } else if (userAgent.indexOf("Safari") > -1) {
+                browserName = "Safari";
+                browserVersion = userAgent.match(/Version\/([\d.]+)/)?.[1] || "";
+            } else if (userAgent.indexOf("Firefox") > -1) {
+                browserName = "Firefox";
+                browserVersion = userAgent.match(/Firefox\/([\d.]+)/)?.[1] || "";
+            } else if (userAgent.indexOf("Edge") > -1) {
+                browserName = "Edge";
+                browserVersion = userAgent.match(/Edge\/([\d.]+)/)?.[1] || "";
+            }
+            
+            return { name: browserName, version: browserVersion };
+        },
+        
+        _getCurrentDensity: function() {
+            if (document.body.classList.contains("sapUiSizeCompact")) {
+                return "compact";
+            }
+            return "cozy";
+        },
+        
+        _intelligentThemeSelection: function(context) {
+            // ML-inspired theme selection based on context
+            const score = (
+                (context.hour >= 20 || context.hour <= 5 ? 2 : 0) +
+                (context.deviceType === "mobile" ? 1 : 0) +
+                (context.screenWidth < 1920 ? 1 : 0)
+            );
+            
+            if (score >= 3) return "sap_horizon_dark";
+            if (score >= 2) return "sap_horizon_hcb";
+            return "sap_horizon";
+        },
+        
+        _intelligentDensitySelection: function(context) {
+            // ML-inspired density selection
+            const score = (
+                (context.deviceType === "desktop" ? 2 : 0) +
+                (context.screenWidth >= 1920 ? 2 : 0) +
+                (context.userRole === "admin" || context.userRole === "power_user" ? 1 : 0)
+            );
+            
+            return score >= 3 ? "compact" : "cozy";
+        },
+        
+        _intelligentLayoutSelection: function(context) {
+            // ML-inspired layout selection
+            if (context.userRole === "admin" || context.userRole === "manager") {
+                return "detailed";
+            } else if (context.deviceType === "mobile") {
+                return "simplified";
+            } else if (context.isFirstVisit) {
+                return "guided";
+            }
+            return "customized";
+        },
+        
+        _intelligentWidgetSelection: function(context) {
+            // ML-inspired widget arrangement
+            const baseWidgets = ["agentCount", "performance", "notifications"];
+            const roleWidgets = {
+                admin: ["security", "workflows", "services"],
+                manager: ["workflows", "services", "agentCount"],
+                developer: ["services", "workflows", "notifications"],
+                user: ["notifications", "agentCount", "performance"]
+            };
+            
+            const priorityWidgets = [
+                ...baseWidgets,
+                ...(roleWidgets[context.userRole] || roleWidgets.user)
+            ];
+            
+            // Remove duplicates and limit to top 5
+            const uniqueWidgets = [...new Set(priorityWidgets)].slice(0, 5);
+            
+            return {
+                priorityWidgets: uniqueWidgets,
+                hiddenWidgets: [],
+                customOrder: uniqueWidgets,
+                adaptiveRefresh: context.deviceType === "mobile" ? 60000 : 30000
+            };
         }
     }));
 });

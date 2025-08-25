@@ -290,10 +290,10 @@ async def initialize_a2a_etl_agents():
             },
             "etl": {
                 "data_sources": [
-                "CRD_Extraction_v1_account.csv", "CRD_Extraction_v1_book.csv",
-                "CRD_Extraction_v1_location.csv", "CRD_Extraction_v1_measure.csv",
-                "CRD_Extraction_v1_product.csv"
-            ],
+                    "CRD_Extraction_v1_account.csv", "CRD_Extraction_v1_book.csv",
+                    "CRD_Extraction_v1_location.csv", "CRD_Extraction_v1_measure.csv",
+                    "CRD_Extraction_v1_product.csv"
+                ],
                 "processing_type": "raw_to_structured",
                 "output_format": "ORD+JSON with Dublin Core",
                 "standards_compliance": ["ISO 15836", "RFC 5013", "ANSI/NISO Z39.85"]

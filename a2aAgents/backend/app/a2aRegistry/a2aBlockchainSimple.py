@@ -4,7 +4,7 @@ A2A Blockchain Agent Network (Simplified)
 Pure A2A v0.2.9 compliant agents that simulate blockchain execution
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import sys

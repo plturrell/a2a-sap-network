@@ -400,40 +400,36 @@ class Agent14Adapter extends BaseAdapter {
                         headers: { 'Content-Type': 'application/json' },
                         timeout: this.timeout
                     });
-                    const data = await response.json();
-                    return data;
+                    return await response.json();
                     
                 case 'create_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                timeout: this.timeout
-            });
-            const data = await response.json();
-                    return data;
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        timeout: this.timeout
+                    });
+                    return await response.json();
                     
                 case 'start_fine_tuning':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/start`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                timeout: this.timeout
-            });
-            const data = await response.json();
-                    return data;
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        timeout: this.timeout
+                    });
+                    return await response.json();
                     
                 case 'stop_fine_tuning':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/stop`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(null, {
                         params: { job_id: payload.job_id }
                     }),
                 timeout: this.timeout
             });
-            const data = await response.json();
-                    return data;
+            return await response.json();
                     
                 case 'get_training_status':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/status`, {
@@ -444,8 +440,7 @@ class Agent14Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            const data = await response.json();
-                    return data;
+            return await response.json();
                     
                 case 'get_training_metrics':
                     response = await fetch(`${baseUrl}/api/v1/fine-tuning/metrics`, {
@@ -454,8 +449,7 @@ class Agent14Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            const data = await response.json();
-                    return data;
+            return await response.json();
                     
                 case 'evaluate_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/evaluate`, {

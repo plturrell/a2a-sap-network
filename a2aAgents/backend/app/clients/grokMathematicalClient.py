@@ -3,15 +3,13 @@ Grok Mathematical Client - Enhanced AI for Mathematical Understanding
 Extends the base Grok client with specialized mathematical capabilities
 """
 
-import os
 import json
 import logging
-import asyncio
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 import re
 
-from .grokClient import GrokClient, GrokConfig, GrokResponse
+from .grokClient import GrokClient, GrokConfig
 
 logger = logging.getLogger(__name__)
 
@@ -325,9 +323,9 @@ Return a JSON array of problems. Make them progressively challenging."""
             return []
 
     async def provide_calculation_feedback(self,
-                                         user_solution: str,
-                                         correct_solution: str,
-                                         problem: str) -> Dict[str, Any]:
+                                           user_solution: str,
+                                           correct_solution: str,
+                                           problem: str) -> Dict[str, Any]:
         """Provide detailed feedback on a user's solution"""
 
         prompt = f"""Compare the user's solution with the correct solution and provide educational feedback.

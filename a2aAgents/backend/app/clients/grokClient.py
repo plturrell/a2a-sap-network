@@ -5,7 +5,6 @@ Now integrated with SAP AI Core SDK for enterprise deployments
 """
 
 import os
-import asyncio
 import logging
 import json
 from typing import Dict, Any, List, Optional, AsyncGenerator
@@ -25,7 +24,6 @@ try:
     if str(aiq_path) not in sys.path:
         sys.path.insert(0, str(aiq_path))
 
-    from aiq.llm.sap_ai_core import LLMService, ExecutionMode, Message
     SAP_AI_CORE_AVAILABLE = True
     logger.info("SAP AI Core SDK integration enabled for GrokClient")
 except ImportError:

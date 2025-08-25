@@ -16,7 +16,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from uuid import uuid4
-from urllib.parse import urljoin
 
 try:
     # Try relative import first (when run as module)
@@ -394,9 +393,9 @@ class A2ARegistryService:
                 # Log trust-aware selection if enabled
                 if self.enable_trust_integration and hasattr(best_agent, 'trust_score'):
                     logger.info(f"Selected agent {best_agent.agent_id} for stage {stage.name} "
-                              f"(trust: {getattr(best_agent, 'trust_score', 'N/A')}, "
-                              f"health: {best_agent.status}, "
-                              f"response: {best_agent.response_time_ms}ms)")
+                                f"(trust: {getattr(best_agent, 'trust_score', 'N/A')}, "
+                                f"health: {best_agent.status}, "
+                                f"response: {best_agent.response_time_ms}ms)")
 
                 execution_plan.append({
                     "stage": stage.name,
@@ -485,8 +484,6 @@ class A2ARegistryService:
         """Get current health status of an agent"""
         if agent_id not in self.agents:
             raise ValueError(f"Agent {agent_id} not found")
-
-        registration = self.agents[agent_id]
 
         # Perform real-time health check
         health_result = await self._perform_health_check(agent_id)
@@ -643,7 +640,6 @@ class A2ARegistryService:
             return {"status": HealthStatus.UNREACHABLE, "timestamp": datetime.utcnow(), "response_time_ms": 0}
 
         registration = self.agents[agent_id]
-        health_endpoint = registration.agent_card.healthEndpoint or f"{registration.agent_card.url}/health"
 
         try:
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
@@ -841,7 +837,7 @@ async def main():
 
     try:
         # Create service instance
-        service = A2ARegistryService()
+        A2ARegistryService()
         logger.info("A2A Registry Service initialized successfully")
 
         # Keep the service running

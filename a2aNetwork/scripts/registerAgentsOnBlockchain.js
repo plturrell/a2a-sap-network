@@ -267,8 +267,7 @@ const AGENTS = {
     }
 };
 
-async async function main() {
-(async () => {
+async function main() {
     console.log("🚀 Starting A2A Agent Blockchain Registration");
     
     try {
@@ -441,7 +440,7 @@ async function stringToBytes32(str) {
 }
 
 // Test blockchain connectivity
-async async function testConnectivity() {
+async function testConnectivity() {
     console.log("🔍 Testing blockchain connectivity...");
     
     try {
@@ -487,4 +486,3 @@ if (require.main === module) {
 }
 
 module.exports = { main, AGENTS, loadAgentRegistryABI, MESSAGE_ROUTER_ABI };
-})().catch(console.error);

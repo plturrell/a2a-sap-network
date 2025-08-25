@@ -11,15 +11,14 @@ import json
 import gzip
 import hashlib
 import shutil
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from enum import Enum
 import threading
 import schedule
 import boto3
-from concurrent.futures import ThreadPoolExecutor
 
 
 def _get_primary_backup_path():
@@ -131,7 +130,7 @@ class DataVersionManager:
         self.lock = threading.Lock()
 
     async def create_data_version(self, table_name: str, operation: str,
-                                 data: Dict[str, Any], user_id: str) -> str:
+                                  data: Dict[str, Any], user_id: str) -> str:
         """Create a new data version entry"""
         version_id = f"v_{int(datetime.utcnow().timestamp() * 1000)}"
 

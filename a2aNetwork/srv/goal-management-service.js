@@ -1,5 +1,6 @@
 const cds = require('@sap/cds');
 const { SELECT, INSERT, UPDATE, DELETE, UPSERT } = cds.ql;
+const goalSyncScheduler = require('./goal-sync-scheduler');
 
 module.exports = (srv) => {
     srv.service.impl(function() {
@@ -18,6 +19,35 @@ module.exports = (srv) => {
         
         // Cleanup tracking
         let analyticsRefreshTimer;
+        
+        /**
+         * Manual goal sync action
+         */
+        this.on('syncGoals', async (req) => {
+            try {
+                LOG.info('Manual goal sync requested');
+                const result = await goalSyncScheduler.triggerManualSync();
+                return {
+                    status: 'success',
+                    message: 'Goal synchronization completed',
+                    result: result
+                };
+            } catch (error) {
+                LOG.error('Manual goal sync failed', { error: error.message });
+                throw new Error('Failed to synchronize goals');
+            }
+        });
+        
+        /**
+         * Get sync status
+         */
+        this.on('getSyncStatus', async (req) => {
+            const status = goalSyncScheduler.getStatus();
+            return {
+                ...status,
+                serverTime: new Date()
+            };
+        });
         
         /**
          * Get visualization data for goal dashboard

@@ -5,7 +5,6 @@ Provides HTTP endpoints for the A2A Registry
 
 import os
 import sys
-import asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
