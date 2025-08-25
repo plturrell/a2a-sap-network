@@ -196,8 +196,7 @@ class RealGrokSQLClient:
             self.api_key = (
                 os.getenv('XAI_API_KEY') or
                 os.getenv('GROK_API_KEY') or
-                # Use the found API key from the codebase
-                "your-xai-api-key-here"
+                None  # No hardcoded API keys - must be provided via environment
             )
 
             self.base_url = os.getenv('XAI_BASE_URL', self.base_url)

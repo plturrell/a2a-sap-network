@@ -127,7 +127,8 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
         # Initialize AI Intelligence Framework (with fallback for missing dependencies)
         try:
             self.ai_framework = create_ai_intelligence_framework(
-                create_enhanced_agent_config()
+                agent_id=self.agent_id,
+                config=create_enhanced_agent_config()
             )
         except Exception as e:
             logger.warning(f"AI Intelligence Framework initialization failed: {e}")

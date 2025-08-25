@@ -7,14 +7,13 @@ This handler ensures all agent communication goes through the A2A blockchain
 messaging system. No direct HTTP endpoints are exposed.
 """
 
-import asyncio
 import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
+from ....core.a2aTypes import A2AMessage
 from ....core.secure_agent_base import SecureA2AAgent, SecureAgentConfig
 from ....sdk.a2aNetworkClient import A2ANetworkClient
 from .comprehensiveDataProductAgentSdk import ComprehensiveDataProductAgentSDK
@@ -829,7 +828,7 @@ class Agent0A2AHandler(SecureA2AAgent):
             "version": self.config.agent_version
         })
 
-        logger.info(f"A2A handler started and registered on blockchain")
+        logger.info("A2A handler started and registered on blockchain")
 
     async def stop(self):
         """Stop the A2A handler"""
@@ -844,7 +843,7 @@ class Agent0A2AHandler(SecureA2AAgent):
         # Parent cleanup
         await self.shutdown()
 
-        logger.info(f"A2A handler stopped")
+        logger.info("A2A handler stopped")
 
 
 # Factory function to create A2A handler

@@ -3,20 +3,13 @@ Advanced MCP Data Product Agent (Agent 0) - FIXED VERSION
 Enhanced data product registration and management with real MCP tool integration
 """
 
-import asyncio
 import json
 import logging
-from typing import Dict, List, Any, Optional, Union
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+from datetime import datetime
 import uuid
 import hashlib
-import mimetypes
-from pathlib import Path
-import pandas as pd
 
-from ...sdk.agentBase import A2AAgentBase
-from ...sdk.decorators import a2a_handler, a2a_skill, a2a_task
-from ...sdk.types import A2AMessage, MessageRole, TaskStatus, AgentCard
 from ...sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 from ...common.mcpPerformanceTools import MCPPerformanceTools
 from ...common.mcpValidationTools import MCPValidationTools

@@ -53,6 +53,25 @@ class TaskState(str, Enum):
 
 
 @dataclass
+class AILoadBalancingModel:
+    """AI model for intelligent load balancing"""
+    load_predictor: Optional[Any] = None
+    performance_classifier: Optional[Any] = None
+    scaler: Optional[Any] = None
+    task_clusterer: Optional[Any] = None
+    last_training: float = 0.0
+    training_interval: float = 3600.0  # Retrain every hour
+    prediction_accuracy: float = 0.0
+    
+    def __post_init__(self):
+        if SKLEARN_AVAILABLE:
+            self.load_predictor = RandomForestRegressor(n_estimators=100, random_state=42)
+            self.performance_classifier = Ridge(alpha=0.1)
+            self.scaler = StandardScaler()
+            self.task_clusterer = KMeans(n_clusters=5, random_state=42)
+
+
+@dataclass
 class WorkerPerformanceMetrics:
     """AI-enhanced worker performance tracking"""
     worker_id: str
@@ -66,6 +85,10 @@ class WorkerPerformanceMetrics:
     performance_score: float = 1.0
     task_type_expertise: Dict[str, float] = None  # task_type -> success_rate
     recent_performance: deque = None  # Rolling window of recent task results
+    predicted_capacity: float = 10.0  # AI-predicted optimal capacity
+    workload_trend: float = 0.0  # Increasing/decreasing workload trend
+    efficiency_score: float = 1.0  # Task completion efficiency
+    collaboration_score: float = 1.0  # How well worker collaborates
 
     def __post_init__(self):
         if self.task_type_expertise is None:
@@ -298,11 +321,20 @@ class DistributedTaskCoordinator:
         self.worker_tasks: List[asyncio.Task] = []
         self.running = False
 
+        # AI Load Balancing Components
+        self.ai_model = AILoadBalancingModel()
+        self.worker_metrics: Dict[str, WorkerPerformanceMetrics] = {}
+        self.task_history: List[Dict[str, Any]] = []
+        self.system_load_history: deque = deque(maxlen=1000)  # System load over time
+        self.prediction_cache: Dict[str, Tuple[float, float]] = {}  # worker_id -> (predicted_load, timestamp)
+        
         # Redis keys
         self.task_queue_key = f"{self.namespace}:queue"
         self.task_data_key = f"{self.namespace}:data"
         self.task_claims_key = f"{self.namespace}:claims"
         self.node_heartbeat_key = f"{self.namespace}:nodes"
+        self.metrics_key = f"{self.namespace}:metrics"
+        self.ai_model_key = f"{self.namespace}:ai_model"
 
     async def initialize(self):
         """Initialize the distributed task coordinator"""
@@ -612,8 +644,8 @@ class DistributedTaskCoordinator:
                             task.claimed_at = None
                             task.updated_at = datetime.utcnow()
 
-                            # Re-add to queue
-                            priority_score = self._get_priority_score(task.priority)
+                            # Re-add to queue with AI-enhanced priority
+                            priority_score = await self._get_ai_priority_score(task)
                             await self.redis.zadd(self.task_queue_key, {task_id: priority_score})
 
                             # Update task data
