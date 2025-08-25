@@ -5,6 +5,9 @@
 const Redis = require('ioredis');
 const EventEmitter = require('events');
 
+// Track intervals for cleanup
+const activeIntervals = new Map();
+
 class A2ACacheService extends EventEmitter {
     constructor(options = {}) {
         super();
@@ -296,9 +299,6 @@ class A2ACacheService extends EventEmitter {
     // Hash query for consistent cache keys
     hashQuery(query, params = []) {
         const crypto = require('crypto');
-
-// Track intervals for cleanup
-const activeIntervals = new Map();
 
 function stopAllIntervals() {
     for (const [name, intervalId] of activeIntervals) {

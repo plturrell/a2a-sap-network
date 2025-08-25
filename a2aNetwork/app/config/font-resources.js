@@ -1,3 +1,4 @@
+/* global sap */
 sap.ui.define([], () => {
     'use strict';
 

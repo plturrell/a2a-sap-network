@@ -374,7 +374,7 @@ class DeadLetterQueueService extends cds.Service {
                     'retry_queue', '-inf', 
                     currentTime, 
                     'LIMIT', 0, this.config.batchProcessSize
-                ));
+                );
                 
                 if (readyMessages.length === 0) return;
                 
@@ -394,7 +394,7 @@ class DeadLetterQueueService extends cds.Service {
             } catch (error) {
                 this.log.error('Retry processor error:', error);
             }
-        }, this.config.retryIntervalMs);
+        }, this.config.retryIntervalMs));
     }
 
     /**
@@ -410,7 +410,7 @@ class DeadLetterQueueService extends cds.Service {
                     this.eventEmitter.emit('highFailureRateAlert', {
                         failureRate: stats.failureRate,
                         threshold: this.config.alertThresholds.highFailureRate,
-                        timestamp: new Date())
+                        timestamp: new Date()
                     });
                 }
                 
@@ -425,7 +425,7 @@ class DeadLetterQueueService extends cds.Service {
             } catch (error) {
                 this.log.error('Analytics processor error:', error);
             }
-        }, 5 * 60000); // Every 5 minutes
+        }, 5 * 60000)); // Every 5 minutes
     }
 
     // Utility methods

@@ -7,10 +7,10 @@
 require('dotenv').config();
 const { ethers } = require('ethers');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 
 // Load AgentRegistry ABI
-function loadAgentRegistryABI() {
+async function loadAgentRegistryABI() {
     try {
         const artifactPath = path.join(__dirname, '../out/AgentRegistry.sol/AgentRegistry.json');
         const artifact = JSON.parse(await fs.readFile(artifactPath, 'utf8'));

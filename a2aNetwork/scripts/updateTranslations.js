@@ -121,14 +121,14 @@ const fallbackLanguages = ['it', 'pt', 'ru', 'ar', 'he', 'hi', 'nl', 'pl', 'tr',
 const localesDir = path.join(__dirname, '../srv/i18n/locales');
 
 // Update main language files
-Object.entries(translations).forEach(([lang, content]) => {
+Object.entries(translations).forEach(async ([lang, content]) => {
   const filePath = path.join(localesDir, `${lang}.json`);
   await fs.writeFile(filePath, JSON.stringify(content), 'utf8');
   console.log(`Updated ${lang}.json`);
 });
 
 // Update fallback language files with English content
-fallbackLanguages.forEach(lang => {
+fallbackLanguages.forEach(async (lang) => {
   const filePath = path.join(localesDir, `${lang}.json`);
   await fs.writeFile(filePath, JSON.stringify(translations.en), 'utf8');
   console.log(`Updated ${lang}.json with English fallback`);

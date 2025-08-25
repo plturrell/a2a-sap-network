@@ -48,6 +48,14 @@ except ImportError:
     GROK_AVAILABLE = False
     logging.warning("GrokClient not available. AI validation will be limited.")
 
+# Local AI SQL Validator - always available
+try:
+    from app.a2a.core.local_ai_sql_validator import LocalAISQLValidator, validate_sql_locally
+    LOCAL_AI_AVAILABLE = True
+except ImportError:
+    LOCAL_AI_AVAILABLE = False
+    logging.warning("Local AI validator not available.")
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,8 +103,15 @@ class EnhancedSQLSkills(SecureA2AAgent):
             "security_blocks": 0,
             "nlp_enhancements": 0,
             "grok_validations": 0,
+            "local_ai_validations": 0,
             "logical_consistency_checks": 0
         }
+        
+        # Initialize local AI validator
+        if LOCAL_AI_AVAILABLE:
+            self.local_ai_validator = LocalAISQLValidator()
+        else:
+            self.local_ai_validator = None
 
         # Initialize GrokClient for AI validation
         self.grok_client = None
@@ -1392,14 +1407,32 @@ class EnhancedSQLSkills(SecureA2AAgent):
 
     async def validate_sql_with_grok(self, sql_query: str, nl_query: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """Use GrokClient to validate SQL syntax and logical consistency"""
+        # Try local AI first if Grok is not available
         if not self.grok_client:
-            return {
-                "grok_available": False,
-                "syntax_valid": True,  # Assume valid if no Grok
-                "logical_consistent": True,
-                "confidence": 0.5,
-                "feedback": "GrokClient not available - using basic validation"
-            }
+            if self.local_ai_validator:
+                self.performance_stats["local_ai_validations"] += 1
+                local_result = await self.local_ai_validator.validate_sql_with_ai(
+                    sql_query, nl_query, context
+                )
+                # Transform to match expected format
+                return {
+                    "grok_available": False,
+                    "local_ai_available": True,
+                    "syntax_valid": local_result.get("syntax_valid", True),
+                    "logical_consistent": local_result.get("logical_consistent", True),
+                    "confidence": local_result.get("overall_score", 50) / 100,
+                    "feedback": local_result.get("feedback", "Validated using local AI"),
+                    "ai_validation": local_result
+                }
+            else:
+                return {
+                    "grok_available": False,
+                    "local_ai_available": False,
+                    "syntax_valid": True,  # Assume valid if no AI
+                    "logical_consistent": True,
+                    "confidence": 0.5,
+                    "feedback": "No AI validation available - using basic validation"
+                }
 
         try:
             self.performance_stats["grok_validations"] += 1
@@ -1457,12 +1490,33 @@ class EnhancedSQLSkills(SecureA2AAgent):
 
         except Exception as e:
             logger.error(f"Grok validation failed: {e}")
+            # Fallback to local AI
+            if self.local_ai_validator:
+                try:
+                    self.performance_stats["local_ai_validations"] += 1
+                    local_result = await self.local_ai_validator.validate_sql_with_ai(
+                        sql_query, nl_query, context
+                    )
+                    return {
+                        "grok_available": False,
+                        "local_ai_available": True,
+                        "grok_error": str(e),
+                        "syntax_valid": local_result.get("syntax_valid", True),
+                        "logical_consistent": local_result.get("logical_consistent", True),
+                        "confidence": local_result.get("overall_score", 50) / 100,
+                        "feedback": f"Grok failed, used local AI: {local_result.get('feedback', '')}",
+                        "ai_validation": local_result
+                    }
+                except Exception as local_e:
+                    logger.error(f"Local AI validation also failed: {local_e}")
+            
             return {
                 "grok_available": False,
+                "local_ai_available": False,
                 "error": str(e),
                 "syntax_valid": True,  # Fallback assumption
                 "logical_consistent": True,
-                "feedback": f"Grok validation failed: {e}"
+                "feedback": f"All AI validations failed: {e}"
             }
 
     async def validate_nl_with_grok(self, nl_explanation: str, sql_query: str, context: Dict[str, Any] = None) -> Dict[str, Any]:

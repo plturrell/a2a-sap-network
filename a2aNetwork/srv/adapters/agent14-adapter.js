@@ -458,8 +458,7 @@ class Agent14Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            const data = await response.json();
-                    return data;
+            return await response.json();
                     
                 case 'deploy_embedding_model':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/deploy`, {
@@ -468,8 +467,7 @@ class Agent14Adapter extends BaseAdapter {
                 body: JSON.stringify(payload),
                 timeout: this.timeout
             });
-            const data = await response.json();
-                    return data;
+            return await response.json();
                     
                 case 'generate_embeddings':
                     response = await fetch(`${baseUrl}/api/v1/embedding-models/generate-embeddings`, {
@@ -481,8 +479,7 @@ class Agent14Adapter extends BaseAdapter {
                     }),
                 timeout: this.timeout
             });
-            const data = await response.json();
-                    return data;
+            return await response.json();
                     
                 default:
                     throw new Error(`Unknown method: ${method}`);

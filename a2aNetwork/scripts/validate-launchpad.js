@@ -1,8 +1,8 @@
+#!/usr/bin/env node
+
 /**
  * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
  */
-
-#!/usr/bin/env node
 
 /**
  * Launchpad Validation Script

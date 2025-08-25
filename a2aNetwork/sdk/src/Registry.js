@@ -2,7 +2,7 @@
  * A2A Protocol Compliance: HTTP client usage replaced with blockchain messaging
  */
 
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 const EventEmitter = require('eventemitter3');
 const logger = require('pino')({ name: 'a2a-registry' });
 
@@ -201,13 +201,15 @@ class Registry extends EventEmitter {
    * Start heartbeat timer for an agent
    */
   startHeartbeat(agentId) {
-    const intervalId = activeIntervals.set('interval_1', setInterval(async () => {
+    const intervalId = setInterval(async () => {
       try {
         await this.sendHeartbeat(agentId);
       } catch (error) {
-        logger.error(`Heartbeat failed for agent '${agentId}':`, error.message));
+        logger.error(`Heartbeat failed for agent '${agentId}':`, error.message);
       }
     }, this.config.heartbeatInterval);
+    
+    activeIntervals.set(`heartbeat_${agentId}`, intervalId);
 
     if (!this.heartbeatTimer) {
       this.heartbeatTimer = new Map();

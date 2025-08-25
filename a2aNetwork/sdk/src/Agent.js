@@ -3,7 +3,7 @@
  */
 
 const EventEmitter = require('eventemitter3');
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 const Joi = require('joi');

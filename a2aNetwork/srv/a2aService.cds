@@ -1,4 +1,5 @@
 using a2a.network as db from '../db/schema';
+using a2a.reputation as reputation from '../db/reputationSchema';
 
 @requires: ['authenticated-user', {kind: 'any', grant: 'READ'}]
 service A2AService @(path: '/api/v1') {
@@ -477,7 +478,7 @@ service A2AService @(path: '/api/v1') {
         { grant: ['READ'], to: 'authenticated-user' },
         { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' }
     ]
-    entity ReputationTransactions as projection on db.ReputationTransactions {
+    entity ReputationTransactions as projection on reputation.ReputationTransactions {
             *,
             agent : redirected to Agents,
             createdByAgent : redirected to Agents,
@@ -494,14 +495,14 @@ service A2AService @(path: '/api/v1') {
             { grant: ['READ'], to: 'authenticated-user' },
             { grant: ['UPDATE', 'DELETE'], to: 'Admin' }
         ]
-        entity PeerEndorsements as projection on db.PeerEndorsements actions {
+        entity PeerEndorsements as projection on reputation.PeerEndorsements actions {
             @requires: ['authenticated-user']
             action verify() returns Boolean;
         };
         
         @readonly
         @requires: ['authenticated-user']
-        entity ReputationMilestones as projection on db.ReputationMilestones;
+        entity ReputationMilestones as projection on reputation.ReputationMilestones;
         
         @requires: ['authenticated-user']
         @restrict: [
@@ -509,7 +510,7 @@ service A2AService @(path: '/api/v1') {
             { grant: ['READ'], to: 'authenticated-user' },
             { grant: ['UPDATE', 'DELETE'], to: 'Admin' }
         ]
-        entity ReputationRecovery as projection on db.ReputationRecovery actions {
+        entity ReputationRecovery as projection on reputation.ReputationRecovery actions {
             @requires: ['authenticated-user']
             action startProgram() returns Boolean;
             @requires: ['authenticated-user']

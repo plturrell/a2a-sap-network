@@ -581,7 +581,7 @@ class A2ARegistryService:
                 registry_uptime=str(datetime.utcnow() - self.start_time),
                 avg_agent_response_time=avg_response_time,
                 total_registrations_today=len([a for a in self.agents.values()
-                                            if a.registration_metadata.registered_at.date() == datetime.utcnow().date()])
+                                              if a.registration_metadata.registered_at.date() == datetime.utcnow().date()])
             )
         )
 
@@ -786,28 +786,30 @@ class A2ARegistryService:
                 return
 
             # Create ORD document for the agent
-            ord_document = {
-                "openResourceDiscovery": "1.5.0",
-                "description": f"A2A Agent: {registration.agent_card.name}",
-                "apiResources": [{
-                    "ordId": f"com.a2a:agent:{agent_id}",
-                    "title": registration.agent_card.name,
-                    "shortDescription": registration.agent_card.description[:100],
-                    "description": registration.agent_card.description,
-                    "version": registration.agent_card.version,
-                    "visibility": "internal",
-                    "tags": (registration.agent_card.tags or []) + ["a2a-agent"],
-                    "labels": {
-                        "agent_type": "a2a-agent",
-                        "protocol_version": registration.agent_card.protocolVersion,
-                        "agent_id": agent_id
-                    },
-                    "accessStrategies": [{
-                        "type": "openapi",
-                        "openapi": str(registration.agent_card.url)
-                    }]
-                }]
-            }
+            # Note: ord_document creation commented out for A2A compliance
+            # In production, this would be sent via blockchain messaging
+            # ord_document = {
+            #     "openResourceDiscovery": "1.5.0",
+            #     "description": f"A2A Agent: {registration.agent_card.name}",
+            #     "apiResources": [{
+            #         "ordId": f"com.a2a:agent:{agent_id}",
+            #         "title": registration.agent_card.name,
+            #         "shortDescription": registration.agent_card.description[:100],
+            #         "description": registration.agent_card.description,
+            #         "version": registration.agent_card.version,
+            #         "visibility": "internal",
+            #         "tags": (registration.agent_card.tags or []) + ["a2a-agent"],
+            #         "labels": {
+            #             "agent_type": "a2a-agent",
+            #             "protocol_version": registration.agent_card.protocolVersion,
+            #             "agent_id": agent_id
+            #         },
+            #         "accessStrategies": [{
+            #             "type": "openapi",
+            #             "openapi": str(registration.agent_card.url)
+            #         }]
+            #     }]
+            # }
 
             # A2A Protocol Compliance: Mock ORD registry instead of direct HTTP
             # Mock ORD registration for A2A compliance

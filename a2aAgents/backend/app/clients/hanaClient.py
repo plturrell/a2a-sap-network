@@ -9,12 +9,9 @@ import logging
 import re
 import json
 import time
-import hashlib
-import uuid
-import random
 from typing import Dict, Any, List, Optional, Union, Tuple
 from dataclasses import dataclass
-from contextlib import contextmanager, asynccontextmanager
+from contextlib import contextmanager
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -94,7 +91,7 @@ class HanaPerformanceMonitor:
         self.connection_threshold = 2.0  # seconds
 
     def log_query_performance(self, query: str, execution_time: float,
-                            row_count: int = 0, user_id: Optional[str] = None):
+                              row_count: int = 0, user_id: Optional[str] = None):
         """Log query performance metrics"""
         if not self.enabled:
             return
@@ -857,7 +854,7 @@ class EnterpriseTransactionManager:
             # Execute with deadlock retry
             cursor, execution_time = self.transaction_manager.retry_on_deadlock(execute_with_retry)
 
-            with self.get_connection() as connection:
+            with self.get_connection():
                 if fetch_results and cursor.description:
                     # Get column names
                     columns = [desc[0] for desc in cursor.description]
@@ -928,7 +925,7 @@ class EnterpriseTransactionManager:
         return query
 
     def execute_transaction(self, operations: List[Tuple[str, Optional[Union[List, Tuple, Dict]]]],
-                           isolation_level: Optional[str] = None) -> List[QueryResult]:
+                            isolation_level: Optional[str] = None) -> List[QueryResult]:
         """Execute multiple operations in a single transaction"""
         results = []
 
@@ -1214,7 +1211,7 @@ class EnterpriseTransactionManager:
             return 'SELECT'  # Default to most restrictive
 
     def create_user(self, username: str, roles: List[str], security_clearance: str,
-                   department: Optional[str] = None) -> Dict[str, Any]:
+                    department: Optional[str] = None) -> Dict[str, Any]:
         """Create database user with enterprise security roles"""
         if not self.security_manager:
             raise RuntimeError("Security manager not enabled")
