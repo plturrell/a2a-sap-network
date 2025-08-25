@@ -74,12 +74,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Log in to the Container registry
+    - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PAT }}
 
     - name: Run 18-Step A2A System Verification
       run: |
@@ -89,7 +88,7 @@ jobs:
         mkdir -p logs data
         
         # Pull the built image (use latest tag from main branch)
-        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+        docker pull ${{ env.IMAGE_NAME }}:main
         
         # Run the 18-step startup verification in Docker
         docker run --rm \
@@ -151,11 +150,11 @@ jobs:
     - name: Deploy to production
       run: |
         echo "🚀 A2A Platform deployment ready!"
-        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
+        echo "Image: ${{ env.IMAGE_NAME }}:main"
         echo "✅ 18-step verification completed successfully"
         echo ""
         echo "Deploy commands:"
-        echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
+        echo "docker pull ${{ env.IMAGE_NAME }}:main"
         echo "docker-compose -f docker-compose.production.yml up -d"
 
   deploy-fly:
@@ -177,7 +176,7 @@ jobs:
         echo "🚀 Deploying A2A Platform to Fly.io..."
         
         # Update fly.toml with the latest image
-        sed -i 's|image = ".*"|image = "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"|' fly.toml
+        sed -i 's|image = ".*"|image = "${{ env.IMAGE_NAME }}:main"|' fly.toml
         
         # Check if app exists, create if not
         if ! flyctl apps list | grep -q "a2a-platform"; then
@@ -252,12 +251,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Log in to the Container registry
+    - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PAT }}
 
     - name: Test Complete A2A Platform UI from Docker Build Cloud
       run: |
@@ -266,7 +264,7 @@ jobs:
         echo ""
         
         # Pull the built image
-        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+        docker pull ${{ env.IMAGE_NAME }}:main
         
         # Start A2A system in background with all ports exposed for testing
         docker run -d \
@@ -459,7 +457,7 @@ jobs:
         echo "=============================================="
         echo ""
         echo "📋 Full Platform Access Instructions:"
-        echo "1. Pull image: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
+        echo "1. Pull image: docker pull ${{ env.IMAGE_NAME }}:main"
         echo ""
         echo "2. Run complete platform:"
         echo "   docker run -d --name a2a-platform \\"
@@ -469,7 +467,7 @@ jobs:
         echo "     -e ENABLE_ALL_AGENTS=true \\"
         echo "     -e A2A_NETWORK_ENABLED=true \\"
         echo "     -e FRONTEND_ENABLED=true \\"
-        echo "     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main start complete"
+        echo "     ${{ env.IMAGE_NAME }}:main start complete"
         echo ""
         echo "3. Access Points:"
         echo "   🎯 Launch Pad: http://localhost:3000"

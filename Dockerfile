@@ -1,5 +1,5 @@
 # Multi-stage Docker build for A2A Platform
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -37,7 +37,7 @@ COPY . .
 RUN echo "Python compilation skipped - syntax errors need to be fixed in a2aAgents/backend/"
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.11-slim AS production
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -169,7 +169,7 @@ case "${1}" in
         # Default start mode
         echo "Starting A2A system..."
         cd /app
-        exec /app/scripts/start.sh "${@:2}"
+        exec /app/scripts/start.sh "$@"
         ;;
     *)
         # Default: run the command as-is
