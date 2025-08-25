@@ -251,7 +251,7 @@ def monitor_db_query(query_type: str, table: str):
                 duration = time.time() - start
                 db_query_duration.labels(query_type=query_type, table=table).observe(duration)
                 return result
-            except Exception as e:
+            except Exception:
                 duration = time.time() - start
                 db_query_duration.labels(query_type=query_type, table=table).observe(duration)
                 raise

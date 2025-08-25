@@ -10,7 +10,7 @@
 
 const EventEmitter = require('events');
 const cds = require('@sap/cds');
-const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
+// const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const { portManager } = require('./utils/portManager');
 const websocketMonitor = require('./websocketMonitor');
 const { BlockchainEventServer } = require('../../../shared/blockchain/blockchain-event-server');
@@ -460,7 +460,7 @@ class A2AWebSocketDataService extends EventEmitter {
         this.stopDataStreaming();
 
         // Close all client connections
-        const closeClientConnection = (ws, clientId) => {
+        const closeClientConnection = (ws, _clientId) => {
             ws.close(1001, 'Server shutting down');
         };
         this.clients.forEach(closeClientConnection);

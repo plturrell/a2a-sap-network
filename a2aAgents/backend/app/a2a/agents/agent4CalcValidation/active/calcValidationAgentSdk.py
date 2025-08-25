@@ -408,7 +408,7 @@ class CalcValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockch
 
             return features
 
-        except Exception as e:
+        except Exception:
             # Fallback features for unparseable expressions
             expr_str = expression.lower()
             features = [len(expression), 0, expression.count('(')]
@@ -1198,7 +1198,6 @@ class CalcValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockch
         """Apply reasoning to select optimal validation methods"""
         complexity_level = expression_analysis.get('complexity_level', 'simple')
         variables = expression_analysis.get('variables', [])
-        functions = expression_analysis.get('functions', [])
 
         selected_methods = []
 

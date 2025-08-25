@@ -462,7 +462,7 @@ class ResourceManager:
         target_allocations = [a for a in stale_allocations if a.resource_type == resource_type]
 
         # Sort by last access time (oldest first)
-        target_allocations.sort(key=lambda a: a.last_accessed or a.allocated_at)
+        target_allocations.sort(key=self._get_allocation_access_time)
 
         # Clean up oldest allocations
         cleanup_count = 0
@@ -628,6 +628,10 @@ class ResourceManager:
     def get_memory_profile(self) -> List[Dict[str, Any]]:
         """Get memory profiling data"""
         return list(self.memory_snapshots)
+
+    def _get_allocation_access_time(self, allocation):
+        """Get allocation access time for sorting"""
+        return allocation.last_accessed or allocation.allocated_at
 
 
 class ResourceExhaustedError(Exception):

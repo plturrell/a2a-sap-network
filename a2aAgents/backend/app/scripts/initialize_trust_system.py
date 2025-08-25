@@ -136,7 +136,7 @@ async def initialize_all_system_agents():
     try:
         # Initialize trust system
         trust_initializer = await get_trust_initializer()
-        trust_middleware = await get_trust_middleware()
+        await get_trust_middleware()  # Initialize middleware but don't store reference
 
         initialization_results = []
 

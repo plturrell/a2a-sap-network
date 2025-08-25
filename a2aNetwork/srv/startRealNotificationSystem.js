@@ -87,11 +87,14 @@ class RealNotificationSystemStarter {
         } catch {
             this.logger.info('📝 Creating .env file with default configuration...');
 
+            function formatEnvVar([key, value]) {
+                return `${key}=${value}`;
+            }
             const envContent = Object.entries(vars)
-                .map(([key, value]) => `${key}=${value}`)
+                .map(formatEnvVar)
                 .join('\n');
 
-            await fs.writeFile(envFile, envContent + '\n');
+            await fs.writeFile(envFile, `${envContent  }\n`);
             this.logger.info('✅ .env file created');
         }
     }
@@ -106,19 +109,19 @@ class RealNotificationSystemStarter {
             {
                 name: 'Agent Registry',
                 type: 'http',
-                url: process.env.A2A_REGISTRY_URL + '/agents',
+                url: `${process.env.A2A_REGISTRY_URL  }/agents`,
                 required: true
             },
             {
                 name: 'Agent Registry WebSocket',
                 type: 'ws',
-                url: process.env.A2A_REGISTRY_WS + '/agents',
+                url: `${process.env.A2A_REGISTRY_WS  }/agents`,
                 required: true
             },
             {
                 name: 'Blockchain Service',
                 type: 'http',
-                url: process.env.BLOCKCHAIN_SERVICE_URL + '/status',
+                url: `${process.env.BLOCKCHAIN_SERVICE_URL  }/status`,
                 required: true
             },
             {
@@ -130,7 +133,7 @@ class RealNotificationSystemStarter {
             {
                 name: 'Security API',
                 type: 'http',
-                url: process.env.SECURITY_API_URL + '/health',
+                url: `${process.env.SECURITY_API_URL  }/health`,
                 required: false // Optional
             },
             {
@@ -146,7 +149,9 @@ class RealNotificationSystemStarter {
                 if (service.type === 'http') {
                     const response = await blockchainClient.sendMessage(service.url, {
                         timeout: 5000,
-                        validateStatus: status => status < 500
+                        validateStatus: function(status) {
+                            return status < 500;
+                        }
                     });
                     this.logger.info(`✅ ${service.name}: Connected (${response.status})`);
                     this.services[service.name] = 'connected';
@@ -189,7 +194,7 @@ class RealNotificationSystemStarter {
             ws.on('open', handleWebSocketOpen);
             ws.on('error', handleWebSocketError);
         };
-        
+
         return new Promise(websocketTestExecutor);
     }
 
@@ -207,7 +212,7 @@ class RealNotificationSystemStarter {
         const waitForInitialization = (resolve) => {
             setTimeout(resolve, 1000);
         };
-        
+
         while (!this.notificationService.isInitialized && attempts < maxAttempts) {
             await new Promise(waitForInitialization);
             attempts++;
@@ -265,8 +270,8 @@ class RealNotificationSystemStarter {
         this.logger.info('=====================================');
         this.logger.info('🎉 Real notification system is running!');
         this.logger.info('📱 WebSocket endpoints:');
-        this.logger.info(`   • Enhanced Notifications: blockchain://localhost:4006/notifications/v2`);
-        this.logger.info(`   • Event Bus: blockchain://localhost:8080/events`);
+        this.logger.info('   • Enhanced Notifications: blockchain://localhost:4006/notifications/v2');
+        this.logger.info('   • Event Bus: blockchain://localhost:8080/events');
         this.logger.info('🌐 REST API endpoints:');
         this.logger.info('   • Notifications: http://localhost:4000/api/notifications');
         this.logger.info('   • Push VAPID Key: http://localhost:4000/api/push/vapid-public-key');

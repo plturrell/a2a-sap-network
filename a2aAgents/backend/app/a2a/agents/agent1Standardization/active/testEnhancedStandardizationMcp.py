@@ -199,7 +199,7 @@ async def test_enhanced_standardization_agent():
         # Test 8: Test caching
         print("\n🧪 Test 8: Testing cache performance...")
         # Standardize same data again to test cache
-        cache_test1 = await agent.standardize_data_mcp(
+        await agent.standardize_data_mcp(
             data_type="account",
             items=test_accounts,
             options={"cache_results": True}

@@ -364,8 +364,7 @@ class SparseVectorSkills(SecureA2AAgent):
             for i in range(0, len(vectors), batchSize):
                 batch = vectors[i:i + batchSize]
 
-                sparseVectors = []
-                denseVectors = []
+                # Process each vector in the batch
 
                 for vectorData in batch:
                     try:

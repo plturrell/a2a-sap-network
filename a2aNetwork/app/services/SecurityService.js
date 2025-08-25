@@ -1,3 +1,4 @@
+/* global sap, jQuery */
 sap.ui.define([
     'sap/base/Log',
     'sap/ui/base/Object'

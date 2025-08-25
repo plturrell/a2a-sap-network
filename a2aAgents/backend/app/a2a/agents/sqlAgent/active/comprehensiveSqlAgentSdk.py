@@ -1771,7 +1771,6 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
         """
         try:
             query = data.get("query", "")
-            parameters = data.get("parameters", {})
             execution_mode = data.get("execution_mode", "single")
             database_type = data.get("database_type", "hana")
             transaction_mode = data.get("transaction_mode", "auto_commit")

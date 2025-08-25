@@ -781,11 +781,18 @@ def auto_cleanup(cleanup_func: Optional[Callable] = None):
 
             # Register cleanup if provided
             if cleanup_func:
-                register_cleanup(lambda: cleanup_func(result), asyncio.iscoroutinefunction(cleanup_func))
+                register_cleanup(create_cleanup_wrapper(cleanup_func, result), asyncio.iscoroutinefunction(cleanup_func))
 
             return result
         return wrapper
     return decorator
+
+
+def create_cleanup_wrapper(cleanup_func, result):
+    """Create a wrapper function for cleanup with result"""
+    def cleanup_wrapper():
+        return cleanup_func(result)
+    return cleanup_wrapper
 
 
 # Component-specific cleanup handlers

@@ -631,8 +631,8 @@ class AISelfHealingSystem:
                 features_scaled = self.error_scaler.transform(features.reshape(1, -1))
                 probabilities = self.error_classifier.predict_proba(features_scaled)[0]
                 return float(probabilities[1] if len(probabilities) > 1 else probabilities[0])
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Error probability prediction failed: {e}")
         
         # Fallback heuristic
         cpu_risk = features[0] if features[0] > 0.8 else 0.0
@@ -647,8 +647,8 @@ class AISelfHealingSystem:
             if hasattr(self.failure_predictor, 'predict'):
                 prediction = self.failure_predictor.predict(features.reshape(1, -1))[0]
                 return max(0.1, float(prediction))
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Time to failure prediction failed: {e}")
         
         # Fallback based on current stress level
         stress_level = (features[0] + features[1] + features[3]) / 3
@@ -1050,53 +1050,87 @@ class AISelfHealingSystem:
     
     # Training data generation for initial model training
     def _generate_error_training_data(self) -> Tuple[List[np.ndarray], List[int]]:
-        """Generate synthetic training data for error classification"""
+        """Extract real training data from system error history"""
         X, y = [], []
         
-        for i in range(200):
-            features = np.random.rand(25)
-            
-            # Create patterns that indicate errors
-            cpu_stress = features[0]
-            memory_stress = features[1]
-            error_rate = features[3]
-            
-            # High stress indicators = error likely
-            stress_score = cpu_stress * 0.4 + memory_stress * 0.4 + error_rate * 0.2
-            is_error = int(stress_score > 0.7 or (stress_score > 0.5 and np.random.random() > 0.7))
-            
-            X.append(features)
-            y.append(is_error)
+        # Use actual system errors and healings for training
+        if not hasattr(self, 'healing_history') or not self.healing_history:
+            logger.warning("No healing history available for error training")
+            return [], []
+        
+        for healing_record in list(self.healing_history):
+            try:
+                # Extract features from real healing attempt
+                error = healing_record.get('error')
+                was_successful = healing_record.get('successful', False)
+                
+                if error and hasattr(error, 'context'):
+                    features = self._extract_system_features_from_error(error)
+                    is_error = 1 if was_successful else 0  # Successful healing indicates real error
+                    
+                    X.append(features)
+                    y.append(is_error)
+                    
+            except Exception as e:
+                logger.debug(f"Failed to extract error training data: {e}")
+                continue
         
         return X, y
     
     def _generate_anomaly_training_data(self) -> List[np.ndarray]:
-        """Generate synthetic training data for anomaly detection"""
+        """Extract real anomaly training data from system metrics"""
+        from .data_pipeline import get_data_pipeline
+        
         X = []
         
-        # Normal operation patterns
-        for i in range(150):
-            features = np.random.normal(0.5, 0.15, 25)  # Normal around 50%
-            features = np.clip(features, 0, 1)
-            X.append(features)
+        try:
+            # Get real system metrics for normal operation patterns
+            pipeline = get_data_pipeline()
+            metrics_df = asyncio.run(pipeline.get_training_data('metrics', hours=24, min_samples=50))
+            
+            for _, metric in metrics_df.iterrows():
+                if metric.get('success', True):  # Only use successful operations for normal patterns
+                    features = self._extract_features_from_metric(metric)
+                    X.append(features)
+            
+            logger.info(f"Extracted {len(X)} normal operation patterns for anomaly detection")
+            
+        except Exception as e:
+            logger.error(f"Failed to extract real anomaly training data: {e}")
+            # Return empty if no real data available
+            return []
         
         return X
     
     def _generate_failure_training_data(self) -> Tuple[List[np.ndarray], List[float]]:
-        """Generate synthetic training data for failure prediction"""
+        """Extract real failure training data from historical failures"""
         X, y = [], []
         
-        for i in range(100):
-            features = np.random.rand(25)
-            
-            # Time to failure based on stress level
-            stress_level = np.mean(features[:5])
-            if stress_level > 0.9:
-                time_to_failure = np.random.exponential(2)  # Hours
-            elif stress_level > 0.7:
-                time_to_failure = np.random.exponential(8)
-            else:
-                time_to_failure = np.random.exponential(24)
+        # Use actual failure events with known time-to-failure
+        if not hasattr(self, 'healing_history') or not self.healing_history:
+            logger.warning("No healing history available for failure training")
+            return [], []
+        
+        for i, healing_record in enumerate(list(self.healing_history)):
+            try:
+                error = healing_record.get('error')
+                healing_time = healing_record.get('healing_time', 0)
+                error_detected_time = healing_record.get('error_detected_time')
+                
+                if error and error_detected_time and healing_time > 0:
+                    # Calculate actual time from error detection to healing
+                    time_to_failure = healing_time / 3600.0  # Convert to hours
+                    
+                    features = self._extract_system_features_from_error(error)
+                    
+                    X.append(features)
+                    y.append(min(48.0, time_to_failure))  # Cap at 48 hours
+                    
+            except Exception as e:
+                logger.debug(f"Failed to extract failure training data: {e}")
+                continue
+        
+        return X, y
             
             X.append(features)
             y.append(min(168, time_to_failure))  # Cap at 1 week

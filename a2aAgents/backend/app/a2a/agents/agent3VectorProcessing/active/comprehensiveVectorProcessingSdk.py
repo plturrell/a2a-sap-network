@@ -920,7 +920,6 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             vector_ids = request_data.get('vector_ids', [])
             technique = request_data.get('technique', 'pca')
             target_dimensions = request_data.get('target_dimensions', 128)
-            preserve_variance = request_data.get('preserve_variance', 0.95)
 
             # Get vectors
             vectors = []

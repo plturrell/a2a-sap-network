@@ -50,7 +50,7 @@ module.exports = class GoalAssignmentIntegration {
                     const response = await axios.get(`${this.ORCHESTRATOR_URL}/api/v1/agents/${agent.id}/goals`, {
                         headers: {
                             'X-A2A-Service': 'goal-assignment-integration',
-                            'Authorization': `Bearer system`
+                            'Authorization': 'Bearer system'
                         }
                     });
 
@@ -451,7 +451,7 @@ module.exports = class GoalAssignmentIntegration {
             }
         }
     }
-}
+};
 
 // Export singleton instance
 module.exports = new GoalAssignmentIntegration();

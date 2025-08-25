@@ -963,11 +963,11 @@ start_agents() {
             available_memory=$((free_pages * 16384 / 1024 / 1024))
         fi
         
-        # FORCE FULL STARTUP - ALL 16 AGENTS
+        # FORCE FULL STARTUP - ALL 17 AGENTS
         local startup_mode="start-all"
-        local agent_startup_time=90
-        local expected_agents=16
-        log_info "FORCING FULL STARTUP - Starting ALL 16 agents (available memory: ${available_memory}MB)"
+        local agent_startup_time=95
+        local expected_agents=17
+        log_info "FORCING FULL STARTUP - Starting ALL 17 agents (available memory: ${available_memory}MB)"
         
         # Start agents with progress tracking
         log_info "Using startup mode: $startup_mode (this will take ~$((agent_startup_time/3)) minutes)"
@@ -979,7 +979,7 @@ start_agents() {
         
         # Check if agents are running
         local running_agents=0
-        for port in {8000..8015}; do
+        for port in {8000..8015} 8017; do
             if curl -sf "http://localhost:$port/health" > /dev/null 2>&1; then
                 ((running_agents++))
             fi

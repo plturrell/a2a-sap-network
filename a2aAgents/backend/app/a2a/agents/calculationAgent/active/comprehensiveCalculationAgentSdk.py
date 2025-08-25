@@ -1789,7 +1789,9 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 for dist_name in distributions:
                     dist = getattr(scipy_stats, dist_name)
                     params = dist.fit(data_array)
-                    _, p_value = scipy_stats.kstest(data_array, lambda x: dist.cdf(x, *params))
+                    def distribution_cdf(x):
+                        return dist.cdf(x, *params)
+                    _, p_value = scipy_stats.kstest(data_array, distribution_cdf)
 
                     if p_value > best_p_value:
                         best_p_value = p_value
@@ -1868,7 +1870,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 for func_name, func_code in functions.items():
                     if func_name.isidentifier() and func_name not in ['eval', 'exec', '__import__']:
                         # Create safe function wrapper
-                        safe_functions[func_name] = lambda x: eval(func_code.replace('x', str(x)))
+                        def create_safe_function(code):
+                            def safe_func(x):
+                                return eval(code.replace('x', str(x)))
+                            return safe_func
+                        safe_functions[func_name] = create_safe_function(func_code)
 
                 # Re-execute with custom functions
                 calc_request.variables.update(safe_functions)

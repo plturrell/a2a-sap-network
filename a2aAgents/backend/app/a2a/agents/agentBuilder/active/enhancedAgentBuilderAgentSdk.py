@@ -1150,7 +1150,6 @@ class EnhancedAgentBuilderAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         """Create AI-generated agent (simplified implementation)"""
         try:
             agent_id = f"ai_agent_{int(datetime.utcnow().timestamp())}"
-            requirements = specification.get('requirements', '')
 
             return {
                 'status': 'created',

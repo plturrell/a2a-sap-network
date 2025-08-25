@@ -956,9 +956,11 @@ async def _get_test_analytics(args: Dict[str, Any]) -> List[types.TextContent]:
             
             if declining_tests:
                 output += "\n⚠️ Declining Tests (Top 5):\n"
+                def get_stability_score(x):
+                    return x[1]
                 sorted_declining = sorted(
                     [(name, trends[name]["stability_score"]) for name in declining_tests],
-                    key=lambda x: x[1]
+                    key=get_stability_score
                 )[:5]
                 for name, score in sorted_declining:
                     output += f"• {name} (Stability: {score:.2f})\n"
@@ -1138,7 +1140,9 @@ async def _generate_ai_insights(args: Dict[str, Any]) -> List[types.TextContent]
             
             if high_risk_tests:
                 output += "\nTop Risk Tests:\n"
-                sorted_risks = sorted(high_risk_tests, key=lambda x: x[1]["stability_score"])[:5]
+                def get_risk_stability_score(x):
+                    return x[1]["stability_score"]
+                sorted_risks = sorted(high_risk_tests, key=get_risk_stability_score)[:5]
                 for name, data in sorted_risks:
                     output += f"• {name}: Stability {data['stability_score']:.2f}, Trend: {data['trend_direction']}\n"
             
@@ -1534,7 +1538,9 @@ async def _code_quality_trends(args: Dict[str, Any]) -> List[types.TextContent]:
         
         elif metric == "issues_by_type":
             output += "Issues by Type:\n"
-            for issue_type, count in sorted(summary['issues_by_type'].items(), key=lambda x: x[1], reverse=True):
+            def get_issue_count(x):
+                return x[1]
+            for issue_type, count in sorted(summary['issues_by_type'].items(), key=get_issue_count, reverse=True):
                 output += f"• {issue_type.replace('_', ' ').title()}: {count}\n"
         
         elif metric == "top_files":
@@ -1548,7 +1554,9 @@ async def _code_quality_trends(args: Dict[str, Any]) -> List[types.TextContent]:
                     file_issues[file_path] = 0
                 file_issues[file_path] += issue['count']
             
-            for file_path, count in sorted(file_issues.items(), key=lambda x: x[1], reverse=True)[:10]:
+            def get_file_issue_count(x):
+                return x[1]
+            for file_path, count in sorted(file_issues.items(), key=get_file_issue_count, reverse=True)[:10]:
                 output += f"• {Path(file_path).name}: {count} issues\n"
         
         elif metric == "improvement_rate":

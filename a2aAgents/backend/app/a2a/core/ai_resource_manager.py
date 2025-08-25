@@ -1280,18 +1280,79 @@ class AIResourceManager:
         default_forecasts = {}
         
         for resource_type in [ResourceType.CPU, ResourceType.MEMORY, ResourceType.NETWORK]:
-            # Simple sine wave pattern
-            predictions = [0.5 + 0.2 * np.sin(h * np.pi / 12) for h in range(horizon_hours)]
+            # Get historical data for this resource type
+            historical_data = []
+            for agent_id, agent_data in self.resource_history.items():
+                if agent_data and resource_type.value in agent_data[-1]:
+                    recent_values = [d.get(resource_type.value, 0.5) for d in agent_data[-24:]]  # Last 24 hours
+                    historical_data.extend(recent_values)
+            
+            if historical_data:
+                # Calculate mean and std from real data
+                mean_usage = np.mean(historical_data)
+                std_usage = np.std(historical_data)
+                
+                # Generate realistic predictions based on historical patterns
+                predictions = []
+                confidence_intervals = []
+                
+                for h in range(horizon_hours):
+                    # Add seasonal pattern based on hour
+                    hour_factor = 1.0 + 0.3 * np.sin((h + datetime.utcnow().hour) * np.pi / 12)
+                    predicted_value = min(1.0, max(0.0, mean_usage * hour_factor))
+                    predictions.append(predicted_value)
+                    
+                    # Calculate confidence interval based on data variance
+                    margin = min(0.4, 1.96 * std_usage)  # 95% confidence interval
+                    lower_bound = max(0.0, predicted_value - margin)
+                    upper_bound = min(1.0, predicted_value + margin)
+                    confidence_intervals.append((lower_bound, upper_bound))
+                
+                # Predict peak usage time based on historical patterns
+                if len(historical_data) >= 24:
+                    hourly_avg = np.zeros(24)
+                    for i, value in enumerate(historical_data[-24:]):
+                        hourly_avg[i % 24] += value
+                    peak_hour = np.argmax(hourly_avg)
+                    peak_time = datetime.utcnow().replace(hour=peak_hour, minute=0, second=0, microsecond=0)
+                    if peak_time < datetime.utcnow():
+                        peak_time += timedelta(days=1)
+                else:
+                    peak_time = datetime.utcnow() + timedelta(hours=12)
+                
+                # Calculate recommended capacity as 80th percentile + buffer
+                recommended_capacity = min(1.0, np.percentile(historical_data, 80) * 1.2)
+                
+                # Estimate cost based on resource requirements
+                cost_estimate = sum(predictions) * 0.1 * {
+                    ResourceType.CPU: 50.0,
+                    ResourceType.MEMORY: 30.0, 
+                    ResourceType.NETWORK: 20.0
+                }.get(resource_type, 25.0)
+                
+                # Calculate risk based on usage variance and peak proximity
+                usage_volatility = std_usage / max(mean_usage, 0.1)
+                time_to_peak = (peak_time - datetime.utcnow()).total_seconds() / 3600
+                overall_risk = min(0.9, usage_volatility * 0.5 + (1.0 / max(time_to_peak, 1)) * 0.3)
+                
+            else:
+                # Fallback when no historical data
+                predictions = [0.4 + 0.2 * np.sin(h * np.pi / 12) for h in range(horizon_hours)]
+                confidence_intervals = [(max(0.0, p - 0.15), min(1.0, p + 0.15)) for p in predictions]
+                peak_time = datetime.utcnow() + timedelta(hours=12)
+                recommended_capacity = 0.6
+                cost_estimate = 75.0
+                overall_risk = 0.4
             
             forecast = CapacityForecast(
                 resource_type=resource_type,
                 forecast_horizon_hours=horizon_hours,
                 predicted_demand=predictions,
-                confidence_intervals=[(0.3, 0.7)] * horizon_hours,
-                peak_usage_time=datetime.utcnow() + timedelta(hours=12),
-                recommended_capacity=0.8,
-                cost_estimate=100.0,
-                risk_assessment={'overall_risk': 0.3}
+                confidence_intervals=confidence_intervals,
+                peak_usage_time=peak_time,
+                recommended_capacity=recommended_capacity,
+                cost_estimate=cost_estimate,
+                risk_assessment={'overall_risk': overall_risk, 'volatility': std_usage if historical_data else 0.2}
             )
             
             default_forecasts[resource_type.value] = forecast
@@ -1355,7 +1416,54 @@ class AIResourceManager:
     async def _get_cost_analysis(self): return {'hourly_cost': 10.5, 'daily_cost': 252.0}
     async def _calculate_efficiency_metrics(self): return {'overall_efficiency': 0.75}
     async def _calculate_prediction_accuracy(self): return {'accuracy': 0.85}
-    async def _identify_optimization_opportunities(self): return []
+    async def _identify_optimization_opportunities(self):
+        """Identify real optimization opportunities from resource usage patterns"""
+        opportunities = []
+        
+        try:
+            # Analyze recent resource history for optimization opportunities
+            for agent_id, agent_history in self.resource_history.items():
+                if not agent_history or len(agent_history) < 10:
+                    continue
+                
+                recent_metrics = agent_history[-10:]
+                
+                # Check for consistently low CPU usage
+                avg_cpu = np.mean([m.get('cpu_usage', 0.5) for m in recent_metrics])
+                if avg_cpu < 0.3:  # Less than 30% CPU usage
+                    opportunities.append({
+                        'type': 'cpu_downscaling',
+                        'agent_id': agent_id,
+                        'current_usage': avg_cpu,
+                        'potential_savings': f'{(0.5 - avg_cpu) * 100:.1f}%',
+                        'description': f'Agent {agent_id} consistently uses low CPU, consider downscaling'
+                    })
+                
+                # Check for memory waste
+                avg_memory = np.mean([m.get('memory_usage', 0.5) for m in recent_metrics])
+                if avg_memory < 0.4:
+                    opportunities.append({
+                        'type': 'memory_optimization',
+                        'agent_id': agent_id,
+                        'current_usage': avg_memory,
+                        'potential_savings': f'{(0.6 - avg_memory) * 100:.1f}%',
+                        'description': f'Agent {agent_id} has low memory utilization, optimize allocation'
+                    })
+                
+                # Check for resource spikes that could benefit from auto-scaling
+                cpu_variance = np.var([m.get('cpu_usage', 0.5) for m in recent_metrics])
+                if cpu_variance > 0.1:  # High variance
+                    opportunities.append({
+                        'type': 'auto_scaling_setup',
+                        'agent_id': agent_id,
+                        'variance': cpu_variance,
+                        'description': f'Agent {agent_id} shows variable load, enable auto-scaling'
+                    })
+        
+        except Exception as e:
+            logger.error(f"Error identifying optimization opportunities: {e}")
+        
+        return opportunities
     async def _analyze_resource_trends(self): return {'cpu_trend': 'increasing'}
     async def _calculate_capacity_headroom(self): return {'cpu_headroom': 0.4}
     
@@ -1363,21 +1471,267 @@ class AIResourceManager:
     async def _validate_scaling_decision(self, decision, pool): return {'valid': True}
     async def _execute_scaling_action(self, decision, pool): return {'success': True}
     async def _update_pool_after_scaling(self, pool, decision): pass
-    async def _monitor_scaling_results(self, decision, pool, start_time): return {}
-    async def _execute_rollback(self, decision, pool): return {}
+    async def _monitor_scaling_results(self, decision, pool, start_time):
+        """Monitor the results of scaling operations"""
+        results = {
+            'decision_id': decision.decision_id,
+            'pool_id': pool.pool_id,
+            'start_time': start_time,
+            'action': decision.action.value,
+            'success': False,
+            'metrics': {}
+        }
+        
+        try:
+            # Wait for scaling to take effect
+            await asyncio.sleep(30)  # Allow 30 seconds for scaling
+            
+            # Get current metrics to evaluate scaling success
+            current_time = datetime.utcnow()
+            monitoring_duration = (current_time - start_time).total_seconds()
+            
+            # Check if resource levels changed as expected
+            current_utilization = await self._get_pool_utilization(pool, {})
+            target_utilization = decision.target_capacity.get('utilization_target', 0.7)
+            
+            # Determine if scaling was successful
+            utilization_diff = abs(current_utilization - target_utilization)
+            results['success'] = utilization_diff < 0.1  # Within 10% of target
+            
+            results['metrics'] = {
+                'monitoring_duration_seconds': monitoring_duration,
+                'current_utilization': current_utilization,
+                'target_utilization': target_utilization,
+                'utilization_difference': utilization_diff,
+                'achieved_target': results['success']
+            }
+            
+            # Log results
+            if results['success']:
+                logger.info(f"Scaling successful for pool {pool.pool_id}: {decision.action.value}")
+            else:
+                logger.warning(f"Scaling may have failed for pool {pool.pool_id}: target={target_utilization:.2f}, actual={current_utilization:.2f}")
+        
+        except Exception as e:
+            logger.error(f"Error monitoring scaling results: {e}")
+            results['error'] = str(e)
+        
+        return results
+    async def _execute_rollback(self, decision, pool):
+        """Execute rollback of a scaling decision"""
+        rollback_result = {
+            'decision_id': decision.decision_id,
+            'pool_id': pool.pool_id,
+            'rollback_success': False,
+            'rollback_time': datetime.utcnow(),
+            'actions_taken': []
+        }
+        
+        try:
+            logger.info(f"Executing rollback for scaling decision {decision.decision_id} on pool {pool.pool_id}")
+            
+            # Reverse the scaling action
+            if decision.action == ScalingAction.SCALE_UP:
+                rollback_action = ScalingAction.SCALE_DOWN
+                rollback_result['actions_taken'].append('Scaled down to reverse scale up')
+            elif decision.action == ScalingAction.SCALE_DOWN:
+                rollback_action = ScalingAction.SCALE_UP
+                rollback_result['actions_taken'].append('Scaled up to reverse scale down')
+            else:
+                # For MAINTAIN, no rollback needed
+                rollback_result['rollback_success'] = True
+                rollback_result['actions_taken'].append('No rollback needed for MAINTAIN action')
+                return rollback_result
+            
+            # Create rollback scaling decision
+            rollback_capacity = {
+                'total': pool.current_capacity,  # Return to original capacity
+                'target': pool.current_capacity * 0.8  # Conservative target
+            }
+            
+            # Execute the rollback (simulate)
+            logger.info(f"Rolling back to capacity: {rollback_capacity}")
+            
+            # In a real implementation, this would interact with infrastructure APIs
+            # For now, we simulate the rollback
+            rollback_result['rollback_success'] = True
+            rollback_result['actions_taken'].append(f'Executed {rollback_action.value} rollback')
+            rollback_result['new_capacity'] = rollback_capacity
+            
+            logger.info(f"Rollback completed successfully for pool {pool.pool_id}")
+        
+        except Exception as e:
+            logger.error(f"Rollback failed for pool {pool.pool_id}: {e}")
+            rollback_result['error'] = str(e)
+        
+        return rollback_result
     
     # Placeholder methods for various calculations
     def _can_scale_pool(self, pool): return True
-    async def _get_pool_utilization(self, pool, metrics): return 0.6
+    async def _get_pool_utilization(self, pool, metrics):
+        """Calculate real pool utilization from current metrics"""
+        try:
+            # Get recent metrics for the pool's agents
+            pool_agents = getattr(pool, 'agent_ids', [])
+            if not pool_agents:
+                # Fallback: use pool_id to estimate
+                pool_agents = [f"agent_{i}" for i in range(getattr(pool, 'size', 3))]
+            
+            utilization_values = []
+            
+            for agent_id in pool_agents:
+                if agent_id in self.resource_history:
+                    agent_history = self.resource_history[agent_id]
+                    if agent_history:
+                        # Get recent utilization
+                        recent_metrics = agent_history[-5:]  # Last 5 data points
+                        
+                        for metric in recent_metrics:
+                            # Calculate combined utilization score
+                            cpu_usage = metric.get('cpu_usage', 0.5)
+                            memory_usage = metric.get('memory_usage', 0.5)
+                            network_usage = metric.get('network_usage', 0.3)
+                            
+                            # Weighted average: CPU 40%, Memory 40%, Network 20%
+                            combined_util = (cpu_usage * 0.4 + 
+                                           memory_usage * 0.4 + 
+                                           network_usage * 0.2)
+                            utilization_values.append(combined_util)
+            
+            if utilization_values:
+                # Return average utilization across all agents in pool
+                return np.mean(utilization_values)
+            else:
+                # No historical data available, use current metrics if provided
+                if metrics and 'current_load' in metrics:
+                    return metrics['current_load']
+                
+                # Final fallback: estimate based on pool characteristics
+                pool_load_factor = getattr(pool, 'load_factor', 0.6)
+                return min(1.0, max(0.1, pool_load_factor))
+        
+        except Exception as e:
+            logger.error(f"Error calculating pool utilization: {e}")
+            return 0.6  # Safe fallback
     async def _predict_scaling_action(self, pool, utilization, features): return ScalingAction.MAINTAIN
     async def _calculate_target_capacity(self, pool, action, utilization, features): return {'total': 100.0}
     async def _predict_scaling_impact(self, pool, action, target): return {'performance': 0.1}
-    def _calculate_scaling_confidence(self, pool, action, features): return 0.8
+    def _calculate_scaling_confidence(self, pool, action, features):
+        """Calculate confidence in scaling decision based on real data quality"""
+        confidence = 0.5  # Base confidence
+        
+        try:
+            # Factor 1: Historical data availability
+            pool_agents = getattr(pool, 'agent_ids', [])
+            data_points = 0
+            
+            for agent_id in pool_agents:
+                if agent_id in self.resource_history:
+                    data_points += len(self.resource_history[agent_id])
+            
+            # More data = higher confidence
+            data_confidence = min(0.3, data_points / 100.0)  # Up to 0.3 boost
+            confidence += data_confidence
+            
+            # Factor 2: Feature quality
+            non_zero_features = np.count_nonzero(features) if len(features) > 0 else 0
+            feature_completeness = non_zero_features / max(len(features), 1)
+            confidence += feature_completeness * 0.2  # Up to 0.2 boost
+            
+            # Factor 3: Action-specific confidence
+            if action == ScalingAction.MAINTAIN:
+                confidence += 0.1  # Conservative action, higher confidence
+            elif action in [ScalingAction.SCALE_UP, ScalingAction.SCALE_DOWN]:
+                # Check if scaling is clearly needed
+                if len(features) > 0:
+                    utilization = features[0] if len(features) > 0 else 0.6
+                    if action == ScalingAction.SCALE_UP and utilization > 0.8:
+                        confidence += 0.15  # Clear need to scale up
+                    elif action == ScalingAction.SCALE_DOWN and utilization < 0.3:
+                        confidence += 0.15  # Clear need to scale down
+                    else:
+                        confidence -= 0.1  # Less clear scaling need
+            
+            # Factor 4: Pool stability
+            if hasattr(pool, 'stability_score'):
+                stability = getattr(pool, 'stability_score', 0.7)
+                confidence += (stability - 0.5) * 0.2  # Stable pools = higher confidence
+            
+            # Factor 5: Recent scaling history
+            recent_scalings = getattr(pool, 'recent_scaling_count', 0)
+            if recent_scalings > 3:  # Too much recent scaling
+                confidence -= 0.1
+        
+        except Exception as e:
+            logger.error(f"Error calculating scaling confidence: {e}")
+        
+        return max(0.2, min(0.95, confidence))
     def _generate_scaling_reasoning(self, pool, action, utilization, features): return "AI-driven scaling decision"
     def _calculate_cost_impact(self, pool, target, action): return 5.0
     def _calculate_execution_priority(self, action, confidence, impact): return 5
     def _estimate_scaling_time(self, pool, target): return 300.0
-    def _create_rollback_plan(self, pool, action): return {}
+    def _create_rollback_plan(self, pool, action):
+        """Create a detailed rollback plan for scaling actions"""
+        rollback_plan = {
+            'pool_id': pool.pool_id,
+            'original_action': action.value,
+            'rollback_steps': [],
+            'estimated_rollback_time': 0,
+            'rollback_triggers': [],
+            'monitoring_metrics': []
+        }
+        
+        try:
+            if action == ScalingAction.SCALE_UP:
+                rollback_plan['rollback_action'] = ScalingAction.SCALE_DOWN.value
+                rollback_plan['rollback_steps'] = [
+                    'Monitor resource utilization for 5 minutes',
+                    'Check if scale-up was effective',
+                    'If utilization remains high, scale down gradually',
+                    'Return to original capacity levels',
+                    'Verify system stability'
+                ]
+                rollback_plan['estimated_rollback_time'] = 300  # 5 minutes
+                rollback_plan['rollback_triggers'] = [
+                    'Utilization does not improve after 10 minutes',
+                    'System errors increase after scaling',
+                    'Performance degrades instead of improving'
+                ]
+            
+            elif action == ScalingAction.SCALE_DOWN:
+                rollback_plan['rollback_action'] = ScalingAction.SCALE_UP.value
+                rollback_plan['rollback_steps'] = [
+                    'Monitor for resource starvation',
+                    'Check response times and error rates',
+                    'If performance degrades, scale back up',
+                    'Restore previous capacity levels',
+                    'Ensure all agents are healthy'
+                ]
+                rollback_plan['estimated_rollback_time'] = 180  # 3 minutes
+                rollback_plan['rollback_triggers'] = [
+                    'Response times increase by >50%',
+                    'Error rate increases above 5%',
+                    'CPU/Memory utilization exceeds 90%'
+                ]
+            
+            else:  # MAINTAIN
+                rollback_plan['rollback_action'] = 'none_required'
+                rollback_plan['rollback_steps'] = ['No rollback needed for maintenance action']
+                rollback_plan['estimated_rollback_time'] = 0
+            
+            rollback_plan['monitoring_metrics'] = [
+                'cpu_utilization',
+                'memory_utilization', 
+                'response_time_p95',
+                'error_rate',
+                'throughput'
+            ]
+        
+        except Exception as e:
+            logger.error(f"Error creating rollback plan: {e}")
+            rollback_plan['error'] = str(e)
+        
+        return rollback_plan
     
     async def _retrain_models(self):
         """Retrain ML models with recent data"""

@@ -175,8 +175,9 @@ class SAPCloudALMService extends EventEmitter {
             return;
         }
 
+        let healthData;
         try {
-            const healthData = {
+            healthData = {
                 applicationId: this.config.applicationId,
                 timestamp: new Date().toISOString(),
                 status: 'UP',
@@ -473,7 +474,7 @@ class SAPCloudALMService extends EventEmitter {
             }
 
             const filename = path.join(metricsDir, `metrics-${new Date().toISOString().split('T')[0]}.json`);
-            const logEntry = JSON.stringify(metrics) + '\n';
+            const logEntry = `${JSON.stringify(metrics)  }\n`;
 
             fs.appendFileSync(filename, logEntry);
         } catch (error) {

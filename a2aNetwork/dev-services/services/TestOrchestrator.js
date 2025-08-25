@@ -66,11 +66,7 @@ class TestOrchestrator {
     this.runningTests.set(testId, testSuite);
 
     // Run tests asynchronously
-    this.executeTestSuite(testSuite).catch(error => {
-      logger.error(`Test suite ${testId} failed:`, error);
-      testSuite.status = 'failed';
-      testSuite.error = error.message;
-    });
+    this.executeTestSuite(testSuite).catch(this.handleTestSuiteError.bind(this, testSuite, testId));
 
     return { testId, status: 'started' };
   }
@@ -173,7 +169,7 @@ class TestOrchestrator {
     const { service, input, expectedOutput, agentName } = test.config;
 
     // Find the target agent
-    const agent = agents.find(a => a === agentName || a.name === agentName);
+    const agent = agents.find(this.findAgentByName.bind(this, agentName));
     if (!agent) {
       throw new Error(`Agent ${agentName} not found`);
     }
@@ -435,9 +431,9 @@ class TestOrchestrator {
 
   calculateTestSummary(results) {
     const total = results.length;
-    const passed = results.filter(r => r.status === 'passed').length;
-    const failed = results.filter(r => r.status === 'failed').length;
-    const skipped = results.filter(r => r.status === 'skipped').length;
+    const passed = results.filter(this.isPassedResult).length;
+    const failed = results.filter(this.isFailedResult).length;
+    const skipped = results.filter(this.isSkippedResult).length;
 
     return {
       total,
@@ -516,6 +512,28 @@ class TestOrchestrator {
     });
 
     logger.info('Default test suites loaded');
+  }
+
+  handleTestSuiteError(testSuite, testId, error) {
+    logger.error(`Test suite ${testId} failed:`, error);
+    testSuite.status = 'failed';
+    testSuite.error = error.message;
+  }
+
+  findAgentByName(agentName, agent) {
+    return agent === agentName || agent.name === agentName;
+  }
+
+  isPassedResult(result) {
+    return result.status === 'passed';
+  }
+
+  isFailedResult(result) {
+    return result.status === 'failed';
+  }
+
+  isSkippedResult(result) {
+    return result.status === 'skipped';
   }
 }
 

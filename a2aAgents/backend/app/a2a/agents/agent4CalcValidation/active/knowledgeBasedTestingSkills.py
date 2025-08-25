@@ -478,34 +478,38 @@ class KnowledgeBasedTestingSkills(SecureA2AAgent):
 
             # Generate embeddings for both outputs
             if self.vectorServiceUrl:
-                # Call Agent 2 for embedding generation
-                embeddingRequest = {
-                    'texts': [actualStr, expectedStr],
-                    'model': 'sentence'
-                }
-
-                # A2A Protocol: Use blockchain messaging instead of httpx
-                # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-                # async with httpx.AsyncClient() as client:
-                #     response = await client.post(
-                #         f"{self.vectorServiceUrl}/generate_embeddings",
-                #         json=embeddingRequest
-                #     )
-                #     response.raise_for_status()
-                #
-                # embeddings = response.json()['embeddings']
-                #
-                # # Calculate cosine similarity
-                # actualEmb = np.array(embeddings[0])
-                # expectedEmb = np.array(embeddings[1])
-                #
-                # similarity = np.dot(actualEmb, expectedEmb) / (
-                #     np.linalg.norm(actualEmb) * np.linalg.norm(expectedEmb)
-                # )
-                # consistency['score'] = float(similarity)
-
-                # Temporary fallback - set default score
-                consistency['score'] = 0.95
+                try:
+                    # Use A2A protocol compliant vector service integration
+                    from app.a2a.network.networkConnector import get_network_connector
+                    network_connector = await get_network_connector()
+                    
+                    # Send embedding request via A2A blockchain messaging
+                    embedding_result = await network_connector.send_message(
+                        recipient_id="agent2_ai_preparation",
+                        message_data={
+                            "operation": "generate_embeddings",
+                            "texts": [actualStr, expectedStr],
+                            "model": "sentence"
+                        }
+                    )
+                    
+                    if embedding_result.get('success') and 'embeddings' in embedding_result:
+                        embeddings = embedding_result['embeddings']
+                        # Calculate cosine similarity
+                        actualEmb = np.array(embeddings[0])
+                        expectedEmb = np.array(embeddings[1])
+                        
+                        similarity = np.dot(actualEmb, expectedEmb) / (
+                            np.linalg.norm(actualEmb) * np.linalg.norm(expectedEmb)
+                        )
+                        consistency['score'] = float(similarity)
+                    else:
+                        # Fallback to simple text similarity
+                        consistency['score'] = self._calculate_simple_similarity(actualStr, expectedStr)
+                        
+                except Exception as e:
+                    logger.warning(f"A2A vector service call failed: {e}, using fallback")
+                    consistency['score'] = self._calculate_simple_similarity(actualStr, expectedStr)
 
                 # Identify semantic differences if score is low
                 if consistency['score'] < 0.9:
@@ -525,6 +529,25 @@ class KnowledgeBasedTestingSkills(SecureA2AAgent):
             })
 
         return consistency
+
+    def _calculate_simple_similarity(self, str1: str, str2: str) -> float:
+        """Calculate simple text similarity as fallback when vector service unavailable"""
+        if str1 == str2:
+            return 1.0
+        
+        # Simple Jaccard similarity based on words
+        words1 = set(str1.lower().split())
+        words2 = set(str2.lower().split())
+        
+        if not words1 and not words2:
+            return 1.0
+        if not words1 or not words2:
+            return 0.0
+            
+        intersection = len(words1.intersection(words2))
+        union = len(words1.union(words2))
+        
+        return intersection / union if union > 0 else 0.0
 
     def _validateAgainstConstraints(self,
                                   output: Any,

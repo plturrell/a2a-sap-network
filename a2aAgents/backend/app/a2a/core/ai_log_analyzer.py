@@ -1071,9 +1071,9 @@ class AILogAnalyzer:
     
     def _rank_anomalies(self, anomalies: List[LogAnomaly]) -> List[LogAnomaly]:
         """Rank anomalies by severity and confidence"""
-        return sorted(anomalies, 
-                     key=lambda a: (a.severity * a.confidence), 
-                     reverse=True)
+        def get_anomaly_score(a):
+            return a.severity * a.confidence
+        return sorted(anomalies, key=get_anomaly_score, reverse=True)
     
     async def _generate_pattern_from_cluster(self, messages: List[str], logs: List[LogEntry]) -> Optional[LogPattern]:
         """Generate a pattern from a cluster of similar messages"""

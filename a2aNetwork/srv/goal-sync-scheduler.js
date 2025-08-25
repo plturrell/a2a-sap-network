@@ -126,7 +126,7 @@ module.exports = class GoalSyncScheduler {
         this.LOG.info('Manual goal sync triggered');
         return await this.syncGoals();
     }
-}
+};
 
 // Create and export singleton instance
 const scheduler = new GoalSyncScheduler();

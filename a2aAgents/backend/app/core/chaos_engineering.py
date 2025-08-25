@@ -869,7 +869,11 @@ class ChaosExperimentRunner:
                         experiments.append(experiment)
 
             # Sort by start time (most recent first)
-            experiments.sort(key=lambda x: x.get("start_time", ""), reverse=True)
+            def get_experiment_start_time(experiment):
+                """Extract start time from experiment for sorting"""
+                return experiment.get("start_time", "")
+            
+            experiments.sort(key=get_experiment_start_time, reverse=True)
 
             return experiments
 

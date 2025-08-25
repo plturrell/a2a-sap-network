@@ -425,7 +425,9 @@ class SwarmIntelligenceCoordinator:
         for approach, solutions in approach_groups.items():
             if solutions:
                 # Get best solution for this approach
-                best_solution = max(solutions, key=lambda s: s["confidence"])
+                def get_solution_confidence(s):
+                    return s["confidence"]
+                best_solution = max(solutions, key=get_solution_confidence)
                 diverse_solutions.append({
                     "approach": approach,
                     "insights": best_solution["insights"],

@@ -814,7 +814,7 @@ async def run_normal_build_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             build_rate=0.1
         )
@@ -836,7 +836,7 @@ async def run_rapid_prototyping_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             build_rate=0.3
         )
@@ -857,7 +857,7 @@ async def run_bulk_generation_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             build_rate=0.5
         )

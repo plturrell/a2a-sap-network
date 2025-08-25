@@ -412,7 +412,7 @@ class EnhancedAgentManagerAgent(BlockchainIntegrationMixin):
 
             # Create initial trust contract if applicable
             if capabilities.get("requires_trust"):
-                trust_result = await self.call_mcp_tool("create_enhanced_trust_contract", {
+                await self.call_mcp_tool("create_enhanced_trust_contract", {
                     "delegator_agent": "enhanced_agent_manager",
                     "delegate_agent": agent_id,
                     "actions": ["basic_operations"],

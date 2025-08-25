@@ -1,3 +1,4 @@
+/* global sap, jQuery */
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
     'sap/ui/model/json/JSONModel',
@@ -104,7 +105,7 @@ sap.ui.define([
                 this._updateRatingDistribution(oAgentDetails.ratingDistribution);
 
                 oModel.setProperty('/busy', false);
-            }).catch((error) => {
+            }).catch((_error) => {
                 MessageBox.error('Failed to load agent information');
                 oModel.setProperty('/busy', false);
             });
@@ -304,7 +305,7 @@ sap.ui.define([
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(oReviewData),
-                success: function (data) {
+                success: function (_data) {
                     MessageToast.show('Review submitted successfully!');
 
                     // Reset form
@@ -492,7 +493,7 @@ sap.ui.define([
             jQuery.ajax({
                 url: `/api/agents/${  sAgentId  }/reviews/${  sReviewId  }/validate`,
                 type: 'POST',
-                success: function (data) {
+                success: function (_data) {
                     MessageToast.show('Review validated successfully!');
 
                     // Update review status in dialog

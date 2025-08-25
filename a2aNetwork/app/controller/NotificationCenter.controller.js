@@ -3,6 +3,7 @@
  * All real-time communication now uses blockchain events instead of WebSockets
  */
 
+/* global sap */
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
     'sap/ui/model/json/JSONModel',
@@ -215,7 +216,7 @@ sap.ui.define([
             this.sendWebSocketMessage({
                 type: 'get_notifications',
                 status: filters.status || undefined,
-                type: filters.type || undefined,
+                notificationType: filters.type || undefined,
                 priority: filters.priority || undefined,
                 category: filters.category || undefined,
                 limit: pagination.limit,
@@ -335,7 +336,7 @@ sap.ui.define([
             }
         },
 
-        onNotificationSelect: function (oEvent) {
+        onNotificationSelect: function (_oEvent) {
             // Handle selection if needed
         },
 
@@ -531,7 +532,7 @@ sap.ui.define([
 
         // Formatters
 
-        formatNotificationIcon: function (type, priority) {
+        formatNotificationIcon: function (type, _priority) {
             const iconMap = {
                 'info': 'sap-icon://information',
                 'warning': 'sap-icon://warning',

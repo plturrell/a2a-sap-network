@@ -600,12 +600,7 @@ class AIRateLimiter:
                                       features: np.ndarray):
         """Record decision for model training"""
         # This would be used for online learning - store training examples
-        feedback_data = {
-            'features': features.tolist(),
-            'decision_allowed': decision.allowed,
-            'actual_rate': decision.current_rate,
-            'timestamp': request.timestamp.isoformat()
-        }
+        # feedback_data would contain: features, decision_allowed, actual_rate, timestamp
         
         # In production, this would go to a training data store
         # For now, we just log it
@@ -645,60 +640,125 @@ class AIRateLimiter:
     
     # Training data generation methods
     def _generate_usage_training_data(self) -> Tuple[List[np.ndarray], List[float]]:
-        """Generate synthetic training data for usage prediction"""
+        """Extract real training data from request history"""
         X, y = [], []
         
-        for i in range(200):
-            features = np.random.rand(18)
+        # Use actual request history for training
+        if not self.request_history:
+            logger.warning("No request history available for usage training")
+            return [], []
+        
+        # Group requests by user to calculate actual usage rates
+        user_usage_data = defaultdict(list)
+        
+        for record in list(self.request_history):
+            request = record['request']
+            decision = record['decision']
+            timestamp = record['timestamp']
             
-            # Synthetic usage pattern
-            hour_feature = features[0]  # Hour of day
-            load_feature = features[15] if len(features) > 15 else 0.5  # System load
-            
-            # Higher usage during business hours and when system is loaded
-            base_usage = 30.0
-            if 0.3 < hour_feature < 0.7:  # Business hours (approx)
-                base_usage *= 2.5
-            
-            usage = base_usage * (1 + load_feature) + np.random.normal(0, 5)
-            usage = max(1.0, usage)
-            
-            X.append(features)
-            y.append(usage)
+            # Extract features from real request
+            if request.user_id in self.user_profiles:
+                user_profile = self.user_profiles[request.user_id]
+                features = self._extract_request_features(request, user_profile)
+                actual_rate = decision.current_rate
+                
+                X.append(features)
+                y.append(actual_rate)
+                
+                user_usage_data[request.user_id].append({
+                    'features': features,
+                    'rate': actual_rate,
+                    'timestamp': timestamp
+                })
         
         return X, y
     
     def _generate_anomaly_training_data(self) -> List[np.ndarray]:
-        """Generate synthetic training data for anomaly detection"""
+        """Extract real training data for anomaly detection from request patterns"""
         X = []
         
-        # Normal patterns
-        for i in range(150):
-            features = np.random.normal(0.5, 0.1, 18)  # Normal distribution around 0.5
-            X.append(features)
+        # Use actual request patterns for anomaly training
+        if not self.request_history:
+            logger.warning("No request history available for anomaly training")
+            return []
         
-        # Anomalous patterns
-        for i in range(30):
-            features = np.random.exponential(0.8, 18)  # Different distribution for anomalies
-            X.append(features)
+        # Collect features from normal requests (allowed)
+        normal_features = []
+        anomalous_features = []
+        
+        for record in list(self.request_history):
+            request = record['request']
+            decision = record['decision']
+            
+            if request.user_id in self.user_profiles:
+                user_profile = self.user_profiles[request.user_id]
+                features = self._extract_request_features(request, user_profile)
+                
+                if decision.allowed and user_profile.trust_score > 0.7:
+                    # Normal pattern
+                    normal_features.append(features)
+                elif not decision.allowed or user_profile.trust_score < 0.3:
+                    # Potentially anomalous pattern
+                    anomalous_features.append(features)
+        
+        # Combine normal and anomalous patterns for training
+        # Anomaly detection models learn what's normal, not what's anomalous
+        X.extend(normal_features)
+        
+        # Add some known anomalous patterns for contrast
+        for anomalous in anomalous_features[:min(len(anomalous_features), len(normal_features) // 5)]:
+            X.append(anomalous)
         
         return X
     
     def _generate_burst_training_data(self) -> Tuple[List[np.ndarray], List[int]]:
-        """Generate synthetic training data for burst detection"""
+        """Extract real training data for burst detection from user patterns"""
         X, y = [], []
         
-        for i in range(100):
-            features = np.random.rand(18)
+        # Use actual user behavior patterns to detect bursts
+        for user_id, user_profile in self.user_profiles.items():
+            if not user_profile.historical_patterns or len(user_profile.historical_patterns) < 5:
+                continue
             
-            # Label burst if current rate is high and variance is high
-            current_rate = features[8] if len(features) > 8 else 0.5
-            rate_variance = np.var(features[9:14]) if len(features) > 14 else 0.1
+            patterns = list(user_profile.historical_patterns)
             
-            is_burst = int(current_rate > 0.7 and rate_variance > 0.3)
-            
-            X.append(features)
-            y.append(is_burst)
+            # Analyze patterns for burst behavior
+            for i in range(1, len(patterns)):
+                current_pattern = patterns[i]
+                prev_pattern = patterns[i-1]
+                
+                # Calculate rate change
+                rate_change = current_pattern.get('rate', 0) - prev_pattern.get('rate', 0)
+                interval_change = abs(current_pattern.get('interval', 60) - prev_pattern.get('interval', 60))
+                
+                # Determine if this represents burst behavior
+                is_burst = int(
+                    rate_change > user_profile.baseline_rate * 0.5 and  # Significant rate increase
+                    interval_change < 10 and  # Quick successive requests
+                    current_pattern.get('rate', 0) > user_profile.baseline_rate * 1.5  # Above normal rate
+                )
+                
+                # Extract features for this pattern
+                mock_request = APIRequest(
+                    request_id=f"training_{user_id}_{i}",
+                    user_id=user_id,
+                    endpoint=current_pattern.get('endpoint', '/api/default'),
+                    method='GET',
+                    timestamp=current_pattern.get('timestamp', datetime.utcnow()),
+                    response_time=100.0,
+                    status_code=200,
+                    payload_size=1000,
+                    ip_address='127.0.0.1',
+                    user_agent='training'
+                )
+                
+                try:
+                    features = self._extract_request_features(mock_request, user_profile)
+                    X.append(features)
+                    y.append(is_burst)
+                except Exception as e:
+                    logger.debug(f"Failed to extract burst training features: {e}")
+                    continue
         
         return X, y
     
@@ -709,7 +769,7 @@ class AIRateLimiter:
                 return
             
             # Extract training data from recent history
-            X, y_usage, y_anomaly = [], [], []
+            # Training data preparation: X (features), y_usage, y_anomaly (labels)
             
             for record in list(self.request_history)[-100:]:
                 # Would extract features and labels from actual data

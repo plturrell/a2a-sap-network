@@ -31,7 +31,7 @@ class AIDecisionRequest(BaseModel):
 
     operation: AIDecisionOperation
     agent_id: str
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=datetime.utcnow().isoformat)
     context_id: Optional[str] = None
 
 
@@ -257,7 +257,7 @@ class AIDecisionResponse(BaseModel):
     success: bool
     operation: AIDecisionOperation
     agent_id: str
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=datetime.utcnow().isoformat)
     context_id: Optional[str] = None
     error: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)

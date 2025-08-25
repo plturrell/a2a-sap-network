@@ -32,11 +32,12 @@ help:
 	@echo "  start-calculation    Start Calculation Agent (port 8013)"
 	@echo "  start-agent-builder  Start Agent Builder (port 8014)"
 	@echo "  start-embedding      Start Embedding Fine-Tuner (port 8015)"
+	@echo "  start-agent17        Start Agent 17 Chat Agent (port 8017)"
 	@echo ""
 	@echo "Startup Modes:"
 	@echo "  start-minimal       Start 4 core agents (low memory systems)"
 	@echo "  start-essential     Start 8 essential agents (moderate memory)"
-	@echo "  start-all           Start all 16 agents sequentially (high memory)"
+	@echo "  start-all           Start all 17 agents sequentially (high memory)"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  deploy-dev    Deploy to development environment"
@@ -130,6 +131,9 @@ start-agent-builder:
 start-embedding:
 	python3 scripts/launch/unified_launcher.py --agent=embedding-finetuner --port=8015
 
+start-agent17:
+	python3 scripts/launch/unified_launcher.py --agent=agent17-chat --port=8017
+
 start-managers: start-data-manager start-catalog-manager start-agent-manager
 
 start-minimal:
@@ -171,7 +175,7 @@ start-essential:
 	@echo "Essential A2A setup complete (8/16 agents). Use 'make start-all' for full coverage."
 
 start-all:
-	@echo "Starting ALL 16 A2A agents sequentially to avoid memory pressure..."
+	@echo "Starting ALL 17 A2A agents sequentially to avoid memory pressure..."
 	@echo "Starting core agents first..."
 	python3 scripts/launch/unifiedLauncher.py --agent=registry-server --port=8000 &
 	@sleep 3
@@ -211,7 +215,10 @@ start-all:
 	@sleep 3
 	python3 scripts/launch/unifiedLauncher.py --agent=embedding-finetuner --port=8015 &
 	@sleep 3
-	@echo "All 16 agents started sequentially (100% coverage). Use 'make stop-all' to stop them."
+	@echo "Starting conversational interface..."
+	python3 scripts/launch/unifiedLauncher.py --agent=agent17-chat --port=8017 &
+	@sleep 3
+	@echo "All 17 agents started sequentially (100% coverage). Use 'make stop-all' to stop them."
 
 stop-all:
 	@echo "Stopping all A2A agents..."

@@ -47,6 +47,7 @@ def launch_agent(agent_name: str, port: int, config_path: str = None):
             "agent-manager": "services/agentManager/src/main.py",
             "catalog-manager": "services/catalogManager/src/main.py",
             "glean-agent": "scripts/launch/launchGleanAgent.py",
+            "agent17-chat": "main.py",  # Agent 17 uses main FastAPI app
         }
         
         # Handle agents that still need to be created (use FastAPI template)
@@ -205,7 +206,7 @@ def main():
             "agent0", "agent1", "agent2", "agent3", "agent4", "agent5", "agent6",
             "data-manager", "catalog-manager", "agent-manager", "agent-builder",
             "reasoning-agent", "sql-agent", "calculation-agent", "embedding-finetuner",
-            "registry-server", "glean-agent"
+            "registry-server", "glean-agent", "agent17-chat"
         ],
         help="Agent to launch"
     )
@@ -248,6 +249,7 @@ def main():
         "calculation-agent": 8013,
         "agent-builder": 8014,
         "embedding-finetuner": 8015,
+        "agent17-chat": 8017,
     }
     
     port = args.port or default_ports[args.agent]

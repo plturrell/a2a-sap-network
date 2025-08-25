@@ -2756,7 +2756,7 @@ entity DataTasks : cuid, managed {
     
     @Common.Label: 'Priority'
     priority           : String(10) enum {
- NORMAL; HIGH; CRITICAL;
+        NORMAL; HIGH; CRITICAL;
     } default 'NORMAL';
     
     @Common.Label: 'Progress Percentage'
@@ -2840,7 +2840,11 @@ entity StorageBackends : cuid, managed {
     
     @Common.Label: 'Status'
     status             : String(20) enum {
- INACTIVE; MAINTENANCE; ERROR; DEGRADED;
+        ACTIVE;
+        INACTIVE;
+        MAINTENANCE;
+        ERROR;
+        DEGRADED;
     } default 'ACTIVE';
     
     @Common.Label: 'Health Score'
@@ -2974,7 +2978,10 @@ entity CacheConfigurations : cuid, managed {
     
     @Common.Label: 'Status'
     status             : String(20) enum {
- INACTIVE; MAINTENANCE; ERROR;
+        ACTIVE;
+        INACTIVE;
+        MAINTENANCE;
+        ERROR;
     } default 'ACTIVE';
     
     @Common.Label: 'Current Size (MB)'
@@ -4653,7 +4660,11 @@ entity RegistryManagement : cuid, managed {
     
     @Common.Label: 'Status'
     status             : String(20) enum {
- INACTIVE; MAINTENANCE; ERROR; SYNCING;
+        ACTIVE;
+        INACTIVE;
+        MAINTENANCE;
+        ERROR;
+        SYNCING;
     } default 'ACTIVE';
     
     @Common.Label: 'Last Sync'
@@ -5219,17 +5230,23 @@ entity TrainingRuns : cuid, managed {
     trainingName       : String(200) @mandatory;
     
     @Common.Label: 'Training Strategy'
+    trainingStrategy   : String(50) enum {
         CONTRASTIVE_LEARNING;
         TRIPLET_LOSS;
         MULTIPLE_NEGATIVES_RANKING;
         DOMAIN_ADAPTATION;
         CROSS_LINGUAL;
         FEW_SHOT_LEARNING;
-    trainingStrategy   : String(50) default 'CONTRASTIVE_LEARNING';
+    } default 'CONTRASTIVE_LEARNING';
     
     @Common.Label: 'Training Status'
+    status             : String(20) enum {
         PREPARING;
-    status             : String(20) default 'PREPARING';
+        RUNNING;
+        COMPLETED;
+        FAILED;
+        CANCELLED;
+    } default 'PREPARING';
     
     @Common.Label: 'Training Configuration'
     @Core.MediaType: 'application/json'
@@ -5303,12 +5320,13 @@ entity ModelEvaluations : cuid, managed {
     evaluationName     : String(200) @mandatory;
     
     @Common.Label: 'Evaluation Type'
+    evaluationType     : String(50) enum {
         SIMILARITY_BENCHMARK;
         RETRIEVAL_ACCURACY;
         CLUSTERING_QUALITY;
         DOWNSTREAM_TASK;
         SPEED_BENCHMARK;
-    evaluationType     : String(50) default 'SIMILARITY_BENCHMARK';
+    } default 'SIMILARITY_BENCHMARK';
     
     @Common.Label: 'Benchmark Dataset'
     benchmarkDataset   : String(200);
@@ -5317,7 +5335,13 @@ entity ModelEvaluations : cuid, managed {
     testDataPath       : String(500);
     
     @Common.Label: 'Evaluation Status'
-    status             : String(20) default 'PENDING';
+    status             : String(20) enum {
+        PENDING;
+        RUNNING;
+        COMPLETED;
+        FAILED;
+        CANCELLED;
+    } default 'PENDING';
     
     @Common.Label: 'Cosine Similarity Score'
     cosineSimilarity   : Decimal(5,4);
@@ -5376,6 +5400,7 @@ entity ModelOptimizations : cuid, managed {
     optimizationName   : String(200) @mandatory;
     
     @Common.Label: 'Optimization Type'
+    optimizationType   : String(50) enum {
         QUANTIZATION;
         PRUNING;
         KNOWLEDGE_DISTILLATION;
@@ -5383,10 +5408,16 @@ entity ModelOptimizations : cuid, managed {
         ONNX_CONVERSION;
         TENSORRT_OPTIMIZATION;
         OPENVINO_OPTIMIZATION;
-    optimizationType   : String(50) default 'QUANTIZATION';
+    } default 'QUANTIZATION';
     
     @Common.Label: 'Optimization Status'
-    status             : String(20) default 'PENDING';
+    status             : String(20) enum {
+        PENDING;
+        RUNNING;
+        COMPLETED;
+        FAILED;
+        CANCELLED;
+    } default 'PENDING';
     
     @Common.Label: 'Original Model Size (MB)'
     originalSizeMB     : Integer;
@@ -5448,23 +5479,32 @@ entity FineTuningTasks : cuid, managed {
     targetDomain       : String(100);
     
     @Common.Label: 'Task Type'
+    taskType           : String(50) enum {
         DOMAIN_ADAPTATION;
         LANGUAGE_ADAPTATION;
         TASK_SPECIFIC;
         PERFORMANCE_OPTIMIZATION;
         MULTI_LINGUAL;
-    taskType           : String(50) default 'DOMAIN_ADAPTATION';
+    } default 'DOMAIN_ADAPTATION';
     
     @Common.Label: 'Task Status'
+    status             : String(20) enum {
         CREATED;
         DATA_PREPARATION;
         TRAINING;
         EVALUATION;
         OPTIMIZATION;
-    status             : String(20) default 'CREATED';
+        COMPLETED;
+        FAILED;
+    } default 'CREATED';
     
     @Common.Label: 'Priority'
-    priority           : String(20) default 'MEDIUM';
+    priority           : String(20) enum {
+        LOW;
+        MEDIUM;
+        HIGH;
+        CRITICAL;
+    } default 'MEDIUM';
     
     @Common.Label: 'Training Data Size'
     trainingDataSize   : Integer;
@@ -5543,17 +5583,19 @@ entity Workflows : cuid, managed {
     version            : String(20) default '1.0.0';
     
     @Common.Label: 'Workflow Status'
+    status             : String(20) enum {
         DRAFT;
         ARCHIVED;
-    status             : String(20) default 'DRAFT';
+    } default 'DRAFT';
     
     @Common.Label: 'Workflow Type'
+    workflowType       : String(50) enum {
         DATA_PROCESSING;
         ML_PIPELINE;
         ETL;
         BATCH_PROCESSING;
         REAL_TIME;
-    workflowType       : String(50) default 'DATA_PROCESSING';
+    } default 'DATA_PROCESSING';
     
     @Common.Label: 'Workflow Definition'
     @Core.MediaType: 'application/json'
@@ -5924,17 +5966,20 @@ entity PipelineConfigurations : cuid, managed {
     pipelineName       : String(200) @mandatory;
     
     @Common.Label: 'Pipeline Type'
+    pipelineType       : String(50) enum {
         DATA_PIPELINE;
         ML_PIPELINE;
         ETL_PIPELINE;
         STREAMING_PIPELINE;
         BATCH_PIPELINE;
         HYBRID_PIPELINE;
-    pipelineType       : String(50) default 'DATA_PIPELINE';
+    } default 'DATA_PIPELINE';
     
     @Common.Label: 'Pipeline Status'
+    status             : String(20) enum {
+        ACTIVE;
         INACTIVE;
-    status             : String(20) default 'ACTIVE';
+    } default 'ACTIVE';
     
     @Common.Label: 'Pipeline Configuration'
     @Core.MediaType: 'application/json'
@@ -6026,26 +6071,29 @@ entity DataProducts : cuid, managed {
     description        : String(2000);
     
     @Common.Label: 'Product Type'
+    productType        : String(50) enum {
         DATASET;
         STREAM;
         API;
         FILE;
         DATABASE;
         HYBRID;
-    productType        : String(50) default 'DATASET';
+    } default 'DATASET';
     
     @Common.Label: 'Product Status'
+    status             : String(20) enum {
         DRAFT;
         INGESTING;
         PROCESSING;
         READY;
         ARCHIVED;
-    status             : String(20) default 'DRAFT';
+    } default 'DRAFT';
     
     @Common.Label: 'Data Source'
     dataSource         : String(500);
     
     @Common.Label: 'Data Format'
+    dataFormat         : String(50) enum {
         JSON;
         XML;
         CSV;
@@ -6054,7 +6102,7 @@ entity DataProducts : cuid, managed {
         EXCEL;
         PLAIN_TEXT;
         BINARY;
-    dataFormat         : String(50) default 'JSON';
+    } default 'JSON';
     
     @Common.Label: 'Data Size (MB)'
     dataSizeMB         : Integer;
@@ -6095,12 +6143,13 @@ entity DataProducts : cuid, managed {
     owner              : String(100);
     
     @Common.Label: 'Data Classification'
+    dataClassification : String(50) enum {
         PUBLIC;
         INTERNAL;
         CONFIDENTIAL;
         RESTRICTED;
         HIGHLY_RESTRICTED;
-    dataClassification : String(50) default 'INTERNAL';
+    } default 'INTERNAL';
     
     @Common.Label: 'Retention Days'
     retentionDays      : Integer default 365;
@@ -6201,11 +6250,12 @@ entity DublinCoreMetadata : cuid, managed {
     isComplete         : Boolean default false;
     
     @Common.Label: 'Validation Status'
+    validationStatus   : String(20) enum {
         VALID;
         PARTIALLY_VALID;
         INVALID;
         NOT_VALIDATED;
-    validationStatus   : String(20) default 'NOT_VALIDATED';
+    } default 'NOT_VALIDATED';
 }
 
 @Common.Label: 'Ingestion Sessions'
@@ -6217,16 +6267,22 @@ entity IngestionSessions : cuid, managed {
     sessionName        : String(200);
     
     @Common.Label: 'Ingestion Type'
+    ingestionType      : String(50) enum {
         BATCH;
         STREAMING;
         API_PULL;
         FILE_UPLOAD;
         DATABASE_EXTRACT;
-    ingestionType      : String(50) default 'BATCH';
+    } default 'BATCH';
     
     @Common.Label: 'Session Status'
+    status             : String(20) enum {
         STARTING;
-    status             : String(20) default 'STARTING';
+        RUNNING;
+        COMPLETED;
+        FAILED;
+        CANCELLED;
+    } default 'STARTING';
     
     @Common.Label: 'Source URL'
     sourceUrl          : String(500);
@@ -6289,6 +6345,7 @@ entity QualityAssessments : cuid, managed {
     assessmentName     : String(200);
     
     @Common.Label: 'Assessment Type'
+    assessmentType     : String(50) enum {
         COMPLETENESS;
         VALIDITY;
         CONSISTENCY;
@@ -6296,7 +6353,7 @@ entity QualityAssessments : cuid, managed {
         TIMELINESS;
         UNIQUENESS;
         COMPREHENSIVE;
-    assessmentType     : String(50) default 'COMPREHENSIVE';
+    } default 'COMPREHENSIVE';
     
     @Common.Label: 'Assessment Status'
     status             : String(20) default 'PENDING';
@@ -6357,6 +6414,7 @@ entity ProductTransformations : cuid, managed {
     transformationName : String(200);
     
     @Common.Label: 'Transformation Type'
+    transformationType : String(50) enum {
         FORMAT_CONVERSION;
         SCHEMA_MAPPING;
         DATA_CLEANSING;
@@ -6364,7 +6422,7 @@ entity ProductTransformations : cuid, managed {
         AGGREGATION;
         FILTERING;
         NORMALIZATION;
-    transformationType : String(50) default 'FORMAT_CONVERSION';
+    } default 'FORMAT_CONVERSION';
     
     @Common.Label: 'Transformation Status'
     status             : String(20) default 'PENDING';

@@ -88,19 +88,11 @@ class DevRegistry extends Registry {
 
       // Add local agents
       const localAgents = Array.from(this.localAgents.values())
-        .filter(agent =>
-          capability === '*' ||
-          agent.capabilities?.includes(capability)
-        );
+        .filter(this.filterAgentByCapability.bind(this, capability));
 
       // Combine and deduplicate
       const allAgents = [...realAgents, ...localAgents];
-      const uniqueAgents = allAgents.reduce((acc, agent) => {
-        if (!acc.find(a => a.id === agent.id)) {
-          acc.push(agent);
-        }
-        return acc;
-      }, []);
+      const uniqueAgents = allAgents.reduce(this.deduplicateAgents, []);
 
       return uniqueAgents;
 
@@ -109,10 +101,7 @@ class DevRegistry extends Registry {
 
       // Return only local agents
       return Array.from(this.localAgents.values())
-        .filter(agent =>
-          capability === '*' ||
-          agent.capabilities?.includes(capability)
-        );
+        .filter(this.filterAgentByCapability.bind(this, capability));
     }
   }
 
@@ -126,12 +115,7 @@ class DevRegistry extends Registry {
 
       // Combine and deduplicate
       const allAgents = [...realAgents, ...localAgents];
-      return allAgents.reduce((acc, agent) => {
-        if (!acc.find(a => a.id === agent.id)) {
-          acc.push(agent);
-        }
-        return acc;
-      }, []);
+      return allAgents.reduce(this.deduplicateAgents, []);
 
     } catch (error) {
       logger.warn(`Could not fetch real agents, returning local only: ${error.message}`);
@@ -199,12 +183,43 @@ class DevRegistry extends Registry {
 
     return {
       totalAgents: localAgents.length,
-      testAgents: localAgents.filter(a => a.isTest).length,
-      localOnlyAgents: localAgents.filter(a => a.localOnly).length,
-      registeredAgents: localAgents.filter(a => !a.localOnly && !a.isTest).length,
-      capabilities: [...new Set(localAgents.flatMap(a => a.capabilities || []))],
-      agentTypes: [...new Set(localAgents.map(a => a.type))]
+      testAgents: localAgents.filter(this.isTestAgent).length,
+      localOnlyAgents: localAgents.filter(this.isLocalOnlyAgent).length,
+      registeredAgents: localAgents.filter(this.isRegisteredAgent).length,
+      capabilities: [...new Set(localAgents.flatMap(this.getAgentCapabilities))],
+      agentTypes: [...new Set(localAgents.map(this.getAgentType))]
     };
+  }
+
+  filterAgentByCapability(capability, agent) {
+    return capability === '*' || agent.capabilities?.includes(capability);
+  }
+
+  deduplicateAgents(acc, agent) {
+    if (!acc.find(a => a.id === agent.id)) {
+      acc.push(agent);
+    }
+    return acc;
+  }
+
+  isTestAgent(agent) {
+    return agent.isTest;
+  }
+
+  isLocalOnlyAgent(agent) {
+    return agent.localOnly;
+  }
+
+  isRegisteredAgent(agent) {
+    return !agent.localOnly && !agent.isTest;
+  }
+
+  getAgentCapabilities(agent) {
+    return agent.capabilities || [];
+  }
+
+  getAgentType(agent) {
+    return agent.type;
   }
 }
 

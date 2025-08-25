@@ -7,15 +7,14 @@ Comprehensive audit logging and compliance reporting system
 import json
 import logging
 import hashlib
-from typing import Dict, Any, List, Optional, Union
-from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
+from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 import uuid
 from pathlib import Path
 
-from .config import settings
-from .errorHandling import ValidationError, SecurityError
+from .errorHandling import SecurityError
 from .secrets import get_secrets_manager
 from .securityMonitoring import report_security_event, EventType, ThreatLevel
 

@@ -613,7 +613,6 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             expression = request_data.get('expression')
             result = request_data.get('result')
             expected_result = request_data.get('expected_result')
-            context = request_data.get('context', {})
 
             # Analyze expression for potential issues
             issues = await self._analyze_expression_ml(expression, result)
@@ -893,8 +892,6 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             variables = request_data.get('variables', {})
             benchmark_iterations = request_data.get('iterations', 100)
             precision_levels = request_data.get('precision_levels', [10, 20, 50])
-
-            benchmark_results = {}
 
             # Performance benchmarking
             performance_metrics = await self._benchmark_performance(
@@ -1368,7 +1365,8 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         """Select optimal validation methods using ML"""
         try:
             # Extract features from expression
-            features = self._extract_expression_features(expression)
+            # Extract features for ML-based method selection (features unused in current implementation)
+            self._extract_expression_features(expression)
 
             # Use ML to predict best methods (simplified)
             # In real implementation, this would use trained models

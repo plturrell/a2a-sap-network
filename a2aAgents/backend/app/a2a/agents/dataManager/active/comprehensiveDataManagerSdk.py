@@ -210,7 +210,9 @@ class ComprehensiveDataManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
 
         # Performance tracking
         self.query_metrics = []
-        self.access_patterns = defaultdict(lambda: defaultdict(int))
+        def create_access_pattern_dict():
+            return defaultdict(int)
+        self.access_patterns = defaultdict(create_access_pattern_dict)
         self.cache_stats = defaultdict(int)
 
         # Data governance
@@ -271,12 +273,14 @@ class ComprehensiveDataManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
         }
 
         # Method performance tracking
-        self.method_performance = defaultdict(lambda: {
-            'total': 0,
-            'success': 0,
-            'total_time': 0.0,
-            'optimization_impact': 0.0
-        })
+        def create_method_performance_dict():
+            return {
+                'total': 0,
+                'success': 0,
+                'total_time': 0.0,
+                'optimization_impact': 0.0
+            }
+        self.method_performance = defaultdict(create_method_performance_dict)
 
         logger.info(f"Initialized Comprehensive Data Manager v{self.version}")
 

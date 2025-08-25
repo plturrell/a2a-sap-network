@@ -796,46 +796,81 @@ def test_{function_name}_property_{property_name}(data):
             self.complexity_predictor.fit(X_scaled, y_complexity)
     
     def _generate_test_type_training_data(self) -> Tuple[List[np.ndarray], List[str]]:
-        """Generate synthetic training data for test type prediction"""
+        """Extract real training data from actual test generation feedback"""
         X, y = [], []
         
-        for i in range(400):
-            features = np.random.rand(25)
-            
-            # Simple heuristics for test type based on features
-            if features[0] > 0.8:  # Many parameters
-                test_type = 'integration'
-            elif features[6] > 0.7:  # Many function calls
-                test_type = 'integration'
-            elif features[2] > 0.5:  # Complex conditionals
-                test_type = 'unit'
-            else:
-                test_type = 'unit'
-            
-            X.append(features)
-            y.append(test_type)
+        # Use feedback from actual test generation to train
+        if not self.feedback_history:
+            logger.warning("No test generation feedback available for training")
+            return [], []
+        
+        for feedback_entry in list(self.feedback_history):
+            try:
+                features = feedback_entry.get('features', [])
+                test_case = feedback_entry.get('test_case')
+                feedback = feedback_entry.get('feedback', {})
+                
+                if test_case and isinstance(features, list) and len(features) >= 25:
+                    # Extract actual test type from successful generations
+                    test_type = test_case.test_type
+                    
+                    # Only use examples that had positive feedback
+                    if feedback.get('success_rate', 0) > 0.7:
+                        X.append(np.array(features[:25]))
+                        y.append(test_type)
+                        
+            except Exception as e:
+                logger.debug(f"Failed to extract test type training data: {e}")
+                continue
         
         return X, y
     
     def _generate_complexity_training_data(self) -> Tuple[List[np.ndarray], List[float]]:
-        """Generate synthetic training data for complexity prediction"""
+        """Extract real training data for complexity prediction from feedback"""
         X, y = [], []
         
-        for i in range(300):
-            features = np.random.rand(25)
-            
-            # Complexity based on feature combination
-            complexity = (
-                features[0] * 0.3 +    # Parameters
-                features[2] * 0.3 +    # Conditionals
-                features[3] * 0.2 +    # Loops
-                features[7] * 0.2      # Line count (normalized)
-            )
-            complexity += np.random.normal(0, 0.1)
-            complexity = np.clip(complexity, 0.0, 1.0)
-            
-            X.append(features)
-            y.append(complexity)
+        # Use actual complexity assessments from test feedback
+        if not self.feedback_history:
+            logger.warning("No test feedback available for complexity training")
+            return [], []
+        
+        for feedback_entry in list(self.feedback_history):
+            try:
+                features = feedback_entry.get('features', [])
+                feedback = feedback_entry.get('feedback', {})
+                test_case = feedback_entry.get('test_case')
+                
+                if test_case and isinstance(features, list) and len(features) >= 25:
+                    # Calculate actual complexity from test characteristics
+                    complexity = 0.0
+                    
+                    # Base complexity on test structure
+                    complexity += len(test_case.assertions) * 0.1  # More assertions = higher complexity
+                    complexity += len(test_case.mocks_needed) * 0.15  # Mocks add complexity
+                    complexity += len(test_case.edge_cases_covered) * 0.1  # Edge cases add complexity
+                    
+                    # Adjust based on test type
+                    type_complexity = {
+                        'unit': 0.2,
+                        'integration': 0.6,
+                        'e2e': 0.8,
+                        'property': 0.7
+                    }
+                    complexity += type_complexity.get(test_case.test_type, 0.4)
+                    
+                    # Factor in actual execution feedback
+                    execution_time = feedback.get('execution_time_ms', 100)
+                    complexity += min(0.3, execution_time / 5000)  # Normalize execution time
+                    
+                    # Normalize to 0-1 range
+                    complexity = min(1.0, complexity)
+                    
+                    X.append(np.array(features[:25]))
+                    y.append(complexity)
+                        
+            except Exception as e:
+                logger.debug(f"Failed to extract complexity training data: {e}")
+                continue
         
         return X, y
 

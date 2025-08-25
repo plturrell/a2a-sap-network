@@ -533,7 +533,7 @@ class EnhancedAIPreparationSkills(SecureA2AAgent):
 
     async def _analyzeTemporalPatterns(self, entityData: Dict) -> Dict[str, Any]:
         """Analyze temporal patterns in entity data"""
-        patterns = {
+        temporalPatterns = {
             'trends': [],
             'seasonality': {},
             'anomalies': []

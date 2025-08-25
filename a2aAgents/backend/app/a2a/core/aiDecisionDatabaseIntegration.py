@@ -447,12 +447,8 @@ class AIDatabaseDecisionIntegrationMixin:
             # Use the logger's database connection to query patterns
             from .aiDecisionProtocols import QueryPatternsRequest
 
-            # Create request object for potential future use
-            _request = QueryPatternsRequest(
-                agent_id=self.agent_id, query_filters=pattern_filters, limit=20
-            )
-
             # This would use the Data Manager communication logic
+            # QueryPatternsRequest(agent_id, query_filters, limit) would be sent
             # For now, return from in-memory cache
             return []
 

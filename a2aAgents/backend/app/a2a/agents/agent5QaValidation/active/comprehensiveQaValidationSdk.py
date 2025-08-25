@@ -751,7 +751,6 @@ class ComprehensiveQAValidationSDK(A2AAgentBase, BlockchainIntegrationMixin):
         """Generate comprehensive quality report"""
         # Calculate individual quality metrics
         accuracy_scores = [r.score for r in results if r.method == ValidationMethod.EXACT_MATCH]
-        semantic_scores = [r.score for r in results if r.method == ValidationMethod.SEMANTIC_SIMILARITY]
 
         individual_scores = {
             QualityMetric.ACCURACY: statistics.mean(accuracy_scores) if accuracy_scores else 0.0,

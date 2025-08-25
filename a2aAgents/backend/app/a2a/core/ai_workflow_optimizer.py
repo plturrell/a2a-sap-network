@@ -643,7 +643,7 @@ class AIWorkflowOptimizer:
                 'type': 'bottleneck_removal',
                 'description': f"Remove {len(analysis['bottleneck_points'])} bottleneck points",
                 'impact': 'medium',
-                'confidence': 0.7
+                'confidence': min(0.9, 0.5 + min(len(analysis['bottleneck_points']), 5) / 5.0 * 0.4)
             })
         
         # Resource optimization
@@ -662,7 +662,7 @@ class AIWorkflowOptimizer:
                 'type': 'simplification',
                 'description': 'Simplify workflow structure',
                 'impact': 'medium',
-                'confidence': 0.5
+                'confidence': min(0.8, 0.4 + analysis.get('complexity_score', 0.5) * 0.4)
             })
         
         return optimizations
@@ -974,8 +974,133 @@ class AIWorkflowOptimizer:
             logger.error(f"Model retraining error: {e}")
     
     # Additional placeholder methods for completeness
-    def _identify_structural_bottlenecks(self, steps, graph): return []
-    def _analyze_resource_distribution(self, steps): return {}
+    def _identify_structural_bottlenecks(self, steps, graph):
+        """Identify structural bottlenecks in workflow from real execution data"""
+        bottlenecks = []
+        
+        try:
+            if not steps or not graph:
+                return []
+            
+            # Analyze each step for structural bottleneck indicators
+            for step in steps:
+                step_id = step.get('id', '')
+                step_type = step.get('type', 'unknown')
+                
+                # Check for sequential dependency chains
+                incoming_edges = [e for e in graph.get('edges', []) if e.get('target') == step_id]
+                outgoing_edges = [e for e in graph.get('edges', []) if e.get('source') == step_id]
+                
+                # High fan-in = potential bottleneck
+                if len(incoming_edges) > 3:
+                    bottlenecks.append({
+                        'step_id': step_id,
+                        'type': 'high_fan_in',
+                        'severity': min(1.0, len(incoming_edges) / 5.0),
+                        'description': f'Step {step_id} has {len(incoming_edges)} dependencies'
+                    })
+                
+                # Single point of failure in critical path
+                if len(outgoing_edges) > 5 and step_type in ['validation', 'approval']:
+                    bottlenecks.append({
+                        'step_id': step_id,
+                        'type': 'critical_gate',
+                        'severity': 0.8,
+                        'description': f'Critical gate step {step_id} affects {len(outgoing_edges)} downstream steps'
+                    })
+                
+                # Check for resource-intensive steps
+                estimated_duration = step.get('estimated_duration', 0)
+                if estimated_duration > 300:  # >5 minutes
+                    bottlenecks.append({
+                        'step_id': step_id,
+                        'type': 'long_running',
+                        'severity': min(1.0, estimated_duration / 1800),  # Scale to 30 minutes
+                        'description': f'Long-running step {step_id} ({estimated_duration}s duration)'
+                    })
+        
+        except Exception as e:
+            logger.error(f"Error identifying structural bottlenecks: {e}")
+        
+        return bottlenecks
+    def _analyze_resource_distribution(self, steps):
+        """Analyze how resources are distributed across workflow steps"""
+        distribution = {
+            'cpu_intensive_steps': [],
+            'memory_intensive_steps': [],
+            'io_intensive_steps': [],
+            'resource_balance_score': 0.5,
+            'bottleneck_resources': []
+        }
+        
+        try:
+            if not steps:
+                return distribution
+            
+            total_cpu = 0
+            total_memory = 0
+            total_io = 0
+            
+            for step in steps:
+                step_id = step.get('id', '')
+                
+                # Estimate resource usage from step characteristics
+                cpu_usage = step.get('cpu_usage', 0.5)
+                memory_usage = step.get('memory_usage', 0.5)
+                io_usage = step.get('io_usage', 0.3)
+                
+                total_cpu += cpu_usage
+                total_memory += memory_usage
+                total_io += io_usage
+                
+                # Categorize resource-intensive steps
+                if cpu_usage > 0.7:
+                    distribution['cpu_intensive_steps'].append({
+                        'step_id': step_id,
+                        'cpu_usage': cpu_usage,
+                        'type': step.get('type', 'unknown')
+                    })
+                
+                if memory_usage > 0.7:
+                    distribution['memory_intensive_steps'].append({
+                        'step_id': step_id,
+                        'memory_usage': memory_usage,
+                        'type': step.get('type', 'unknown')
+                    })
+                
+                if io_usage > 0.6:
+                    distribution['io_intensive_steps'].append({
+                        'step_id': step_id,
+                        'io_usage': io_usage,
+                        'type': step.get('type', 'unknown')
+                    })
+            
+            # Calculate resource balance score
+            if len(steps) > 0:
+                avg_cpu = total_cpu / len(steps)
+                avg_memory = total_memory / len(steps)
+                avg_io = total_io / len(steps)
+                
+                # Good balance means resources are used evenly
+                cpu_variance = np.var([s.get('cpu_usage', 0.5) for s in steps])
+                memory_variance = np.var([s.get('memory_usage', 0.5) for s in steps])
+                
+                # Lower variance = better balance
+                balance_score = 1.0 - min(1.0, (cpu_variance + memory_variance) / 2)
+                distribution['resource_balance_score'] = balance_score
+                
+                # Identify bottleneck resources
+                if avg_cpu > 0.8:
+                    distribution['bottleneck_resources'].append('cpu')
+                if avg_memory > 0.8:
+                    distribution['bottleneck_resources'].append('memory')
+                if avg_io > 0.7:
+                    distribution['bottleneck_resources'].append('io')
+        
+        except Exception as e:
+            logger.error(f"Error analyzing resource distribution: {e}")
+        
+        return distribution
     def _calculate_complexity_score(self, steps, graph): return 0.5
     def _heuristic_bottleneck_score(self, step, steps): return 0.5
     def _analyze_resource_contention(self, step, steps): return 0.3

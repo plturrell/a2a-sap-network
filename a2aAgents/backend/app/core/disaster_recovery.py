@@ -384,7 +384,7 @@ class BackupManager:
             )
 
             # Store backup
-            storage_location = await self.storage_provider.store_backup(
+            await self.storage_provider.store_backup(
                 backup_id, archive_data, metadata
             )
 

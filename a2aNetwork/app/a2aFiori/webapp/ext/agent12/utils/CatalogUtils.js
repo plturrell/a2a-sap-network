@@ -2,7 +2,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/base/Log",
     "a2a/network/agent12/ext/utils/SecurityUtils"
-], (MessageToast, Log, SecurityUtils) => {
+], function(MessageToast, Log, SecurityUtils) {
     "use strict";
 
     return {
@@ -119,7 +119,7 @@ sap.ui.define([
                 formattedDate: this._formatDate(entry.modifiedAt),
                 statusBadge: this._getStatusBadge(entry.status),
                 categoryIcon: this._getCategoryIcon(entry.category),
-                tagsArray: entry.tags ? entry.tags.split(",").map((tag) => { return tag.trim(); }) : []
+                tagsArray: entry.tags ? entry.tags.split(",").map(this._trimTag.bind(this)) : []
             };
         },
 
@@ -137,19 +137,7 @@ sap.ui.define([
             const tags = new Set();
             const entryTypes = new Set();
 
-            entries.forEach((entry) => {
-                if (entry.category) {categories.add(entry.category);}
-                if (entry.provider) {providers.add(entry.provider);}
-                if (entry.status) {statuses.add(entry.status);}
-                if (entry.entryType) {entryTypes.add(entry.entryType);}
-
-                if (entry.tags) {
-                    entry.tags.split(",").forEach((tag) => {
-                        const cleanTag = tag.trim();
-                        if (cleanTag) {tags.add(cleanTag);}
-                    });
-                }
-            });
+            entries.forEach(this._processEntryForFilters.bind(this, categories, providers, statuses, entryTypes, tags));
 
             return {
                 categories: Array.from(categories).sort(),
@@ -624,16 +612,40 @@ sap.ui.define([
         },
 
         _escapeXml(str) {
-            return str.replace(/[<>&'"]/g, (c) => {
-                switch (c) {
+            return str.replace(/[<>&'"]/g, this._replaceXmlChar);
+        },
+
+        _replaceXmlChar(c) {
+            switch (c) {
                 case "<": return "&lt;";
                 case ">": return "&gt;";
                 case "&": return "&amp;";
                 case "'": return "&apos;";
                 case "\"": return "&quot;";
                 default: return c;
-                }
-            });
+            }
+        },
+
+        _trimTag(tag) {
+            return tag.trim();
+        },
+
+        _processEntryForFilters(categories, providers, statuses, entryTypes, tags, entry) {
+            if (entry.category) {categories.add(entry.category);}
+            if (entry.provider) {providers.add(entry.provider);}
+            if (entry.status) {statuses.add(entry.status);}
+            if (entry.entryType) {entryTypes.add(entry.entryType);}
+
+            if (entry.tags) {
+                entry.tags.split(",").forEach((tag) => {
+                    const cleanTag = tag.trim();
+                    if (cleanTag) {tags.add(cleanTag);}
+                });
+            }
+        },
+
+        _processTagForSearch(tag) {
+            // Implementation depends on context
         }
     };
 });

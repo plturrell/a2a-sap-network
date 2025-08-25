@@ -367,7 +367,7 @@ class ORDDualDatabaseStorage:
 
             # Store in HANA (primary)
             logger.debug("Storing in HANA primary database")
-            hana_result = await self._store_registration_hana(registration)
+            await self._store_registration_hana(registration)
 
             # Replicate to SQLite (fallback)
             if self.replication_enabled:
@@ -1011,7 +1011,7 @@ class ORDDualDatabaseStorage:
             sqlite_entry["dc_creator"] = json.loads(entry["dc_creator"])
             sqlite_entry["dc_subject"] = json.loads(entry["dc_subject"])
 
-            result = self.sqlite_client.client.table("ord_resource_index").upsert(sqlite_entry).execute()
+            self.sqlite_client.client.table("ord_resource_index").upsert(sqlite_entry).execute()
 
         except Exception as e:
             logger.error(f"Failed to index in SQLite: {e}")

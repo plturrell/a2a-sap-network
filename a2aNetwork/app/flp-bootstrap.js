@@ -1,3 +1,4 @@
+/* global sap */
 /**
  * SAP Fiori Launchpad Enterprise Bootstrap
  * Compliant with SAP NetWeaver 7.50+ and SAP BTP
@@ -6,7 +7,7 @@
     'use strict';
 
     // Enterprise configuration based on deployment type
-    const deploymentType = window['sap-ui-config'] && window['sap-ui-config']['deployment-type'] || 'standalone';
+    // const _deploymentType = window['sap-ui-config'] && window['sap-ui-config']['deployment-type'] || 'standalone';
 
     // Check for SAP NetWeaver environment
     const isNetWeaver = window.location.pathname.indexOf('/sap/bc/') !== -1;

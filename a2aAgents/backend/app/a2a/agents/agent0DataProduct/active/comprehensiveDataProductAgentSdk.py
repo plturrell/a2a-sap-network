@@ -1618,7 +1618,9 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
 
             # Sort by relevance and apply quality threshold
             search_results = [r for r in search_results if r["quality_score"] >= quality_threshold]
-            search_results.sort(key=lambda x: x["relevance_score"], reverse=True)
+            def get_relevance_score(x):
+                return x["relevance_score"]
+            search_results.sort(key=get_relevance_score, reverse=True)
 
             return search_results[:max_results]
 
@@ -1666,7 +1668,9 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
                         })
 
                 # Sort by enhanced relevance if available
-                results.sort(key=lambda x: x.get("enhanced_relevance", x.get("relevance_score", 0)), reverse=True)
+                def get_enhanced_relevance(x):
+                    return x.get("enhanced_relevance", x.get("relevance_score", 0))
+                results.sort(key=get_enhanced_relevance, reverse=True)
 
             return results
 

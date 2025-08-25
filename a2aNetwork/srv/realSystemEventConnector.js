@@ -87,11 +87,13 @@ class RealSystemEventConnector extends EventEmitter {
             // Connect to registry WebSocket for real-time agent events
             const registryWs = new BlockchainEventClient(`${this.services.registry.ws}/agents`);
 
-            registryWs.on('open', () => {
+            const handleRegistryOpen = () => {
                 this.logger.info('✅ Connected to agent registry WebSocket');
                 this.connections.set('registry', registryWs);
                 this.retryAttempts.delete('registry');
-            });
+            };
+            
+            registryWs.on('open', handleRegistryOpen);
 
             const handleRegistryMessage = (data) => {
                 try {
@@ -101,20 +103,21 @@ class RealSystemEventConnector extends EventEmitter {
                     this.logger.error('Failed to parse registry event:', error);
                 }
             };
-            
+
             registryWs.on('message', handleRegistryMessage);
 
             const handleRegistryClose = () => {
                 this.logger.warn('Agent registry WebSocket closed, attempting reconnect...');
-                this.scheduleReconnect('registry', () => this.connectToAgentRegistry());
+                const reconnectRegistry = () => this.connectToAgentRegistry();
+                this.scheduleReconnect('registry', reconnectRegistry);
             };
-            
+
             registryWs.on('close', handleRegistryClose);
 
             const handleRegistryError = (error) => {
                 this.logger.error('Agent registry WebSocket error:', error);
             };
-            
+
             registryWs.on('error', handleRegistryError);
 
         } catch (error) {
@@ -135,7 +138,7 @@ class RealSystemEventConnector extends EventEmitter {
             // Connect to blockchain WebSocket for transaction events
             const blockchainWs = new BlockchainEventClient(this.services.blockchain.ws);
 
-            blockchainWs.on('open', () => {
+            const handleBlockchainOpen = () => {
                 this.logger.info('✅ Connected to blockchain events WebSocket');
                 this.connections.set('blockchain', blockchainWs);
                 this.retryAttempts.delete('blockchain');
@@ -145,7 +148,9 @@ class RealSystemEventConnector extends EventEmitter {
                     type: 'subscribe',
                     events: ['transaction.pending', 'transaction.confirmed', 'transaction.failed', 'block.new']
                 }));
-            });
+            };
+            
+            blockchainWs.on('open', handleBlockchainOpen);
 
             const handleBlockchainMessage = (data) => {
                 try {
@@ -155,20 +160,21 @@ class RealSystemEventConnector extends EventEmitter {
                     this.logger.error('Failed to parse blockchain event:', error);
                 }
             };
-            
+
             blockchainWs.on('message', handleBlockchainMessage);
 
             const handleBlockchainClose = () => {
                 this.logger.warn('Blockchain WebSocket closed, attempting reconnect...');
-                this.scheduleReconnect('blockchain', () => this.connectToBlockchainService());
+                const reconnectBlockchain = () => this.connectToBlockchainService();
+                this.scheduleReconnect('blockchain', reconnectBlockchain);
             };
-            
+
             blockchainWs.on('close', handleBlockchainClose);
 
             const handleBlockchainError = (error) => {
                 this.logger.error('Blockchain WebSocket error:', error);
             };
-            
+
             blockchainWs.on('error', handleBlockchainError);
 
         } catch (error) {
@@ -220,20 +226,20 @@ class RealSystemEventConnector extends EventEmitter {
                     this.logger.error('Failed to parse metrics event:', error);
                 }
             };
-            
+
             metricsWs.on('message', handleMetricsMessage);
 
             const handleMetricsClose = () => {
                 this.logger.warn('Metrics WebSocket closed, attempting reconnect...');
                 this.scheduleReconnect('metrics', () => this.connectToMetricsService());
             };
-            
+
             metricsWs.on('close', handleMetricsClose);
 
             const handleMetricsError = (error) => {
                 this.logger.error('Metrics WebSocket error:', error);
             };
-            
+
             metricsWs.on('error', handleMetricsError);
 
         } catch (error) {
@@ -387,7 +393,7 @@ class RealSystemEventConnector extends EventEmitter {
                     const processSecurityEvent = (event) => {
                         this.handleSecurityEvent(event);
                     };
-                    
+
                     response.data.events.forEach(processSecurityEvent);
                     this.logger.debug(`📡 Polled ${response.data.events.length} security events`);
                 }
@@ -441,7 +447,7 @@ class RealSystemEventConnector extends EventEmitter {
                 this.logger.error(`Reconnection failed for ${serviceName}:`, error);
             }
         };
-        
+
         setTimeout(executeReconnection, delay);
     }
 
@@ -453,7 +459,7 @@ class RealSystemEventConnector extends EventEmitter {
         const performHealthCheck = async () => {
             await this.checkAgentHealth();
         };
-        
+
         this.healthMonitorInterval = setInterval(performHealthCheck, 30000);
 
         // Initial check
@@ -806,7 +812,7 @@ class RealSystemEventConnector extends EventEmitter {
                 // Try HTTP health check
                 let httpHealthy = false;
                 try {
-                    await blockchainClient.sendMessage(config.http + '/health', { timeout: 2000 });
+                    await blockchainClient.sendMessage(`${config.http  }/health`, { timeout: 2000 });
                     httpHealthy = true;
                 } catch (e) {
                     // HTTP might not be available for all services

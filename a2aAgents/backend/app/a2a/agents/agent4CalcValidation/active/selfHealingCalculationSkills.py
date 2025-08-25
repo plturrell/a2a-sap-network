@@ -884,7 +884,6 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
 
     def _apply_precision_adjustment(self, error: CalculationError) -> Tuple[Any, float, Dict[str, Any]]:
         """Apply precision adjustment healing strategy"""
-        original_input = error.original_input
 
         # Convert inputs to higher precision if possible
         if isinstance(error.failed_output, (float, np.floating)):

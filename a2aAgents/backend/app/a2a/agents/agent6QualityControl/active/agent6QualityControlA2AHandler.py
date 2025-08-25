@@ -140,7 +140,6 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle intelligent routing decisions based on quality metrics"""
             try:
                 # Make routing decision based on quality assessment
-                quality_metrics = data.get("quality_metrics", {})
                 routing_options = data.get("routing_options", [])
 
                 # Assess quality of each option
@@ -202,7 +201,6 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle workflow control based on quality thresholds"""
             try:
                 workflow_data = data.get("workflow", {})
-                quality_thresholds = data.get("quality_thresholds", {})
 
                 # Monitor workflow quality
                 quality_check = await self.agent_sdk.monitor_trends({

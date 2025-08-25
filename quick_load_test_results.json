@@ -1,0 +1,45 @@
+{
+  "assessment_timestamp": "2025-08-25T17:04:51.714151",
+  "system_info": {
+    "cpu_count": 11,
+    "total_memory_gb": 18.0,
+    "available_memory_gb": 3.34
+  },
+  "concurrent_processing": {
+    "error": "Can't pickle local object 'QuickA2ALoadTester.test_concurrent_processing.<locals>.worker_task'"
+  },
+  "database_performance": {
+    "insert_operations": 500,
+    "insert_duration": 0.0022568702697753906,
+    "insert_rate_ops_per_sec": 221545.74265793365,
+    "select_duration": 0.00023818016052246094,
+    "update_operations": 100,
+    "update_duration": 0.0004611015319824219,
+    "records_found": 500,
+    "database_performance_score": "HIGH"
+  },
+  "memory_usage": {
+    "initial_memory_percent": 81.5,
+    "peak_memory_percent": 81.5,
+    "final_memory_percent": 81.3,
+    "memory_increase": 0.0,
+    "memory_efficiency": "GOOD"
+  },
+  "cpu_performance": {
+    "cpu_task_duration": 1.0260908603668213,
+    "avg_cpu_usage": 8.01,
+    "peak_cpu_usage": 26.6,
+    "cpu_performance_score": "MEDIUM",
+    "work_result": 333332833333500000
+  },
+  "overall_assessment": {
+    "performance_rating": "MEDIUM",
+    "component_scores": {
+      "concurrent_processing": "HIGH",
+      "database": "HIGH",
+      "memory": "MEDIUM",
+      "cpu": "ERROR"
+    },
+    "scalability_estimate": "MEDIUM (10-25 users)"
+  }
+}

@@ -282,7 +282,7 @@ class MonitoringIntegration {
         // Check SAP services
         if (process.env.SAP_GRAPH_ENDPOINT) {
           try {
-            await blockchainClient.sendMessage(process.env.SAP_GRAPH_ENDPOINT + '/health', {
+            await blockchainClient.sendMessage(`${process.env.SAP_GRAPH_ENDPOINT  }/health`, {
               timeout: 5000,
               headers: { 'Authorization': `Bearer ${process.env.SAP_GRAPH_TOKEN}` }
             });

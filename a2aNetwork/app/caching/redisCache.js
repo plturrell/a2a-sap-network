@@ -260,40 +260,40 @@ class A2ACacheService extends EventEmitter {
 
     // Cache specific to tile data
     async cacheTileData(tileId, data, ttl = 30) {
-        return await this.set(`tile:${tileId}`, data, ttl);
+        return this.set(`tile:${tileId}`, data, ttl);
     }
 
     async getTileData(tileId) {
-        return await this.get(`tile:${tileId}`);
+        return this.get(`tile:${tileId}`);
     }
 
     // Cache user sessions
     async cacheUserSession(userId, sessionData, ttl = 3600) {
-        return await this.set(`session:${userId}`, sessionData, ttl);
+        return this.set(`session:${userId}`, sessionData, ttl);
     }
 
     async getUserSession(userId) {
-        return await this.get(`session:${userId}`);
+        return this.get(`session:${userId}`);
     }
 
     // Cache user preferences
     async cacheUserPreferences(userId, preferences, ttl = 1800) {
-        return await this.set(`preferences:${userId}`, preferences, ttl);
+        return this.set(`preferences:${userId}`, preferences, ttl);
     }
 
     async getUserPreferences(userId) {
-        return await this.get(`preferences:${userId}`);
+        return this.get(`preferences:${userId}`);
     }
 
     // Cache database query results
     async cacheQueryResult(query, params, result, ttl = 300) {
         const cacheKey = `query:${this.hashQuery(query, params)}`;
-        return await this.set(cacheKey, result, ttl);
+        return this.set(cacheKey, result, ttl);
     }
 
     async getCachedQueryResult(query, params) {
         const cacheKey = `query:${this.hashQuery(query, params)}`;
-        return await this.get(cacheKey);
+        return this.get(cacheKey);
     }
 
     // Hash query for consistent cache keys
@@ -301,7 +301,7 @@ class A2ACacheService extends EventEmitter {
         const crypto = require('crypto');
 
 function stopAllIntervals() {
-    for (const [name, intervalId] of activeIntervals) {
+    for (const [, intervalId] of activeIntervals) {
         clearInterval(intervalId);
     }
     activeIntervals.clear();

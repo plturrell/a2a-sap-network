@@ -349,8 +349,6 @@ class SophisticatedEmbeddingGenerator:
                 self.statistical_vocab[word] += 1
 
             # Calculate TF-IDF-like features
-            features = []
-
             # Word frequency features
             word_freqs = defaultdict(int)
             for word in words:
@@ -717,8 +715,6 @@ class AdvancedConfidenceScorer:
         base_score = 0.7
 
         # Check for reasonable value distribution
-        abs_values = [abs(v) for v in vector_embedding]
-
         if NUMPY_AVAILABLE:
             arr = np.array(vector_embedding)
 
@@ -1028,7 +1024,6 @@ class EnhancedAIPreparationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin
         try:
             standardized_data = content.get('standardized_data', {})
             data_type = content.get('data_type', 'unknown')
-            requester_address = message.get('from')
 
             logger.info(f"Received standardized data for AI preparation: {data_type}")
 
@@ -1523,7 +1518,7 @@ class EnhancedAIPreparationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin
 
             try:
                 self.embedding_config.mode = EmbeddingMode(embedding_mode)
-            except ValueError as e:
+            except ValueError:
                 return {
                     "success": False,
                     "error": f"Invalid embedding mode '{embedding_mode}'. Valid modes: {[mode.value for mode in EmbeddingMode]}",
@@ -2452,7 +2447,7 @@ class EnhancedAIPreparationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin
             try:
                 # Process queued items
                 try:
-                    item = await asyncio.wait_for(self.processing_queue.get(), timeout=1.0)
+                    await asyncio.wait_for(self.processing_queue.get(), timeout=1.0)
                     # Process item here if needed
                     self.processing_queue.task_done()
                 except asyncio.TimeoutError:

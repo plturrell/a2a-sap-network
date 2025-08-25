@@ -7,7 +7,7 @@ import asyncio
 # Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
-from typing import Dict, Any, List, Optional, Set
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from enum import Enum
 from uuid import uuid4
@@ -154,7 +154,7 @@ class A2ADistributedCoordinator:
     def _register_coordination_handlers(self):
         """Register message handlers for task coordination"""
 
-        @self.agent_base.handlers.setdefault('task_assignment', lambda: None)
+        @self.agent_base.handlers.setdefault('task_assignment', self._default_handler)
         async def handle_task_assignment(self, message: A2AMessage, context_id: str):
             """Handle incoming task assignment"""
             task_data = message.parts[0].data
@@ -170,7 +170,7 @@ class A2ADistributedCoordinator:
 
             return await self._accept_task_assignment(task)
 
-        @self.agent_base.handlers.setdefault('task_result', lambda: None)
+        @self.agent_base.handlers.setdefault('task_result', self._default_handler)
         async def handle_task_result(self, message: A2AMessage, context_id: str):
             """Handle task completion result"""
             result_data = message.parts[0].data
@@ -186,7 +186,7 @@ class A2ADistributedCoordinator:
 
             return {"success": True, "task_id": task_id}
 
-        @self.agent_base.handlers.setdefault('help_request', lambda: None)
+        @self.agent_base.handlers.setdefault('help_request', self._default_handler)
         async def handle_help_request(self, message: A2AMessage, context_id: str):
             """Handle help request for task failure"""
             help_data = message.parts[0].data
@@ -315,7 +315,7 @@ class A2ADistributedCoordinator:
                 # Select agent with best capability match
                 best_agent = max(
                     agents["agents"],
-                    key=lambda a: len(set(a.get("capabilities", [])) & set(required_capabilities))
+                    key=self._get_capability_match_score(required_capabilities)
                 )
                 return best_agent["agent_id"]
 
@@ -352,7 +352,7 @@ class A2ADistributedCoordinator:
                 # Select agent with highest trust score
                 best_agent = max(
                     agents["agents"],
-                    key=lambda a: a.get("trust_score", 0.0)
+                    key=self._get_agent_trust_score
                 )
                 return best_agent["agent_id"]
 
@@ -688,6 +688,20 @@ class A2ADistributedCoordinator:
             "registered_handlers": len(self.agent_base.handlers),
             "registered_skills": len(self.agent_base.skills)
         }
+
+    def _default_handler(self):
+        """Default handler for unhandled events"""
+        return None
+
+    def _get_capability_match_score(self, required_capabilities):
+        """Create function to calculate capability match score"""
+        def capability_scorer(agent):
+            return len(set(agent.get("capabilities", [])) & set(required_capabilities))
+        return capability_scorer
+
+    def _get_agent_trust_score(self, agent):
+        """Get trust score from agent data"""
+        return agent.get("trust_score", 0.0)
 
 
 # Integration helper for existing A2A agents

@@ -413,9 +413,11 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 analogies.append(analogy)
 
         # Rank analogies by relevance and similarity
+        def get_analogy_score(a):
+            return a["similarity"] * a["inference"]["confidence"]
         ranked_analogies = sorted(
             analogies,
-            key=lambda a: a["similarity"] * a["inference"]["confidence"],
+            key=get_analogy_score,
             reverse=True
         )
 
@@ -468,7 +470,9 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                         continue
 
         # Sort by causal strength
-        causal_paths.sort(key=lambda p: p["strength"], reverse=True)
+        def get_causal_strength(p):
+            return p["strength"]
+        causal_paths.sort(key=get_causal_strength, reverse=True)
 
         # Generate causal explanation
         if causal_paths:
@@ -638,7 +642,9 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
     async def _update_bee_swarm(self, evaluations: List[Tuple[SwarmAgent, float]]):
         """Update swarm using Artificial Bee Colony algorithm"""
         # Sort agents by fitness
-        sorted_agents = sorted(evaluations, key=lambda x: x[1], reverse=True)
+        def get_agent_fitness(x):
+            return x[1]
+        sorted_agents = sorted(evaluations, key=get_agent_fitness, reverse=True)
 
         # Elite bees (top 20%) - exploit
         elite_count = max(1, len(sorted_agents) // 5)
@@ -1661,7 +1667,9 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             }
         else:
             # Simple synthesis fallback
-            best = max(weighted_answers, key=lambda x: x["weighted_confidence"])
+            def get_weighted_confidence(x):
+                return x["weighted_confidence"]
+            best = max(weighted_answers, key=get_weighted_confidence)
             synthesis = best["answer"]
 
             for wa in weighted_answers:
@@ -1949,9 +1957,11 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         positions = debate_state["positions"]
 
         # Find position with highest final confidence
+        def get_position_confidence(x):
+            return x[1]["confidence"]
         best_position = max(
             positions.items(),
-            key=lambda x: x[1]["confidence"]
+            key=get_position_confidence
         )
 
         perspective = best_position[0]

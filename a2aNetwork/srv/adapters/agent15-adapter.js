@@ -601,7 +601,7 @@ class Agent15Adapter extends BaseAdapter {
                     throw new Error(`Unknown method: ${method}`);
             }
         } catch (error) {
-            console.error(`Agent 15 backend call failed:`, error.message);
+            console.error('Agent 15 backend call failed:', error.message);
             throw error;
         }
     }

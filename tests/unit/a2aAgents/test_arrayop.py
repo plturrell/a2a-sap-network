@@ -147,9 +147,16 @@ def test_array_permutedims():
         assert m1.tomatrix().C == m1.conjugate().tomatrix()
         assert m1.tomatrix().H == m1.adjoint().tomatrix()
 
-        raises(ValueError, lambda m=m1: permutedims(m, (0,)))
-        raises(ValueError, lambda m=m1: permutedims(m, (0, 0)))
-        raises(ValueError, lambda m=m1: permutedims(m, (1, 2, 0)))
+        def test_permutedims_single_index(m=m1):
+            return permutedims(m, (0,))
+        def test_permutedims_duplicate_index(m=m1):
+            return permutedims(m, (0, 0))
+        def test_permutedims_invalid_range(m=m1):
+            return permutedims(m, (1, 2, 0))
+        
+        raises(ValueError, test_permutedims_single_index)
+        raises(ValueError, test_permutedims_duplicate_index)
+        raises(ValueError, test_permutedims_invalid_range)
 
         # Some tests with random arrays:
         dims = 6
@@ -172,9 +179,16 @@ def test_array_permutedims():
 
         po = ArrayType(sa, [2, 2, 3, 3, 2, 2])
 
-        raises(ValueError, lambda p=po: permutedims(p, (1, 1)))
-        raises(ValueError, lambda p=po: p.transpose())
-        raises(ValueError, lambda p=po: p.adjoint())
+        def test_po_permutedims_duplicate(p=po):
+            return permutedims(p, (1, 1))
+        def test_po_transpose(p=po):
+            return p.transpose()
+        def test_po_adjoint(p=po):
+            return p.adjoint()
+        
+        raises(ValueError, test_po_permutedims_duplicate)
+        raises(ValueError, test_po_transpose)
+        raises(ValueError, test_po_adjoint)
 
         assert permutedims(po, reversed(range(po.rank()))) == ArrayType(
             [[[[[[sa[0], sa[72]], [sa[36], sa[108]]], [[sa[12], sa[84]], [sa[48], sa[120]]], [[sa[24],
@@ -313,12 +327,25 @@ def test_permutedims_with_indices():
     new_A = permutedims(A, index_order_new=indices_new, index_order_old=indices_old)
     for a, b, c, d, e in itertools.product(range(2), range(2), range(2), range(2), range(2)):
         assert new_A[a, b, c, d, e] == A[c, a, b, e, d]
-    raises(ValueError, lambda: permutedims(A, index_order_old=list("aacde"), index_order_new=list("abcde")))
-    raises(ValueError, lambda: permutedims(A, index_order_old=list("abcde"), index_order_new=list("abcce")))
-    raises(ValueError, lambda: permutedims(A, index_order_old=list("abcde"), index_order_new=list("abce")))
-    raises(ValueError, lambda: permutedims(A, index_order_old=list("abce"), index_order_new=list("abce")))
-    raises(ValueError, lambda: permutedims(A, [2, 1, 0, 3, 4], index_order_old=list("abcde")))
-    raises(ValueError, lambda: permutedims(A, [2, 1, 0, 3, 4], index_order_new=list("abcde")))
+    def test_permutedims_duplicate_old_indices():
+        return permutedims(A, index_order_old=list("aacde"), index_order_new=list("abcde"))
+    def test_permutedims_duplicate_new_indices():
+        return permutedims(A, index_order_old=list("abcde"), index_order_new=list("abcce"))
+    def test_permutedims_mismatched_indices_length():
+        return permutedims(A, index_order_old=list("abcde"), index_order_new=list("abce"))
+    def test_permutedims_invalid_old_indices_length():
+        return permutedims(A, index_order_old=list("abce"), index_order_new=list("abce"))
+    def test_permutedims_conflicting_old_indices():
+        return permutedims(A, [2, 1, 0, 3, 4], index_order_old=list("abcde"))
+    def test_permutedims_conflicting_new_indices():
+        return permutedims(A, [2, 1, 0, 3, 4], index_order_new=list("abcde"))
+        
+    raises(ValueError, test_permutedims_duplicate_old_indices)
+    raises(ValueError, test_permutedims_duplicate_new_indices)
+    raises(ValueError, test_permutedims_mismatched_indices_length)
+    raises(ValueError, test_permutedims_invalid_old_indices_length)
+    raises(ValueError, test_permutedims_conflicting_old_indices)
+    raises(ValueError, test_permutedims_conflicting_new_indices)
 
 
 def test_flatten():
@@ -334,8 +361,13 @@ def test_flatten():
 def test_tensordiagonal():
     from sympy.matrices.dense import eye
     expr = Array(range(9)).reshape(3, 3)
-    raises(ValueError, lambda: tensordiagonal(expr, [0], [1]))
-    raises(ValueError, lambda: tensordiagonal(expr, [0, 0]))
+    def test_tensordiagonal_invalid_indices():
+        return tensordiagonal(expr, [0], [1])
+    def test_tensordiagonal_duplicate_indices():
+        return tensordiagonal(expr, [0, 0])
+    
+    raises(ValueError, test_tensordiagonal_invalid_indices)
+    raises(ValueError, test_tensordiagonal_duplicate_indices)
     assert tensordiagonal(eye(3), [0, 1]) == Array([1, 1, 1])
     assert tensordiagonal(expr, [0, 1]) == Array([0, 4, 8])
     x, y, z = symbols("x y z")
@@ -357,5 +389,10 @@ def test_tensordiagonal():
     # assert tensordiagonal(expr3, [0], [1, 2], [3]) == tensorproduct([x, y, z], [a, 2*b, 3*c], [X, Y, Z])
     assert tensordiagonal(tensordiagonal(expr3, [2, 3]), [0, 1]) == tensorproduct([a*X, b*Y, c*Z], [x, 2*y, 3*z])
 
-    raises(ValueError, lambda: tensordiagonal([[1, 2, 3], [4, 5, 6]], [0, 1]))
-    raises(ValueError, lambda: tensordiagonal(expr3.reshape(3, 3, 9), [1, 2]))
+    def test_tensordiagonal_invalid_matrix():
+        return tensordiagonal([[1, 2, 3], [4, 5, 6]], [0, 1])
+    def test_tensordiagonal_invalid_reshape():
+        return tensordiagonal(expr3.reshape(3, 3, 9), [1, 2])
+    
+    raises(ValueError, test_tensordiagonal_invalid_matrix)
+    raises(ValueError, test_tensordiagonal_invalid_reshape)

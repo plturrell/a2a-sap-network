@@ -589,7 +589,9 @@ class BlackboardController:
             return False
 
         # Sort by priority and select best candidate
-        candidates.sort(key=lambda x: x[1], reverse=True)
+        def get_candidate_priority(x):
+            return x[1]
+        candidates.sort(key=get_candidate_priority, reverse=True)
         selected_source = candidates[0][0]
 
         # Let selected source contribute
@@ -684,10 +686,14 @@ class BlackboardController:
             else:
                 # Fallback synthesis
                 if self.blackboard.conclusions:
-                    best_conclusion = max(self.blackboard.conclusions, key=lambda c: c.get('confidence', 0))
+                    def get_conclusion_confidence(c):
+                        return c.get('confidence', 0)
+                    best_conclusion = max(self.blackboard.conclusions, key=get_conclusion_confidence)
                     return best_conclusion['content']
                 elif self.blackboard.hypotheses:
-                    best_hypothesis = max(self.blackboard.hypotheses, key=lambda h: h.get('evidence_score', 0))
+                    def get_hypothesis_evidence_score(h):
+                        return h.get('evidence_score', 0)
+                    best_hypothesis = max(self.blackboard.hypotheses, key=get_hypothesis_evidence_score)
                     return f"Based on evidence: {best_hypothesis['content']}"
                 else:
                     return "Unable to reach a conclusion with available information"

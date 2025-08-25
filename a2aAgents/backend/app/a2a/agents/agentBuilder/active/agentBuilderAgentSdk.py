@@ -532,9 +532,8 @@ class AgentBuilderAgentSDK(A2AAgentBase, PerformanceMonitoringMixin):
             dependencies_result = await self.execute_skill("dependency_resolution", template, generation_request)
 
             # Stage 4: Process BPMN workflow (if provided)
-            bpmn_result = None
             if generation_request.bpmn_workflow:
-                bpmn_result = await self.execute_skill("bpmn_processing", generation_request.bpmn_workflow)
+                await self.execute_skill("bpmn_processing", generation_request.bpmn_workflow)
 
             # Stage 5: Generate agent code
             code_result = await self.execute_skill("code_generation", generation_request, template)

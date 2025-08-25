@@ -101,15 +101,16 @@ class AIDecisionLogger:
         self.decision_history: deque = deque(maxlen=memory_size)
 
         # Analytics tracking
-        self.decision_stats = defaultdict(
-            lambda: {
+        def create_default_stats():
+            return {
                 "total": 0,
                 "success": 0,
                 "failure": 0,
                 "avg_response_time": 0.0,
                 "avg_confidence": 0.0,
             }
-        )
+        
+        self.decision_stats = defaultdict(create_default_stats)
 
         # Pattern learning
         self.learned_patterns: List[PatternInsight] = []
@@ -387,7 +388,11 @@ class AIDecisionLogger:
                     new_patterns.append(pattern)
 
         # Pattern 3: Context-specific patterns
-        context_success = defaultdict(lambda: {"total": 0, "success": 0})
+        def create_default_context_stats():
+            """Create default statistics for context tracking"""
+            return {"total": 0, "success": 0}
+        
+        context_success = defaultdict(create_default_context_stats)
         for decision_id, outcome in self.outcomes.items():
             if decision_id in self.decisions:
                 decision = self.decisions[decision_id]
@@ -421,7 +426,11 @@ class AIDecisionLogger:
         # Keep only most relevant patterns
         if len(self.learned_patterns) > 50:
             # Sort by evidence count and recency
-            self.learned_patterns.sort(key=lambda p: (p.evidence_count, p.confidence), reverse=True)
+            def get_pattern_sort_key(pattern):
+                """Get sort key for pattern based on evidence count and confidence"""
+                return (pattern.evidence_count, pattern.confidence)
+            
+            self.learned_patterns.sort(key=get_pattern_sort_key, reverse=True)
             self.learned_patterns = self.learned_patterns[:50]
 
         # Update learning effectiveness metric

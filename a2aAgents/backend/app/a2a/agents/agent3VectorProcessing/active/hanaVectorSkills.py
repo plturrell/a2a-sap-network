@@ -1180,7 +1180,6 @@ class HanaVectorSkills(SecureA2AAgent):
             # Extract context information
             query = searchContext.get('query', '')
             userId = searchContext.get('userId')
-            sessionHistory = searchContext.get('sessionHistory', [])
             userPreferences = searchContext.get('userPreferences', {})
 
             # Determine optimal search strategy
@@ -1279,9 +1278,6 @@ class HanaVectorSkills(SecureA2AAgent):
         """
         try:
             # Use domain-specific embedding based on user preferences
-            domain = context.get('userPreferences', {}).get('domain', 'general')
-            embedding_model = context.get('userPreferences', {}).get('embedding_model', 'sentence-transformers')
-
             # Fallback embedding generation using TF-IDF approach
             from sklearn.feature_extraction.text import TfidfVectorizer
             import numpy as np

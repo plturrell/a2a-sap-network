@@ -625,7 +625,6 @@ class DistributedTaskCoordinator:
 
         try:
             # Find stale claims (older than 10 minutes)
-            stale_threshold = time.time() - 600
             claim_pattern = f"{self.task_claims_key}:*"
 
             async for key in self.redis.scan_iter(match=claim_pattern):
@@ -780,7 +779,7 @@ async def initialize_distributed_coordination(
             return None
 
         # Select best task based on worker expertise and current conditions
-        best_task = max(tasks, key=lambda t: t.get('ai_score', 0))
+        best_task = max(tasks, key=self._get_task_ai_score)
 
         # Claim the task
         task_id = best_task['task_id']
@@ -1011,7 +1010,7 @@ async def initialize_distributed_coordination(
         if not worker_scores:
             return None
 
-        best_worker = max(worker_scores.items(), key=lambda x: x[1])[0]
+        best_worker = max(worker_scores.items(), key=self._get_worker_score)[0]
 
         # Update prediction cache
         predicted_load = self._predict_worker_load(
@@ -1139,6 +1138,14 @@ async def initialize_distributed_coordination(
             'training_data_size': len(self.task_history),
             'sklearn_available': SKLEARN_AVAILABLE
         }
+
+    def _get_task_ai_score(self, task):
+        """Get AI score from task data"""
+        return task.get('ai_score', 0)
+
+    def _get_worker_score(self, worker_score_item):
+        """Get score from worker score item tuple"""
+        return worker_score_item[1]
 
 
 async def shutdown_distributed_coordination():

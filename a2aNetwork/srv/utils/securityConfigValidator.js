@@ -7,7 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+// const crypto = require('crypto');
 const cds = require('@sap/cds');
 
 /**
@@ -404,7 +404,7 @@ class SecurityConfigValidator {
                 /node-ipc/  // Known compromised package
             ];
 
-            for (const [pkg, version] of Object.entries(allDeps)) {
+            for (const [pkg, _version] of Object.entries(allDeps)) {
                 for (const pattern of suspiciousPatterns) {
                     if (pattern.test(pkg)) {
                         this.warnings.push({

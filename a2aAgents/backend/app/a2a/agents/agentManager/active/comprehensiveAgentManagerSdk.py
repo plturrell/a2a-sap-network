@@ -1688,7 +1688,6 @@ class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             total_skills = len(all_skills)
             redundant_skills = sum(1 for skill in all_skills if len(skill_agents[skill]) > 1)
             single_point_skills = sum(1 for skill in all_skills if len(skill_agents[skill]) == 1)
-            uncovered_skills = []  # Skills that might be needed but no agent has
 
             # Calculate specialization index for each agent
             for agent_id in agent_skills:
@@ -2165,7 +2164,6 @@ class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         """
         try:
             agent_id = tracking_data.get("agent_id")
-            metrics = tracking_data.get("metrics", [])
             time_range = tracking_data.get("time_range", "24h")
             include_predictions = tracking_data.get("include_predictions", True)
 

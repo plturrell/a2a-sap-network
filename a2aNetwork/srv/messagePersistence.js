@@ -196,7 +196,7 @@ class MessagePersistenceService extends cds.Service {
             // Add text search with parameterized query
             if (query) {
                 const sanitizedQuery = query.replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
-                searchQuery = searchQuery.where("content LIKE ? OR metadata LIKE ?",
+                searchQuery = searchQuery.where('content LIKE ? OR metadata LIKE ?',
                     [`%${sanitizedQuery}%`, `%${sanitizedQuery}%`]);
             }
 

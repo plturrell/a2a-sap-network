@@ -460,7 +460,6 @@ class EnhancedQAValidationAgent(SecureA2AAgent, BlockchainIntegrationMixin):
 
             # Calculate multi-perspective consensus
             consensus_score = np.mean(consensus_scores) if consensus_scores else 0.5
-            agreement_threshold = 0.8
             high_agreement = np.std(consensus_scores) < 0.2 if consensus_scores else False
 
             # Identify conflicting perspectives
@@ -887,7 +886,6 @@ class EnhancedQAValidationAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         """Analyze contextual relevance of the validation"""
         try:
             question = validation_data.get("question", "")
-            expected = validation_data.get("expected_answer", "")
             actual = validation_data.get("actual_answer", "")
             context = validation_data.get("context", {})
 

@@ -157,7 +157,7 @@ class ConnectionPool:
 
             yield conn.connection
 
-        except Exception as e:
+        except Exception:
             connection_errors.labels(
                 pool_name=self.name,
                 db_type=self.db_type,

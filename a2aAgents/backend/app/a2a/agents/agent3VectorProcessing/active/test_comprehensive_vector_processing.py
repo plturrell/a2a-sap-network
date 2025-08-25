@@ -156,7 +156,7 @@ async def test_vector_processing():
     try:
         # Generate test vectors if needed
         if len(agent.vector_store) < 2:
-            test_result = await agent.generate_embeddings({
+            await agent.generate_embeddings({
                 'texts': ['First test vector', 'Second test vector'],
                 'model_type': 'general'
             })

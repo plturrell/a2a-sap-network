@@ -1709,7 +1709,6 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
             prepared_data = content.get('prepared_data', {})
             features = content.get('features', [])
             metadata = content.get('metadata', {})
-            requester_address = message.get('from')
 
             logger.info(f"Received AI-ready data for vector processing")
 
@@ -2321,7 +2320,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     self.vector_store.metadata.clear()
 
                     # Store as chunks
-                    chunk_result = await self.vector_store._store_vectors_streaming(vectors_to_chunk, metadata_to_chunk)
+                    await self.vector_store._store_vectors_streaming(vectors_to_chunk, metadata_to_chunk)
                     optimizations_applied.append(f"Chunked {len(vectors_to_chunk)} vectors")
 
             elif optimization_strategy == "memory_map":
@@ -2340,7 +2339,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     self.vector_store.metadata.clear()
 
                     # Store as memory-mapped
-                    mmap_result = await self.vector_store._store_vectors_memory_mapped(vectors_to_mmap, metadata_to_mmap)
+                    await self.vector_store._store_vectors_memory_mapped(vectors_to_mmap, metadata_to_mmap)
                     optimizations_applied.append(f"Memory-mapped {len(vectors_to_mmap)} vectors")
 
             elif optimization_strategy == "garbage_collect":
@@ -2733,7 +2732,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
             try:
                 # Process queued items
                 try:
-                    item = await asyncio.wait_for(self.processing_queue.get(), timeout=1.0)
+                    await asyncio.wait_for(self.processing_queue.get(), timeout=1.0)
                     # Process item here if needed
                     self.processing_queue.task_done()
                 except asyncio.TimeoutError:

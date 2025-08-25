@@ -2764,7 +2764,6 @@ Return ONLY a decimal number between 0.0 and 1.0."""
                                          consensus_threshold: float = 0.8,
                                          timeout: float = 30) -> Dict[str, Any]:
         """Perform validation with multi-agent consensus"""
-        start_time = time.time()
         self.metrics['cross_agent_validations'] += 1
 
         try:
@@ -3162,8 +3161,7 @@ Return ONLY a decimal number between 0.0 and 1.0."""
             # Test skill execution capability
             if discovered_skills:
                 try:
-                    # Try to execute a simple skill
-                    test_skill = discovered_skills[0]
+                    # Check skill execution capability (first skill available for testing)
                     if hasattr(self, 'execute_skill'):
                         # Test if execute_skill method exists (from SDK)
                         verification["details"]["execute_skill_method_available"] = True
@@ -3925,28 +3923,8 @@ Return ONLY a decimal number between 0.0 and 1.0."""
     async def _ensure_training_data_table(self):
         """Ensure training data table exists in the database"""
         try:
-            create_table_request = {
-                "jsonrpc": "2.0",
-                "method": "ai_data_storage",
-                "params": {
-                    "operation": "create_table",
-                    "table_name": self.training_data_table,
-                    "schema": {
-                        "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-                        "agent_id": "TEXT NOT NULL",
-                        "timestamp": "DATETIME DEFAULT CURRENT_TIMESTAMP",
-                        "test_case": "TEXT NOT NULL",
-                        "features": "TEXT NOT NULL",
-                        "strategy": "TEXT NOT NULL",
-                        "success_rate": "REAL NOT NULL",
-                        "confidence_score": "REAL NOT NULL",
-                        "execution_time": "REAL NOT NULL",
-                        "validation_type": "TEXT",
-                        "metadata": "TEXT"
-                    }
-                },
-                "id": f"create_table_{int(time.time())}"
-            }
+            # TODO: Implement A2A protocol compliant table creation
+            # Table schema would be sent via blockchain messaging to data manager
 
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             # async with httpx.AsyncClient() as client:
@@ -3972,17 +3950,8 @@ Return ONLY a decimal number between 0.0 and 1.0."""
     async def _load_training_data_from_database(self):
         """Load existing training data from database into memory"""
         try:
-            load_request = {
-                "jsonrpc": "2.0",
-                "method": "ai_data_retrieval",
-                "params": {
-                    "table_name": self.training_data_table,
-                    "filters": {"agent_id": self.agent_id},
-                    "limit": 1000,
-                    "order_by": "timestamp DESC"
-                },
-                "id": f"load_training_{int(time.time())}"
-            }
+            # TODO: Implement A2A protocol compliant data loading
+            # Load parameters would be sent via blockchain messaging
 
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             # async with httpx.AsyncClient() as client:
@@ -4033,29 +4002,8 @@ Return ONLY a decimal number between 0.0 and 1.0."""
             if not self.use_data_manager:
                 return False
 
-            storage_request = {
-                "jsonrpc": "2.0",
-                "method": "ai_data_storage",
-                "params": {
-                    "table_name": self.training_data_table,
-                    "data": {
-                        "agent_id": self.agent_id,
-                        "test_case": json.dumps(test_case),
-                        "features": json.dumps(features),
-                        "strategy": strategy,
-                        "success_rate": success_rate,
-                        "confidence_score": confidence_score,
-                        "execution_time": execution_time,
-                        "validation_type": validation_type or "unknown",
-                        "metadata": json.dumps({
-                            "agent_version": self.version,
-                            "learning_enabled": self.learning_enabled,
-                            "timestamp": datetime.utcnow().isoformat()
-                        })
-                    }
-                },
-                "id": f"persist_training_{int(time.time())}"
-            }
+            # TODO: Implement A2A protocol compliant data storage
+            # Training data would be sent via blockchain messaging to data manager
 
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             # async with httpx.AsyncClient() as client:

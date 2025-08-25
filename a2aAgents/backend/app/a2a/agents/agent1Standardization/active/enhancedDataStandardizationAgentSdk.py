@@ -1377,7 +1377,6 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
         try:
             total_records = 0
             successful_records = 0
-            processing_times = []
             confidence_scores = []
 
             for data_type, type_results in batch_results.items():

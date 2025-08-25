@@ -559,8 +559,6 @@ class QualityControlSimulator(SecureA2AAgent):
         while self.simulation_running:
             try:
                 # Calculate real-time metrics
-                current_time = datetime.now()
-
                 # Calculate defect rates by data type
                 defect_rates = {}
                 for data_point in self.test_dataset:
@@ -604,11 +602,7 @@ class QualityControlSimulator(SecureA2AAgent):
     async def _calculate_final_metrics(self):
         """Calculate final simulation metrics"""
 
-        if self.simulation_metrics.processing_time_ms:
-            # Calculate average processing time
-            avg_time = statistics.mean(self.simulation_metrics.processing_time_ms)
-        else:
-            avg_time = 0
+        # Average processing time is already calculated in the metrics
 
         # Calculate overall quality score
         total_score = sum(dp.quality_score for dp in self.test_dataset)
@@ -694,7 +688,7 @@ async def run_normal_quality_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             processing_rate=5.0
         )
@@ -716,7 +710,7 @@ async def run_high_defect_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             processing_rate=8.0
         )
@@ -738,7 +732,7 @@ async def run_performance_stress_simulation(
     )
 
     try:
-        metrics = await simulator.run_simulation(
+        await simulator.run_simulation(
             duration_seconds=duration_seconds,
             processing_rate=20.0  # High processing rate
         )

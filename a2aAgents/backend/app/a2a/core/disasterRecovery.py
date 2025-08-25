@@ -868,8 +868,10 @@ class DisasterRecoveryManager:
         """Find appropriate parent backup for incremental/differential"""
         if backup_type == BackupType.INCREMENTAL:
             # Find most recent backup of any type
+            def get_backup_timestamp(b):
+                return b.timestamp
             recent_backups = sorted(
-                self.backup_catalog.values(), key=lambda b: b.timestamp, reverse=True
+                self.backup_catalog.values(), key=get_backup_timestamp, reverse=True
             )
             return recent_backups[0].backup_id if recent_backups else None
 
@@ -878,7 +880,9 @@ class DisasterRecoveryManager:
             full_backups = [
                 b for b in self.backup_catalog.values() if b.backup_type == BackupType.FULL
             ]
-            full_backups.sort(key=lambda b: b.timestamp, reverse=True)
+            def get_full_backup_timestamp(b):
+                return b.timestamp
+            full_backups.sort(key=get_full_backup_timestamp, reverse=True)
             return full_backups[0].backup_id if full_backups else None
 
         return None
@@ -929,8 +933,10 @@ class DisasterRecoveryManager:
         )
 
         # Find last successful backup
+        def get_catalog_backup_timestamp(b):
+            return b.timestamp
         recent_backups = sorted(
-            self.backup_catalog.values(), key=lambda b: b.timestamp, reverse=True
+            self.backup_catalog.values(), key=get_catalog_backup_timestamp, reverse=True
         )
         last_backup = recent_backups[0] if recent_backups else None
 

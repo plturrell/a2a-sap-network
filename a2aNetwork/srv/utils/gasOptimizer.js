@@ -155,7 +155,7 @@ class GasOptimizer {
 const activeIntervals = new Map();
 
 function stopAllIntervals() {
-    for (const [name, intervalId] of activeIntervals) {
+    for (const [, intervalId] of activeIntervals) {
         clearInterval(intervalId);
     }
     activeIntervals.clear();
@@ -266,7 +266,7 @@ module.exports.shutdown = shutdown;
 }
 
 // Start cache cleanup interval
-const gasOptimizer = new GasOptimizer();
+// const gasOptimizer = new GasOptimizer();
 // activeIntervals.set('interval_270', setInterval(() => gasOptimizer.cleanupCache(), 300000)); // Clean every 5 minutes
 
 module.exports = GasOptimizer;

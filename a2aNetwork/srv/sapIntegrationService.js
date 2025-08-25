@@ -448,7 +448,7 @@ module.exports = class EnhancedIntegrationService extends cds.Service {
             this.emit('integration.health.metrics', metrics);
         }, 60000)); // Every minute
     }
-}
+};
 
 /**
  * Transaction Manager for atomic operations

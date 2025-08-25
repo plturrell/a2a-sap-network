@@ -262,7 +262,7 @@ class PriorityQueue:
                 queue = self.queues[p]
                 if not queue.empty():
                     try:
-                        dropped_item = queue.get_nowait()
+                        queue.get_nowait()
                         self.total_size -= 1
                         logger.warning(f"Dropped {p} priority item to make space for {priority}")
                         return

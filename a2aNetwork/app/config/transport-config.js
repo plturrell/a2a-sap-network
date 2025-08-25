@@ -1,7 +1,7 @@
 /* global sap, jQuery */
 sap.ui.define([
     'sap/base/Log'
-], (Log) => {
+], function(Log) {
     'use strict';
 
     /**
@@ -109,12 +109,12 @@ sap.ui.define([
                         'Accept': 'application/vnd.sap.adt.transportrequests.v1+xml'
                     },
                     data: this._buildTransportRequestXML(requestData),
-                    success: (data) => {
+                    success: function(data) {
                         const transportNumber = this._extractTransportNumber(data);
                         Log.info('Transport request created', transportNumber);
                         resolve(transportNumber);
-                    },
-                    error: (error) => {
+                    }.bind(this),
+                    error: function(error) {
                         Log.error('Failed to create transport request', error);
                         // Fallback for non-SAP environments
                         if (error.status === 404) {
@@ -122,7 +122,7 @@ sap.ui.define([
                         } else {
                             reject(error);
                         }
-                    }
+                    }.bind(this)
                 });
             });
         },
@@ -149,11 +149,11 @@ sap.ui.define([
                         'Content-Type': 'application/vnd.sap.adt.transportobjects.v1+xml'
                     },
                     data: this._buildTransportObjectXML(objectData),
-                    success: () => {
+                    success: function() {
                         Log.info('Object added to transport', { transport: transportNumber, object: object.name });
                         resolve();
                     },
-                    error: (error) => {
+                    error: function(error) {
                         Log.error('Failed to add object to transport', error);
                         reject(error);
                     }
@@ -171,7 +171,7 @@ sap.ui.define([
                 jQuery.ajax({
                     url: `/sap/bc/adt/cts/transportrequests/${transportNumber}/release`,
                     method: 'POST',
-                    success: () => {
+                    success: function() {
                         Log.info('Transport request released', transportNumber);
 
                         if (this.config.autoTransport.enabled) {
@@ -179,8 +179,8 @@ sap.ui.define([
                         }
 
                         resolve();
-                    },
-                    error: (error) => {
+                    }.bind(this),
+                    error: function(error) {
                         Log.error('Failed to release transport request', error);
                         reject(error);
                     }
@@ -194,7 +194,7 @@ sap.ui.define([
          * @returns {Promise} Transport history
          */
         getTransportHistory: function(object) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve, _reject) => {
                 jQuery.ajax({
                     url: '/sap/bc/adt/vit/wb/object_requests',
                     method: 'GET',
@@ -203,11 +203,11 @@ sap.ui.define([
                         object: object.type,
                         objName: object.name
                     },
-                    success: (data) => {
+                    success: function(data) {
                         const history = this._parseTransportHistory(data);
                         resolve(history);
-                    },
-                    error: (error) => {
+                    }.bind(this),
+                    error: function(error) {
                         Log.error('Failed to get transport history', error);
                         resolve([]); // Return empty history on error
                     }
@@ -310,14 +310,18 @@ sap.ui.define([
             const xmlDoc = parser.parseFromString(xmlData, 'text/xml');
             const requests = xmlDoc.querySelectorAll('REQUEST');
 
-            return Array.from(requests).map(req => ({
-                number: req.querySelector('TRKORR')?.textContent,
-                description: req.querySelector('AS4TEXT')?.textContent,
-                owner: req.querySelector('AS4USER')?.textContent,
-                date: req.querySelector('AS4DATE')?.textContent,
-                time: req.querySelector('AS4TIME')?.textContent,
-                status: req.querySelector('TRSTATUS')?.textContent
-            }));
+            function mapRequestToHistory(req) {
+                return {
+                    number: req.querySelector('TRKORR')?.textContent,
+                    description: req.querySelector('AS4TEXT')?.textContent,
+                    owner: req.querySelector('AS4USER')?.textContent,
+                    date: req.querySelector('AS4DATE')?.textContent,
+                    time: req.querySelector('AS4TIME')?.textContent,
+                    status: req.querySelector('TRSTATUS')?.textContent
+                };
+            }
+
+            return Array.from(requests).map(mapRequestToHistory);
         },
 
         /**

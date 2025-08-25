@@ -145,7 +145,7 @@ sap.ui.define([
          * Perform batch acknowledge operation
          */
         _performBatchAcknowledge: function (aContexts, oModel) {
-            const that = this;
+            // const that = this;
             const aPromises = [];
 
             aContexts.forEach(oContext => {
@@ -199,7 +199,7 @@ sap.ui.define([
          * Perform batch resolve operation
          */
         _performBatchResolve: function (aContexts, oModel, sResolution) {
-            const that = this;
+            // const that = this;
             const aPromises = [];
 
             aContexts.forEach(oContext => {
@@ -260,7 +260,7 @@ sap.ui.define([
          * Perform batch escalate operation
          */
         _performBatchEscalate: function (aContexts, oModel, sEscalationReason) {
-            const that = this;
+            // const that = this;
             const aPromises = [];
 
             aContexts.forEach(oContext => {

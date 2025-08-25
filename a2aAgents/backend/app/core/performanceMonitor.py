@@ -143,7 +143,6 @@ class PerformanceMonitor:
             if durations:
                 avg = statistics.mean(durations)
                 p95 = sorted(durations)[int(len(durations) * 0.95)]
-                p99 = sorted(durations)[int(len(durations) * 0.99)]
 
                 # Check against thresholds
                 if operation.startswith("api_"):

@@ -1276,7 +1276,6 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
 
         try:
             calc_metrics = calc_data.get("metrics", {})
-            qa_metrics = qa_data.get("metrics", {})
 
             # Analyze trend indicators for variation
             calc_trends = calc_metrics.get("trend_indicators", {})
@@ -2662,7 +2661,6 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
 
         for agent_id, data in agent_data.items():
             test_results = data.get("test_results", [])
-            quality_assessments = data.get("quality_assessments", [])
 
             # Detailed agent analysis
             agent_analysis = {

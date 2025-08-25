@@ -22,10 +22,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from concurrent.futures import ThreadPoolExecutor
 
-from app.core.loggingConfig import get_logger, LogCategory, log_operation
+from app.core.loggingConfig import get_logger, LogCategory
 from app.core.exceptions import (
-    A2ABaseException, A2ATimeoutError, A2AConcurrencyError,
-    A2AResourceExhaustionError, ErrorSeverity
+    A2ATimeoutError, A2AConcurrencyError,
+    ErrorSeverity
 )
 
 T = TypeVar('T')
@@ -167,7 +167,7 @@ class AsyncOperationManager:
                     metadata={'operation_type': config.operation_type.value}
                 )
 
-            except asyncio.TimeoutError as e:
+            except asyncio.TimeoutError:
                 last_exception = A2ATimeoutError(
                     f"Operation {operation_id} timed out after {config.timeout_seconds}s",
                     timeout_seconds=config.timeout_seconds,

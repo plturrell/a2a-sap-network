@@ -6,10 +6,9 @@ AI-powered rate limiting that adapts to user behavior patterns and threat detect
 import time
 import logging
 import json
-import hashlib
 from collections import defaultdict, deque
 from typing import Dict, Any, List, Optional, Tuple, Set
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 import redis.asyncio as redis
@@ -138,9 +137,6 @@ class AIBehaviorAnalyzer:
                 return rule_classification
             else:
                 # Weighted combination
-                rule_weight = 0.4
-                ml_weight = 0.6
-
                 # This is a simplified combination - in practice would be more sophisticated
                 if rule_classification[0] == ml_classification[0]:
                     confidence = max(rule_classification[1], ml_classification[1])
@@ -161,11 +157,9 @@ class AIBehaviorAnalyzer:
 
         # Time-based analysis
         current_time = time.time()
-        last_hour_requests = [r for r in recent_requests if current_time - r.timestamp < 3600]
         last_minute_requests = [r for r in recent_requests if current_time - r.timestamp < 60]
 
         requests_per_minute = len(last_minute_requests)
-        requests_per_hour = len(last_hour_requests)
 
         # Endpoint diversity
         unique_endpoints = len(set(r.endpoint for r in recent_requests))

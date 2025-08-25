@@ -67,7 +67,7 @@ sap.ui.define([
         // Performance optimization utilities
         _debounce(fn, delay) {
             let timeoutId;
-            
+
             const debouncedFunction = function() {
                 const args = arguments;
                 const context = this;
@@ -87,7 +87,7 @@ sap.ui.define([
 
         _throttle(fn, limit) {
             let inThrottle;
-            
+
             const throttledFunction = function() {
                 const args = arguments;
                 const context = this;
@@ -97,7 +97,7 @@ sap.ui.define([
                     setTimeout(() => { inThrottle = false; }, limit);
                 }
             };
-            
+
             return throttledFunction;
         },
 
@@ -167,7 +167,7 @@ sap.ui.define([
                     }
                 });
             }.bind(this);
-            
+
             return new Promise(csrfTokenExecutor);
         },
 

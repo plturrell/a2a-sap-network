@@ -323,8 +323,9 @@ class AIIntelligentCache:
         elif self.strategy == CacheStrategy.LRU:
             victim_key = next(iter(self.cache_entries))
         elif self.strategy == CacheStrategy.LFU:
-            victim_key = min(self.cache_entries.keys(), 
-                           key=lambda k: self.cache_entries[k].access_count)
+            def get_access_count(k):
+                return self.cache_entries[k].access_count
+            victim_key = min(self.cache_entries.keys(), key=get_access_count)
         else:
             victim_key = await self._adaptive_select_victim()
         
@@ -482,8 +483,10 @@ class AIIntelligentCache:
                     self.prefetch_queue.append((key, prefetch_score, user_context))
                     
             # Sort prefetch queue by score
+            def get_prefetch_score(x):
+                return x[1]
             self.prefetch_queue = deque(
-                sorted(self.prefetch_queue, key=lambda x: x[1], reverse=True)[:100]
+                sorted(self.prefetch_queue, key=get_prefetch_score, reverse=True)[:100]
             )
             
         except Exception as e:
@@ -512,7 +515,9 @@ class AIIntelligentCache:
                     similarities.append((other_key, similarity))
             
             # Sort by similarity and return top matches
-            similarities.sort(key=lambda x: x[1], reverse=True)
+            def get_similarity_score(x):
+                return x[1]
+            similarities.sort(key=get_similarity_score, reverse=True)
             similar_keys = [k for k, s in similarities[:5] if s > 0.7]
             
         except Exception as e:
@@ -908,8 +913,9 @@ class AIIntelligentCache:
         
         # Calculate scores for different strategies
         lru_victim = next(iter(self.cache_entries))
-        lfu_victim = min(self.cache_entries.keys(), 
-                        key=lambda k: self.cache_entries[k].access_count)
+        def get_access_count_for_victim(k):
+            return self.cache_entries[k].access_count
+        lfu_victim = min(self.cache_entries.keys(), key=get_access_count_for_victim)
         ai_victim = await self._ai_select_victim()
         
         # Combine strategies based on recent performance

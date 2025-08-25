@@ -381,7 +381,7 @@ class ErrorHandler {
     /**
      * Express error middleware wrapper
      */
-    expressErrorMiddleware(error, req, res, next) {
+    expressErrorMiddleware(error, req, res, _next) {
         this.handleRequestError(req, error, { res });
     }
 

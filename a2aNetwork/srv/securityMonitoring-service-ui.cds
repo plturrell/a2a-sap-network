@@ -121,7 +121,7 @@ annotate SecurityMonitoringService.SecurityAlerts with @(
     
     UI.DataPoint #RiskScore: {
         Value: riskScore,
-        Criticality: 1,
+        Criticality: #Critical,
         Title: 'Risk Score'
     },
 
@@ -325,7 +325,7 @@ annotate SecurityMonitoringService.SecurityMetrics with @(
         {
             $Type: 'UI.DataField',
             Value: criticalEvents,
-            Criticality: 1,
+            Criticality: #Critical,
             ![@UI.Importance]: #High
         },
         {
@@ -379,7 +379,7 @@ annotate SecurityMonitoringService.SecurityMetrics with @(
 
     UI.DataPoint #CriticalEvents: {
         Value: criticalEvents,
-        Criticality: 1,
+        Criticality: #Critical,
         Title: 'Critical Events'
     },
 
@@ -497,7 +497,7 @@ annotate SecurityMonitoringService.SecurityDashboard with @(
 
     UI.DataPoint #OverallRisk: {
         Value: overallRiskScore,
-        Criticality: 1,
+        Criticality: #Critical,
         Title: 'Overall Risk Score',
         TrendCalculation: {
             ReferenceValue: 50.0,
@@ -507,19 +507,19 @@ annotate SecurityMonitoringService.SecurityDashboard with @(
 
     UI.DataPoint #ComplianceScore: {
         Value: complianceScore,
-        Criticality: 1,
+        Criticality: #Positive,
         Title: 'Compliance Score (%)'
     },
 
     UI.DataPoint #SystemHealth: {
         Value: systemHealthScore,
-        Criticality: 1,
+        Criticality: #Information,
         Title: 'System Health Score'
     },
 
     UI.DataPoint #ActiveAlerts: {
         Value: totalActiveAlerts,
-        Criticality: 1,
+        Criticality: #Negative,
         Title: 'Active Security Alerts'
     },
 

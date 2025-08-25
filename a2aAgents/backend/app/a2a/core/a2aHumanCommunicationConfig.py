@@ -497,7 +497,6 @@ class A2AHumanCommunicationRouter:
 
         message_type = message.get("message_type", "message")
         category = message.get("category", "general")
-        urgency = message.get("urgency", "medium")
 
         # Generate human-friendly message based on type and content
         if message_type == "approval_request":

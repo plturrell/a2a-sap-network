@@ -158,6 +158,16 @@ const A2A_AGENTS = [
         address: process.env.AGENT_BUILDER_SERVICE_ADDRESS || "0xAA00000000000000000000000000000000000015",
         description: "Static agent builder service for template-based agent generation",
         capabilities: ["template-generation", "static-building", "agent-scaffolding", "code-generation"]
+    },
+    {
+        name: "Chat Interface Agent",
+        endpoint: process.env.AGENT17_ENDPOINT || "http://localhost:8017",
+        reputation: 200,
+        isActive: true,
+        country_code: "US",
+        address: process.env.AGENT17_ADDRESS || "0xAA00000000000000000000000000000000000017",
+        description: "A2A v0.2.9 compliant conversational interface agent for multi-agent coordination via blockchain",
+        capabilities: ["conversational-interface", "intent-analysis", "multi-agent-routing", "response-synthesis"]
     }
 ];
 

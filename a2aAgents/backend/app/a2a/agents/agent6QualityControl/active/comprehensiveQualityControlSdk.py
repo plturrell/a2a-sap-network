@@ -647,7 +647,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         """Make intelligent routing decisions based on quality assessment"""
         try:
             routing_options = request_data.get("routing_options", [])
-            decision_criteria = request_data.get("decision_criteria", {})
 
             best_route = None
             best_score = 0.0
@@ -735,8 +734,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         """Perform intelligent workflow control based on quality metrics"""
         try:
             workflow = request_data.get("workflow", {})
-            quality_thresholds = request_data.get("quality_thresholds", {})
-            control_actions = request_data.get("control_actions", ["continue", "pause", "halt"])
 
             workflow_id = workflow.get("workflow_id", "unknown")
 
@@ -868,7 +865,6 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         try:
             metrics_data = request_data.get('metrics', {})
             sensitivity = request_data.get('sensitivity', 0.1)
-            time_window = request_data.get('time_window', '1h')
 
             # Extract features for anomaly detection
             features = await self._extract_anomaly_features(metrics_data)

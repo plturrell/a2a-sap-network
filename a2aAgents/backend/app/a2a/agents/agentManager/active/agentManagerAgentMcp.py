@@ -588,8 +588,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
 
             # Simple sequential execution
             for i, task in enumerate(workflow["tasks"]):
-                agent_id = workflow["agents"][i % len(workflow["agents"])]
-
+                # Assign task to next available agent (round-robin)
                 # Execute task on agent
                 # In real implementation, this would call the agent's API
                 await asyncio.sleep(1)  # Simulate task execution

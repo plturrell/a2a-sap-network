@@ -128,7 +128,7 @@ async function checkBlockchainHealth() {
 async function checkMcpHealth() {
     try {
         const healthChecks = await Promise.all(
-            Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
+            Object.entries(AGENT_METADATA).map(async ([_id, agent]) => {
                 const health = await checkAgentHealth(agent.port);
                 return health.status === 'healthy' ? {
                     mcp_tools: health.mcp_tools || 0,

@@ -332,42 +332,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
         Use GrokClient to evaluate the answer from CalculationAgent
         """
         try:
-            evaluation_prompt = f"""
-            Evaluate the following calculation result:
-
-            Question: {question.question}
-            Category: {question.category}
-            Difficulty: {question.difficulty}
-
-            Provided Answer: {calc_result.answer}
-            Methodology: {calc_result.methodology}
-            Steps: {json.dumps(calc_result.steps, indent=2)}
-
-            Expected Answer: {expected_answer if expected_answer else "Not provided - evaluate correctness based on mathematical principles"}
-            Expected Methodology: {question.expected_methodology if question.expected_methodology else "Any valid approach"}
-
-            Please evaluate:
-            1. Accuracy of the answer (0-100 score)
-            2. Quality of methodology explanation (0-100 score)
-            3. Clarity of step-by-step explanation (0-100 score)
-            4. Overall assessment
-
-            Consider:
-            - Mathematical correctness
-            - Logical flow of steps
-            - Clarity of explanation
-            - Appropriate methodology for the problem type
-
-            Return a JSON response with:
-            {{
-                "accuracy_score": <0-100>,
-                "methodology_score": <0-100>,
-                "explanation_score": <0-100>,
-                "overall_score": <0-100>,
-                "feedback": "<detailed feedback>",
-                "passed": <true/false>
-            }}
-            """
+            # Evaluation logic: use Grok client if available, otherwise fallback to rule-based
 
             if self.grok_client and GROK_AVAILABLE:
                 # Use Grok for intelligent evaluation

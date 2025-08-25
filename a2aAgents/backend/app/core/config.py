@@ -40,7 +40,7 @@ class Settings(BaseSettings):
             self._secrets_manager = get_secrets_manager()
         try:
             return self._secrets_manager.get_jwt_secret()
-        except (SecretNotFoundError, Exception) as e:
+        except (SecretNotFoundError, Exception):
             # In production, this should fail, but for initial deployment we'll generate a temporary one
             if os.getenv("A2A_ENVIRONMENT") == "production" and not os.getenv("A2A_ALLOW_TEMP_SECRETS"):
                 raise ValueError("JWT_SECRET_KEY must be set in environment variables or secrets storage")
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
             self._secrets_manager = get_secrets_manager()
         try:
             return self._secrets_manager.get_api_key("XAI")
-        except (SecretNotFoundError, Exception) as e:
+        except (SecretNotFoundError, Exception):
             # For deployment without XAI key, return None and let individual components handle it
             print(f"WARNING: XAI_API_KEY not set. Some AI features will be disabled.")
             return None

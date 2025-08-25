@@ -1,4 +1,5 @@
-sap.ui.define([], () => {
+/* global sap */
+sap.ui.define([], function() {
     'use strict';
 
     /**
@@ -104,13 +105,16 @@ sap.ui.define([], () => {
             'S_RFCACL': {
                 'checkFunction': function(authValues, requestedRFC) {
                     if (!authValues.RFC_NAME) return false;
-                    return authValues.RFC_NAME.some(pattern => {
+                    
+                    function matchPattern(pattern) {
                         if (pattern.includes('*')) {
                             const regex = new RegExp(`^${  pattern.replace('*', '.*')  }$`);
                             return regex.test(requestedRFC);
                         }
                         return pattern === requestedRFC;
-                    });
+                    }
+                    
+                    return authValues.RFC_NAME.some(matchPattern);
                 }
             }
         },
@@ -154,12 +158,18 @@ sap.ui.define([], () => {
          */
         getAuthorizedCatalogs: function(userRoles) {
             const catalogs = new Set();
-            userRoles.forEach(role => {
+            
+            function processRole(role) {
                 const roleCatalogs = this.roleToCatalogMapping[role];
                 if (roleCatalogs) {
-                    roleCatalogs.forEach(catalog => catalogs.add(catalog));
+                    function addCatalog(catalog) {
+                        catalogs.add(catalog);
+                    }
+                    roleCatalogs.forEach(addCatalog);
                 }
-            });
+            }
+            
+            userRoles.forEach(processRole.bind(this));
             return Array.from(catalogs);
         },
 
@@ -170,15 +180,21 @@ sap.ui.define([], () => {
          */
         getAuthorizedGroups: function(userRoles) {
             const groups = new Set();
-            userRoles.forEach(role => {
+            
+            function processRole(role) {
                 const roleGroups = this.roleToGroupMapping[role];
                 if (roleGroups) {
                     if (roleGroups.includes('*')) {
                         return ['*']; // All groups
                     }
-                    roleGroups.forEach(group => groups.add(group));
+                    function addGroup(group) {
+                        groups.add(group);
+                    }
+                    roleGroups.forEach(addGroup);
                 }
-            });
+            }
+            
+            userRoles.forEach(processRole.bind(this));
             return Array.from(groups);
         },
 

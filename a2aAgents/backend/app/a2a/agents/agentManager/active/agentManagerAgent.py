@@ -270,7 +270,7 @@ class EnhancedAgentManagerAgent(AgentHelpSeeker):
         """Initialize enhanced trust system with AI insights"""
         try:
             # Initialize base trust system
-            trust_result = await initialize_agent_trust(
+            await initialize_agent_trust(
                 agent_id=self.agent_id,
                 private_key_path=f"./trust_keys/{self.agent_id}_private.pem",
                 public_key_path=f"./trust_keys/{self.agent_id}_public.pem"
@@ -1249,12 +1249,8 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
             return await self._handle_advisor_request(message)
 
         # Handle the message content processing
-        if hasattr(message, 'model_dump'):
-            message_data = message.model_dump()
-        elif hasattr(message, 'dict'):
-            message_data = message.dict()
-        else:
-            message_data = {"content": str(message)}
+        # Note: message_data was removed as it was unused
+        # The actual message is passed via message.model_dump() later
 
         # Convert string priority to enum
         from app.a2a.core.messageQueue import MessagePriority, ProcessingMode
@@ -2010,7 +2006,7 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
                     return {"success": False, "error": f"No valid delegation actions provided from: {actions}"}
 
                 # Use delegation contract system
-                delegation_contract = create_delegation_contract(
+                create_delegation_contract(
                     delegator_agent=delegator_agent,
                     delegate_agent=delegate_agent,
                     actions=validated_actions,
@@ -2364,33 +2360,13 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
         """Execute a single task within a workflow"""
         try:
             agent_id = task.get("agent")
-            task_type = task.get("type")
-            task_data = task.get("data", {})
 
             if agent_id not in self.registered_agents:
                 logger.error(f"Task execution failed: Agent {agent_id} not registered")
                 return False
 
-            agent_info = self.registered_agents[agent_id]
-            base_url = agent_info["base_url"]
-
-            # Create A2A message for task
-            message = A2AMessage(
-                role=MessageRole.USER,
-                parts=[
-                    MessagePart(
-                        kind="data",
-                        data={
-                            "task_type": task_type,
-                            "task_data": task_data,
-                            "workflow_id": workflow["workflow_id"],
-                            "workflow_context": workflow.get("metadata", {})
-                        }
-                    )
-                ],
-                taskId=str(uuid4()),
-                contextId=workflow.get("context_id", str(uuid4()))
-            )
+            # TODO: Implement A2A protocol compliant task delegation
+            # Task would be sent via blockchain messaging
 
             # Send task to agent
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
@@ -2618,7 +2594,6 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
 
         async def make_request():
             """Make HTTP request to agent"""
-            timeout = httpx.Timeout(10.0, connect=5.0)
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             # async with httpx.AsyncClient() as client:
             # httpx\.AsyncClient(timeout=timeout) as client:
@@ -2989,16 +2964,9 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
     async def _send_prepare_request(self, transaction_id: str, participant: str, operation: Dict[str, Any]) -> Dict[str, Any]:
         """Send prepare request to a participant"""
         try:
-            # Create prepare message
-            prepare_message = {
-                "transaction_id": transaction_id,
-                "phase": "prepare",
-                "operation": operation,
-                "coordinator": self.agent_id
-            }
-
             # Send to participant (implement based on your A2A protocol)
             # For now, simulate preparation
+            # prepare_message structure: {transaction_id, phase: "prepare", operation, coordinator}
             logger.info(f"Sent prepare request to {participant} for transaction {transaction_id}")
 
             # Simulate response

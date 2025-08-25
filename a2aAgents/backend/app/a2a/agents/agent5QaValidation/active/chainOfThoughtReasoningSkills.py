@@ -127,7 +127,6 @@ class ChainOfThoughtReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMix
             strategy = ReasoningStrategy(request_data.get("reasoning_strategy", "step_by_step"))
             knowledge_base = request_data.get("knowledge_base", [])
             max_steps = request_data.get("max_reasoning_steps", 10)
-            confidence_threshold = request_data.get("confidence_threshold", 0.7)
 
             # Create unique chain ID
             chain_id = hashlib.sha256(f"{question}_{context}_{strategy.value}".encode()).hexdigest()[:12]

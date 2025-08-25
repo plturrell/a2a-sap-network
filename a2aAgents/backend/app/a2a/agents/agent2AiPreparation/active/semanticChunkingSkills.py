@@ -326,8 +326,8 @@ class SemanticChunkingSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 fingerprint_text = f"{chunk_id}_{text[:100]}_{'_'.join(metadata.get('topic_keywords', []))}"
                 semantic_fingerprint = hashlib.sha256(fingerprint_text.encode()).hexdigest()[:16]
 
-                # Create hierarchical embedding object
-                hierarchical_embedding = HierarchicalEmbedding(
+                # Create hierarchical embedding object (constructor call for validation)
+                HierarchicalEmbedding(
                     chunk_id=chunk_id,
                     embeddings=embeddings_by_level,
                     aggregation_method='multi_level',

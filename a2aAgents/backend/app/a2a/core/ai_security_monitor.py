@@ -280,31 +280,110 @@ class AISecurityMonitor:
         }
     
     def _initialize_models(self):
-        """Initialize ML models with synthetic training data"""
-        # Generate synthetic security training data
-        X_anomaly = self._generate_anomaly_training_data()
-        X_intrusion, y_intrusion = self._generate_intrusion_training_data()
-        X_malware, y_malware = self._generate_malware_training_data()
-        X_behavior, y_behavior = self._generate_behavior_training_data()
-        X_ddos = self._generate_ddos_training_data()
+        """Initialize ML models - will train with real data as it arrives"""
+        # Models will be trained incrementally with real security events
+        # No synthetic data - models start untrained and learn from actual threats
+        logger.info("Security models initialized - will train on real security events")
         
-        # Train models
-        if len(X_anomaly) > 0:
-            X_anomaly_scaled = self.feature_scaler.fit_transform(X_anomaly)
-            self.anomaly_detector.fit(X_anomaly_scaled)
+        # Set flag to indicate models need training
+        self.models_trained = False
         
-        if len(X_intrusion) > 0:
-            self.intrusion_detector.fit(X_intrusion, y_intrusion)
+        # Schedule initial training attempt
+        asyncio.create_task(self._train_with_real_data())
+    
+    async def _train_with_real_data(self):
+        """Train models with real security data from the platform"""
+        from .data_pipeline import get_data_pipeline
+        pipeline = get_data_pipeline()
         
-        if len(X_malware) > 0:
-            self.malware_classifier.fit(X_malware, y_malware)
+        try:
+            # Wait for pipeline to be ready
+            await asyncio.sleep(5)
+            
+            # Get real security events
+            events_df = await pipeline.get_training_data('events', hours=24, min_samples=50)
+            
+            if len(events_df) < 10:
+                logger.info("Waiting for more security events to train models")
+                # Retry in 5 minutes
+                await asyncio.sleep(300)
+                asyncio.create_task(self._train_with_real_data())
+                return
+            
+            # Extract features from real security events
+            X_security = []
+            y_labels = []
+            
+            for _, event in events_df.iterrows():
+                # Only process security-relevant events
+                if event['event_type'] in ['auth_failure', 'access_denied', 'suspicious_activity', 
+                                          'rate_limit_exceeded', 'invalid_request']:
+                    features = await self._extract_real_security_features(event)
+                    X_security.append(features)
+                    
+                    # Label based on actual outcomes
+                    if event['error_code'] in ['INTRUSION_DETECTED', 'MALWARE_FOUND', 'ATTACK_BLOCKED']:
+                        y_labels.append(1)  # Confirmed threat
+                    else:
+                        y_labels.append(0)  # Normal/benign
+            
+            if len(X_security) > 10:
+                X_security = np.array(X_security)
+                y_labels = np.array(y_labels)
+                
+                # Train anomaly detector with real data
+                X_scaled = self.feature_scaler.fit_transform(X_security)
+                self.anomaly_detector.fit(X_scaled)
+                
+                # Train classifiers if we have both classes
+                if len(np.unique(y_labels)) > 1:
+                    self.intrusion_detector.fit(X_security, y_labels)
+                    self.malware_classifier.fit(X_security, y_labels)
+                    self.behavior_analyzer.fit(X_scaled, y_labels)
+                
+                self.models_trained = True
+                logger.info(f"Security models trained with {len(X_security)} real events")
+            
+        except Exception as e:
+            logger.error(f"Error training security models: {e}")
+            # Retry training later
+            await asyncio.sleep(300)
+            asyncio.create_task(self._train_with_real_data())
+    
+    async def _extract_real_security_features(self, event: pd.Series) -> np.ndarray:
+        """Extract security features from real event data"""
+        features = []
         
-        if len(X_behavior) > 0:
-            X_behavior_scaled = self.behavior_scaler.fit_transform(X_behavior)
-            self.behavior_analyzer.fit(X_behavior_scaled, y_behavior)
+        # Time-based features
+        timestamp = datetime.fromtimestamp(event['timestamp'])
+        features.append(timestamp.hour / 24.0)
+        features.append(timestamp.weekday() / 7.0)
+        features.append(1 if timestamp.hour < 6 or timestamp.hour > 22 else 0)  # Off-hours
         
-        if len(X_ddos) > 0:
-            self.ddos_detector.fit(X_ddos)
+        # Event characteristics
+        features.append(1 if event['success'] else 0)
+        features.append(event['duration_ms'] / 1000.0 if event['duration_ms'] else 0)
+        
+        # Error patterns
+        error_keywords = ['auth', 'denied', 'invalid', 'blocked', 'limit', 'suspicious']
+        error_score = sum(1 for kw in error_keywords if kw in str(event.get('error_code', '')).lower())
+        features.append(error_score / len(error_keywords))
+        
+        # Extract context features if available
+        if event.get('context'):
+            context = event['context']
+            features.append(context.get('retry_count', 0) / 10.0)
+            features.append(context.get('request_size', 0) / 10000.0)
+            features.append(1 if context.get('is_proxy', False) else 0)
+            features.append(context.get('geo_risk_score', 0.5))
+        else:
+            features.extend([0, 0, 0, 0.5])
+        
+        # Pad to expected size
+        while len(features) < 25:
+            features.append(0.0)
+        
+        return np.array(features[:25], dtype=np.float32)
     
     async def analyze_security_event(self, event: SecurityEvent) -> List[ThreatDetection]:
         """
@@ -761,6 +840,10 @@ class AISecurityMonitor:
         return threats
     
     # Additional helper methods for comprehensive analysis
+    def _get_ip_count(self, item):
+        """Helper method to get IP count for sorting"""
+        return item[1]
+    
     def _analyze_ip_patterns(self, events: List[SecurityEvent]) -> Dict[str, Any]:
         """Analyze IP address patterns"""
         ip_counts = defaultdict(int)
@@ -773,106 +856,829 @@ class AISecurityMonitor:
         
         return {
             'unique_ips': len(ip_counts),
-            'top_ips': dict(sorted(ip_counts.items(), key=lambda x: x[1], reverse=True)[:10]),
+            'top_ips': dict(sorted(ip_counts.items(), key=self._get_ip_count, reverse=True)[:10]),
             'suspicious_ips': [ip for ip, count in ip_counts.items() if count > 100]
         }
     
-    def _generate_anomaly_training_data(self) -> List[np.ndarray]:
-        """Generate synthetic anomaly training data"""
-        X = []
-        for i in range(500):
-            # Normal behavior features
-            normal_features = np.random.normal(0.5, 0.1, 25)
-            X.append(normal_features)
-            
-            # Add some anomalous samples
-            if i % 10 == 0:  # 10% anomalies
-                anomaly_features = normal_features.copy()
-                anomaly_features[np.random.randint(0, len(anomaly_features))] += np.random.uniform(2, 4)
-                X.append(anomaly_features)
-        
-        return X
+    # Removed all synthetic training data methods.
+    # Models now train exclusively on real production data via ml_training_service.py
+    # See _train_with_real_data() method for actual ML training implementation
     
-    def _generate_intrusion_training_data(self) -> Tuple[List[np.ndarray], List[int]]:
-        """Generate synthetic intrusion training data"""
-        X, y = [], []
+    # Real implementations using actual data analysis
+    async def _correlate_threats(self, threats: List[Dict[str, Any]], 
+                               event: SecurityEvent) -> List[Dict[str, Any]]:
+        """Correlate threats using real historical patterns"""
+        if not threats:
+            return []
         
-        for i in range(300):
-            features = np.random.rand(25)
+        correlated_threats = []
+        
+        # Get recent similar events for correlation
+        recent_events = [e for e in list(self.security_events)[-100:] 
+                        if e.agent_id == event.agent_id]
+        
+        for threat in threats:
+            threat_type = threat.get('type', 'unknown')
             
-            # Label based on suspicious patterns
-            if features[3] > 0.8 or features[10] > 0.9 or features[15] > 0.7:  # High risk features
-                label = 1  # Intrusion
+            # Find similar threat patterns in recent history
+            similar_threats = [e for e in recent_events 
+                             if threat_type.lower() in e.event_type.lower()]
+            
+            if len(similar_threats) > 2:  # Pattern detected
+                # Calculate correlation strength
+                time_intervals = [(similar_threats[i+1].timestamp - similar_threats[i].timestamp).seconds 
+                                for i in range(len(similar_threats)-1)]
+                
+                avg_interval = np.mean(time_intervals) if time_intervals else 0
+                correlation_strength = min(1.0, len(similar_threats) / 10.0)
+                
+                threat['correlation'] = {
+                    'pattern_detected': True,
+                    'similar_events': len(similar_threats),
+                    'avg_interval_seconds': avg_interval,
+                    'correlation_strength': correlation_strength,
+                    'escalating': len(similar_threats) > 5
+                }
             else:
-                label = 0  # Normal
+                threat['correlation'] = {
+                    'pattern_detected': False,
+                    'similar_events': len(similar_threats),
+                    'correlation_strength': 0.0
+                }
             
-            X.append(features)
-            y.append(label)
+            correlated_threats.append(threat)
         
-        return X, y
+        return correlated_threats
     
-    def _generate_malware_training_data(self) -> Tuple[List[np.ndarray], List[int]]:
-        """Generate synthetic malware training data"""
-        X, y = [], []
+    def _update_ip_reputation(self, event: SecurityEvent, threats: List[Dict[str, Any]]):
+        """Update IP reputation based on real threat analysis"""
+        ip_address = event.metadata.get('source_ip')
+        if not ip_address or ip_address == '127.0.0.1':
+            return
         
-        for i in range(250):
-            features = np.random.rand(25)
-            
-            # Malware indicators
-            malware_score = features[1] * 0.3 + features[8] * 0.4 + features[12] * 0.3
-            label = 1 if malware_score > 0.6 else 0
-            
-            X.append(features)
-            y.append(label)
+        current_time = datetime.utcnow()
         
-        return X, y
+        # Initialize or get existing reputation
+        if ip_address not in self.ip_reputation:
+            self.ip_reputation[ip_address] = {
+                'score': 0.5,  # Neutral starting score
+                'events': 0,
+                'threats': 0,
+                'last_seen': current_time,
+                'threat_types': Counter(),
+                'first_seen': current_time
+            }
+        
+        reputation = self.ip_reputation[ip_address]
+        reputation['events'] += 1
+        reputation['last_seen'] = current_time
+        
+        # Update based on threats detected
+        if threats:
+            reputation['threats'] += len(threats)
+            for threat in threats:
+                threat_type = threat.get('type', 'unknown')
+                reputation['threat_types'][threat_type] += 1
+            
+            # Decrease reputation score based on threat severity
+            severity_impact = {
+                'critical': -0.3,
+                'high': -0.2,
+                'medium': -0.1,
+                'low': -0.05
+            }
+            
+            for threat in threats:
+                severity = threat.get('severity', 'medium')
+                reputation['score'] += severity_impact.get(severity, -0.1)
+        else:
+            # Slight increase for clean events
+            reputation['score'] += 0.01
+        
+        # Calculate threat ratio
+        threat_ratio = reputation['threats'] / reputation['events']
+        
+        # Adjust score based on overall behavior
+        if threat_ratio > 0.5:  # More than 50% threats
+            reputation['score'] = min(reputation['score'], 0.2)
+        elif threat_ratio > 0.2:  # More than 20% threats
+            reputation['score'] = min(reputation['score'], 0.4)
+        
+        # Bound score between 0 and 1
+        reputation['score'] = max(0.0, min(1.0, reputation['score']))
+        
+        # Auto-block very low reputation IPs
+        if reputation['score'] < 0.1 and reputation['events'] > 5:
+            self.blocked_ips.add(ip_address)
+            logger.warning(f"Auto-blocked IP {ip_address} due to low reputation: {reputation['score']:.3f}")
     
-    def _generate_behavior_training_data(self) -> Tuple[List[np.ndarray], List[int]]:
-        """Generate synthetic behavior training data"""
-        X, y = [], []
+    def _analyze_user_agent_patterns(self, events: List[SecurityEvent]) -> Dict[str, Any]:
+        """Analyze user agent patterns from real events"""
+        if not events:
+            return {'anomalies': [], 'suspicious_agents': [], 'bot_score': 0.0}
         
-        for i in range(400):
-            features = np.random.rand(25)
+        user_agents = []
+        for event in events:
+            ua = event.metadata.get('user_agent', '')
+            if ua:
+                user_agents.append(ua)
+        
+        if not user_agents:
+            return {'anomalies': [], 'suspicious_agents': [], 'bot_score': 0.0}
+        
+        # Analyze patterns
+        ua_counts = Counter(user_agents)
+        total_requests = len(user_agents)
+        unique_agents = len(set(user_agents))
+        
+        suspicious_agents = []
+        bot_indicators = 0
+        
+        # Check for suspicious patterns
+        for ua, count in ua_counts.items():
+            ratio = count / total_requests
             
-            # Behavioral classification
-            if features[5] > 0.8 and features[14] > 0.7:
-                label = 1  # Suspicious behavior
+            # High volume from single UA
+            if ratio > 0.3:
+                suspicious_agents.append({
+                    'user_agent': ua,
+                    'requests': count,
+                    'percentage': ratio * 100,
+                    'reason': 'high_volume'
+                })
+            
+            # Check for bot indicators
+            bot_keywords = ['bot', 'crawler', 'spider', 'scraper', 'curl', 'wget']
+            if any(keyword in ua.lower() for keyword in bot_keywords):
+                bot_indicators += count
+            
+            # Very short or suspicious UAs
+            if len(ua) < 10 or ua.count('/') > 3:
+                suspicious_agents.append({
+                    'user_agent': ua,
+                    'requests': count,
+                    'percentage': ratio * 100,
+                    'reason': 'suspicious_format'
+                })
+        
+        bot_score = bot_indicators / total_requests
+        diversity_score = unique_agents / total_requests
+        
+        return {
+            'total_requests': total_requests,
+            'unique_agents': unique_agents,
+            'diversity_score': diversity_score,
+            'bot_score': bot_score,
+            'suspicious_agents': suspicious_agents,
+            'anomalies': suspicious_agents  # For backward compatibility
+        }
+    
+    def _analyze_request_patterns(self, events: List[SecurityEvent]) -> Dict[str, Any]:
+        """Analyze HTTP request patterns from real events"""
+        if not events:
+            return {'anomalies': [], 'patterns': {}}
+        
+        # Extract request data from events
+        request_data = []
+        for event in events:
+            if 'request' in event.event_type.lower():
+                request_data.append({
+                    'method': event.metadata.get('method', 'GET'),
+                    'path': event.metadata.get('path', '/'),
+                    'status_code': event.metadata.get('status_code', 200),
+                    'size': event.metadata.get('response_size', 0),
+                    'timestamp': event.timestamp
+                })
+        
+        if not request_data:
+            return {'anomalies': [], 'patterns': {}}
+        
+        # Analyze patterns
+        methods = Counter([r['method'] for r in request_data])
+        paths = Counter([r['path'] for r in request_data])
+        status_codes = Counter([r['status_code'] for r in request_data])
+        
+        # Calculate request rate
+        if len(request_data) > 1:
+            time_span = (max(r['timestamp'] for r in request_data) - 
+                        min(r['timestamp'] for r in request_data)).total_seconds()
+            request_rate = len(request_data) / (time_span + 1)  # requests per second
+        else:
+            request_rate = 0
+        
+        # Identify anomalies
+        anomalies = []
+        
+        # High error rate
+        error_count = sum(count for code, count in status_codes.items() if code >= 400)
+        error_rate = error_count / len(request_data)
+        if error_rate > 0.2:  # >20% errors
+            anomalies.append({
+                'type': 'high_error_rate',
+                'value': error_rate,
+                'description': f'{error_rate*100:.1f}% of requests resulted in errors'
+            })
+        
+        # Unusual method distribution
+        if methods.get('POST', 0) / len(request_data) > 0.8:
+            anomalies.append({
+                'type': 'high_post_ratio',
+                'value': methods.get('POST', 0) / len(request_data),
+                'description': 'Unusually high ratio of POST requests'
+            })
+        
+        # High request rate
+        if request_rate > 10:  # >10 req/sec
+            anomalies.append({
+                'type': 'high_request_rate',
+                'value': request_rate,
+                'description': f'High request rate: {request_rate:.1f} req/s'
+            })
+        
+        return {
+            'total_requests': len(request_data),
+            'request_rate': request_rate,
+            'methods': dict(methods),
+            'top_paths': dict(paths.most_common(10)),
+            'status_codes': dict(status_codes),
+            'error_rate': error_rate,
+            'anomalies': anomalies,
+            'patterns': {
+                'method_diversity': len(methods),
+                'path_diversity': len(paths),
+                'avg_response_size': np.mean([r['size'] for r in request_data])
+            }
+        }
+    
+    def _analyze_temporal_patterns(self, events: List[SecurityEvent]) -> Dict[str, Any]:
+        """Analyze temporal patterns in security events"""
+        if len(events) < 5:
+            return {'patterns': [], 'anomalies': []}
+        
+        # Extract timestamps
+        timestamps = [event.timestamp for event in events]
+        timestamps.sort()
+        
+        # Calculate time intervals
+        intervals = [(timestamps[i+1] - timestamps[i]).total_seconds() 
+                    for i in range(len(timestamps)-1)]
+        
+        if not intervals:
+            return {'patterns': [], 'anomalies': []}
+        
+        # Statistical analysis
+        mean_interval = np.mean(intervals)
+        std_interval = np.std(intervals)
+        min_interval = min(intervals)
+        max_interval = max(intervals)
+        
+        # Hour-of-day analysis
+        hours = [ts.hour for ts in timestamps]
+        hour_counts = Counter(hours)
+        
+        # Day-of-week analysis
+        weekdays = [ts.weekday() for ts in timestamps]
+        weekday_counts = Counter(weekdays)
+        
+        # Detect patterns
+        patterns = []
+        anomalies = []
+        
+        # Regular intervals (possible automation)
+        if std_interval < mean_interval * 0.2 and len(intervals) > 5:
+            patterns.append({
+                'type': 'regular_intervals',
+                'interval_seconds': mean_interval,
+                'confidence': 0.9,
+                'description': f'Events occur regularly every {mean_interval:.1f} seconds'
+            })
+        
+        # Burst detection
+        burst_count = sum(1 for interval in intervals if interval < 5)  # <5 seconds
+        if burst_count > len(intervals) * 0.3:  # >30% are bursts
+            anomalies.append({
+                'type': 'burst_activity',
+                'burst_ratio': burst_count / len(intervals),
+                'description': f'{burst_count} events in rapid succession'
+            })
+        
+        # Off-hours activity
+        off_hours = [h for h in hours if h < 6 or h > 22]
+        if len(off_hours) > len(hours) * 0.3:  # >30% off-hours
+            anomalies.append({
+                'type': 'off_hours_activity',
+                'off_hours_ratio': len(off_hours) / len(hours),
+                'description': f'{len(off_hours)} events during off-hours (22:00-06:00)'
+            })
+        
+        return {
+            'total_events': len(events),
+            'time_span_seconds': (timestamps[-1] - timestamps[0]).total_seconds(),
+            'avg_interval': mean_interval,
+            'interval_std': std_interval,
+            'min_interval': min_interval,
+            'max_interval': max_interval,
+            'hour_distribution': dict(hour_counts),
+            'weekday_distribution': dict(weekday_counts),
+            'patterns': patterns,
+            'anomalies': anomalies
+        }
+    
+    def _analyze_geographic_patterns(self, events: List[SecurityEvent]) -> Dict[str, Any]:
+        """Analyze geographic patterns from IP addresses"""
+        if not events:
+            return {'countries': {}, 'anomalies': []}
+        
+        # Extract IP addresses
+        ips = []
+        for event in events:
+            ip = event.metadata.get('source_ip')
+            if ip and ip != '127.0.0.1':  # Skip localhost
+                ips.append(ip)
+        
+        if not ips:
+            return {'countries': {}, 'anomalies': []}
+        
+        # Simple geographic analysis (in production, use GeoIP database)
+        # For now, analyze IP patterns
+        ip_counts = Counter(ips)
+        unique_ips = len(set(ips))
+        
+        # Classify IP ranges (simplified)
+        ip_classes = {'private': 0, 'public': 0, 'suspicious': 0}
+        suspicious_patterns = []
+        
+        for ip in set(ips):
+            # Private IPs
+            if (ip.startswith('192.168.') or 
+                ip.startswith('10.') or 
+                ip.startswith('172.')):
+                ip_classes['private'] += ip_counts[ip]
             else:
-                label = 0  # Normal behavior
+                ip_classes['public'] += ip_counts[ip]
+                
+                # Check for suspicious patterns
+                if ip_counts[ip] > len(ips) * 0.3:  # >30% from single IP
+                    suspicious_patterns.append({
+                        'ip': ip,
+                        'requests': ip_counts[ip],
+                        'percentage': ip_counts[ip] / len(ips) * 100,
+                        'reason': 'high_volume_single_ip'
+                    })
+        
+        # Detect geographic anomalies
+        anomalies = []
+        
+        # Too many unique IPs (possible botnet)
+        if unique_ips > len(ips) * 0.8:  # >80% unique
+            anomalies.append({
+                'type': 'high_ip_diversity',
+                'unique_ratio': unique_ips / len(ips),
+                'description': f'Unusually high IP diversity: {unique_ips} unique IPs from {len(ips)} requests'
+            })
+        
+        # Single IP dominance
+        max_ip_count = max(ip_counts.values())
+        if max_ip_count > len(ips) * 0.5:  # >50% from single IP
+            dominant_ip = max(ip_counts, key=ip_counts.get)
+            anomalies.append({
+                'type': 'ip_dominance',
+                'dominant_ip': dominant_ip,
+                'percentage': max_ip_count / len(ips) * 100,
+                'description': f'Single IP {dominant_ip} accounts for {max_ip_count/len(ips)*100:.1f}% of traffic'
+            })
+        
+        return {
+            'total_requests': len(ips),
+            'unique_ips': unique_ips,
+            'ip_diversity': unique_ips / len(ips),
+            'ip_classes': ip_classes,
+            'top_ips': dict(ip_counts.most_common(10)),
+            'suspicious_patterns': suspicious_patterns,
+            'anomalies': anomalies
+        }
+    
+    def _is_pattern_anomalous(self, pattern_type: str, data: Dict[str, Any]) -> bool:
+        """Determine if a pattern is anomalous based on real data analysis"""
+        if not data:
+            return False
+        
+        anomaly_thresholds = {
+            'request_rate': 50,      # requests per second
+            'error_rate': 0.15,      # 15% error rate
+            'unique_ip_ratio': 0.8,  # 80% unique IPs
+            'off_hours_ratio': 0.4,  # 40% off-hours activity
+            'burst_ratio': 0.3,      # 30% burst events
+            'bot_score': 0.5,        # 50% bot traffic
+        }
+        
+        if pattern_type == 'temporal':
+            return (data.get('off_hours_ratio', 0) > anomaly_thresholds['off_hours_ratio'] or
+                    data.get('burst_ratio', 0) > anomaly_thresholds['burst_ratio'])
+        
+        elif pattern_type == 'geographic':
+            return data.get('ip_diversity', 0) > anomaly_thresholds['unique_ip_ratio']
+        
+        elif pattern_type == 'request':
+            return (data.get('request_rate', 0) > anomaly_thresholds['request_rate'] or
+                    data.get('error_rate', 0) > anomaly_thresholds['error_rate'])
+        
+        elif pattern_type == 'user_agent':
+            return data.get('bot_score', 0) > anomaly_thresholds['bot_score']
+        
+        # Default: check if any anomalies were detected
+        return len(data.get('anomalies', [])) > 0
+    def _calculate_pattern_anomaly_score(self, data: Dict[str, Any]) -> float:
+        """Calculate anomaly score from real pattern data"""
+        score = 0.0
+        factors = 0
+        
+        # Analyze connection patterns
+        if 'connections_per_second' in data:
+            cps = data['connections_per_second']
+            if cps > 100:
+                score += min(1.0, cps / 500)  # Scale up to 500 cps
+                factors += 1
+        
+        # Analyze request patterns
+        if 'unique_endpoints' in data:
+            endpoint_ratio = data.get('endpoint_diversity', 1.0)
+            if endpoint_ratio < 0.2:  # Low diversity is suspicious
+                score += (1 - endpoint_ratio)
+                factors += 1
+        
+        # Analyze timing patterns
+        if 'burst_detected' in data and data['burst_detected']:
+            score += 0.8
+            factors += 1
+        
+        # Analyze geographic patterns
+        if 'countries' in data:
+            suspicious_countries = data.get('suspicious_countries', [])
+            if suspicious_countries:
+                score += min(1.0, len(suspicious_countries) * 0.2)
+                factors += 1
+        
+        return score / factors if factors > 0 else 0.0
+    
+    async def _cluster_behaviors(self, events: List[SecurityEvent]) -> Dict[str, Any]:
+        """Cluster security events to identify behavior patterns"""
+        if len(events) < 5:
+            return {'clusters': [], 'patterns': []}
+        
+        # Extract features for clustering
+        features = []
+        for event in events[:100]:  # Limit to recent 100 events
+            event_features = [
+                hash(event.event_type) % 100 / 100,  # Event type
+                1 if event.success else 0,  # Success/failure
+                event.severity_score,  # Severity
+                len(event.metadata) / 10,  # Metadata richness
+            ]
+            features.append(event_features)
+        
+        features = np.array(features)
+        
+        # Perform clustering
+        n_clusters = min(5, len(events) // 10)  # Dynamic cluster count
+        if n_clusters > 1:
+            try:
+                from sklearn.cluster import KMeans
+                kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+                labels = kmeans.fit_predict(features)
+                
+                # Analyze clusters
+                clusters = []
+                for i in range(n_clusters):
+                    cluster_events = [events[j] for j in range(len(labels)) if labels[j] == i]
+                    if cluster_events:
+                        clusters.append({
+                            'size': len(cluster_events),
+                            'dominant_type': Counter([e.event_type for e in cluster_events]).most_common(1)[0][0],
+                            'avg_severity': np.mean([e.severity_score for e in cluster_events]),
+                            'failure_rate': sum(1 for e in cluster_events if not e.success) / len(cluster_events)
+                        })
+                
+                return {'clusters': clusters, 'n_clusters': n_clusters}
+            except Exception as e:
+                logger.error(f"Clustering error: {e}")
+        
+        return {'clusters': [], 'patterns': []}
+    
+    def _assess_overall_risk(self, patterns: Dict[str, Any], anomalies: Dict[str, Any]) -> str:
+        """Assess overall risk level from real analysis data"""
+        risk_score = 0.0
+        risk_factors = 0
+        
+        # Pattern-based risk
+        if patterns:
+            # Connection patterns
+            if patterns.get('connection_burst', {}).get('detected', False):
+                risk_score += 0.8
+                risk_factors += 1
             
-            X.append(features)
-            y.append(label)
+            # Authentication patterns
+            auth_failures = patterns.get('authentication_failures', 0)
+            if auth_failures > 0:
+                risk_score += min(1.0, auth_failures / 10)
+                risk_factors += 1
+            
+            # Geographic risk
+            geo_risk = patterns.get('geographic_risk', 0)
+            if geo_risk > 0:
+                risk_score += geo_risk
+                risk_factors += 1
         
-        return X, y
-    
-    def _generate_ddos_training_data(self) -> List[np.ndarray]:
-        """Generate synthetic DDoS training data"""
-        X = []
-        for i in range(200):
-            # Normal traffic patterns
-            features = np.random.normal(0.3, 0.1, 25)
-            X.append(features)
+        # Anomaly-based risk
+        if anomalies:
+            anomaly_score = anomalies.get('score', 0)
+            if anomaly_score > 0:
+                risk_score += anomaly_score
+                risk_factors += 1
         
-        return X
+        # Calculate average risk
+        avg_risk = risk_score / risk_factors if risk_factors > 0 else 0.0
+        
+        # Determine risk level
+        if avg_risk >= 0.8:
+            return "critical"
+        elif avg_risk >= 0.6:
+            return "high"
+        elif avg_risk >= 0.4:
+            return "medium"
+        elif avg_risk >= 0.2:
+            return "low"
+        else:
+            return "minimal"
     
-    # Placeholder methods for additional functionality
-    async def _correlate_threats(self, threats, event): return []
-    def _update_ip_reputation(self, event, threats): pass
-    def _analyze_user_agent_patterns(self, events): return {}
-    def _analyze_request_patterns(self, events): return {}
-    def _analyze_temporal_patterns(self, events): return {}
-    def _analyze_geographic_patterns(self, events): return {}
-    def _is_pattern_anomalous(self, pattern_type, data): return False
-    def _calculate_pattern_anomaly_score(self, data): return 0.5
-    async def _cluster_behaviors(self, events): return {}
-    def _assess_overall_risk(self, patterns, anomalies): return "medium"
-    def _prepare_historical_data(self): return []
-    def _extract_trend_features(self, data): return np.random.rand(20)
-    def _heuristic_threat_prediction(self, threat_type, data): return 0.3
-    def _calculate_prediction_confidence(self, features): return 0.7
-    def _identify_risk_factors(self, threat_type, data): return []
-    def _generate_preventive_actions(self, predictions): return []
-    def _get_mitigation_suggestions(self, attack_type): return ["Monitor and block"]
+    def _prepare_historical_data(self) -> List[Dict[str, Any]]:
+        """Prepare historical threat data for analysis"""
+        # Return actual historical data from detections
+        historical_data = []
+        
+        # Get recent detections
+        for detections in list(self.threat_history.values())[-1000:]:
+            for detection in detections:
+                historical_data.append({
+                    'timestamp': detection.timestamp,
+                    'threat_type': detection.threat_type,
+                    'severity': detection.severity,
+                    'confidence': detection.confidence_score,
+                    'mitigated': detection.mitigated
+                })
+        
+        return historical_data
+    
+    def _extract_trend_features(self, data: List[Dict[str, Any]]) -> np.ndarray:
+        """Extract trend features from real historical data"""
+        if not data:
+            return np.zeros(20)
+        
+        features = []
+        
+        # Temporal features
+        timestamps = [d['timestamp'] for d in data]
+        if timestamps:
+            time_span = (max(timestamps) - min(timestamps)).total_seconds() / 3600  # Hours
+            features.append(time_span)
+            features.append(len(data) / (time_span + 1))  # Events per hour
+        else:
+            features.extend([0, 0])
+        
+        # Threat type distribution
+        threat_types = [d.get('threat_type', 'unknown') for d in data]
+        type_counts = Counter(threat_types)
+        for threat in ['intrusion', 'malware', 'ddos', 'brute_force']:
+            features.append(type_counts.get(threat, 0) / len(data) if data else 0)
+        
+        # Severity distribution
+        severities = [d.get('severity', 'medium') for d in data]
+        sev_map = {'low': 0.2, 'medium': 0.5, 'high': 0.8, 'critical': 1.0}
+        avg_severity = np.mean([sev_map.get(s, 0.5) for s in severities])
+        features.append(avg_severity)
+        
+        # Success rate
+        mitigated = sum(1 for d in data if d.get('mitigated', False))
+        features.append(mitigated / len(data) if data else 1.0)
+        
+        # Trend indicators
+        if len(data) > 10:
+            recent = data[-5:]
+            older = data[-10:-5]
+            recent_severity = np.mean([sev_map.get(d.get('severity', 'medium'), 0.5) for d in recent])
+            older_severity = np.mean([sev_map.get(d.get('severity', 'medium'), 0.5) for d in older])
+            trend = recent_severity - older_severity
+            features.append(trend)
+        else:
+            features.append(0)
+        
+        # Pad to expected size
+        while len(features) < 20:
+            features.append(0.0)
+        
+        return np.array(features[:20], dtype=np.float32)
+    
+    def _heuristic_threat_prediction(self, threat_type: str, data: Dict[str, Any]) -> float:
+        """Predict threat probability using heuristics on real data"""
+        base_probability = 0.1
+        
+        # Adjust based on threat type and current data
+        if threat_type == 'intrusion':
+            if data.get('failed_auth_count', 0) > 5:
+                base_probability += 0.3
+            if data.get('unusual_ports', False):
+                base_probability += 0.2
+            if data.get('suspicious_patterns', 0) > 0:
+                base_probability += 0.2
+        
+        elif threat_type == 'ddos':
+            if data.get('request_rate', 0) > 1000:
+                base_probability += 0.4
+            if data.get('unique_sources', 0) > 100:
+                base_probability += 0.3
+        
+        elif threat_type == 'malware':
+            if data.get('suspicious_files', 0) > 0:
+                base_probability += 0.4
+            if data.get('unusual_processes', False):
+                base_probability += 0.3
+        
+        return min(1.0, base_probability)
+    
+    def _calculate_prediction_confidence(self, features: np.ndarray) -> float:
+        """Calculate confidence based on feature quality and model state"""
+        # Check feature quality
+        non_zero_features = np.count_nonzero(features)
+        feature_coverage = non_zero_features / len(features)
+        
+        # Base confidence on feature coverage
+        confidence = 0.3 + (feature_coverage * 0.4)
+        
+        # Adjust based on model training state
+        if hasattr(self, 'models_trained') and self.models_trained:
+            confidence += 0.2
+        
+        # Adjust based on data recency
+        if hasattr(self, 'last_training_time'):
+            hours_since_training = (datetime.utcnow() - self.last_training_time).total_seconds() / 3600
+            if hours_since_training < 1:
+                confidence += 0.1
+            elif hours_since_training > 24:
+                confidence -= 0.1
+        
+        return max(0.1, min(0.95, confidence))
+    
+    def _identify_risk_factors(self, threat_type: str, data: Dict[str, Any]) -> List[str]:
+        """Identify specific risk factors from threat analysis"""
+        risk_factors = []
+        
+        if threat_type == 'intrusion':
+            if data.get('failed_auth_count', 0) > 3:
+                risk_factors.append(f"Multiple failed authentication attempts: {data['failed_auth_count']}")
+            if data.get('privilege_escalation', False):
+                risk_factors.append("Privilege escalation attempt detected")
+            if data.get('suspicious_commands', []):
+                risk_factors.append(f"Suspicious commands executed: {', '.join(data['suspicious_commands'][:3])}")
+        
+        elif threat_type == 'ddos':
+            if data.get('request_rate', 0) > 500:
+                risk_factors.append(f"High request rate: {data['request_rate']} req/s")
+            if data.get('bandwidth_usage', 0) > 0.8:
+                risk_factors.append(f"High bandwidth usage: {data['bandwidth_usage']*100:.1f}%")
+            if data.get('syn_flood', False):
+                risk_factors.append("SYN flood attack pattern detected")
+        
+        elif threat_type == 'malware':
+            if data.get('suspicious_files', []):
+                risk_factors.append(f"Suspicious files detected: {len(data['suspicious_files'])}")
+            if data.get('c2_communication', False):
+                risk_factors.append("Command & Control communication detected")
+            if data.get('file_encryption', False):
+                risk_factors.append("File encryption activity detected (possible ransomware)")
+        
+        elif threat_type == 'data_exfiltration':
+            if data.get('unusual_data_transfer', False):
+                risk_factors.append(f"Unusual data transfer: {data.get('data_volume', 'unknown')}")
+            if data.get('sensitive_data_access', False):
+                risk_factors.append("Access to sensitive data detected")
+        
+        # Common risk factors
+        if data.get('known_bad_ip', False):
+            risk_factors.append("Connection from known malicious IP")
+        if data.get('tor_exit_node', False):
+            risk_factors.append("Traffic from Tor exit node")
+        if data.get('vpn_detected', False) and data.get('suspicious_behavior', False):
+            risk_factors.append("VPN usage with suspicious behavior")
+        
+        return risk_factors
+    
+    def _generate_preventive_actions(self, predictions: Dict[str, float]) -> List[str]:
+        """Generate preventive actions based on threat predictions"""
+        actions = []
+        
+        # Sort predictions by probability
+        def get_threat_probability(x):
+            return x[1]
+        sorted_threats = sorted(predictions.items(), key=get_threat_probability, reverse=True)
+        
+        for threat_type, probability in sorted_threats:
+            if probability > 0.7:  # High probability threats
+                if threat_type == 'intrusion':
+                    actions.extend([
+                        "Enable enhanced authentication monitoring",
+                        "Activate intrusion detection system (IDS)",
+                        "Review and tighten access control lists"
+                    ])
+                elif threat_type == 'ddos':
+                    actions.extend([
+                        "Pre-configure DDoS mitigation rules",
+                        "Increase bandwidth capacity temporarily",
+                        "Enable rate limiting on all public endpoints"
+                    ])
+                elif threat_type == 'malware':
+                    actions.extend([
+                        "Update antivirus signatures immediately",
+                        "Enable real-time file scanning",
+                        "Block executable downloads temporarily"
+                    ])
+            
+            elif probability > 0.4:  # Medium probability threats
+                if threat_type == 'intrusion':
+                    actions.append("Increase login attempt monitoring")
+                elif threat_type == 'ddos':
+                    actions.append("Monitor traffic patterns closely")
+                elif threat_type == 'malware':
+                    actions.append("Schedule full system scan")
+        
+        # General preventive actions
+        if not actions:
+            actions = [
+                "Maintain current security monitoring levels",
+                "Review security logs regularly",
+                "Ensure all systems are updated"
+            ]
+        
+        return list(set(actions))[:6]  # Return unique actions, limit to 6
+    
+    def _get_mitigation_suggestions(self, attack_type: str) -> List[str]:
+        """Get specific mitigation suggestions for detected attacks"""
+        mitigation_map = {
+            'sql_injection': [
+                "Enable SQL query parameterization",
+                "Implement input validation and sanitization",
+                "Deploy Web Application Firewall (WAF)",
+                "Review and fix vulnerable SQL queries"
+            ],
+            'xss': [
+                "Enable Content Security Policy (CSP)",
+                "Implement output encoding for all user data",
+                "Sanitize all user inputs before display",
+                "Use HTTP-only cookies for sessions"
+            ],
+            'brute_force': [
+                "Implement account lockout after failed attempts",
+                "Deploy CAPTCHA on login forms",
+                "Enable multi-factor authentication",
+                "Use progressive delays for failed attempts"
+            ],
+            'ddos': [
+                "Enable DDoS protection service",
+                "Configure rate limiting per IP",
+                "Implement SYN cookies",
+                "Use CDN for traffic distribution"
+            ],
+            'malware': [
+                "Isolate infected systems immediately",
+                "Run comprehensive malware removal",
+                "Restore from clean backups if needed",
+                "Update all security software"
+            ],
+            'intrusion': [
+                "Reset all potentially compromised accounts",
+                "Review all system logs for unauthorized changes",
+                "Implement network segmentation",
+                "Deploy host-based intrusion detection"
+            ],
+            'data_exfiltration': [
+                "Block suspicious outbound connections",
+                "Implement data loss prevention (DLP)",
+                "Monitor large data transfers",
+                "Encrypt sensitive data at rest"
+            ]
+        }
+        
+        # Get specific mitigations or return general ones
+        specific_mitigations = mitigation_map.get(attack_type, [])
+        
+        if not specific_mitigations:
+            return [
+                "Monitor system for further suspicious activity",
+                "Block source IP addresses involved in attack",
+                "Review and update security policies",
+                "Increase logging and monitoring levels"
+            ]
+        
+        return specific_mitigations
 
 
 # Singleton instance

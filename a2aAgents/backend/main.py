@@ -102,6 +102,12 @@ except ImportError as e:
     print(f"WARNING: Failed to import catalog_manager router: {e}")
 
 try:
+    from app.a2a.agents.agent17ChatAgent.active.agent17Router import agent17_router
+    agent_routers['agent17'] = agent17_router
+except ImportError as e:
+    print(f"WARNING: Failed to import agent17 router: {e}")
+
+try:
     from app.core.rateLimiting import rate_limit_middleware
     from app.core.errorHandling import global_exception_handler
     from app.core.securityMonitoring import get_security_monitor
@@ -344,6 +350,7 @@ app = FastAPI(
     - **Agent Builder**: Dynamic Agent Creation and Configuration
     - **Data Manager**: Data Pipeline and Storage Management
     - **Catalog Manager**: Data Catalog and Metadata Management
+    - **Agent 17**: Chat Interface - Conversational multi-agent coordination
     
     ### Authentication:
     All endpoints except health checks require authentication via:
@@ -534,6 +541,8 @@ if 'agent_manager' in agent_routers:
     app.include_router(agent_routers['agent_manager'])  # Agent Manager at /a2a/agent_manager/v1
 if 'catalog_manager' in agent_routers:
     app.include_router(agent_routers['catalog_manager'])  # Catalog Manager at /a2a/catalog_manager/v1
+if 'agent17' in agent_routers:
+    app.include_router(agent_routers['agent17'])  # Agent 17 Chat Agent at /a2a/agent17/v1
 
 logger.info(f"Successfully loaded {len(agent_routers)} agent routers")
 

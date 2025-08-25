@@ -65,27 +65,10 @@ sap.ui.define([
             }
 
             // Validate tags and keywords
-            ["tags", "keywords"].forEach(field => {
-                if (entryData[field]) {
-                    validation.sanitized[field] = this.sanitizeSearchQuery(entryData[field]);
-                    if (this._containsScriptTags(entryData[field])) {
-                        validation.errors.push(`${field} contains potentially unsafe content`);
-                        validation.isValid = false;
-                    }
-                }
-            });
+            ["tags", "keywords"].forEach(this._validateTagField.bind(this, entryData, validation));
 
             // Validate API endpoints
-            ["apiEndpoint", "documentationUrl", "healthCheckUrl", "swaggerUrl"].forEach(field => {
-                if (entryData[field]) {
-                    const urlValidation = this.validateResourceURL(entryData[field]);
-                    if (!urlValidation.isValid) {
-                        validation.warnings.push(`Invalid ${field}: ${urlValidation.error}`);
-                    } else {
-                        validation.sanitized[field] = urlValidation.sanitizedUrl;
-                    }
-                }
-            });
+            ["apiEndpoint", "documentationUrl", "healthCheckUrl", "swaggerUrl"].forEach(this._validateUrlField.bind(this, entryData, validation));
 
             return validation;
         },
@@ -268,20 +251,8 @@ sap.ui.define([
                     const secureParams = {
                         ...parameters,
                         headers,
-                        success: (data) => {
-                            this.logSecureOperation(functionName, "SUCCESS");
-                            if (parameters.success) {
-                                parameters.success(data);
-                            }
-                            resolve(data);
-                        },
-                        error: (error) => {
-                            this.logSecureOperation(functionName, "ERROR", error);
-                            if (parameters.error) {
-                                parameters.error(error);
-                            }
-                            reject(error);
-                        }
+                        success: this._handleSecureOperationSuccess.bind(this, functionName, parameters, resolve),
+                        error: this._handleSecureOperationError.bind(this, functionName, parameters, reject)
                     };
 
                     model.callFunction(functionName, secureParams);
@@ -598,6 +569,43 @@ sap.ui.define([
         _sendToAuditService(logEntry) {
             // In production, implement actual audit service integration
             // console.log("AUDIT:", logEntry);
+        },
+
+        _validateTagField(entryData, validation, field) {
+            if (entryData[field]) {
+                validation.sanitized[field] = this.sanitizeSearchQuery(entryData[field]);
+                if (this._containsScriptTags(entryData[field])) {
+                    validation.errors.push(`${field} contains potentially unsafe content`);
+                    validation.isValid = false;
+                }
+            }
+        },
+
+        _validateUrlField(entryData, validation, field) {
+            if (entryData[field]) {
+                const urlValidation = this.validateResourceURL(entryData[field]);
+                if (!urlValidation.isValid) {
+                    validation.warnings.push(`Invalid ${field}: ${urlValidation.error}`);
+                } else {
+                    validation.sanitized[field] = urlValidation.sanitizedUrl;
+                }
+            }
+        },
+
+        _handleSecureOperationSuccess(functionName, parameters, resolve, data) {
+            this.logSecureOperation(functionName, "SUCCESS");
+            if (parameters.success) {
+                parameters.success(data);
+            }
+            resolve(data);
+        },
+
+        _handleSecureOperationError(functionName, parameters, reject, error) {
+            this.logSecureOperation(functionName, "ERROR", error);
+            if (parameters.error) {
+                parameters.error(error);
+            }
+            reject(error);
         }
     };
 });

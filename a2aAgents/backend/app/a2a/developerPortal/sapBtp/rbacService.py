@@ -28,8 +28,8 @@ from pydantic import BaseModel, Field
 from fastapi import HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-# A2A Protocol imports
-from .a2aSapBtpAgent import A2ASAPBTPAgent, SAPBTPServiceType, send_sap_btp_request
+# A2A Protocol imports - Hybrid approach
+from ...core.hybridNetworkClient import create_sap_btp_client
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,10 @@ class RBACService:
         self.user_cache: Dict[str, UserInfo] = {}
         self.cache_ttl = timedelta(minutes=15)
 
-        logger.info("RBAC Service initialized for SAP BTP with A2A protocol compliance")
+        # Initialize hybrid network client for A2A compliance with external HTTP
+        self.hybrid_client = create_sap_btp_client(f"rbac_service_{id(self)}")
+        
+        logger.info("RBAC Service initialized for SAP BTP with A2A hybrid compliance")
 
     def _initialize_role_permissions(self) -> Dict[UserRole, RolePermissionMapping]:
         """Initialize role to permission mappings"""
@@ -222,27 +225,44 @@ class RBACService:
             # Decode and verify JWT token
             import os
 
-            # A2A Protocol: Use JWT validation through blockchain messaging
-            response = await send_sap_btp_request(
-                service_type=SAPBTPServiceType.XSUAA_SERVICE,
-                operation="validate_token",
-                parameters={
-                    "token": token,
-                    "xsuaa_config": self.xsuaa_config,
-                    "validation_options": {
-                        "verify_signature": not os.environ.get('DEVELOPMENT_MODE', False),
-                        "jwt_secret": os.environ.get('JWT_SECRET_KEY'),
-                        "jwt_algorithm": os.environ.get('JWT_ALGORITHM', 'HS256'),
-                        "public_key_path": os.environ.get('JWT_PUBLIC_KEY_PATH', '/app/certs/public.pem')
-                    }
-                },
-                from_agent="rbac_service"
-            )
+            # A2A Protocol: Use hybrid approach for JWT validation
+            # For development/local testing, use local JWT validation
+            # For production, this could be routed through A2A messaging to a JWT validation service
+            
+            development_mode = os.environ.get('DEVELOPMENT_MODE', 'false').lower() == 'true'
+            
+            if development_mode:
+                # Local JWT validation for development
+                decoded_token = jwt.decode(token, options={"verify_signature": False})
+            else:
+                # Production JWT validation
+                jwt_secret = os.environ.get('JWT_SECRET_KEY')
+                jwt_algorithm = os.environ.get('JWT_ALGORITHM', 'HS256')
 
-            if not response.success:
-                raise ValueError(f"A2A JWT validation failed: {response.error}")
-
-            decoded_token = response.data.get("decoded_token", {})
+                if jwt_algorithm.startswith('RS'):  # RSA algorithms
+                    public_key_path = os.environ.get('JWT_PUBLIC_KEY_PATH', '/app/certs/public.pem')
+                    try:
+                        with open(public_key_path, 'r') as f:
+                            public_key = f.read()
+                        decoded_token = jwt.decode(
+                            token,
+                            public_key,
+                            algorithms=[jwt_algorithm],
+                            options={"verify_exp": True, "verify_aud": True}
+                        )
+                    except FileNotFoundError:
+                        logger.error(f"JWT public key not found at {public_key_path}")
+                        raise ValueError("JWT verification failed: public key not found")
+                else:
+                    # Symmetric algorithms (HS256, etc)
+                    if not jwt_secret:
+                        raise ValueError("JWT_SECRET_KEY must be set for token verification")
+                    decoded_token = jwt.decode(
+                        token,
+                        jwt_secret,
+                        algorithms=[jwt_algorithm],
+                        options={"verify_exp": True}
+                    )
 
             # Extract user information
             user_info = UserInfo(
@@ -460,4 +480,4 @@ def initialize_rbac_service(xsuaa_config: Dict[str, Any]):
     """Initialize the global RBAC service"""
     global rbac_service
     rbac_service = RBACService(xsuaa_config)
-    logger.info("RBAC Service initialized globally")
+    logger.info("RBAC Service initialized globally with A2A hybrid compliance")

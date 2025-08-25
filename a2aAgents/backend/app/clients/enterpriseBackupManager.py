@@ -715,7 +715,7 @@ class EnterpriseBackupManager:
     def get_backup_status(self) -> Dict[str, Any]:
         """Get comprehensive backup system status"""
         with self.lock:
-            recent_backups = sorted(self.backup_history, key=lambda x: x.start_time, reverse=True)[:10]
+            recent_backups = sorted(self.backup_history, key=self._get_backup_start_time, reverse=True)[:10]
 
             return {
                 "active_backups": len(self.active_backups),
@@ -737,6 +737,10 @@ class EnterpriseBackupManager:
                     "verification_enabled": self.config.backup_verification_enabled
                 }
             }
+
+    def _get_backup_start_time(self, backup):
+        """Helper method to get backup start time for sorting"""
+        return backup.start_time
 
 
 # Factory function

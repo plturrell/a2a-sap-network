@@ -2,8 +2,8 @@
  * Real Tile Personalization with Database Persistence
  * Stores user tile preferences, positions, and visibility
  */
-const path = require('path');
-const fs = require('fs');
+// const path = require('path');
+// const fs = require('fs');
 
 class TilePersonalizationService {
     constructor(db, isBTP = false) {
@@ -32,7 +32,7 @@ class TilePersonalizationService {
     }
 
     async initializeSQLiteTables() {
-        const handleInitializeSQLiteTables = function(resolve, reject) {
+        const handleInitializeSQLiteTables = function(resolve, _reject) {
             const serializeInitialization = function() {
                 // User tile configurations table
                 this.db.run(`CREATE TABLE IF NOT EXISTS user_tile_config (

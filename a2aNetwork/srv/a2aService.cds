@@ -2623,7 +2623,7 @@ service Agent12Service @(path : '/a2a/agent12') {
     @odata.draft.enabled
     entity AgentTemplates as projection on db.AgentTemplates;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error with AgentTemplates
     entity AgentBuilds as projection on db.AgentBuilds;
     
     // @odata.draft.enabled - Disabled to fix composition error

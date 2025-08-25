@@ -213,7 +213,7 @@ class ProductionSecurityManager {
         return rateLimit({
             ...PRODUCTION_CONFIG.RATE_LIMITS.errorReporting,
             keyGenerator: (req) => {
-                return req.ip + ':' + (req.user?.id || 'anonymous');
+                return `${req.ip  }:${  req.user?.id || 'anonymous'}`;
             },
             handler: (req, res) => {
                 this.logSecurityEvent('ERROR_REPORT_RATE_LIMITED', {
@@ -271,20 +271,20 @@ class ProductionSecurityManager {
 
             // Set CSP header with nonce
             const cspDirectives = {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", `'nonce-${nonce}'`],
-                styleSrc: ["'self'", "'unsafe-inline'"], // Required for UI5
-                imgSrc: ["'self'", "data:", "https:"],
-                connectSrc: ["'self'", "wss:", "https:"],
-                fontSrc: ["'self'"],
-                objectSrc: ["'none'"],
-                mediaSrc: ["'none'"],
-                frameSrc: ["'none'"],
-                childSrc: ["'none'"],
-                formAction: ["'self'"],
-                frameAncestors: ["'none'"],
-                baseUri: ["'self'"],
-                manifestSrc: ["'self'"]
+                defaultSrc: ['\'self\''],
+                scriptSrc: ['\'self\'', `'nonce-${nonce}'`],
+                styleSrc: ['\'self\'', '\'unsafe-inline\''], // Required for UI5
+                imgSrc: ['\'self\'', 'data:', 'https:'],
+                connectSrc: ['\'self\'', 'wss:', 'https:'],
+                fontSrc: ['\'self\''],
+                objectSrc: ['\'none\''],
+                mediaSrc: ['\'none\''],
+                frameSrc: ['\'none\''],
+                childSrc: ['\'none\''],
+                formAction: ['\'self\''],
+                frameAncestors: ['\'none\''],
+                baseUri: ['\'self\''],
+                manifestSrc: ['\'self\'']
             };
 
             if (PRODUCTION_CONFIG.ENFORCE_PRODUCTION) {
