@@ -978,17 +978,17 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         
         super().__init__(
             agent_id=create_agent_id("reasoning"),
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
-        
             name="Advanced Reasoning Agent",
             description="Multi-agent reasoning system with hierarchical orchestration and swarm intelligence",
             version="1.0.0",
             base_url=base_url or config.base_url,
             **kwargs
         )
+        
+        # Initialize security features
+        self._init_security_features()
+        self._init_rate_limiting()
+        self._init_input_validation()
         
         # Network configuration using centralized config
         self.agent_network_url = agent_network_url or config.agent_network_url
@@ -1255,8 +1255,9 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     message_content["signer"] = signed_message["signer"]
                 
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient(timeout=30.0) as client:
+                # async with httpx.AsyncClient() as client:
+                # httpx.AsyncClient(timeout=30.0) as client:
+                if True:  # Placeholder for blockchain messaging
                     response = await client.post(
                         f"{agent_url}/a2a/execute",
                         json=message_content,

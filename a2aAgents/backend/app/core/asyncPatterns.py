@@ -8,11 +8,10 @@ import asyncio
 import inspect
 import functools
 import contextlib
-import traceback
 from typing import (
-    Any, Awaitable, Callable, Coroutine, Dict, List, Optional, 
+    Any, Awaitable, Callable, Dict, List, Optional, 
     TypeVar, Union, Generic, Protocol, runtime_checkable,
-    AsyncContextManager, AsyncIterator
+    AsyncIterator
 )
 
 try:
@@ -22,7 +21,7 @@ except ImportError:
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 from app.core.loggingConfig import get_logger, LogCategory, log_operation
 from app.core.exceptions import (

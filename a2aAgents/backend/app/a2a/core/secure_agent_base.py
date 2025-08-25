@@ -127,7 +127,7 @@ class SecureA2AAgent(A2AAgentBase):
             }
         )
     
-    def secure_handler(self, operation: str, require_auth: bool = True):
+    def secure_handler(self, operation: str, auth_required: bool = True):
         """
         Decorator for secure message handlers
         Provides authentication, rate limiting, and input validation
@@ -337,13 +337,7 @@ class SecureA2AAgent(A2AAgentBase):
         if not api_key:
             raise ValueError(f"No API key configured for service: {service}")
         
-        # Create A2A message for external request (as per protocol compliance)
-        external_request = {
-            "service": service,
-            "endpoint": endpoint,
-            "data": data,
-            "timestamp": datetime.now().isoformat()
-        }
+        # A2A protocol compliance: External requests should be logged for audit
         
         # Log external request (without exposing API key)
         self.logger.info(

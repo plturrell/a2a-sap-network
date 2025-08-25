@@ -14,9 +14,11 @@ from pathlib import Path
 # Add parent directory to path to import clients
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
-from app.clients.grokClient import GrokClient, GrokConfig
+try:
+    from app.clients.grokClient import GrokClient, GrokConfig
 except ImportError:
-from app.a2a.core.grokClient import GrokClient, GrokConfig
+    try:
+        from app.a2a.core.grokClient import GrokClient, GrokConfig
     except ImportError:
         # Try direct import for testing
         sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend')

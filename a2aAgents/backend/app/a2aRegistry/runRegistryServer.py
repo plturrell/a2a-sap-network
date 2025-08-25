@@ -91,8 +91,6 @@ async def lifespan(app: FastAPI):
 
 async def register_blockchain_agents():
     """Register your blockchain agents in the A2A Registry"""
-    global registry_service, trust_system
-    
     if not registry_service or not trust_system:
         return
     

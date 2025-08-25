@@ -5,21 +5,14 @@ Comprehensive security testing suite for continuous security validation
 """
 
 import asyncio
-import subprocess
-import json
 import logging
 import hashlib
 import re
 import os
 from typing import Dict, Any, List, Optional, Set, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-import tempfile
-import shutil
-from pathlib import Path
-
-from .errorHandling import SecurityError
 from .securityMonitoring import report_security_event, EventType, ThreatLevel
 from .blockchainSecurity import get_security_auditor
 

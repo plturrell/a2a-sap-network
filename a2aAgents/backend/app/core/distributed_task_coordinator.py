@@ -8,8 +8,10 @@ import asyncio
 import json
 import logging
 import time
-from typing import Dict, Any, List, Optional, Callable, Set
-from datetime import datetime
+import numpy as np
+from collections import defaultdict, deque
+from typing import Dict, Any, List, Optional, Callable, Set, Tuple
+from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from enum import Enum
 import redis.asyncio as redis
@@ -17,6 +19,14 @@ from uuid import uuid4
 
 # A2A SDK imports
 from ..a2a.security.requestSigning import A2ARequestSigner
+
+try:
+    from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    logger.warning("scikit-learn not available, using simplified AI models")
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +51,30 @@ class TaskState(str, Enum):
 
 
 @dataclass
+class WorkerPerformanceMetrics:
+    """AI-enhanced worker performance tracking"""
+    worker_id: str
+    total_tasks: int = 0
+    successful_tasks: int = 0
+    failed_tasks: int = 0
+    avg_processing_time: float = 0.0
+    current_load: int = 0
+    max_capacity: int = 10
+    last_task_timestamp: float = 0.0
+    performance_score: float = 1.0
+    task_type_expertise: Dict[str, float] = None  # task_type -> success_rate
+    recent_performance: deque = None  # Rolling window of recent task results
+    
+    def __post_init__(self):
+        if self.task_type_expertise is None:
+            self.task_type_expertise = defaultdict(float)
+        if self.recent_performance is None:
+            self.recent_performance = deque(maxlen=50)  # Last 50 tasks
+
+
+@dataclass
 class DistributedTask:
-    """Distributed task representation"""
+    """Distributed task representation with AI enhancements"""
     task_id: str
     agent_id: str
     task_type: str
@@ -288,13 +320,25 @@ class DistributedTaskCoordinator:
         logger.info(f"Distributed task coordinator initialized for node {self.node_id}")
     
     async def start_workers(self, num_workers: int = 3):
-        """Start worker processes"""
+        """Start AI-optimized worker processes"""
         self.running = True
+        
+        # Initialize AI components
+        self.worker_metrics = {}
+        self.task_completion_history = deque(maxlen=1000)
+        self.load_prediction_model = self._initialize_load_predictor()
+        
         for i in range(num_workers):
-            task = asyncio.create_task(self._worker_loop(f"worker_{i}"))
+            worker_id = f"worker_{i}"
+            self.worker_metrics[worker_id] = WorkerPerformanceMetrics(worker_id=worker_id)
+            task = asyncio.create_task(self._ai_enhanced_worker_loop(worker_id))
             self.worker_tasks.append(task)
         
-        logger.info(f"Started {num_workers} workers on node {self.node_id}")
+        # Start AI monitoring and optimization tasks
+        asyncio.create_task(self._performance_monitoring_loop())
+        asyncio.create_task(self._intelligent_load_balancing_loop())
+        
+        logger.info(f"Started {num_workers} AI-enhanced workers on node {self.node_id}")
     
     async def stop(self):
         """Stop the coordinator"""
@@ -354,8 +398,8 @@ class DistributedTaskCoordinator:
             json.dumps(task.to_dict())
         )
         
-        # Add to priority queue
-        priority_score = self._get_priority_score(priority)
+        # Add to priority queue with AI-enhanced scoring
+        priority_score = await self._get_ai_enhanced_priority_score(task, priority)
         await self.redis.zadd(
             self.task_queue_key,
             {task_id: priority_score}

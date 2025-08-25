@@ -7,30 +7,28 @@ from unittest.mock import Mock, AsyncMock
 import logging
 
 from .comprehensiveServiceDiscoveryAgentSdk import (
+    ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
+    ServiceStatus, ServiceQuery, HealthCheckResult, LoadBalancingStrategy
+)
 from app.a2a.core.security_base import SecureA2AAgent
+
 """
 Mock Service Discovery Agent for Testing
 Provides mock implementations for isolated testing
 """
 
-    ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
-    ServiceStatus, ServiceQuery, HealthCheckResult, LoadBalancingStrategy
-)
-
 logger = logging.getLogger(__name__)
 
 class MockServiceDiscoveryAgent(SecureA2AAgent):
+    """Mock implementation of Service Discovery Agent for testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""
-    Mock implementation of Service Discovery Agent for testing
-    """
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self):
         
@@ -457,15 +455,15 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
 
 # Test utilities and fixtures
 class ServiceDiscoveryTestHelper(SecureA2AAgent):
+    """Helper class for service discovery testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Helper class for service discovery testing"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, mock_agent: MockServiceDiscoveryAgent):
         

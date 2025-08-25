@@ -4,16 +4,16 @@ import uuid
 from datetime import datetime, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 
-from .comprehensiveServiceDiscoveryAgentSdk import (
-from app.a2a.core.security_base import SecureA2AAgent
 """
 Comprehensive Test Suite for Service Discovery Agent
 Tests service registration, discovery, load balancing, health monitoring, and simulations
 """
 
+from .comprehensiveServiceDiscoveryAgentSdk import (
     ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
     ServiceStatus, ServiceQuery, HealthCheckResult, LoadBalancingStrategy
 )
+from app.a2a.core.security_base import SecureA2AAgent
 from .mockServiceDiscoveryAgent import (
     MockServiceDiscoveryAgent, ServiceDiscoveryTestHelper
 )
@@ -23,15 +23,15 @@ from .serviceDiscoverySimulator import (
 )
 
 class TestServiceDiscoveryAgent(SecureA2AAgent):
+    """Test suite for Service Discovery Agent"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Test suite for Service Discovery Agent"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     @pytest.fixture
     async def discovery_agent(self):
@@ -656,7 +656,8 @@ class TestServiceDiscoveryPerformance(SecureA2AAgent):
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-"""Performance tests for service discovery"""
+    
+    """Performance tests for service discovery"""
     
     @pytest.mark.asyncio
     async def test_concurrent_registrations(self, discovery_agent):

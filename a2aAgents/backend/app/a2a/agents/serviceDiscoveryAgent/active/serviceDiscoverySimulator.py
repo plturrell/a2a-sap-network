@@ -9,16 +9,16 @@ from enum import Enum
 import logging
 import statistics
 
-from .comprehensiveServiceDiscoveryAgentSdk import (
-from app.a2a.core.security_base import SecureA2AAgent
 """
 Service Discovery Simulation Framework
 Provides comprehensive simulation capabilities for testing service discovery scenarios
 """
 
+from .comprehensiveServiceDiscoveryAgentSdk import (
     ServiceDiscoveryAgentSdk, ServiceRegistration, ServiceEndpoint,
     ServiceStatus, LoadBalancingStrategy
 )
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 
@@ -33,16 +33,16 @@ class SimulationScenario(Enum):
     HEALTH_CHECK_STORM = "health_check_storm"
 
 @dataclass
-class SimulationAgent(SecureA2AAgent):
+class SimulationAgent:
+    """Simulated agent for testing"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Simulated agent for testing"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     agent_id: str
     name: str
     service_types: List[str]
@@ -54,16 +54,16 @@ class SimulationAgent(SecureA2AAgent):
     services: List[str] = field(default_factory=list)
 
 @dataclass
-class SimulationMetrics(SecureA2AAgent):
+class SimulationMetrics:
+    """Metrics collected during simulation"""
     
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""Metrics collected during simulation"""
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -76,17 +76,17 @@ class SimulationMetrics(SecureA2AAgent):
     service_availability: Dict[str, float] = field(default_factory=dict)
 
 class ServiceDiscoverySimulator(SecureA2AAgent):
-    
-        # Security features provided by SecureA2AAgent:
-        # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
-        # - Input validation and sanitization
-        # - Audit logging and compliance tracking
-        # - Encrypted communication channels
-        # - Automatic security scanning
-"""
+    """
     Comprehensive simulation framework for service discovery testing
     """
+    
+    # Security features provided by SecureA2AAgent:
+    # - JWT authentication and authorization
+    # - Rate limiting and request throttling  
+    # - Input validation and sanitization
+    # - Audit logging and compliance tracking
+    # - Encrypted communication channels
+    # - Automatic security scanning
     
     def __init__(self, discovery_agent: ServiceDiscoveryAgentSdk):
         

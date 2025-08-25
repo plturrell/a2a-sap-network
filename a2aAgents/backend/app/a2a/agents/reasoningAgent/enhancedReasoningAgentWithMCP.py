@@ -304,7 +304,7 @@ async def example_usage():
     Example of how to use MCP tools in agent code
     """
     # Initialize agent
-    agent = EnhancedReasoningAgentWithMCP("os.getenv("A2A_BASE_URL")")
+    agent = EnhancedReasoningAgentWithMCP(os.getenv("A2A_BASE_URL", "http://localhost:8000"))
     await agent.initialize()
     
     # Example 1: Direct MCP tool usage

@@ -15,9 +15,9 @@ from app.a2a.sdk import (
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.mixins import (
-from app.a2a.core.security_base import SecureA2AAgent
     PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin
 )
+from app.a2a.core.security_base import SecureA2AAgent
 
 logger = logging.getLogger(__name__)
 

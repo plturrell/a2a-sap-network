@@ -243,53 +243,49 @@ async def test_blackboard_performance():
     
     try:
         # Import with fallback for testing
-from blackboardArchitecture import BlackboardController
-        except ImportError:
-            print("⚠️  Blackboard architecture not available for testing")
-            return True
-        
-        controller = BlackboardController()
-        
-        # Test questions of varying complexity
-        test_questions = [
-            "What is quantum computing?",
-            "How does artificial intelligence impact society?",
-            "What are the causes of climate change?",
-        ]
-        
-        results = []
-        total_time = 0
-        
-        for i, question in enumerate(test_questions):
-            print(f"Testing question {i+1}: {question[:50]}...")
-            
-            start_time = time.time()
-            result = await controller.reason(question)
-            question_time = time.time() - start_time
-            
-            total_time += question_time
-            results.append(result)
-            
-            print(f"  - Completed in {question_time:.3f}s")
-            print(f"  - Confidence: {result.get('confidence', 0):.3f}")
-            print(f"  - Iterations: {result.get('iterations', 0)}")
-            print(f"  - Enhanced: {result.get('enhanced', False)}")
-        
-        # Calculate performance metrics
-        avg_time = total_time / len(test_questions)
-        successful_results = sum(1 for r in results if r.get('enhanced', False))
-        
-        print(f"✅ Enhanced Blackboard Results:")
-        print(f"  - Total processing time: {total_time:.3f}s")
-        print(f"  - Average time per question: {avg_time:.3f}s")
-        print(f"  - Enhanced results: {successful_results}/{len(results)}")
-        print(f"  - Average confidence: {statistics.mean(r.get('confidence', 0) for r in results):.3f}")
-        
+        from blackboardArchitecture import BlackboardController
+    except ImportError:
+        print("⚠️  Blackboard architecture not available for testing")
         return True
         
-    except Exception as e:
-        print(f"❌ Blackboard performance test failed: {e}")
-        return False
+    controller = BlackboardController()
+        
+    # Test questions of varying complexity
+    test_questions = [
+        "What is quantum computing?",
+        "How does artificial intelligence impact society?",
+        "What are the causes of climate change?",
+    ]
+        
+    results = []
+    total_time = 0
+        
+    for i, question in enumerate(test_questions):
+        print(f"Testing question {i+1}: {question[:50]}...")
+        
+        start_time = time.time()
+        result = await controller.reason(question)
+        question_time = time.time() - start_time
+        
+        total_time += question_time
+        results.append(result)
+        
+        print(f"  - Completed in {question_time:.3f}s")
+        print(f"  - Confidence: {result.get('confidence', 0):.3f}")
+        print(f"  - Iterations: {result.get('iterations', 0)}")
+        print(f"  - Enhanced: {result.get('enhanced', False)}")
+    
+    # Calculate performance metrics
+    avg_time = total_time / len(test_questions)
+    successful_results = sum(1 for r in results if r.get('enhanced', False))
+    
+    print(f"✅ Enhanced Blackboard Results:")
+    print(f"  - Total processing time: {total_time:.3f}s")
+    print(f"  - Average time per question: {avg_time:.3f}s")
+    print(f"  - Enhanced results: {successful_results}/{len(results)}")
+    print(f"  - Average confidence: {statistics.mean(r.get('confidence', 0) for r in results):.3f}")
+        
+    return True
 
 
 async def test_memory_leak_prevention():

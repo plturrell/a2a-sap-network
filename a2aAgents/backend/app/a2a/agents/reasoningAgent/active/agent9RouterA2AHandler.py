@@ -471,7 +471,106 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
     
         # Registry capability handlers
         @self.secure_handler("logical_reasoning")
-        async def handle_logical_reasoning(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:\n            \"\"\"Handle logical reasoning operations\"\"\"\n            try:\n                result = await self.agent_sdk.perform_logical_reasoning(data)\n                \n                # Log blockchain transaction\n                await self._log_blockchain_transaction(\n                    operation=\"logical_reasoning\",\n                    data_hash=self._hash_data(data),\n                    result_hash=self._hash_data(result),\n                    context_id=context_id\n                )\n                \n                return self.create_secure_response(result)\n                \n            except Exception as e:\n                logger.error(f\"Failed to logical_reasoning: {e}\")\n                return self.create_secure_response(str(e), status=\"error\")\n\n        @self.secure_handler(\"inference_generation\")\n        async def handle_inference_generation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:\n            \"\"\"Handle inference generation\"\"\"\n            try:\n                result = await self.agent_sdk.generate_inferences_enhanced(data)\n                \n                # Log blockchain transaction\n                await self._log_blockchain_transaction(\n                    operation=\"inference_generation\",\n                    data_hash=self._hash_data(data),\n                    result_hash=self._hash_data(result),\n                    context_id=context_id\n                )\n                \n                return self.create_secure_response(result)\n                \n            except Exception as e:\n                logger.error(f\"Failed to inference_generation: {e}\")\n                return self.create_secure_response(str(e), status=\"error\")\n\n        @self.secure_handler(\"decision_making\")\n        async def handle_decision_making(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:\n            \"\"\"Handle decision making operations\"\"\"\n            try:\n                result = await self.agent_sdk.make_decisions_enhanced(data)\n                \n                # Log blockchain transaction\n                await self._log_blockchain_transaction(\n                    operation=\"decision_making\",\n                    data_hash=self._hash_data(data),\n                    result_hash=self._hash_data(result),\n                    context_id=context_id\n                )\n                \n                return self.create_secure_response(result)\n                \n            except Exception as e:\n                logger.error(f\"Failed to decision_making: {e}\")\n                return self.create_secure_response(str(e), status=\"error\")\n\n        @self.secure_handler(\"knowledge_synthesis\")\n        async def handle_knowledge_synthesis(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:\n            \"\"\"Handle knowledge synthesis operations\"\"\"\n            try:\n                result = await self.agent_sdk.synthesize_knowledge_enhanced(data)\n                \n                # Log blockchain transaction\n                await self._log_blockchain_transaction(\n                    operation=\"knowledge_synthesis\",\n                    data_hash=self._hash_data(data),\n                    result_hash=self._hash_data(result),\n                    context_id=context_id\n                )\n                \n                return self.create_secure_response(result)\n                \n            except Exception as e:\n                logger.error(f\"Failed to knowledge_synthesis: {e}\")\n                return self.create_secure_response(str(e), status=\"error\")\n\n        @self.secure_handler(\"problem_solving\")\n        async def handle_problem_solving(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:\n            \"\"\"Handle problem solving operations\"\"\"\n            try:\n                result = await self.agent_sdk.solve_problems_enhanced(data)\n                \n                # Log blockchain transaction\n                await self._log_blockchain_transaction(\n                    operation=\"problem_solving\",\n                    data_hash=self._hash_data(data),\n                    result_hash=self._hash_data(result),\n                    context_id=context_id\n                )\n                \n                return self.create_secure_response(result)\n                \n            except Exception as e:\n                logger.error(f\"Failed to problem_solving: {e}\")\n                return self.create_secure_response(str(e), status=\"error\")\n    \n    async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
+        async def handle_logical_reasoning(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle logical reasoning operations"""
+            try:
+                result = await self.agent_sdk.perform_logical_reasoning(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="logical_reasoning",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to logical_reasoning: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("inference_generation")
+        async def handle_inference_generation(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle inference generation"""
+            try:
+                result = await self.agent_sdk.generate_inferences_enhanced(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="inference_generation",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to inference_generation: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("decision_making")
+        async def handle_decision_making(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle decision making operations"""
+            try:
+                result = await self.agent_sdk.make_decisions_enhanced(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="decision_making",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to decision_making: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("knowledge_synthesis")
+        async def handle_knowledge_synthesis(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle knowledge synthesis operations"""
+            try:
+                result = await self.agent_sdk.synthesize_knowledge_enhanced(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="knowledge_synthesis",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to knowledge_synthesis: {e}")
+                return self.create_secure_response(str(e), status="error")
+
+        @self.secure_handler("problem_solving")
+        async def handle_problem_solving(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+            """Handle problem solving operations"""
+            try:
+                result = await self.agent_sdk.solve_problems_enhanced(data)
+                
+                # Log blockchain transaction
+                await self._log_blockchain_transaction(
+                    operation="problem_solving",
+                    data_hash=self._hash_data(data),
+                    result_hash=self._hash_data(result),
+                    context_id=context_id
+                )
+                
+                return self.create_secure_response(result)
+                
+            except Exception as e:
+                logger.error(f"Failed to problem_solving: {e}")
+                return self.create_secure_response(str(e), status="error")
+    
+    async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
         Routes messages to appropriate handlers based on operation

@@ -10,12 +10,12 @@ import json
 from typing import Dict, List, Any
 from collections import defaultdict
 
+
 def analyze_python_file(file_path: str) -> Dict[str, Any]:
     """Analyze a single Python file"""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        
         # Basic metrics
         lines = content.split('\n')
         line_count = len(lines)
@@ -74,6 +74,7 @@ def analyze_python_file(file_path: str) -> Dict[str, Any]:
             "quality_score": 0
         }
 
+
 def analyze_directory(directory: str) -> Dict[str, Any]:
     """Analyze all Python files in a directory"""
     results = []
@@ -101,6 +102,7 @@ def analyze_directory(directory: str) -> Dict[str, Any]:
         "quality_score": round(avg_quality, 2),
         "file_results": results
     }
+
 
 def print_summary_table(analyses: List[Dict[str, Any]]):
     """Print a summary table of analysis results"""
@@ -132,6 +134,7 @@ def print_summary_table(analyses: List[Dict[str, Any]]):
             
             for issue, count in sorted(issue_count.items(), key=get_issue_count, reverse=True)[:10]:
                 print(f"  - {issue} (x{count})")
+
 
 def main():
     """Main function to run analysis on specified directories"""

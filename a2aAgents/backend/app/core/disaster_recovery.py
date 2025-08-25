@@ -6,15 +6,12 @@ Provides backup strategies, failover procedures, and automated recovery
 import asyncio
 import json
 import logging
-import shutil
-import tempfile
 import time
 from typing import Dict, Any, List, Optional, Callable, Union
 from datetime import datetime, timedelta
 from enum import Enum
 from dataclasses import dataclass, field
 from pathlib import Path
-import tarfile
 import gzip
 import os
 import hashlib

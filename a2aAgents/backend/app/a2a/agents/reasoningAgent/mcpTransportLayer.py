@@ -60,7 +60,7 @@ class MCPTransportClient:
 class MCPWebSocketTransport:
     """WebSocket transport for MCP protocol"""
     
-    def __init__(self, mcp_server: MCPIntraAgentServer, host: str = "localhost", port: int = 0  # A2A Protocol: No ports - blockchain messaging only):
+    def __init__(self, mcp_server: MCPIntraAgentServer, host: str = "localhost", port: int = 0):  # A2A Protocol: No ports - blockchain messaging only
         if not WEBSOCKETS_AVAILABLE:
             raise ImportError("websockets package not available")
             
@@ -224,7 +224,7 @@ class MCPWebSocketTransport:
 class MCPHTTPTransport:
     """HTTP transport for MCP protocol using FastAPI"""
     
-    def __init__(self, mcp_server: MCPIntraAgentServer, host: str = "localhost", port: int = 0  # A2A Protocol: No ports - blockchain messaging only):
+    def __init__(self, mcp_server: MCPIntraAgentServer, host: str = "localhost", port: int = 0):  # A2A Protocol: No ports - blockchain messaging only
         if not FASTAPI_AVAILABLE:
             raise ImportError("fastapi package not available")
         
@@ -485,7 +485,7 @@ class MCPTransportManager:
         # Periodic tasks
         self.cleanup_task = None
         
-    async def add_websocket_transport(self, host: str = "localhost", port: int = 0  # A2A Protocol: No ports - blockchain messaging only):
+    async def add_websocket_transport(self, host: str = "localhost", port: int = 0):  # A2A Protocol: No ports - blockchain messaging only
         """Add WebSocket transport"""
         if WEBSOCKETS_AVAILABLE:
             transport = MCPWebSocketTransport(self.mcp_server, host, port)
@@ -497,7 +497,7 @@ class MCPTransportManager:
             logger.warning("WebSocket transport not available - install websockets package")
             return None
     
-    async def add_http_transport(self, host: str = "localhost", port: int = 0  # A2A Protocol: No ports - blockchain messaging only):
+    async def add_http_transport(self, host: str = "localhost", port: int = 0):  # A2A Protocol: No ports - blockchain messaging only
         """Add HTTP transport"""
         if FASTAPI_AVAILABLE:
             transport = MCPHTTPTransport(self.mcp_server, host, port)

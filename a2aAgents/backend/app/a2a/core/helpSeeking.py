@@ -345,8 +345,6 @@ class AgentHelpSeeker:
             )
 
             # Send request to target agent with circuit breaker protection
-            endpoint = f"{target_url}/a2a/v1/messages"
-
             async def make_help_request():
                 # A2A Protocol Compliance: Use blockchain messaging instead of direct HTTP
                 if hasattr(self, 'send_blockchain_message'):

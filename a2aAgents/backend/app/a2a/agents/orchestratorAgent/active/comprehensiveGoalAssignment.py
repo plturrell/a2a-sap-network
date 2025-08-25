@@ -323,7 +323,9 @@ class ComprehensiveGoalAssignmentSystem:
             
             # Assign primary goal based on first goal type
             for goal_type in profile.primary_goal_types[:2]:  # Assign top 2 goal types
-                goal_template_key = f"{agent_id}_{goal_type}"
+                # Extract agent number/type from agent_id (e.g., agent0_data_product -> agent0)
+                agent_key = agent_id.split('_')[0] if '_' in agent_id else agent_id
+                goal_template_key = f"{agent_key}_{goal_type}"
                 
                 if goal_template_key in self.notification_system.goal_templates:
                     # Calculate target metrics based on baseline + improvement
@@ -350,7 +352,7 @@ class ComprehensiveGoalAssignmentSystem:
                         "tracking_frequency": "daily"
                     }
                     
-                    smart_goal = await self.notification_system.create_smart_goal(
+                    smart_goal = self.notification_system.create_smart_goal(
                         agent_id, goal_type, goal_params
                     )
                     

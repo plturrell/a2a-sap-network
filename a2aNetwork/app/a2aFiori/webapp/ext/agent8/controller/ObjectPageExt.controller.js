@@ -10,7 +10,7 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "../../../utils/SharedSecurityUtils",
     "a2a/network/agent8/ext/utils/AuthHandler"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML,
+], function(ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML,
     encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) {
     "use strict";
 
@@ -238,10 +238,7 @@ sap.ui.define([
                     const safeRecordCount = parseInt(data.recordCount, 10) || 0;
                     const safeCacheKey = this._securityUtils.encodeHTML(data.cacheKey || "N/A");
                     MessageBox.success(
-                        `Dataset cached successfully!\n` +
-                        `Cache size: ${safeCacheSize}\n` +
-                        `Records cached: ${safeRecordCount}\n` +
-                        `Cache key: ${safeCacheKey}`
+                        `Dataset cached successfully!\nCache size: ${safeCacheSize}\nRecords cached: ${safeRecordCount}\nCache key: ${safeCacheKey}`
                     );
                     this._extensionAPI.refresh();
                 },
@@ -325,10 +322,7 @@ sap.ui.define([
                     const safeCompression = parseFloat(data.compressionImprovement) || 0;
                     const safeTime = parseFloat(data.optimizationTime) || 0;
                     MessageBox.success(
-                        `Storage optimization completed!\n` +
-                        `Space saved: ${safeSpaceSaved}\n` +
-                        `Compression improved: ${safeCompression}%\n` +
-                        `Optimization time: ${safeTime}s`
+                        `Storage optimization completed!\nSpace saved: ${safeSpaceSaved}\nCompression improved: ${safeCompression}%\nOptimization time: ${safeTime}s`
                     );
 
                     this._extensionAPI.refresh();
@@ -438,7 +432,7 @@ sap.ui.define([
         },
 
         _showValidationResults(validationData) {
-            let sMessage = `Data Validation Results:\n\n`;
+            let sMessage = "Data Validation Results:\n\n";
 
             sMessage += `Total Records: ${validationData.totalRecords}\n`;
             sMessage += `Valid Records: ${validationData.validRecords}\n`;
@@ -446,7 +440,7 @@ sap.ui.define([
             sMessage += `Validation Score: ${validationData.validationScore}%\n\n`;
 
             if (validationData.errors && validationData.errors.length > 0) {
-                sMessage += `Validation Errors:\n`;
+                sMessage += "Validation Errors:\n";
                 validationData.errors.slice(0, 5).forEach((error) => {
                     sMessage += `• ${error.field}: ${error.message}\n`;
                 });
@@ -571,10 +565,7 @@ sap.ui.define([
                     const safeStorageSize = this._securityUtils.encodeHTML(data.storageSize || "0");
                     const safeCompressionRatio = parseFloat(data.compressionRatio) || 0;
                     MessageBox.success(
-                        `Data stored successfully!\n` +
-                        `Records stored: ${safeRecordsStored}\n` +
-                        `Storage size: ${safeStorageSize}\n` +
-                        `Compression ratio: ${safeCompressionRatio}%`
+                        `Data stored successfully!\nRecords stored: ${safeRecordsStored}\nStorage size: ${safeStorageSize}\nCompression ratio: ${safeCompressionRatio}%`
                     );
 
                     this._extensionAPI.refresh();
@@ -683,10 +674,7 @@ sap.ui.define([
                     const safeVersionNumber = this._securityUtils.encodeHTML(data.versionNumber || "N/A");
                     const safeVersionSize = this._securityUtils.encodeHTML(data.versionSize || "0");
                     MessageBox.success(
-                        `Version created successfully!\n` +
-                        `Version ID: ${safeVersionId}\n` +
-                        `Version Number: ${safeVersionNumber}\n` +
-                        `Size: ${safeVersionSize}`
+                        `Version created successfully!\nVersion ID: ${safeVersionId}\nVersion Number: ${safeVersionNumber}\nSize: ${safeVersionSize}`
                     );
 
                     this._extensionAPI.refresh();
@@ -718,10 +706,7 @@ sap.ui.define([
                     const safeCompressedSize = this._securityUtils.encodeHTML(data.compressedSize || "0");
                     const safeRatio = parseFloat(data.compressionRatio) || 0;
                     MessageBox.success(
-                        `Data compression completed!\n` +
-                        `Original size: ${safeOriginalSize}\n` +
-                        `Compressed size: ${safeCompressedSize}\n` +
-                        `Compression ratio: ${safeRatio}%`
+                        `Data compression completed!\nOriginal size: ${safeOriginalSize}\nCompressed size: ${safeCompressedSize}\nCompression ratio: ${safeRatio}%`
                     );
 
                     this._extensionAPI.refresh();
@@ -760,10 +745,7 @@ sap.ui.define([
                     const safeBackupSize = this._securityUtils.encodeHTML(data.backupSize || "0");
                     const safeLocation = this._securityUtils.encodeHTML(data.backupLocation || "N/A");
                     MessageBox.success(
-                        `Backup created successfully!\n` +
-                        `Backup ID: ${safeBackupId}\n` +
-                        `Backup size: ${safeBackupSize}\n` +
-                        `Location: ${safeLocation}`
+                        `Backup created successfully!\nBackup ID: ${safeBackupId}\nBackup size: ${safeBackupSize}\nLocation: ${safeLocation}`
                     );
 
                     this._extensionAPI.refresh();
@@ -864,7 +846,9 @@ sap.ui.define([
         },
 
         _sanitizeObject(obj) {
-            if (!obj || typeof obj !== "object") return {};
+            if (!obj || typeof obj !== "object") {
+                return {};
+            }
             const sanitized = {};
             Object.keys(obj).forEach(key => {
                 if (typeof obj[key] === "string") {
@@ -1157,11 +1141,11 @@ sap.ui.define([
             return arr.map(item => {
                 if (typeof item === "string") {
                     return this._securityUtils.sanitizeInput(item);
-                } else if (typeof item === "object") {
-                    return this._sanitizeObject(item);
-                } else {
-                    return item;
                 }
+                if (typeof item === "object") {
+                    return this._sanitizeObject(item);
+                }
+                return item;
             });
         },
 
@@ -1353,9 +1337,7 @@ sap.ui.define([
                     this.base.getView().setBusy(false);
 
                     MessageBox.success(
-                        `Transformation started successfully!\n` +
-                        `Job ID: ${this._securityUtils.encodeHTML(data.jobId)}\n` +
-                        `Estimated time: ${this._securityUtils.encodeHTML(data.estimatedTime)} minutes`
+                        `Transformation started successfully!\nJob ID: ${this._securityUtils.encodeHTML(data.jobId)}\nEstimated time: ${this._securityUtils.encodeHTML(data.estimatedTime)} minutes`
                     );
 
                     this._extensionAPI.refresh();
@@ -1428,7 +1410,7 @@ sap.ui.define([
          * @private
          */
         _showTestResults(testData) {
-            let sMessage = `Transformation Test Results:\n\n`;
+            let sMessage = "Transformation Test Results:\n\n";
 
             const safeRecordsProcessed = parseInt(testData.recordsProcessed, 10) || 0;
             const safeRecordsTransformed = parseInt(testData.recordsTransformed, 10) || 0;
@@ -1442,7 +1424,7 @@ sap.ui.define([
 
             if (testData.validationResults) {
                 const safeValidation = this._securityUtils.sanitizeObject(testData.validationResults);
-                sMessage += `Validation Results:\n`;
+                sMessage += "Validation Results:\n";
                 sMessage += `Valid Records: ${safeValidation.validRecords || 0}\n`;
                 sMessage += `Invalid Records: ${safeValidation.invalidRecords || 0}\n`;
                 sMessage += `Validation Score: ${safeValidation.score || 0}%\n\n`;
@@ -1731,7 +1713,9 @@ sap.ui.define([
          */
         onConfirmExportTransformedData() {
             const oDialog = this._dialogCache["exportTransformed"];
-            if (!oDialog) return;
+            if (!oDialog) {
+                return;
+            }
 
             const oModel = oDialog.getModel("export");
             const oData = oModel.getData();
@@ -1764,10 +1748,7 @@ sap.ui.define([
                     oDialog.close();
 
                     MessageBox.success(
-                        `Export initiated successfully!\n` +
-                        `Export ID: ${this._securityUtils.encodeHTML(data.exportId)}\n` +
-                        `Estimated time: ${this._securityUtils.encodeHTML(data.estimatedTime)} minutes\n` +
-                        "You will be notified when the export is ready."
+                        `Export initiated successfully!\nExport ID: ${this._securityUtils.encodeHTML(data.exportId)}\nEstimated time: ${this._securityUtils.encodeHTML(data.estimatedTime)} minutes\nYou will be notified when the export is ready.`
                     );
 
                     this._securityUtils.auditLog("TRANSFORMED_DATA_EXPORT_STARTED", {

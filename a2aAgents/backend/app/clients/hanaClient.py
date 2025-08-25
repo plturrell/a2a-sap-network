@@ -332,7 +332,6 @@ class HanaConnectionPool:
     def _start_maintenance_thread(self):
         """Start background maintenance thread"""
         def maintenance_worker():
-            import time
             while True:
                 try:
                     self._perform_maintenance()
@@ -346,7 +345,6 @@ class HanaConnectionPool:
     
     def _perform_maintenance(self):
         """Perform regular pool maintenance"""
-        import time
         current_time = time.time()
         
         with self._lock:
@@ -372,14 +370,12 @@ class HanaConnectionPool:
     
     def _check_circuit_breaker(self):
         """Check if circuit breaker should prevent new connections"""
-        import time
         if self.circuit_breaker_failures >= self.circuit_breaker_threshold:
             if (time.time() - self.circuit_breaker_last_failure) < self.circuit_breaker_timeout:
                 raise Exception("Circuit breaker OPEN - too many connection failures")
     
     def _record_connection_failure(self):
         """Record a connection failure for circuit breaker"""
-        import time
         self.circuit_breaker_failures += 1
         self.circuit_breaker_last_failure = time.time()
         self.health_metrics["connection_errors"] += 1

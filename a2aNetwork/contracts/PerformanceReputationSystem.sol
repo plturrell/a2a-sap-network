@@ -18,6 +18,7 @@ contract PerformanceReputationSystem is
 {
     bytes32 public constant METRIC_UPDATER_ROLE = keccak256("METRIC_UPDATER_ROLE");
     bytes32 public constant REPUTATION_ORACLE_ROLE = keccak256("REPUTATION_ORACLE_ROLE");
+    bytes32 public constant AI_OPTIMIZER_ROLE = keccak256("AI_OPTIMIZER_ROLE");
     
     IAgentRegistry public agentRegistry;
     
@@ -140,12 +141,18 @@ contract PerformanceReputationSystem is
     uint256 public reviewValidationThreshold = 3; // Min validators for review
     uint256 public maxReviewsPerAgent = 100; // Storage limit
     
-    // Weights for reputation calculation (out of 100)
-    uint256 public constant SUCCESS_WEIGHT = 35;
-    uint256 public constant SPEED_WEIGHT = 25;
-    uint256 public constant AVAILABILITY_WEIGHT = 20;
-    uint256 public constant EFFICIENCY_WEIGHT = 10;
-    uint256 public constant EXPERIENCE_WEIGHT = 10;
+    // Dynamic weights for reputation calculation (out of 100)
+    // These can be updated by AI optimization oracles
+    uint256 public successWeight = 35;
+    uint256 public speedWeight = 25;
+    uint256 public availabilityWeight = 20;
+    uint256 public efficiencyWeight = 10;
+    uint256 public experienceWeight = 10;
+    
+    // AI optimization parameters
+    uint256 public weightUpdateCooldown = 1 hours;
+    uint256 public lastWeightUpdate;
+    uint256 public performanceWindow = 7 days; // Window for ML analysis
     
     event MetricsUpdated(address indexed agent, uint256 totalTasks, uint256 successRate, TaskDifficulty difficulty);
     event ReputationCalculated(address indexed agent, uint256 newScore, uint256 confidence);
@@ -495,13 +502,13 @@ contract PerformanceReputationSystem is
         // Include peer reviews
         uint256 peerScore = _calculatePeerScore(agent);
         
-        // Calculate weighted score
+        // Calculate weighted score with dynamic weights
         uint256 baseScore = (
-            factors.successRate * SUCCESS_WEIGHT +
-            factors.responseSpeed * SPEED_WEIGHT +
-            factors.availability * AVAILABILITY_WEIGHT +
-            factors.efficiency * EFFICIENCY_WEIGHT +
-            factors.experience * EXPERIENCE_WEIGHT
+            factors.successRate * successWeight +
+            factors.responseSpeed * speedWeight +
+            factors.availability * availabilityWeight +
+            factors.efficiency * efficiencyWeight +
+            factors.experience * experienceWeight
         ) / 100;
         
         // Blend with peer reviews (if available)
@@ -843,5 +850,98 @@ contract PerformanceReputationSystem is
         return reviewLocations[reviewHash].exists;
     }
     
+    /**
+     * @notice AI-powered dynamic weight optimization
+     * @dev Updates reputation weights based on ML analysis of performance patterns
+     * @param _successWeight New weight for success rate (0-100)
+     * @param _speedWeight New weight for response speed (0-100)
+     * @param _availabilityWeight New weight for availability (0-100)
+     * @param _efficiencyWeight New weight for efficiency (0-100)
+     * @param _experienceWeight New weight for experience (0-100)
+     */
+    function updateDynamicWeights(
+        uint256 _successWeight,
+        uint256 _speedWeight,
+        uint256 _availabilityWeight,
+        uint256 _efficiencyWeight,
+        uint256 _experienceWeight
+    ) external onlyRole(AI_OPTIMIZER_ROLE) {
+        require(
+            block.timestamp >= lastWeightUpdate + weightUpdateCooldown,
+            "Weight update cooldown active"
+        );
+        require(
+            _successWeight + _speedWeight + _availabilityWeight + 
+            _efficiencyWeight + _experienceWeight == 100,
+            "Weights must sum to 100"
+        );
+
+        successWeight = _successWeight;
+        speedWeight = _speedWeight;
+        availabilityWeight = _availabilityWeight;
+        efficiencyWeight = _efficiencyWeight;
+        experienceWeight = _experienceWeight;
+        lastWeightUpdate = block.timestamp;
+
+        emit DynamicWeightsUpdated(_successWeight, _speedWeight, _availabilityWeight, 
+                                 _efficiencyWeight, _experienceWeight);
+    }
+
+    /**
+     * @notice Get current dynamic weights for ML analysis
+     */
+    function getCurrentWeights() external view returns (
+        uint256, uint256, uint256, uint256, uint256
+    ) {
+        return (successWeight, speedWeight, availabilityWeight, 
+                efficiencyWeight, experienceWeight);
+    }
+
+    /**
+     * @notice Get performance data for AI analysis
+     * @param agents Array of agent addresses to analyze
+     * @return Performance metrics for ML model training
+     */
+    function getPerformanceDataForML(address[] calldata agents) 
+        external view returns (
+            uint256[][] memory metricsData,
+            uint256[] memory reputationScores,
+            uint256[] memory timestamps
+        ) {
+        metricsData = new uint256[][](agents.length);
+        reputationScores = new uint256[](agents.length);
+        timestamps = new uint256[](agents.length);
+
+        for (uint256 i = 0; i < agents.length; i++) {
+            address agent = agents[i];
+            PerformanceMetrics storage metrics = agentMetrics[agent];
+            ReputationScore storage score = reputationScores[agent];
+            
+            // Pack metrics into array for ML processing
+            metricsData[i] = new uint256[](8);
+            metricsData[i][0] = metrics.totalTasks;
+            metricsData[i][1] = metrics.successfulTasks;
+            metricsData[i][2] = metrics.avgResponseTime;
+            metricsData[i][3] = metrics.uptime;
+            metricsData[i][4] = metrics.avgGasPerTask;
+            metricsData[i][5] = metrics.avgTaskDifficulty;
+            metricsData[i][6] = peerReviews[agent].length;
+            metricsData[i][7] = block.timestamp - metrics.lastActiveTimestamp;
+            
+            reputationScores[i] = score.score;
+            timestamps[i] = score.lastUpdated;
+        }
+        
+        return (metricsData, reputationScores, timestamps);
+    }
+
+    event DynamicWeightsUpdated(
+        uint256 successWeight,
+        uint256 speedWeight, 
+        uint256 availabilityWeight,
+        uint256 efficiencyWeight,
+        uint256 experienceWeight
+    );
+
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

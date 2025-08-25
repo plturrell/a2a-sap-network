@@ -33,7 +33,8 @@ except ImportError:
             self.description = description
             self.version = version
             
-from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
+try:
+    from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 except ImportError:
     logger.error("Failed to import MCP decorators - creating stubs")
     def mcp_tool(*args, **kwargs):
@@ -50,7 +51,8 @@ except ImportError:
         return decorator
 
 # Import with fallbacks for testing
-from app.a2a.sdk.types import A2AMessage, MessagePart, MessageRole, TaskStatus, AgentCard
+try:
+    from app.a2a.sdk.types import A2AMessage, MessagePart, MessageRole, TaskStatus, AgentCard
 except ImportError:
     logger.warning("SDK types not available - using stub classes")
     class A2AMessage:
@@ -85,9 +87,8 @@ except ImportError:
         pass
 
 # Import MCP skill coordination system
-from app.a2a.sdk.mcpSkillCoordination import MCPSkillCoordinationMixin, skill_depends_on, skill_provides
-
-
+try:
+    from app.a2a.sdk.mcpSkillCoordination import MCPSkillCoordinationMixin, skill_depends_on, skill_provides
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
 except ImportError:

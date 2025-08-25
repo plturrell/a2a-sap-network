@@ -101,8 +101,8 @@ Be extremely precise in extracting the mathematical intent."""
             }
     
     async def generate_step_by_step_solution(self, 
-                                           query: str, 
-                                           analysis: Dict[str, Any]) -> Dict[str, Any]:
+                                             query: str, 
+                                             analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate detailed step-by-step solution for a mathematical problem"""
         
         prompt = f"""Create a detailed step-by-step solution for this mathematical problem.
@@ -167,9 +167,9 @@ Be thorough and educational in your explanation."""
             return {"error": str(e), "query": query}
     
     async def validate_mathematical_result(self, 
-                                         query: str, 
-                                         calculated_result: Any,
-                                         calculation_steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                           query: str, 
+                                           calculated_result: Any,
+                                           calculation_steps: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Validate a mathematical calculation result"""
         
         prompt = f"""Validate this mathematical calculation and verify the result.
@@ -227,9 +227,9 @@ Be rigorous in your validation."""
             return {"is_correct": "error", "error": str(e)}
     
     async def explain_mathematical_concept(self, 
-                                         concept: str, 
-                                         level: str = "intermediate",
-                                         include_examples: bool = True) -> str:
+                                           concept: str, 
+                                           level: str = "intermediate",
+                                           include_examples: bool = True) -> str:
         """Explain a mathematical concept at the specified level"""
         
         level_descriptions = {
@@ -268,9 +268,9 @@ Make it engaging and educational."""
         return response.content
     
     async def suggest_practice_problems(self, 
-                                      topic: str, 
-                                      difficulty: str,
-                                      num_problems: int = 5) -> List[Dict[str, str]]:
+                                        topic: str, 
+                                        difficulty: str,
+                                        num_problems: int = 5) -> List[Dict[str, str]]:
         """Generate practice problems for a mathematical topic"""
         
         prompt = f"""Create {num_problems} practice problems for the topic: {topic}
