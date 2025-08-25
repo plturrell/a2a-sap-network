@@ -303,9 +303,14 @@ jobs:
           -e AGENT_STARTUP_MODE=quick \
           -e SKIP_DATABASE_SETUP=true \
           -e QUICK_START=true \
-          --memory=6g \
-          --cpus=4 \
+          -e NODE_OPTIONS="--max-old-space-size=4096" \
+          -e JAVA_OPTS="-Xmx2g -Xms1g" \
+          -e DATABASE_TIMEOUT=30000 \
+          -e STARTUP_TIMEOUT=120 \
+          --memory=12g \
+          --cpus=3 \
           --restart=unless-stopped \
+          --shm-size=2g \
           ${{ env.IMAGE_NAME }}:main \
           complete
         
@@ -317,8 +322,8 @@ jobs:
         echo "   - MCP servers must be operational"
         echo ""
         
-        # Initial startup wait - optimized for quick mode
-        sleep 30  # 30 seconds for quick startup mode
+        # Initial startup wait - increased for stability
+        sleep 60  # 60 seconds for full ecosystem startup
         
         # Check container is still running
         if ! docker ps | grep -q a2a-full-test; then
@@ -405,11 +410,29 @@ jobs:
           done
         done
         
-        # Verify minimum agent coverage - reduced for quick mode
-        if [ $READY_AGENTS -lt 8 ]; then
-          echo "❌ Insufficient agents ready: $READY_AGENTS/16 (minimum 8 required for quick mode)"
-          docker logs a2a-full-test --tail=100
-          exit 1
+        # Verify minimum agent coverage - require all 16 agents
+        if [ $READY_AGENTS -lt 16 ]; then
+          echo "❌ Insufficient agents ready: $READY_AGENTS/16 (all 16 required for complete testing)"
+          echo "🔍 Checking container logs for startup issues..."
+          docker logs a2a-full-test --tail=200
+          echo ""
+          echo "🔧 Attempting to restart failed services..."
+          # Give more time for slower agents
+          sleep 30
+          # Recheck agents
+          RETRY_READY=0
+          for port in {8000..8015}; do
+            if curl -f -s http://localhost:$port/health > /dev/null 2>&1 || curl -f -s http://localhost:$port > /dev/null 2>&1; then
+              ((RETRY_READY++))
+            fi
+          done
+          if [ $RETRY_READY -lt 12 ]; then
+            echo "❌ Still insufficient agents after retry: $RETRY_READY/16"
+            exit 1
+          else
+            echo "✅ Retry successful: $RETRY_READY/16 agents ready"
+            READY_AGENTS=$RETRY_READY
+          fi
         fi
         
         echo "✅ System ready: $READY_AGENTS/16 agents accessible"
