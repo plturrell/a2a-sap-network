@@ -473,7 +473,7 @@ sap.ui.define([
                 url: `/a2a/agent8/v1/datasets/${this._securityUtils.encodeURL(sDatasetName)}/validation-report`,
                 type: "POST",
                 data: JSON.stringify({
-                    validationData: validationData,
+                    validationData,
                     format: "PDF"
                 }),
                 success: (data) => {
@@ -786,9 +786,9 @@ sap.ui.define([
                 return { isValid: false, message: "Dataset name is required" };
             }
 
-            const datasetValidation = this._securityUtils.validateInput(oData.datasetName, 'datasetName', { required: true });
+            const datasetValidation = this._securityUtils.validateInput(oData.datasetName, "datasetName", { required: true });
             if (!datasetValidation.isValid) {
-                return { isValid: false, message: "Dataset name: " + datasetValidation.message };
+                return { isValid: false, message: `Dataset name: ${datasetValidation.message}` };
             }
 
             return { isValid: true };
@@ -797,8 +797,8 @@ sap.ui.define([
         _sanitizeStoreData(oData) {
             return {
                 datasetName: this._securityUtils.sanitizeInput(oData.datasetName),
-                dataFormat: this._securityUtils.sanitizeInput(oData.dataFormat || 'JSON'),
-                compressionType: this._securityUtils.sanitizeInput(oData.compressionType || 'GZIP'),
+                dataFormat: this._securityUtils.sanitizeInput(oData.dataFormat || "JSON"),
+                compressionType: this._securityUtils.sanitizeInput(oData.compressionType || "GZIP"),
                 encryptionEnabled: Boolean(oData.encryptionEnabled),
                 createVersion: Boolean(oData.createVersion),
                 cacheAfterStore: Boolean(oData.cacheAfterStore),
@@ -811,9 +811,9 @@ sap.ui.define([
                 return { isValid: false, message: "Dataset name is required" };
             }
 
-            const datasetValidation = this._securityUtils.validateInput(oData.datasetName, 'datasetName', { required: true });
+            const datasetValidation = this._securityUtils.validateInput(oData.datasetName, "datasetName", { required: true });
             if (!datasetValidation.isValid) {
-                return { isValid: false, message: "Dataset name: " + datasetValidation.message };
+                return { isValid: false, message: `Dataset name: ${datasetValidation.message}` };
             }
 
             if (oData.maxRecords && oData.maxRecords < 0) {
@@ -826,8 +826,8 @@ sap.ui.define([
         _sanitizeRetrieveData(oData) {
             return {
                 datasetName: this._securityUtils.sanitizeInput(oData.datasetName),
-                version: this._securityUtils.sanitizeInput(oData.version || ''),
-                outputFormat: this._securityUtils.sanitizeInput(oData.outputFormat || 'JSON'),
+                version: this._securityUtils.sanitizeInput(oData.version || ""),
+                outputFormat: this._securityUtils.sanitizeInput(oData.outputFormat || "JSON"),
                 useCache: Boolean(oData.useCache),
                 filterCriteria: this._sanitizeObject(oData.filterCriteria || {}),
                 maxRecords: Math.max(0, parseInt(oData.maxRecords, 10) || 0),
@@ -840,9 +840,9 @@ sap.ui.define([
                 return { isValid: false, message: "Dataset name is required" };
             }
 
-            const datasetValidation = this._securityUtils.validateInput(oData.datasetName, 'datasetName', { required: true });
+            const datasetValidation = this._securityUtils.validateInput(oData.datasetName, "datasetName", { required: true });
             if (!datasetValidation.isValid) {
-                return { isValid: false, message: "Dataset name: " + datasetValidation.message };
+                return { isValid: false, message: `Dataset name: ${datasetValidation.message}` };
             }
 
             if (oData.retentionDays && (oData.retentionDays < 1 || oData.retentionDays > 3650)) {
@@ -855,21 +855,21 @@ sap.ui.define([
         _sanitizeBackupData(oData) {
             return {
                 datasetName: this._securityUtils.sanitizeInput(oData.datasetName),
-                backupType: this._securityUtils.sanitizeInput(oData.backupType || 'FULL'),
+                backupType: this._securityUtils.sanitizeInput(oData.backupType || "FULL"),
                 compressionEnabled: Boolean(oData.compressionEnabled),
                 encryptionEnabled: Boolean(oData.encryptionEnabled),
-                backupLocation: this._securityUtils.sanitizeInput(oData.backupLocation || 'S3'),
+                backupLocation: this._securityUtils.sanitizeInput(oData.backupLocation || "S3"),
                 retentionDays: Math.max(1, Math.min(3650, parseInt(oData.retentionDays, 10) || 90))
             };
         },
 
         _sanitizeObject(obj) {
-            if (!obj || typeof obj !== 'object') return {};
+            if (!obj || typeof obj !== "object") return {};
             const sanitized = {};
             Object.keys(obj).forEach(key => {
-                if (typeof obj[key] === 'string') {
+                if (typeof obj[key] === "string") {
                     sanitized[key] = this._securityUtils.sanitizeInput(obj[key]);
-                } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                } else if (typeof obj[key] === "object" && obj[key] !== null) {
                     sanitized[key] = this._sanitizeObject(obj[key]);
                 } else {
                     sanitized[key] = obj[key];
@@ -881,7 +881,7 @@ sap.ui.define([
         // Create Data Task Dialog Methods
         onCreateDataTask() {
             // Check user permissions
-            if (!this._authHandler.hasPermission('CREATE_DATA_TASK')) {
+            if (!this._authHandler.hasPermission("CREATE_DATA_TASK")) {
                 MessageBox.error("Insufficient permissions to create data tasks");
                 return;
             }
@@ -893,7 +893,7 @@ sap.ui.define([
                     id: oView.getId(),
                     name: "a2a.network.agent8.ext.fragment.CreateDataTask",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oCreateDialog = oDialog;
                     oView.addDependent(this._oCreateDialog);
                     this._oCreateDialog.setModel(this._oCreateModel, "create");
@@ -902,8 +902,8 @@ sap.ui.define([
                     // Load available storage backends
                     this._loadAvailableBackends();
 
-                    this._securityUtils.auditLog('CREATE_DATA_DIALOG_OPENED', { action: 'create_data_task' });
-                }.bind(this));
+                    this._securityUtils.auditLog("CREATE_DATA_DIALOG_OPENED", { action: "create_data_task" });
+                });
             } else {
                 this._oCreateDialog.open();
                 this._loadAvailableBackends();
@@ -914,16 +914,15 @@ sap.ui.define([
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
                 url: "/a2a/agent8/v1/storage-backends",
                 type: "GET",
-                success: function(data) {
+                success: (data) => {
                     const sanitizedBackends = this._sanitizeArray(data || []);
                     this._oCreateModel.setProperty("/availableBackends", sanitizedBackends);
-                }.bind(this),
-                error: function(xhr) {
-                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    // console.warn("Failed to load storage backends: " + errorMsg);
+                },
+                error: (xhr) => {
+                    this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     // Set empty array as fallback
                     this._oCreateModel.setProperty("/availableBackends", []);
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
@@ -992,20 +991,20 @@ sap.ui.define([
                 url: "/a2a/agent8/v1/tasks",
                 type: "POST",
                 data: JSON.stringify(oSanitizedData),
-                success: function(data) {
+                success: (data) => {
                     this._oCreateDialog.setBusy(false);
                     this._oCreateDialog.close();
                     MessageToast.show("Data management task created successfully");
                     this._extensionAPI.refresh();
 
-                    this._securityUtils.auditLog('DATA_TASK_CREATED', { taskName: oSanitizedData.taskName });
-                }.bind(this),
-                error: function(xhr) {
+                    this._securityUtils.auditLog("DATA_TASK_CREATED", { taskName: oSanitizedData.taskName });
+                },
+                error: (xhr) => {
                     this._oCreateDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to create data task: " + errorMsg);
-                    this._securityUtils.auditLog('DATA_TASK_CREATE_FAILED', { error: errorMsg });
-                }.bind(this)
+                    MessageBox.error(`Failed to create data task: ${errorMsg}`);
+                    this._securityUtils.auditLog("DATA_TASK_CREATE_FAILED", { error: errorMsg });
+                }
             });
 
             jQuery.ajax(ajaxConfig);
@@ -1041,34 +1040,34 @@ sap.ui.define([
 
         _applyOperationDefaults(sOperationType) {
             switch (sOperationType) {
-                case "STORE":
-                    this._oCreateModel.setProperty("/compressionEnabled", true);
-                    this._oCreateModel.setProperty("/encryptionEnabled", true);
-                    this._oCreateModel.setProperty("/versioningEnabled", true);
-                    this._oCreateModel.setProperty("/cacheEnabled", false);
-                    break;
-                case "RETRIEVE":
-                    this._oCreateModel.setProperty("/cacheEnabled", true);
-                    this._oCreateModel.setProperty("/autoWarmCache", true);
-                    this._oCreateModel.setProperty("/performanceMonitoring", true);
-                    break;
-                case "BACKUP":
-                    this._oCreateModel.setProperty("/compressionEnabled", true);
-                    this._oCreateModel.setProperty("/encryptionEnabled", true);
-                    this._oCreateModel.setProperty("/checksumValidation", true);
-                    break;
-                case "CACHE":
-                    this._oCreateModel.setProperty("/cacheEnabled", true);
-                    this._oCreateModel.setProperty("/autoWarmCache", false);
-                    this._oCreateModel.setProperty("/cacheOnWrite", true);
-                    break;
-                case "COMPRESS":
-                    this._oCreateModel.setProperty("/compressionEnabled", true);
-                    this._oCreateModel.setProperty("/compressionType", "ZSTD");
-                    break;
-                default:
-                    // Keep current values
-                    break;
+            case "STORE":
+                this._oCreateModel.setProperty("/compressionEnabled", true);
+                this._oCreateModel.setProperty("/encryptionEnabled", true);
+                this._oCreateModel.setProperty("/versioningEnabled", true);
+                this._oCreateModel.setProperty("/cacheEnabled", false);
+                break;
+            case "RETRIEVE":
+                this._oCreateModel.setProperty("/cacheEnabled", true);
+                this._oCreateModel.setProperty("/autoWarmCache", true);
+                this._oCreateModel.setProperty("/performanceMonitoring", true);
+                break;
+            case "BACKUP":
+                this._oCreateModel.setProperty("/compressionEnabled", true);
+                this._oCreateModel.setProperty("/encryptionEnabled", true);
+                this._oCreateModel.setProperty("/checksumValidation", true);
+                break;
+            case "CACHE":
+                this._oCreateModel.setProperty("/cacheEnabled", true);
+                this._oCreateModel.setProperty("/autoWarmCache", false);
+                this._oCreateModel.setProperty("/cacheOnWrite", true);
+                break;
+            case "COMPRESS":
+                this._oCreateModel.setProperty("/compressionEnabled", true);
+                this._oCreateModel.setProperty("/compressionType", "ZSTD");
+                break;
+            default:
+                // Keep current values
+                break;
             }
         },
 
@@ -1113,7 +1112,7 @@ sap.ui.define([
             if (!sValue || sValue.trim().length === 0) {
                 return { state: "Error", message: "Operation type is required" };
             }
-            const allowedOperations = ['STORE', 'RETRIEVE', 'UPDATE', 'DELETE', 'BACKUP', 'RESTORE', 'MIGRATE', 'COMPRESS', 'CACHE', 'VALIDATE'];
+            const allowedOperations = ["STORE", "RETRIEVE", "UPDATE", "DELETE", "BACKUP", "RESTORE", "MIGRATE", "COMPRESS", "CACHE", "VALIDATE"];
             if (!allowedOperations.includes(sValue)) {
                 return { state: "Error", message: "Invalid operation type" };
             }
@@ -1128,29 +1127,37 @@ sap.ui.define([
             const oTaskNameValidation = this._validateTaskName(oData.taskName);
             this._oCreateModel.setProperty("/taskNameState", oTaskNameValidation.state);
             this._oCreateModel.setProperty("/taskNameStateText", oTaskNameValidation.message);
-            if (oTaskNameValidation.state === "Error") bValid = false;
+            if (oTaskNameValidation.state === "Error") {
+                bValid = false;
+            }
 
             // Validate dataset name
             const oDatasetNameValidation = this._validateDatasetName(oData.datasetName);
             this._oCreateModel.setProperty("/datasetNameState", oDatasetNameValidation.state);
             this._oCreateModel.setProperty("/datasetNameStateText", oDatasetNameValidation.message);
-            if (oDatasetNameValidation.state === "Error") bValid = false;
+            if (oDatasetNameValidation.state === "Error") {
+                bValid = false;
+            }
 
             // Validate operation type
             const oOperationTypeValidation = this._validateOperationType(oData.operationType);
             this._oCreateModel.setProperty("/operationTypeState", oOperationTypeValidation.state);
             this._oCreateModel.setProperty("/operationTypeStateText", oOperationTypeValidation.message);
-            if (oOperationTypeValidation.state === "Error") bValid = false;
+            if (oOperationTypeValidation.state === "Error") {
+                bValid = false;
+            }
 
             return bValid;
         },
 
         _sanitizeArray(arr) {
-            if (!Array.isArray(arr)) return [];
+            if (!Array.isArray(arr)) {
+                return [];
+            }
             return arr.map(item => {
-                if (typeof item === 'string') {
+                if (typeof item === "string") {
                     return this._securityUtils.sanitizeInput(item);
-                } else if (typeof item === 'object') {
+                } else if (typeof item === "object") {
                     return this._sanitizeObject(item);
                 } else {
                     return item;
@@ -1176,12 +1183,12 @@ sap.ui.define([
                 return;
             }
 
-            MessageBox.confirm("Test transformation for task '" + sTaskName + "'?\\n\\nThis will run the transformation on a sample dataset.", {
-                onClose: function(oAction) {
+            MessageBox.confirm(`Test transformation for task '${sTaskName}'?\n\nThis will run the transformation on a sample dataset.`, {
+                onClose: (oAction) => {
                     if (oAction === MessageBox.Action.OK) {
                         this._executeTransformationTest(sTaskId);
                     }
-                }.bind(this)
+                }
             });
         },
 
@@ -1210,14 +1217,14 @@ sap.ui.define([
             }
 
             MessageBox.confirm(
-                "Run transformation for task '" + sTaskName + "'?\\n\\n" +
+                `Run transformation for task '${sTaskName}'?\n\n` +
                 "This will process the full dataset and may take considerable time.",
                 {
-                    onClose: function(oAction) {
+                    onClose: (oAction) => {
                         if (oAction === MessageBox.Action.OK) {
                             this._executeTransformation(sTaskId);
                         }
-                    }.bind(this)
+                    }
                 }
             );
         },
@@ -1240,12 +1247,12 @@ sap.ui.define([
             }
 
             this._getOrCreateDialog("viewResults", "a2a.network.agent8.ext.fragment.TransformationResults")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     oDialog.open();
                     this._loadTransformationResults(sTaskId, oDialog);
 
                     this._securityUtils.auditLog("TRANSFORMATION_RESULTS_VIEWED", { taskId: sTaskId });
-                }.bind(this));
+                });
         },
 
         /**
@@ -1266,7 +1273,7 @@ sap.ui.define([
             }
 
             this._getOrCreateDialog("exportTransformed", "a2a.network.agent8.ext.fragment.ExportTransformedData")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     const oModel = new JSONModel({
                         taskId: sTaskId,
                         exportFormat: "JSON",
@@ -1281,7 +1288,7 @@ sap.ui.define([
                     oDialog.open();
 
                     this._securityUtils.auditLog("EXPORT_TRANSFORMED_DIALOG_OPENED", { taskId: sTaskId });
-                }.bind(this));
+                });
         },
 
         /**
@@ -1300,10 +1307,10 @@ sap.ui.define([
             };
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/transformations/" + encodeURIComponent(sTaskId) + "/test",
+                url: `/a2a/agent8/v1/transformations/${encodeURIComponent(sTaskId)}/test`,
                 type: "POST",
                 data: JSON.stringify(requestData),
-                success: function(data) {
+                success: (data) => {
                     this.base.getView().setBusy(false);
                     this._showTestResults(data);
 
@@ -1311,13 +1318,13 @@ sap.ui.define([
                         taskId: sTaskId,
                         testId: data.testId
                     });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this.base.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Transformation test failed: " + errorMsg);
+                    MessageBox.error(`Transformation test failed: ${errorMsg}`);
                     this._securityUtils.auditLog("TRANSFORMATION_TEST_FAILED", { taskId: sTaskId, error: errorMsg });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
@@ -1339,16 +1346,16 @@ sap.ui.define([
             };
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/transformations/" + encodeURIComponent(sTaskId) + "/run",
+                url: `/a2a/agent8/v1/transformations/${encodeURIComponent(sTaskId)}/run`,
                 type: "POST",
                 data: JSON.stringify(requestData),
-                success: function(data) {
+                success: (data) => {
                     this.base.getView().setBusy(false);
 
                     MessageBox.success(
-                        "Transformation started successfully!\\n" +
-                        "Job ID: " + this._securityUtils.encodeHTML(data.jobId) + "\\n" +
-                        "Estimated time: " + this._securityUtils.encodeHTML(data.estimatedTime) + " minutes"
+                        `Transformation started successfully!\n` +
+                        `Job ID: ${this._securityUtils.encodeHTML(data.jobId)}\n` +
+                        `Estimated time: ${this._securityUtils.encodeHTML(data.estimatedTime)} minutes`
                     );
 
                     this._extensionAPI.refresh();
@@ -1358,13 +1365,13 @@ sap.ui.define([
                         taskId: sTaskId,
                         jobId: data.jobId
                     });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     this.base.getView().setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Transformation failed to start: " + errorMsg);
+                    MessageBox.error(`Transformation failed to start: ${errorMsg}`);
                     this._securityUtils.auditLog("TRANSFORMATION_START_FAILED", { taskId: sTaskId, error: errorMsg });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
@@ -1379,14 +1386,16 @@ sap.ui.define([
          */
         _loadTransformationResults(sTaskId, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
-            if (!oTargetDialog) return;
+            if (!oTargetDialog) {
+                return;
+            }
 
             oTargetDialog.setBusy(true);
 
             const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent8/v1/transformations/" + encodeURIComponent(sTaskId) + "/results",
+                url: `/a2a/agent8/v1/transformations/${encodeURIComponent(sTaskId)}/results`,
                 type: "GET",
-                success: function(data) {
+                success: (data) => {
                     oTargetDialog.setBusy(false);
 
                     const oModel = new JSONModel({
@@ -1400,13 +1409,13 @@ sap.ui.define([
 
                     this._createResultsCharts(data, oTargetDialog);
                     this._securityUtils.auditLog("TRANSFORMATION_RESULTS_LOADED", { taskId: sTaskId });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     oTargetDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to load transformation results: " + errorMsg);
+                    MessageBox.error(`Failed to load transformation results: ${errorMsg}`);
                     this._securityUtils.auditLog("TRANSFORMATION_RESULTS_LOAD_FAILED", { taskId: sTaskId, error: errorMsg });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
@@ -1419,24 +1428,24 @@ sap.ui.define([
          * @private
          */
         _showTestResults(testData) {
-            const sMessage = "Transformation Test Results:\\n\\n";
+            let sMessage = `Transformation Test Results:\n\n`;
 
             const safeRecordsProcessed = parseInt(testData.recordsProcessed, 10) || 0;
             const safeRecordsTransformed = parseInt(testData.recordsTransformed, 10) || 0;
             const safeErrors = parseInt(testData.errors, 10) || 0;
             const safeExecutionTime = parseFloat(testData.executionTime) || 0;
 
-            sMessage += "Records Processed: " + safeRecordsProcessed + "\\n";
-            sMessage += "Records Transformed: " + safeRecordsTransformed + "\\n";
-            sMessage += "Errors: " + safeErrors + "\\n";
-            sMessage += "Execution Time: " + safeExecutionTime + "s\\n\\n";
+            sMessage += `Records Processed: ${safeRecordsProcessed}\n`;
+            sMessage += `Records Transformed: ${safeRecordsTransformed}\n`;
+            sMessage += `Errors: ${safeErrors}\n`;
+            sMessage += `Execution Time: ${safeExecutionTime}s\n\n`;
 
             if (testData.validationResults) {
                 const safeValidation = this._securityUtils.sanitizeObject(testData.validationResults);
-                sMessage += "Validation Results:\\n";
-                sMessage += "Valid Records: " + (safeValidation.validRecords || 0) + "\\n";
-                sMessage += "Invalid Records: " + (safeValidation.invalidRecords || 0) + "\\n";
-                sMessage += "Validation Score: " + (safeValidation.score || 0) + "%\\n\\n";
+                sMessage += `Validation Results:\n`;
+                sMessage += `Valid Records: ${safeValidation.validRecords || 0}\n`;
+                sMessage += `Invalid Records: ${safeValidation.invalidRecords || 0}\n`;
+                sMessage += `Validation Score: ${safeValidation.score || 0}%\n\n`;
             }
 
             if (safeErrors === 0) {
@@ -1447,13 +1456,13 @@ sap.ui.define([
 
             MessageBox.information(sMessage, {
                 actions: ["View Details", "Run Full Transformation", MessageBox.Action.CLOSE],
-                onClose: function(oAction) {
+                onClose: (oAction) => {
                     if (oAction === "View Details") {
                         this._showDetailedTestResults(testData);
                     } else if (oAction === "Run Full Transformation" && safeErrors === 0) {
                         this.onRunTransformation();
                     }
-                }.bind(this)
+                }
             });
         },
 
@@ -1465,13 +1474,13 @@ sap.ui.define([
          */
         _showDetailedTestResults(testData) {
             this._getOrCreateDialog("testResults", "a2a.network.agent8.ext.fragment.TestResults")
-                .then(function(oDialog) {
+                .then((oDialog) => {
                     const oModel = new JSONModel({
                         testResults: this._securityUtils.sanitizeObject(testData)
                     });
                     oDialog.setModel(oModel, "test");
                     oDialog.open();
-                }.bind(this));
+                });
         },
 
         /**
@@ -1485,7 +1494,7 @@ sap.ui.define([
                 this._transformationEventSource.close();
             }
 
-            const streamUrl = "/a2a/agent8/v1/transformations/jobs/" + encodeURIComponent(sJobId) + "/stream";
+            const streamUrl = `/a2a/agent8/v1/transformations/jobs/${encodeURIComponent(sJobId)}/stream`;
 
             if (!this._securityUtils.validateEventSourceUrl(streamUrl)) {
                 MessageBox.error("Invalid transformation monitoring stream URL");
@@ -1494,14 +1503,14 @@ sap.ui.define([
 
             this._transformationEventSource = new EventSource(streamUrl);
 
-            this._transformationEventSource.onmessage = function(event) {
+            this._transformationEventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
 
                     if (data.type === "progress") {
                         const progress = Math.max(0, Math.min(100, parseInt(data.progress, 10) || 0));
                         const stage = this._securityUtils.sanitizeInput(data.stage);
-                        MessageToast.show("Transformation: " + stage + " (" + progress + "%)");
+                        MessageToast.show(`Transformation: ${stage} (${progress}%)`);
                     } else if (data.type === "completed") {
                         this._transformationEventSource.close();
                         MessageBox.success("Transformation completed successfully!");
@@ -1510,22 +1519,22 @@ sap.ui.define([
                     } else if (data.type === "failed") {
                         this._transformationEventSource.close();
                         const errorMsg = this._securityUtils.sanitizeInput(data.error || "Unknown error");
-                        MessageBox.error("Transformation failed: " + errorMsg);
+                        MessageBox.error(`Transformation failed: ${errorMsg}`);
                         this._securityUtils.auditLog("TRANSFORMATION_FAILED", { jobId: sJobId, error: errorMsg });
                     }
                 } catch (e) {
                     this._transformationEventSource.close();
                     MessageBox.error("Invalid data received from transformation monitoring");
                 }
-            }.bind(this);
+            };
 
-            this._transformationEventSource.onerror = function() {
+            this._transformationEventSource.onerror = () => {
                 if (this._transformationEventSource) {
                     this._transformationEventSource.close();
                     this._transformationEventSource = null;
                 }
                 MessageBox.error("Lost connection to transformation monitoring");
-            }.bind(this);
+            };
         },
 
         /**
@@ -1537,7 +1546,9 @@ sap.ui.define([
          */
         _createResultsCharts(data, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
-            if (!oTargetDialog) return;
+            if (!oTargetDialog) {
+                return;
+            }
 
             this._createTransformationSummaryChart(data.summary, oTargetDialog);
             this._createErrorDistributionChart(data.errors, oTargetDialog);
@@ -1552,10 +1563,14 @@ sap.ui.define([
          */
         _createTransformationSummaryChart(summaryData, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
-            if (!oTargetDialog) return;
+            if (!oTargetDialog) {
+                return;
+            }
 
             const oChart = oTargetDialog.byId("summaryChart");
-            if (!oChart || !summaryData) return;
+            if (!oChart || !summaryData) {
+                return;
+            }
 
             const aChartData = [
                 {
@@ -1587,19 +1602,23 @@ sap.ui.define([
          */
         _createErrorDistributionChart(errorData, oDialog) {
             const oTargetDialog = oDialog || this._dialogCache["viewResults"];
-            if (!oTargetDialog) return;
+            if (!oTargetDialog) {
+                return;
+            }
 
             const oChart = oTargetDialog.byId("errorChart");
-            if (!oChart || !errorData || errorData.length === 0) return;
+            if (!oChart || !errorData || errorData.length === 0) {
+                return;
+            }
 
             // Group errors by type
             const errorGroups = {};
-            errorData.forEach(function(error) {
+            errorData.forEach((error) => {
                 const type = error.type || "Unknown";
                 errorGroups[type] = (errorGroups[type] || 0) + 1;
             });
 
-            const aChartData = Object.keys(errorGroups).map(function(type) {
+            const aChartData = Object.keys(errorGroups).map((type) => {
                 return {
                     ErrorType: type,
                     Count: errorGroups[type]
@@ -1636,7 +1655,7 @@ sap.ui.define([
                 id: this.base.getView().getId(),
                 name: sFragmentName,
                 controller: this
-            }).then(function(oDialog) {
+            }).then((oDialog) => {
                 that._dialogCache[sDialogId] = oDialog;
                 that.base.getView().addDependent(oDialog);
 
@@ -1658,21 +1677,21 @@ sap.ui.define([
          */
         _enableDialogAccessibility(oDialog) {
             oDialog.addEventDelegate({
-                onAfterRendering: function() {
+                onAfterRendering: () => {
                     const $dialog = oDialog.$();
 
                     // Set tabindex for focusable elements
                     $dialog.find("input, button, select, textarea").attr("tabindex", "0");
 
                     // Handle escape key
-                    $dialog.on("keydown", function(e) {
+                    $dialog.on("keydown", (e) => {
                         if (e.key === "Escape") {
                             oDialog.close();
                         }
                     });
 
                     // Focus first input on open
-                    setTimeout(function() {
+                    setTimeout(() => {
                         $dialog.find("input:visible:first").focus();
                     }, 100);
                 }
@@ -1696,7 +1715,7 @@ sap.ui.define([
             }
 
             // Add resize handler
-            sap.ui.Device.resize.attachHandler(function() {
+            sap.ui.Device.resize.attachHandler(() => {
                 if (sap.ui.Device.system.phone) {
                     oDialog.setStretch(true);
                 } else {
@@ -1740,14 +1759,14 @@ sap.ui.define([
                 url: "/a2a/agent8/v1/transformations/export",
                 type: "POST",
                 data: JSON.stringify(requestData),
-                success: function(data) {
+                success: (data) => {
                     oDialog.setBusy(false);
                     oDialog.close();
 
                     MessageBox.success(
-                        "Export initiated successfully!\\n" +
-                        "Export ID: " + this._securityUtils.encodeHTML(data.exportId) + "\\n" +
-                        "Estimated time: " + this._securityUtils.encodeHTML(data.estimatedTime) + " minutes\\n" +
+                        `Export initiated successfully!\n` +
+                        `Export ID: ${this._securityUtils.encodeHTML(data.exportId)}\n` +
+                        `Estimated time: ${this._securityUtils.encodeHTML(data.estimatedTime)} minutes\n` +
                         "You will be notified when the export is ready."
                     );
 
@@ -1756,16 +1775,16 @@ sap.ui.define([
                         exportId: data.exportId,
                         format: requestData.format
                     });
-                }.bind(this),
-                error: function(xhr) {
+                },
+                error: (xhr) => {
                     oDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Export failed: " + errorMsg);
+                    MessageBox.error(`Export failed: ${errorMsg}`);
                     this._securityUtils.auditLog("TRANSFORMED_DATA_EXPORT_FAILED", {
                         taskId: requestData.taskId,
                         error: errorMsg
                     });
-                }.bind(this)
+                }
             });
 
             jQuery.ajax(ajaxConfig);
