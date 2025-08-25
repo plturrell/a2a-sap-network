@@ -5,7 +5,7 @@ kill_signal = "SIGINT"
 kill_timeout = "300s"
 
 [build]
-  image = "ghcr.io/plturrell/a2a-sap-network:main"
+  image = "finsightintelligence/a2a:main"
 
 [env]
   A2A_ENVIRONMENT = "production"
