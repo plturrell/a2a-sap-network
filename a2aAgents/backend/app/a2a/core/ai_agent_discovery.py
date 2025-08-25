@@ -100,7 +100,10 @@ class AgentPerformanceMetrics:
     memory_usage: float = 0.0
     network_latency: float = 0.0
     concurrent_tasks: int = 0
-    historical_performance: deque = field(default_factory=lambda: deque(maxlen=100))
+    def _create_performance_history():
+        return deque(maxlen=100)
+    
+    historical_performance: deque = field(default_factory=_create_performance_history)
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -227,7 +230,10 @@ class AIAgentDiscovery:
                 }
             
             # Select best agent
-            best_agent = max(agent_scores.items(), key=lambda x: x[1]['overall_score'])
+            def get_overall_score(agent_score_item):
+                return agent_score_item[1]['overall_score']
+            
+            best_agent = max(agent_scores.items(), key=get_overall_score)
             
             # Calculate confidence
             scores = [s['overall_score'] for s in agent_scores.values()]
@@ -792,7 +798,10 @@ class AIAgentDiscovery:
             
             agent_scores[agent_id] = total_score / len(cluster_tasks)
         
-        return max(agent_scores.items(), key=lambda x: x[1])[0]
+        def get_agent_score(agent_score_item):
+            return agent_score_item[1]
+        
+        return max(agent_scores.items(), key=get_agent_score)[0]
     
     def _predict_task_duration(self, agent_id: str, task: AgentTask) -> float:
         """Predict how long the task will take"""

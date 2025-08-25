@@ -4,6 +4,7 @@ Handles goal assignment notifications and metric mapping for agents
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from datetime import datetime, timedelta

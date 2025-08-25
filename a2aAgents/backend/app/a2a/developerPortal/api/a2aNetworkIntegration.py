@@ -123,18 +123,42 @@ async def setup_event_listeners():
     if not a2a_client:
         return
 
+    # Agent event handlers
+    def handle_agent_registered_event(data):
+        return asyncio.create_task(handle_webhook_event('agent_registered', data))
+    
+    def handle_agent_updated_event(data):
+        return asyncio.create_task(handle_webhook_event('agent_updated', data))
+    
+    def handle_agent_status_changed_event(data):
+        return asyncio.create_task(handle_webhook_event('agent_status_changed', data))
+    
+    # Message event handlers
+    def handle_message_sent_event(data):
+        return asyncio.create_task(handle_webhook_event('message_sent', data))
+    
+    def handle_message_received_event(data):
+        return asyncio.create_task(handle_webhook_event('message_received', data))
+    
+    # Network event handlers
+    def handle_agent_network_event(data):
+        return asyncio.create_task(handle_webhook_event('agent_event', data))
+    
+    def handle_message_network_event(data):
+        return asyncio.create_task(handle_webhook_event('message_event', data))
+
     # Agent events
-    a2a_client.on('agent_registered', lambda data: asyncio.create_task(handle_webhook_event('agent_registered', data)))
-    a2a_client.on('agent_updated', lambda data: asyncio.create_task(handle_webhook_event('agent_updated', data)))
-    a2a_client.on('agent_status_changed', lambda data: asyncio.create_task(handle_webhook_event('agent_status_changed', data)))
+    a2a_client.on('agent_registered', handle_agent_registered_event)
+    a2a_client.on('agent_updated', handle_agent_updated_event)
+    a2a_client.on('agent_status_changed', handle_agent_status_changed_event)
 
     # Message events
-    a2a_client.on('message_sent', lambda data: asyncio.create_task(handle_webhook_event('message_sent', data)))
-    a2a_client.on('message_received', lambda data: asyncio.create_task(handle_webhook_event('message_received', data)))
+    a2a_client.on('message_sent', handle_message_sent_event)
+    a2a_client.on('message_received', handle_message_received_event)
 
     # Network events
-    a2a_client.on('agent_event', lambda data: asyncio.create_task(handle_webhook_event('agent_event', data)))
-    a2a_client.on('message_event', lambda data: asyncio.create_task(handle_webhook_event('message_event', data)))
+    a2a_client.on('agent_event', handle_agent_network_event)
+    a2a_client.on('message_event', handle_message_network_event)
 
 async def handle_webhook_event(event_type: str, data: Dict[str, Any]):
     """Handle webhook events and notify subscribers"""

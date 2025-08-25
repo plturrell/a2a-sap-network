@@ -35,10 +35,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             base_url=base_url
         )
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         # Initialize MCP tool providers - REAL INSTANCES
         self.performance_tools = MCPPerformanceTools()
@@ -488,7 +485,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
 
         # Create hash of definition for uniqueness
         definition_str = json.dumps(product_definition, sort_keys=True)
-        definition_hash = hashlib.md5(definition_str.encode()).hexdigest()[:8]
+        definition_hash = hashlib.sha256(definition_str.encode()).hexdigest()[:8]
 
         return f"{product_type}_{product_name}_{timestamp}_{definition_hash}"
 

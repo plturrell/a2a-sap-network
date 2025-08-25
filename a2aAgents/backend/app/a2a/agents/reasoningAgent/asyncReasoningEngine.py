@@ -4,6 +4,7 @@ Implements true concurrent processing for reasoning operations
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Optional, Any, Callable, Coroutine
 from dataclasses import dataclass, field

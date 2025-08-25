@@ -5,6 +5,7 @@ data replication, and recovery orchestration for the A2A platform
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import time
 import json
 import logging

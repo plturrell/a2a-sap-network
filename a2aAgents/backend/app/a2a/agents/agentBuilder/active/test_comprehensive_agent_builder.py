@@ -5,6 +5,7 @@ Test Comprehensive Agent Builder Real AI Integration
 
 import sys
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import os
 
@@ -196,6 +197,7 @@ async def test_agent_builder():
             # Test code quality assessment
             test_code = '''
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from app.a2a.sdk import A2AAgentBase, a2a_skill
 from app.a2a.sdk.utils import create_success_response
 

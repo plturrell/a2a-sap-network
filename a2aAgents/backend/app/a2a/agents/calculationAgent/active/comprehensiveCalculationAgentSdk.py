@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -156,10 +157,7 @@ class BlockchainQueueMixin:
     """Mixin for blockchain queue message processing"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
@@ -279,10 +277,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
 
     def __init__(self, base_url: str):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for calculation agent
         blockchain_capabilities = [
             "mathematical_calculation",
@@ -520,7 +515,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             enable_blockchain = request_data.get("enable_blockchain_validation", True)
 
             # Create calculation request object
-            request_id = f"calc_{int(time.time())}_{hashlib.md5(calc_request['expression'].encode()).hexdigest()[:8]}"
+            request_id = f"calc_{int(time.time())}_{hashlib.sha256(calc_request['expression'].encode()).hexdigest()[:8]}"
             calculation = CalculationRequest(
                 id=request_id,
                 expression=calc_request["expression"],
@@ -983,7 +978,10 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             # If we have matching patterns, use their recommended methods
             if patterns:
                 # Select pattern with highest success rate
-                best_pattern = max(patterns, key=lambda p: p.success_rate)
+                def get_success_rate(pattern):
+                    return pattern.success_rate
+                
+                best_pattern = max(patterns, key=get_success_rate)
                 return best_pattern.solution_method
 
             # Otherwise, select based on calculation type and preferences

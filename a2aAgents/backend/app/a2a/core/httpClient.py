@@ -16,6 +16,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from typing import Dict, Any, Optional, Union, Callable

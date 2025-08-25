@@ -420,7 +420,7 @@ class TestGrokReasoning(unittest.IsolatedAsyncioTestCase):
 
         # Mock client to simulate failure
         mock_client = AsyncMock()
-        mock_client.async_chat_completion.side_effect = Exception("API Error")
+        mock_client.async_chat_completion.side_effect = await Exception("API Error")
         mock_client_class.return_value = mock_client
 
         grok = self.GrokReasoning()
@@ -438,7 +438,7 @@ class TestGrokReasoning(unittest.IsolatedAsyncioTestCase):
 
         # Mock client to simulate failure
         mock_client = AsyncMock()
-        mock_client.async_chat_completion.side_effect = Exception("API Error")
+        mock_client.async_chat_completion.side_effect = await Exception("API Error")
         mock_client_class.return_value = mock_client
 
         grok = self.GrokReasoning()

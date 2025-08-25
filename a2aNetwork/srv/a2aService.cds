@@ -2626,10 +2626,10 @@ service Agent12Service @(path : '/a2a/agent12') {
     @odata.draft.enabled
     entity AgentBuilds as projection on db.AgentBuilds;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity TemplateComponents as projection on db.TemplateComponents;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity AgentDeployments as projection on db.AgentDeployments;
     
     @odata.draft.enabled
@@ -2980,13 +2980,13 @@ service Agent12Service @(path : '/a2a/agent12') {
     @odata.draft.enabled
     entity EmbeddingModels as projection on db.EmbeddingModels;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity TrainingRuns as projection on db.TrainingRuns;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity ModelEvaluations as projection on db.ModelEvaluations;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity ModelOptimizations as projection on db.ModelOptimizations;
     
     @odata.draft.enabled
@@ -3415,10 +3415,10 @@ service Agent12Service @(path : '/a2a/agent12') {
     
 
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity WorkflowSteps as projection on db.WorkflowSteps;
     
-    @odata.draft.enabled
+    // @odata.draft.enabled - Disabled to fix composition error
     entity StepExecutions as projection on db.StepExecutions;
     
     @odata.draft.enabled

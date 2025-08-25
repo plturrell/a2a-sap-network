@@ -618,7 +618,7 @@ class SecurityTestRunner:
 
                 for payload in injection_payloads:
                     # Test would send these payloads to various endpoints
-                    result.evidence[f"payload_{hashlib.md5(payload.encode()).hexdigest()[:8]}"] = {
+                    result.evidence[f"payload_{hashlib.sha256(payload.encode()).hexdigest()[:8]}"] = {
                         "payload": payload,
                         "blocked": True  # In real test, check if blocked
                     }
@@ -644,7 +644,7 @@ class SecurityTestRunner:
                 ]
 
                 for payload in sql_payloads:
-                    result.evidence[f"sql_payload_{hashlib.md5(payload.encode()).hexdigest()[:8]}"] = {
+                    result.evidence[f"sql_payload_{hashlib.sha256(payload.encode()).hexdigest()[:8]}"] = {
                         "payload": payload,
                         "vulnerable": False  # Would be set based on actual test
                     }
@@ -660,7 +660,7 @@ class SecurityTestRunner:
                 ]
 
                 for payload in xss_payloads:
-                    result.evidence[f"xss_payload_{hashlib.md5(payload.encode()).hexdigest()[:8]}"] = {
+                    result.evidence[f"xss_payload_{hashlib.sha256(payload.encode()).hexdigest()[:8]}"] = {
                         "payload": payload,
                         "sanitized": True  # Would be set based on actual test
                     }
@@ -676,7 +676,7 @@ class SecurityTestRunner:
                 ]
 
                 for payload in cmd_payloads:
-                    result.evidence[f"cmd_payload_{hashlib.md5(payload.encode()).hexdigest()[:8]}"] = {
+                    result.evidence[f"cmd_payload_{hashlib.sha256(payload.encode()).hexdigest()[:8]}"] = {
                         "payload": payload,
                         "blocked": True  # Would be set based on actual test
                     }

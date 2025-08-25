@@ -4,6 +4,7 @@ Simple test script for blackboard reasoning with Grok-4
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import sys
 import logging
 from pathlib import Path

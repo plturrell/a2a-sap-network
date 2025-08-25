@@ -4,6 +4,7 @@ Provides automated failure injection, resilience testing, and system validation
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import random

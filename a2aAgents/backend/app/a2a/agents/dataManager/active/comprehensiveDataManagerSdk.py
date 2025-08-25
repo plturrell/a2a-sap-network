@@ -13,6 +13,7 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -176,10 +177,7 @@ class ComprehensiveDataManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize blockchain capabilities
@@ -853,7 +851,7 @@ class ComprehensiveDataManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
     def _generate_cache_key(self, query: str, params: List[Any]) -> str:
         """Generate cache key for query"""
         key_string = f"{query}:{json.dumps(params, sort_keys=True)}"
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
     async def _check_cache(self, cache_key: str) -> Optional[Any]:
         """Check cache for result"""

@@ -17,6 +17,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import os
 # Direct HTTP calls not allowed - use A2A protocol

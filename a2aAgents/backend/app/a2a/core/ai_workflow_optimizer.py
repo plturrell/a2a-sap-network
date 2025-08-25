@@ -7,6 +7,7 @@ workflow performance and resource utilization.
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import numpy as np
 import json
@@ -310,9 +311,12 @@ class AIWorkflowOptimizer:
             }
         
         # Find top bottleneck candidates
+        def get_bottleneck_score(item):
+            return item[1]['combined_score']
+        
         top_bottlenecks = sorted(
             bottleneck_predictions.items(),
-            key=lambda x: x[1]['combined_score'],
+            key=get_bottleneck_score,
             reverse=True
         )[:5]
         
@@ -453,7 +457,10 @@ class AIWorkflowOptimizer:
                     parallelization_opportunities.append(opportunity)
         
         # Sort by potential impact
-        parallelization_opportunities.sort(key=lambda x: x['parallel_score'], reverse=True)
+        def get_parallel_score(opportunity):
+            return opportunity['parallel_score']
+        
+        parallelization_opportunities.sort(key=get_parallel_score, reverse=True)
         
         return {
             'opportunities': parallelization_opportunities,

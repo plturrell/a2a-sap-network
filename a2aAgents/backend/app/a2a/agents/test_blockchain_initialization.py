@@ -7,6 +7,7 @@ and verifies blockchain integration step by step.
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import os
 import sys

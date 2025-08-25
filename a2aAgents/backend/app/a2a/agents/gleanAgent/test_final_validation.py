@@ -3,6 +3,7 @@
 Final validation test - comprehensive check of all real implementations
 """
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import sys
 import os
 from pathlib import Path

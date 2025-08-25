@@ -5,6 +5,7 @@ Implements collective reasoning using emergent behavior with MCP tools
 
 import asyncio
 import random
+import secrets
 import json
 import logging
 from typing import Dict, Any, List, Optional, Set, Tuple
@@ -79,7 +80,7 @@ class SwarmAgent:
     def move(self, global_best: Tuple[float, float], inertia: float = 0.7):
         """Move agent in solution space"""
         # Particle swarm optimization movement
-        r1, r2 = random.random(), random.random()
+        r1, r2 = secrets.SystemRandom().random(), secrets.SystemRandom().random()
         cognitive_weight = 1.5
         social_weight = 1.5
 

@@ -5,6 +5,7 @@ Demonstrates quality assessment and routing decisions
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, Any

@@ -4,6 +4,7 @@ Uses the actual MCP protocol for skill-to-skill communication
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, Any, List
 from datetime import datetime

@@ -4,6 +4,7 @@ Implements real-time resource updates and streaming capabilities
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import uuid

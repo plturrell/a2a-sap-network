@@ -1,5 +1,6 @@
 import asyncio
 import random
+import secrets
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -444,7 +445,7 @@ class OrchestratorSimulator(SecureA2AAgent):
             }
 
             # Add dependencies based on template
-            if i > 0 and random.random() < template.dependency_ratio:
+            if i > 0 and secrets.SystemRandom().random() < template.dependency_ratio:
                 # Add dependency on previous task(s)
                 num_deps = min(i, random.randint(1, 3))
                 dependencies = random.sample(
@@ -501,11 +502,11 @@ class OrchestratorSimulator(SecureA2AAgent):
                 # Randomly change agent status
                 agent = random.choice(self.simulated_agents)
 
-                if random.random() < agent.failure_probability:
+                if secrets.SystemRandom().random() < agent.failure_probability:
                     if agent.is_available:
                         agent.is_available = False
                         logger.debug(f"Simulated failure for agent {agent.agent_id}")
-                elif not agent.is_available and random.random() < 0.3:  # 30% recovery chance
+                elif not agent.is_available and secrets.SystemRandom().random() < 0.3:  # 30% recovery chance
                     agent.is_available = True
                     logger.debug(f"Simulated recovery for agent {agent.agent_id}")
 
@@ -560,7 +561,7 @@ class OrchestratorSimulator(SecureA2AAgent):
         while self.simulation_running:
             try:
                 # Randomly create coordination sessions
-                if random.random() < 0.1:  # 10% chance per cycle
+                if secrets.SystemRandom().random() < 0.1:  # 10% chance per cycle
                     agents = random.sample(
                         [agent.agent_id for agent in self.simulated_agents if agent.is_available],
                         k=min(random.randint(2, 5), len([a for a in self.simulated_agents if a.is_available]))

@@ -339,7 +339,7 @@ class MCPHelperImplementations:
                 # Generate type conversion rule if needed
                 if not MCPHelperImplementations._types_compatible(current_type, target_type):
                     rule = {
-                        "rule_id": f"rule_{hashlib.md5(f'{field_name}_type'.encode()).hexdigest()[:8]}",
+                        "rule_id": f"rule_{hashlib.sha256(f'{field_name}_type'.encode()).hexdigest()[:8]}",
                         "type": "type_conversion",
                         "field": field_name,
                         "source_type": current_type,
@@ -362,7 +362,7 @@ class MCPHelperImplementations:
                 # Check for format standardization
                 if field_spec.get("format"):
                     format_rule = {
-                        "rule_id": f"rule_{hashlib.md5(f'{field_name}_format'.encode()).hexdigest()[:8]}",
+                        "rule_id": f"rule_{hashlib.sha256(f'{field_name}_format'.encode()).hexdigest()[:8]}",
                         "type": "format_standardization",
                         "field": field_name,
                         "target_format": field_spec["format"],
@@ -376,7 +376,7 @@ class MCPHelperImplementations:
                 # Field missing - add default value rule
                 if field_spec.get("required", False):
                     rule = {
-                        "rule_id": f"rule_{hashlib.md5(f'{field_name}_required'.encode()).hexdigest()[:8]}",
+                        "rule_id": f"rule_{hashlib.sha256(f'{field_name}_required'.encode()).hexdigest()[:8]}",
                         "type": "required_field",
                         "field": field_name,
                         "action": "error",
@@ -386,7 +386,7 @@ class MCPHelperImplementations:
                     }
                 elif field_spec.get("default") is not None:
                     rule = {
-                        "rule_id": f"rule_{hashlib.md5(f'{field_name}_default'.encode()).hexdigest()[:8]}",
+                        "rule_id": f"rule_{hashlib.sha256(f'{field_name}_default'.encode()).hexdigest()[:8]}",
                         "type": "default_value",
                         "field": field_name,
                         "default_value": field_spec["default"],
@@ -407,7 +407,7 @@ class MCPHelperImplementations:
                     if field in target_fields:
                         expected_type = target_fields[field].get("type", "string")
                         rule = {
-                            "rule_id": f"rule_{hashlib.md5(f'{field}_pattern'.encode()).hexdigest()[:8]}",
+                            "rule_id": f"rule_{hashlib.sha256(f'{field}_pattern'.encode()).hexdigest()[:8]}",
                             "type": "pattern_validation",
                             "field": field,
                             "pattern": pattern,

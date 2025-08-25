@@ -4,6 +4,7 @@ Provides standardized health check, capability, and status endpoints
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import time
 from typing import Dict, List, Optional, Any, Callable

@@ -4,6 +4,7 @@ Test Enhanced Agent Builder with MCP Integration
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import os
 import sys
 import logging
@@ -162,6 +163,7 @@ async def test_enhanced_agent_builder():
 """Sample agent code for validation testing"""
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 from app.a2a.sdk import A2AAgentBase, a2a_handler, a2a_skill, a2a_task
 from app.a2a.core.security_base import SecureA2AAgent
@@ -183,10 +185,7 @@ class SampleAgent(SecureA2AAgent):
             version="1.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
     @a2a_handler("process_data")

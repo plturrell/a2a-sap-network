@@ -6,6 +6,7 @@ Integrates xAI Grok-4 API for enhanced reasoning capabilities
 import os
 import sys
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, Any, List, Optional
 from pathlib import Path

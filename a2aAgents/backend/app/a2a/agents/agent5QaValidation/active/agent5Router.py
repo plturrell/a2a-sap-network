@@ -6,6 +6,7 @@ Handles HTTP endpoints and WebSocket streaming for ORD-integrated factuality tes
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from datetime import datetime

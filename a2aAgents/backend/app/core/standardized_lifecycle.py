@@ -4,6 +4,7 @@ Provides consistent lifecycle management, validation, and compliance for all A2A
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time

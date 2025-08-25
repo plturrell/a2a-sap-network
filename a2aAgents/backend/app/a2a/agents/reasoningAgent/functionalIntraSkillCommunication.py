@@ -4,6 +4,7 @@ No mocks, no fallbacks - actual working message passing between skills within a 
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import uuid

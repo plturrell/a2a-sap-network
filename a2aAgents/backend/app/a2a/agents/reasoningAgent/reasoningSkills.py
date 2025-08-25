@@ -4,6 +4,7 @@ Implements various reasoning architectures and collaborative strategies
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import hashlib
 import numpy as np
@@ -95,7 +96,7 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             context = request_data.get("context", {})
 
             # Create root node
-            root_id = hashlib.md5(question.encode()).hexdigest()[:8]
+            root_id = hashlib.sha256(question.encode()).hexdigest()[:8]
             root_node = ReasoningNode(
                 node_id=root_id,
                 node_type="question",

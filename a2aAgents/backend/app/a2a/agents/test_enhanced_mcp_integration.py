@@ -4,6 +4,7 @@ Tests the MCP tool usage patterns implemented in high-priority agents
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import pytest

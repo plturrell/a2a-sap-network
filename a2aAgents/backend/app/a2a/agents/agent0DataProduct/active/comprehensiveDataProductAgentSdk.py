@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import time
 import hashlib
@@ -163,10 +164,7 @@ class BlockchainQueueMixin:
 
     def __init__(self):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
@@ -283,10 +281,7 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
 
     def __init__(self, base_url: str):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         A2AAgentBase.__init__(
             self,
             agent_id=create_agent_id(),
@@ -476,7 +471,7 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
 
             # Create data product instance
             data_product = DataProduct(
-                id=f"dp_{int(time.time())}_{hashlib.md5(data_product_info['name'].encode()).hexdigest()[:8]}",
+                id=f"dp_{int(time.time())}_{hashlib.sha256(data_product_info['name'].encode()).hexdigest()[:8]}",
                 name=data_product_info["name"],
                 description=data_product_info["description"],
                 data_type=data_product_info.get("data_type", "unknown"),
@@ -1078,13 +1073,6 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
                 # Store in memory as fallback
                 self.training_data.setdefault(data_type, []).append(data)
                 return True
-
-            # Prepare request for Data Manager
-            request_data = {
-                "table_name": self.data_product_training_table,
-                "data": data,
-                "data_type": data_type
-            }
 
             # Send to Data Manager (will fail gracefully if not running)
             # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
@@ -1962,7 +1950,6 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
 
             pdf_path = request_data["pdf_path"]
             extract_filled_only = request_data.get("extract_filled_only", False)
-            include_structure = request_data.get("include_structure", True)
 
             if not hasattr(self, 'pdf_processor'):
                 from .pdfProcessingModule import EnhancedPDFProcessor
@@ -2702,7 +2689,7 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
 
             # Create unified dataset if multiple sources
             if len(quality_filtered_data) > 0:
-                unified_dataset = await self._create_unified_dataset(quality_filtered_data, orchestration_id)
+                await self._create_unified_dataset(quality_filtered_data, orchestration_id)
 
                 # Register unified dataset as data product
                 unified_data_product_info = {
@@ -4913,13 +4900,6 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
         # Register tools with MCP registry
         try:
             if self.use_data_manager and hasattr(self, 'data_manager_agent_url'):
-                registration_payload = {
-                    "agent_id": self.agent_id,
-                    "agent_name": self.name,
-                    "tools": mcp_tools,
-                    "registration_timestamp": datetime.utcnow().isoformat()
-                }
-
                 if AIOHTTP_AVAILABLE:
                     if False:  # Disabled aiohttp usage for A2A protocol compliance
                         # Placeholder for future blockchain messaging implementation
@@ -4966,27 +4946,6 @@ class ComprehensiveDataProductAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
         # Register skills with A2A registry
         try:
             # Register with central A2A registry if available
-            a2a_registry_url = os.getenv('A2A_REGISTRY_URL', 'http://localhost:8000/registry')
-
-            registration_payload = {
-                "agent_id": self.agent_id,
-                "agent_name": self.name,
-                "agent_description": self.description,
-                "agent_version": self.version,
-                "skills": a2a_skills,
-                "registration_timestamp": datetime.utcnow().isoformat(),
-                "capabilities": [
-                    "data_product_management",
-                    "metadata_extraction",
-                    "quality_assessment",
-                    "pdf_harvesting",
-                    "web_scraping",
-                    "database_extraction",
-                    "news_collection",
-                    "data_orchestration"
-                ]
-            }
-
             if AIOHTTP_AVAILABLE:
                 # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
                 if False:  # Disabled aiohttp usage for A2A protocol compliance

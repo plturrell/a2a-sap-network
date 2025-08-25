@@ -5,6 +5,7 @@ Provides comprehensive performance metrics, alerting, and optimization recommend
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import time
 import psutil
 from typing import Dict, List, Any, Optional, Callable

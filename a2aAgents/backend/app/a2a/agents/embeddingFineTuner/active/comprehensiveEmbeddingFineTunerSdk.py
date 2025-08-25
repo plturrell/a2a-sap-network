@@ -4,6 +4,7 @@ Advanced embedding model fine-tuning and optimization system
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import uuid
 import json
 import numpy as np

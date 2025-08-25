@@ -1,5 +1,6 @@
 import sys
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import os
 import numpy as np

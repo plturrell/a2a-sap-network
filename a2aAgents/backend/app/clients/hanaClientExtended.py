@@ -652,7 +652,7 @@ class EnterpriseHanaClient:
                                   isolation_level: Optional[str] = None):
         """Execute multiple operations in a transaction"""
         async with self.pool.get_connection() as conn:
-            async with self.transaction_manager.transaction(conn, isolation_level) as txn_id:
+            async with self.transaction_manager.transaction(conn, isolation_level):
                 results = []
 
                 for query, params in operations:

@@ -89,10 +89,7 @@ class CalcValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockch
 
     def __init__(self, base_url: str):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for calculation validation
         blockchain_capabilities = [
             "calculation_validation",
@@ -2424,7 +2421,7 @@ class CalcValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockch
     def _get_cache_key(self, expression: str, expected: Any, method: str) -> str:
         """Generate cache key"""
         key_str = f"{expression}|{expected}|{method}"
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.sha256(key_str.encode()).hexdigest()
 
     def _check_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Check if result is cached and still valid"""

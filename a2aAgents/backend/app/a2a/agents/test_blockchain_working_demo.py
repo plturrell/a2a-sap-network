@@ -7,6 +7,7 @@ and shows the blockchain integration capabilities we've implemented.
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import os
 import sys

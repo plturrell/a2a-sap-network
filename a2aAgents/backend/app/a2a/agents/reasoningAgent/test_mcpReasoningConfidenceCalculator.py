@@ -4,6 +4,7 @@ Tests for MCP-enabled Reasoning Confidence Calculator
 
 import pytest
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from unittest.mock import Mock, patch
 from .mcpReasoningConfidenceCalculator import MCPReasoningConfidenceCalculator, ConfidenceFactors
 

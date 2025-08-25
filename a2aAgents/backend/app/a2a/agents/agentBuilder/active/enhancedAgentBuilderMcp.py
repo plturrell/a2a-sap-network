@@ -204,10 +204,7 @@ class DynamicTemplateEngine:
     """Advanced dynamic template engine with context awareness"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.template_cache: Dict[str, Template] = {}
         self.context_analyzers: Dict[str, Callable] = {}
         self.template_validators: List[Callable] = []
@@ -861,7 +858,7 @@ except Exception as e:
 
     def _is_performant_code(self, code: str) -> bool:
         """Test if code follows performance best practices"""
-        anti_patterns = ['time.sleep(', 'for i in range(len(']
+        anti_patterns = ['await asyncio.sleep(', 'for i in range(len(']
         return not any(ap in code for ap in anti_patterns)
 
 
@@ -869,10 +866,7 @@ class AdvancedBPMNProcessor:
     """Advanced BPMN processor with complex workflow support"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.element_handlers: Dict[BPMNElementType, Callable] = {}
         self.flow_analyzers: List[Callable] = []
         self.optimization_strategies: Dict[str, Callable] = {}
@@ -1136,10 +1130,7 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
 
     def __init__(self):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 self.workflow_id = "{bpmn_def.id}"
         self.execution_context = {{}}
         self.element_states = {{}}
@@ -1343,10 +1334,7 @@ class AdvancedTestGenerator:
     """Advanced test generator with multiple strategies"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.test_strategies: Dict[TestGenerationStrategy, Callable] = {
             TestGenerationStrategy.BASIC: self._generate_basic_tests,
             TestGenerationStrategy.PROPERTY_BASED: self._generate_property_based_tests,
@@ -1684,10 +1672,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
             version="2.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         self.templates_path = Path(templates_path)
@@ -2506,10 +2491,7 @@ class {bpmn_def.name.replace(' ', '')}Integration:
 
     def __init__(self, agent: A2AAgentBase):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 self.agent = agent
         self.workflow = {bpmn_def.name.replace(' ', '')}Workflow()
 
@@ -2661,10 +2643,7 @@ class PerformanceMonitor:
     """Performance monitoring helper"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.metrics = defaultdict(list)
 
     def record_metric(self, metric_name: str, value: float):

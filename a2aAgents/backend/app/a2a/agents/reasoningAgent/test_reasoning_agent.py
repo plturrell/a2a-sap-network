@@ -5,6 +5,7 @@ Tests multi-agent reasoning capabilities, architectures, and skills
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import pytest
 import json
 import time

@@ -33,6 +33,7 @@ class SapSealGovernance extends BaseService {
         this.incidentHistory = [];
 
         this.intervals = new Map(); // Track intervals for cleanup
+    }
 
     /**
      * Initialize SAP SEAL Governance
@@ -148,7 +149,7 @@ class SapSealGovernance extends BaseService {
             // Real-time monitoring setup
             const monitoringInterval = this.intervals.set('interval_148', setInterval(async () => {
                 try {
-                    await this._performMonitoringCheck(monitor, sealService));
+                    await this._performMonitoringCheck(monitor, sealService);
                 } catch (error) {
                     this.logger.error('Monitoring check failed:', error);
                     monitor.alerts.push({
@@ -157,7 +158,7 @@ class SapSealGovernance extends BaseService {
                         timestamp: new Date()
                     });
                 }
-            }, 5000); // Check every 5 seconds
+            }, 5000)); // Check every 5 seconds
 
             // Store monitoring session
             this.performanceMonitors.set(operationId, {

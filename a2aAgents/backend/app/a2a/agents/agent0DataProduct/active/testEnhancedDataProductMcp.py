@@ -1,4 +1,5 @@
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import os
 import sys
 import logging
@@ -158,8 +159,8 @@ async def test_enhanced_data_product_agent():
         # Test 8: Test caching
         print("\n🧪 Test 8: Testing cache...")
         # Access same product twice to test cache
-        cache_test1 = await agent.validate_data_product_mcp(product_id=product_id)
-        cache_test2 = await agent.validate_data_product_mcp(product_id=product_id)
+        await agent.validate_data_product_mcp(product_id=product_id)
+        await agent.validate_data_product_mcp(product_id=product_id)
 
         cache_status = await agent.get_cache_status()
         print(f"   Cache hits: {cache_status['statistics']['hits']}")

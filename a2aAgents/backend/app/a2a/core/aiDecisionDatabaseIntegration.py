@@ -13,6 +13,7 @@ To send messages to other agents, use:
 # Shows how to integrate database-backed AI Decision Logger with existing agents
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, Any, Optional, List
 

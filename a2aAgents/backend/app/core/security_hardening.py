@@ -4,6 +4,7 @@ Provides authentication, authorization, secrets management, and vulnerability sc
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 import json
 import logging

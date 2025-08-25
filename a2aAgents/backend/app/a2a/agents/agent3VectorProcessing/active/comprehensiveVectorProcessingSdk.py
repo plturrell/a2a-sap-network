@@ -13,6 +13,7 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -191,10 +192,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize blockchain capabilities
@@ -472,7 +470,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             # Store embeddings with metadata
             vector_ids = []
             for i, (text, embedding) in enumerate(zip(texts, embeddings)):
-                vector_id = f"vec_{hashlib.md5(text.encode()).hexdigest()[:8]}"
+                vector_id = f"vec_{hashlib.sha256(text.encode()).hexdigest()[:8]}"
 
                 metadata = VectorMetadata(
                     vector_id=vector_id,

@@ -7,6 +7,7 @@ and minimize downtime.
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import numpy as np
 import json

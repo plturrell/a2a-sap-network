@@ -12,6 +12,7 @@ Usage:
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import sys
 import os

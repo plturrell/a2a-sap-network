@@ -137,10 +137,7 @@ class EnhancedCache:
 
     def __init__(self, strategy: CacheStrategy = CacheStrategy.LRU, max_size: int = 10000):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.strategy = strategy
         self.max_size = max_size
         self.cache = OrderedDict()
@@ -247,10 +244,7 @@ class ConnectionPool:
 
     def __init__(self, service_url: str, max_connections: int = 10):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.service_url = service_url
         self.max_connections = max_connections
         self.pool = asyncio.Queue(maxsize=max_connections)
@@ -356,10 +350,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             enable_monitoring: Enable performance monitoring
         """
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Initialize base classes
         A2AAgentBase.__init__(
             self,
@@ -974,7 +965,6 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     yield {"success": False, "original": item, "error": str(e)}
 
         # Process stream
-        results = []
         async for result in stream_standardize():
             if result["success"]:
                 standardized_count += 1
@@ -1291,7 +1281,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         """Generate cache key for standardization results"""
         # Create hash of items for cache key
         items_str = json.dumps(items, sort_keys=True)
-        items_hash = hashlib.md5(items_str.encode()).hexdigest()
+        items_hash = hashlib.sha256(items_str.encode()).hexdigest()
         return f"std_{data_type}_{items_hash}"
 
     def _build_hierarchy_path(self, account: Dict[str, Any]) -> str:
@@ -1902,10 +1892,7 @@ class EnhancedAccountStandardizer(AccountStandardizer):
 
     def __init__(self):
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Entity", "Department", "Account Type", "Account"]
@@ -2065,10 +2052,7 @@ class EnhancedLocationStandardizer(LocationStandardizer):
 
     def __init__(self):
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Region", "Country", "State/Province", "City"]
@@ -2182,10 +2166,7 @@ class EnhancedProductStandardizer(ProductStandardizer):
 
     def __init__(self):
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Product Line", "Product Family", "Product Type", "Product"]
@@ -2330,10 +2311,7 @@ class EnhancedBookStandardizer(BookStandardizer):
 
     def __init__(self):
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Business Line", "Book Type", "Sub-Book", "Book"]
@@ -2429,10 +2407,7 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
 
     def __init__(self):
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Measure Category", "Measure Type", "Measure Group", "Measure"]
@@ -2558,10 +2533,7 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
 
     def __init__(self):
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Domain", "Catalog Type", "Business Area", "Catalog"]
@@ -2771,10 +2743,7 @@ class MemoryMonitor:
 
     def __init__(self):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.warning_threshold = 0.8  # 80% memory usage
         self.critical_threshold = 0.9  # 90% memory usage
 

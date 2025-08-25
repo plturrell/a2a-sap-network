@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -2960,6 +2961,7 @@ Please provide:
 if __name__ == "__main__":
     # This allows the module to be run directly for testing
     import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
 
 # A2A Protocol Compliance: All imports must be available

@@ -17,6 +17,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import os
 from typing import Dict, List, Optional, Any, Union, Callable
@@ -107,10 +108,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             base_url=base_url
         )
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         # Agent registry
         self.registered_agents: Dict[str, Dict[str, Any]] = {}

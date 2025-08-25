@@ -387,7 +387,7 @@ class EnhancedSQLSkills(SecureA2AAgent):
             self.performance_stats["queries_processed"] += 1
 
             # Check cache first
-            cache_key = hashlib.md5(f"{nl_query}_{query_type}_{json.dumps(context or {}, sort_keys=True)}".encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{nl_query}_{query_type}_{json.dumps(context or {}, sort_keys=True)}".encode()).hexdigest()
             if cache_key in self.query_cache:
                 self.performance_stats["cache_hits"] += 1
                 cached_result = self.query_cache[cache_key].copy()

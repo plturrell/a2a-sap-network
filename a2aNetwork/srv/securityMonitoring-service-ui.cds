@@ -325,7 +325,7 @@ annotate SecurityMonitoringService.SecurityMetrics with @(
         {
             $Type: 'UI.DataField',
             Value: criticalEvents,
-            Criticality: 1
+            Criticality: 1,
             ![@UI.Importance]: #High
         },
         {
@@ -513,11 +513,7 @@ annotate SecurityMonitoringService.SecurityDashboard with @(
 
     UI.DataPoint #SystemHealth: {
         Value: systemHealthScore,
-        Criticality:
-            case systemHealthScore
-                when >= 90.0 then 3    // Good
-                when >= 75.0 then 2    // Warning  
-                else 1,                 // Critical
+        Criticality: 1,
         Title: 'System Health Score'
     },
 

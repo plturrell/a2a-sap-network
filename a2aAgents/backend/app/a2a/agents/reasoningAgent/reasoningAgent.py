@@ -117,10 +117,7 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Initialize parent classes
         A2AAgentBase.__init__(
             self,
@@ -564,10 +561,7 @@ class GrokSkillMessaging:
     """Grok-4 powered intelligent skill messaging system"""
 
     def __init__(self, reasoning_agent):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.reasoning_agent = reasoning_agent
         self.grok_client = None
         self.message_context_cache = {}
@@ -985,10 +979,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             **kwargs
         )
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         # Network configuration using centralized config
         self.agent_network_url = agent_network_url or config.agent_network_url

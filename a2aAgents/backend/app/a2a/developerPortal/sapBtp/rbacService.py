@@ -27,8 +27,10 @@ import logging
 from pydantic import BaseModel, Field
 from fastapi import HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-# Direct HTTP calls not allowed - use A2A protocol
-# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
+
+# A2A Protocol imports
+from .a2aSapBtpAgent import A2ASAPBTPAgent, SAPBTPServiceType, send_sap_btp_request
+
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
@@ -121,7 +123,7 @@ class RBACService:
         self.user_cache: Dict[str, UserInfo] = {}
         self.cache_ttl = timedelta(minutes=15)
 
-        logger.info("RBAC Service initialized for SAP BTP")
+        logger.info("RBAC Service initialized for SAP BTP with A2A protocol compliance")
 
     def _initialize_role_permissions(self) -> Dict[UserRole, RolePermissionMapping]:
         """Initialize role to permission mappings"""
@@ -220,40 +222,27 @@ class RBACService:
             # Decode and verify JWT token
             import os
 
-            # Get JWT verification settings
-            if self.config.get('development_mode'):
-                # Only skip verification in explicit development mode
-                decoded_token = jwt.decode(token, options={"verify_signature": False})
-            else:
-                # Production: Verify token signature
-                jwt_secret = os.environ.get('JWT_SECRET_KEY')
-                jwt_algorithm = os.environ.get('JWT_ALGORITHM', 'HS256')
+            # A2A Protocol: Use JWT validation through blockchain messaging
+            response = await send_sap_btp_request(
+                service_type=SAPBTPServiceType.XSUAA_SERVICE,
+                operation="validate_token",
+                parameters={
+                    "token": token,
+                    "xsuaa_config": self.xsuaa_config,
+                    "validation_options": {
+                        "verify_signature": not os.environ.get('DEVELOPMENT_MODE', False),
+                        "jwt_secret": os.environ.get('JWT_SECRET_KEY'),
+                        "jwt_algorithm": os.environ.get('JWT_ALGORITHM', 'HS256'),
+                        "public_key_path": os.environ.get('JWT_PUBLIC_KEY_PATH', '/app/certs/public.pem')
+                    }
+                },
+                from_agent="rbac_service"
+            )
 
-                if jwt_algorithm.startswith('RS'):  # RSA algorithms
-                    # Load public key for verification
-                    public_key_path = os.environ.get('JWT_PUBLIC_KEY_PATH', '/app/certs/public.pem')
-                    try:
-                        with open(public_key_path, 'r') as f:
-                            public_key = f.read()
-                        decoded_token = jwt.decode(
-                            token,
-                            public_key,
-                            algorithms=[jwt_algorithm],
-                            options={"verify_exp": True, "verify_aud": True}
-                        )
-                    except FileNotFoundError:
-                        logger.error(f"JWT public key not found at {public_key_path}")
-                        raise ValueError("JWT verification failed: public key not found")
-                else:
-                    # Symmetric algorithms (HS256, etc)
-                    if not jwt_secret:
-                        raise ValueError("JWT_SECRET_KEY must be set for token verification")
-                    decoded_token = jwt.decode(
-                        token,
-                        jwt_secret,
-                        algorithms=[jwt_algorithm],
-                        options={"verify_exp": True}
-                    )
+            if not response.success:
+                raise ValueError(f"A2A JWT validation failed: {response.error}")
+
+            decoded_token = response.data.get("decoded_token", {})
 
             # Extract user information
             user_info = UserInfo(

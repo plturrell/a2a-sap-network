@@ -5,6 +5,7 @@ Provides automatic performance optimization and tuning capabilities
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import time
 import logging
 from typing import Dict, List, Any, Optional, Callable

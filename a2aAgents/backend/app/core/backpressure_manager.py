@@ -4,6 +4,7 @@ Provides adaptive rate limiting, load shedding, and graceful degradation
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time

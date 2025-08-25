@@ -17,6 +17,7 @@ Usage:
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import argparse
 import sys
 import json

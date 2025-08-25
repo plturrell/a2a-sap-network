@@ -6,6 +6,7 @@ Enhanced with message serialization, validation, and compression
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Optional, Any, Callable, AsyncGenerator
 from datetime import datetime, timedelta

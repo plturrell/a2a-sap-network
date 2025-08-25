@@ -4,6 +4,7 @@ Test script for validating extended language support in GleanAgent on the real A
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import os
 import sys
 from pathlib import Path

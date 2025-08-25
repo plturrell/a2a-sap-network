@@ -114,6 +114,7 @@ class GrokClient:
         # Start quality monitoring for continuous benchmarking
         if self.quality_monitor and not self.use_local_analysis:
             import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
             try:
                 loop = asyncio.get_running_loop()
                 asyncio.create_task(self.quality_monitor.start_monitoring())

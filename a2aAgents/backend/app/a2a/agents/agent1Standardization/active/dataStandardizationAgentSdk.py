@@ -17,6 +17,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
@@ -25,7 +26,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from uuid import uuid4
 
 # Trust system imports

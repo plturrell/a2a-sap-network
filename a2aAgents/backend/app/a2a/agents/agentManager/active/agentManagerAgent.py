@@ -34,10 +34,7 @@ class BlockchainRegistry:
     """Registry that uses blockchain as single source of truth"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.blockchain_client = None
         self._init_blockchain()
 
@@ -175,10 +172,7 @@ class EnhancedAgentManagerAgent(AgentHelpSeeker):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         # Initialize parent class
         super().__init__()
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Configuration
@@ -858,10 +852,7 @@ class EnhancedWorkflowOptimizer:
     """AI-enhanced workflow optimization"""
 
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
 
@@ -869,10 +860,7 @@ class AgentPerformancePredictor:
     """AI-powered agent performance prediction"""
 
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
 
@@ -880,10 +868,7 @@ class TrustIntelligenceSystem:
     """AI-enhanced trust decision making"""
 
     def __init__(self, ai_framework: AIIntelligenceFramework):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
 
@@ -958,10 +943,7 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
     def __init__(self, base_url: str, agent_id: str = "agent_manager", agent_name: str = "Agent Manager",
                  capabilities: Optional[Dict[str, Any]] = None, skills: Optional[List[Dict[str, Any]]] = None):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Initialize blockchain capabilities with agent management specializations
         blockchain_capabilities = [
             "agent_lifecycle_management",
@@ -1454,7 +1436,10 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
                         })
 
             # Sort by reputation (highest first)
-            discovered_agents.sort(key=lambda x: x['reputation'], reverse=True)
+            def get_agent_reputation(agent):
+                return agent['reputation']
+            
+            discovered_agents.sort(key=get_agent_reputation, reverse=True)
 
             logger.info(f"🔍 Discovered {len(discovered_agents)} agents via blockchain with capabilities {required_capabilities}")
 
@@ -1658,7 +1643,10 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
 
             if distribution_strategy == 'reputation_based':
                 # Sort agents by reputation (highest first)
-                agent_profiles.sort(key=lambda x: x['reputation'], reverse=True)
+                def get_profile_reputation(profile):
+                    return profile['reputation']
+                
+                agent_profiles.sort(key=get_profile_reputation, reverse=True)
 
             for i, task in enumerate(tasks):
                 if agent_profiles:
@@ -1667,8 +1655,11 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
                     elif distribution_strategy == 'capability_based':
                         # Find agent with best matching capabilities
                         required_caps = task.get('required_capabilities', [])
-                        best_match = max(agent_profiles,
-                                       key=lambda x: len(set(x['capabilities']) & set(required_caps)))
+                        
+                        def get_capability_overlap(profile):
+                            return len(set(profile['capabilities']) & set(required_caps))
+                        
+                        best_match = max(agent_profiles, key=get_capability_overlap)
                         assigned_agent = best_match
                     else:  # reputation_based (already sorted)
                         assigned_agent = agent_profiles[0]
@@ -1747,11 +1738,20 @@ class AgentManagerAgent(SecureA2AAgent, AgentHelpSeeker):
             for resource in resources:
                 if agent_metrics:
                     if allocation_criteria == 'reputation':
-                        best_agent = max(agent_metrics, key=lambda x: x['reputation'])
+                        def get_reputation_score(agent):
+                            return agent['reputation']
+                        
+                        best_agent = max(agent_metrics, key=get_reputation_score)
                     elif allocation_criteria == 'load_balancing':
-                        best_agent = min(agent_metrics, key=lambda x: x['current_load'])
+                        def get_current_load(agent):
+                            return agent['current_load']
+                        
+                        best_agent = min(agent_metrics, key=get_current_load)
                     else:  # capability_match
-                        best_agent = max(agent_metrics, key=lambda x: x['capacity_score'])
+                        def get_capacity_score(agent):
+                            return agent['capacity_score']
+                        
+                        best_agent = max(agent_metrics, key=get_capacity_score)
 
                     resource_allocations.append({
                         'resource_id': resource.get('id', str(uuid4())),

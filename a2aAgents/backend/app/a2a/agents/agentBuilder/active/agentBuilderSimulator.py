@@ -1,5 +1,6 @@
 import asyncio
 import random
+import secrets
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -196,7 +197,7 @@ class AgentBuilderSimulator(SecureA2AAgent):
                 capabilities = template["capabilities"].copy()
                 estimated_time = template["estimated_time"]
             else:
-                template_id = random.choice(template_ids) if random.random() < 0.7 else None
+                template_id = random.choice(template_ids) if secrets.SystemRandom().random() < 0.7 else None
                 agent_type = random.choice(["custom", "hybrid", "specialized"])
                 capabilities = self._generate_random_capabilities()
                 estimated_time = self._estimate_build_time(complexity)
@@ -226,7 +227,7 @@ class AgentBuilderSimulator(SecureA2AAgent):
 
     def _select_complexity(self, distribution: Dict[str, float]) -> str:
         """Select complexity based on probability distribution"""
-        rand = random.random()
+        rand = secrets.SystemRandom().random()
         cumulative = 0
 
         for complexity, probability in distribution.items():
@@ -263,7 +264,7 @@ class AgentBuilderSimulator(SecureA2AAgent):
             return []  # First agent has no dependencies
 
         # Some agents depend on previously created agents
-        if random.random() < 0.3:  # 30% chance of having dependencies
+        if secrets.SystemRandom().random() < 0.3:  # 30% chance of having dependencies
             num_deps = random.randint(1, min(3, agent_index))
             return [f"agent_spec_{random.randint(0, agent_index-1):04d}" for _ in range(num_deps)]
 
@@ -486,7 +487,7 @@ class AgentBuilderSimulator(SecureA2AAgent):
             # Simulate build success/failure
             success_probability = self._calculate_success_probability(spec)
 
-            if random.random() < success_probability:
+            if secrets.SystemRandom().random() < success_probability:
                 # Build succeeded
                 build_result.status = "success"
                 build_result.artifacts = self._generate_build_artifacts(spec)
@@ -683,7 +684,7 @@ class AgentBuilderSimulator(SecureA2AAgent):
 
                 for build in deployable_builds:
                     # Simulate deployment
-                    deployment_success = random.random() < 0.9  # 90% deployment success rate
+                    deployment_success = secrets.SystemRandom().random() < 0.9  # 90% deployment success rate
 
                     if deployment_success:
                         build.deployment_url = f"http://agent-{build.build_id[:8]}.simulation.local"

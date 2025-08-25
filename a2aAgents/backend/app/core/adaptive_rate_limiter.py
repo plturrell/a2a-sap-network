@@ -523,8 +523,6 @@ class AdaptiveRateLimiter:
                              confidence: float) -> float:
         """Calculate trust score for user based on behavior history"""
 
-        base_trust = 0.5
-
         # Behavior class influence
         behavior_trust_map = {
             UserBehaviorClass.LEGITIMATE: 1.0,

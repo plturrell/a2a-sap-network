@@ -4,6 +4,7 @@ Implements comprehensive validation for reasoning processes and outputs
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field

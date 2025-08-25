@@ -8,6 +8,7 @@ not A2A protocol. MCP is for agent-to-tools communication only.
 import http
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import uuid

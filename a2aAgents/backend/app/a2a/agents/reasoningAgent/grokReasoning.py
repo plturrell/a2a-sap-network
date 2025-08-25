@@ -6,6 +6,7 @@ Uses xAI Grok-4 API for reasoning capabilities
 import os
 import sys
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import json
 from typing import Dict, Any, List, Optional

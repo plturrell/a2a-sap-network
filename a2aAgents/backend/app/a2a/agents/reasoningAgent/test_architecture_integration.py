@@ -6,6 +6,7 @@ Quick test to verify all architectures are properly integrated
 
 import sys
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from pathlib import Path
 
 # Add paths

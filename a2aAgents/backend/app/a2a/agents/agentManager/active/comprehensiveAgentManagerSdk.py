@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -457,10 +458,7 @@ class ComprehensiveAgentManagerSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         # Initialize A2A agent base
         A2AAgentBase.__init__(self, config)
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         # Machine Learning Models for Agent Management Intelligence
         self.performance_predictor = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1)

@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -191,10 +192,7 @@ class BlockchainQueueMixin:
 
     def __init__(self):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
@@ -311,10 +309,7 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
 
     def __init__(self, base_url: str):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         A2AAgentBase.__init__(
             self,
             agent_id=create_agent_id(),
@@ -502,7 +497,6 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
             source_schema = request_data["source_schema"]
             target_standard = request_data.get("target_standard", "dublin_core")
             standardization_rules = request_data.get("standardization_rules", ["naming_conventions", "data_type_mapping", "field_validation"])
-            quality_threshold = request_data.get("quality_threshold", 0.8)
             enable_blockchain = request_data.get("enable_blockchain_validation", True)
 
             # AI-enhanced field mapping
@@ -536,7 +530,7 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
                     self.method_performance["blockchain_validation"]["success"] += 1
 
             # Create standardization result
-            standardization_id = f"std_{int(time.time())}_{hashlib.md5(str(source_schema).encode()).hexdigest()[:8]}"
+            standardization_id = f"std_{int(time.time())}_{hashlib.sha256(str(source_schema).encode()).hexdigest()[:8]}"
             processing_time = time.time() - start_time
 
             result = StandardizationResult(
@@ -562,7 +556,7 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
                 "processing_time": processing_time,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            success = await self.store_training_data("schema_transformations", training_entry)
+            await self.store_training_data("schema_transformations", training_entry)
 
             # Update metrics
             self.metrics["total_standardizations"] += 1
@@ -1284,7 +1278,6 @@ class ComprehensiveDataStandardizationAgentSDK(SecureA2AAgent, BlockchainQueueMi
         """Infer data type conversion needed"""
         # Simple heuristic-based data type inference
         source_lower = source_field.lower()
-        target_lower = target_field.lower()
 
         if any(pattern in source_lower for pattern in ['id', 'key', 'uuid']):
             return "string"

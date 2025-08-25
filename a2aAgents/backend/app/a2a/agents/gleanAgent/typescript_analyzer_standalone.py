@@ -4,6 +4,7 @@ Standalone TypeScript analyzer for enhanced analysis
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import re
 import shutil
 import json
@@ -18,7 +19,7 @@ class StandaloneTypeScriptAnalyzer:
 
     def _create_issue(self, file_path: str, line: int, message: str, severity: str, tool: str) -> Dict[str, Any]:
         """Create a standardized issue dictionary"""
-        issue_id = hashlib.md5(f'{file_path}{line}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
+        issue_id = hashlib.sha256(f'{file_path}{line}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
 
         return {
             "id": f"{tool}_{issue_id}",

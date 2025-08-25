@@ -5,6 +5,7 @@ Provides A2A protocol compliant networking for agents
 
 import os
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, Any, Optional, List

@@ -1223,7 +1223,7 @@ class OptimizedBatchProcessor:
             str(test_case.get("difficulty", ""))
         ]
 
-        return hashlib.md5("|".join(key_components).encode()).hexdigest()
+        return hashlib.sha256("|".join(key_components).encode()).hexdigest()
 
     def _update_batch_stats(self, total_items: int, batch_count: int, processing_time: float):
         """Update batch processing statistics"""

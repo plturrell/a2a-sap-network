@@ -1,4 +1,5 @@
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, List, Any, Optional, Callable
@@ -334,7 +335,7 @@ class GrokRealTimeValidator(SecureA2AAgent):
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
         cache_string = f"{query}:{str(result)}"
-        return hashlib.md5(cache_string.encode()).hexdigest()
+        return hashlib.sha256(cache_string.encode()).hexdigest()
 
     async def _execute_callback(self, callback: Callable, result: Dict[str, Any]):
         """Execute validation callback"""

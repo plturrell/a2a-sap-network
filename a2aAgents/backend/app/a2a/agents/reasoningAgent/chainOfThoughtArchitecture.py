@@ -4,6 +4,7 @@ Implements step-by-step reasoning with MCP tools and Grok-4 integration
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, Any, List, Optional, Tuple

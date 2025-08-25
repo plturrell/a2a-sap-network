@@ -25,9 +25,10 @@ from enum import Enum
 import logging
 
 from pydantic import BaseModel, Field
-# Direct HTTP calls not allowed - use A2A protocol
-# # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 from fastapi import HTTPException
+
+# A2A Protocol imports - Hybrid approach
+from ...core.hybridNetworkClient import create_sap_btp_client
 
 logger = logging.getLogger(__name__)
 
@@ -97,10 +98,13 @@ class DestinationService:
         self.token_cache: Dict[str, Dict[str, Any]] = {}
         self.cache_ttl = timedelta(minutes=10)
 
-        logger.info("SAP Destination Service initialized")
+        # Initialize hybrid network client for A2A compliance with external HTTP
+        self.hybrid_client = create_sap_btp_client(f"destination_service_{id(self)}")
+        
+        logger.info("SAP Destination Service initialized with A2A hybrid compliance")
 
     async def get_access_token(self) -> str:
-        """Get OAuth2 access token for Destination Service"""
+        """Get OAuth2 access token for Destination Service through A2A protocol"""
         try:
             cache_key = "destination_service_token"
 
@@ -110,7 +114,7 @@ class DestinationService:
                 if datetime.utcnow() < token_info["expires_at"]:
                     return token_info["access_token"]
 
-            # Request new token
+            # Request new token through A2A protocol
             auth_header = base64.b64encode(
                 f"{self.client_id}:{self.client_secret}".encode()
             ).decode()
@@ -124,14 +128,19 @@ class DestinationService:
                 "grant_type": "client_credentials"
             }
 
-            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
-                response = await client.post(self.token_url, headers=headers, data=data)
-                response.raise_for_status()
+            # A2A Protocol: Use hybrid approach for SAP BTP services
+            response = await self.hybrid_client.send_sap_btp_request(
+                service_type="oauth_token",
+                operation="get_access_token", 
+                endpoint=self.token_url,
+                method="POST",
+                headers=headers,
+                data=data
+            )
 
-                token_data = response.json()
-                access_token = token_data["access_token"]
+            if response.get("success") and response.get("data"):
+                token_data = response["data"]
+                access_token = token_data.get("access_token")
                 expires_in = token_data.get("expires_in", 3600)
 
                 # Cache token
@@ -141,6 +150,8 @@ class DestinationService:
                 }
 
                 return access_token
+            else:
+                raise Exception(f"Hybrid A2A token request failed: {response.get('error')}")
 
         except Exception as e:
             logger.error(f"Failed to get Destination Service access token: {e}")
@@ -167,14 +178,20 @@ class DestinationService:
                 headers["X-User-Token"] = user_token
 
             url = f"{self.service_url}/destination-configuration/v1/destinations/{destination_name}"
+            
+            # A2A Protocol: Use hybrid approach for SAP BTP services
+            response = await self.hybrid_client.send_sap_btp_request(
+                service_type="destination_config",
+                operation="get_destination",
+                endpoint=url,
+                method="GET",
+                headers=headers
+            )
 
-            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
-                response = await client.get(url, headers=headers)
-                response.raise_for_status()
+            if not response.get("success"):
+                raise Exception(f"Hybrid A2A destination request failed: {response.get('error')}")
 
-                dest_data = response.json()
+            dest_data = response.get("data")
 
                 # Parse destination info
                 destination_info = DestinationInfo(
@@ -199,8 +216,8 @@ class DestinationService:
 
                 return destination_info
 
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
+        except Exception as e:
+            if "not found" in str(e).lower():
                 raise HTTPException(status_code=404, detail=f"Destination '{destination_name}' not found")
             else:
                 logger.error(f"Failed to get destination {destination_name}: {e}")
@@ -228,14 +245,20 @@ class DestinationService:
                 headers["X-User-Token"] = user_token
 
             url = f"{self.service_url}/destination-configuration/v1/destinations/{destination_name}/authTokens"
+            
+            # A2A Protocol: Use hybrid approach for SAP BTP services
+            response = await self.hybrid_client.send_sap_btp_request(
+                service_type="destination_auth",
+                operation="get_auth_tokens",
+                endpoint=url,
+                method="POST",
+                headers=headers
+            )
 
-            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
-                response = await client.post(url, headers=headers)
-                response.raise_for_status()
-
-                return response.json()
+            if response.get("success"):
+                return response.get("data", {})
+            else:
+                return {}
 
         except Exception as e:
             logger.warning(f"Failed to get auth tokens for destination {destination_name}: {e}")
@@ -252,15 +275,21 @@ class DestinationService:
             }
 
             url = f"{self.service_url}/destination-configuration/v1/destinations"
+            
+            # A2A Protocol: Use hybrid approach for SAP BTP services
+            response = await self.hybrid_client.send_sap_btp_request(
+                service_type="destinations_list",
+                operation="list_destinations",
+                endpoint=url,
+                method="GET",
+                headers=headers
+            )
 
-            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
-                response = await client.get(url, headers=headers)
-                response.raise_for_status()
-
-                destinations_data = response.json()
-                return [dest["Name"] for dest in destinations_data]
+            if response.get("success") and response.get("data"):
+                destinations_data = response.get("data")
+                return [dest.get("Name", "") for dest in destinations_data] if isinstance(destinations_data, list) else []
+            else:
+                return []
 
         except Exception as e:
             logger.error(f"Failed to list destinations: {e}")

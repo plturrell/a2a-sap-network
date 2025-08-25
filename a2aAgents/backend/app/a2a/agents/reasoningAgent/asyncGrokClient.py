@@ -137,7 +137,7 @@ class AsyncGrokCache:
             "response_format": kwargs.get("response_format")
         }
         key_string = json.dumps(key_data, sort_keys=True)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
     async def get(self, cache_key: str) -> Optional[GrokResponse]:
         """Get cached response"""

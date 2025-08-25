@@ -130,7 +130,7 @@ class ChainOfThoughtReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMix
             confidence_threshold = request_data.get("confidence_threshold", 0.7)
 
             # Create unique chain ID
-            chain_id = hashlib.md5(f"{question}_{context}_{strategy.value}".encode()).hexdigest()[:12]
+            chain_id = hashlib.sha256(f"{question}_{context}_{strategy.value}".encode()).hexdigest()[:12]
 
             # Analyze question complexity and type
             question_analysis = self._analyze_question_complexity(question, context)

@@ -391,6 +391,7 @@ class SAPLogHandler(logging.Handler):
     def emit(self, record):
         """Send log record to SAP"""
         import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
         # Skip if we're already in an event loop
         try:

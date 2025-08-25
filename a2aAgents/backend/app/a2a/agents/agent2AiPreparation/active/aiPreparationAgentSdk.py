@@ -17,6 +17,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
@@ -119,10 +120,7 @@ class EnhancedAIPreparationAgent(SecureA2AAgent, BlockchainIntegrationMixin, Per
 
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for AI preparation agent
         blockchain_capabilities = [
             "ai_data_preparation",
@@ -685,7 +683,7 @@ class EnhancedAIPreparationAgent(SecureA2AAgent, BlockchainIntegrationMixin, Per
     def _generate_fallback_vector(self, text: str) -> List[float]:
         """Generate fallback vector when embedding models not available"""
         # Simple hash-based vector generation
-        hash_value = hashlib.md5(text.encode()).hexdigest()
+        hash_value = hashlib.sha256(text.encode()).hexdigest()
         vector = []
 
         for i in range(0, min(len(hash_value), self.embedding_dimensions // 16)):
@@ -917,19 +915,13 @@ class EnhancedAIPreparationAgent(SecureA2AAgent, BlockchainIntegrationMixin, Per
 class PreparationReasoningEngine:
     def __init__(self, ai_framework: AIIntelligenceFramework):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
 class AdaptivePreparationLearner:
     def __init__(self, ai_framework: AIIntelligenceFramework):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
     async def update_preparation_patterns(self, learning_result: Dict[str, Any], learning_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -938,10 +930,7 @@ class AdaptivePreparationLearner:
 class IntelligentVectorizer:
     def __init__(self, ai_framework: AIIntelligenceFramework):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
     async def vectorize_with_intelligence(self, context: Dict[str, Any], reasoning_result: Dict[str, Any]) -> Dict[str, Any]:
@@ -950,10 +939,7 @@ class IntelligentVectorizer:
 class AutonomousPreparationOptimizer:
     def __init__(self, ai_framework: AIIntelligenceFramework):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
 
     async def optimize_preparation(self, data: Dict[str, Any], intelligence: Dict[str, Any], enhanced: Dict[str, Any]) -> Dict[str, Any]:
@@ -966,10 +952,7 @@ class AIPreparationAgentSDK(EnhancedAIPreparationAgent, PerformanceMonitoringMix
 
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
     async def initialize(self) -> None:
@@ -1483,7 +1466,6 @@ class AIPreparationAgentSDK(EnhancedAIPreparationAgent, PerformanceMonitoringMix
         try:
             data = request_data.get("data", {})
             config = request_data.get("feature_config", {})
-            target_features = request_data.get("target_features", [])
 
             # Apply intelligent feature engineering
             if self.ai_framework:

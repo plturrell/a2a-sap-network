@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 import json
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from .sparseVectorSkills import SparseVectorSkills
 from .hybridRankingSkills import HybridRankingSkills
 

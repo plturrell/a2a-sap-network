@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Callable
 from uuid import uuid4
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import json

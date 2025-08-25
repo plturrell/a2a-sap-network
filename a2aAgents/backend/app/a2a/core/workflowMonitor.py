@@ -5,6 +5,7 @@ Compliant with A2A Protocol v0.2.9
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from pydantic import BaseModel

@@ -14,6 +14,7 @@ from enum import Enum
 from collections import defaultdict, deque
 import numpy as np
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from abc import ABC, abstractmethod
 import uuid
 

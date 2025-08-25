@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple, Union, Callable
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
@@ -146,10 +147,7 @@ class QualityControlManagerAgent(SecureA2AAgent, PerformanceOptimizationMixin):
         enable_monitoring: bool = True
     ):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Initialize both parent classes
         A2AAgentBase.__init__(
             self,

@@ -7,6 +7,7 @@ to demonstrate that the blockchain communication is working.
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import os
 import sys

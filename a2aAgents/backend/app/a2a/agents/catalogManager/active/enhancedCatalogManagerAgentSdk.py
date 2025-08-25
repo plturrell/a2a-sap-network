@@ -29,6 +29,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import datetime
 import json
 import logging
@@ -167,10 +168,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
 
     def __init__(self, base_url: str, db_path: str = "/tmp/enhanced_catalog.db"):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for catalog management
         blockchain_capabilities = [
             "catalog_management",

@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 import torch
 from transformers import AutoTokenizer, AutoModel
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 

@@ -1,4 +1,5 @@
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from app.a2a.core.security_base import SecureA2AAgent
 """
 A2A-Compliant Perplexity AI API Module for Agent 0

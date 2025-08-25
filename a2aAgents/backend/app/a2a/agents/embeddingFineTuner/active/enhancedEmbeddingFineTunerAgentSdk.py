@@ -16,6 +16,7 @@ Enhanced Capabilities:
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import datetime
 import json
 import logging

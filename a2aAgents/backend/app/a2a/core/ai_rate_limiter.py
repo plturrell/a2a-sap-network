@@ -7,6 +7,7 @@ policies based on user behavior and system capacity.
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import numpy as np
 import json
@@ -205,8 +206,14 @@ class AIRateLimiter:
         self.system_metrics = defaultdict(list)
         
         # Real-time tracking
-        self.current_rates = defaultdict(lambda: defaultdict(float))  # user_id -> endpoint -> rate
-        self.request_windows = defaultdict(lambda: defaultdict(deque))  # sliding windows
+        def create_default_rate_dict():
+            return defaultdict(float)
+        
+        def create_default_window_dict():
+            return defaultdict(deque)
+        
+        self.current_rates = defaultdict(create_default_rate_dict)  # user_id -> endpoint -> rate
+        self.request_windows = defaultdict(create_default_window_dict)  # sliding windows
         self.token_buckets = defaultdict(dict)  # user_id -> endpoint -> bucket_state
         
         # Adaptive thresholds
@@ -339,7 +346,10 @@ class AIRateLimiter:
                 hourly_dist[req_hour] += 1
             
             # Use top 3 hours as features
-            top_hours = sorted(enumerate(hourly_dist), key=lambda x: x[1], reverse=True)[:3]
+            def get_hour_count(hour_tuple):
+                return hour_tuple[1]
+            
+            top_hours = sorted(enumerate(hourly_dist), key=get_hour_count, reverse=True)[:3]
             for i, (hour, count) in enumerate(top_hours):
                 features.append(count / max(1, len(recent_requests)))
         else:
@@ -734,8 +744,11 @@ class AIRateLimiter:
         avg_interval = np.mean(intervals)
         usage_consistency = 1.0 - np.std(intervals) / max(avg_interval, 1)
         
-        peak_hours = sorted(hourly_usage.items(), key=lambda x: x[1], reverse=True)[:3]
-        top_endpoints = sorted(endpoint_usage.items(), key=lambda x: x[1], reverse=True)[:5]
+        def get_usage_count(item):
+            return item[1]
+        
+        peak_hours = sorted(hourly_usage.items(), key=get_usage_count, reverse=True)[:3]
+        top_endpoints = sorted(endpoint_usage.items(), key=get_usage_count, reverse=True)[:5]
         
         return {
             'user_id': user_id,

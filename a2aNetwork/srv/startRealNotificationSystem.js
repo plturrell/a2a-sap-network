@@ -168,24 +168,29 @@ class RealNotificationSystemStarter {
     }
 
     async testWebSocketConnection(url) {
-        return new Promise((resolve, reject) => {
+        const websocketTestExecutor = (resolve, reject) => {
             const ws = new BlockchainEventClient(url);
             const timeout = setTimeout(() => {
                 ws.terminate();
                 reject(new Error('WebSocket connection timeout'));
             }, 5000);
 
-            ws.on('open', () => {
+            const handleWebSocketOpen = () => {
                 clearTimeout(timeout);
                 ws.close();
                 resolve();
-            });
+            };
 
-            ws.on('error', (error) => {
+            const handleWebSocketError = (error) => {
                 clearTimeout(timeout);
                 reject(error);
-            });
-        });
+            };
+
+            ws.on('open', handleWebSocketOpen);
+            ws.on('error', handleWebSocketError);
+        };
+        
+        return new Promise(websocketTestExecutor);
     }
 
     async startComponents() {
@@ -199,8 +204,12 @@ class RealNotificationSystemStarter {
         let attempts = 0;
         const maxAttempts = 30;
 
+        const waitForInitialization = (resolve) => {
+            setTimeout(resolve, 1000);
+        };
+        
         while (!this.notificationService.isInitialized && attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(waitForInitialization);
             attempts++;
         }
 
@@ -226,16 +235,21 @@ class RealNotificationSystemStarter {
             process.exit(0);
         };
 
-        process.on('SIGINT', () => shutdown('SIGINT'));
-        process.on('SIGTERM', () => shutdown('SIGTERM'));
-        process.on('uncaughtException', (error) => {
+        const handleSigInt = () => shutdown('SIGINT');
+        const handleSigTerm = () => shutdown('SIGTERM');
+        const handleUncaughtException = (error) => {
             this.logger.error('Uncaught Exception:', error);
             shutdown('UNCAUGHT_EXCEPTION');
-        });
-        process.on('unhandledRejection', (reason, promise) => {
+        };
+        const handleUnhandledRejection = (reason, promise) => {
             this.logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
             shutdown('UNHANDLED_REJECTION');
-        });
+        };
+
+        process.on('SIGINT', handleSigInt);
+        process.on('SIGTERM', handleSigTerm);
+        process.on('uncaughtException', handleUncaughtException);
+        process.on('unhandledRejection', handleUnhandledRejection);
     }
 
     printServiceStatus() {

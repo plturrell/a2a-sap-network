@@ -31,10 +31,7 @@ class AdvancedMCPStandardizationAgent(SecureA2AAgent):
             version="2.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize MCP tool providers
@@ -664,7 +661,6 @@ class AdvancedMCPStandardizationAgent(SecureA2AAgent):
                 if field in data_input:
                     current_value = data_input[field]
                     target_type = field_spec.get("type")
-                    current_type = type(current_value).__name__
 
                     # Check for type mismatches
                     if target_type == "integer" and isinstance(current_value, str) and current_value.isdigit():

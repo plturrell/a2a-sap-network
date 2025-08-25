@@ -1,4 +1,5 @@
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, List, Any, Optional, Tuple

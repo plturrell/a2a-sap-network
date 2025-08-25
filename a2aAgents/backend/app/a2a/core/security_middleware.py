@@ -4,6 +4,7 @@ Provides authentication, authorization, rate limiting, and input validation
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import functools
 import hashlib
 import hmac

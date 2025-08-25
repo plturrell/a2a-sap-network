@@ -70,10 +70,7 @@ if False:  # Disabled fallback
         # Create minimal base class if SDK not available
         class A2AAgentBase(ABC, PerformanceMonitoringMixin):
             def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                # Initialize security features
-                self._init_security_features()
-                self._init_rate_limiting()
-                self._init_input_validation()
+                # Security features are initialized by SecureA2AAgent base class
                 self.agent_id = agent_id
                 self.name = name
                 self.description = description
@@ -417,10 +414,7 @@ class RealGrokClient:
     """Real Grok AI client implementation"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.api_key = None
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
@@ -548,10 +542,7 @@ class RealGrokAssistant:
     """Grok AI assistant for specialized tasks"""
 
     def __init__(self, client: RealGrokClient):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.client = client
 
     async def analyze_semantic_similarity(self, text1: str, text2: str) -> float:
@@ -605,10 +596,7 @@ class QaValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockchai
 
     def __init__(self, base_url: str):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for QA validation agent
         blockchain_capabilities = [
             "qa_validation",
@@ -995,7 +983,7 @@ class QaValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockchai
             )
 
             # Store in cache
-            cache_key = hashlib.md5(f"{content}_{content_type}_{strict_mode}".encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{content}_{content_type}_{strict_mode}".encode()).hexdigest()
             self.validation_cache[cache_key] = (result, time.time())
 
             return result
@@ -1038,7 +1026,7 @@ class QaValidationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin, Blockchai
 
         try:
             # Check cache first
-            cache_key = hashlib.md5(f"{actual_output}_{expected_output}_{tolerance}".encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{actual_output}_{expected_output}_{tolerance}".encode()).hexdigest()
             if cache_key in self.validation_cache:
                 cached_result, cache_time = self.validation_cache[cache_key]
                 if time.time() - cache_time < self.cache_ttl:

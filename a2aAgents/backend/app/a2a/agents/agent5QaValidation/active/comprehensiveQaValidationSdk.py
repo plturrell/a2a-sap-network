@@ -13,6 +13,7 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -1106,7 +1107,7 @@ class ComprehensiveQAValidationSDK(A2AAgentBase, BlockchainIntegrationMixin):
                 "timestamp": datetime.utcnow().isoformat(),
                 "validation_agent": self.agent_id,
                 "blockchain_network": "test_network",
-                "transaction_id": f"0x{hashlib.md5(proof_hash.encode()).hexdigest()}",
+                "transaction_id": f"0x{hashlib.sha256(proof_hash.encode()).hexdigest()}",
                 "verification_url": f"https://testnet.explorer.io/tx/{proof_hash}"
             }
 

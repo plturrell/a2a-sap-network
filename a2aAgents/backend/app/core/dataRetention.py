@@ -6,6 +6,7 @@ Implements configurable data retention policies for compliance
 import logging
 import json
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
 from enum import Enum

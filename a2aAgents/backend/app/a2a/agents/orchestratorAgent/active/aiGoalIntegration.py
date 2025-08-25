@@ -4,6 +4,7 @@ Integrates AI optimization with the existing orchestrator agent
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from datetime import datetime
 from typing import Dict, Any, Optional

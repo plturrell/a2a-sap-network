@@ -6,6 +6,7 @@ Dead Letter Queue implementation for handling failed messages
 import json
 import logging
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from typing import Any, Dict, List, Optional, Callable
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict

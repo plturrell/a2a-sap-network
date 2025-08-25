@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
 from .errorHandling import SecurityError
 from .secrets import get_secrets_manager

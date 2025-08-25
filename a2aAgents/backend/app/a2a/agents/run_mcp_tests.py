@@ -5,6 +5,7 @@ Run real MCP integration tests to verify functionality
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import sys
 import logging
 from datetime import datetime

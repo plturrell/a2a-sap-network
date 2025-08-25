@@ -4,14 +4,12 @@ Collects SMART goal-relevant metrics and notifies orchestrator of goal assignmen
 """
 
 import asyncio
-import json
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from dataclasses import dataclass
-
-from ....core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from ....sdk.a2aNetworkClient import A2ANetworkClient
 
 logger = logging.getLogger(__name__)

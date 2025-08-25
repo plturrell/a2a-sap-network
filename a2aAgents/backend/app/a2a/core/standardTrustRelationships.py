@@ -7,6 +7,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
 logger = logging.getLogger(__name__)
 

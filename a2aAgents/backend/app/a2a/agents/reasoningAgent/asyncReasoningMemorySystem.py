@@ -4,6 +4,7 @@ Replaces SQLite blocking operations with async storage for performance improveme
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import aiosqlite
 import json
 import logging
@@ -34,7 +35,7 @@ class ReasoningExperience:
         if not self.experience_id:
             # Generate unique ID based on question and timestamp
             content = f"{self.question}_{self.timestamp.isoformat()}"
-            self.experience_id = hashlib.md5(content.encode()).hexdigest()[:16]
+            self.experience_id = hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
 @dataclass
@@ -51,7 +52,7 @@ class MemoryPattern:
     def __post_init__(self):
         if not self.pattern_id:
             content = f"{self.pattern_type}_{self.pattern_data}"
-            self.pattern_id = hashlib.md5(str(content).encode()).hexdigest()[:16]
+            self.pattern_id = hashlib.sha256(str(content).encode()).hexdigest()[:16]
 
 
 class AsyncReasoningMemoryStore:
@@ -154,7 +155,7 @@ class AsyncReasoningMemoryStore:
             await self.initialize()
 
             # Create question hash for efficient lookups
-            question_hash = hashlib.md5(experience.question.encode()).hexdigest()
+            question_hash = hashlib.sha256(experience.question.encode()).hexdigest()
 
             async with aiosqlite.connect(self.db_path) as db:
                 await db.execute("""
@@ -194,7 +195,7 @@ class AsyncReasoningMemoryStore:
         try:
             await self.initialize()
 
-            question_hash = hashlib.md5(question.encode()).hexdigest()
+            question_hash = hashlib.sha256(question.encode()).hexdigest()
 
             # Build query with optional filters
             query = """

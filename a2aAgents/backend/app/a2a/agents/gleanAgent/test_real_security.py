@@ -65,6 +65,7 @@ urllib3==1.26.0
 import os
 import subprocess
 import random
+import secrets
 import sqlite3
 
 # Hardcoded secrets (security issue)
@@ -78,7 +79,8 @@ def unsafe_sql_query(user_input):
     query = "SELECT * FROM users WHERE name = '" + user_input + "'"
 
     # Another SQL injection pattern
-    cursor.execute("SELECT * FROM products WHERE id = %s" % user_input)
+    cursor.# WARNING: Potential SQL injection - use parameterized queries
+        execute("SELECT * FROM products WHERE id = %s" % user_input)
 
     return query
 
@@ -98,7 +100,7 @@ def command_injection_vulnerability(filename):
 def weak_random_for_security():
     """Using weak random for security purposes"""
     # Weak random for token generation
-    token = str(random.random())
+    token = str(secrets.SystemRandom().random())
 
     # Weak random choice for session ID
     session_id = random.choice("abcdefghijklmnopqrstuvwxyz")

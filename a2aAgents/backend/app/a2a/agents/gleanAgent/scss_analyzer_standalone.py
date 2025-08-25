@@ -4,6 +4,7 @@ Standalone SCSS analyzer that can run without the full A2A SDK
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import re
 import shutil
@@ -22,7 +23,7 @@ class StandaloneSCSSAnalyzer:
         import hashlib
         from datetime import datetime
 
-        issue_id = hashlib.md5(f'{file_path}{line}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
+        issue_id = hashlib.sha256(f'{file_path}{line}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
 
         return {
             "id": f"{tool}_{issue_id}",

@@ -211,7 +211,7 @@ async def run_integration_tests():
         
         # Test 4: UI Data Availability
         if test_results["goal_sync"]:
-            time.sleep(2)  # Wait for sync to complete
+            await asyncio.sleep(2)  # Wait for sync to complete
             test_results["ui_data"] = test_ui_data_availability()
     
     # Test 5: UI Navigation

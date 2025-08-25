@@ -3,6 +3,7 @@ Test suite for Glean Agent
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import pytest
 from pathlib import Path

@@ -201,7 +201,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
 
             # Create unique node ID
             node_content = f"{node_data['label']}_{json.dumps(node_data.get('properties', {}), sort_keys=True)}"
-            node_id = hashlib.md5(node_content.encode()).hexdigest()[:12]
+            node_id = hashlib.sha256(node_content.encode()).hexdigest()[:12]
 
             # Generate embedding for semantic analysis
             content_text = node_data.get('content_text', node_data['label'])
@@ -241,7 +241,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
 
             # Record update
             update = GraphUpdate(
-                update_id=hashlib.md5(f"add_node_{node_id}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
+                update_id=hashlib.sha256(f"add_node_{node_id}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
                 update_type="node_add",
                 affected_elements=[node_id],
                 update_reason=f"Added new {node_data['node_type']} node",
@@ -416,7 +416,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
 
             # Record the update
             update_record = GraphUpdate(
-                update_id=hashlib.md5(f"graph_update_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
+                update_id=hashlib.sha256(f"graph_update_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
                 update_type="graph_update",
                 affected_elements=list(set([u["node_id"] for u in node_updates if "node_id" in u])),
                 update_reason="Batch graph update with new information",
@@ -615,7 +615,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
 
     def _create_relationship_edge(self, source_id: str, target_id: str, relationship_type: RelationshipType, confidence: float, strength: float = 1.0) -> Optional[KnowledgeEdge]:
         """Create a relationship edge between two nodes"""
-        edge_id = hashlib.md5(f"{source_id}_{target_id}_{relationship_type.value}".encode()).hexdigest()[:12]
+        edge_id = hashlib.sha256(f"{source_id}_{target_id}_{relationship_type.value}".encode()).hexdigest()[:12]
 
         # Check if edge already exists
         if edge_id in self.edges:
@@ -656,7 +656,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         embedding = self.embedding_model.encode(fact_text, normalize_embeddings=True)
 
         # Create node ID
-        node_id = hashlib.md5(f"fact_{fact_text}_{source}".encode()).hexdigest()[:12]
+        node_id = hashlib.sha256(f"fact_{fact_text}_{source}".encode()).hexdigest()[:12]
 
         # Create fact node
         fact_node = KnowledgeNode(

@@ -4,6 +4,7 @@ Implements persistent memory, learning from experience, and adaptive reasoning
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import json
 import pickle
@@ -323,7 +324,7 @@ class ReasoningLearningEngine:
 
             # Extract successful decomposition pattern
             if experience.reasoning_chain:
-                pattern_id = hashlib.md5(
+                pattern_id = hashlib.sha256(
                     f"{question_pattern}_{experience.decomposition_strategy}".encode()
                 ).hexdigest()[:8]
 

@@ -4,6 +4,7 @@ Enhanced vector processing and embeddings with comprehensive MCP tool integratio
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import numpy as np
@@ -41,10 +42,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             version="2.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize MCP tool providers

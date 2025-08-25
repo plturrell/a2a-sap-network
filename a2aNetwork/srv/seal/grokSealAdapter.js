@@ -4,7 +4,7 @@
 
 const cds = require('@sap/cds');
 const BaseService = require('../utils/BaseService');
-const { BlockchainClient } = require('../core/blockchain-client') = const { BlockchainClient } = require('../core/blockchain-client');
+const { BlockchainClient } = require('../core/blockchain-client');
 
 /**
  * Real SEAL Implementation using Grok API
@@ -23,6 +23,7 @@ class GrokSealAdapter extends BaseService {
         this.selfEditStrategies = new Set();
 
         this.intervals = new Map(); // Track intervals for cleanup
+    }
 
     /**
      * Initialize SEAL adapter with Grok integration

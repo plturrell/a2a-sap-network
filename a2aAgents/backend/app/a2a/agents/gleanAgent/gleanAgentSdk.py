@@ -280,7 +280,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         """Generate a cache key for the given operation and parameters"""
         import hashlib
         key_data = f"{operation}:{':'.join(f'{k}={v}' for k, v in sorted(kwargs.items()))}"
-        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
+        return hashlib.sha256(key_data.encode(), usedforsecurity=False).hexdigest()
 
     async def _get_cached_result(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get cached result if available and not expired"""
@@ -384,7 +384,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         import hashlib
 
         # Generate unique ID for the issue
-        issue_id = hashlib.md5(f'{file_path}{line}{column}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
+        issue_id = hashlib.sha256(f'{file_path}{line}{column}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
 
         # Map tool to issue type
         issue_type_mapping = {
@@ -1532,7 +1532,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         if file_patterns is None:
             file_patterns = ["*.py", "*.js", "*.ts"]
 
-        analysis_id = f"analysis_{hashlib.md5(f'{directory}{time.time()}'.encode(), usedforsecurity=False).hexdigest()[:12]}"
+        analysis_id = f"analysis_{hashlib.sha256(f'{directory}{time.time()}'.encode(), usedforsecurity=False).hexdigest()[:12]}"
         start_time = time.time()
 
         results = {
@@ -1892,8 +1892,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         import_analysis["absolute_imports"] += 1
 
         # Find most imported modules
+        def get_module_count(item):
+            return item[1]
+        
         import_analysis["most_imported"] = dict(
-            sorted(module_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+            sorted(module_counts.items(), key=get_module_count, reverse=True)[:10]
         )
         import_analysis["unique_modules"] = len(import_analysis["unique_modules"])
 
@@ -2238,7 +2241,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for issue_data in pylint_issues:
                         issue_key = f'{issue_data.get("path", "")}{issue_data.get("line", 0)}{issue_data.get("symbol", "")}'
                         issue = {
-                            "id": f"pylint_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                            "id": f"pylint_{hashlib.sha256(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                             "file_path": issue_data.get("path", ""),
                             "line": issue_data.get("line", 0),
                             "column": issue_data.get("column", 0),
@@ -2281,7 +2284,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     parts = line.split(':', 4)
                     if len(parts) >= 5:
                         issue = {
-                            "id": f"flake8_{hashlib.md5(line.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                            "id": f"flake8_{hashlib.sha256(line.encode(), usedforsecurity=False).hexdigest()[:8]}",
                             "file_path": parts[0],
                             "line": int(parts[1]) if parts[1].isdigit() else 0,
                             "column": int(parts[2]) if parts[2].isdigit() else 0,
@@ -2335,7 +2338,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
 
                             issue_key = f'{file_path}{line_num}{error_code}'
                             issue = {
-                                "id": f"mypy_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                                "id": f"mypy_{hashlib.sha256(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                                 "file_path": file_path,
                                 "line": line_num,
                                 "column": 0,
@@ -2376,7 +2379,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 for issue_data in bandit_data.get("results", []):
                     issue_key = f'{issue_data.get("filename", "")}{issue_data.get("line_number", 0)}{issue_data.get("test_id", "")}'
                     issue = {
-                        "id": f"bandit_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                        "id": f"bandit_{hashlib.sha256(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                         "file_path": issue_data.get("filename", ""),
                         "line": issue_data.get("line_number", 0),
                         "column": 0,
@@ -2652,7 +2655,8 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         ))
 
                     # 6. SQL injection risk
-                    if 'query(' in line_lower and ('+' in line or '${' in line):
+                    if '# WARNING: Potential SQL injection - use parameterized queries
+        query(' in line_lower and ('+' in line or '${' in line):
                         issues.append(self._create_issue(
                             file_path=str(file_path),
                             line=line_num,
@@ -2902,7 +2906,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for message in file_data.get("messages", []):
                         issue_key = f'{file_path}{message.get("line", 0)}{message.get("ruleId", "")}'
                         issue = {
-                            "id": f"eslint_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                            "id": f"eslint_{hashlib.sha256(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                             "file_path": file_path,
                             "line": message.get("line", 0),
                             "column": message.get("column", 0),
@@ -2955,7 +2959,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             # Create unique issue ID
                             issue_key = f'{file_path}{line_num}{col_num}{message}'
                             issue = {
-                                "id": f"jshint_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                                "id": f"jshint_{hashlib.sha256(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
                                 "file_path": file_path,
                                 "line": line_num,
                                 "column": col_num,
@@ -4324,7 +4328,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for issue in pylint_issues:
                         line_num = issue.get("line", 0)
                         col_num = issue.get("column", 0)
-                        issue_id = hashlib.md5(f'{file_path}{line_num}{col_num}'.encode(), usedforsecurity=False).hexdigest()[:8]
+                        issue_id = hashlib.sha256(f'{file_path}{line_num}{col_num}'.encode(), usedforsecurity=False).hexdigest()[:8]
                         issues.append(CodeIssue(
                             id=f"pylint_{issue_id}",
                             file_path=file_path,
@@ -4354,7 +4358,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             match = re.match(r"(.+):(\d+):(\d+): (\w+) (.+)", line)
                             if match:
                                 issues.append(CodeIssue(
-                                    id=f"flake8_{hashlib.md5(line.encode(), usedforsecurity=False).hexdigest()[:8]}",
+                                    id=f"flake8_{hashlib.sha256(line.encode(), usedforsecurity=False).hexdigest()[:8]}",
                                     file_path=match.group(1),
                                     line=int(match.group(2)),
                                     column=int(match.group(3)),
@@ -4387,7 +4391,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         for message in file_result.get("messages", []):
                             line_num = message.get("line", 0)
                             col_num = message.get("column", 0)
-                            issue_id = hashlib.md5(f'{file_path}{line_num}{col_num}'.encode(), usedforsecurity=False).hexdigest()[:8]
+                            issue_id = hashlib.sha256(f'{file_path}{line_num}{col_num}'.encode(), usedforsecurity=False).hexdigest()[:8]
                             issues.append(CodeIssue(
                                 id=f"eslint_{issue_id}",
                                 file_path=file_path,
@@ -4824,7 +4828,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
 
             # Sort by severity and limit results
             severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-            unique_suggestions.sort(key=lambda x: (severity_order.get(x["severity"], 4), x["line"]))
+            
+            def get_suggestion_priority(suggestion):
+                return (severity_order.get(suggestion["severity"], 4), suggestion["line"])
+            
+            unique_suggestions.sort(key=get_suggestion_priority)
             unique_suggestions = unique_suggestions[:max_suggestions]
 
             # Calculate refactoring metrics
@@ -5066,10 +5074,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 complexity_results["max_complexity"] = max(complexities)
 
                 # Find high complexity functions
+                def get_function_complexity(func):
+                    return func["complexity"]
+                
                 high_complexity = sorted([
                     f for f in all_functions
                     if f["complexity"] > complexity_threshold
-                ], key=lambda x: x["complexity"], reverse=True)
+                ], key=get_function_complexity, reverse=True)
 
                 complexity_results["high_complexity_functions"] = high_complexity[:10]  # Top 10
 
@@ -6042,7 +6053,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         class RefactoringVisitor(ast.NodeVisitor):
             def __init__(self):
                 self.suggestions = []
-                self.function_stats = defaultdict(lambda: {'complexity': 1, 'parameters': 0, 'lines': 0})
+                def create_default_function_stats():
+                    return {'complexity': 1, 'parameters': 0, 'lines': 0}
+                
+                self.function_stats = defaultdict(create_default_function_stats)
                 self.duplicated_code = []
                 self.long_parameter_lists = []
                 self.deep_nesting = []

@@ -126,10 +126,7 @@ class EnhancedStandardizer:
     """AI-enhanced standardizer with intelligent pattern recognition"""
 
     def __init__(self, ai_framework: AIIntelligenceFramework, data_type: str):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.ai_framework = ai_framework
         self.data_type = data_type
         self.schema_patterns = {}
@@ -545,10 +542,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             version="2.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize AI Intelligence Framework

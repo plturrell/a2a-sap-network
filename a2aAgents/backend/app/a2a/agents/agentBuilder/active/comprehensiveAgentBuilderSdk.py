@@ -4,6 +4,7 @@ Advanced agent creation, configuration, and deployment system
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import uuid
 import json
 import yaml
@@ -844,6 +845,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -972,6 +974,7 @@ Test cases for {project.configuration.name}
 
 import pytest
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
 from agent import get_{self._to_instance_name(project.configuration.name)}
 

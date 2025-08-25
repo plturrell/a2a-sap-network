@@ -10,6 +10,7 @@ Tests the following agents with their MCP tool integrations:
 
 import pytest
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import numpy as np
 from unittest.mock import Mock, AsyncMock, patch

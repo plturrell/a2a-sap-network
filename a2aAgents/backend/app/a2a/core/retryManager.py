@@ -261,7 +261,7 @@ def retry_with_backoff(
 
                     delay = min(backoff_factor * (2 ** (attempt - 1)), max_backoff)
                     logger.warning(f"Attempt {attempt} failed: {e}. Retrying in {delay:.2f}s")
-                    time.sleep(delay)
+                    await asyncio.sleep(delay)
 
             raise last_exception or Exception("All retry attempts failed")
 

@@ -17,6 +17,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, Any, Optional, Callable, List
 from datetime import datetime

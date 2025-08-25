@@ -1,5 +1,6 @@
 import asyncio
 import random
+import secrets
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -189,7 +190,7 @@ class QualityControlSimulator(SecureA2AAgent):
             data_point = await self._generate_data_point(data_type, i)
 
             # Inject defects based on defect rate
-            if random.random() < defect_rate:
+            if secrets.SystemRandom().random() < defect_rate:
                 data_point = await self._inject_defect(data_point, scenario)
 
             dataset.append(data_point)
@@ -504,7 +505,7 @@ class QualityControlSimulator(SecureA2AAgent):
                     result["details"]["violation"] = "Cross-field consistency violation"
 
             # Simulate random failures based on rule failure probability
-            if result["passed"] and random.random() < rule.failure_probability:
+            if result["passed"] and secrets.SystemRandom().random() < rule.failure_probability:
                 result["passed"] = False
                 result["details"]["violation"] = "Random simulation failure"
 

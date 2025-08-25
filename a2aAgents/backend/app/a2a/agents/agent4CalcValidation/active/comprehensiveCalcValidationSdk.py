@@ -13,6 +13,7 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -207,10 +208,7 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize blockchain capabilities
@@ -479,7 +477,7 @@ class ComprehensiveCalcValidationSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 return create_error_response("Missing expression or result")
 
             # Check cache first
-            cache_key = hashlib.md5(f"{expression}_{result}_{str(variables)}".encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{expression}_{result}_{str(variables)}".encode()).hexdigest()
             if cache_key in self.validation_cache:
                 cached_result = self.validation_cache[cache_key]
                 cached_result['from_cache'] = True

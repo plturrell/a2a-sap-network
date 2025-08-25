@@ -1,4 +1,5 @@
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import hashlib
 import numpy as np
@@ -372,7 +373,7 @@ class AdvancedSemanticSearchEngine(SecureA2AAgent):
         Advanced semantic search with multi-factor ranking
         """
         # Check query cache
-        cache_key = hashlib.md5(f"{query}{filters}".encode()).hexdigest()
+        cache_key = hashlib.sha256(f"{query}{filters}".encode()).hexdigest()
         if cache_key in self.query_cache:
             cached_result = self.query_cache[cache_key]
             if (datetime.utcnow() - cached_result["timestamp"]).seconds < 300:  # 5 min cache

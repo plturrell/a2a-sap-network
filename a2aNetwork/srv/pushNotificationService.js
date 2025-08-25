@@ -460,31 +460,35 @@ self.addEventListener('notificationclick', function(event) {
         return;
     }
 
+    const handleNotificationClick = function(clientList) {
+        // Check if there's already a window/tab open with the target URL
+        for (let i = 0; i < clientList.length; i++) {
+            const client = clientList[i];
+            if (client.url.includes('/notifications') && 'focus' in client) {
+                return client.focus();
+            }
+        }
+
+        // If no existing window, open a new one
+        if (clients.openWindow) {
+            return clients.openWindow(targetUrl);
+        }
+    };
+
     event.waitUntil(
         clients.matchAll({
             type: 'window',
             includeUncontrolled: true
-        }).then(function(clientList) {
-            // Check if there's already a window/tab open with the target URL
-            for (let i = 0; i < clientList.length; i++) {
-                const client = clientList[i];
-                if (client.url.includes('/notifications') && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-
-            // If no existing window, open a new one
-            if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
-            }
-        })
+        }).then(handleNotificationClick)
     );
 });
 
-self.addEventListener('notificationclose', function(event) {
+const handleNotificationClose = function(event) {
     logger.info('Notification closed:', { event: event });
     // Handle notification close if needed
-});
+};
+
+self.addEventListener('notificationclose', handleNotificationClose);
 `;
     }
 

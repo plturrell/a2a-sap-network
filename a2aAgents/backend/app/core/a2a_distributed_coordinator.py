@@ -4,6 +4,7 @@ Integrates with existing A2A task management, message protocol, and agent discov
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, Any, List, Optional, Set

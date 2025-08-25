@@ -5,6 +5,7 @@ Tests core integration without extensive testing to avoid timeouts
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import os
 import sys
 import time

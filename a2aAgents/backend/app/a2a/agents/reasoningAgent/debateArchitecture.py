@@ -4,6 +4,7 @@ Implements multi-agent debate for reasoning through argumentation using MCP tool
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 from typing import Dict, Any, List, Optional, Tuple

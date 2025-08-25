@@ -15,6 +15,7 @@ from collections import defaultdict, deque
 import numpy as np
 import json
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import pickle
 import os
 import hashlib

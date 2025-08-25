@@ -5,6 +5,7 @@ Provides persistent task management with retry logic, dead letter queue, and rec
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import uuid
 import logging

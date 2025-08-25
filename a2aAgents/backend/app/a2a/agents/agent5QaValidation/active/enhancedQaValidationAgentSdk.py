@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +50,7 @@ class EnhancedQAValidationAgent(SecureA2AAgent, BlockchainIntegrationMixin):
 
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for QA validation
         blockchain_capabilities = [
             "qa_validation",
@@ -1635,10 +1633,7 @@ class QaValidationAgentSDK(EnhancedQAValidationAgent):
 
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
     async def validate_qa(self, input_data: Dict[str, Any]) -> Dict[str, Any]:

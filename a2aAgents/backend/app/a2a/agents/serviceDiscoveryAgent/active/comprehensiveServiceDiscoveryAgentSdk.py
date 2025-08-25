@@ -4,6 +4,7 @@ Dynamic service registry and agent discovery system
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import uuid
 import json
 import time
@@ -145,10 +146,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
 
         super().__init__(config)
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(

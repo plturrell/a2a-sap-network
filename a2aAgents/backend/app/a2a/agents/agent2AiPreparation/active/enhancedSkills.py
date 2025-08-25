@@ -5,6 +5,7 @@ import logging
 import json
 from sentence_transformers import SentenceTransformer
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from .domainSpecificEmbeddingSkills import DomainSpecificEmbeddingSkills
 
 from app.a2a.core.security_base import SecureA2AAgent

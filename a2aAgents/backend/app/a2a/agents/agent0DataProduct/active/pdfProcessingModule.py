@@ -1,9 +1,8 @@
 import asyncio
-import io
 import logging
 import os
 import tempfile
-from typing import Dict, List, Any, Optional, Union, AsyncGenerator
+from typing import Dict, List, Any, Union, AsyncGenerator
 from datetime import datetime
 import aiofiles
 from asyncio_throttle import Throttler

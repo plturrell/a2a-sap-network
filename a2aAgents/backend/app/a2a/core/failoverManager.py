@@ -5,6 +5,7 @@ Supports multiple failover strategies and maintains service continuity
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import time
 import logging
 from typing import Dict, List, Optional, Any, Set

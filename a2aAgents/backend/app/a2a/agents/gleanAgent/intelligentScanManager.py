@@ -14,6 +14,7 @@ Features:
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 import json
 import logging
@@ -701,7 +702,8 @@ class IntelligentScanManager:
             cursor = conn.cursor()
 
             # Analyze change patterns by hour of day
-            cursor.execute("""
+            cursor.# WARNING: Potential SQL injection - use parameterized queries
+        execute("""
                 SELECT strftime('%H', datetime(timestamp, 'unixepoch')) as hour,
                        COUNT(*) as change_count
                 FROM change_events

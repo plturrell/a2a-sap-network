@@ -4,6 +4,7 @@ Enhances goal management with machine learning and predictive analytics
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import numpy as np
 from datetime import datetime, timedelta
@@ -327,7 +328,10 @@ class AIGoalOptimizer:
             )
             milestones.extend(performance_milestones)
 
-            return sorted(milestones, key=lambda m: m.achievement_probability, reverse=True)
+            def get_achievement_probability(milestone):
+                return milestone.achievement_probability
+            
+            return sorted(milestones, key=get_achievement_probability, reverse=True)
 
         except Exception as e:
             logger.error(f"Failed to detect intelligent milestones for {agent_id}: {e}")
@@ -551,7 +555,10 @@ class AIGoalOptimizer:
                     recommendations.append(recommendation)
 
             # Sort by synergy score
-            recommendations.sort(key=lambda r: r.synergy_score, reverse=True)
+            def get_synergy_score(recommendation):
+                return recommendation.synergy_score
+            
+            recommendations.sort(key=get_synergy_score, reverse=True)
 
             return recommendations[:5]  # Top 5 recommendations
 
@@ -873,7 +880,10 @@ class AIGoalOptimizer:
                     partner_scores[agent] += collab.get("efficiency_score", 0.5)
 
         # Sort by score and return top partners
-        sorted_partners = sorted(partner_scores.items(), key=lambda x: x[1], reverse=True)
+        def get_partner_score(partner_item):
+            return partner_item[1]
+        
+        sorted_partners = sorted(partner_scores.items(), key=get_partner_score, reverse=True)
         return [partner for partner, score in sorted_partners[:5]]
 
     def _extract_expertise_areas(self, agent_id: str) -> List[str]:

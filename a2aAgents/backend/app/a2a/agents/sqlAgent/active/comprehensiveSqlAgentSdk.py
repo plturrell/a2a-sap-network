@@ -26,6 +26,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -177,10 +178,7 @@ class RealGrokSQLClient:
     """Real Grok AI client for SQL processing"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.api_key = None
         self.base_url = "https://api.x.ai/v1"
         self.model = "grok-4-latest"
@@ -398,10 +396,7 @@ class ProductionGrokSQLClient:
 
     def __init__(self):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         try:
             self.grok_client = get_grok_client()
@@ -506,10 +501,7 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize blockchain queue capabilities
@@ -753,7 +745,7 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
 
         try:
             # Check cache first
-            cache_key = hashlib.md5(f"{natural_language}_{database_schema}_{query_type}".encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{natural_language}_{database_schema}_{query_type}".encode()).hexdigest()
             if cache_key in self.query_cache:
                 cache_entry = self.query_cache[cache_key]
                 if time.time() - cache_entry['timestamp'] < self.cache_ttl:
@@ -1825,7 +1817,7 @@ class ComprehensiveSqlAgentSDK(SecureA2AAgent, BlockchainQueueMixin):
                 "optimization_applied": optimized_query != query,
                 "optimization_notes": optimization_result.optimization_suggestions,
                 "security_validated": True,
-                "transaction_id": f"txn_{hashlib.md5(query.encode()).hexdigest()[:8]}",
+                "transaction_id": f"txn_{hashlib.sha256(query.encode()).hexdigest()[:8]}",
                 "execution_mode": execution_mode
             }
 

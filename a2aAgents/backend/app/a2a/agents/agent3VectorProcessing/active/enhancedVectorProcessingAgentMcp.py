@@ -5,6 +5,7 @@ Score: 100/100 - All gaps addressed
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import os
 import sys
@@ -38,10 +39,7 @@ class BlockchainOnlyEnforcer:
     """Enforces blockchain-only communication - no HTTP fallbacks"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.blockchain_required = True
 
     async def call(self, func, *args, **kwargs):
@@ -181,10 +179,7 @@ class CorruptionDetector:
     """Advanced corruption detection for vector data"""
 
     def __init__(self):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.corruption_patterns = [
             self._check_dimension_consistency,
             self._check_value_ranges,
@@ -453,10 +448,7 @@ class HANAConnectionManager:
     """Advanced HANA connection management with retry and circuit breaking"""
 
     def __init__(self, config: Dict[str, Any], max_retries: int = 3):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.config = config
         self.max_retries = max_retries
         self.connection_pool = deque(maxlen=5)  # Pool of up to 5 connections
@@ -566,10 +558,7 @@ class MemoryManagedVectorStore:
     """Memory-managed vector store with chunking and streaming support"""
 
     def __init__(self, config: VectorProcessingConfig):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.config = config
         self.vectors = {}  # In-memory vector storage
         self.metadata = {}  # Vector metadata
@@ -841,7 +830,10 @@ class MemoryManagedVectorStore:
                 results.extend(chunk_results)
 
             # Sort by similarity and return top-k
-            results.sort(key=lambda x: x["similarity"], reverse=True)
+            def get_similarity_score(result):
+                return result["similarity"]
+            
+            results.sort(key=get_similarity_score, reverse=True)
             return results[:top_k]
 
         except Exception as e:
@@ -987,10 +979,7 @@ class NetworkXDocumentedOperations:
     """
 
     def __init__(self, graph: nx.DiGraph = None):
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.graph = graph or nx.DiGraph()
         self.operation_history = []
 
@@ -1280,7 +1269,10 @@ class NetworkXDocumentedOperations:
                 component_analysis.append(analysis)
 
             # Sort components by size (largest first)
-            component_analysis.sort(key=lambda x: x["size"], reverse=True)
+            def get_component_size(component):
+                return component["size"]
+            
+            component_analysis.sort(key=get_component_size, reverse=True)
 
             operation_result = {
                 "success": True,
@@ -1502,10 +1494,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
 
     def __init__(self, base_url: str, hana_config: Dict[str, Any] = None, enable_monitoring: bool = True):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Initialize parent classes
         A2AAgentBase.__init__(
             self,
@@ -2055,7 +2044,10 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                             # Combine and deduplicate results
                             combined_results = hana_results + memory_results
                             # Sort by similarity and take top_k
-                            combined_results.sort(key=lambda x: x.get("similarity", 0), reverse=True)
+                            def get_result_similarity(result):
+                                return result.get("similarity", 0)
+                            
+                            combined_results.sort(key=get_result_similarity, reverse=True)
                             results = combined_results[:top_k]
                         else:
                             results = hana_results

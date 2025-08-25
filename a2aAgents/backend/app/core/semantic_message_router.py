@@ -793,7 +793,7 @@ class SemanticMessageRouter:
 
         # Create semantic message
         message = SemanticMessage(
-            message_id=hashlib.md5(f"{sender_id}{content}{time.time()}".encode()).hexdigest(),
+            message_id=hashlib.sha256(f"{sender_id}{content}{time.time()}".encode()).hexdigest(),
             sender_id=sender_id,
             content=content,
             message_type=message_type,

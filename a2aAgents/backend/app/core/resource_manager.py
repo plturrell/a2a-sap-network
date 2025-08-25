@@ -4,6 +4,7 @@ Provides memory limits, resource cleanup, and leak prevention
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import gc
 import logging
 import psutil

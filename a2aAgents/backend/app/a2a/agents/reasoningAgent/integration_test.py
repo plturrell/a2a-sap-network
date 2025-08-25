@@ -5,6 +5,7 @@ Test all reasoning architectures to verify they're properly integrated and worki
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import sys
 from pathlib import Path
 

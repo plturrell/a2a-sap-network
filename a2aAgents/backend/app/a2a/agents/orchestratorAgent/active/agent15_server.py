@@ -3,6 +3,7 @@ import sys
 import json
 import logging
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from uuid import uuid4

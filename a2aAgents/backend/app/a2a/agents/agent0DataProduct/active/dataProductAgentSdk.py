@@ -20,6 +20,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 import json
 import pandas as pd
@@ -95,10 +96,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
     """
     def __init__(self, base_url: str, ord_registry_url: str):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for data product agent
         blockchain_capabilities = [
             "data_product_registration",
@@ -239,7 +237,6 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
     async def extract_dublin_core_metadata(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Extract Dublin Core metadata according to ISO 15836 standards"""
         data_location = input_data.get("data_location", "")
-        data_type = input_data.get("data_type", "dataset")
         # Read and analyze data
         metadata = await self._analyze_data_for_dublin_core(data_location)
         # Generate Dublin Core elements
@@ -889,37 +886,3 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             logger.error(f"Error processing A2A data request: {e}")
             return {"error": str(e)}
 
-    async def _initialize_trust_system(self) -> None:
-        """Initialize the agent's trust system"""
-        try:
-            # Initialize trust identity
-            self.trust_identity = await initialize_agent_trust(
-                self.agent_id,
-                self.base_url
-            )
-            if self.trust_identity:
-                logger.info(f"✅ Trust system initialized for {self.agent_id}")
-                logger.info(f"   Trust address: {self.trust_identity.get('address')}")
-
-                # Get trust contract reference
-                self.trust_contract = get_trust_contract()
-
-                # Pre-trust essential agents for A2A communication
-                essential_agents = [
-                    "agent_manager",
-                    self.catalog_manager_agent,
-                    self.ai_preparation_agent,
-                    self.vector_agent,
-                    self.standardization_agent
-                ]
-
-                self.trusted_agents = set()
-                for agent_id in essential_agents:
-                    self.trusted_agents.add(agent_id)
-
-                logger.info(f"   Pre-trusted agents: {self.trusted_agents}")
-            else:
-                logger.warning("⚠️ Trust system initialization failed, running without trust verification")
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize trust system: {e}")
-            logger.warning("Continuing without trust verification")

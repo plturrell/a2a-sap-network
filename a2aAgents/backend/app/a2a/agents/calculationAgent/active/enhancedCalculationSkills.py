@@ -4,6 +4,7 @@ from typing import Dict, List, Any, Optional, Tuple, Union
 from datetime import datetime
 from decimal import Decimal
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 
 from app.a2a.core.security_base import SecureA2AAgent
 """

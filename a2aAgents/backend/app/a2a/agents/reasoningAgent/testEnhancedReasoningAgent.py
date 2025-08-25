@@ -3,6 +3,7 @@ Test suite for Enhanced Reasoning Agent with MCP integration
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 from typing import Dict, Any
 from datetime import datetime

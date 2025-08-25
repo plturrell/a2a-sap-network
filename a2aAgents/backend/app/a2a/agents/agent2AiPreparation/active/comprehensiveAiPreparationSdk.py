@@ -13,6 +13,7 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -178,10 +179,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize blockchain capabilities through mixin
@@ -1018,7 +1016,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     async def _create_preparation_pipeline(self, data_source: str, target_format: str,
                                          quality_threshold: float, config: Dict[str, Any]) -> PreparationPipeline:
         """Create intelligent preparation pipeline"""
-        pipeline_id = f"prep_{hashlib.md5(f'{data_source}{time.time()}'.encode()).hexdigest()[:8]}"
+        pipeline_id = f"prep_{hashlib.sha256(f'{data_source}{time.time()}'.encode()).hexdigest()[:8]}"
 
         # Determine input format
         input_format = self._detect_format(data_source)

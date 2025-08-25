@@ -4,6 +4,7 @@ Automatically handles trust verification and message signing for agents
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import functools
 import logging
 from typing import Dict, List, Any, Optional, Callable

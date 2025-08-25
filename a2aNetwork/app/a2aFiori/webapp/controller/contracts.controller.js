@@ -239,11 +239,17 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
             const oContract = oEvent.getSource().getBindingContext("contracts").getObject();
 
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(oContract.address).then(() => {
+                const handleClipboardSuccess = () => {
                     MessageToast.show(this.getResourceBundle().getText("contracts.address.copied"));
-                }).catch(function() {
+                };
+                
+                const handleClipboardError = function() {
                     MessageToast.show(this.getResourceBundle().getText("contracts.address.copyError"));
-                });
+                };
+                
+                navigator.clipboard.writeText(oContract.address)
+                    .then(handleClipboardSuccess)
+                    .catch(handleClipboardError);
             }
         },
 
@@ -293,15 +299,17 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
         },
 
         onConfirmExecution() {
+            const handleExecutionConfirmation = function(sAction) {
+                if (sAction === MessageBox.Action.OK) {
+                    this._executeContract();
+                }
+            }.bind(this);
+            
             MessageBox.confirm(
                 this.getResourceBundle().getText("contracts.execute.confirmMessage"),
                 {
                     title: this.getResourceBundle().getText("contracts.execute.confirmTitle"),
-                    onClose: function(sAction) {
-                        if (sAction === MessageBox.Action.OK) {
-                            this._executeContract();
-                        }
-                    }.bind(this)
+                    onClose: handleExecutionConfirmation
                 }
             );
         },
@@ -312,7 +320,8 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
 
             // Simulate blockchain transaction
             let iProgress = 0;
-            const oInterval = setInterval(() => {
+            
+            const updateExecutionProgress = () => {
                 iProgress += 10;
                 this.oUIModel.setProperty("/blockchainProgress", iProgress);
 
@@ -332,21 +341,25 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                     // Refresh contract data
                     this._loadContracts();
                 }
-            }, 500);
+            };
+            
+            const oInterval = setInterval(updateExecutionProgress, 500);
         },
 
         onPauseContract() {
             const oContract = this.oContractsModel.getProperty("/selectedContract");
 
+            const handlePauseConfirmation = function(sAction) {
+                if (sAction === MessageBox.Action.OK) {
+                    this._updateContractStatus(oContract, "Paused");
+                }
+            }.bind(this);
+            
             MessageBox.confirm(
                 this.getResourceBundle().getText("contracts.pause.confirm", [oContract.name]),
                 {
                     title: this.getResourceBundle().getText("contracts.pause.title"),
-                    onClose: function(sAction) {
-                        if (sAction === MessageBox.Action.OK) {
-                            this._updateContractStatus(oContract, "Paused");
-                        }
-                    }.bind(this)
+                    onClose: handlePauseConfirmation
                 }
             );
         },
@@ -424,15 +437,17 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
         },
 
         onDeployContract() {
+            const handleDeploymentConfirmation = function(sAction) {
+                if (sAction === MessageBox.Action.OK) {
+                    this._deployContract();
+                }
+            }.bind(this);
+            
             MessageBox.confirm(
                 this.getResourceBundle().getText("contracts.deploy.confirm"),
                 {
                     title: this.getResourceBundle().getText("contracts.deploy.title"),
-                    onClose: function(sAction) {
-                        if (sAction === MessageBox.Action.OK) {
-                            this._deployContract();
-                        }
-                    }.bind(this)
+                    onClose: handleDeploymentConfirmation
                 }
             );
         },
@@ -443,7 +458,8 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
 
             // Simulate deployment
             let iProgress = 0;
-            const oInterval = setInterval(() => {
+            
+            const updateDeploymentProgress = () => {
                 iProgress += 5;
                 this.oUIModel.setProperty("/blockchainProgress", iProgress);
 
@@ -475,7 +491,9 @@ contract AgentRegistry is Ownable, Pausable, ReentrancyGuard {
                     this.oUIModel.setProperty("/contractView", "deployed");
                     this._loadContracts();
                 }
-            }, 300);
+            };
+            
+            const oInterval = setInterval(updateDeploymentProgress, 300);
         },
 
         onFileSelect(oEvent) {

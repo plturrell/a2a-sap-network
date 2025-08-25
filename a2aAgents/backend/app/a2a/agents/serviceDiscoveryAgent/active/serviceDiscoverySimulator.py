@@ -1,5 +1,6 @@
 import asyncio
 import random
+import secrets
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -298,19 +299,19 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
             try:
                 # Register services if under capacity
                 if len(agent.services) < agent.max_services:
-                    if random.random() < 0.3:  # 30% chance to register
+                    if secrets.SystemRandom().random() < 0.3:  # 30% chance to register
                         await self._register_service_for_agent(agent)
 
                 # Random service failures
-                if agent.services and random.random() < agent.failure_probability:
+                if agent.services and secrets.SystemRandom().random() < agent.failure_probability:
                     await self._simulate_service_failure(agent)
 
                 # Service recovery
-                if random.random() < agent.recovery_probability:
+                if secrets.SystemRandom().random() < agent.recovery_probability:
                     await self._simulate_service_recovery(agent)
 
                 # Random deregistration
-                if agent.services and random.random() < 0.1:  # 10% chance
+                if agent.services and secrets.SystemRandom().random() < 0.1:  # 10% chance
                     await self._deregister_service_for_agent(agent)
 
                 await asyncio.sleep(random.uniform(5, 15))
@@ -327,7 +328,7 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
                 request_interval = 1.0 / agent.request_rate
 
                 # Service discovery requests
-                if random.random() < 0.7:  # 70% discovery, 30% load balancing
+                if secrets.SystemRandom().random() < 0.7:  # 70% discovery, 30% load balancing
                     await self._simulate_service_discovery_request(agent)
                 else:
                     await self._simulate_load_balancing_request(agent)
@@ -344,7 +345,7 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
         while self.simulation_running:
             try:
                 # Randomly adjust network parameters
-                if random.random() < 0.1:  # 10% chance per iteration
+                if secrets.SystemRandom().random() < 0.1:  # 10% chance per iteration
                     self.network_latency_ms *= random.uniform(0.8, 1.5)
                     self.network_jitter_ms *= random.uniform(0.5, 2.0)
                     self.packet_loss_rate = max(0, min(0.1, self.packet_loss_rate + random.uniform(-0.01, 0.01)))
@@ -426,9 +427,9 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
 
             # Random discovery query
             query_params = {}
-            if random.random() < 0.5:
+            if secrets.SystemRandom().random() < 0.5:
                 query_params["service_type"] = random.choice(list(self.service_templates.keys()))
-            if random.random() < 0.3:
+            if secrets.SystemRandom().random() < 0.3:
                 query_params["capabilities"] = [random.choice(["http_api", "sql", "caching", "messaging"])]
 
             result = await self.discovery_agent.discover_services(**query_params)
@@ -517,7 +518,7 @@ class ServiceDiscoverySimulator(SecureA2AAgent):
     async def _simulate_network_delay(self):
         """Simulate network latency and jitter"""
 
-        if random.random() < self.packet_loss_rate:
+        if secrets.SystemRandom().random() < self.packet_loss_rate:
             # Simulate packet loss with longer delay
             delay = self.network_latency_ms * 3
         else:

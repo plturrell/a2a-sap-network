@@ -3,6 +3,7 @@ Enhanced cache manager with TTL and LRU eviction
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import time
 from typing import Any, Dict, Optional, Union
 from collections import OrderedDict
@@ -105,7 +106,7 @@ class CacheManager:
         """Generate cache key from parameters"""
         # Sort params for consistent keys
         sorted_params = json.dumps(params, sort_keys=True)
-        hash_value = hashlib.md5(sorted_params.encode()).hexdigest()
+        hash_value = hashlib.sha256(sorted_params.encode()).hexdigest()
         return f"{prefix}:{hash_value}"
 
 

@@ -5,6 +5,7 @@ work together on a shared blackboard workspace
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime

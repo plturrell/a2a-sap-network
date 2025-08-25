@@ -23,10 +23,7 @@ class EnhancedGleanAgent(SecureA2AAgent):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         # Initialize base agent
         super().__init__('glean-agent', config)
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize original Glean SDK

@@ -8,6 +8,7 @@ Implements advanced internal reasoning capabilities including:
 - Caching and parallel processing support
 """
 import random
+import secrets
 
 import asyncio
 import json
@@ -213,7 +214,7 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         max_depth = request_data.get("max_depth", 5)
 
         # Check cache first
-        cache_key = hashlib.md5(f"{question}:{json.dumps(engines)}".encode()).hexdigest()
+        cache_key = hashlib.sha256(f"{question}:{json.dumps(engines)}".encode()).hexdigest()
         cached_result = await self._get_cached_result(cache_key)
         if cached_result:
             return cached_result
@@ -1337,7 +1338,7 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             for analog in analogy_db[term]:
                 similar_cases.append({
                     "concept": analog,
-                    "similarity": 0.7 + 0.1 * np.random.random(),
+                    "similarity": 0.7 + 0.1 * np.secrets.SystemRandom().random(),
                     "mapping": {term: analog},
                     "source_domain": "technology",
                     "target_domain": "general"

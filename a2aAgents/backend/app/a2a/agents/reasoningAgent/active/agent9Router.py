@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 import json
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from uuid import uuid4

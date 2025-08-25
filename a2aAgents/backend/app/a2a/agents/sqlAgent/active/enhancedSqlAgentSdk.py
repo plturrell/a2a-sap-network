@@ -16,6 +16,7 @@ Enhanced Capabilities:
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 import json
 import logging
@@ -138,10 +139,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
 
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Define blockchain capabilities for SQL operations
         blockchain_capabilities = [
             "sql_query_execution",

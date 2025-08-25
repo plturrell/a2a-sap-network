@@ -245,7 +245,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             formal_errors = []
             for error_data in detected_errors:
                 error = CalculationError(
-                    error_id=hashlib.md5(f"{error_data['type']}_{error_data['description']}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
+                    error_id=hashlib.sha256(f"{error_data['type']}_{error_data['description']}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
                     error_type=CalculationErrorType(error_data['type']),
                     description=error_data['description'],
                     original_input=input_data,
@@ -855,7 +855,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
 
     def _execute_healing_strategy(self, error: CalculationError, strategy: HealingStrategy, iteration: int) -> HealingResult:
         """Execute the selected healing strategy"""
-        healing_id = hashlib.md5(f"{error.error_id}_{strategy.strategy_id}_{iteration}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12]
+        healing_id = hashlib.sha256(f"{error.error_id}_{strategy.strategy_id}_{iteration}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12]
 
         # Strategy-specific healing implementation
         healed_output = None

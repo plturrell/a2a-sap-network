@@ -3,6 +3,7 @@ Connection pooling for database connections with health checks and monitoring
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 import time
 from typing import Dict, Any, Optional, List, Callable

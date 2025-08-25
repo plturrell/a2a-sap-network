@@ -16,6 +16,7 @@ This test should FAIL if any agent is unavailable
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 # Direct HTTP calls not allowed - use A2A protocol
 # # A2A Protocol: Use blockchain messaging instead of httpx  # REMOVED: A2A protocol violation
 import logging

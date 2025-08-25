@@ -191,10 +191,7 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
             base_url=base_url
         )
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
         # Core configuration
         self.ord_registry_url = ord_registry_url
@@ -297,8 +294,8 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         }
     )
     async def create_data_product_mcp(self, name: str, file_path: str, file_type: str,
-                                     description: str = "", metadata: Dict[str, Any] = None,
-                                     dublin_core_overrides: Dict[str, Any] = None) -> Dict[str, Any]:
+                                      description: str = "", metadata: Dict[str, Any] = None,
+                                      dublin_core_overrides: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Create a new data product via MCP tool
 
@@ -393,7 +390,7 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         }
     )
     async def validate_data_product_mcp(self, product_id: str, schema_id: str = None,
-                                       validation_level: str = "standard") -> Dict[str, Any]:
+                                        validation_level: str = "standard") -> Dict[str, Any]:
         """
         Validate data product via MCP tool
 
@@ -472,8 +469,8 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         }
     )
     async def transform_data_product_mcp(self, product_id: str, target_format: str,
-                                        transformations: List[Dict[str, Any]] = None,
-                                        streaming: bool = False) -> Dict[str, Any]:
+                                         transformations: List[Dict[str, Any]] = None,
+                                         streaming: bool = False) -> Dict[str, Any]:
         """
         Transform data product via MCP tool
 
@@ -549,7 +546,7 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         }
     )
     async def stream_data_product_mcp(self, product_id: str, mode: str = "websocket",
-                                     chunk_size: int = 1000, filters: Dict[str, Any] = None) -> Dict[str, Any]:
+                                      chunk_size: int = 1000, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Stream data product via MCP tool
 
@@ -740,7 +737,7 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
             total_memory += sys.getsizeof(entry.value)
 
         hit_rate = (self.processing_stats["cache_hits"] /
-                   max(self.processing_stats["cache_hits"] + self.processing_stats["cache_misses"], 1)) * 100
+                    max(self.processing_stats["cache_hits"] + self.processing_stats["cache_misses"], 1)) * 100
 
         return {
             "cache_config": self.cache_config,
@@ -992,8 +989,8 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         }
 
     async def _generate_dublin_core_metadata(self, name: str, description: str,
-                                           extracted_metadata: Dict[str, Any],
-                                           overrides: Dict[str, Any]) -> Dict[str, Any]:
+                                              extracted_metadata: Dict[str, Any],
+                                              overrides: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generate Dublin Core metadata with configurable mappings
 
@@ -1042,7 +1039,7 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
         return dublin_core
 
     async def _register_with_ord_safe(self, dublin_core: Dict[str, Any],
-                                     integrity_info: Dict[str, Any]) -> Dict[str, Any]:
+                                       integrity_info: Dict[str, Any]) -> Dict[str, Any]:
         """
         Register with ORD using circuit breaker for resilience
 
@@ -1094,7 +1091,7 @@ class EnhancedDataProductAgentMCP(SecureA2AAgent):
             return {"success": False, "error": str(e)}
 
     async def _handle_streaming_session(self, session: StreamingSession,
-                                       chunk_size: int, filters: Dict[str, Any] = None):
+                                         chunk_size: int, filters: Dict[str, Any] = None):
         """
         Handle streaming session for real-time data delivery
 

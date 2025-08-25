@@ -79,7 +79,7 @@ class EmbeddingPatternMatcher:
         # Store patterns
         for pattern_type, pattern_data in semantic_patterns.items():
             pattern = EmbeddedPattern(
-                pattern_id=hashlib.md5(pattern_type.encode()).hexdigest()[:8],
+                pattern_id=hashlib.sha256(pattern_type.encode()).hexdigest()[:8],
                 pattern_text=" ".join(pattern_data["examples"]),
                 pattern_type=pattern_type,
                 embedding=pattern_data["embedding"],

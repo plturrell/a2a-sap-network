@@ -13,6 +13,7 @@ To send messages to other agents, use:
 # Integrates with Data Manager Agent for persistent storage
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time

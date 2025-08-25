@@ -6,6 +6,7 @@ Tests MCP integration and validates 100/100 score improvements
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 from typing import Dict, Any
 from datetime import datetime, timedelta

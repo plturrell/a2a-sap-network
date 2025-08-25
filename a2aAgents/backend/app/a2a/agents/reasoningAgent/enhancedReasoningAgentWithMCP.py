@@ -35,10 +35,7 @@ class EnhancedReasoningAgentWithMCP(SecureA2AAgent):
             version="2.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize MCP skill coordinator

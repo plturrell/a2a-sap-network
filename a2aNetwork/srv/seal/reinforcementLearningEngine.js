@@ -35,6 +35,7 @@ class ReinforcementLearningEngine extends BaseService {
         this.complianceCheckpoints = new Set();
 
         this.intervals = new Map(); // Track intervals for cleanup
+    }
 
     /**
      * Initialize RL engine with state and action spaces

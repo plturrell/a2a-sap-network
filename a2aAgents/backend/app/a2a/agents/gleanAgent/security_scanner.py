@@ -104,10 +104,7 @@ class SecurityScanner(SecureA2AAgent):
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__('security-scanner', config)
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Load vulnerability patterns
@@ -337,7 +334,7 @@ class SecurityScanner(SecureA2AAgent):
                         confidence = self._calculate_confidence(line, pattern_info, file_path)
 
                         if confidence > 0.3:  # Threshold to reduce false positives
-                            vuln_id = hashlib.md5(
+                            vuln_id = hashlib.sha256(
                                 f"{file_path}:{line_num}:{vuln_type.value}:{match.start()}".encode(),
                                 usedforsecurity=False
                             ).hexdigest()[:8]
@@ -388,7 +385,7 @@ class SecurityScanner(SecureA2AAgent):
                 vulnerabilities = []
 
                 for issue in data.get('results', []):
-                    vuln_id = hashlib.md5(
+                    vuln_id = hashlib.sha256(
                         f"{file_path}:{issue['line_number']}:bandit:{issue['test_id']}".encode(),
                         usedforsecurity=False
                     ).hexdigest()[:8]
@@ -439,7 +436,7 @@ class SecurityScanner(SecureA2AAgent):
                 vulnerabilities = []
 
                 for finding in data.get('results', []):
-                    vuln_id = hashlib.md5(
+                    vuln_id = hashlib.sha256(
                         f"{file_path}:{finding['start']['line']}:semgrep:{finding['check_id']}".encode(),
                         usedforsecurity=False
                     ).hexdigest()[:8]
@@ -483,7 +480,7 @@ class SecurityScanner(SecureA2AAgent):
 
         # Check for authentication bypass patterns
         if self._check_auth_bypass_patterns(content):
-            vuln_id = hashlib.md5(f"{file_path}:auth_bypass".encode(), usedforsecurity=False).hexdigest()[:8]
+            vuln_id = hashlib.sha256(f"{file_path}:auth_bypass".encode(), usedforsecurity=False).hexdigest()[:8]
 
             vulnerability = SecurityVulnerability(
                 id=vuln_id,

@@ -13,6 +13,7 @@ Rating: 95/100 (Real AI Intelligence)
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time
@@ -558,7 +559,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
 
             # Create comprehensive report
             report = QualityReport(
-                report_id=f"qc_{hashlib.md5(f'{target}_{time.time()}'.encode()).hexdigest()[:8]}",
+                report_id=f"qc_{hashlib.sha256(f'{target}_{time.time()}'.encode()).hexdigest()[:8]}",
                 assessment_target=target,
                 overall_score=overall_score,
                 dimension_scores=dimension_scores,

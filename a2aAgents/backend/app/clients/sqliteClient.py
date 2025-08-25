@@ -29,8 +29,8 @@ except ImportError:
 
 from app.core.databaseSecurityManager import DatabaseSecurityManager, SecurityLevel
 from app.core.connection_pool import pool_manager
-from app.core.cache_manager import cache_manager, cached
-from app.core.pagination import PaginationParams, PaginatedResponse, paginate_query
+from app.core.cache_manager import cached
+from app.core.pagination import PaginationParams, PaginatedResponse
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class SQLiteSecurityAuditor:
         self.audit_logger = logging.getLogger(f"{__name__}.security_audit")
 
     def log_operation(self, operation: str, table: str, user_id: Optional[str] = None,
-                     sensitive_data: bool = False, execution_time: Optional[float] = None):
+                      sensitive_data: bool = False, execution_time: Optional[float] = None):
         """Log database operations for security audit"""
         if not self.enabled:
             return
@@ -1004,7 +1004,7 @@ class SQLiteClient:
             )
 
     def create_user(self, username: str, roles: List[str], security_clearance: str,
-                   department: Optional[str] = None) -> Dict[str, Any]:
+                    department: Optional[str] = None) -> Dict[str, Any]:
         """Create database user with enterprise security roles"""
         if not self.security_manager:
             raise RuntimeError("Security manager not enabled")

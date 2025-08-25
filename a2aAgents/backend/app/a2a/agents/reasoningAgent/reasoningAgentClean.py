@@ -4,6 +4,7 @@ This is a pure A2A agent that discovers and uses MCP skills for reasoning
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -40,10 +41,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
 
     def __init__(self, name: str = "ReasoningAgent", **kwargs):
         super().__init__(name=name, **kwargs)
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
 

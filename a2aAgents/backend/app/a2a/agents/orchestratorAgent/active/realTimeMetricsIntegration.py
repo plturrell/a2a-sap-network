@@ -4,6 +4,7 @@ Connects goal tracking with actual agent performance metrics
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any

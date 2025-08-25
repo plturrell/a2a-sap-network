@@ -5,6 +5,7 @@ Provides easy integration of comprehensive security capabilities
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Any, Callable, Set
 from datetime import datetime

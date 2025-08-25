@@ -5,6 +5,7 @@ Comprehensive rate limiting with token bucket algorithm and DDoS protection
 
 import time
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 import logging
 from typing import Dict, Any, Optional, Tuple, List, Set

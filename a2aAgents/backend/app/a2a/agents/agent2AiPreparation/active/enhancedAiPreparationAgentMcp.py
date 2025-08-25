@@ -182,10 +182,7 @@ class SophisticatedEmbeddingGenerator:
 
     def __init__(self, config: EmbeddingConfig):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.config = config
         self.transformer_model = None
         self.embedding_cache = OrderedDict()
@@ -283,7 +280,7 @@ class SophisticatedEmbeddingGenerator:
                 hashlib.sha256(processed_text.encode()).digest(),
                 hashlib.sha512(processed_text.encode()).digest()[:32],  # Truncate to 32 bytes
                 hashlib.blake2b(processed_text.encode(), digest_size=32).digest(),
-                hashlib.md5((processed_text + "_salt1").encode()).digest() + hashlib.md5((processed_text + "_salt2").encode()).digest()
+                hashlib.sha256((processed_text + "_salt1").encode()).digest() + hashlib.sha256((processed_text + "_salt2").encode()).digest()
             ]
 
             # Convert to embedding vector
@@ -555,7 +552,7 @@ class SophisticatedEmbeddingGenerator:
         if not self.config.cache_embeddings:
             return None
 
-        text_hash = hashlib.md5(text.encode()).hexdigest()
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
         if text_hash in self.embedding_cache:
             self.cache_stats["hits"] += 1
             # Move to end (LRU)
@@ -571,7 +568,7 @@ class SophisticatedEmbeddingGenerator:
         if not self.config.cache_embeddings:
             return
 
-        text_hash = hashlib.md5(text.encode()).hexdigest()
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
 
         # Implement LRU eviction
         if len(self.embedding_cache) >= 1000:
@@ -586,10 +583,7 @@ class AdvancedConfidenceScorer:
 
     def __init__(self, config: ConfidenceScoreConfig):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
         self.config = config
         self.historical_scores = []
         self.quality_statistics = defaultdict(list)
@@ -840,10 +834,7 @@ class EnhancedAIPreparationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin
 
     def __init__(self, base_url: str, enable_monitoring: bool = True):
 
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
                 # Initialize parent classes
         A2AAgentBase.__init__(
             self,

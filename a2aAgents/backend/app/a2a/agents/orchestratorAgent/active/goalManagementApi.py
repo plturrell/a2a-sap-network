@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 import logging
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import traceback
 from enum import Enum
 

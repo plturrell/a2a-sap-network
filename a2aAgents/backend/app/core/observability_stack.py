@@ -4,6 +4,7 @@ Provides distributed tracing, metrics collection, log aggregation, and dashboard
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import json
 import logging
 import time

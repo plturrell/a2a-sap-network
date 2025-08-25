@@ -868,7 +868,7 @@ class EnhancedReasoningAgent(MCPSkillCoordinationMixin, MCPSkillClientMixin):
             context = context or {}
 
             # Check cache if enabled
-            cache_key = hashlib.md5(f"{question}{architecture}{strategy}".encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{question}{architecture}{strategy}".encode()).hexdigest()
             if enable_caching and cache_key in self.evidence_cache:
                 cached_result = self.evidence_cache[cache_key]
                 if cached_result.get("timestamp", 0) > time.time() - self.cache_ttl:

@@ -29,6 +29,7 @@ To send messages to other agents, use:
 
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import hashlib
 import json
 import logging
@@ -66,26 +67,21 @@ except ImportError:
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
 # Import SDK components
-from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
-    A2AMessage, MessageRole, create_agent_id
-)
+from app.a2a.sdk import a2a_skill
 from app.a2a.sdk.utils import create_error_response, create_success_response
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
-    AIIntelligenceFramework, AIIntelligenceConfig,
     create_ai_intelligence_framework, create_enhanced_agent_config
 )
 
 # Import async patterns
 from app.a2a.core.asyncPatterns import (
-    async_retry, async_timeout, async_concurrent_limit,
-    AsyncOperationType, AsyncOperationConfig
+    async_retry, async_timeout,
+    AsyncOperationType
 )
 
-# Import network services
-from app.a2a.network import get_network_connector, get_registration_service, get_messaging_service
+# Import network services (currently unused due to A2A protocol compliance requirements)
 from app.a2a.core.security_base import SecureA2AAgent
 
 
@@ -166,10 +162,7 @@ class EnhancedDataProductAgentSDK(SecureA2AAgent):
             version="2.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
+        # Security features are initialized by SecureA2AAgent base class
 
 
         # Initialize AI Intelligence Framework

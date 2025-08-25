@@ -4,6 +4,7 @@ Replaces WebSocket connections with blockchain event monitoring for real-time up
 """
 
 import asyncio
+# Performance: Consider using asyncio.gather for concurrent operations
 import logging
 from typing import Dict, List, Any, Callable, Set
 from datetime import datetime

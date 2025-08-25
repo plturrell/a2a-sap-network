@@ -148,7 +148,7 @@ sap.ui.define([
         _setupWebSocketHandlers: function() {
             if (!this._websocket) return;
 
-            this._websocket.onopen = function() {
+            const handleWebSocketOpen = function() {
                 Log.info("WebSocket connected successfully");
                 this._reconnectAttempts = 0;
                 this._clearReconnectTimer();
@@ -164,8 +164,10 @@ sap.ui.define([
 
                 MessageToast.show(this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("websocketConnected") || "Real-time updates connected");
             }.bind(this);
+            
+            this._websocket.onopen = handleWebSocketOpen;
 
-            this._websocket.onmessage = function(event) {
+            const handleWebSocketMessage = function(event) {
                 try {
                     const data = JSON.parse(event.data);
                     this._handleWebSocketMessage(data);
@@ -174,12 +176,16 @@ sap.ui.define([
                     Log.error("Failed to parse WebSocket message", error);
                 }
             }.bind(this);
+            
+            this._websocket.onmessage = handleWebSocketMessage;
 
-            this._websocket.onerror = function(error) {
+            const handleWebSocketError = function(error) {
                 Log.error("WebSocket error occurred", error);
             }.bind(this);
+            
+            this._websocket.onerror = handleWebSocketError;
 
-            this._websocket.onclose = function(event) {
+            const handleWebSocketClose = function(event) {
                 Log.warning("WebSocket connection closed", { code: event.code, reason: event.reason });
                 this._websocket = null;
 
@@ -187,6 +193,8 @@ sap.ui.define([
                     this._scheduleReconnect();
                 }
             }.bind(this);
+            
+            this._websocket.onclose = handleWebSocketClose;
         },
 
         _handleWebSocketMessage: function(data) {
@@ -324,20 +332,13 @@ sap.ui.define([
             this.getView().setModel(personalizationModel, "personalization");
 
             if (!this._oPersonalizationDialog) {
-                const handlePersonalizationDialogLoad = function (oDialog) {
-                    this.getView().addDependent(oDialog);
-                    return oDialog;
-                }.bind(this);
                 this._oPersonalizationDialog = Fragment.load({
                     name: "a2a.network.launchpad.view.Personalization",
                     controller: this
-                }).then(handlePersonalizationDialogLoad);
+                }).then(this._handlePersonalizationDialogLoad.bind(this));
             }
 
-            const openPersonalizationDialog = function(oDialog) {
-                oDialog.open();
-            };
-            this._oPersonalizationDialog.then(openPersonalizationDialog);
+            this._oPersonalizationDialog.then(this._openPersonalizationDialog);
         },
 
         onApplyPersonalization: function() {
@@ -1213,6 +1214,15 @@ sap.ui.define([
                 customOrder: uniqueWidgets,
                 adaptiveRefresh: context.deviceType === "mobile" ? 60000 : 30000
             };
+        },
+
+        _handlePersonalizationDialogLoad: function(oDialog) {
+            this.getView().addDependent(oDialog);
+            return oDialog;
+        },
+
+        _openPersonalizationDialog: function(oDialog) {
+            oDialog.open();
         }
     }));
 });
